@@ -198,7 +198,7 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 			AssertElementPresent(
-				locator1 = "RaylifeMobile#MESSAGE_MORE_INFO_INFORMATION",
+				locator1 = "CommerceEntry#MESSAGE_MORE_INFO_INFORMATION",
 				value = ${productFullDescription});
 
 			SelectFrameTop();
@@ -812,8 +812,8 @@ definition {
 
 		if (isSet(minOrderQuantity)) {
 			Type(
-				key_labelName = "Minimum Order Quantity",
-				locator1 = "TextInput#SPECIFIC_LABEL_TEXT_INPUT",
+				key_fieldLabel = "Minimum Order Quantity",
+				locator1 = "TextInput#GENERIC_NUMBER_INPUT",
 				value1 = ${minOrderQuantity});
 		}
 

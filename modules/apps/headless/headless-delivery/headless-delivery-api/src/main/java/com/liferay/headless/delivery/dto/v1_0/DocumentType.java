@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -50,7 +48,7 @@ public class DocumentType implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(DocumentType.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The list of languages the document type has a translation for."
 	)
 	public String[] getAvailableLanguages() {
@@ -95,7 +93,9 @@ public class DocumentType implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _availableLanguagesSupplier;
 
-	@Schema(description = "The list of content fields the document type has.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The list of content fields the document type has."
+	)
 	@Valid
 	public ContentField[] getContentFields() {
 		if (_contentFieldsSupplier != null) {
@@ -139,7 +139,9 @@ public class DocumentType implements Serializable {
 	@JsonIgnore
 	private Supplier<ContentField[]> _contentFieldsSupplier;
 
-	@Schema(description = "The document type's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document type's description."
+	)
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -180,7 +182,9 @@ public class DocumentType implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema(description = "The localized document type's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized document type's description."
+	)
 	@Valid
 	public Map<String, String> getDescription_i18n() {
 		if (_description_i18nSupplier != null) {
@@ -223,7 +227,9 @@ public class DocumentType implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _description_i18nSupplier;
 
-	@Schema(description = "The document type's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document type's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -262,7 +268,9 @@ public class DocumentType implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "The localized document type's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized document type's name."
+	)
 	@Valid
 	public Map<String, String> getName_i18n() {
 		if (_name_i18nSupplier != null) {
@@ -441,8 +449,8 @@ public class DocumentType implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.DocumentType",
 		name = "x-class-name"
 	)

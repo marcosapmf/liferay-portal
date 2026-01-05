@@ -56,19 +56,23 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 			</clay:content-section>
 		</clay:content-col>
 
-		<%
-		DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
-		%>
+		<clay:content-col>
+			<ul class="autofit-padded-no-gutters autofit-row">
+				<li class="autofit-col">
+					<liferay-util:include page="/document_library/subscribe_file_entry.jsp" servletContext="<%= application %>" />
+				</li>
 
-		<c:if test="<%= !hideActions && dlPortletInstanceSettingsHelper.isShowActions() %>">
-			<clay:content-col>
-				<ul class="autofit-padded-no-gutters autofit-row">
+				<%
+				DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
+				%>
+
+				<c:if test="<%= !hideActions && dlPortletInstanceSettingsHelper.isShowActions() %>">
 					<li class="autofit-col">
 						<liferay-util:include page="/document_library/file_entry_action.jsp" servletContext="<%= application %>" />
 					</li>
-				</ul>
-			</clay:content-col>
-		</c:if>
+				</c:if>
+			</ul>
+		</clay:content-col>
 	</clay:content-row>
 </div>
 
@@ -147,7 +151,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 
 									<c:choose>
 										<c:when test="<%= conversions.length > 0 %>">
-											<div class="btn-group-item" data-analytics-file-entry-id="<%= String.valueOf(fileEntry.getFileEntryId()) %>" data-analytics-file-entry-title="<%= HtmlUtil.escapeAttribute(String.valueOf(fileEntry.getTitle())) %>" data-analytics-file-entry-version="<%= String.valueOf(fileEntry.getVersion()) %>">
+											<div class="btn-group-item" data-analytics-external-reference-code="<%= fileEntry.getExternalReferenceCode() %>" data-analytics-file-entry-id="<%= String.valueOf(fileEntry.getFileEntryId()) %>" data-analytics-file-entry-title="<%= HtmlUtil.escapeAttribute(String.valueOf(fileEntry.getTitle())) %>" data-analytics-file-entry-version="<%= String.valueOf(fileEntry.getVersion()) %>">
 												<clay:dropdown-menu
 													dropdownItems='<%=
 														new JSPDropdownItemList(pageContext) {
@@ -155,6 +159,8 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 																ThemeDisplay themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
 																Map<String, Object> data = HashMapBuilder.<String, Object>put(
+																	"analytics-external-reference-code", fileEntry.getExternalReferenceCode()
+																).put(
 																	"analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId())
 																).put(
 																	"analytics-file-entry-title", String.valueOf(fileEntry.getTitle())
@@ -198,6 +204,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 										<c:otherwise>
 											<div class="btn-group-item">
 												<clay:link
+													data-analytics-external-reference-code="<%= fileEntry.getExternalReferenceCode() %>"
 													data-analytics-file-entry-id="<%= fileEntry.getFileEntryId() %>"
 													data-analytics-file-entry-title="<%= fileEntry.getTitle() %>"
 													data-analytics-file-entry-version="<%= fileEntry.getVersion() %>"
@@ -213,7 +220,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 									</c:choose>
 								</c:when>
 								<c:otherwise>
-									<div class="btn-group-item" data-analytics-file-entry-id="<%= String.valueOf(fileEntry.getFileEntryId()) %>" data-analytics-file-entry-title="<%= HtmlUtil.escapeAttribute(String.valueOf(fileEntry.getTitle())) %>" data-analytics-file-entry-version="<%= String.valueOf(fileEntry.getVersion()) %>">
+									<div class="btn-group-item" data-analytics-external-reference-code="<%= fileEntry.getExternalReferenceCode() %>" data-analytics-file-entry-id="<%= String.valueOf(fileEntry.getFileEntryId()) %>" data-analytics-file-entry-title="<%= HtmlUtil.escapeAttribute(String.valueOf(fileEntry.getTitle())) %>" data-analytics-file-entry-version="<%= String.valueOf(fileEntry.getVersion()) %>">
 										<clay:link
 											displayType="primary"
 											href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
@@ -336,7 +343,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 
 				<c:if test="<%= Validator.isNotNull(fileVersion.getExtension()) %>">
 					<dt class="sidebar-dt">
-						<liferay-ui:message key="extension" />
+						<liferay-ui:message key="extension[file]" />
 					</dt>
 					<dd class="sidebar-dd">
 						<%= HtmlUtil.escape(fileVersion.getExtension()) %>

@@ -11,7 +11,6 @@ import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
-import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryService;
@@ -45,6 +44,8 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -81,26 +82,26 @@ public class BlogsViewEntriesDisplayContextTest {
 
 	@Test
 	public void testGetSearchContainer() throws Exception {
-		for (int i = 0; i <= SearchContainer.DEFAULT_DELTA; i++) {
-			_addBlogEntry("alpha_" + i);
+		List<BlogsEntry> blogsEntries = new ArrayList<>();
+
+		for (int i = 0; i < SearchContainer.DEFAULT_DELTA; i++) {
+			blogsEntries.add(
+				_addBlogsEntry(RandomTestUtil.randomString(), 1900 + i));
 		}
 
-		SearchContainer<BlogsEntry> searchContainer = _getSearchContainer(
-			_getMockHttpServletRequest());
+		_addBlogsEntry(
+			RandomTestUtil.randomString(),
+			1900 + SearchContainer.DEFAULT_DELTA);
 
-		Assert.assertEquals(
-			SearchContainer.DEFAULT_DELTA + 1, searchContainer.getTotal());
-
-		List<BlogsEntry> blogsEntries = searchContainer.getResults();
-
-		Assert.assertEquals(
-			blogsEntries.toString(), SearchContainer.DEFAULT_DELTA,
-			blogsEntries.size());
+		_assertSearchContainer(
+			blogsEntries,
+			_getSearchContainer(
+				_getMockHttpServletRequestWithOrderBy("display-date", "asc")));
 	}
 
 	@Test
 	public void testGetSearchContainerByComment() throws Exception {
-		BlogsEntry blogsEntry = _addBlogEntry(RandomTestUtil.randomString());
+		BlogsEntry blogsEntry = _addBlogsEntry(RandomTestUtil.randomString());
 
 		String commentBody = RandomTestUtil.randomString();
 
@@ -110,14 +111,22 @@ public class BlogsViewEntriesDisplayContextTest {
 			new IdentityServiceContextFunction(
 				ServiceContextTestUtil.getServiceContext()));
 
-		SearchContainer<BlogsEntry> searchContainer = _getSearchContainer(
-			_getMockHttpServletRequestWithSearch(commentBody));
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithSearch(commentBody)));
+	}
 
-		Assert.assertEquals(1, searchContainer.getTotal());
+	@Test
+	public void testGetSearchContainerByContent() throws Exception {
+		BlogsEntry blogsEntry = _addBlogsEntry(RandomTestUtil.randomString());
 
-		List<BlogsEntry> blogsEntries = searchContainer.getResults();
+		_addBlogsEntry(RandomTestUtil.randomString());
 
-		Assert.assertEquals(blogsEntries.toString(), 1, blogsEntries.size());
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithSearch(blogsEntry.getContent())));
 	}
 
 	@Test
@@ -129,24 +138,15 @@ public class BlogsViewEntriesDisplayContextTest {
 
 		AssetCategory assetCategory = _addAssetCategory(assetVocabulary);
 
-		BlogsEntry blogsEntry = _addBlogEntry(
+		BlogsEntry blogsEntry = _addBlogsEntry(
 			new long[] {assetCategory.getCategoryId()});
 
-		_addBlogEntry(RandomTestUtil.randomString());
+		_addBlogsEntry(RandomTestUtil.randomString());
 
-		SearchContainer<BlogsEntry> searchContainer = _getSearchContainer(
-			_getMockHttpServletRequestWithSearch(assetCategory.getName()));
-
-		Assert.assertEquals(1, searchContainer.getTotal());
-
-		List<BlogsEntry> blogsEntries = searchContainer.getResults();
-
-		Assert.assertEquals(blogsEntries.toString(), 1, blogsEntries.size());
-
-		BlogsEntry returnedBlogsEntry = blogsEntries.get(0);
-
-		Assert.assertEquals(
-			returnedBlogsEntry.getTitle(), blogsEntry.getTitle());
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithSearch(assetCategory.getName())));
 	}
 
 	@Test
@@ -156,24 +156,46 @@ public class BlogsViewEntriesDisplayContextTest {
 
 		AssetCategory assetCategory = _addAssetCategory(assetVocabulary);
 
-		BlogsEntry blogsEntry = _addBlogEntry(
+		BlogsEntry blogsEntry = _addBlogsEntry(
 			new long[] {assetCategory.getCategoryId()});
 
-		_addBlogEntry(RandomTestUtil.randomString());
+		_addBlogsEntry(RandomTestUtil.randomString());
 
-		SearchContainer<BlogsEntry> searchContainer = _getSearchContainer(
-			_getMockHttpServletRequestWithSearch(assetCategory.getName()));
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithSearch(assetCategory.getName())));
+	}
 
-		Assert.assertEquals(1, searchContainer.getTotal());
+	@Test
+	public void testGetSearchContainerByTitle() throws Exception {
+		BlogsEntry blogsEntry = _addBlogsEntry(RandomTestUtil.randomString());
 
-		List<BlogsEntry> blogsEntries = searchContainer.getResults();
+		_addBlogsEntry(RandomTestUtil.randomString());
 
-		Assert.assertEquals(blogsEntries.toString(), 1, blogsEntries.size());
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithSearch(blogsEntry.getTitle())));
+	}
 
-		BlogsEntry returnedBlogsEntry = blogsEntries.get(0);
+	@Test
+	public void testGetSearchContainerOrderByDisplayDate() throws Exception {
+		BlogsEntry blogsEntry1 = _addBlogsEntry(
+			RandomTestUtil.randomString(), 2000);
+		BlogsEntry blogsEntry2 = _addBlogsEntry(
+			RandomTestUtil.randomString(), 2001);
+		BlogsEntry blogsEntry3 = _addBlogsEntry(
+			RandomTestUtil.randomString(), 1999);
 
-		Assert.assertEquals(
-			returnedBlogsEntry.getTitle(), blogsEntry.getTitle());
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry3, blogsEntry1, blogsEntry2),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithOrderBy("display-date", "asc")));
+		_assertSearchContainer(
+			Arrays.asList(blogsEntry2, blogsEntry1, blogsEntry3),
+			_getSearchContainer(
+				_getMockHttpServletRequestWithOrderBy("display-date", "desc")));
 	}
 
 	private AssetCategory _addAssetCategory(AssetVocabulary assetVocabulary)
@@ -200,31 +222,72 @@ public class BlogsViewEntriesDisplayContextTest {
 			null, null, visibilityTypePublic, new ServiceContext());
 	}
 
-	private BlogsEntry _addBlogEntry(long[] assetCategoryIds) throws Exception {
+	private BlogsEntry _addBlogsEntry(long[] assetCategoryIds)
+		throws Exception {
+
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		serviceContext.setAssetCategoryIds(assetCategoryIds);
 
-		return _addBlogEntry(RandomTestUtil.randomString(), serviceContext);
+		return _addBlogsEntry(RandomTestUtil.randomString(), serviceContext);
 	}
 
-	private BlogsEntry _addBlogEntry(String title) throws Exception {
-		return _addBlogEntry(
+	private BlogsEntry _addBlogsEntry(String title) throws Exception {
+		return _addBlogsEntry(
 			title,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 
-	private BlogsEntry _addBlogEntry(
+	private BlogsEntry _addBlogsEntry(String title, int displayYear)
+		throws Exception {
+
+		return _addBlogsEntry(
+			title, RandomTestUtil.randomString(), displayYear,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
+	private BlogsEntry _addBlogsEntry(
 			String title, ServiceContext serviceContext)
+		throws Exception {
+
+		return _addBlogsEntry(
+			title, RandomTestUtil.randomString(), serviceContext);
+	}
+
+	private BlogsEntry _addBlogsEntry(
+			String title, String content, int displayYear,
+			ServiceContext serviceContext)
 		throws Exception {
 
 		return _blogsEntryService.addEntry(
 			title, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), 1, 1, 1990, 1, 1, true, false,
-			new String[0], RandomTestUtil.randomString(), null, null,
-			serviceContext);
+			content, 1, 1, displayYear, 1, 1, true, false, new String[0],
+			RandomTestUtil.randomString(), null, null, serviceContext);
+	}
+
+	private BlogsEntry _addBlogsEntry(
+			String title, String content, ServiceContext serviceContext)
+		throws Exception {
+
+		return _addBlogsEntry(title, content, 1990, serviceContext);
+	}
+
+	private void _assertSearchContainer(
+		List<BlogsEntry> expectedBlogsEntries,
+		SearchContainer<BlogsEntry> searchContainer) {
+
+		List<BlogsEntry> blogsEntries = searchContainer.getResults();
+
+		Assert.assertEquals(
+			blogsEntries.toString(), expectedBlogsEntries.size(),
+			blogsEntries.size());
+
+		for (int i = 0; i < expectedBlogsEntries.size(); i++) {
+			Assert.assertEquals(
+				expectedBlogsEntries.get(i), blogsEntries.get(i));
+		}
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest()
@@ -239,6 +302,19 @@ public class BlogsViewEntriesDisplayContextTest {
 		return mockHttpServletRequest;
 	}
 
+	private MockHttpServletRequest _getMockHttpServletRequestWithOrderBy(
+			String orderByCol, String orderByType)
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			_getMockHttpServletRequest();
+
+		mockHttpServletRequest.setParameter("orderByCol", orderByCol);
+		mockHttpServletRequest.setParameter("orderByType", orderByType);
+
+		return mockHttpServletRequest;
+	}
+
 	private MockHttpServletRequest _getMockHttpServletRequestWithSearch(
 			String keywords)
 		throws Exception {
@@ -247,7 +323,7 @@ public class BlogsViewEntriesDisplayContextTest {
 			_getMockHttpServletRequest();
 
 		mockHttpServletRequest.setParameter(
-			"mvcRenderCommandName", "/blogs/view");
+			"mvcRenderCommandName", "/blogs/search");
 		mockHttpServletRequest.setParameter("keywords", keywords);
 
 		return mockHttpServletRequest;
@@ -264,14 +340,14 @@ public class BlogsViewEntriesDisplayContextTest {
 			mockLiferayPortletRenderRequest,
 			new MockLiferayPortletRenderResponse());
 
-		Object blogEntriesDisplayContext =
+		Object blogsViewEntriesDisplayContext =
 			mockLiferayPortletRenderRequest.getAttribute(
 				"com.liferay.blogs.web.internal.display.context." +
 					"BlogsViewEntriesDisplayContext");
 
 		return ReflectionTestUtil.invoke(
-			blogEntriesDisplayContext, "getSearchContainer", new Class<?>[0],
-			null);
+			blogsViewEntriesDisplayContext, "getSearchContainer",
+			new Class<?>[0], null);
 	}
 
 	private ThemeDisplay _getThemeDisplay() throws Exception {
@@ -290,9 +366,6 @@ public class BlogsViewEntriesDisplayContextTest {
 
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
-
-	@Inject
-	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Inject
 	private AssetVocabularyLocalService _assetVocabularyLocalService;

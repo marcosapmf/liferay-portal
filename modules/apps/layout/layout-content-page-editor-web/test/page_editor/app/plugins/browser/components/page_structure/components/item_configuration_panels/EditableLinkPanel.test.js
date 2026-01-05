@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {State} from '@liferay/frontend-js-state-web';
 import {act, fireEvent, getByLabelText, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -268,7 +268,8 @@ describe('EditableLinkPanel', () => {
 
 		const hrefInput = getByLabelText('url');
 
-		userEvent.type(hrefInput, 'http://google.com');
+		await userEvent.clear(hrefInput);
+		await userEvent.type(hrefInput, 'http://google.com');
 
 		fireEvent.blur(hrefInput);
 
@@ -294,7 +295,8 @@ describe('EditableLinkPanel', () => {
 
 		const hrefInput = getByLabelText('url');
 
-		userEvent.type(hrefInput, 'http://google.com');
+		await userEvent.clear(hrefInput);
+		await userEvent.type(hrefInput, 'http://google.com');
 
 		fireEvent.blur(hrefInput);
 

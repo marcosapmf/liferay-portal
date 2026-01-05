@@ -8,13 +8,13 @@ package com.liferay.headless.admin.workflow.client.dto.v1_0;
 import com.liferay.headless.admin.workflow.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.workflow.client.serdes.v1_0.WorkflowTaskSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -363,6 +363,27 @@ public class WorkflowTask implements Cloneable, Serializable {
 	}
 
 	protected Long workflowInstanceId;
+
+	public WorkflowLog[] getWorkflowLogs() {
+		return workflowLogs;
+	}
+
+	public void setWorkflowLogs(WorkflowLog[] workflowLogs) {
+		this.workflowLogs = workflowLogs;
+	}
+
+	public void setWorkflowLogs(
+		UnsafeSupplier<WorkflowLog[], Exception> workflowLogsUnsafeSupplier) {
+
+		try {
+			workflowLogs = workflowLogsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected WorkflowLog[] workflowLogs;
 
 	@Override
 	public WorkflowTask clone() throws CloneNotSupportedException {

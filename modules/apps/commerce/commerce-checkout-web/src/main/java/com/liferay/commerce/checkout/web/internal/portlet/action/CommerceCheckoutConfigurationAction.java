@@ -19,15 +19,15 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Balázs Breier
  */
 @Component(
-	property = "javax.portlet.name=" + CommercePortletKeys.COMMERCE_CHECKOUT,
+	property = "jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_CHECKOUT,
 	service = ConfigurationAction.class
 )
 public class CommerceCheckoutConfigurationAction
@@ -59,10 +59,10 @@ public class CommerceCheckoutConfigurationAction
 					_commerceCheckoutStepRegistry, _configurationProvider,
 					_portal.getLiferayPortletRequest(
 						(PortletRequest)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_REQUEST)),
+							JavaConstants.JAKARTA_PORTLET_REQUEST)),
 					_portal.getLiferayPortletResponse(
 						(PortletResponse)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_RESPONSE)),
+							JavaConstants.JAKARTA_PORTLET_RESPONSE)),
 					_portal);
 
 			httpServletRequest.setAttribute(

@@ -8,13 +8,13 @@ package com.liferay.headless.admin.list.type.client.dto.v1_0;
 import com.liferay.headless.admin.list.type.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.list.type.client.serdes.v1_0.ListTypeDefinitionSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Gabriel Albuquerque
@@ -48,6 +48,27 @@ public class ListTypeDefinition implements Cloneable, Serializable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
+
+	public Creator getCreator() {
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+	}
+
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		try {
+			creator = creatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator creator;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -90,6 +111,27 @@ public class ListTypeDefinition implements Cloneable, Serializable {
 	}
 
 	protected Date dateModified;
+
+	public String getDefaultLanguageId() {
+		return defaultLanguageId;
+	}
+
+	public void setDefaultLanguageId(String defaultLanguageId) {
+		this.defaultLanguageId = defaultLanguageId;
+	}
+
+	public void setDefaultLanguageId(
+		UnsafeSupplier<String, Exception> defaultLanguageIdUnsafeSupplier) {
+
+		try {
+			defaultLanguageId = defaultLanguageIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String defaultLanguageId;
 
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
@@ -193,6 +235,58 @@ public class ListTypeDefinition implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> name_i18n;
+
+	public com.liferay.headless.admin.list.type.client.permission.Permission[]
+		getPermissions() {
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.headless.admin.list.type.client.permission.Permission[]
+			permissions) {
+
+		this.permissions = permissions;
+	}
+
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.headless.admin.list.type.client.permission.
+				Permission[],
+			 Exception> permissionsUnsafeSupplier) {
+
+		try {
+			permissions = permissionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected
+		com.liferay.headless.admin.list.type.client.permission.Permission[]
+			permissions;
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public void setStatus(
+		UnsafeSupplier<Status, Exception> statusUnsafeSupplier) {
+
+		try {
+			status = statusUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Status status;
 
 	public Boolean getSystem() {
 		return system;

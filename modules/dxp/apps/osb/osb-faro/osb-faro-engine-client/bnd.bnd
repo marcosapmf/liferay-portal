@@ -80,6 +80,8 @@ Import-Package:\
 	\
 	!io.undertow.*,\
 	\
+	!jakarta.faces.*,\
+	\
 	!javax.annotation.*,\
 	\
 	!javax.ejb.*,\
@@ -98,7 +100,15 @@ Import-Package:\
 	\
 	!javax.money.*,\
 	\
+	!javax.persistence.*,\
+	\
+	!javax.servlet.*,\
+	\
+	!javax.transaction.*,\
+	\
 	!javax.validation.*,\
+	\
+	!javax.xml.ws.*,\
 	\
 	!jdk.jfr.*,\
 	\
@@ -182,6 +192,7 @@ Import-Package:\
 	!org.springframework.messaging.rsocket.*,\
 	!org.springframework.oxm.*,\
 	!org.springframework.plugin.*,\
+	!org.springframework.orm.jpa.*,\
 	!org.springframework.r2dbc.connection.*,\
 	!org.springframework.security.authentication.*,\
 	!org.springframework.security.core.*,\
@@ -218,3 +229,4 @@ Import-Package:\
 	\
 	*
 -dsannotations-options: inherit
+-fixupmessages "Classes found in the wrong directory"; restrict:=error; is:=ignore

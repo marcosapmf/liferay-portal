@@ -138,7 +138,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 															cssClass="card-title text-truncate"
 															href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
 															label="<%= latestFileVersion.getTitle() %>"
-															title="<%= HtmlUtil.escapeAttribute(latestFileVersion.getTitle()) %>"
+															title="<%= latestFileVersion.getTitle() %>"
 														/>
 
 														<c:if test="<%= !dlViewEntriesDisplayContext.hasGuestViewPermission(fileEntry) %>">
@@ -156,7 +156,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 													</div>
 
 													<div class="card-detail">
-														<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>'>
+														<c:if test="<%= !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>">
 															<liferay-portal-workflow:status
 																showStatusLabel="<%= false %>"
 																status="<%= WorkflowConstants.STATUS_APPROVED %>"
@@ -168,7 +168,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 															status="<%= latestFileVersion.getStatus() %>"
 														/>
 
-														<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && latestFileVersion.isScheduled() %>'>
+														<c:if test="<%= latestFileVersion.isScheduled() %>">
 
 															<%
 															String displayDateString = StringPool.BLANK;
@@ -253,7 +253,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 															<clay:link
 																cssClass="text-truncate"
 																href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
-																label="<%= HtmlUtil.unescape(latestFileVersion.getTitle()) %>"
+																label="<%= latestFileVersion.getTitle() %>"
 																translated="<%= false %>"
 															/>
 
@@ -339,7 +339,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 											cssClass="table-cell-expand-smallest"
 											name="status"
 										>
-											<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>'>
+											<c:if test="<%= !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>">
 												<liferay-portal-workflow:status
 													showStatusLabel="<%= false %>"
 													status="<%= WorkflowConstants.STATUS_APPROVED %>"
@@ -351,7 +351,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 												status="<%= latestFileVersion.getStatus() %>"
 											/>
 
-											<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && latestFileVersion.isScheduled() %>'>
+											<c:if test="<%= latestFileVersion.isScheduled() %>">
 
 												<%
 												String displayDateString = StringPool.BLANK;

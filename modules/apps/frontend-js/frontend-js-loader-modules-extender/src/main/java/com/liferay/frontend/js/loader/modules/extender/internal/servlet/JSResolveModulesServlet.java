@@ -10,10 +10,16 @@ import com.liferay.frontend.js.loader.modules.extender.internal.resolution.Brows
 import com.liferay.frontend.js.loader.modules.extender.internal.resolution.BrowserModulesResolver;
 import com.liferay.frontend.js.loader.modules.extender.internal.servlet.util.JSLoaderModulesUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,11 +29,6 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,6 +51,10 @@ public class JSResolveModulesServlet extends HttpServlet {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
 		throws IOException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-48372")) {
+			return;
+		}
 
 		if (JSLoaderModulesUtil.eTagEquals(
 				httpServletRequest.getHeader(HttpHeaders.IF_NONE_MATCH))) {

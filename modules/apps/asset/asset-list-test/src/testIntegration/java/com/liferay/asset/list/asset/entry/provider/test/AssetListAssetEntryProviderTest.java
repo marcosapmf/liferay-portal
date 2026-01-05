@@ -12,6 +12,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
 import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.model.AssetListEntry;
@@ -23,12 +24,15 @@ import com.liferay.asset.publisher.util.AssetQueryRule;
 import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.data.engine.rest.test.util.DataDefinitionTestUtil;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.test.util.DLAppTestUtil;
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.info.pagination.InfoPage;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
@@ -40,6 +44,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -49,9 +54,11 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -67,7 +74,9 @@ import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -165,6 +174,11 @@ public class AssetListAssetEntryProviderTest {
 				3, _getAssetEntry(journalArticle1),
 				_getAssetEntry(journalArticle2),
 				_getAssetEntry(journalArticle3));
+			_assertAssetListEntryResultsPagination(
+				assetListEntry, segmentsEntryIds,
+				_getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
 		}
 	}
 
@@ -180,85 +194,66 @@ public class AssetListAssetEntryProviderTest {
 						"combineAssetsFromAllSegmentsDynamic", true
 					).build())) {
 
-			Company company = _companyLocalService.getCompany(
-				TestPropsValues.getCompanyId());
+			AssetVocabulary assetVocabulary = AssetTestUtil.addVocabulary(
+				_group.getGroupId());
 
-			Group globalGroup = company.getGroup();
-
-			DDMStructure ddmStructure =
-				_ddmStructureLocalService.fetchStructure(
-					globalGroup.getGroupId(),
-					_portal.getClassNameId(JournalArticle.class),
-					"BASIC-WEB-CONTENT");
+			AssetCategory assetCategory1 = AssetTestUtil.addCategory(
+				_group.getGroupId(), assetVocabulary.getVocabularyId());
+			AssetCategory assetCategory2 = AssetTestUtil.addCategory(
+				_group.getGroupId(), assetVocabulary.getVocabularyId());
 
 			AssetListEntry assetListEntry =
 				_assetListEntryLocalService.addAssetListEntry(
 					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 					_group.getGroupId(), RandomTestUtil.randomString(),
-					AssetListEntryTypeConstants.TYPE_DYNAMIC,
-					UnicodePropertiesBuilder.create(
-						true
-					).put(
-						"anyAssetType",
-						String.valueOf(
-							_portal.getClassNameId(JournalArticle.class))
-					).put(
-						"anyClassTypeJournalArticleAssetRendererFactory",
-						ddmStructure.getStructureId()
-					).buildString(),
+					AssetListEntryTypeConstants.TYPE_DYNAMIC, null,
 					_serviceContext);
 
 			User user = TestPropsValues.getUser();
 
-			AssetVocabulary globalAssetVocabulary = AssetTestUtil.addVocabulary(
-				globalGroup.getGroupId());
-
-			AssetCategory globalAssetCategory = AssetTestUtil.addCategory(
-				globalGroup.getGroupId(),
-				globalAssetVocabulary.getVocabularyId());
-
-			long[] assetCategoryIds = {globalAssetCategory.getCategoryId()};
-
-			_userLocalService.updateAsset(
-				user.getUserId(), user, assetCategoryIds, null);
-
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext();
-
-			serviceContext.setAssetCategoryIds(assetCategoryIds);
-
 			SegmentsEntry segmentsEntry1 = _addSegmentsEntryByFirstName(
 				_group.getGroupId(), user.getFirstName());
-			SegmentsEntry segmentsEntry2 = _addSegmentsEntryByCategoryId(
-				_group.getGroupId(), globalAssetCategory.getCategoryId());
-
-			JournalArticle journalArticle = _addJournalArticle(
-				assetCategoryIds, TestPropsValues.getUserId());
-
-			_addJournalArticle(new long[0], TestPropsValues.getUserId());
+			SegmentsEntry segmentsEntry2 = _addSegmentsEntryByLastName(
+				_group.getGroupId(), user.getLastName());
 
 			AssetListTestUtil.addAssetListEntrySegmentsEntryRel(
 				_group.getGroupId(), assetListEntry,
 				segmentsEntry1.getSegmentsEntryId(),
-				_getTypeSettings(user.getFirstName()));
+				_getTypeSettings(
+					new AssetQueryRule(
+						true, false, "assetCategories",
+						new String[] {
+							String.valueOf(assetCategory1.getCategoryId())
+						})));
 
 			AssetListTestUtil.addAssetListEntrySegmentsEntryRel(
 				_group.getGroupId(), assetListEntry,
 				segmentsEntry2.getSegmentsEntryId(),
-				_getTypeSettings(user.getFirstName()));
+				_getTypeSettings(
+					new AssetQueryRule(
+						true, false, "assetCategories",
+						new String[] {
+							String.valueOf(assetCategory2.getCategoryId())
+						})));
 
-			long[] segmentsEntryIds = {
-				segmentsEntry1.getSegmentsEntryId(),
-				segmentsEntry2.getSegmentsEntryId()
-			};
+			JournalArticle journalArticle1 = _addJournalArticle(
+				new long[] {assetCategory1.getCategoryId()});
+			JournalArticle journalArticle2 = _addJournalArticle(
+				new long[] {assetCategory2.getCategoryId()});
+
+			_addJournalArticle(new long[0]);
 
 			_assertAssetListEntryResults(
 				_assetListAssetEntryProvider.getAssetEntriesInfoPage(
-					assetListEntry, segmentsEntryIds,
-					new long[][] {{globalAssetCategory.getCategoryId()}}, null,
-					StringPool.BLANK, StringPool.BLANK, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS),
-				1, _getAssetEntry(journalArticle));
+					assetListEntry,
+					new long[] {
+						segmentsEntry1.getSegmentsEntryId(),
+						segmentsEntry2.getSegmentsEntryId()
+					},
+					null, null, StringPool.BLANK, StringPool.BLANK,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+				2, _getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2));
 		}
 	}
 
@@ -412,6 +407,16 @@ public class AssetListAssetEntryProviderTest {
 					infoPage.getPageItems(),
 					assetEntry ->
 						assetEntry.getEntryId() == assetEntry3.getEntryId()));
+
+			_assertAssetListEntryResultsPagination(
+				assetListEntry,
+				new long[] {
+					segmentsEntry1.getSegmentsEntryId(),
+					segmentsEntry2.getSegmentsEntryId()
+				},
+				_getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
 		}
 	}
 
@@ -476,6 +481,94 @@ public class AssetListAssetEntryProviderTest {
 					null, null, StringPool.BLANK, StringPool.BLANK,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
 				4);
+		}
+	}
+
+	@Test
+	public void testGetAssetQueryWithMostRelevantLocale() throws Exception {
+		Group group = GroupTestUtil.addGroup();
+
+		GroupTestUtil.updateDisplaySettings(
+			group.getGroupId(), Arrays.asList(LocaleUtil.US, LocaleUtil.SPAIN),
+			LocaleUtil.US);
+
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				"journal", _dataDefinitionResourceFactory, group.getGroupId(),
+				_read("data_definition.json"), TestPropsValues.getUser());
+
+		JournalTestUtil.addArticleWithXMLContent(
+			group.getGroupId(), JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
+			_read("journal_article_content.xml"),
+			dataDefinition.getDataDefinitionKey(), null, LocaleUtil.US);
+
+		Locale originalThemeDisplayLocale =
+			LocaleThreadLocal.getThemeDisplayLocale();
+
+		try {
+			long userId = TestPropsValues.getUserId();
+
+			UnicodeProperties unicodeProperties =
+				UnicodePropertiesBuilder.create(
+					true
+				).put(
+					"anyAssetType",
+					String.valueOf(_portal.getClassNameId(JournalArticle.class))
+				).put(
+					"anyClassTypeJournalArticleAssetRendererFactory",
+					dataDefinition.getId()
+				).put(
+					"classNameIds", JournalArticle.class.getName()
+				).put(
+					"classTypeIdsJournalArticleAssetRendererFactory",
+					dataDefinition.getId()
+				).put(
+					"ddmStructureDisplayFieldValue", true
+				).put(
+					"ddmStructureFieldName", "Checkbox21871963"
+				).put(
+					"ddmStructureFieldValue", true
+				).put(
+					"groupIds", String.valueOf(group.getGroupId())
+				).build();
+
+			AssetListEntry assetListEntry =
+				_assetListEntryLocalService.addAssetListEntry(
+					RandomTestUtil.randomString(), userId, group.getGroupId(),
+					RandomTestUtil.randomString(),
+					AssetListEntryTypeConstants.TYPE_DYNAMIC,
+					unicodeProperties.toString(), _serviceContext);
+
+			LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
+
+			AssetEntryQuery assetEntryQuery =
+				_assetListAssetEntryProvider.getAssetEntryQuery(
+					assetListEntry,
+					new long[] {SegmentsEntryConstants.ID_DEFAULT},
+					StringUtil.toHexString(userId));
+
+			String ddmStructureFieldName = (String)assetEntryQuery.getAttribute(
+				"ddmStructureFieldName");
+
+			Assert.assertTrue(
+				StringUtil.endsWith(ddmStructureFieldName, "en_US"));
+
+			LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.SPAIN);
+
+			assetEntryQuery = _assetListAssetEntryProvider.getAssetEntryQuery(
+				assetListEntry, new long[] {SegmentsEntryConstants.ID_DEFAULT},
+				StringUtil.toHexString(userId));
+
+			ddmStructureFieldName = (String)assetEntryQuery.getAttribute(
+				"ddmStructureFieldName");
+
+			Assert.assertTrue(
+				StringUtil.endsWith(ddmStructureFieldName, "es_ES"));
+		}
+		finally {
+			LocaleThreadLocal.setThemeDisplayLocale(originalThemeDisplayLocale);
+			GroupTestUtil.deleteGroup(group);
 		}
 	}
 
@@ -1240,6 +1333,66 @@ public class AssetListAssetEntryProviderTest {
 	}
 
 	@Test
+	public void testGetManualAssetEntriesFromDifferentGroups()
+		throws Exception {
+
+		Group group1 = GroupTestUtil.addGroup();
+		Group group2 = GroupTestUtil.addGroup();
+
+		try {
+			JournalArticle journalArticle1 = JournalTestUtil.addArticle(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry1 = _getAssetEntry(journalArticle1);
+
+			JournalArticle journalArticle2 = JournalTestUtil.addArticle(
+				group1.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry2 = _getAssetEntry(journalArticle2);
+
+			JournalArticle journalArticle3 = JournalTestUtil.addArticle(
+				group2.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				_serviceContext);
+
+			AssetEntry assetEntry3 = _getAssetEntry(journalArticle3);
+
+			AssetListEntry assetListEntry =
+				_assetListEntryLocalService.addAssetListEntry(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId(), RandomTestUtil.randomString(),
+					AssetListEntryTypeConstants.TYPE_MANUAL, _serviceContext);
+
+			_assetListEntryLocalService.addAssetEntrySelections(
+				assetListEntry.getAssetListEntryId(),
+				new long[] {
+					assetEntry1.getEntryId(), assetEntry2.getEntryId(),
+					assetEntry3.getEntryId()
+				},
+				SegmentsEntryConstants.ID_DEFAULT, _serviceContext);
+
+			_assertAssetListEntryResults(
+				_assetListAssetEntryProvider.getAssetEntriesInfoPage(
+					assetListEntry,
+					new long[] {SegmentsEntryConstants.ID_DEFAULT}, null, null,
+					StringPool.BLANK,
+					String.valueOf(TestPropsValues.getUserId()),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+				3, _getAssetEntry(journalArticle1),
+				_getAssetEntry(journalArticle2),
+				_getAssetEntry(journalArticle3));
+		}
+		finally {
+			GroupTestUtil.deleteGroup(group1);
+			GroupTestUtil.deleteGroup(group2);
+		}
+	}
+
+	@Test
 	public void testGetManualAssetEntriesMatchingAllAssetCategories()
 		throws Exception {
 
@@ -1752,14 +1905,6 @@ public class AssetListAssetEntryProviderTest {
 			groupId, CriteriaSerializer.serialize(criteria));
 	}
 
-	private SegmentsEntry _addSegmentsEntryByCategoryId(
-			long groupId, long categoryId)
-		throws Exception {
-
-		return _addSegmentsEntry(
-			groupId, String.format("(assetCategoryIds eq '%s')", categoryId));
-	}
-
 	private SegmentsEntry _addSegmentsEntryByFirstName(
 			long groupId, String firstName)
 		throws Exception {
@@ -1784,6 +1929,33 @@ public class AssetListAssetEntryProviderTest {
 
 		List<AssetEntry> assetEntries =
 			(List<AssetEntry>)infoPage.getPageItems();
+
+		for (AssetEntry expectedAssetEntry : expectedAssetEntries) {
+			Assert.assertTrue(assetEntries.contains(expectedAssetEntry));
+		}
+	}
+
+	private void _assertAssetListEntryResultsPagination(
+		AssetListEntry assetListEntry, long[] segmentsEntryIds,
+		AssetEntry... expectedAssetEntries) {
+
+		InfoPage<AssetEntry> infoPage =
+			_assetListAssetEntryProvider.getAssetEntriesInfoPage(
+				assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+				StringPool.BLANK, 0, 2);
+
+		List<AssetEntry> assetEntries =
+			(List<AssetEntry>)infoPage.getPageItems();
+
+		infoPage = _assetListAssetEntryProvider.getAssetEntriesInfoPage(
+			assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+			StringPool.BLANK, 2, 4);
+
+		assetEntries.addAll(infoPage.getPageItems());
+
+		Assert.assertEquals(
+			assetEntries.toString(), expectedAssetEntries.length,
+			assetEntries.size());
 
 		for (AssetEntry expectedAssetEntry : expectedAssetEntries) {
 			Assert.assertTrue(assetEntries.contains(expectedAssetEntry));
@@ -1942,6 +2114,11 @@ public class AssetListAssetEntryProviderTest {
 		).buildString();
 	}
 
+	private String _read(String fileName) throws Exception {
+		return new String(
+			FileUtil.getBytes(getClass(), "dependencies/" + fileName));
+	}
+
 	@Inject
 	private static ConfigurationAdmin _configurationAdmin;
 
@@ -1965,6 +2142,9 @@ public class AssetListAssetEntryProviderTest {
 	private CompanyLocalService _companyLocalService;
 
 	@Inject
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
+
+	@Inject
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@DeleteAfterTestRun
@@ -1980,6 +2160,9 @@ public class AssetListAssetEntryProviderTest {
 	private SegmentsCriteriaContributor _segmentsCriteriaContributor;
 
 	private ServiceContext _serviceContext;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
 
 	@Inject
 	private UserLocalService _userLocalService;

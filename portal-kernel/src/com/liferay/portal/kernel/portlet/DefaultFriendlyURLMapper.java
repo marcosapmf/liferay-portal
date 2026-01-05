@@ -10,17 +10,19 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.WindowState;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletMode;
-import javax.portlet.WindowState;
 
 /**
  * The default friendly URL mapper to use with friendly URL routes.
@@ -373,13 +375,23 @@ public class DefaultFriendlyURLMapper extends BaseFriendlyURLMapper {
 
 		// Copy default reserved parameters if they are not already set
 
+		Map<String, String[]> parentParameterMap =
+			FriendlyURLMapperThreadLocal.getParentParameters();
+
+		if (parentParameterMap == null) {
+			parentParameterMap = Collections.emptyMap();
+		}
+
 		for (Map.Entry<String, String> entry :
 				defaultReservedParameters.entrySet()) {
 
 			String key = entry.getKey();
 
 			if (!parameterMap.containsKey(key)) {
-				addParameter(namespace, parameterMap, key, entry.getValue());
+				addParameter(
+					namespace, parameterMap, key,
+					MapUtil.getString(
+						parentParameterMap, key, entry.getValue()));
 			}
 		}
 	}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {State} from '@liferay/frontend-js-state-web';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -34,7 +34,7 @@ describe('CollectionSelector', () => {
 		openItemSelector.mockClear();
 	});
 
-	it('uses custom item selector URL when present in the collection item context', () => {
+	it('uses custom item selector URL when present in the collection item context', async () => {
 		const CUSTOM_COLLECTION_SELECTOR_URL = 'CUSTOM_COLLECTION_SELECTOR_URL';
 		const DEFAULT_ITEM_SELECTOR_URL = 'DEFAULT_ITEM_SELECTOR_URL';
 
@@ -55,9 +55,9 @@ describe('CollectionSelector', () => {
 			</StoreAPIContextProvider>
 		);
 
-		const button = screen.getByLabelText('select-x');
+		const button = screen.getByLabelText('select-something');
 
-		userEvent.click(button);
+		await userEvent.click(button);
 
 		expect(openItemSelector).toBeCalledWith(
 			expect.objectContaining({
@@ -66,7 +66,7 @@ describe('CollectionSelector', () => {
 		);
 	});
 
-	it('uses passed item selector URL when not inside a collection item context', () => {
+	it('uses passed item selector URL when not inside a collection item context', async () => {
 		const DEFAULT_ITEM_SELECTOR_URL = 'DEFAULT_ITEM_SELECTOR_URL';
 
 		render(
@@ -79,9 +79,9 @@ describe('CollectionSelector', () => {
 			</StoreAPIContextProvider>
 		);
 
-		const button = screen.getByLabelText('select-x');
+		const button = screen.getByLabelText('select-something');
 
-		userEvent.click(button);
+		await userEvent.click(button);
 
 		expect(openItemSelector).toBeCalledWith(
 			expect.objectContaining({

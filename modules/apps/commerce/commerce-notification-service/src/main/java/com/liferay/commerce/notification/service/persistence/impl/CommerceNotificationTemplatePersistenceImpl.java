@@ -66,9 +66,11 @@ import org.osgi.service.component.annotations.Reference;
  * </p>
  *
  * @author Alessio Antonio Rendina
+ * @deprecated
  * @generated
  */
 @Component(service = CommerceNotificationTemplatePersistence.class)
+@Deprecated
 public class CommerceNotificationTemplatePersistenceImpl
 	extends BasePersistenceImpl<CommerceNotificationTemplate>
 	implements CommerceNotificationTemplatePersistence {
@@ -638,7 +640,6 @@ public class CommerceNotificationTemplatePersistenceImpl
 		"(commerceNotificationTemplate.uuid IS NULL OR commerceNotificationTemplate.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the commerce notification template where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchNotificationTemplateException</code> if it could not be found.
@@ -825,62 +826,14 @@ public class CommerceNotificationTemplatePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		uuid = Objects.toString(uuid, "");
+		CommerceNotificationTemplate commerceNotificationTemplate =
+			fetchByUUID_G(uuid, groupId);
 
-		FinderPath finderPath = _finderPathCountByUUID_G;
-
-		Object[] finderArgs = new Object[] {uuid, groupId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_COMMERCENOTIFICATIONTEMPLATE_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				queryPos.add(groupId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (commerceNotificationTemplate == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -1978,6 +1931,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 			return findByGroupId(groupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2344,6 +2307,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 	public int filterCountByGroupId(long groupId) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByGroupId(groupId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CommerceNotificationTemplate> commerceNotificationTemplates =
+				findByGroupId(groupId);
+
+			commerceNotificationTemplates = InlineSQLHelperUtil.filter(
+				commerceNotificationTemplates, groupId);
+
+			return commerceNotificationTemplates.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -2914,6 +2887,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 			return findByG_E(groupId, enabled, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_E(
+					groupId, enabled, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -3299,6 +3282,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 	public int filterCountByG_E(long groupId, boolean enabled) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_E(groupId, enabled);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CommerceNotificationTemplate> commerceNotificationTemplates =
+				findByG_E(groupId, enabled);
+
+			commerceNotificationTemplates = InlineSQLHelperUtil.filter(
+				commerceNotificationTemplates, groupId);
+
+			return commerceNotificationTemplates.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -3932,6 +3925,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 				groupId, type, enabled, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_T_E(
+					groupId, type, enabled, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		type = Objects.toString(type, "");
 
 		StringBundler sb = null;
@@ -4375,6 +4378,16 @@ public class CommerceNotificationTemplatePersistenceImpl
 			return countByG_T_E(groupId, type, enabled);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CommerceNotificationTemplate> commerceNotificationTemplates =
+				findByG_T_E(groupId, type, enabled);
+
+			commerceNotificationTemplates = InlineSQLHelperUtil.filter(
+				commerceNotificationTemplates, groupId);
+
+			return commerceNotificationTemplates.size();
+		}
+
 		type = Objects.toString(type, "");
 
 		StringBundler sb = new StringBundler(4);
@@ -4584,7 +4597,6 @@ public class CommerceNotificationTemplatePersistenceImpl
 			commerceNotificationTemplateModelImpl.getGroupId()
 		};
 
-		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByUUID_G, args,
 			commerceNotificationTemplateModelImpl);
@@ -5114,11 +5126,6 @@ public class CommerceNotificationTemplatePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",

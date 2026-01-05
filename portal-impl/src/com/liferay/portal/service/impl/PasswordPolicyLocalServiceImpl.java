@@ -29,10 +29,10 @@ import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.base.PasswordPolicyLocalServiceBaseImpl;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.List;
 
@@ -224,29 +224,14 @@ public class PasswordPolicyLocalServiceImpl
 	public PasswordPolicy getDefaultPasswordPolicy(long companyId)
 		throws PortalException {
 
-		if (LDAPSettingsUtil.isPasswordPolicyEnabled(companyId)) {
-			return null;
-		}
-
-		return passwordPolicyPersistence.findByC_DP(companyId, true);
-	}
-
-	@Override
-	public PasswordPolicy getPasswordPolicy(
-			long companyId, boolean defaultPolicy)
-		throws PortalException {
-
-		return passwordPolicyPersistence.findByC_DP(companyId, defaultPolicy);
+		return passwordPolicyPersistence.fetchByC_N(
+			companyId, PropsValues.PASSWORDS_DEFAULT_POLICY_NAME);
 	}
 
 	@Override
 	public PasswordPolicy getPasswordPolicy(
 			long companyId, long[] organizationIds)
 		throws PortalException {
-
-		if (LDAPSettingsUtil.isPasswordPolicyEnabled(companyId)) {
-			return null;
-		}
 
 		if (ArrayUtil.isEmpty(organizationIds)) {
 			return getDefaultPasswordPolicy(companyId);
@@ -274,7 +259,9 @@ public class PasswordPolicyLocalServiceImpl
 	public PasswordPolicy getPasswordPolicyByUser(User user)
 		throws PortalException {
 
-		if (LDAPSettingsUtil.isPasswordPolicyEnabled(user.getCompanyId())) {
+		if (LDAPSettingsUtil.isPasswordPolicyEnabled(
+				user.getLdapServerId(), user.getCompanyId())) {
+
 			return null;
 		}
 
@@ -282,8 +269,8 @@ public class PasswordPolicyLocalServiceImpl
 			user.getCompanyId());
 
 		if (count == 1) {
-			return passwordPolicyPersistence.findByC_DP(
-				user.getCompanyId(), true);
+			return passwordPolicyPersistence.fetchByC_N(
+				user.getCompanyId(), PropsValues.PASSWORDS_DEFAULT_POLICY_NAME);
 		}
 
 		PasswordPolicyRel passwordPolicyRel =
@@ -299,8 +286,8 @@ public class PasswordPolicyLocalServiceImpl
 			user.getUserId());
 
 		if (organizationIds.length == 0) {
-			return passwordPolicyPersistence.findByC_DP(
-				user.getCompanyId(), true);
+			return passwordPolicyPersistence.fetchByC_N(
+				user.getCompanyId(), PropsValues.PASSWORDS_DEFAULT_POLICY_NAME);
 		}
 
 		return getPasswordPolicy(user.getCompanyId(), organizationIds);

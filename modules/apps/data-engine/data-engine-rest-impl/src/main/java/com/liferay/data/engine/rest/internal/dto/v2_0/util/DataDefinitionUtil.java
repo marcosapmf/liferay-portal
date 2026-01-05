@@ -19,12 +19,24 @@ import com.liferay.dynamic.data.mapping.spi.converter.SPIDDMFormRuleConverter;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Jeyvison Nascimento
  */
 public class DataDefinitionUtil {
+
+	public static String getContentType(DDMStructure structure) {
+		DataDefinitionContentType dataDefinitionContentType =
+			DataDefinitionContentTypeRegistryUtil.getDataDefinitionContentType(
+				structure.getClassNameId());
+
+		if (dataDefinitionContentType == null) {
+			return null;
+		}
+
+		return dataDefinitionContentType.getContentType();
+	}
 
 	public static DataDefinition toDataDefinition(
 			DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
@@ -44,18 +56,7 @@ public class DataDefinitionUtil {
 						ddmForm.getAvailableLocales(),
 						LanguageUtil::getLanguageId, String.class));
 				setContentType(
-					() -> {
-						DataDefinitionContentType dataDefinitionContentType =
-							DataDefinitionContentTypeRegistryUtil.
-								getDataDefinitionContentType(
-									ddmStructure.getClassNameId());
-
-						if (dataDefinitionContentType == null) {
-							return null;
-						}
-
-						return dataDefinitionContentType.getContentType();
-					});
+					() -> DataDefinitionUtil.getContentType(ddmStructure));
 				setDataDefinitionFields(
 					() -> TransformUtil.transformToArray(
 						ddmForm.getDDMFormFields(),
@@ -79,6 +80,8 @@ public class DataDefinitionUtil {
 				setDescription(
 					() -> LocalizedValueUtil.toStringObjectMap(
 						ddmStructure.getDescriptionMap()));
+				setExternalReferenceCode(
+					ddmStructure::getExternalReferenceCode);
 				setId(ddmStructure::getStructureId);
 				setName(
 					() -> LocalizedValueUtil.toStringObjectMap(

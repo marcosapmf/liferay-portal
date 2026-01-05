@@ -88,6 +88,13 @@ public class ObjectActionLocalServiceUtil {
 			parametersUnicodeProperties, system);
 	}
 
+	public static void addOrUpdateSubscriptionObjectActions(
+			com.liferay.object.model.ObjectDefinition objectDefinition)
+		throws PortalException {
+
+		getService().addOrUpdateSubscriptionObjectActions(objectDefinition);
+	}
+
 	/**
 	 * Creates a new object action with the primary key. Does not add the object action to the database.
 	 *
@@ -248,6 +255,12 @@ public class ObjectActionLocalServiceUtil {
 	}
 
 	public static ObjectAction fetchObjectAction(
+		long objectDefinitionId, String name) {
+
+		return getService().fetchObjectAction(objectDefinitionId, name);
+	}
+
+	public static ObjectAction fetchObjectAction(
 		String externalReferenceCode, long objectDefinitionId) {
 
 		return getService().fetchObjectAction(
@@ -366,6 +379,13 @@ public class ObjectActionLocalServiceUtil {
 		return getService().getObjectActionsCount();
 	}
 
+	public static Map<Long, List<ObjectAction>> getObjectActionsMap(
+		long companyId, boolean active, String objectActionTriggerKey) {
+
+		return getService().getObjectActionsMap(
+			companyId, active, objectActionTriggerKey);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -382,6 +402,13 @@ public class ObjectActionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
+	}
+
+	public static ObjectAction updateActive(
+			ObjectAction objectAction, boolean active)
+		throws PortalException {
+
+		return getService().updateActive(objectAction, active);
 	}
 
 	/**

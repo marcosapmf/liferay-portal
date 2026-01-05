@@ -12,7 +12,6 @@ import com.liferay.exportimport.changeset.constants.ChangesetPortletKeys;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletExportController;
-import com.liferay.exportimport.internal.lar.DeletionSystemEventExporter;
 import com.liferay.exportimport.internal.lar.PermissionExporter;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
 import com.liferay.exportimport.kernel.exception.ExportImportIOException;
@@ -32,6 +31,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.lar.DeletionSystemEventExporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
@@ -343,7 +343,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 		// Data
 
 		if (exportPortletData) {
-			javax.portlet.PortletPreferences jxPortletPreferences = null;
+			jakarta.portlet.PortletPreferences jxPortletPreferences = null;
 
 			if (ExportImportThreadLocal.isInitialLayoutStagingInProcess()) {
 				if (layout != null) {
@@ -361,7 +361,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 					layout.setGroupId(liveGroup.getGroupId());
 				}
-				else {
+				else if (!portletDataHandler.isBatch()) {
 					Group liveGroup = _groupLocalService.getGroup(
 						portletDataContext.getGroupId());
 
@@ -379,7 +379,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 						PortletPreferencesFactoryUtil.getStrictPortletSetup(
 							layout, portlet.getPortletId());
 				}
-				else {
+				else if (!portletDataHandler.isBatch()) {
 					jxPortletPreferences =
 						PortletPreferencesFactoryUtil.getStrictPortletSetup(
 							portletDataContext.getCompanyId(),
@@ -527,13 +527,10 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 		Element element = parentElement.addElement("portlet");
 
+		element.addAttribute("display-name", portlet.getDisplayName());
 		element.addAttribute("portlet-id", portlet.getPortletId());
 		element.addAttribute("layout-id", String.valueOf(layoutId));
 		element.addAttribute("path", path);
-		element.addAttribute("portlet-data", String.valueOf(exportPortletData));
-
-		element.addAttribute(
-			"schema-version", portletDataHandler.getSchemaVersion());
 
 		StringBundler configurationOptionsSB = new StringBundler(6);
 
@@ -559,6 +556,14 @@ public class PortletExportControllerImpl implements PortletExportController {
 		element.addAttribute(
 			"portlet-configuration", configurationOptionsSB.toString());
 
+		element.addAttribute("portlet-data", String.valueOf(exportPortletData));
+		element.addAttribute(
+			"schema-version", portletDataHandler.getSchemaVersion());
+
+		if (portletDataContext.isValidateExistingDataHandler()) {
+			element.addAttribute("validate-existing-data-handler", "true");
+		}
+
 		try {
 			portletDataContext.addZipEntry(path, document.formattedString());
 		}
@@ -572,7 +577,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 	public void exportPortletData(
 			PortletDataContext portletDataContext, Portlet portlet,
 			Layout layout,
-			javax.portlet.PortletPreferences jxPortletPreferences,
+			jakarta.portlet.PortletPreferences jxPortletPreferences,
 			Element parentElement)
 		throws Exception {
 
@@ -675,7 +680,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 			PortletDataHandlerKeys.UPDATE_LAST_PUBLISH_DATE);
 
 		if (ExportImportThreadLocal.isStagingInProcess() &&
-			updateLastPublishDate) {
+			!portletDataHandler.isBatch() && updateLastPublishDate) {
 
 			DateRange adjustedDateRange = new DateRange(
 				portletLastPublishDate, portletDataContext.getEndDate());
@@ -772,7 +777,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 		long scopeGroupId = portletDataContext.getGroupId();
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 				layout, portletDataContext.getPortletId());
 
@@ -983,7 +988,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 			String portletId, long plid, Element parentElement)
 		throws Exception {
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			_portletPreferenceValueLocalService.getPreferences(
 				portletPreferences);
 
@@ -1001,8 +1006,25 @@ public class PortletExportControllerImpl implements PortletExportController {
 			Set<String> oldScopedPrimaryKeys = new HashSet<>(
 				portletDataContext.getScopedPrimaryKeys());
 
+			Map<String, String[]> parameterMap =
+				portletDataContext.getParameterMap();
+
+			boolean portletDataAll = MapUtil.getBoolean(
+				parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL);
+
 			try {
 				portletDataContext.clearScopedPrimaryKeys();
+
+				Set<String> scopedLayoutPrimaryKeys = new HashSet<>();
+
+				for (String oldScopedPrimaryKey : oldScopedPrimaryKeys) {
+					if (oldScopedPrimaryKey.contains(Layout.class.getName())) {
+						scopedLayoutPrimaryKeys.add(oldScopedPrimaryKey);
+					}
+				}
+
+				portletDataContext.addScopedPrimaryKeys(
+					scopedLayoutPrimaryKeys);
 
 				Element preferenceDataElement =
 					portletPreferencesElement.addElement("preference-data");
@@ -1034,6 +1056,10 @@ public class PortletExportControllerImpl implements PortletExportController {
 				}
 			}
 			finally {
+				parameterMap.put(
+					PortletDataHandlerKeys.PORTLET_DATA_ALL,
+					new String[] {String.valueOf(portletDataAll)});
+
 				portletDataContext.addScopedPrimaryKeys(oldScopedPrimaryKeys);
 				portletDataContext.setExportDataRootElement(
 					exportDataRootElement);
@@ -1123,7 +1149,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 			Element parentElement)
 		throws Exception {
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			_portletPreferenceValueLocalService.getPreferences(
 				portletPreferences);
 
@@ -1309,8 +1335,8 @@ public class PortletExportControllerImpl implements PortletExportController {
 	@Reference
 	private ConfigurationProvider _configurationProvider;
 
-	private final DeletionSystemEventExporter _deletionSystemEventExporter =
-		DeletionSystemEventExporter.getInstance();
+	@Reference
+	private DeletionSystemEventExporter _deletionSystemEventExporter;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;
@@ -1393,7 +1419,7 @@ public class PortletExportControllerImpl implements PortletExportController {
 				}
 			}
 
-			javax.portlet.PortletPreferences jxPortletPreferences = null;
+			jakarta.portlet.PortletPreferences jxPortletPreferences = null;
 
 			if (layout == null) {
 				jxPortletPreferences =

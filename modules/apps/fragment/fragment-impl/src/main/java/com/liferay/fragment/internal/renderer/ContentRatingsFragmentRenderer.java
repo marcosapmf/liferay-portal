@@ -7,6 +7,7 @@ package com.liferay.fragment.internal.renderer;
 
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -15,10 +16,10 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.ratings.taglib.servlet.taglib.RatingsTag;
 
-import java.util.Locale;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,7 +37,7 @@ public class ContentRatingsFragmentRenderer
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		return JSONUtil.put(
@@ -57,8 +58,7 @@ public class ContentRatingsFragmentRenderer
 					_language.format(
 						fragmentRendererContext.getLocale(), "x-options",
 						"content-ratings", true)
-				))
-		).toString();
+				)));
 	}
 
 	@Override

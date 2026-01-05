@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -52,7 +50,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 			OpenGraphSettingsMapping.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the description"
 	)
 	public String getDescriptionMappingFieldKey() {
@@ -101,7 +99,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionMappingFieldKeySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the alt property of the image"
 	)
 	public String getImageAltMappingFieldKey() {
@@ -147,7 +145,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _imageAltMappingFieldKeySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the image"
 	)
 	public String getImageMappingFieldKey() {
@@ -192,7 +190,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _imageMappingFieldKeySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the title"
 	)
 	public String getTitleMappingFieldKey() {
@@ -334,8 +332,8 @@ public class OpenGraphSettingsMapping implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.content.dto.v1_0.OpenGraphSettingsMapping",
 		name = "x-class-name"
 	)

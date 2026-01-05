@@ -40,10 +40,14 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
@@ -51,10 +55,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -84,7 +84,7 @@ public class SharingDLViewFileVersionDisplayContextTest {
 		_group = GroupTestUtil.addGroup();
 	}
 
-	@FeatureFlags("LPS-197477")
+	@FeatureFlag("LPS-197477")
 	@Test
 	public void testGetActionDropdownItems() throws PortalException {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
@@ -143,14 +143,13 @@ public class SharingDLViewFileVersionDisplayContextTest {
 			FileEntry fileEntry, boolean signedIn)
 		throws PortalException {
 
-		HttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
+		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+		httpServletRequest.setAttribute(
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			new MockLiferayPortletRenderRequest());
-		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+		httpServletRequest.setAttribute(
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
@@ -165,13 +164,12 @@ public class SharingDLViewFileVersionDisplayContextTest {
 		themeDisplay.setSignedIn(signedIn);
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 
-		mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, themeDisplay);
+		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
 
 		DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 			_dlDisplayContextFactory.getDLViewFileVersionDisplayContext(
 				new TestParentDLViewFileVersionDisplayContext(),
-				mockHttpServletRequest, new MockHttpServletResponse(),
+				httpServletRequest, new MockHttpServletResponse(),
 				fileEntry.getFileVersion());
 
 		return dlViewFileVersionDisplayContext.getActionDropdownItems();
@@ -214,7 +212,9 @@ public class SharingDLViewFileVersionDisplayContextTest {
 	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
-	@Inject
+	@Inject(
+		filter = "component.name=com.liferay.sharing.document.library.internal.display.context.SharingDLDisplayContextFactory"
+	)
 	private DLDisplayContextFactory _dlDisplayContextFactory;
 
 	@Inject

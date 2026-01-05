@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  */
 @Component(
 	configurationPid = "com.liferay.saml.runtime.configuration.SamlKeyStoreManagerConfiguration",
@@ -164,11 +164,7 @@ public class KeyStoreLocalEntityManager implements LocalEntityManager {
 			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(
 				CompanyThreadLocal.getCompanyId());
 
-		if (samlSpIdpConnections.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !samlSpIdpConnections.isEmpty();
 	}
 
 	@Override

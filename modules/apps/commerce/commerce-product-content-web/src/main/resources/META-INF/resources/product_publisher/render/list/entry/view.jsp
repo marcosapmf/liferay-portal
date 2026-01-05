@@ -79,10 +79,10 @@ boolean hasMultipleCPSkus = cpContentHelper.hasMultipleCPSkus(cpCatalogEntry);
 					</span>
 				</p>
 
-				<p class="card-title" title="<%= cpCatalogEntry.getName() %>">
+				<p class="card-title" title="<%= HtmlUtil.escape(cpCatalogEntry.getName()) %>">
 					<a href="<%= productDetailURL %>">
 						<span class="text-truncate-inline">
-							<span class="text-truncate"><%= cpCatalogEntry.getName() %></span>
+							<span class="text-truncate"><%= HtmlUtil.escape(cpCatalogEntry.getName()) %></span>
 						</span>
 					</a>
 				</p>
@@ -101,7 +101,7 @@ boolean hasMultipleCPSkus = cpContentHelper.hasMultipleCPSkus(cpCatalogEntry);
 
 			<div>
 				<c:choose>
-					<c:when test="<%= !hasMultipleCPSkus && (cpSku != null) %>">
+					<c:when test="<%= !hasMultipleCPSkus && (cpSku != null) && !cpContentHelper.hasRequiredCPDefinitionOptionRels(cpCatalogEntry.getCPDefinitionId()) %>">
 						<div class="mt-2">
 							<commerce-ui:add-to-cart
 								alignment="full-width"
@@ -115,7 +115,7 @@ boolean hasMultipleCPSkus = cpContentHelper.hasMultipleCPSkus(cpCatalogEntry);
 					</c:when>
 					<c:otherwise>
 						<div class="add-to-cart d-flex my-2 pt-5" id="<%= PortalUtil.generateRandomKey(request, "taglib") + StringPool.UNDERLINE %>add_to_cart">
-							<a class="btn btn-block btn-secondary" href="<%= productDetailURL %>" role="button" style="margin-top: 0.35rem;">
+							<a class="btn btn-block btn-secondary mt-2" href="<%= productDetailURL %>" role="button">
 								<liferay-ui:message key="view-all-variants" />
 							</a>
 						</div>

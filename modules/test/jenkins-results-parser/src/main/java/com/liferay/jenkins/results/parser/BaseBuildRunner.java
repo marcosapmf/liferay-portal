@@ -60,6 +60,36 @@ public abstract class BaseBuildRunner<T extends BuildData>
 		return _job;
 	}
 
+	protected String getLabelExpression(String jobName) {
+		String labelExpression = null;
+
+		try {
+			labelExpression = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label", jobName);
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(labelExpression)) {
+				labelExpression = JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.osb.jenkins.web.slave.label.minimum.ram",
+					String.valueOf(getSlaveRAMMinimum()));
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(labelExpression)) {
+				labelExpression = JenkinsResultsParserUtil.getBuildProperty(
+					"cloud.fleet.primary.label");
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(labelExpression)) {
+				labelExpression = JenkinsResultsParserUtil.getBuildProperty(
+					"master.auto.scaling.group.name");
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		return labelExpression;
+	}
+
 	protected List<JSONObject> getPreviousBuildJSONObjects() {
 		if (_previousBuildJSONObjects != null) {
 			return _previousBuildJSONObjects;
@@ -90,6 +120,10 @@ public abstract class BaseBuildRunner<T extends BuildData>
 		}
 
 		return _previousBuildJSONObjects;
+	}
+
+	protected int getSlaveRAMMinimum() {
+		return JenkinsMaster.getSlaveRAMMinimumDefault();
 	}
 
 	protected void keepJenkinsBuild(boolean keepLogs) {
@@ -132,8 +166,8 @@ public abstract class BaseBuildRunner<T extends BuildData>
 				String command = JenkinsResultsParserUtil.combine(
 					"time timeout 1200 rsync -Ipqrs --chmod=go=rx ",
 					JenkinsResultsParserUtil.getCanonicalPath(file), " ",
-					_buildData.getTopLevelMasterHostname(), "::usercontent/",
-					userContentRelativePath);
+					_buildData.getTopLevelMasterHostname(),
+					":/opt/java/jenkins/userContent/", userContentRelativePath);
 
 				JenkinsResultsParserUtil.executeBashCommands(command);
 
@@ -190,6 +224,10 @@ public abstract class BaseBuildRunner<T extends BuildData>
 
 				JSONObject envMapJSONObject =
 					injectedEnvVarsJSONObject.getJSONObject("envMap");
+
+				if (envMapJSONObject.isEmpty()) {
+					return;
+				}
 
 				JenkinsResultsParserUtil.keepJenkinsBuild(
 					false,

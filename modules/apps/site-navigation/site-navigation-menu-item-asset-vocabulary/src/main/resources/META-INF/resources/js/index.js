@@ -9,8 +9,11 @@ import ClayForm, {ClayCheckbox, ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import classNames from 'classnames';
-import {TranslationAdminSelector} from 'frontend-js-components-web';
-import {fetch, objectToFormData, openSelectionModal} from 'frontend-js-web';
+import {
+	TranslationAdminSelector,
+	openSelectionModal,
+} from 'frontend-js-components-web';
+import {fetch, objectToFormData} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -96,7 +99,7 @@ function AssetVocabularyContextualSidebar({
 
 					setSelectedVocabulary({
 						...item,
-						classPK: item.assetVocabularyId,
+						externalReferenceCode: item.externalReferenceCode,
 					});
 
 					const namespacedItem = Liferay.Util.ns(namespace, item);
@@ -312,11 +315,10 @@ function AssetVocabularyContextualSidebar({
 
 AssetVocabularyContextualSidebar.propTypes = {
 	assetVocabulary: PropTypes.shape({
-		classPK: PropTypes.string,
-		groupId: PropTypes.string,
+		externalReferenceCode: PropTypes.string,
+		scopeExternalReferenceCode: PropTypes.string,
 		title: PropTypes.string,
 		type: PropTypes.string,
-		uuid: PropTypes.string,
 	}).isRequired,
 	chooseAssetVocabularyProps: PropTypes.shape({
 		assetVocabularySelectorURL: PropTypes.string,
@@ -343,16 +345,16 @@ function FormValues({
 	return (
 		<>
 			<input
-				name={getFieldName(namespace, 'classPK')}
+				name={getFieldName(namespace, 'externalReferenceCode')}
 				readOnly
 				type="hidden"
-				value={selectedVocabulary.classPK || ''}
+				value={selectedVocabulary.externalReferenceCode || ''}
 			/>
 			<input
-				name={getFieldName(namespace, 'groupId')}
+				name={getFieldName(namespace, 'scopeExternalReferenceCode')}
 				readOnly
 				type="hidden"
-				value={selectedVocabulary.groupId || ''}
+				value={selectedVocabulary.scopeExternalReferenceCode || ''}
 			/>
 			<input
 				name={getFieldName(namespace, 'title')}
@@ -384,12 +386,6 @@ function FormValues({
 				type="hidden"
 				value={useCustomName}
 			/>
-			<input
-				name={getFieldName(namespace, 'uuid')}
-				readOnly
-				type="hidden"
-				value={selectedVocabulary.uuid || ''}
-			/>
 		</>
 	);
 }
@@ -398,11 +394,10 @@ FormValues.propTypes = {
 	localizedNames: PropTypes.object.isRequired,
 	namespace: PropTypes.string.isRequired,
 	selectedVocabulary: PropTypes.shape({
-		classPK: PropTypes.string,
-		groupId: PropTypes.string,
+		externalReferenceCode: PropTypes.string,
+		scopeExternalReferenceCode: PropTypes.string,
 		title: PropTypes.string,
 		type: PropTypes.string,
-		uuid: PropTypes.string,
 	}).isRequired,
 	showAssetVocabularyLevel: PropTypes.bool,
 	useCustomName: PropTypes.bool,

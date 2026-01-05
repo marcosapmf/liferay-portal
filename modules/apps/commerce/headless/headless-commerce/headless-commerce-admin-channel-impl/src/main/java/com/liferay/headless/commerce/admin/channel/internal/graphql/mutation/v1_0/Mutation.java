@@ -31,8 +31,6 @@ import com.liferay.headless.commerce.admin.channel.resource.v1_0.ShippingMethodR
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.TaxCategoryResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -41,15 +39,15 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -310,22 +308,70 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public Response createChannelsPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
+	public boolean deleteChannel(@GraphQLName("channelId") Long channelId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource -> channelResource.deleteChannel(channelId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteChannelBatch(
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
+			@GraphQLName("object") Object object)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_channelResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			channelResource -> channelResource.postChannelsPageExportBatch(
-				search, _filterBiFunction.apply(channelResource, filterString),
-				_sortsBiFunction.apply(channelResource, sortsString),
-				callbackURL, contentType, fieldNames));
+			channelResource -> channelResource.deleteChannelBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteChannelByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource ->
+				channelResource.deleteChannelByExternalReferenceCode(
+					externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Channel patchChannel(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("channel") Channel channel)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource -> channelResource.patchChannel(
+				channelId, channel));
+	}
+
+	@GraphQLField
+	public Channel patchChannelByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("channel") Channel channel)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource ->
+				channelResource.patchChannelByExternalReferenceCode(
+					externalReferenceCode, channel));
 	}
 
 	@GraphQLField
@@ -352,84 +398,22 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteChannelByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource ->
-				channelResource.deleteChannelByExternalReferenceCode(
-					externalReferenceCode));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Channel patchChannelByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("channel") Channel channel)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource ->
-				channelResource.patchChannelByExternalReferenceCode(
-					externalReferenceCode, channel));
-	}
-
-	@GraphQLField
-	public Channel updateChannelByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("channel") Channel channel)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource ->
-				channelResource.putChannelByExternalReferenceCode(
-					externalReferenceCode, channel));
-	}
-
-	@GraphQLField
-	public boolean deleteChannel(@GraphQLName("channelId") Long channelId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource -> channelResource.deleteChannel(channelId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteChannelBatch(
+	public Response createChannelsPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_channelResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			channelResource -> channelResource.deleteChannelBatch(
-				callbackURL, object));
-	}
-
-	@GraphQLField
-	public Channel patchChannel(
-			@GraphQLName("channelId") Long channelId,
-			@GraphQLName("channel") Channel channel)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource -> channelResource.patchChannel(
-				channelId, channel));
+			channelResource -> channelResource.postChannelsPageExportBatch(
+				search, _filterBiFunction.apply(channelResource, filterString),
+				_sortsBiFunction.apply(channelResource, sortsString),
+				callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -455,6 +439,20 @@ public class Mutation {
 			this::_populateResourceContext,
 			channelResource -> channelResource.putChannelBatch(
 				callbackURL, object));
+	}
+
+	@GraphQLField
+	public Channel updateChannelByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("channel") Channel channel)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource ->
+				channelResource.putChannelByExternalReferenceCode(
+					externalReferenceCode, channel));
 	}
 
 	@GraphQLField
@@ -533,6 +531,21 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteChannelIdDefaultCategoryDisplayPage(
+			@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_defaultCategoryDisplayPageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			defaultCategoryDisplayPageResource ->
+				defaultCategoryDisplayPageResource.
+					deleteChannelIdDefaultCategoryDisplayPage(id));
+
+		return true;
+	}
+
+	@GraphQLField
 	public DefaultCategoryDisplayPage
 			createChannelByExternalReferenceCodeDefaultCategoryDisplayPage(
 				@GraphQLName("externalReferenceCode") String
@@ -548,21 +561,6 @@ public class Mutation {
 				defaultCategoryDisplayPageResource.
 					postChannelByExternalReferenceCodeDefaultCategoryDisplayPage(
 						externalReferenceCode, defaultCategoryDisplayPage));
-	}
-
-	@GraphQLField
-	public boolean deleteChannelIdDefaultCategoryDisplayPage(
-			@GraphQLName("id") Long id)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_defaultCategoryDisplayPageResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			defaultCategoryDisplayPageResource ->
-				defaultCategoryDisplayPageResource.
-					deleteChannelIdDefaultCategoryDisplayPage(id));
-
-		return true;
 	}
 
 	@GraphQLField
@@ -600,6 +598,21 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public boolean deleteChannelIdDefaultProductDisplayPage(
+			@GraphQLName("id") Long id)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_defaultProductDisplayPageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			defaultProductDisplayPageResource ->
+				defaultProductDisplayPageResource.
+					deleteChannelIdDefaultProductDisplayPage(id));
+
+		return true;
+	}
+
+	@GraphQLField
 	public DefaultProductDisplayPage
 			createChannelByExternalReferenceCodeDefaultProductDisplayPage(
 				@GraphQLName("externalReferenceCode") String
@@ -615,21 +628,6 @@ public class Mutation {
 				defaultProductDisplayPageResource.
 					postChannelByExternalReferenceCodeDefaultProductDisplayPage(
 						externalReferenceCode, defaultProductDisplayPage));
-	}
-
-	@GraphQLField
-	public boolean deleteChannelIdDefaultProductDisplayPage(
-			@GraphQLName("id") Long id)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_defaultProductDisplayPageResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			defaultProductDisplayPageResource ->
-				defaultProductDisplayPageResource.
-					deleteChannelIdDefaultProductDisplayPage(id));
-
-		return true;
 	}
 
 	@GraphQLField
@@ -747,39 +745,6 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public ProductDisplayPage
-			createChannelByExternalReferenceCodeProductDisplayPage(
-				@GraphQLName("externalReferenceCode") String
-					externalReferenceCode,
-				@GraphQLName("productDisplayPage") ProductDisplayPage
-					productDisplayPage)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_productDisplayPageResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			productDisplayPageResource ->
-				productDisplayPageResource.
-					postChannelByExternalReferenceCodeProductDisplayPage(
-						externalReferenceCode, productDisplayPage));
-	}
-
-	@GraphQLField
-	public ProductDisplayPage createChannelIdProductDisplayPage(
-			@GraphQLName("id") Long id,
-			@GraphQLName("productDisplayPage") ProductDisplayPage
-				productDisplayPage)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_productDisplayPageResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			productDisplayPageResource ->
-				productDisplayPageResource.postChannelIdProductDisplayPage(
-					id, productDisplayPage));
-	}
-
-	@GraphQLField
 	public boolean deleteProductDisplayPage(@GraphQLName("id") Long id)
 		throws Exception {
 
@@ -818,6 +783,39 @@ public class Mutation {
 			this::_populateResourceContext,
 			productDisplayPageResource ->
 				productDisplayPageResource.patchProductDisplayPage(
+					id, productDisplayPage));
+	}
+
+	@GraphQLField
+	public ProductDisplayPage
+			createChannelByExternalReferenceCodeProductDisplayPage(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("productDisplayPage") ProductDisplayPage
+					productDisplayPage)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productDisplayPageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productDisplayPageResource ->
+				productDisplayPageResource.
+					postChannelByExternalReferenceCodeProductDisplayPage(
+						externalReferenceCode, productDisplayPage));
+	}
+
+	@GraphQLField
+	public ProductDisplayPage createChannelIdProductDisplayPage(
+			@GraphQLName("id") Long id,
+			@GraphQLName("productDisplayPage") ProductDisplayPage
+				productDisplayPage)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_productDisplayPageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			productDisplayPageResource ->
+				productDisplayPageResource.postChannelIdProductDisplayPage(
 					id, productDisplayPage));
 	}
 
@@ -1313,12 +1311,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

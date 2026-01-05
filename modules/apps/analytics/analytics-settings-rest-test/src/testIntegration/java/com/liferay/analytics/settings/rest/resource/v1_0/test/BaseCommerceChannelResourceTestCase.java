@@ -31,22 +31,27 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -85,7 +86,7 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,11 +100,15 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 		_commerceChannelResource.setContextCompany(testCompany);
 
-		CommerceChannelResource.Builder builder =
-			CommerceChannelResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		commerceChannelResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		commerceChannelResource = CommerceChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +122,32 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CommerceChannel commerceChannel1 = randomCommerceChannel();
+
+		String json = objectMapper.writeValueAsString(commerceChannel1);
+
+		CommerceChannel commerceChannel2 = CommerceChannelSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(commerceChannel1, commerceChannel2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CommerceChannel commerceChannel = randomCommerceChannel();
+
+		String json1 = objectMapper.writeValueAsString(commerceChannel);
+		String json2 = CommerceChannelSerDes.toJSON(commerceChannel);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +162,6 @@ public abstract class BaseCommerceChannelResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CommerceChannel commerceChannel1 = randomCommerceChannel();
-
-		String json = objectMapper.writeValueAsString(commerceChannel1);
-
-		CommerceChannel commerceChannel2 = CommerceChannelSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(commerceChannel1, commerceChannel2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CommerceChannel commerceChannel = randomCommerceChannel();
-
-		String json1 = objectMapper.writeValueAsString(commerceChannel);
-		String json2 = CommerceChannelSerDes.toJSON(commerceChannel);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -193,7 +189,7 @@ public abstract class BaseCommerceChannelResourceTestCase {
 	public void testGetCommerceChannelsPage() throws Exception {
 		Page<CommerceChannel> page =
 			commerceChannelResource.getCommerceChannelsPage(
-				RandomTestUtil.randomString(), Pagination.of(1, 10), null);
+				null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -228,11 +224,11 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 	@Test
 	public void testGetCommerceChannelsPageWithPagination() throws Exception {
-		Page<CommerceChannel> commerceChannelPage =
+		Page<CommerceChannel> commerceChannelsPage =
 			commerceChannelResource.getCommerceChannelsPage(null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			commerceChannelPage.getTotalCount());
+			commerceChannelsPage.getTotalCount());
 
 		CommerceChannel commerceChannel1 =
 			testGetCommerceChannelsPage_addCommerceChannel(
@@ -470,87 +466,6 @@ public abstract class BaseCommerceChannelResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testGraphQLGetCommerceChannelsPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"commerceChannels",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/commerceChannels");
-
-		long totalCount = commerceChannelsJSONObject.getLong("totalCount");
-
-		CommerceChannel commerceChannel1 =
-			testGraphQLGetCommerceChannelsPage_addCommerceChannel();
-		CommerceChannel commerceChannel2 =
-			testGraphQLGetCommerceChannelsPage_addCommerceChannel();
-
-		commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/commerceChannels");
-
-		Assert.assertEquals(
-			totalCount + 2, commerceChannelsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			commerceChannel1,
-			Arrays.asList(
-				CommerceChannelSerDes.toDTOs(
-					commerceChannelsJSONObject.getString("items"))));
-		assertContains(
-			commerceChannel2,
-			Arrays.asList(
-				CommerceChannelSerDes.toDTOs(
-					commerceChannelsJSONObject.getString("items"))));
-
-		// Using the namespace analyticsSettings_v1_0
-
-		commerceChannelsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("analyticsSettings_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/analyticsSettings_v1_0",
-			"JSONObject/commerceChannels");
-
-		Assert.assertEquals(
-			totalCount + 2, commerceChannelsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			commerceChannel1,
-			Arrays.asList(
-				CommerceChannelSerDes.toDTOs(
-					commerceChannelsJSONObject.getString("items"))));
-		assertContains(
-			commerceChannel2,
-			Arrays.asList(
-				CommerceChannelSerDes.toDTOs(
-					commerceChannelsJSONObject.getString("items"))));
-	}
-
-	protected CommerceChannel
-			testGraphQLGetCommerceChannelsPage_addCommerceChannel()
-		throws Exception {
-
-		return testGraphQLCommerceChannel_addCommerceChannel();
-	}
-
-	protected CommerceChannel testGraphQLCommerceChannel_addCommerceChannel()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
 	protected void assertContains(
 		CommerceChannel commerceChannel,
 		List<CommerceChannel> commerceChannels) {
@@ -717,6 +632,8 @@ public abstract class BaseCommerceChannelResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1151,12 +1068,12 @@ public abstract class BaseCommerceChannelResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1165,11 +1082,16 @@ public abstract class BaseCommerceChannelResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1201,6 +1123,24 @@ public abstract class BaseCommerceChannelResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1222,16 +1162,6 @@ public abstract class BaseCommerceChannelResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1329,7 +1259,9 @@ public abstract class BaseCommerceChannelResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseCommerceChannelResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

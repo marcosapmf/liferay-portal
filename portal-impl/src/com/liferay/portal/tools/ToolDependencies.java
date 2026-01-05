@@ -25,18 +25,17 @@ import com.liferay.portal.kernel.security.auth.DefaultFullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
-import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.model.DefaultModelHintsImpl;
 import com.liferay.portal.security.permission.ResourceActionsImpl;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
-import com.liferay.portal.util.DigesterImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
 import com.liferay.portal.util.InitUtil;
@@ -84,10 +83,6 @@ public class ToolDependencies {
 
 		cacheKeyGeneratorUtil.setDefaultCacheKeyGenerator(
 			new SimpleCacheKeyGenerator());
-
-		DigesterUtil digesterUtil = new DigesterUtil();
-
-		digesterUtil.setDigester(new DigesterImpl());
 
 		FastDateFormatFactoryUtil fastDateFormatFactoryUtil =
 			new FastDateFormatFactoryUtil();
@@ -375,7 +370,8 @@ public class ToolDependencies {
 				String portalCacheName, boolean mvcc)
 			throws PortalCacheException {
 
-			return getPortalCache(portalCacheName, mvcc, false);
+			return getPortalCache(
+				portalCacheName, mvcc, PropsValues.DATABASE_PARTITION_ENABLED);
 		}
 
 		@Override

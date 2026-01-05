@@ -44,8 +44,8 @@ public interface DocumentRepository extends CapabilityProvider {
 		throws PortalException;
 
 	public FileShortcut addFileShortcut(
-			long userId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException;
 
 	public Folder addFolder(
@@ -81,6 +81,12 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public void deleteFolder(long folderId) throws PortalException;
 
+	public default FileEntry fetchFileEntry(long fileEntryId)
+		throws PortalException {
+
+		return getFileEntry(fileEntryId);
+	}
+
 	public default FileEntry fetchFileEntry(long folderId, String title)
 		throws PortalException {
 
@@ -88,6 +94,18 @@ public interface DocumentRepository extends CapabilityProvider {
 	}
 
 	public default FileEntry fetchFileEntryByExternalReferenceCode(
+		String externalReferenceCode) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	public default FileShortcut fetchFileShortcut(long fileShortcutId) {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	public default FileShortcut fetchFileShortcutByExternalReferenceCode(
 		String externalReferenceCode) {
 
 		throw new UnsupportedOperationException(
@@ -162,6 +180,14 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public FileShortcut getFileShortcut(long fileShortcutId)
 		throws PortalException;
+
+	public default FileShortcut getFileShortcutByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
 
 	public FileVersion getFileVersion(long fileVersionId)
 		throws PortalException;

@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import {fetch} from 'frontend-js-web';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import AICreatorModal from '../../src/main/resources/META-INF/resources/ai_creator_modal/AICreatorModal';
 
@@ -16,12 +16,13 @@ jest.mock('frontend-js-web', () => ({
 	fetch: jest.fn(() => Promise.resolve({})),
 }));
 
-const mockedFetch = fetch as jest.MockedFunction<
-	(url: string, options: {body: FormData}) => Promise<{}>
->;
+const mockedFetch = fetch as any;
 
 async function renderModalWithRequest() {
 	render(
+
+		// @ts-ignore
+
 		<AICreatorModal
 			getCompletionURL="/sample-url"
 			portletNamespace="namespace"

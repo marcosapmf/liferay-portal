@@ -8,10 +8,12 @@ import React from 'react';
 export default React.createContext({
 	availableLanguages: {},
 	defaultLocale: 'en_US',
+	getAssetSubtypesURL: '',
 	learnMessages: {},
 	locale: 'en_US',
 	namespace: '',
 	redirectURL: '',
+	selectScopeURL: '',
 	selectSitesURL: '',
 	sxpType: '',
 });

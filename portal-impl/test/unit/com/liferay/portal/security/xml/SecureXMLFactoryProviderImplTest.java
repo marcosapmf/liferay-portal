@@ -7,15 +7,17 @@ package com.liferay.portal.security.xml;
 
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
 import java.net.ConnectException;
+
+import java.util.NoSuchElementException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,7 +39,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Tomas Polesovsky
  */
 @NewEnv(type = NewEnv.Type.JVM)
-@NewEnv.JVMArgsLine("-Dattached=true -Xmx11m")
+@NewEnv.JVMArgsLine("-Dattached=true -Xmx15m")
 public class SecureXMLFactoryProviderImplTest {
 
 	@ClassRule
@@ -136,33 +138,34 @@ public class SecureXMLFactoryProviderImplTest {
 
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xmlBombBillionLaughsXML,
-			OutOfMemoryError.class, "Billion Laughs XML attack does not work.",
-			null, "Vulnerable to Billion Laughs XML attack.");
+			NoSuchElementException.class,
+			"Billion Laughs XML attack does not work.", null,
+			"Vulnerable to Billion Laughs XML attack.");
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xmlBombQuadraticBlowupXML,
-			OutOfMemoryError.class,
+			NoSuchElementException.class,
 			"Quadratic Blowup XML attack does not work.", null,
 			"Vulnerable to Quadratic Blowup XML attack.");
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xxeGeneralEntitiesXML1,
-			ConnectException.class,
+			NoSuchElementException.class,
 			"General Entities XXE attack using SYSTEM entity does not work.",
 			null,
 			"Vulnerable to General Entities XXE attack using SYSTEM entity.");
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xxeGeneralEntitiesXML2,
-			ConnectException.class,
+			NoSuchElementException.class,
 			"General Entities XXE attack using PUBLIC entity does not work.",
 			null,
 			"Vulnerable to  General Entities XXE attack using PUBLIC entity.");
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xxeParameterEntitiesXML1,
-			ConnectException.class,
+			NoSuchElementException.class,
 			"Parameter Entities XXE using SYSTEM entity does not work.", null,
 			"Vulnerable to Parameter Entities XXE using SYSTEM entity.");
 		runXMLSecurityTest(
 			xmlInputFactoryTest, _xxeParameterEntitiesXML2,
-			ConnectException.class,
+			NoSuchElementException.class,
 			"Parameter Entities XXE attack using PUBLIC entity does not work.",
 			null,
 			"Vulnerable to Parameter Entities XXE attack using PUBLIC entity.");
@@ -191,14 +194,14 @@ public class SecureXMLFactoryProviderImplTest {
 						public void characters(
 							char[] ch, int start, int length) {
 
-							_contentLenght += length;
+							_contentLength += length;
 
-							if (_contentLenght > (1024 * 1024 * 10)) {
+							if (_contentLength > (1024 * 1024 * 10)) {
 								throw new OutOfMemoryError();
 							}
 						}
 
-						private int _contentLenght;
+						private int _contentLength;
 
 					});
 

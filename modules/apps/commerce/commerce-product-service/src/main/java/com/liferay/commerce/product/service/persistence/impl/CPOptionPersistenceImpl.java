@@ -607,6 +607,15 @@ public class CPOptionPersistenceImpl
 			return findByUuid(uuid, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByUuid(
+					uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		uuid = Objects.toString(uuid, "");
 
 		StringBundler sb = null;
@@ -995,6 +1004,14 @@ public class CPOptionPersistenceImpl
 	public int filterCountByUuid(String uuid) {
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return countByUuid(uuid);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CPOption> cpOptions = findByUuid(uuid);
+
+			cpOptions = InlineSQLHelperUtil.filter(cpOptions);
+
+			return cpOptions.size();
 		}
 
 		uuid = Objects.toString(uuid, "");
@@ -1603,6 +1620,15 @@ public class CPOptionPersistenceImpl
 			return findByUuid_C(uuid, companyId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		uuid = Objects.toString(uuid, "");
 
 		StringBundler sb = null;
@@ -2010,6 +2036,14 @@ public class CPOptionPersistenceImpl
 	public int filterCountByUuid_C(String uuid, long companyId) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByUuid_C(uuid, companyId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CPOption> cpOptions = findByUuid_C(uuid, companyId);
+
+			cpOptions = InlineSQLHelperUtil.filter(cpOptions);
+
+			return cpOptions.size();
 		}
 
 		uuid = Objects.toString(uuid, "");
@@ -2563,6 +2597,15 @@ public class CPOptionPersistenceImpl
 			return findByCompanyId(companyId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2916,6 +2959,14 @@ public class CPOptionPersistenceImpl
 			return countByCompanyId(companyId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<CPOption> cpOptions = findByCompanyId(companyId);
+
+			cpOptions = InlineSQLHelperUtil.filter(cpOptions);
+
+			return cpOptions.size();
+		}
+
 		StringBundler sb = new StringBundler(2);
 
 		sb.append(_FILTER_SQL_COUNT_CPOPTION_WHERE);
@@ -2956,7 +3007,6 @@ public class CPOptionPersistenceImpl
 		"cpOption.companyId = ?";
 
 	private FinderPath _finderPathFetchByC_K;
-	private FinderPath _finderPathCountByC_K;
 
 	/**
 	 * Returns the cp option where companyId = &#63; and key = &#63; or throws a <code>NoSuchCPOptionException</code> if it could not be found.
@@ -3141,68 +3191,13 @@ public class CPOptionPersistenceImpl
 	 */
 	@Override
 	public int countByC_K(long companyId, String key) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPOption.class)) {
+		CPOption cpOption = fetchByC_K(companyId, key);
 
-			key = Objects.toString(key, "");
-
-			FinderPath finderPath = _finderPathCountByC_K;
-
-			Object[] finderArgs = new Object[] {companyId, key};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CPOPTION_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_K_COMPANYID_2);
-
-				boolean bindKey = false;
-
-				if (key.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_K_KEY_3);
-				}
-				else {
-					bindKey = true;
-
-					sb.append(_FINDER_COLUMN_C_K_KEY_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					if (bindKey) {
-						queryPos.add(key);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpOption == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_K_COMPANYID_2 =
@@ -3214,7 +3209,6 @@ public class CPOptionPersistenceImpl
 		"(cpOption.key IS NULL OR cpOption.key = '')";
 
 	private FinderPath _finderPathFetchByERC_C;
-	private FinderPath _finderPathCountByERC_C;
 
 	/**
 	 * Returns the cp option where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchCPOptionException</code> if it could not be found.
@@ -3401,70 +3395,13 @@ public class CPOptionPersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPOption.class)) {
+		CPOption cpOption = fetchByERC_C(externalReferenceCode, companyId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_C;
-
-			Object[] finderArgs = new Object[] {
-				externalReferenceCode, companyId
-			};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_CPOPTION_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(companyId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpOption == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
@@ -3603,7 +3540,6 @@ public class CPOptionPersistenceImpl
 				cpOptionModelImpl.getCompanyId(), cpOptionModelImpl.getKey()
 			};
 
-			finderCache.putResult(_finderPathCountByC_K, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_K, args, cpOptionModelImpl);
 
@@ -3612,8 +3548,6 @@ public class CPOptionPersistenceImpl
 				cpOptionModelImpl.getCompanyId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByERC_C, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByERC_C, args, cpOptionModelImpl);
 		}
@@ -4338,6 +4272,7 @@ public class CPOptionPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4349,19 +4284,20 @@ public class CPOptionPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("commerceOptionTypeKey");
-		ctStrictColumnNames.add("facetable");
-		ctStrictColumnNames.add("required");
-		ctStrictColumnNames.add("skuContributor");
-		ctStrictColumnNames.add("key_");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("commerceOptionTypeKey");
+		ctMergeColumnNames.add("facetable");
+		ctMergeColumnNames.add("required");
+		ctMergeColumnNames.add("skuContributor");
+		ctMergeColumnNames.add("key_");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("CPOptionId"));
 		_ctColumnNamesMap.put(
@@ -4453,20 +4389,10 @@ public class CPOptionPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "key_"}, true);
 
-		_finderPathCountByC_K = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_K",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "key_"}, false);
-
 		_finderPathFetchByERC_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
-
-		_finderPathCountByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, false);
 
 		CPOptionUtil.setPersistence(this);
 	}

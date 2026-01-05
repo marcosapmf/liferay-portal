@@ -5,6 +5,7 @@
 
 import {act, fireEvent, render, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {RichText} from 'dynamic-data-mapping-form-field-type';
 import React from 'react';
 
 import {Editor} from '../../../../../../src/main/resources/META-INF/resources/js/components/rules/editor/Editor.es';
@@ -99,6 +100,8 @@ const defaultProps = (fieldsList = FIELDS) => {
 	};
 };
 
+globalThis.RichText = RichText;
+
 jest.mock('frontend-js-web', () => ({
 	...jest.requireActual('frontend-js-web'),
 	loadModule: jest.fn((fieldModule) => {
@@ -109,7 +112,6 @@ jest.mock('frontend-js-web', () => ({
 			Grid,
 			ImagePicker,
 			Numeric,
-			RichText,
 			Select,
 			Text,
 		} = jest.requireActual('dynamic-data-mapping-form-field-type');
@@ -133,7 +135,7 @@ jest.mock('frontend-js-web', () => ({
 				component = Numeric;
 				break;
 			case 'rich_text':
-				component = RichText;
+				component = globalThis.RichText;
 				break;
 			case 'select':
 				component = Select;
@@ -208,7 +210,7 @@ describe('Editor', () => {
 						await waitFor(() => getByTestId('field-operator-id'));
 
 						act(() => {
-							jest.runAllTimers();
+							jest.advanceTimersByTime(100);
 						});
 
 						const fieldOperator = getByTestId('field-operator-id');
@@ -252,7 +254,7 @@ describe('Editor', () => {
 						await waitFor(() => getByTestId('field-operator-id'));
 
 						act(() => {
-							jest.runAllTimers();
+							jest.advanceTimersByTime(100);
 						});
 
 						const fieldOperator = getByTestId('field-operator-id');
@@ -294,7 +296,7 @@ describe('Editor', () => {
 					await waitFor(() => getByTestId('field-operator-id'));
 
 					act(() => {
-						jest.runAllTimers();
+						jest.advanceTimersByTime(100);
 					});
 
 					const fieldOperator = getByTestId('field-operator-id');
@@ -346,7 +348,7 @@ describe('Editor', () => {
 						await waitFor(() => getByTestId('field-operator-id'));
 
 						act(() => {
-							jest.runAllTimers();
+							jest.advanceTimersByTime(100);
 						});
 
 						const fieldOperator = getByTestId('field-operator-id');
@@ -354,7 +356,7 @@ describe('Editor', () => {
 						fireEvent.click(fieldOperator);
 
 						act(() => {
-							jest.runAllTimers();
+							jest.advanceTimersByTime(100);
 						});
 
 						await act(async () => {
@@ -422,7 +424,7 @@ describe('Editor', () => {
 					await waitFor(() => getByTestId('field-operator-id'));
 
 					act(() => {
-						jest.runAllTimers();
+						jest.advanceTimersByTime(100);
 					});
 
 					const fieldOperator = getByTestId('field-operator-id');
@@ -430,7 +432,7 @@ describe('Editor', () => {
 					fireEvent.click(fieldOperator);
 
 					act(() => {
-						jest.runAllTimers();
+						jest.advanceTimersByTime(100);
 					});
 
 					await act(async () => {

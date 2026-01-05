@@ -9,11 +9,11 @@ import com.liferay.configuration.admin.display.ConfigurationScreen;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Jorge Ferrer
@@ -91,6 +91,11 @@ public class ConfigurationScreenConfigurationEntry
 		hash = HashUtil.hash(hash, getScope());
 
 		return hash;
+	}
+
+	@Override
+	public boolean isDeprecated() {
+		return _configurationScreen.isDeprecated();
 	}
 
 	private final ConfigurationScreen _configurationScreen;

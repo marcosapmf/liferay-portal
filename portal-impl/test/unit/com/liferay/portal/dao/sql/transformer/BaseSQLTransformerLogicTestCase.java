@@ -48,6 +48,13 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	@Test
+	public void testReplaceBitwiseOr() {
+		Assert.assertEquals(
+			getBitwiseOrTransformedSQL(),
+			sqlTransformer.transform(getBitwiseOrOriginalSQL()));
+	}
+
+	@Test
 	public void testReplaceBoolean() {
 		Assert.assertEquals(
 			getBooleanTransformedSQL(),
@@ -59,6 +66,13 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		Assert.assertEquals(
 			getCastClobTextTransformedSQL(),
 			sqlTransformer.transform(getCastClobTextOriginalSQL()));
+	}
+
+	@Test
+	public void testReplaceCastDecimal() {
+		Assert.assertEquals(
+			getCastDecimalTransformedSQL(),
+			sqlTransformer.transform(getCastDecimalOriginalSQL()));
 	}
 
 	@Test
@@ -171,6 +185,13 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		Assert.assertEquals(sql, sqlTransformer.transform(sql));
 	}
 
+	@Test
+	public void testTruncateTable() {
+		Assert.assertEquals(
+			getTruncateTableTransformedSQL(),
+			sqlTransformer.transform(getTruncateTableOriginalSQL()));
+	}
+
 	protected String getAggregationOriginalSQL() {
 		return "select foo from Foo order by AGGREGATION_STRING_MIN(foo)";
 	}
@@ -185,6 +206,14 @@ public abstract class BaseSQLTransformerLogicTestCase {
 
 	protected String getBitwiseCheckTransformedSQL() {
 		return getBitwiseCheckOriginalSQL();
+	}
+
+	protected String getBitwiseOrOriginalSQL() {
+		return "select BITOR(foo, bar) from Foo";
+	}
+
+	protected String getBitwiseOrTransformedSQL() {
+		return getBitwiseOrOriginalSQL();
 	}
 
 	protected String getBooleanOriginalSQL() {
@@ -203,6 +232,16 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	protected String getCastClobTextTransformedSQL() {
 		return "select foo || (foo || (bar || foo)), foo || (bar || foo) " +
 			"from Foo";
+	}
+
+	protected String getCastDecimalOriginalSQL() {
+		return "select CAST_DECIMAL(1 + (CAST_DECIMAL(foo) - (bar x 2))), " +
+			"CAST_DECIMAL(foo + (bar x 3)) from Foo";
+	}
+
+	protected String getCastDecimalTransformedSQL() {
+		return "select CAST(1 + (CAST(foo AS DECIMAL(31, 2)) - (bar x 2)) AS " +
+			"DECIMAL(31, 2)), CAST(foo + (bar x 3) AS DECIMAL(31, 2)) from Foo";
 	}
 
 	protected String getCastLongOriginalSQL() {
@@ -280,6 +319,14 @@ public abstract class BaseSQLTransformerLogicTestCase {
 
 	protected String getSubstrTransformedSQL() {
 		return getSubstrOriginalSQL();
+	}
+
+	protected String getTruncateTableOriginalSQL() {
+		return "truncate table Foo";
+	}
+
+	protected String getTruncateTableTransformedSQL() {
+		return "TRUNCATE TABLE Foo";
 	}
 
 	protected SQLTransformer sqlTransformer;

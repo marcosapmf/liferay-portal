@@ -8,6 +8,7 @@ package com.liferay.source.formatter.checkstyle.check;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.source.formatter.check.util.JavaSourceUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -40,6 +41,14 @@ public class MethodNamingCheck extends BaseCheck {
 			methodName.startsWith("search")) {
 
 			_checkSearchMethodName(detailAST, methodName);
+		}
+
+		String className = JavaSourceUtil.getClassName(getAbsolutePath());
+
+		if (isAttributeValue(_CHECK_SET_WITH_SAFE_CLOSEABLE_METHOD_NAMES) &&
+			!className.equals("CentralizedThreadLocal")) {
+
+			_checkSetWithSafeCloseableMethodName(detailAST, methodName);
 		}
 
 		if (AnnotationUtil.containsAnnotation(detailAST, "Override")) {
@@ -93,11 +102,11 @@ public class MethodNamingCheck extends BaseCheck {
 
 			DetailAST parentDetailAST = detailAST.getParent();
 
-			List<DetailAST> methodDefinitionDetailASTList = getAllChildTokens(
+			List<DetailAST> methodDefinitionDetailASTs = getAllChildTokens(
 				parentDetailAST, false, TokenTypes.METHOD_DEF);
 
 			for (DetailAST methodDefinitionDetailAST :
-					methodDefinitionDetailASTList) {
+					methodDefinitionDetailASTs) {
 
 				String curMethodName = getName(methodDefinitionDetailAST);
 
@@ -185,6 +194,25 @@ public class MethodNamingCheck extends BaseCheck {
 		}
 	}
 
+	private void _checkSetWithSafeCloseableMethodName(
+		DetailAST detailAST, String methodName) {
+
+		String typeName = getTypeName(
+			detailAST.findFirstToken(TokenTypes.TYPE), false);
+
+		if (!typeName.equals("SafeCloseable") ||
+			!methodName.startsWith("set")) {
+
+			return;
+		}
+
+		if (!methodName.matches("set.+WithSafeCloseable\\d*")) {
+			log(
+				detailAST, _MSG_INCORRECT_SET_SAFE_CLOSEABLE_METHOD,
+				methodName);
+		}
+	}
+
 	private void _checkTypeName(DetailAST detailAST, String methodName) {
 		String absolutePath = getAbsolutePath();
 
@@ -235,6 +263,9 @@ public class MethodNamingCheck extends BaseCheck {
 	private static final String _CHECK_SEARCH_METHOD_NAMES =
 		"checkSearchMethodNames";
 
+	private static final String _CHECK_SET_WITH_SAFE_CLOSEABLE_METHOD_NAMES =
+		"checkSetWithSafeCloseableMethodNames";
+
 	private static final String _ENFORCE_TYPE_NAMES_KEY = "enforceTypeNames";
 
 	private static final String[][] _METHOD_NAME_PREFIXS = {
@@ -246,6 +277,9 @@ public class MethodNamingCheck extends BaseCheck {
 
 	private static final String _MSG_INCORRECT_SEARCH_METHOD =
 		"search.method.incorrect";
+
+	private static final String _MSG_INCORRECT_SET_SAFE_CLOSEABLE_METHOD =
+		"set.safe.closeable.method.incorrect";
 
 	private static final String _MSG_RENAME_METHOD = "method.rename";
 

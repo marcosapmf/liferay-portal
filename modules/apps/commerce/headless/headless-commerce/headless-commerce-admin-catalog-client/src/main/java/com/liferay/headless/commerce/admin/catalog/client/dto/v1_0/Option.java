@@ -8,12 +8,12 @@ package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.OptionSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -69,16 +69,24 @@ public class Option implements Cloneable, Serializable {
 
 	protected Long catalogId;
 
-	public CustomField[] getCustomFields() {
+	public com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.commerce.admin.catalog.client.custom.field.
+			CustomField[] customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.commerce.admin.catalog.client.custom.field.
+				CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -88,7 +96,8 @@ public class Option implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected com.liferay.headless.commerce.admin.catalog.client.custom.field.
+		CustomField[] customFields;
 
 	public Map<String, String> getDescription() {
 		return description;
@@ -360,8 +369,9 @@ public class Option implements Cloneable, Serializable {
 	public static enum FieldType {
 
 		CHECKBOX("checkbox"), CHECKBOX_MULTIPLE("checkbox_multiple"),
-		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select"),
-		SELECT_DATE("select_date"), TEXT("text");
+		DATE("date"), DOCUMENT_LIBRARY("document_library"), NUMERIC("numeric"),
+		RADIO("radio"), SELECT("select"), SELECT_DATE("select_date"),
+		TEXT("text");
 
 		public static FieldType create(String value) {
 			for (FieldType fieldType : values()) {

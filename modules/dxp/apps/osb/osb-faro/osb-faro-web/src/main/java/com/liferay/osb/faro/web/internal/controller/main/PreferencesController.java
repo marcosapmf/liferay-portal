@@ -24,21 +24,22 @@ import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.annotation.security.RolesAllowed;
+
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-
-import javax.annotation.security.RolesAllowed;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -245,8 +246,8 @@ public class PreferencesController extends BaseFaroController {
 			individualSegmentId);
 	}
 
-	public void removeIndividualSegmentPreferences(
-			long groupId, String individualSegmentId, String scope)
+	public void removeIndividualSegmentsPreferences(
+			long groupId, List<String> individualSegmentIds, String scope)
 		throws Exception {
 
 		long ownerId = _getOwnerId(groupId, scope);
@@ -254,8 +255,8 @@ public class PreferencesController extends BaseFaroController {
 		WorkspacePreferences workspacePreferences = _getWorkspacePreferences(
 			groupId, ownerId);
 
-		workspacePreferences.removeIndividualSegmentPreference(
-			individualSegmentId);
+		workspacePreferences.removeIndividualSegmentsPreferences(
+			individualSegmentIds);
 
 		_faroPreferencesLocalService.savePreferences(
 			getUserId(), groupId, ownerId,

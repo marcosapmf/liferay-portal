@@ -30,7 +30,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.style.book.exception.StyleBookEntryNameException;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
-import javax.portlet.ActionRequest;
+import jakarta.portlet.ActionRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -92,6 +92,8 @@ public class AddStyleBookEntryMVCActionCommandTest {
 
 		mockLiferayPortletActionRequest.addParameter("name", name);
 
+		mockLiferayPortletActionRequest.addParameter(
+			"themeId", RandomTestUtil.randomString());
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _themeDisplay);
 

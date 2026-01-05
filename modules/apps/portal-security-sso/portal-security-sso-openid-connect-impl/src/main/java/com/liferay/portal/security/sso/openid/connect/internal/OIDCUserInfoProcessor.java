@@ -5,7 +5,20 @@
 
 package com.liferay.portal.security.sso.openid.connect.internal;
 
+import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.expando.kernel.model.ExpandoColumnConstants;
+import com.liferay.expando.kernel.model.ExpandoTable;
+import com.liferay.expando.kernel.model.ExpandoTableConstants;
+import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -19,8 +32,10 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.AddressLocalService;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
@@ -28,21 +43,32 @@ import com.liferay.portal.kernel.service.PhoneLocalService;
 import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Props;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
 import com.liferay.portal.security.sso.openid.connect.internal.exception.StrangersNotAllowedException;
+import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectProviderUtil;
+import com.liferay.portal.security.sso.openid.connect.persistence.model.OpenIdConnectUser;
+import com.liferay.portal.security.sso.openid.connect.persistence.service.OpenIdConnectUserLocalService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -53,22 +79,19 @@ import org.osgi.service.component.annotations.Reference;
 public class OIDCUserInfoProcessor {
 
 	public long processUserInfo(
-			long companyId, String issuer, ServiceContext serviceContext,
-			String userInfoJSON, String userInfoMapperJSON)
+			long companyId, String issuer, OAuthClientEntry oAuthClientEntry,
+			ServiceContext serviceContext, String tokenEndpoint,
+			String userInfoJSON)
 		throws Exception {
 
-		long userId = _getUserId(companyId, userInfoJSON, userInfoMapperJSON);
-
-		if (userId > 0) {
-			return userId;
-		}
-
-		User user = _addUser(
-			companyId, issuer, serviceContext, userInfoJSON,
-			userInfoMapperJSON);
+		User user = _addOrUpdateUser(
+			companyId, issuer, oAuthClientEntry, serviceContext, tokenEndpoint,
+			userInfoJSON);
 
 		try {
-			_addAddress(serviceContext, user, userInfoJSON, userInfoMapperJSON);
+			_addAddress(
+				serviceContext, user, userInfoJSON,
+				oAuthClientEntry.getOIDCUserInfoMapperJSON());
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -77,7 +100,9 @@ public class OIDCUserInfoProcessor {
 		}
 
 		try {
-			_addPhone(serviceContext, user, userInfoJSON, userInfoMapperJSON);
+			_addPhone(
+				serviceContext, user, userInfoJSON,
+				oAuthClientEntry.getOIDCUserInfoMapperJSON());
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -168,19 +193,215 @@ public class OIDCUserInfoProcessor {
 
 		_addressLocalService.addAddress(
 			null, user.getUserId(), Contact.class.getName(),
-			user.getContactId(), null, null,
+			user.getContactId(), (country == null) ? 0 : country.getCountryId(),
+			listType.getListTypeId(),
+			(region == null) ? 0 : region.getRegionId(),
+			_getClaimString(
+				"city", addressMapperJSONObject, userInfoJSONObject),
+			null, false, null, false,
 			(streetClaimStringParts.length > 0) ? streetClaimStringParts[0] :
 				null,
 			(streetClaimStringParts.length > 1) ? streetClaimStringParts[1] :
 				null,
 			(streetClaimStringParts.length > 2) ? streetClaimStringParts[2] :
 				null,
-			_getClaimString(
-				"city", addressMapperJSONObject, userInfoJSONObject),
+			null,
 			_getClaimString("zip", addressMapperJSONObject, userInfoJSONObject),
-			(region == null) ? 0 : region.getRegionId(),
-			(country == null) ? 0 : country.getCountryId(),
-			listType.getListTypeId(), false, false, null, serviceContext);
+			null, serviceContext);
+	}
+
+	private void _addOpenIdConnectUser(String issuer, String subject, User user)
+		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				user.getCompanyId(), "LPD-20879")) {
+
+			return;
+		}
+
+		OpenIdConnectUser openIdConnectUser =
+			_openIdConnectUserLocalService.fetchOpenIdConnectUser(
+				user.getCompanyId(), issuer, subject);
+
+		if (openIdConnectUser != null) {
+			return;
+		}
+
+		_openIdConnectUserLocalService.addOpenIdConnectUser(
+			user.getUserId(), issuer, subject);
+	}
+
+	private User _addOrUpdateUser(
+			long companyId, String issuer, OAuthClientEntry oAuthClientEntry,
+			ServiceContext serviceContext, String tokenEndpoint,
+			String userInfoJSON)
+		throws Exception {
+
+		JSONObject userInfoMapperJSONObject = _jsonFactory.createJSONObject(
+			oAuthClientEntry.getOIDCUserInfoMapperJSON());
+
+		JSONObject userMapperJSONObject =
+			userInfoMapperJSONObject.getJSONObject("user");
+
+		JSONObject userInfoJSONObject = _jsonFactory.createJSONObject(
+			userInfoJSON);
+
+		String emailAddress = _getClaimString(
+			"emailAddress", userMapperJSONObject, userInfoJSONObject);
+		String firstName = _getClaimString(
+			"firstName", userMapperJSONObject, userInfoJSONObject);
+		String lastName = _getClaimString(
+			"lastName", userMapperJSONObject, userInfoJSONObject);
+		String screenName = _getClaimString(
+			"screenName", userMapperJSONObject, userInfoJSONObject);
+		String subject = userInfoJSONObject.getString("sub");
+
+		String matcherField = _getMatcherField(
+			oAuthClientEntry.getAuthServerWellKnownURI(),
+			oAuthClientEntry.getClientId(), companyId, issuer, tokenEndpoint);
+
+		User user = _fetchUser(
+			companyId, emailAddress, issuer, matcherField, screenName, subject);
+
+		_validate(
+			companyId, emailAddress, firstName, lastName, matcherField, user);
+
+		JSONObject contactMapperJSONObject =
+			userInfoMapperJSONObject.getJSONObject("contact");
+
+		int[] birthday = _getBirthday(
+			contactMapperJSONObject, userInfoJSONObject);
+
+		long[] roleIds = _getRoleIds(
+			companyId, userInfoJSONObject,
+			userInfoMapperJSONObject.getJSONObject("users_roles"));
+
+		if (ArrayUtil.isEmpty(roleIds)) {
+			roleIds = _getRoleIds(companyId, issuer);
+		}
+
+		List<Long> userGroupIds = _getUserGroupIds(
+			companyId, oAuthClientEntry.getOAuthClientEntryId(),
+			userInfoJSONObject,
+			userInfoMapperJSONObject.getJSONObject("users_groups"));
+
+		if (user == null) {
+			user = _userLocalService.addUser(
+				0, companyId, true, null, null, Validator.isNull(screenName),
+				screenName, emailAddress,
+				_getLocale(companyId, userInfoJSONObject, userMapperJSONObject),
+				firstName,
+				_getClaimString(
+					"middleName", userMapperJSONObject, userInfoJSONObject),
+				lastName, 0, 0,
+				_isMale(contactMapperJSONObject, userInfoJSONObject),
+				birthday[1], birthday[2], birthday[0],
+				_getClaimString(
+					"jobTitle", userMapperJSONObject, userInfoJSONObject),
+				UserConstants.TYPE_REGULAR, null, null, roleIds,
+				(userGroupIds != null) ? ArrayUtil.toLongArray(userGroupIds) :
+					null,
+				false, serviceContext);
+
+			_addOpenIdConnectUser(issuer, subject, user);
+
+			ExpandoColumn expandoColumn = _getOrAddExpandoColumn(
+				User.class.getName(), companyId);
+
+			_expandoValueLocalService.addValue(
+				_classNameLocalService.getClassNameId(User.class.getName()),
+				expandoColumn.getTableId(), expandoColumn.getColumnId(),
+				user.getUserId(),
+				String.valueOf(oAuthClientEntry.getOAuthClientEntryId()));
+
+			_addOrUpdateUserCustomClaims(
+				oAuthClientEntry.getCustomClaimsJSON(), user,
+				userInfoJSONObject);
+
+			return _userLocalService.updatePasswordReset(
+				user.getUserId(), false);
+		}
+
+		Contact contact = user.getContact();
+
+		serviceContext.setUuid(user.getUuid());
+
+		_addOrUpdateUserCustomClaims(
+			oAuthClientEntry.getCustomClaimsJSON(), user, userInfoJSONObject);
+
+		user = _userLocalService.updateUser(
+			user.getUserId(), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, false, user.getReminderQueryQuestion(),
+			user.getReminderQueryAnswer(),
+			Validator.isNotNull(screenName) ? screenName : user.getScreenName(),
+			Validator.isNotNull(emailAddress) ? emailAddress :
+				user.getEmailAddress(),
+			true, null, user.getLanguageId(), user.getTimeZoneId(),
+			user.getGreeting(), user.getComments(),
+			Validator.isNotNull(firstName) ? firstName : user.getFirstName(),
+			_getClaimString(
+				"middleName", userMapperJSONObject, userInfoJSONObject),
+			Validator.isNotNull(lastName) ? lastName : user.getLastName(),
+			contact.getPrefixListTypeId(), contact.getSuffixListTypeId(),
+			_isMale(contactMapperJSONObject, userInfoJSONObject), birthday[1],
+			birthday[2], birthday[0], contact.getSmsSn(),
+			contact.getFacebookSn(), contact.getJabberSn(),
+			contact.getSkypeSn(), contact.getTwitterSn(),
+			_getClaimString(
+				"jobTitle", userMapperJSONObject, userInfoJSONObject),
+			user.getGroupIds(), user.getOrganizationIds(), user.getRoleIds(),
+			user.getUserGroupRoles(),
+			_getUserGroupIds(
+				companyId, oAuthClientEntry.getOAuthClientEntryId(), user,
+				userGroupIds),
+			serviceContext);
+
+		_addOpenIdConnectUser(issuer, subject, user);
+
+		return user;
+	}
+
+	private void _addOrUpdateUserCustomClaims(
+			String customClaimsJSON, User user, JSONObject userInfoJSONObject)
+		throws Exception {
+
+		ExpandoTable expandoTable = _expandoTableLocalService.fetchTable(
+			user.getCompanyId(),
+			_classNameLocalService.getClassNameId(User.class.getName()),
+			ExpandoTableConstants.DEFAULT_TABLE_NAME);
+
+		if (expandoTable == null) {
+			return;
+		}
+
+		JSONObject customClaimsJSONObject = _jsonFactory.createJSONObject(
+			customClaimsJSON);
+
+		for (String key : customClaimsJSONObject.keySet()) {
+			String value = userInfoJSONObject.getString(
+				customClaimsJSONObject.getString(key));
+
+			if (value.isEmpty()) {
+				continue;
+			}
+
+			ExpandoColumn expandoColumn =
+				_expandoColumnLocalService.fetchColumn(
+					expandoTable.getTableId(), key);
+
+			if (expandoColumn == null) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("No expando column found with name " + key);
+				}
+
+				continue;
+			}
+
+			_expandoValueLocalService.addValue(
+				_classNameLocalService.getClassNameId(User.class.getName()),
+				expandoColumn.getTableId(), expandoColumn.getColumnId(),
+				user.getUserId(), value);
+		}
 	}
 
 	private void _addPhone(
@@ -222,113 +443,38 @@ public class OIDCUserInfoProcessor {
 		}
 
 		_phoneLocalService.addPhone(
-			user.getUserId(), Contact.class.getName(), user.getContactId(),
-			phoneClaimString, null, listType.getListTypeId(), false,
-			serviceContext);
+			null, user.getUserId(), Contact.class.getName(),
+			user.getContactId(), phoneClaimString, null,
+			listType.getListTypeId(), false, serviceContext);
 	}
 
-	private User _addUser(
-			long companyId, String issuer, ServiceContext serviceContext,
-			String userInfoJSON, String userInfoMapperJSON)
-		throws Exception {
+	private User _fetchUser(
+		long companyId, String emailAddress, String issuer, String matcherField,
+		String screenName, String subject) {
 
-		JSONObject userInfoMapperJSONObject = _jsonFactory.createJSONObject(
-			userInfoMapperJSON);
-
-		JSONObject userMapperJSONObject =
-			userInfoMapperJSONObject.getJSONObject("user");
-
-		JSONObject userInfoJSONObject = _jsonFactory.createJSONObject(
-			userInfoJSON);
-
-		String emailAddress = _getClaimString(
-			"emailAddress", userMapperJSONObject, userInfoJSONObject);
-
-		if (Validator.isNull(emailAddress)) {
-			throw new OpenIdConnectServiceException.UserMappingException(
-				"Email address is null");
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-20879")) {
+			return _userLocalService.fetchUserByEmailAddress(
+				companyId, emailAddress);
 		}
 
-		String firstName = _getClaimString(
-			"firstName", userMapperJSONObject, userInfoJSONObject);
+		OpenIdConnectUser openIdConnectUser =
+			_openIdConnectUserLocalService.fetchOpenIdConnectUser(
+				companyId, issuer, subject);
 
-		if (Validator.isNull(firstName)) {
-			throw new OpenIdConnectServiceException.UserMappingException(
-				"First name is null");
+		if (openIdConnectUser != null) {
+			return _userLocalService.fetchUser(openIdConnectUser.getUserId());
+		}
+		else if (matcherField.equals("email")) {
+			return _userLocalService.fetchUserByEmailAddress(
+				companyId, emailAddress);
+		}
+		else if (matcherField.equals("screenName")) {
+			return _userLocalService.fetchUserByScreenName(
+				companyId, screenName);
 		}
 
-		String lastName = _getClaimString(
-			"lastName", userMapperJSONObject, userInfoJSONObject);
-
-		if (Validator.isNull(lastName)) {
-			throw new OpenIdConnectServiceException.UserMappingException(
-				"Last name is null");
-		}
-
-		_checkAddUser(companyId, emailAddress);
-
-		long creatorUserId = 0;
-		boolean autoPassword = true;
-		String password1 = null;
-		String password2 = null;
-		String screenName = _getClaimString(
-			"screenName", userMapperJSONObject, userInfoJSONObject);
-		long prefixListTypeId = 0;
-		long suffixListTypeId = 0;
-
-		JSONObject contactMapperJSONObject =
-			userInfoMapperJSONObject.getJSONObject("contact");
-
-		int[] birthday = _getBirthday(
-			contactMapperJSONObject, userInfoJSONObject);
-
-		long[] groupIds = null;
-		long[] organizationIds = null;
-
-		long[] roleIds = _getRoleIds(
-			companyId, userInfoJSONObject,
-			userInfoMapperJSONObject.getJSONObject("users_roles"));
-
-		if (ArrayUtil.isEmpty(roleIds)) {
-			roleIds = _getRoleIds(companyId, issuer);
-		}
-
-		long[] userGroupIds = null;
-		boolean sendEmail = false;
-
-		User user = _userLocalService.addUser(
-			creatorUserId, companyId, autoPassword, password1, password2,
-			Validator.isNull(screenName), screenName, emailAddress,
-			_getLocale(companyId, userInfoJSONObject, userMapperJSONObject),
-			firstName,
-			_getClaimString(
-				"middleName", userMapperJSONObject, userInfoJSONObject),
-			lastName, prefixListTypeId, suffixListTypeId,
-			_isMale(contactMapperJSONObject, userInfoJSONObject), birthday[1],
-			birthday[2], birthday[0],
-			_getClaimString(
-				"jobTitle", userMapperJSONObject, userInfoJSONObject),
-			UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
-			userGroupIds, sendEmail, serviceContext);
-
-		return _userLocalService.updatePasswordReset(user.getUserId(), false);
-	}
-
-	private void _checkAddUser(long companyId, String emailAddress)
-		throws Exception {
-
-		Company company = _companyLocalService.getCompany(companyId);
-
-		if (!company.isStrangers()) {
-			throw new StrangersNotAllowedException(companyId);
-		}
-
-		if (!company.isStrangersWithMx() &&
-			company.hasCompanyMx(emailAddress)) {
-
-			throw new UserEmailAddressException.MustNotUseCompanyMx(
-				emailAddress);
-		}
+		throw new IllegalArgumentException(
+			"Invalid matcher field " + matcherField);
 	}
 
 	private int[] _getBirthday(
@@ -432,6 +578,83 @@ public class OIDCUserInfoProcessor {
 		return company.getLocale();
 	}
 
+	private String _getMatcherField(
+			String authServerWellKnownURI, String clientId, long companyId,
+			String issuer, String tokenEndpoint)
+		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-20879")) {
+			return "email";
+		}
+
+		String filterString = null;
+
+		if (authServerWellKnownURI.equals(
+				OpenIdConnectProviderUtil.generateLocalWellKnownURI(
+					issuer, tokenEndpoint))) {
+
+			filterString = StringBundler.concat(
+				"(&(companyId=", companyId, ")(issuerURL=", issuer,
+				")(openIdConnectClientId=", clientId, ")(tokenEndpoint=",
+				tokenEndpoint, "))");
+		}
+		else {
+			filterString = StringBundler.concat(
+				"(&(companyId=", companyId, ")(discoveryEndpoint=",
+				authServerWellKnownURI, ")(openIdConnectClientId=", clientId,
+				"))");
+		}
+
+		Configuration[] configurations = _configurationAdmin.listConfigurations(
+			filterString);
+
+		if (ArrayUtil.isEmpty(configurations)) {
+			return "email";
+		}
+
+		Dictionary<String, Object> properties =
+			configurations[0].getProperties();
+
+		return GetterUtil.getString(properties.get("matcherField"));
+	}
+
+	private ExpandoColumn _getOrAddExpandoColumn(
+			String className, long companyId)
+		throws Exception {
+
+		ExpandoTable expandoTable = _expandoTableLocalService.fetchTable(
+			companyId, _classNameLocalService.getClassNameId(className),
+			ExpandoTableConstants.DEFAULT_TABLE_NAME);
+
+		if (expandoTable == null) {
+			expandoTable = _expandoTableLocalService.addTable(
+				companyId, className, ExpandoTableConstants.DEFAULT_TABLE_NAME);
+		}
+
+		ExpandoColumn expandoColumn = _expandoColumnLocalService.fetchColumn(
+			expandoTable.getTableId(), "idpId");
+
+		if (expandoColumn != null) {
+			return expandoColumn;
+		}
+
+		expandoColumn = _expandoColumnLocalService.addColumn(
+			expandoTable.getTableId(), "idpId", ExpandoColumnConstants.LONG);
+
+		UnicodeProperties unicodeProperties =
+			expandoColumn.getTypeSettingsProperties();
+
+		unicodeProperties.setProperty(
+			ExpandoColumnConstants.INDEX_TYPE,
+			String.valueOf(ExpandoColumnConstants.INDEX_TYPE_KEYWORD));
+		unicodeProperties.setProperty(
+			ExpandoColumnConstants.PROPERTY_HIDDEN, Boolean.TRUE.toString());
+
+		expandoColumn.setTypeSettingsProperties(unicodeProperties);
+
+		return _expandoColumnLocalService.updateExpandoColumn(expandoColumn);
+	}
+
 	private long[] _getRoleIds(
 		long companyId, JSONObject userInfoJSONObject,
 		JSONObject usersRolesMapperJSONObject) {
@@ -477,13 +700,13 @@ public class OIDCUserInfoProcessor {
 		if (Validator.isNull(issuer) ||
 			!Objects.equals(
 				issuer,
-				_props.get(
+				PropsUtil.get(
 					"open.id.connect.user.info.processor.impl.issuer"))) {
 
 			return null;
 		}
 
-		String roleName = _props.get(
+		String roleName = PropsUtil.get(
 			"open.id.connect.user.info.processor.impl.regular.role");
 
 		if (Validator.isNull(roleName)) {
@@ -507,29 +730,97 @@ public class OIDCUserInfoProcessor {
 		return null;
 	}
 
-	private long _getUserId(
-			long companyId, String userInfoJSON, String userInfoMapperJSON)
+	private List<Long> _getUserGroupIds(
+			long companyId, long oAuthClientEntryId,
+			JSONObject userInfoJSONObject,
+			JSONObject usersGroupsMapperJSONObject)
 		throws Exception {
 
-		JSONObject userInfoMapperJSONObject = _jsonFactory.createJSONObject(
-			userInfoMapperJSON);
+		if ((usersGroupsMapperJSONObject == null) ||
+			(usersGroupsMapperJSONObject.length() < 1)) {
 
-		JSONObject userMapperJSONObject =
-			userInfoMapperJSONObject.getJSONObject("user");
-
-		JSONObject userInfoJSONObject = _jsonFactory.createJSONObject(
-			userInfoJSON);
-
-		User user = _userLocalService.fetchUserByEmailAddress(
-			companyId,
-			_getClaimString(
-				"emailAddress", userMapperJSONObject, userInfoJSONObject));
-
-		if (user != null) {
-			return user.getUserId();
+			return null;
 		}
 
-		return 0;
+		JSONArray userGroupsJSONArray = _getClaimJSONArray(
+			"groups", usersGroupsMapperJSONObject, userInfoJSONObject);
+
+		if (userGroupsJSONArray == null) {
+			return Collections.emptyList();
+		}
+
+		List<Long> userGroupIds = new ArrayList<>();
+
+		ExpandoColumn expandoColumn = _getOrAddExpandoColumn(
+			UserGroup.class.getName(), companyId);
+
+		for (int i = 0; i < userGroupsJSONArray.length(); ++i) {
+			UserGroup userGroup = _userGroupLocalService.fetchUserGroup(
+				companyId, userGroupsJSONArray.getString(i));
+
+			if (userGroup == null) {
+				try {
+					userGroup = _userGroupLocalService.addUserGroup(
+						StringPool.BLANK,
+						_userLocalService.getGuestUserId(companyId), companyId,
+						userGroupsJSONArray.getString(i), StringPool.BLANK,
+						null);
+
+					_expandoValueLocalService.addValue(
+						_classNameLocalService.getClassNameId(UserGroup.class),
+						expandoColumn.getTableId(), expandoColumn.getColumnId(),
+						userGroup.getUserGroupId(),
+						String.valueOf(oAuthClientEntryId));
+				}
+				catch (PortalException portalException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to create User Group", portalException);
+					}
+
+					continue;
+				}
+			}
+
+			userGroupIds.add(userGroup.getUserGroupId());
+		}
+
+		return userGroupIds;
+	}
+
+	private long[] _getUserGroupIds(
+			long companyId, long oAuthClientEntryId, User user,
+			List<Long> userGroupIds)
+		throws Exception {
+
+		if (userGroupIds == null) {
+			userGroupIds = new ArrayList<>();
+		}
+
+		ExpandoColumn expandoColumn = _getOrAddExpandoColumn(
+			UserGroup.class.getName(), companyId);
+
+		for (UserGroup userGroup :
+				_userGroupLocalService.getUserUserGroups(user.getUserId())) {
+
+			if (userGroupIds.contains(userGroup.getUserGroupId())) {
+				continue;
+			}
+
+			ExpandoValue expandoValue = _expandoValueLocalService.getValue(
+				expandoColumn.getTableId(), expandoColumn.getColumnId(),
+				userGroup.getUserGroupId());
+
+			if ((expandoValue != null) &&
+				(expandoValue.getLong() == oAuthClientEntryId)) {
+
+				continue;
+			}
+
+			userGroupIds.add(userGroup.getUserGroupId());
+		}
+
+		return ArrayUtil.toLongArray(userGroupIds);
 	}
 
 	private boolean _isMale(
@@ -545,6 +836,48 @@ public class OIDCUserInfoProcessor {
 		return false;
 	}
 
+	private void _validate(
+			long companyId, String emailAddress, String firstName,
+			String lastName, String matcherField, User user)
+		throws Exception {
+
+		if (Validator.isNull(emailAddress) &&
+			(matcherField.equals("email") ||
+			 PrefsPropsUtil.getBoolean(
+				 companyId, PropsKeys.USERS_EMAIL_ADDRESS_REQUIRED))) {
+
+			throw new OpenIdConnectServiceException.UserMappingException(
+				"Email address is null");
+		}
+
+		if (user != null) {
+			return;
+		}
+
+		if (Validator.isNull(firstName)) {
+			throw new OpenIdConnectServiceException.UserMappingException(
+				"First name is null");
+		}
+
+		if (Validator.isNull(lastName)) {
+			throw new OpenIdConnectServiceException.UserMappingException(
+				"Last name is null");
+		}
+
+		Company company = _companyLocalService.getCompany(companyId);
+
+		if (!company.isStrangers()) {
+			throw new StrangersNotAllowedException(companyId);
+		}
+
+		if (!company.isStrangersWithMx() &&
+			company.hasCompanyMx(emailAddress)) {
+
+			throw new UserEmailAddressException.MustNotUseCompanyMx(
+				emailAddress);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		OIDCUserInfoProcessor.class);
 
@@ -552,10 +885,25 @@ public class OIDCUserInfoProcessor {
 	private AddressLocalService _addressLocalService;
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
+	private ConfigurationAdmin _configurationAdmin;
+
+	@Reference
 	private CountryLocalService _countryLocalService;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private ExpandoValueLocalService _expandoValueLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -564,16 +912,19 @@ public class OIDCUserInfoProcessor {
 	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
-	private PhoneLocalService _phoneLocalService;
+	private OpenIdConnectUserLocalService _openIdConnectUserLocalService;
 
 	@Reference
-	private Props _props;
+	private PhoneLocalService _phoneLocalService;
 
 	@Reference
 	private RegionLocalService _regionLocalService;
 
 	@Reference
 	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private UserGroupLocalService _userGroupLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

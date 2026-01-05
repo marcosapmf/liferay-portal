@@ -10,13 +10,15 @@ import {FieldBase} from '../FieldBase';
 
 type MultiSelectProps<T> = {
 	className?: string;
+	disabledClearAll?: boolean;
+	errorMessage?: string;
 	helpMessage?: string;
 	hideFeedback?: boolean;
 	inputName: string;
 	label?: string;
 	localized?: boolean;
 	multiselectKey: string;
-	onChange: (values: T) => void;
+	onChange?: (values: T) => void;
 	onItemsChange: (values: T) => void;
 	placeholder?: string;
 	required?: boolean;
@@ -28,6 +30,8 @@ type MultiSelectProps<T> = {
 
 const MultiSelect: React.FC<MultiSelectProps<any>> = ({
 	className,
+	disabledClearAll = false,
+	errorMessage,
 	helpMessage,
 	hideFeedback,
 	inputName,
@@ -36,7 +40,6 @@ const MultiSelect: React.FC<MultiSelectProps<any>> = ({
 	multiselectKey,
 	onChange,
 	onItemsChange,
-	placeholder,
 	required,
 	selectedItems,
 	sourceItems,
@@ -46,6 +49,7 @@ const MultiSelect: React.FC<MultiSelectProps<any>> = ({
 	return (
 		<FieldBase
 			className={className}
+			errorMessage={errorMessage}
 			helpMessage={helpMessage}
 			hideFeedback={hideFeedback}
 			label={label}
@@ -54,7 +58,7 @@ const MultiSelect: React.FC<MultiSelectProps<any>> = ({
 			tooltip={tooltip}
 		>
 			<ClayMultiSelect
-				{...{placeholder}}
+				disabledClearAll={disabledClearAll}
 				inputName={inputName}
 				items={selectedItems}
 				key={multiselectKey}

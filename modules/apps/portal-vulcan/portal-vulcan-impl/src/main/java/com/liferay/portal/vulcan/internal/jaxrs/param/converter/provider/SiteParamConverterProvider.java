@@ -11,19 +11,21 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.vulcan.util.GroupUtil;
 
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverterProvider;
+import jakarta.ws.rs.ext.Provider;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.Provider;
+import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.cxf.jaxrs.utils.AnnotationUtils;
 
 /**
@@ -46,27 +48,17 @@ public class SiteParamConverterProvider
 		MultivaluedMap<String, String> multivaluedMap =
 			_uriInfo.getPathParameters();
 
-		Long siteId = null;
+		Long groupId = _getGroupId(multivaluedMap, parameter);
 
-		if (multivaluedMap.containsKey("assetLibraryId")) {
-			siteId = getDepotGroupId(
-				multivaluedMap.getFirst("assetLibraryId"),
-				_company.getCompanyId());
-		}
-		else {
-			siteId = getGroupId(
-				_company.getCompanyId(), multivaluedMap.getFirst("siteId"));
-		}
-
-		if (siteId != null) {
-			return siteId;
+		if (groupId != null) {
+			return groupId;
 		}
 
 		StringBundler sb = new StringBundler(4);
 
 		sb.append("Unable to get a valid ");
 
-		if (multivaluedMap.containsKey("assetLibraryId")) {
+		if (_contains("assetLibraryId", multivaluedMap, parameter)) {
 			sb.append("asset library");
 		}
 		else {
@@ -113,10 +105,37 @@ public class SiteParamConverterProvider
 		return String.valueOf(parameter);
 	}
 
+	private boolean _contains(
+		String key, MultivaluedMap<String, String> multivaluedMap,
+		String value) {
+
+		List<String> values = multivaluedMap.get(key);
+
+		if ((values != null) && values.contains(value)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private Long _getGroupId(
+		MultivaluedMap<String, String> multivaluedMap, String parameterValue) {
+
+		if (_contains("assetLibraryId", multivaluedMap, parameterValue)) {
+			return getDepotGroupId(parameterValue, _company.getCompanyId());
+		}
+
+		if (_contains("siteId", multivaluedMap, parameterValue)) {
+			return getGroupId(_company.getCompanyId(), parameterValue);
+		}
+
+		return null;
+	}
+
 	private boolean _hasSiteIdAnnotation(Annotation[] annotations) {
 		for (Annotation annotation : annotations) {
 			if ((annotation.annotationType() == PathParam.class) &&
-				StringUtils.equalsAny(
+				Strings.CI.equalsAny(
 					AnnotationUtils.getAnnotationValue(annotation),
 					"assetLibraryId", "siteId")) {
 

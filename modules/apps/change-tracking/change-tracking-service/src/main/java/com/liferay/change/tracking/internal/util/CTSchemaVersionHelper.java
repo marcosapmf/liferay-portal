@@ -31,6 +31,12 @@ import org.osgi.service.component.annotations.Reference;
 public class CTSchemaVersionHelper {
 
 	public void expireCTCollection(CTCollection ctCollection) {
+		if (_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
+				ctCollection.getSchemaVersionId())) {
+
+			return;
+		}
+
 		try {
 			Map<Long, List<ConflictInfo>> conflictMap =
 				_ctCollectionLocalService.checkConflicts(ctCollection);
@@ -86,7 +92,11 @@ public class CTSchemaVersionHelper {
 						CTCollectionTable.INSTANCE
 					).where(
 						CTCollectionTable.INSTANCE.status.eq(
-							WorkflowConstants.STATUS_DRAFT)
+							WorkflowConstants.STATUS_DRAFT
+						).or(
+							CTCollectionTable.INSTANCE.status.eq(
+								WorkflowConstants.STATUS_INCOMPLETE)
+						)
 					))) {
 
 			expireCTCollection(ctCollection);

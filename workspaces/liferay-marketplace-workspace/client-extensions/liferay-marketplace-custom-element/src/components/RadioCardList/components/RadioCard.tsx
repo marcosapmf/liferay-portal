@@ -4,14 +4,13 @@
  */
 
 import {ClayRadio} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClaySticker from '@clayui/sticker';
 import classNames from 'classnames';
+import {ReactNode} from 'react';
 
 import './RadioCard.scss';
-
-import ClayIcon from '@clayui/icon';
-import {ReactNode} from 'react';
 
 interface RadioCardProps {
 	activeRadio: boolean | undefined;
@@ -95,7 +94,7 @@ const NewRadioCard = ({
 						)}
 
 						<div
-							className={classNames('mt-2  mb-0', {
+							className={classNames({
 								'col-10': !fullTitle,
 								'col-12 pr-0': fullTitle,
 								'pl-0': !leftRadio,

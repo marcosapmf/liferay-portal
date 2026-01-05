@@ -14,8 +14,10 @@ import com.liferay.portal.kernel.security.auth.http.HttpAuthorizationHeader;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.impl.UserImpl;
@@ -23,13 +25,12 @@ import com.liferay.portal.security.access.control.AccessControlImpl;
 import com.liferay.portal.security.auth.http.HttpAuthManagerUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PortalImpl;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
-
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -89,6 +90,23 @@ public class BaseAuthFilterTest {
 	@After
 	public void tearDown() {
 		AccessControlUtil.setAccessControlContext(null);
+	}
+
+	@Test
+	public void testDigestModified() {
+		_mockFilterConfig.addInitParameter("digest_auth", "true");
+
+		User user = _setUpUser(WorkflowConstants.STATUS_APPROVED);
+
+		Assert.assertFalse(
+			_testHttpSessionIsInvalid(
+				HttpAuthorizationHeader.SCHEME_DIGEST, user));
+
+		user.setDigest(RandomTestUtil.randomString());
+
+		Assert.assertTrue(
+			_testHttpSessionIsInvalid(
+				HttpAuthorizationHeader.SCHEME_DIGEST, user));
 	}
 
 	@Test
@@ -295,9 +313,15 @@ public class BaseAuthFilterTest {
 	private User _setUpUser(int status) {
 		User user = new UserImpl();
 
+		String digest = RandomTestUtil.randomString();
+
+		user.setDigest(digest);
+
 		user.setStatus(status);
 
 		_mockHttpSession.setAttribute(WebKeys.USER, user);
+
+		_mockHttpSession.setAttribute(WebKeys.USER_DIGEST, digest);
 
 		_mockHttpServletRequest.setSession(_mockHttpSession);
 

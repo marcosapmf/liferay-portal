@@ -26,6 +26,7 @@ import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceOrderShippingMethodException;
 import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
+import com.liferay.commerce.helper.CommerceShippingHelper;
 import com.liferay.commerce.internal.order.status.CompletedCommerceOrderStatusImpl;
 import com.liferay.commerce.internal.order.status.PartiallyShippedCommerceOrderStatusImpl;
 import com.liferay.commerce.internal.order.status.ShippedCommerceOrderStatusImpl;
@@ -51,7 +52,6 @@ import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.subscription.CommerceSubscriptionEntryHelperUtil;
-import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -71,6 +71,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -398,8 +399,9 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		long commerceOrderId = commerceOrder.getCommerceOrderId();
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			commerceOrder.getCompanyId(), commerceOrder.getGroupId(), userId,
-			commerceOrderId, commerceOrder.getCommerceAccountId());
+			commerceOrder.getCommerceAccountId(), commerceOrder.getGroupId(),
+			commerceOrder.getCommerceCurrencyCode(), commerceOrderId,
+			commerceOrder.getCompanyId());
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
@@ -439,6 +441,16 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 
 			commerceOrder.setShippingAddressId(
 				commerceAddress.getCommerceAddressId());
+		}
+
+		if (BigDecimalUtil.eq(commerceOrder.getTotal(), BigDecimal.ZERO)) {
+			commerceOrder = _commerceOrderLocalService.updatePaymentStatus(
+				userId, commerceOrder.getCommerceOrderId(),
+				CommerceOrderPaymentConstants.STATUS_NOT_REQUIRED);
+
+			return transitionCommerceOrder(
+				commerceOrder, CommerceOrderConstants.ORDER_STATUS_PENDING,
+				userId, true);
 		}
 
 		CommercePaymentMethod commercePaymentMethod =
@@ -489,7 +501,7 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		dtoConverterContext.setAttribute("secure", Boolean.FALSE);
 
 		JSONObject commerceOrderJSONObject = _jsonFactory.createJSONObject(
-			String.valueOf(
+			_jsonFactory.looseSerializeDeep(
 				commerceOrderDTOConverter.toDTO(dtoConverterContext)));
 
 		JSONArray commerceOrderItemsJSONArray = _jsonFactory.createJSONArray();

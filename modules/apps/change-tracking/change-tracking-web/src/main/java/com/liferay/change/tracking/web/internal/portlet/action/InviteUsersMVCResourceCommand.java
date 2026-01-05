@@ -14,11 +14,11 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
@@ -55,19 +55,19 @@ import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,7 +77,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/invite_users"
 	},
 	service = MVCResourceCommand.class
@@ -180,11 +180,12 @@ public class InviteUsersMVCResourceCommand
 			}
 
 			group = _groupLocalService.addGroup(
-				userId, GroupConstants.DEFAULT_PARENT_GROUP_ID, className,
-				classPK, GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, null,
-				GroupConstants.TYPE_SITE_PRIVATE, false,
+				StringPool.BLANK, userId,
+				GroupConstants.DEFAULT_PARENT_GROUP_ID, className, classPK,
+				GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, null,
+				GroupConstants.TYPE_SITE_PRIVATE, null, false,
 				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false,
-				true, null);
+				false, true, null);
 		}
 
 		long[] publicationsUserRoleUserIds = ParamUtil.getLongValues(
@@ -240,9 +241,7 @@ public class InviteUsersMVCResourceCommand
 				_sendNotificationEvent(
 					ctCollectionId, userIds[i], roleValues[i], themeDisplay);
 
-				if (FeatureFlagManagerUtil.isEnabled("LPD-11212")) {
-					_sendEmail(ctCollectionId, userIds[i], themeDisplay);
-				}
+				_sendEmail(ctCollectionId, userIds[i], themeDisplay);
 			}
 		}
 
@@ -257,8 +256,8 @@ public class InviteUsersMVCResourceCommand
 	private String[] _getModelResourceActions(int role) {
 		if (role == PublicationRoleConstants.ROLE_ADMIN) {
 			return new String[] {
-				ActionKeys.PERMISSIONS, ActionKeys.UPDATE, ActionKeys.VIEW,
-				CTActionKeys.INVITE_USERS, CTActionKeys.PUBLISH
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE,
+				ActionKeys.VIEW, CTActionKeys.INVITE_USERS, CTActionKeys.PUBLISH
 			};
 		}
 		else if (role == PublicationRoleConstants.ROLE_EDITOR) {

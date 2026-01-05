@@ -3,12 +3,16 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		HeadlessSite.addSite(siteName = "Test Site Name");
 
@@ -357,7 +361,7 @@ definition {
 			webContentText = "Asset Library Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.openToEditWCInSite(
 			groupName = "Test Site Name",
@@ -368,7 +372,7 @@ definition {
 
 		WebContent.addFeaturedImageFromURL(imageSourceURL = "https://dummyimage.com/600x400/000/fff.jpg");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		Navigator.openSpecificURL(url = "${portalURL}/c/portal/logout");
 
@@ -605,7 +609,7 @@ definition {
 			webContentText = "Asset Library Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		DisplayPageTemplate.selectDisplayPageTemplateForAsset(
 			assetType = "Web Content",
@@ -663,9 +667,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -675,6 +678,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -752,9 +760,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -764,6 +771,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -849,9 +861,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -861,6 +872,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -883,7 +899,7 @@ definition {
 			webContentText = "WC WebContent Content",
 			webContentTitle = "WC Webcontent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page Name",
@@ -941,9 +957,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -953,6 +968,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -975,7 +995,7 @@ definition {
 			webContentText = "WC WebContent Content",
 			webContentTitle = "WC Webcontent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page Name",
@@ -1033,9 +1053,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -1045,6 +1064,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -1130,9 +1154,8 @@ definition {
 		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			composition = "true",
-			fragmentName = "Banner Center");
+			collectionName = "Basic Components",
+			fragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Heading",
@@ -1142,6 +1165,11 @@ definition {
 			key_fieldLabel = "Field",
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Title");
+
+		PageEditor.addFragment(
+			collectionName = "Basic Components",
+			fragmentName = "Paragraph",
+			targetFragmentName = "Heading");
 
 		PageEditorMapping.gotoEditableFieldMapping(
 			fragmentName = "Paragraph",
@@ -1164,7 +1192,7 @@ definition {
 			webContentText = "WC WebContent Content",
 			webContentTitle = "WC Webcontent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Navigator.gotoSitePage(
 			pageName = "Test Page Name",

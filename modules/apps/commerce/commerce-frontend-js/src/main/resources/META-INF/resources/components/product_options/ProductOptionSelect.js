@@ -7,7 +7,7 @@ import {Option, Picker} from '@clayui/core';
 import ClayForm, {ClaySelect} from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import {useLiferayState} from '@liferay/frontend-js-state-web';
+import {useLiferayState} from '@liferay/frontend-js-state-web/react';
 import classnames from 'classnames';
 import React, {useCallback, useEffect, useState} from 'react';
 
@@ -19,11 +19,11 @@ import {
 } from '../../utilities/eventsDefinitions';
 import Asterisk from './Asterisk';
 import {
+	INITIAL_SKU_OPTIONS_ATOM_STATE,
 	getInitialProductOptionValue,
 	getName,
 	getProductOptionName,
 	getSkuOptionsErrors,
-	initialSkuOptionsAtomState,
 	isRequired,
 } from './utils';
 
@@ -148,7 +148,7 @@ const ProductOptionSelect = ({
 						miniCartErrors: [],
 						miniCartSkuOptions: [],
 					})
-				: setSkuOptionsAtomState(initialSkuOptionsAtomState);
+				: setSkuOptionsAtomState(INITIAL_SKU_OPTIONS_ATOM_STATE);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -199,8 +199,6 @@ const ProductOptionSelect = ({
 				(skuOption) => skuOption.skuOptionKey !== productOption.key
 			);
 
-			setHasErrors(optionIsRequired);
-
 			setSkuOptionsAtomState({
 				...skuOptionsAtomState,
 				[errorsKey]: getSkuOptionsErrors(
@@ -221,6 +219,12 @@ const ProductOptionSelect = ({
 					skuOptions: currentSkuOptions,
 				})
 			);
+
+			if (optionIsRequired) {
+				setHasErrors(optionIsRequired);
+
+				return;
+			}
 		}
 		else {
 			setSelectedProductOptionValue({
@@ -281,6 +285,9 @@ const ProductOptionSelect = ({
 			channelId,
 			productId,
 			accountId,
+			Liferay.CommerceContext
+				? Liferay.CommerceContext.currency.currencyCode
+				: '',
 			minQuantity,
 			null,
 			currentSkuOptions
@@ -371,6 +378,9 @@ const ProductOptionSelect = ({
 				productId,
 				productOption.id,
 				accountId,
+				Liferay.CommerceContext
+					? Liferay.CommerceContext.currency.currencyCode
+					: '',
 				productOptionValueId,
 				skuId,
 				1,
@@ -485,6 +495,16 @@ const ProductOptionSelect = ({
 					}
 					disabled={skuOptionsAtomState.updating}
 					id={componentId}
+					messages={{
+						itemDescribedby: Liferay.Language.get(
+							'you-are-currently-on-a-text-element,-inside-of-a-list-box'
+						),
+						itemSelected: Liferay.Language.get('x-selected'),
+						scrollToBottomAriaLabel:
+							Liferay.Language.get('scroll-to-bottom'),
+						scrollToTopAriaLabel:
+							Liferay.Language.get('scroll-to-top'),
+					}}
 					onSelectionChange={handleSelectionChange}
 					placeholder={emptyTextValue}
 				>

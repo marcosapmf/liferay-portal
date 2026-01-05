@@ -5,6 +5,7 @@
 
 import {EditableValue} from '../../types/editables/EditableValue';
 import {config} from '../config/index';
+import {ObjectFields} from '../contexts/ObjectDataContext';
 import {State} from '../reducers';
 import {PageContent} from '../utils/usePageContents';
 import serviceFetch from './serviceFetch';
@@ -42,7 +43,7 @@ function getAvailableStructureMappingFields({
 	classNameId: string;
 	classTypeId: string;
 }) {
-	return serviceFetch(config.mappingFieldsURL, {
+	return serviceFetch<ObjectFields>(config.mappingFieldsURL, {
 		body: {
 			classNameId,
 			classTypeId,
@@ -108,7 +109,7 @@ function getInfoItemFieldValue({
 	editableTypeOptions: EditableValue['config'];
 	externalReferenceCode: string;
 	fieldId: string;
-	languageId: string;
+	languageId: Liferay.Language.Locale;
 }) {
 	const body: {
 		classNameId: string;
@@ -116,7 +117,7 @@ function getInfoItemFieldValue({
 		editableTypeOptions: string;
 		externalReferenceCode?: string;
 		fieldId: string;
-		languageId: string;
+		languageId: Liferay.Language.Locale;
 	} = {
 		classNameId,
 		editableTypeOptions: JSON.stringify(editableTypeOptions),

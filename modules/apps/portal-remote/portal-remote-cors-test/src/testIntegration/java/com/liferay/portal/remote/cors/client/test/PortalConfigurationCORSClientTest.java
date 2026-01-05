@@ -10,26 +10,26 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.ext.RuntimeDelegate;
 
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl;
 import org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl;
@@ -53,8 +53,23 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 
 	@Test
 	public void testCORSUsingBasicWithDefaultConfig() throws Exception {
-		assertJsonWSUrl("/user/get-current-user", HttpMethod.OPTIONS, true);
 		assertJsonWSUrl("/user/get-current-user", HttpMethod.GET, false);
+		assertJsonWSUrl("/user/get-current-user", HttpMethod.GET, false, "::1");
+		assertJsonWSUrl(
+			"/user/get-current-user", HttpMethod.GET, false,
+			"http://127.0.0.1:8080");
+		assertJsonWSUrl(
+			"/user/get-current-user", HttpMethod.GET, false,
+			"http://localhost:8080");
+		assertJsonWSUrl("/user/get-current-user", HttpMethod.OPTIONS, false);
+		assertJsonWSUrl(
+			"/user/get-current-user", HttpMethod.OPTIONS, true, "::1");
+		assertJsonWSUrl(
+			"/user/get-current-user", HttpMethod.OPTIONS, true,
+			"http://127.0.0.1:8080");
+		assertJsonWSUrl(
+			"/user/get-current-user", HttpMethod.OPTIONS, true,
+			"http://localhost:8080");
 	}
 
 	@Test
@@ -63,8 +78,25 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 				PropsValuesTestUtil.swapWithSafeCloseable(
 					"CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK", true)) {
 
-			assertJsonWSUrl("/user/get-current-user", HttpMethod.OPTIONS, true);
-			assertJsonWSUrl("/user/get-current-user", HttpMethod.GET, true);
+			assertJsonWSUrl("/user/get-current-user", HttpMethod.GET, false);
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.GET, true, "::1");
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.GET, true,
+				"http://127.0.0.1:8080");
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.GET, true,
+				"http://localhost:8080");
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.OPTIONS, false);
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.OPTIONS, true, "::1");
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.OPTIONS, true,
+				"http://127.0.0.1:8080");
+			assertJsonWSUrl(
+				"/user/get-current-user", HttpMethod.OPTIONS, true,
+				"http://localhost:8080");
 		}
 	}
 
@@ -188,7 +220,7 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 	}
 
 	private static final Pattern _pAuthTokenPattern = Pattern.compile(
-		"Liferay.authToken\\s*=\\s*(['\"])(((?!\\1).)*)\\1;");
+		"authToken:\\s*(['\"])(((?!\\1).)*)\\1,");
 
 	private String _pAuth;
 

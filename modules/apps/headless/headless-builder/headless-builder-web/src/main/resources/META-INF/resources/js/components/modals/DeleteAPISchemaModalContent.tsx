@@ -5,7 +5,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayModal from '@clayui/modal';
-import {fetch, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React from 'react';
 
 interface DeleteAPISchemaModal {
@@ -52,7 +53,9 @@ export function DeleteAPISchemaModalContent({
 
 	return (
 		<>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('delete-api-schema')}
 			</ClayModal.Header>
 

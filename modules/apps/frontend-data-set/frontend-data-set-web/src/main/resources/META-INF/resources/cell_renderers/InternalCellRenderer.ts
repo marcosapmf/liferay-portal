@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IInternalRenderer} from '../FrontendDataSetContext';
+import {IInternalRenderer} from '../utils/types';
 
 // @ts-ignore
 
@@ -12,13 +12,7 @@ import ActionsLinkRenderer from './ActionLinkRenderer';
 // @ts-ignore
 
 import BooleanRenderer from './BooleanRenderer';
-
-// @ts-ignore
-
 import DateRenderer from './DateRenderer';
-
-// @ts-ignore
-
 import DateTimeRenderer from './DateTimeRenderer';
 import DefaultRenderer from './DefaultRenderer';
 

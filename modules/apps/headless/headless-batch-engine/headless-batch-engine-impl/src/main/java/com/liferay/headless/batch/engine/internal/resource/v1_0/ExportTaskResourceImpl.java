@@ -18,6 +18,9 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import java.io.InputStream;
 
 import java.util.Arrays;
@@ -26,9 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -84,8 +84,8 @@ public class ExportTaskResourceImpl extends BaseExportTaskResourceImpl {
 
 	@Override
 	public ExportTask postExportTask(
-			String className, String contentType, String callbackURL,
-			String externalReferenceCode, String fieldNames,
+			String className, String contentType, String batchNestedFields,
+			String callbackURL, String externalReferenceCode, String fieldNames,
 			String taskItemDelegateName)
 		throws Exception {
 

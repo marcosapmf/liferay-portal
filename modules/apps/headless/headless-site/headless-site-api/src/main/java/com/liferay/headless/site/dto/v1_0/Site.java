@@ -19,7 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,24 +34,17 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
 @GraphQLName(description = "Represents the site being created.", value = "Site")
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents the site being created.",
 	requiredProperties = {"name"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Site")
 public class Site implements Serializable {
 
@@ -58,7 +56,179 @@ public class Site implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Site.class, json);
 	}
 
-	@Schema(description = "The site's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getActive() {
+		if (_activeSupplier != null) {
+			active = _activeSupplier.get();
+
+			_activeSupplier = null;
+		}
+
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+
+		_activeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setActive(
+		UnsafeSupplier<Boolean, Exception> activeUnsafeSupplier) {
+
+		_activeSupplier = () -> {
+			try {
+				return activeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean active;
+
+	@JsonIgnore
+	private Supplier<Boolean> _activeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Map<String, String> getDescription() {
+		if (_descriptionSupplier != null) {
+			description = _descriptionSupplier.get();
+
+			_descriptionSupplier = null;
+		}
+
+		return description;
+	}
+
+	public void setDescription(Map<String, String> description) {
+		this.description = description;
+
+		_descriptionSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDescription(
+		UnsafeSupplier<Map<String, String>, Exception>
+			descriptionUnsafeSupplier) {
+
+		_descriptionSupplier = () -> {
+			try {
+				return descriptionUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> description;
+
+	@JsonIgnore
+	private Supplier<Map<String, String>> _descriptionSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getDescriptiveName() {
+		if (_descriptiveNameSupplier != null) {
+			descriptiveName = _descriptiveNameSupplier.get();
+
+			_descriptiveNameSupplier = null;
+		}
+
+		return descriptiveName;
+	}
+
+	public void setDescriptiveName(String descriptiveName) {
+		this.descriptiveName = descriptiveName;
+
+		_descriptiveNameSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDescriptiveName(
+		UnsafeSupplier<String, Exception> descriptiveNameUnsafeSupplier) {
+
+		_descriptiveNameSupplier = () -> {
+			try {
+				return descriptiveNameUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String descriptiveName;
+
+	@JsonIgnore
+	private Supplier<String> _descriptiveNameSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Map<String, String> getDescriptiveName_i18n() {
+		if (_descriptiveName_i18nSupplier != null) {
+			descriptiveName_i18n = _descriptiveName_i18nSupplier.get();
+
+			_descriptiveName_i18nSupplier = null;
+		}
+
+		return descriptiveName_i18n;
+	}
+
+	public void setDescriptiveName_i18n(
+		Map<String, String> descriptiveName_i18n) {
+
+		this.descriptiveName_i18n = descriptiveName_i18n;
+
+		_descriptiveName_i18nSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDescriptiveName_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			descriptiveName_i18nUnsafeSupplier) {
+
+		_descriptiveName_i18nSupplier = () -> {
+			try {
+				return descriptiveName_i18nUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> descriptiveName_i18n;
+
+	@JsonIgnore
+	private Supplier<Map<String, String>> _descriptiveName_i18nSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The site's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -99,7 +269,7 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getFriendlyUrlPath() {
 		if (_friendlyUrlPathSupplier != null) {
 			friendlyUrlPath = _friendlyUrlPathSupplier.get();
@@ -134,13 +304,13 @@ public class Site implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String friendlyUrlPath;
 
 	@JsonIgnore
 	private Supplier<String> _friendlyUrlPathSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -179,7 +349,7 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -218,8 +388,93 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getManualMembership() {
+		if (_manualMembershipSupplier != null) {
+			manualMembership = _manualMembershipSupplier.get();
+
+			_manualMembershipSupplier = null;
+		}
+
+		return manualMembership;
+	}
+
+	public void setManualMembership(Boolean manualMembership) {
+		this.manualMembership = manualMembership;
+
+		_manualMembershipSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setManualMembership(
+		UnsafeSupplier<Boolean, Exception> manualMembershipUnsafeSupplier) {
+
+		_manualMembershipSupplier = () -> {
+			try {
+				return manualMembershipUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean manualMembership;
+
+	@JsonIgnore
+	private Supplier<Boolean> _manualMembershipSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Integer getMembershipRestriction() {
+		if (_membershipRestrictionSupplier != null) {
+			membershipRestriction = _membershipRestrictionSupplier.get();
+
+			_membershipRestrictionSupplier = null;
+		}
+
+		return membershipRestriction;
+	}
+
+	public void setMembershipRestriction(Integer membershipRestriction) {
+		this.membershipRestriction = membershipRestriction;
+
+		_membershipRestrictionSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setMembershipRestriction(
+		UnsafeSupplier<Integer, Exception>
+			membershipRestrictionUnsafeSupplier) {
+
+		_membershipRestrictionSupplier = () -> {
+			try {
+				return membershipRestrictionUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer membershipRestriction;
+
+	@JsonIgnore
+	private Supplier<Integer> _membershipRestrictionSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The default value is open."
+	)
 	@JsonGetter("membershipType")
-	@Schema(description = "The default value is open.")
 	@Valid
 	public MembershipType getMembershipType() {
 		if (_membershipTypeSupplier != null) {
@@ -267,13 +522,13 @@ public class Site implements Serializable {
 	}
 
 	@GraphQLField(description = "The default value is open.")
-	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected MembershipType membershipType;
 
 	@JsonIgnore
 	private Supplier<MembershipType> _membershipTypeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -313,7 +568,95 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Map<String, String> getName_i18n() {
+		if (_name_i18nSupplier != null) {
+			name_i18n = _name_i18nSupplier.get();
+
+			_name_i18nSupplier = null;
+		}
+
+		return name_i18n;
+	}
+
+	public void setName_i18n(Map<String, String> name_i18n) {
+		this.name_i18n = name_i18n;
+
+		_name_i18nSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setName_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			name_i18nUnsafeSupplier) {
+
+		_name_i18nSupplier = () -> {
+			try {
+				return name_i18nUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> name_i18n;
+
+	@JsonIgnore
+	private Supplier<Map<String, String>> _name_i18nSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getParentSiteExternalReferenceCode() {
+		if (_parentSiteExternalReferenceCodeSupplier != null) {
+			parentSiteExternalReferenceCode =
+				_parentSiteExternalReferenceCodeSupplier.get();
+
+			_parentSiteExternalReferenceCodeSupplier = null;
+		}
+
+		return parentSiteExternalReferenceCode;
+	}
+
+	public void setParentSiteExternalReferenceCode(
+		String parentSiteExternalReferenceCode) {
+
+		this.parentSiteExternalReferenceCode = parentSiteExternalReferenceCode;
+
+		_parentSiteExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setParentSiteExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			parentSiteExternalReferenceCodeUnsafeSupplier) {
+
+		_parentSiteExternalReferenceCodeSupplier = () -> {
+			try {
+				return parentSiteExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String parentSiteExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _parentSiteExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getParentSiteKey() {
 		if (_parentSiteKeySupplier != null) {
 			parentSiteKey = _parentSiteKeySupplier.get();
@@ -354,7 +697,7 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _parentSiteKeySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTemplateKey() {
 		if (_templateKeySupplier != null) {
 			templateKey = _templateKeySupplier.get();
@@ -395,8 +738,8 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _templateKeySupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
 	@JsonGetter("templateType")
-	@Schema
 	@Valid
 	public TemplateType getTemplateType() {
 		if (_templateTypeSupplier != null) {
@@ -449,6 +792,49 @@ public class Site implements Serializable {
 	@JsonIgnore
 	private Supplier<TemplateType> _templateTypeSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema
+	@Valid
+	public Map<String, String> getTypeSettings() {
+		if (_typeSettingsSupplier != null) {
+			typeSettings = _typeSettingsSupplier.get();
+
+			_typeSettingsSupplier = null;
+		}
+
+		return typeSettings;
+	}
+
+	public void setTypeSettings(Map<String, String> typeSettings) {
+		this.typeSettings = typeSettings;
+
+		_typeSettingsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTypeSettings(
+		UnsafeSupplier<Map<String, String>, Exception>
+			typeSettingsUnsafeSupplier) {
+
+		_typeSettingsSupplier = () -> {
+			try {
+				return typeSettingsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> typeSettings;
+
+	@JsonIgnore
+	private Supplier<Map<String, String>> _typeSettingsSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -475,6 +861,58 @@ public class Site implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		Boolean active = getActive();
+
+		if (active != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"active\": ");
+
+			sb.append(active);
+		}
+
+		Map<String, String> description = getDescription();
+
+		if (description != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description\": ");
+
+			sb.append(_toJSON(description));
+		}
+
+		String descriptiveName = getDescriptiveName();
+
+		if (descriptiveName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"descriptiveName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(descriptiveName));
+
+			sb.append("\"");
+		}
+
+		Map<String, String> descriptiveName_i18n = getDescriptiveName_i18n();
+
+		if (descriptiveName_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"descriptiveName_i18n\": ");
+
+			sb.append(_toJSON(descriptiveName_i18n));
+		}
 
 		String externalReferenceCode = getExternalReferenceCode();
 
@@ -536,6 +974,30 @@ public class Site implements Serializable {
 			sb.append("\"");
 		}
 
+		Boolean manualMembership = getManualMembership();
+
+		if (manualMembership != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"manualMembership\": ");
+
+			sb.append(manualMembership);
+		}
+
+		Integer membershipRestriction = getMembershipRestriction();
+
+		if (membershipRestriction != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"membershipRestriction\": ");
+
+			sb.append(membershipRestriction);
+		}
+
 		MembershipType membershipType = getMembershipType();
 
 		if (membershipType != null) {
@@ -546,9 +1008,7 @@ public class Site implements Serializable {
 			sb.append("\"membershipType\": ");
 
 			sb.append("\"");
-
 			sb.append(membershipType);
-
 			sb.append("\"");
 		}
 
@@ -564,6 +1024,35 @@ public class Site implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(name));
+
+			sb.append("\"");
+		}
+
+		Map<String, String> name_i18n = getName_i18n();
+
+		if (name_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name_i18n\": ");
+
+			sb.append(_toJSON(name_i18n));
+		}
+
+		String parentSiteExternalReferenceCode =
+			getParentSiteExternalReferenceCode();
+
+		if (parentSiteExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"parentSiteExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(parentSiteExternalReferenceCode));
 
 			sb.append("\"");
 		}
@@ -610,10 +1099,20 @@ public class Site implements Serializable {
 			sb.append("\"templateType\": ");
 
 			sb.append("\"");
-
 			sb.append(templateType);
-
 			sb.append("\"");
+		}
+
+		Map<String, String> typeSettings = getTypeSettings();
+
+		if (typeSettings != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"typeSettings\": ");
+
+			sb.append(_toJSON(typeSettings));
 		}
 
 		sb.append("}");
@@ -621,8 +1120,8 @@ public class Site implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.site.dto.v1_0.Site",
 		name = "x-class-name"
 	)

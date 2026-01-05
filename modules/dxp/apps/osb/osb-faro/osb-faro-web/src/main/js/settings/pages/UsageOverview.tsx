@@ -1,4 +1,4 @@
-import BasePage from 'settings/components/BasePage';
+import BasePage from 'settings/components/base-page/BasePage';
 import Card from 'shared/components/Card';
 import ClayAlert from '@clayui/alert';
 import ClayLayout from '@clayui/layout';
@@ -65,10 +65,9 @@ const getAlertStatusCode = currentPlan => {
 	return null;
 };
 
-export const UsageOverview = ({groupId, project}) => {
+export const UsageOverview = ({project}) => {
 	const [showAlert, setShowAlert] = useState(true);
 	const currentUser = useCurrentUser();
-
 	const admin = currentUser.isAdmin();
 	const currentPlan = formatPlanData(project.faroSubscription);
 	const {timeZoneId} = useTimeZone();
@@ -85,7 +84,7 @@ export const UsageOverview = ({groupId, project}) => {
 				icon: {
 					symbol: 'shortcut'
 				},
-				label: Liferay.Language.get('manage-subscriptions'),
+				label: Liferay.Language.get('go-to-customer-portal'),
 				target: '_blank'
 			}
 		];
@@ -97,7 +96,6 @@ export const UsageOverview = ({groupId, project}) => {
 
 	return (
 		<BasePage
-			groupId={groupId}
 			key='UsageOverview'
 			pageActions={pageActions}
 			pageDescription={Liferay.Language.get(

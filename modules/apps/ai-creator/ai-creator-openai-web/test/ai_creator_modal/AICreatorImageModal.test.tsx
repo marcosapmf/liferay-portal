@@ -8,12 +8,12 @@ import userEvent from '@testing-library/user-event';
 import {fetch} from 'frontend-js-web';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import AICreatorImageModal from '../../src/main/resources/META-INF/resources/ai_creator_modal/AICreatorImageModal';
 
 jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
+	...(jest.requireActual('frontend-js-web') as any),
 	fetch: jest.fn(() => Promise.resolve({})),
 	getOpener: jest.fn(() => ({
 		Liferay: {
@@ -22,12 +22,13 @@ jest.mock('frontend-js-web', () => ({
 	})),
 }));
 
-const mockedFetch = fetch as jest.MockedFunction<
-	(url: string, options: {body: FormData}) => Promise<{}>
->;
+const mockedFetch = fetch as any;
 
 async function renderModalWithRequest() {
 	render(
+
+		// @ts-ignore
+
 		<AICreatorImageModal
 			getGenerationsURL="/sample-url"
 			portletNamespace="namespace"

@@ -9,6 +9,7 @@ import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomize
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,6 +25,7 @@ import com.liferay.portal.search.elasticsearch7.internal.index.constants.IndexSe
 import com.liferay.portal.search.elasticsearch7.internal.index.util.IndexFactoryCompanyIdRegistryUtil;
 import com.liferay.portal.search.elasticsearch7.internal.settings.SettingsHelperImpl;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.spi.index.configuration.contributor.CompanyIndexConfigurationContributor;
 import com.liferay.portal.search.spi.index.listener.CompanyIndexListener;
@@ -50,7 +52,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  */
 @Component(service = CompanyIndexHelper.class)
 public class CompanyIndexHelper {
@@ -65,7 +67,8 @@ public class CompanyIndexHelper {
 
 		MappingsHelperImpl mappingsHelperImpl = new MappingsHelperImpl(
 			indexName, indicesClient, _jsonFactory,
-			_elasticsearchConfigurationWrapper.overrideTypeMappings());
+			_elasticsearchConfigurationWrapper.overrideTypeMappings(),
+			_searchEngineInformation);
 
 		mappingsHelperImpl.setDefaultOrOverrideMappings(createIndexRequest);
 
@@ -109,6 +112,12 @@ public class CompanyIndexHelper {
 				}
 			}
 		}
+		catch (PortalException portalException) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Unable to update company index names", portalException);
+			}
+		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
 		}
@@ -137,7 +146,8 @@ public class CompanyIndexHelper {
 
 		MappingsHelperImpl mappingsHelperImpl = new MappingsHelperImpl(
 			indexName, indicesClient, _jsonFactory,
-			_elasticsearchConfigurationWrapper.overrideTypeMappings());
+			_elasticsearchConfigurationWrapper.overrideTypeMappings(),
+			_searchEngineInformation);
 
 		mappingsHelperImpl.putDefaultOrOverrideMappings();
 
@@ -385,7 +395,8 @@ public class CompanyIndexHelper {
 					new MappingsHelperImpl(
 						indexName, indicesClient, _jsonFactory,
 						_elasticsearchConfigurationWrapper.
-							overrideTypeMappings()));
+							overrideTypeMappings(),
+						_searchEngineInformation));
 			},
 			IndexFactoryCompanyIdRegistryUtil.getCompanyIds());
 	}
@@ -496,5 +507,8 @@ public class CompanyIndexHelper {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private SearchEngineInformation _searchEngineInformation;
 
 }

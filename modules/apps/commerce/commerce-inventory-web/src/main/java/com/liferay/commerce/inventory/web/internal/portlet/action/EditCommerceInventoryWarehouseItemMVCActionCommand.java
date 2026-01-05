@@ -5,7 +5,9 @@
 
 package com.liferay.commerce.inventory.web.internal.portlet.action;
 
+import com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseItemQuantityException;
 import com.liferay.commerce.inventory.exception.MVCCException;
+import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
@@ -18,8 +20,8 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY,
+		"jakarta.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY,
 		"mvc.command.name=/commerce_inventory/edit_commerce_inventory_warehouse_item"
 	},
 	service = MVCActionCommand.class
@@ -53,7 +55,10 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof MVCCException) {
+			if (exception instanceof
+					CommerceInventoryWarehouseItemQuantityException ||
+				exception instanceof MVCCException) {
+
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				hideDefaultErrorMessage(actionRequest);
@@ -90,9 +95,13 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 			updateCommerceInventoryWarehouseItem(
 				commerceInventoryWarehouseItemId,
 				_commerceOrderItemQuantityFormatter.parse(
-					actionRequest, "quantity"),
+					actionRequest,
+					CommerceInventoryWarehouseItem.class.getName(), "quantity"),
 				_commerceOrderItemQuantityFormatter.parse(
-					actionRequest, "reservedQuantity"),
+					actionRequest,
+					CommerceInventoryWarehouseItem.class.getName(),
+					"reservedQuantity"),
+				ParamUtil.getString(actionRequest, "unitOfMeasureKey"),
 				ParamUtil.getLong(actionRequest, "mvccVersion"));
 	}
 

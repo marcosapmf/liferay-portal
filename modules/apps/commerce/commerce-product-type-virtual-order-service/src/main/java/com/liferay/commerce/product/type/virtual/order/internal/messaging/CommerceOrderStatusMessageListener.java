@@ -12,8 +12,15 @@ import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
+import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
@@ -25,6 +32,7 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
@@ -108,17 +116,45 @@ public class CommerceOrderStatusMessageListener extends BaseMessageListener {
 			commerceOrderItem.getSku(),
 			commerceOrderItem.getUnitOfMeasureKey());
 
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByGroupId(
+				commerceOrder.getGroupId());
+
+		CPConfigurationList cpConfigurationList =
+			_cpConfigurationListDiscovery.getCPConfigurationList(
+				cpInstance.getCompanyId(), cpInstance.getGroupId(),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getCommerceChannelId(),
+				commerceOrder.getCommerceOrderTypeId());
+
+		long cpConfigurationListId =
+			cpConfigurationList.getCPConfigurationListId();
+
+		CPConfigurationEntry cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.fetchCPConfigurationEntry(
+				_classNameLocalService.getClassNameId(CPDefinition.class),
+				cpInstance.getCPDefinitionId(), cpConfigurationListId);
+
 		CPDefinitionInventoryEngine cpDefinitionInventoryEngine =
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
-				cpDefinitionInventory);
+				cpConfigurationEntry.getCPDefinitionInventoryEngine());
 
 		if (BigDecimalUtil.lte(
 				stockQuantity,
-				cpDefinitionInventoryEngine.getMinStockQuantity(cpInstance))) {
+				cpDefinitionInventoryEngine.getMinStockQuantity(
+					cpConfigurationListId, cpInstance))) {
 
 			commerceLowStockActivity.execute(cpInstance);
 		}
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private CommerceInventoryEngine _commerceInventoryEngine;
@@ -132,6 +168,12 @@ public class CommerceOrderStatusMessageListener extends BaseMessageListener {
 	@Reference
 	private CommerceVirtualOrderItemLocalService
 		_commerceVirtualOrderItemLocalService;
+
+	@Reference
+	private CPConfigurationEntryLocalService _cpConfigurationEntryLocalService;
+
+	@Reference
+	private CPConfigurationListDiscovery _cpConfigurationListDiscovery;
 
 	@Reference
 	private CPDefinitionInventoryEngineRegistry

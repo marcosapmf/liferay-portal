@@ -9,6 +9,7 @@ import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomize
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -18,6 +19,7 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationWrapper;
 import com.liferay.portal.search.opensearch2.internal.connection.OpenSearchConnectionManager;
@@ -59,7 +61,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  * @author Petteri Karttunen
  */
 @Component(service = CompanyIndexHelper.class)
@@ -78,7 +80,8 @@ public class CompanyIndexHelper {
 
 		MappingsHelperImpl mappingsHelperImpl = new MappingsHelperImpl(
 			indexName, _jsonFactory, openSearchIndicesClient,
-			_openSearchConfigurationWrapper.overrideTypeMappings());
+			_openSearchConfigurationWrapper.overrideTypeMappings(),
+			_searchEngineInformation);
 
 		mappingsHelperImpl.setDefaultOrOverrideMappings(
 			builder, _openSearchConnectionManager.getJsonpMapper(null));
@@ -123,6 +126,12 @@ public class CompanyIndexHelper {
 				}
 			}
 		}
+		catch (PortalException portalException) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Unable to update company index names", portalException);
+			}
+		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
 		}
@@ -155,7 +164,8 @@ public class CompanyIndexHelper {
 
 		MappingsHelperImpl mappingsHelperImpl = new MappingsHelperImpl(
 			indexName, _jsonFactory, openSearchIndicesClient,
-			_openSearchConfigurationWrapper.overrideTypeMappings());
+			_openSearchConfigurationWrapper.overrideTypeMappings(),
+			_searchEngineInformation);
 
 		mappingsHelperImpl.putDefaultOrOverrideMappings();
 
@@ -429,8 +439,8 @@ public class CompanyIndexHelper {
 					companyId,
 					new MappingsHelperImpl(
 						indexName, _jsonFactory, openSearchIndicesClient,
-						_openSearchConfigurationWrapper.
-							overrideTypeMappings()));
+						_openSearchConfigurationWrapper.overrideTypeMappings(),
+						_searchEngineInformation));
 			},
 			IndexFactoryCompanyIdRegistryUtil.getCompanyIds());
 	}
@@ -561,5 +571,8 @@ public class CompanyIndexHelper {
 
 	@Reference
 	private OpenSearchConnectionManager _openSearchConnectionManager;
+
+	@Reference
+	private SearchEngineInformation _searchEngineInformation;
 
 }

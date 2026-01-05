@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.OptionCategory;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
+import com.liferay.list.type.model.ListTypeDefinition;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -53,7 +55,21 @@ public class SpecificationDTOConverter
 				setId(cpSpecificationOption::getCPSpecificationOptionId);
 				setKey(cpSpecificationOption::getKey);
 				setListTypeDefinitionId(
-					cpSpecificationOption::getListTypeDefinitionId);
+					() -> {
+						for (ListTypeDefinition listTypeDefinition :
+								cpSpecificationOption.
+									getListTypeDefinitions()) {
+
+							return listTypeDefinition.getListTypeDefinitionId();
+						}
+
+						return null;
+					});
+				setListTypeDefinitionIds(
+					() -> TransformUtil.transformToArray(
+						cpSpecificationOption.getListTypeDefinitions(),
+						ListTypeDefinition::getListTypeDefinitionId,
+						Long.class));
 				setOptionCategory(
 					() -> {
 						CPOptionCategory cpOptionCategory =
@@ -72,6 +88,7 @@ public class SpecificationDTOConverter
 				setTitle(
 					() -> LanguageUtils.getLanguageIdMap(
 						cpSpecificationOption.getTitleMap()));
+				setVisible(cpSpecificationOption::isVisible);
 			}
 		};
 	}

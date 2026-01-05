@@ -4,7 +4,10 @@
  */
 
 import classNames from 'classnames';
-import {InputLocalized} from 'frontend-js-components-web';
+import {
+	ILearnResourceContext,
+	InputLocalized,
+} from 'frontend-js-components-web';
 import React from 'react';
 
 import {updateFieldSettings} from '../../../../utils/fieldSettings';
@@ -23,8 +26,9 @@ interface BasicInfoContainerProps {
 	dbObjectFieldRequired?: boolean;
 	errors: ObjectFieldErrors;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
+	learnResources: ILearnResourceContext;
 	modelBuilder?: boolean;
-	objectDefinition?: ObjectDefinition;
+	objectDefinition?: ObjectDefinition | ObjectDefinitionNodeData;
 	objectFieldBusinessTypes: ObjectFieldBusinessType[];
 	objectRelationshipId: number;
 	onSubmit?: () => void;
@@ -42,6 +46,7 @@ export function BasicInfoContainer({
 	dbObjectFieldRequired,
 	errors,
 	handleChange,
+	learnResources,
 	modelBuilder = false,
 	objectDefinition,
 	objectFieldBusinessTypes,
@@ -79,6 +84,7 @@ export function BasicInfoContainer({
 			<InputLocalized
 				disabled={readOnly}
 				error={errors.label}
+				id="objectFieldLabelInput"
 				label={Liferay.Language.get('label')}
 				onBlur={(event) => {
 					event.stopPropagation();
@@ -102,6 +108,7 @@ export function BasicInfoContainer({
 				editingObjectField
 				errors={errors}
 				handleChange={handleChange}
+				learnResources={learnResources}
 				modelBuilder={modelBuilder}
 				objectDefinition={objectDefinition}
 				objectField={values}

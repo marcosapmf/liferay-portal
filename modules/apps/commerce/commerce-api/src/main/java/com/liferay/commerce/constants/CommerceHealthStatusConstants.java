@@ -65,6 +65,15 @@ public class CommerceHealthStatusConstants {
 	public static final String CP_COMPARE_CONTENT_COMMERCE_HEALTH_STATUS_KEY =
 		"cp.compare.content.commerce.health.status.key";
 
+	public static final String
+		CP_CONFIGURATION_LIST_ELIGIBILITY_COMMERCE_HEALTH_STATUS_DESCRIPTION =
+			"cp.configuration.list.eligibility.commerce.health.status." +
+				"description";
+
+	public static final String
+		CP_CONFIGURATION_LIST_ELIGIBILITY_COMMERCE_HEALTH_STATUS_KEY =
+			"cp.configuration.list.eligibility.commerce.health.status.key";
+
 	public static final String CP_CONTENT_COMMERCE_HEALTH_STATUS_DESCRIPTION =
 		"cp.content.commerce.health.status.description";
 
@@ -103,5 +112,11 @@ public class CommerceHealthStatusConstants {
 	public static final String
 		SPLIT_COMMERCE_ORDER_BY_CATALOG_HEALTH_STATUS_KEY =
 			"split.commerce.order.by.catalog.health.status.key";
+
+	public static final String USERS_COMMERCE_HEALTH_STATUS_DESCRIPTION =
+		"users.commerce.health.status.description";
+
+	public static final String USERS_COMMERCE_HEALTH_STATUS_KEY =
+		"users.commerce.health.status.key";
 
 }

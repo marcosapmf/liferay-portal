@@ -13,7 +13,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -31,10 +30,10 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -88,12 +87,13 @@ public class SegmentsExperienceSelectorDisplayContext {
 	}
 
 	private SegmentsExperience _getParentSegmentsExperience(
-		SegmentsExperience segmentsExperience) {
+		SegmentsExperience segmentsExperience, ThemeDisplay themeDisplay) {
 
 		List<SegmentsExperimentRel> segmentsExperimentRels =
 			_segmentsExperimentRelLocalService.
-				getSegmentsExperimentRelsBySegmentsExperienceId(
-					segmentsExperience.getSegmentsExperienceId());
+				getSegmentsExperimentRelsBySegmentsExperienceKey(
+					segmentsExperience.getSegmentsExperienceKey(),
+					themeDisplay.getPlid());
 
 		if (segmentsExperimentRels.isEmpty()) {
 			return null;
@@ -194,20 +194,12 @@ public class SegmentsExperienceSelectorDisplayContext {
 		SegmentsExperience segmentsExperience =
 			_fetchSegmentsExperienceFromRequest();
 
-		long plid = _themeDisplay.getPlid();
-
-		Layout layout = _themeDisplay.getLayout();
-
-		if (layout.isDraftLayout()) {
-			plid = layout.getClassPK();
-		}
-
 		if ((segmentsExperience == null) ||
-			(segmentsExperience.getPlid() != plid)) {
+			(segmentsExperience.getPlid() != _themeDisplay.getPlid())) {
 
 			long defaultSegmentsExperienceId =
 				_segmentsExperienceLocalService.
-					fetchDefaultSegmentsExperienceId(plid);
+					fetchDefaultSegmentsExperienceId(_themeDisplay.getPlid());
 
 			segmentsExperience =
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
@@ -215,13 +207,20 @@ public class SegmentsExperienceSelectorDisplayContext {
 		}
 
 		if (segmentsExperience != null) {
+			SegmentsExperience parentSegmentsExperience =
+				_getParentSegmentsExperience(segmentsExperience, _themeDisplay);
+
+			if (parentSegmentsExperience != null) {
+				segmentsExperience = parentSegmentsExperience;
+			}
+
 			JSONObject segmentsExperienceSelectedJSONObject =
 				_getSegmentsExperienceJSONObject(
 					segmentsExperience.getSegmentsExperienceId());
 
 			segmentsExperienceSelectedJSONObject.put(
 				"segmentsExperienceName",
-				_getSelectedSegmentsExperienceName(segmentsExperience));
+				segmentsExperience.getName(_themeDisplay.getLocale()));
 
 			return segmentsExperienceSelectedJSONObject;
 		}
@@ -251,26 +250,6 @@ public class SegmentsExperienceSelectorDisplayContext {
 		_segmentsExperiencesJSONArray = segmentsExperiencesJSONArray;
 
 		return _segmentsExperiencesJSONArray;
-	}
-
-	private String _getSelectedSegmentsExperienceName(
-		SegmentsExperience segmentsExperience) {
-
-		SegmentsExperience parentSegmentsExperience =
-			_getParentSegmentsExperience(segmentsExperience);
-
-		if ((segmentsExperience != null) &&
-			(parentSegmentsExperience != null)) {
-
-			segmentsExperience = parentSegmentsExperience;
-		}
-
-		if (segmentsExperience != null) {
-			return segmentsExperience.getName(_themeDisplay.getLocale());
-		}
-
-		return SegmentsEntryConstants.getDefaultSegmentsEntryName(
-			_themeDisplay.getLocale());
 	}
 
 	private boolean _isActive(

@@ -25,9 +25,9 @@ public class PullRequestPortalTopLevelBuild
 	implements PortalWorkspaceBuild, PullRequestBuild {
 
 	public PullRequestPortalTopLevelBuild(
-		String url, TopLevelBuild topLevelBuild) {
+		String buildURL, TopLevelBuild topLevelBuild) {
 
-		super(url, topLevelBuild);
+		super(buildURL, topLevelBuild);
 
 		setCompareToUpstream(true);
 
@@ -88,16 +88,22 @@ public class PullRequestPortalTopLevelBuild
 			return _pullRequest;
 		}
 
-		StringBuilder sb = new StringBuilder();
+		String pullRequestURL = getParameterValue("PULL_REQUEST_URL");
 
-		sb.append("https://github.com/");
-		sb.append(getParameterValue("GITHUB_RECEIVER_USERNAME"));
-		sb.append("/");
-		sb.append(getBaseGitRepositoryName());
-		sb.append("/pull/");
-		sb.append(getParameterValue("GITHUB_PULL_REQUEST_NUMBER"));
+		if (pullRequestURL == null) {
+			StringBuilder sb = new StringBuilder();
 
-		_pullRequest = PullRequestFactory.newPullRequest(sb.toString(), this);
+			sb.append("https://github.com/");
+			sb.append(getParameterValue("GITHUB_RECEIVER_USERNAME"));
+			sb.append("/");
+			sb.append(getBaseGitRepositoryName());
+			sb.append("/pull/");
+			sb.append(getParameterValue("GITHUB_PULL_REQUEST_NUMBER"));
+
+			pullRequestURL = sb.toString();
+		}
+
+		_pullRequest = PullRequestFactory.newPullRequest(pullRequestURL, this);
 
 		return _pullRequest;
 	}
@@ -174,12 +180,6 @@ public class PullRequestPortalTopLevelBuild
 	}
 
 	public String getStableJobResult() {
-		Job stableJob = _getStableJob();
-
-		if (stableJob == null) {
-			return null;
-		}
-
 		if (_stableJobResult != null) {
 			return _stableJobResult;
 		}
@@ -189,6 +189,22 @@ public class PullRequestPortalTopLevelBuild
 		int stableJobDownstreamBuildsSize = stableJobDownstreamBuilds.size();
 
 		if (stableJobDownstreamBuildsSize == 0) {
+			return null;
+		}
+
+		String result = getResult();
+
+		if (result == null) {
+			return null;
+		}
+
+		if (result.equals("SUCCESS")) {
+			_stableJobResult = result;
+		}
+
+		Job stableJob = _getStableJob();
+
+		if (stableJob == null) {
 			return null;
 		}
 
@@ -205,14 +221,12 @@ public class PullRequestPortalTopLevelBuild
 			return null;
 		}
 
-		String result = getResult();
 		int stableJobDownstreamBuildsSuccessCount =
 			getJobVariantsDownstreamBuildCount(
 				stableJobBatchNames, "SUCCESS", null);
 
-		if (((result != null) && result.equals("SUCCESS")) ||
-			(stableJobDownstreamBuildsSuccessCount ==
-				stableJobDownstreamBuildsSize)) {
+		if (stableJobDownstreamBuildsSuccessCount ==
+				stableJobDownstreamBuildsSize) {
 
 			_stableJobResult = "SUCCESS";
 		}
@@ -269,11 +283,7 @@ public class PullRequestPortalTopLevelBuild
 			}
 		}
 
-		if (failedDownstreamBuilds.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return failedDownstreamBuilds.isEmpty();
 	}
 
 	protected Element getFailedStableJobSummaryElement() {

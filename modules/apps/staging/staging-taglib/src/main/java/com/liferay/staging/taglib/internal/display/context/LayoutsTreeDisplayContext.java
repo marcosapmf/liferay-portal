@@ -16,6 +16,7 @@ import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.layout.util.LayoutsTree;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -42,13 +43,18 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.staging.configuration.StagingConfiguration;
 import com.liferay.staging.taglib.internal.servlet.ServletContextUtil;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
 
@@ -58,11 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -108,6 +109,14 @@ public class LayoutsTreeDisplayContext {
 			if (!stagingConfiguration.publishParentLayoutsByDefault()) {
 				childPageHelpMessage = null;
 			}
+		}
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-35443") &&
+			FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-35914")) {
+
+			childPageHelpMessage = "child-page-process-warning-new-procedure";
 		}
 
 		return childPageHelpMessage;
@@ -471,13 +480,8 @@ public class LayoutsTreeDisplayContext {
 	}
 
 	private boolean _isIncomplete() {
-		if (LayoutStagingUtil.isBranchingLayoutSet(
-				getSelectPagesGroup(), isSelectPagesPrivateLayout())) {
-
-			return true;
-		}
-
-		return false;
+		return LayoutStagingUtil.isBranchingLayoutSet(
+			getSelectPagesGroup(), isSelectPagesPrivateLayout());
 	}
 
 	private String _action;

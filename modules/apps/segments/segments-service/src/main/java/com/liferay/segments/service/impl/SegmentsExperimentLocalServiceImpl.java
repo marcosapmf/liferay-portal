@@ -5,7 +5,6 @@
 
 package com.liferay.segments.service.impl;
 
-import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -21,6 +20,7 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -50,12 +50,11 @@ import com.liferay.segments.exception.WinnerSegmentsExperienceException;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.model.SegmentsExperimentRel;
-import com.liferay.segments.model.SegmentsExperimentRelTable;
-import com.liferay.segments.model.SegmentsExperimentTable;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.segments.service.base.SegmentsExperimentLocalServiceBaseImpl;
 import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
+import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence;
 
 import java.math.RoundingMode;
 
@@ -158,12 +157,12 @@ public class SegmentsExperimentLocalServiceImpl
 
 	@Override
 	public SegmentsExperiment deleteSegmentsExperiment(
-			long groupId, long segmentsExperienceId, long plid)
+			long groupId, String segmentsExperienceKey, long plid)
 		throws PortalException {
 
 		SegmentsExperiment segmentsExperiment =
 			segmentsExperimentLocalService.fetchSegmentsExperiment(
-				groupId, segmentsExperienceId, plid);
+				groupId, segmentsExperienceKey, plid);
 
 		return segmentsExperimentLocalService.deleteSegmentsExperiment(
 			segmentsExperiment);
@@ -207,41 +206,40 @@ public class SegmentsExperimentLocalServiceImpl
 
 	@Override
 	public SegmentsExperiment fetchSegmentsExperiment(
-		long groupId, long segmentsExperienceId, long plid) {
-
-		List<SegmentsExperiment> segmentsExperiments =
-			segmentsExperimentPersistence.dslQuery(
-				DSLQueryFactoryUtil.select(
-					SegmentsExperimentTable.INSTANCE
-				).from(
-					SegmentsExperimentTable.INSTANCE
-				).innerJoinON(
-					SegmentsExperimentRelTable.INSTANCE,
-					SegmentsExperimentRelTable.INSTANCE.segmentsExperimentId.eq(
-						SegmentsExperimentTable.INSTANCE.segmentsExperimentId)
-				).where(
-					SegmentsExperimentRelTable.INSTANCE.segmentsExperienceId.eq(
-						segmentsExperienceId
-					).and(
-						SegmentsExperimentTable.INSTANCE.groupId.eq(groupId)
-					).and(
-						SegmentsExperimentTable.INSTANCE.plid.eq(plid)
-					)
-				));
-
-		if (segmentsExperiments.isEmpty()) {
-			return null;
-		}
-
-		return segmentsExperiments.get(0);
-	}
-
-	@Override
-	public SegmentsExperiment fetchSegmentsExperiment(
 		long groupId, String segmentsExperimentKey) {
 
 		return segmentsExperimentPersistence.fetchByG_S(
 			groupId, segmentsExperimentKey);
+	}
+
+	@Override
+	public SegmentsExperiment fetchSegmentsExperiment(
+		long groupId, String segmentsExperienceKey, long plid) {
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				groupId, segmentsExperienceKey, _getPublishedLayoutPlid(plid));
+
+		if (segmentsExperience == null) {
+			return null;
+		}
+
+		for (SegmentsExperimentRel segmentsExperimentRel :
+				_segmentsExperimentRelPersistence.findBySegmentsExperienceId(
+					segmentsExperience.getSegmentsExperienceId())) {
+
+			SegmentsExperiment segmentsExperiment =
+				segmentsExperimentPersistence.fetchByPrimaryKey(
+					segmentsExperimentRel.getSegmentsExperimentId());
+
+			if ((segmentsExperiment.getGroupId() == groupId) &&
+				(segmentsExperiment.getPlid() == plid)) {
+
+				return segmentsExperiment;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -372,6 +370,16 @@ public class SegmentsExperimentLocalServiceImpl
 			winnerSegmentsExperienceId, status);
 	}
 
+	private long _getPublishedLayoutPlid(long plid) {
+		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		if ((layout != null) && layout.isDraftLayout()) {
+			return layout.getClassPK();
+		}
+
+		return plid;
+	}
+
 	private DynamicQuery _getSegmentsExperienceIdsDynamicQuery(
 		long segmentsEntryId) {
 
@@ -389,8 +397,9 @@ public class SegmentsExperimentLocalServiceImpl
 		return dynamicQuery;
 	}
 
-	private SegmentsExperience _publishSegmentsExperienceVariant(
+	private void _publishSegmentsExperienceVariant(
 		SegmentsExperience controlSegmentsExperience,
+		String newSegmentsExperienceKey,
 		SegmentsExperience variantSegmentsExperience) {
 
 		int originalPriority = controlSegmentsExperience.getPriority();
@@ -413,9 +422,7 @@ public class SegmentsExperimentLocalServiceImpl
 			_setSegmentsExperienceKeyProperty(controlSegmentsExperience);
 
 			controlSegmentsExperience.setSegmentsExperienceKey(
-				String.valueOf(
-					counterLocalService.increment(
-						SegmentsExperience.class.getName())));
+				newSegmentsExperienceKey);
 		}
 
 		_segmentsExperienceLocalService.updateSegmentsExperience(
@@ -448,8 +455,6 @@ public class SegmentsExperimentLocalServiceImpl
 
 				return null;
 			});
-
-		return variantSegmentsExperience;
 	}
 
 	private void _sendNotificationEvent(SegmentsExperiment segmentsExperiment)
@@ -524,20 +529,30 @@ public class SegmentsExperimentLocalServiceImpl
 		return segmentsExperiment;
 	}
 
-	private SegmentsExperiment _updateWinnerSegmentsExperienceId(
+	private void _updateWinnerSegmentsExperienceId(
 			SegmentsExperiment segmentsExperiment,
 			long winnerSegmentsExperienceId, int status)
 		throws PortalException {
 
+		SegmentsExperience winnerSegmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				winnerSegmentsExperienceId);
+
+		if (winnerSegmentsExperience == null) {
+			throw new WinnerSegmentsExperienceException(
+				"Winner segments experience " + winnerSegmentsExperienceId +
+					" does not exist");
+		}
+
 		SegmentsExperimentRel segmentsExperimentRel =
 			_segmentsExperimentRelLocalService.fetchSegmentsExperimentRel(
 				segmentsExperiment.getSegmentsExperimentId(),
-				winnerSegmentsExperienceId);
+				winnerSegmentsExperience.getSegmentsExperienceKey());
 
 		if (segmentsExperimentRel == null) {
 			throw new WinnerSegmentsExperienceException(
 				"Winner segments experience " + winnerSegmentsExperienceId +
-					" no found");
+					" does not exist");
 		}
 
 		UnicodeProperties typeSettingsUnicodeProperties =
@@ -558,14 +573,33 @@ public class SegmentsExperimentLocalServiceImpl
 			(winnerSegmentsExperienceId !=
 				segmentsExperiment.getSegmentsExperienceId())) {
 
+			Layout layout = _layoutLocalService.fetchLayout(
+				segmentsExperiment.getPlid());
+
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			String newSegmentsExperienceKey = String.valueOf(
+				counterLocalService.increment(
+					SegmentsExperience.class.getName()));
+
+			_publishSegmentsExperienceVariant(
+				_segmentsExperienceLocalService.getSegmentsExperience(
+					draftLayout.getGroupId(),
+					segmentsExperiment.getSegmentsExperienceKey(),
+					draftLayout.getPlid()),
+				newSegmentsExperienceKey,
+				_segmentsExperienceLocalService.getSegmentsExperience(
+					draftLayout.getGroupId(),
+					winnerSegmentsExperience.getSegmentsExperienceKey(),
+					draftLayout.getPlid()));
+
 			_publishSegmentsExperienceVariant(
 				_segmentsExperienceLocalService.getSegmentsExperience(
 					segmentsExperiment.getSegmentsExperienceId()),
+				newSegmentsExperienceKey,
 				_segmentsExperienceLocalService.getSegmentsExperience(
 					winnerSegmentsExperienceId));
 		}
-
-		return segmentsExperiment;
 	}
 
 	private void _validate(
@@ -602,9 +636,13 @@ public class SegmentsExperimentLocalServiceImpl
 			long groupId, long segmentsExperienceId, long plid)
 		throws PortalException {
 
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.getSegmentsExperience(
+				segmentsExperienceId);
+
 		SegmentsExperiment segmentsExperiment =
 			segmentsExperimentLocalService.fetchSegmentsExperiment(
-				groupId, segmentsExperienceId, plid);
+				groupId, segmentsExperience.getSegmentsExperienceKey(), plid);
 
 		if (segmentsExperiment == null) {
 			return;
@@ -707,6 +745,9 @@ public class SegmentsExperimentLocalServiceImpl
 	}
 
 	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
@@ -721,6 +762,9 @@ public class SegmentsExperimentLocalServiceImpl
 	@Reference
 	private SegmentsExperimentRelLocalService
 		_segmentsExperimentRelLocalService;
+
+	@Reference
+	private SegmentsExperimentRelPersistence _segmentsExperimentRelPersistence;
 
 	@Reference
 	private UserLocalService _userLocalService;

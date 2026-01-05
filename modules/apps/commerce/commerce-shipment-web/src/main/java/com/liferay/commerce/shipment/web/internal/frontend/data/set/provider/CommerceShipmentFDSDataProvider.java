@@ -15,6 +15,7 @@ import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.constants.CommerceShipmentFDSNames;
 import com.liferay.commerce.frontend.model.LabelField;
 import com.liferay.commerce.frontend.model.Shipment;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceShipment;
@@ -23,7 +24,6 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceShipmentService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -44,13 +44,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DateFormat;
 import java.text.Format;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,8 +69,6 @@ public class CommerceShipmentFDSDataProvider
 			FDSKeywords fdsKeywords, FDSPagination fdsPagination,
 			HttpServletRequest httpServletRequest, Sort sort)
 		throws PortalException {
-
-		List<Shipment> shipments = new ArrayList<>();
 
 		long commerceOrderId = ParamUtil.getLong(
 			httpServletRequest, "commerceOrderId");
@@ -108,27 +105,29 @@ public class CommerceShipmentFDSDataProvider
 			DateFormat.MEDIUM, _portal.getLocale(httpServletRequest),
 			user.getTimeZone());
 
-		for (CommerceShipment commerceShipment : commerceShipments) {
-			CommerceChannel commerceChannel =
-				_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
-					commerceShipment.getGroupId());
+		return TransformUtil.transform(
+			commerceShipments,
+			commerceShipment -> {
+				CommerceChannel commerceChannel =
+					_commerceChannelLocalService.
+						getCommerceChannelByOrderGroupId(
+							commerceShipment.getGroupId());
 
-			String expectedDate = null;
+				String expectedDate = null;
 
-			if (commerceShipment.getExpectedDate() != null) {
-				expectedDate = dateFormat.format(
-					commerceShipment.getExpectedDate());
-			}
+				if (commerceShipment.getExpectedDate() != null) {
+					expectedDate = dateFormat.format(
+						commerceShipment.getExpectedDate());
+				}
 
-			String shippingDate = null;
+				String shippingDate = null;
 
-			if (commerceShipment.getShippingDate() != null) {
-				shippingDate = dateFormat.format(
-					commerceShipment.getShippingDate());
-			}
+				if (commerceShipment.getShippingDate() != null) {
+					shippingDate = dateFormat.format(
+						commerceShipment.getShippingDate());
+				}
 
-			shipments.add(
-				new Shipment(
+				return new Shipment(
 					commerceShipment.getAccountEntryName(),
 					_getDescriptiveAddress(commerceShipment),
 					commerceChannel.getName(),
@@ -142,10 +141,8 @@ public class CommerceShipmentFDSDataProvider
 							httpServletRequest,
 							CommerceShipmentConstants.getShipmentStatusLabel(
 								commerceShipment.getStatus()))),
-					commerceShipment.getTrackingNumber()));
-		}
-
-		return shipments;
+					commerceShipment.getTrackingNumber());
+			});
 	}
 
 	@Override
@@ -173,25 +170,27 @@ public class CommerceShipmentFDSDataProvider
 	}
 
 	private long[] _getAccountEntryIds(long userId) throws PortalException {
-		if (!_portletResourcePermission.contains(
+		if (_portletResourcePermission.contains(
 				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceActionKeys.MANAGE_ALL_ACCOUNTS)) {
 
-			List<AccountEntry> accountEntries =
-				_accountEntryLocalService.getUserAccountEntries(
-					userId, AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
-					StringPool.BLANK,
-					_commerceAccountHelper.toAccountEntryTypes(
-						CommerceChannelConstants.SITE_TYPE_B2X),
-					WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS);
+			return null;
+		}
 
-			long[] accountEntriesIds = ListUtil.toLongArray(
-				accountEntries, AccountEntryModel::getAccountEntryId);
+		List<AccountEntry> accountEntries =
+			_accountEntryLocalService.getUserAccountEntries(
+				userId, AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
+				StringPool.BLANK,
+				_commerceAccountHelper.toAccountEntryTypes(
+					CommerceChannelConstants.SITE_TYPE_B2X),
+				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
 
-			if (accountEntriesIds.length != 0) {
-				return accountEntriesIds;
-			}
+		long[] accountEntriesIds = ListUtil.toLongArray(
+			accountEntries, AccountEntryModel::getAccountEntryId);
+
+		if (accountEntriesIds.length != 0) {
+			return accountEntriesIds;
 		}
 
 		return null;

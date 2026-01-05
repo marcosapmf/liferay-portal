@@ -28,11 +28,11 @@ import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,11 +76,7 @@ public class LayoutCPDefinitionDisplayLayoutSelectionScreenNavigationEntry
 			_log.error(portalException);
 		}
 
-		if (Validator.isNotNull(cpDisplayLayout.getLayoutUuid())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(cpDisplayLayout.getLayoutUuid());
 	}
 
 	@Override

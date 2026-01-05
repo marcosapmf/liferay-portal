@@ -5,6 +5,10 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.json.JSONObject;
 
 /**
@@ -28,13 +32,59 @@ public class BaseTestReport implements TestReport {
 	}
 
 	@Override
+	public String getErrorStackTrace() {
+		return _jsonObject.optString("errorStackTrace");
+	}
+
+	@Override
+	public String getModuleAppPath() {
+		Matcher matcher = _moduleAppPathPattern.matcher(getTestTaskName());
+
+		if (!matcher.find()) {
+			return null;
+		}
+
+		String moduleAppPath = matcher.group("moduleAppPath");
+
+		return "modules" + moduleAppPath.replaceAll(":", "/");
+	}
+
+	@Override
 	public String getStatus() {
 		return _jsonObject.getString("status");
 	}
 
 	@Override
+	public String getTestClassName() {
+		return getTestName();
+	}
+
+	@Override
 	public String getTestName() {
 		return _jsonObject.getString("name");
+	}
+
+	@Override
+	public String getTestTaskName() {
+		return _jsonObject.optString("testTaskName");
+	}
+
+	@Override
+	public boolean isFailing() {
+		String status = getStatus();
+
+		if (status.equals("FIXED") || status.equals("PASSED") ||
+			status.equals("SKIPPED")) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean isSkipped() {
+		return Objects.equals(getStatus(), "SKIPPED");
 	}
 
 	protected BaseTestReport(
@@ -43,6 +93,9 @@ public class BaseTestReport implements TestReport {
 		_downstreamBuildReport = downstreamBuildReport;
 		_jsonObject = jsonObject;
 	}
+
+	private static final Pattern _moduleAppPathPattern = Pattern.compile(
+		"(?<moduleAppPath>(:dxp)?:apps:[^:]+):.*");
 
 	private final DownstreamBuildReport _downstreamBuildReport;
 	private final JSONObject _jsonObject;

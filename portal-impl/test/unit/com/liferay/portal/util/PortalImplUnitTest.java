@@ -7,6 +7,7 @@ package com.liferay.portal.util;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -14,6 +15,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.InvokerPortlet;
+import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.security.auth.AlwaysAllowDoAsUser;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
@@ -27,8 +29,10 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LayoutTypePortletFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.LayoutImpl;
@@ -46,6 +50,15 @@ import com.liferay.portlet.ActionResponseFactory;
 import com.liferay.portlet.internal.MutableRenderParametersImpl;
 import com.liferay.portlet.test.MockLiferayPortletContext;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -53,16 +66,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.logging.Level;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -543,20 +546,32 @@ public class PortalImplUnitTest {
 			MockHttpServletRequest mockHttpServletRequest =
 				new MockHttpServletRequest();
 
+			byte[] doAsUserIdBytes = new byte[Long.BYTES];
+
+			BigEndianCodec.putLong(doAsUserIdBytes, 0, 1L);
+
+			mockHttpServletRequest.setParameter(
+				"doAsUserId",
+				StringUtil.bytesToHexString(
+					ChecksumUtil.appendChecksum(doAsUserIdBytes)));
+
+			_portalImpl.getUserId(mockHttpServletRequest);
+
+			Assert.assertTrue(calledAlwaysAllowDoAsUser[0]);
+
+			calledAlwaysAllowDoAsUser[0] = false;
+
+			mockHttpServletRequest = new MockHttpServletRequest();
+
+			_portalImpl.getUserId(mockHttpServletRequest);
+
+			Assert.assertFalse(calledAlwaysAllowDoAsUser[0]);
+
 			mockHttpServletRequest.setParameter("doAsUserId", "1");
 
 			_portalImpl.getUserId(mockHttpServletRequest);
 
-			Assert.assertTrue(
-				"AlwaysAllowDoAsUser not called", calledAlwaysAllowDoAsUser[0]);
-
-			calledAlwaysAllowDoAsUser[0] = false;
-
-			_portalImpl.getUserId(new MockHttpServletRequest());
-
-			Assert.assertFalse(
-				"AlwaysAllowDoAsUser should not be called",
-				calledAlwaysAllowDoAsUser[0]);
+			Assert.assertFalse(calledAlwaysAllowDoAsUser[0]);
 		}
 		finally {
 			serviceRegistration.unregister();
@@ -645,8 +660,8 @@ public class PortalImplUnitTest {
 
 		Assert.assertFalse(_portalImpl.isValidResourceId(sb.toString()));
 
-		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
-				HttpComponentsUtil.class.getName(), Level.OFF)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				HttpComponentsUtil.class.getName(), LoggerTestUtil.OFF)) {
 
 			Assert.assertFalse(_portalImpl.isValidResourceId("%view.jsp"));
 		}
@@ -746,26 +761,31 @@ public class PortalImplUnitTest {
 		).thenReturn(
 			enumeration
 		);
+
 		Mockito.when(
 			actionRequestMock.getParameterValues("redirect")
 		).thenReturn(
 			params.get("redirect")
 		);
+
 		Mockito.when(
 			actionRequestMock.getParameterValues("p_u_i_d")
 		).thenReturn(
 			params.get("p_u_i_d")
 		);
+
 		Mockito.when(
 			actionRequestMock.getParameterValues("passwordReset")
 		).thenReturn(
 			params.get("passwordReset")
 		);
+
 		Mockito.when(
 			actionRequestMock.getParameterValues("password1")
 		).thenReturn(
 			params.get("password1")
 		);
+
 		Mockito.when(
 			actionRequestMock.getParameterValues("password2")
 		).thenReturn(
@@ -863,11 +883,13 @@ public class PortalImplUnitTest {
 		).thenReturn(
 			2000L
 		);
+
 		Mockito.when(
 			group.isUser()
 		).thenReturn(
 			userGroup
 		);
+
 		Mockito.when(
 			group.getFriendlyURL()
 		).thenReturn(

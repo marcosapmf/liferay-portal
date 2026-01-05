@@ -38,18 +38,33 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.NamespaceServletRequest;
 import com.liferay.portal.servlet.SharedSessionServletRequest;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletPreferencesImpl;
 import com.liferay.portlet.PortletPreferencesWrapper;
 import com.liferay.portlet.PublicRenderParametersPool;
 import com.liferay.portlet.RenderParametersPool;
 import com.liferay.portlet.UserInfoFactory;
 import com.liferay.portlet.portletconfiguration.util.PublicRenderParameterConfiguration;
+
+import jakarta.portlet.PortalContext;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletContext;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletSession;
+import jakarta.portlet.RenderParameters;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import java.security.Principal;
 
@@ -67,21 +82,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.portlet.PortalContext;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletContext;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletSession;
-import javax.portlet.RenderParameters;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
 /**
  * @author Brian Wing Shun Chan
  * @author Brian Myunghun Kim
@@ -93,11 +93,12 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 	@Override
 	public void cleanUp() {
-		_httpServletRequest.removeAttribute(JavaConstants.JAVAX_PORTLET_CONFIG);
 		_httpServletRequest.removeAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 		_httpServletRequest.removeAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
+		_httpServletRequest.removeAttribute(
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 		_httpServletRequest.removeAttribute(PortletRequest.LIFECYCLE_PHASE);
 		_httpServletRequest.removeAttribute(WebKeys.PORTLET_ID);
 		_httpServletRequest.removeAttribute(WebKeys.PORTLET_CONTENT);
@@ -118,9 +119,9 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 		setAttribute(WebKeys.PORTLET_ID, liferayPortletConfig.getPortletId());
 
-		setAttribute(JavaConstants.JAVAX_PORTLET_CONFIG, portletConfig);
-		setAttribute(JavaConstants.JAVAX_PORTLET_REQUEST, this);
-		setAttribute(JavaConstants.JAVAX_PORTLET_RESPONSE, portletResponse);
+		setAttribute(JavaConstants.JAKARTA_PORTLET_CONFIG, portletConfig);
+		setAttribute(JavaConstants.JAKARTA_PORTLET_REQUEST, this);
+		setAttribute(JavaConstants.JAKARTA_PORTLET_RESPONSE, portletResponse);
 		setAttribute(PortletRequest.LIFECYCLE_PHASE, getLifecycle());
 	}
 
@@ -1123,7 +1124,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		while (enumeration.hasMoreElements()) {
 			String name = enumeration.nextElement();
 
-			if (!name.equals(JavaConstants.JAVAX_SERVLET_INCLUDE_PATH_INFO)) {
+			if (!name.equals(JavaConstants.JAKARTA_SERVLET_INCLUDE_PATH_INFO)) {
 				names.add(name);
 			}
 		}
@@ -1242,6 +1243,10 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 		for (String checkboxName : StringUtil.split(checkboxNames)) {
 			String value = dynamicServletRequest.getParameter(checkboxName);
+
+			if (checkboxName.contains("ExpandoAttribute")) {
+				continue;
+			}
 
 			if (value == null) {
 				dynamicServletRequest.setParameter(

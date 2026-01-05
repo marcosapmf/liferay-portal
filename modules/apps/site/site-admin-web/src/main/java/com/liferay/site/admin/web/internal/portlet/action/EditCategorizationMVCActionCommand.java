@@ -16,8 +16,8 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
+		"jakarta.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"mvc.command.name=/site_admin/edit_categorization"
 	},
 	service = MVCActionCommand.class
@@ -51,7 +51,7 @@ public class EditCategorizationMVCActionCommand
 
 		_groupService.updateGroup(
 			liveGroupId, liveGroup.getParentGroupId(), liveGroup.getNameMap(),
-			liveGroup.getDescriptionMap(), liveGroup.getType(),
+			liveGroup.getDescriptionMap(), liveGroup.getType(), null,
 			liveGroup.isManualMembership(),
 			liveGroup.getMembershipRestriction(), liveGroup.getFriendlyURL(),
 			liveGroup.isInheritContent(), liveGroup.isActive(), serviceContext);

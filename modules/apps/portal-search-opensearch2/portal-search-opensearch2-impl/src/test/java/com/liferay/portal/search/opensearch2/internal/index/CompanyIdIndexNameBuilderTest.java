@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.opensearch2.configuration.OpenSearchConfiguration;
 import com.liferay.portal.search.opensearch2.internal.BaseOpenSearchTestCase;
@@ -77,11 +78,10 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 
 	@After
 	public void tearDown() throws Exception {
-		if (_companyIndexFactory != null) {
-			ReflectionTestUtil.invoke(
-				_companyIndexFactory, "deactivate", new Class<?>[0]);
+		if (_indexFactory != null) {
+			_indexFactory.close();
 
-			_companyIndexFactory = null;
+			_indexFactory = null;
 		}
 
 		if (_companyIndexHelper != null) {
@@ -94,11 +94,11 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 
 	@Test
 	public void testActivate() throws Exception {
-		OpenSearchConfigurationWrapper elasticsearchConfigurationWrapperMock =
+		OpenSearchConfigurationWrapper openSearchConfigurationWrapperMock =
 			Mockito.mock(OpenSearchConfigurationWrapperImpl.class);
 
 		Mockito.when(
-			elasticsearchConfigurationWrapperMock.indexNamePrefix()
+			openSearchConfigurationWrapperMock.indexNamePrefix()
 		).thenReturn(
 			"UPPERCASE"
 		);
@@ -107,7 +107,7 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 			new CompanyIdIndexNameBuilder() {
 				{
 					openSearchConfigurationWrapper =
-						elasticsearchConfigurationWrapperMock;
+						openSearchConfigurationWrapperMock;
 				}
 			};
 
@@ -173,34 +173,23 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 		ReflectionTestUtil.setFieldValue(
 			_companyIndexHelper, "_openSearchConnectionManager",
 			openSearchConnectionManager);
+		ReflectionTestUtil.setFieldValue(
+			_companyIndexHelper, "_searchEngineInformation",
+			_createSearchEngineInformation());
 
 		ReflectionTestUtil.invoke(
 			_companyIndexHelper, "activate",
 			new Class<?>[] {BundleContext.class},
 			SystemBundleUtil.getBundleContext());
 
-		_companyIndexFactory = new CompanyIndexFactory();
-
-		ReflectionTestUtil.setFieldValue(
-			_companyIndexFactory, "_companyLocalService",
-			Mockito.mock(CompanyLocalService.class));
-		ReflectionTestUtil.setFieldValue(
-			_companyIndexFactory, "_companyIndexHelper", _companyIndexHelper);
-		ReflectionTestUtil.setFieldValue(
-			_companyIndexFactory, "_openSearchConfigurationWrapper",
-			openSearchConfigurationWrapper);
-		ReflectionTestUtil.setFieldValue(
-			_companyIndexFactory, "_openSearchConnectionManager",
-			openSearchConnectionManager);
-
-		ReflectionTestUtil.invoke(
-			_companyIndexFactory, "activate", new Class<?>[0]);
+		_indexFactory = new IndexFactory(
+			_companyIndexHelper, Mockito.mock(CompanyLocalService.class),
+			openSearchConfigurationWrapper, openSearchConnectionManager);
 
 		OpenSearchClient openSearchClient =
 			openSearchConnectionManager.getOpenSearchClient();
 
-		_companyIndexFactory.initializeIndex(
-			companyId, openSearchClient.indices());
+		_indexFactory.initializeIndex(companyId, openSearchClient.indices());
 	}
 
 	private void _assertIndexNamePrefix(
@@ -240,6 +229,19 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 		};
 	}
 
+	private SearchEngineInformation _createSearchEngineInformation() {
+		SearchEngineInformation searchEngineInformation = Mockito.mock(
+			SearchEngineInformation.class);
+
+		Mockito.when(
+			searchEngineInformation.getEmbeddingVectorDimensions()
+		).thenReturn(
+			new int[] {256}
+		);
+
+		return searchEngineInformation;
+	}
+
 	private void _deleteIndices(long companyId, String indexNamePrefix) {
 		OpenSearchClient openSearchClient =
 			openSearchConnectionManager.getOpenSearchClient();
@@ -272,7 +274,7 @@ public class CompanyIdIndexNameBuilderTest extends BaseOpenSearchTestCase {
 	private static final MockedStatic<FrameworkUtil>
 		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 
-	private CompanyIndexFactory _companyIndexFactory;
 	private CompanyIndexHelper _companyIndexHelper;
+	private IndexFactory _indexFactory;
 
 }

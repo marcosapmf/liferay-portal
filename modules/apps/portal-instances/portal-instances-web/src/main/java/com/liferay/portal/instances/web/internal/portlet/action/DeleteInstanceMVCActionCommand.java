@@ -5,7 +5,6 @@
 
 package com.liferay.portal.instances.web.internal.portlet.action;
 
-import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.instances.web.internal.constants.PortalInstancesPortletKeys;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -16,10 +15,11 @@ import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.CompanyService;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + PortalInstancesPortletKeys.PORTAL_INSTANCES,
+		"jakarta.portlet.name=" + PortalInstancesPortletKeys.PORTAL_INSTANCES,
 		"mvc.command.name=/portal_instances/delete_instance"
 	},
 	service = MVCActionCommand.class
@@ -47,13 +47,13 @@ public class DeleteInstanceMVCActionCommand extends BaseMVCActionCommand {
 			long companyId = ParamUtil.getLong(actionRequest, "companyId");
 
 			_companyService.deleteCompany(companyId);
-
-			_portalInstancesLocalService.synchronizePortalInstances();
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(exception);
 			}
+
+			SessionErrors.add(actionRequest, exception.getClass());
 
 			jsonObject.put(
 				"error",
@@ -76,8 +76,5 @@ public class DeleteInstanceMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private PortalInstancesLocalService _portalInstancesLocalService;
 
 }

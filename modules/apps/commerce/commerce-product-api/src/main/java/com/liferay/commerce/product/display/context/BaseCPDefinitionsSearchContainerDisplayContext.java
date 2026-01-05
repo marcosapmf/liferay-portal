@@ -17,9 +17,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -161,11 +161,7 @@ public abstract class BaseCPDefinitionsSearchContainerDisplayContext<T>
 	}
 
 	public boolean isShowInfoPanel() {
-		if (isSearch()) {
-			return false;
-		}
-
-		return true;
+		return !isSearch();
 	}
 
 	public void setDefaultOrderByCol(String defaultOrderByCol) {

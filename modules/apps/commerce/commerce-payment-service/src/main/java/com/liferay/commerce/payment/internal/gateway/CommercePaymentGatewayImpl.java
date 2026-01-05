@@ -10,11 +10,11 @@ import com.liferay.commerce.payment.audit.CommercePaymentEntryAuditTypeRegistry;
 import com.liferay.commerce.payment.configuration.CommercePaymentEntryAuditConfiguration;
 import com.liferay.commerce.payment.constants.CommercePaymentEntryAuditConstants;
 import com.liferay.commerce.payment.gateway.CommercePaymentGateway;
+import com.liferay.commerce.payment.helper.CommercePaymentHelper;
 import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
 import com.liferay.commerce.payment.model.CommercePaymentEntry;
 import com.liferay.commerce.payment.service.CommercePaymentEntryAuditLocalService;
 import com.liferay.commerce.payment.service.CommercePaymentEntryLocalService;
-import com.liferay.commerce.payment.util.CommercePaymentHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,9 +32,9 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import javax.persistence.OptimisticLockException;
+import jakarta.persistence.OptimisticLockException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

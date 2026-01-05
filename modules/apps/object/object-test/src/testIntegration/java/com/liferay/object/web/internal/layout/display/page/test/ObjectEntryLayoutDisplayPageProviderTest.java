@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -50,9 +51,7 @@ public class ObjectEntryLayoutDisplayPageProviderTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testGetObjectEntryLayoutDisplayPageObjectProvider()
-		throws Exception {
-
+	public void testGetLayoutDisplayPageObjectProvider() throws Exception {
 		String objectFieldName = StringUtil.randomId();
 
 		ObjectDefinition objectDefinition1 = _publishCustomObjectDefinition(
@@ -65,8 +64,10 @@ public class ObjectEntryLayoutDisplayPageProviderTest {
 				).build()));
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			objectDefinition1.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				objectFieldName, StringUtil.randomId()
 			).build(),

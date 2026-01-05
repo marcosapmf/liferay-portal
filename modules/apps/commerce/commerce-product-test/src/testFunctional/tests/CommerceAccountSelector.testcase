@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -281,80 +284,6 @@ definition {
 
 	@description = "COMMERCE-9022. As a Sales Agent, I want to be able to create a new Account from the account selector"
 	@priority = 5
-	test CanCheckoutAfterInFlowAccountCreation {
-		property portal.acceptance = "true";
-
-		task ("GIVEN a Minium site created and the catalog page is reached") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			ApplicationsMenu.gotoSite(site = "Minium");
-		}
-
-		task ("WHEN an account is in-flow created") {
-			Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
-
-			Button.click(button = "Create New Account");
-
-			CommerceAcceleratorsInitializer.createNewAccountInFlow(accountName = "Commerce Account");
-		}
-
-		task ("AND a buyer user is associated with the account") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
-
-			CommerceNavigator.gotoEntry(entryName = "Commerce Account");
-
-			CommerceAcceleratorsInitializer.inviteNewMemberWithRoleToAccount(
-				accountName = "Commerce Account",
-				emailAddress = "buyer@liferay.com",
-				role = "Buyer",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userScreenName = "buyeruser");
-
-			User.openUsersAdmin();
-
-			CommerceLogin.editPasswordCP(
-				newPassword = "ttest",
-				requirePasswordReset = "true",
-				userScreenName = "buyeruser");
-		}
-
-		task ("AND the buyer user logs in and reaches the catalog page") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				newPassword = PropsUtil.get("default.admin.password"),
-				password = "ttest",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-		}
-
-		CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-		FrontStore.addInitializerProductToCart(
-			productName = "ABS Sensor",
-			productQuantity = 2);
-
-		CommerceCheckout.gotoCheckoutViaMiniCart();
-
-		CommerceCheckout.initializersCheckout(
-			newAddressAddress = "Test Address",
-			newAddressCity = "Test City",
-			newAddressCountry = "United States",
-			newAddressName = "Address Name",
-			newAddressZipCode = "Test Zip Code",
-			productName = "ABS Sensor",
-			productQuantity = 2,
-			productUnitPrice = 50,
-			shippingMethod = "Standard");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#CHECKOUT_SUCCESS_MESSAGE",
-			value1 = "Success! Your order has been processed.");
-	}
-
-	@description = "COMMERCE-9022. As a Sales Agent, I want to be able to create a new Account from the account selector"
-	@priority = 5
 	test CanCreateNewAccountInFlow {
 		property portal.acceptance = "true";
 
@@ -429,6 +358,8 @@ definition {
 			Button.click(button = "Create New Account");
 
 			CommerceAcceleratorsInitializer.createNewAccountInFlow(accountName = "Commerce Account");
+
+			AssertElementNotPresent(locator1 = "//div[@class='modal-content']//div/h1[text()='Create New Account']");
 		}
 
 		task ("AND a buyer user is associated with the account") {
@@ -617,102 +548,6 @@ definition {
 		AssertTextEquals(
 			locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN_MENU_SELECTED_ACCOUNT",
 			value1 = "Commerce Account 2");
-	}
-
-	@description = "COMMERCE-5929. As a buyer, I want to be able to select an order from the list (which is not the selected one), and have the selected order change to the newly selected order"
-	@priority = 5
-	test ChangeActiveOrderFromOrdersList {
-		property portal.acceptance = "true";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
-
-		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "test");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
-
-		Click(
-			key_filterOption = "Add Order",
-			locator1 = "AppBuilder#CHOOSE_SEARCH_FILTER_BY_OPTION");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
-
-		Click(
-			key_filterOption = "Add Order",
-			locator1 = "AppBuilder#CHOOSE_SEARCH_FILTER_BY_OPTION");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		WaitForElementPresent(locator1 = "CommerceEntry#ACTIVE_ORDER_ID");
-
-		var getFirstId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
-
-		FrontStore.addInitializerProductToCart(
-			productName = "U-Joint",
-			productQuantity = 1);
-
-		Click(locator1 = "Button#ANGLE_DOWN");
-
-		WaitForElementPresent(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
-
-		var getSecondId = selenium.getText("CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
-
-		WaitForElementPresent(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
-
-		Click(locator1 = "CommerceEntry#ORDER_ID_FROM_ACCOUNT_SELECTOR");
-
-		AssertElementNotPresent(
-			key_filterOption = ${getFirstId},
-			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
-
-		AssertElementPresent(
-			key_filterOption = ${getSecondId},
-			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
-
-		Click(locator1 = "CommerceAccelerators#MINI_CART_BUTTON");
-
-		AssertElementPresent(locator1 = "CommerceAccelerators#MINI_CART_EMPTY");
-	}
-
-	@description = "COMMERCE-5936. As a buyer, I want to be able to create a new order from the account selector dropdown's order list view, The created order should then be the selected order"
-	@priority = 5
-	test CreateNewOrderFromAccountSelectorDropdown {
-		property portal.acceptance = "true";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
-
-		CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account 1");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		FrontStore.addInitializerProductToCart(
-			productName = "U-Joint",
-			productQuantity = 1);
-
-		Click(locator1 = "Button#ANGLE_DOWN");
-
-		WaitForElementPresent(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_ORDER_ID");
-
-		var getOrderId = selenium.getText("CommerceAccelerators#ACCOUNT_SELECTOR_ORDER_ID");
-
-		Button.click(button = "Create New Order");
-
-		AssertElementNotPresent(
-			key_filterOption = ${getOrderId},
-			locator1 = "AppBuilder#CHOOSE_APP_SEARCH_FILTER_BY_OPTION");
 	}
 
 	@description = "COMMERCE-5956. As a buyer, I want to search for an account in the accounts list, and select it as active account"

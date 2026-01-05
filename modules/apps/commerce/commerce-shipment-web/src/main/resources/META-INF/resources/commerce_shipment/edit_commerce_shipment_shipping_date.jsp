@@ -12,44 +12,25 @@ CommerceShipmentDisplayContext commerceShipmentDisplayContext = (CommerceShipmen
 
 CommerceShipment commerceShipment = commerceShipmentDisplayContext.getCommerceShipment();
 
-Date shippingDate = commerceShipment.getShippingDate();
+String shippingDateString = null;
 
-int shippingDay = 0;
-int shippingMonth = -1;
-int shippingYear = 0;
+Date shippingDate = commerceShipment.getShippingDate();
 
 if (shippingDate != null) {
 	Calendar calendar = CalendarFactoryUtil.getCalendar(shippingDate.getTime());
 
-	shippingDay = calendar.get(Calendar.DAY_OF_MONTH);
-	shippingMonth = calendar.get(Calendar.MONTH);
-	shippingYear = calendar.get(Calendar.YEAR);
+	Format format = FastDateFormatFactoryUtil.getDate(DateFormat.MEDIUM, locale, user.getTimeZone());
+
+	shippingDateString = format.format(calendar.getTime());
 }
 %>
 
 <portlet:actionURL name="/commerce_shipment/edit_commerce_shipment" var="editCommerceShipmentURL" />
 
-<commerce-ui:modal-content
-	title='<%= LanguageUtil.format(request, "edit-x", "estimated-shipping-date") %>'
->
-	<liferay-ui:error exception="<%= CommerceShipmentShippingDateException.class %>" />
+<liferay-ui:error exception="<%= CommerceShipmentShippingDateException.class %>" />
 
-	<aui:form action="<%= editCommerceShipmentURL %>" cssClass="container-fluid container-fluid-max-xl p-0" method="post" name="fm">
-		<aui:input name="<%= Constants.CMD %>" type="hidden" value="shippingDate" />
-		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-		<aui:input name="commerceShipmentId" type="hidden" value="<%= commerceShipment.getCommerceShipmentId() %>" />
-
-		<liferay-ui:input-date
-			dayParam="shippingDateDay"
-			dayValue="<%= shippingDay %>"
-			disabled="<%= false %>"
-			monthParam="shippingDateMonth"
-			monthValue="<%= shippingMonth %>"
-			name="shippingDate"
-			nullable="<%= true %>"
-			showDisableCheckbox="<%= false %>"
-			yearParam="shippingDateYear"
-			yearValue="<%= shippingYear %>"
-		/>
-	</aui:form>
-</commerce-ui:modal-content>
+<aui:form action="<%= editCommerceShipmentURL %>" cssClass="container-fluid container-fluid-max-xl p-4" method="post" name="fm">
+	<aui:input name="<%= Constants.CMD %>" type="hidden" value="shippingDate" />
+	<aui:input name="commerceShipmentId" type="hidden" value="<%= commerceShipment.getCommerceShipmentId() %>" />
+	<aui:input name="shippingDate" type="date" value="<%= shippingDateString %>" />
+</aui:form>

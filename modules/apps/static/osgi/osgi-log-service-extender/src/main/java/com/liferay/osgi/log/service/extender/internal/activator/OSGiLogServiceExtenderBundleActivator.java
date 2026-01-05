@@ -5,14 +5,14 @@
 
 package com.liferay.osgi.log.service.extender.internal.activator;
 
-import com.liferay.osgi.log.service.extender.internal.osgi.commands.LoggingLevelsOSGiCommands;
+import com.liferay.osgi.log.service.extender.internal.osgi.commands.LoggingOSGiCommands;
 import com.liferay.osgi.util.osgi.commands.OSGiCommands;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.log4j.Log4JUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PropertiesUtil;
-import com.liferay.portal.log4j.Log4JUtil;
 
 import java.io.IOException;
 
@@ -148,12 +148,12 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 
 			bundleTracker.open();
 
-			LoggingLevelsOSGiCommands loggingLevelsOSGiCommands =
-				new LoggingLevelsOSGiCommands(loggerAdmin);
+			LoggingOSGiCommands loggingOSGiCommands = new LoggingOSGiCommands(
+				loggerAdmin);
 
 			ServiceRegistration<OSGiCommands> serviceRegistration =
 				_bundleContext.registerService(
-					OSGiCommands.class, loggingLevelsOSGiCommands,
+					OSGiCommands.class, loggingOSGiCommands,
 					HashMapDictionaryBuilder.<String, Object>put(
 						"osgi.command.function",
 						new String[] {"levels", "level"}

@@ -44,17 +44,17 @@ import com.liferay.portal.kernel.util.InstancePool;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -83,17 +83,16 @@ public class ServicePreActionTest {
 	public static void setUpClass() throws Exception {
 		_company = CompanyTestUtil.addCompany();
 
-		_companyThreadLocalCompanyId = CompanyThreadLocal.getCompanyId();
-
-		CompanyThreadLocal.setCompanyId(_company.getCompanyId());
+		_safeCloseable = CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+			_company.getCompanyId());
 	}
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		CompanyThreadLocal.setCompanyId(_companyThreadLocalCompanyId);
+		_safeCloseable.close();
 
 		UserTestUtil.setUser(
-			UserTestUtil.getAdminUser(_companyThreadLocalCompanyId));
+			UserTestUtil.getAdminUser(CompanyThreadLocal.getCompanyId()));
 
 		CompanyLocalServiceUtil.deleteCompany(_company.getCompanyId());
 	}
@@ -465,7 +464,7 @@ public class ServicePreActionTest {
 	}
 
 	private static Company _company;
-	private static long _companyThreadLocalCompanyId;
+	private static SafeCloseable _safeCloseable;
 
 	@DeleteAfterTestRun
 	private Group _group;
@@ -528,9 +527,9 @@ public class ServicePreActionTest {
 					ServicePreActionTest.class.getName() + "_JspException");
 
 				httpServletRequest.setAttribute(
-					"javax.servlet.error.exception", exception);
+					"jakarta.servlet.error.exception", exception);
 				httpServletRequest.setAttribute(
-					"javax.servlet.jsp.jspException", exception);
+					"jakarta.servlet.jsp.jspException", exception);
 			}
 
 			throw new ActionException(ServicePreActionTest.class.getName());

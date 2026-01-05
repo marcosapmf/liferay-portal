@@ -3,54 +3,98 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import {
+	Body as ClayTableBody,
+	Cell as ClayTableCell,
+	Head as ClayTableHead,
+	Row as ClayTableRow,
+	Table as ClayTable,
+} from '@clayui/core';
 import {ClayCheckbox, ClayRadio} from '@clayui/form';
-import {LinkOrButton} from '@clayui/shared';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
+import {FDSTableCellHTMLElementBuilderArgs} from '@liferay/js-api/data-set';
 import classNames from 'classnames';
-import React, {useContext, useState} from 'react';
+import {ClientExtension} from 'frontend-js-components-web';
+import {getObjectValueFromPath, throttle} from 'frontend-js-web';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 
-import {IItemsActions} from '../..';
-import FrontendDataSetContext from '../../FrontendDataSetContext';
+import FrontendDataSetContext, {
+	IFrontendDataSetContext,
+} from '../../FrontendDataSetContext';
 import Actions from '../../actions/Actions';
+import {getInternalCellRenderer} from '../../cell_renderers/getInternalCellRenderer';
+import FDSDndProvider from '../../dnd/FDSDndProvider';
+import useFDSDrop from '../../dnd/useFDSDrop';
 import {
 	ILocalizedItemDetails,
 	getLocalizedValue,
 } from '../../utils/getLocalizedValue';
-import ViewsContext from '../ViewsContext';
-import {ClayTable} from './ClayTable';
+import {getInputRendererById} from '../../utils/renderer';
+import {saveViewSettings} from '../../utils/saveViewSettings';
+import {
+	IItemsActions,
+	ITableSchema,
+	IView,
+	TRenderer,
+	TSort,
+	VisibleFieldNames,
+} from '../../utils/types';
+import ViewsContext, {
+	IViewsContext,
+	TViewsContextDispatch,
+} from '../ViewsContext';
+import getCellColumnClassName from '../utils/getCellColumnClassName';
 
 // @ts-ignore
 
-import FieldsSelectorDropdown from './FieldsSelectorDropdown';
-import TableCell from './TableCell';
-import TableHeadCell from './TableHeadCell';
+import {EViewsActionTypes} from '../viewsReducer';
+import TableContext from './TableContext';
+import TableContextProvider from './TableContextProvider';
 
-// @ts-ignore
+type Column = {
+	fieldName: string;
+};
 
-import TableInlineAddingRow from './TableInlineAddingRow';
-import TableContext from './dnd_table/TableContext';
+type Field = {
+	contentRenderer?: string;
+	contentRendererClientExtension?: boolean;
+	fieldName: any;
+	label?: string;
+	localizeLabel?: boolean;
+	mapData?: Function;
+	sortable?: boolean;
+};
 
-// @ts-ignore
+type Sorting = {
+	column: React.Key;
+	direction: 'ascending' | 'descending';
+};
 
-import DndTable from './dnd_table/index';
+const defaultAddItem = {
+	editable: true,
+	fieldName: 'add',
+	id: 'add',
+};
 
-interface IField {
-	fieldName: string | [];
-	label: string;
-	mapData: Function;
-}
-interface ISchema {
-	fields: Array<IField>;
-}
+const defaultAlwaysVisibleColumns = new Set(['select']);
 
 const getVisibleFields = ({
 	fields,
 	visibleFieldNames,
 }: {
 	fields: Array<any>;
-	visibleFieldNames: Array<string>;
+	visibleFieldNames: VisibleFieldNames;
 }) => {
 	const visibleFields = fields.filter(
-		({fieldName}) => visibleFieldNames[fieldName]
+		({fieldName}: {fieldName: string | string[]}) => {
+			if (Array.isArray(fieldName)) {
+				return visibleFieldNames[fieldName.join(',')];
+			}
+
+			return visibleFieldNames[fieldName.replaceAll('.', ',')];
+		}
 	);
 
 	return visibleFields.length ? visibleFields : fields;
@@ -59,357 +103,654 @@ const getVisibleFields = ({
 const Head = ({
 	fields,
 	items,
-	itemsActions,
-	schema,
-	selectItems,
-	selectable,
-	selectedItemsKey,
-	selectedItemsValue,
 	selectionType,
 }: {
-	fields: Array<IField>;
+	fields: Array<Field>;
 	items: Array<any>;
-	itemsActions: Array<IItemsActions>;
-	schema: ISchema;
-	selectItems: Function;
-	selectable: boolean | undefined;
-	selectedItemsKey: string;
-	selectedItemsValue: any;
-	selectionType: string | undefined;
+	selectionType?: 'single' | 'multiple';
 }) => {
-	const {isFixed} = useContext(TableContext);
-
-	function handleCheckboxClick() {
-		if (selectedItemsValue.length === items.length) {
-			return selectItems([]);
-		}
-
-		return selectItems(items.map((item) => item[selectedItemsKey]));
-	}
+	const {selectable} = useContext(FrontendDataSetContext);
 
 	return (
-		<DndTable.Head>
-			<DndTable.Row>
-				{selectable && (
-					<DndTable.Cell
-						className="item-selector"
-						columnName="item-selector"
-						heading
-					>
-						{!!items.length && selectionType === 'multiple' ? (
-							<ClayCheckbox
-								checked={!!selectedItemsValue.length}
-								indeterminate={
-									!!selectedItemsValue.length &&
-									items.length !== selectedItemsValue.length
-								}
-								name="table-head-selector"
-								onChange={handleCheckboxClick}
-								title={
-									items.length !== selectedItemsValue.length
-										? Liferay.Language.get('select-items')
-										: Liferay.Language.get(
-												'clear-selection'
-											)
-								}
-							/>
-						) : null}
-					</DndTable.Cell>
-				)}
-
-				{fields.map((field) => (
-					<TableHeadCell {...field} key={field.label} />
-				))}
-
-				<DndTable.Cell
-					className="item-actions"
-					columnName="item-actions"
-					defaultWidth={0}
-					heading
-				>
-					<FieldsSelectorDropdown fields={schema.fields} />
-
-					{!isFixed &&
-						itemsActions?.length === 1 &&
-						!itemsActions[0].icon &&
-						itemsActions[0].label && (
-							<LinkOrButton
-								className="btn btn-secondary btn-sm"
-								href="#"
-								monospaced={false}
-								style={{
-									'visibility': 'hidden',
-									'white-space': 'nowrap',
-								}}
+		<ClayTableHead
+			items={selectable ? [{fieldName: 'select'}, ...fields] : fields}
+		>
+			{(field: Field) => {
+				if (field.fieldName === 'select') {
+					if (!!items.length && selectionType !== 'multiple') {
+						return (
+							<ClayTableCell
+								key="select"
+								scope="col"
+								textValue="select-item"
+								width="51px"
 							>
-								{itemsActions[0].label}
-							</LinkOrButton>
-						)}
-				</DndTable.Cell>
-			</DndTable.Row>
-		</DndTable.Head>
-	);
-};
-
-const ItemCells = ({
-	fields,
-	item,
-	itemId,
-	itemInlineChanges,
-	itemsActions,
-}: {
-	fields: Array<any>;
-	item: any;
-	itemId: string;
-	itemInlineChanges?: Array<any> | undefined;
-	itemsActions: Array<IItemsActions>;
-}) => {
-	return (
-		<>
-			{fields.map((field) => {
-				const {actionDropdownItems} = item;
-
-				const localizedValue: ILocalizedItemDetails | null =
-					getLocalizedValue(item, field.fieldName);
-
-				const valuePath = localizedValue?.valuePath ?? undefined;
+								<span className="sr-only">
+									{Liferay.Language.get('item-selection')}
+								</span>
+							</ClayTableCell>
+						);
+					}
+				}
 
 				return (
-					<TableCell
-						actions={itemsActions || actionDropdownItems}
-						field={field}
-						itemData={item}
-						itemId={itemId}
-						itemInlineChanges={itemInlineChanges}
+					<HeadCellResizer
+						className={getCellColumnClassName(field.fieldName)}
+						columnName={field.fieldName}
 						key={field.fieldName}
-						rootPropertyName={
-							localizedValue?.rootPropertyName ?? undefined
-						}
-						value={localizedValue?.value ?? undefined}
-						valuePath={valuePath}
-					/>
+						sortable={field.sortable}
+						textValue={field.fieldName}
+					>
+						{field.label || (
+							<span className="sr-only">
+								{field.fieldName === 'select'
+									? Liferay.Language.get('item-selection')
+									: field.fieldName}
+							</span>
+						)}
+					</HeadCellResizer>
 				);
-			})}
-		</>
+			}}
+		</ClayTableHead>
 	);
 };
 
-const RowWithActions = ({
+const Row = ({
 	active,
+	columns,
 	item,
-	itemId,
+	itemInlineChanges,
+	items,
 	itemsActions,
-	itemsChanges,
-	selectItems,
-	selectable,
-	selected,
-	selectedItemsValue,
+	onItemSelectionChange,
 	selectionType,
-	visibleFields,
 	...otherProps
 }: {
 	active: boolean;
+	columns: Array<Field>;
 	item: any;
-	itemId: string;
+	itemInlineChanges?: {[key: string]: any};
+	items: any[];
 	itemsActions: Array<IItemsActions>;
-	itemsChanges: Array<any> | undefined;
-	selectItems: Function;
-	selectable: boolean | undefined;
-	selected: boolean;
-	selectedItemsValue: any;
-	selectionType: string | undefined;
-	visibleFields: Array<any>;
+	onItemSelectionChange: Function;
+	selectionType?: 'single' | 'multiple';
 }) => {
-	const [menuActive, setMenuActive] = useState(false);
+	const {itemsChanges, selectedItemsKey, updateItem} = useContext(
+		FrontendDataSetContext
+	);
 
 	const SelectionComponent =
 		selectionType === 'multiple' ? ClayCheckbox : ClayRadio;
 
+	const id = getObjectValueFromPath({object: item, path: selectedItemsKey});
+
 	return (
-		<DndTable.Row
-			className={classNames({
-				active,
-				'menu-active': menuActive,
-				selected,
-			})}
+		<ClayTableRowOptionalDropTarget
 			{...otherProps}
+			className={classNames({'table-active': active})}
+			item={item}
+			items={columns}
+			onItemSelectionChange={onItemSelectionChange}
 		>
-			{selectable && (
-				<DndTable.Cell
-					className="item-selector"
-					columnName="item-selector"
-				>
-					<SelectionComponent
-						checked={
-							!!selectedItemsValue.find(
-								(element: any) =>
-									String(element) === String(itemId)
-							)
+			{(cell: Column) => {
+				const cellColumnName = getCellColumnClassName(cell.fieldName);
+
+				switch (cell.fieldName) {
+					case 'actions': {
+						return (
+							<ClayTableCell
+								className="cell-item-actions"
+								key={`${id}:actions`}
+								textValue={Liferay.Language.get('item-actions')}
+							>
+								{item.editable ? (
+									<AddActions />
+								) : (
+									(itemsActions?.length > 0 ||
+										item.actionDropdownItems?.length >
+											0) && (
+										<Actions
+											actions={
+												itemsActions ||
+												item.actionDropdownItems
+											}
+											itemData={item}
+											itemId={id}
+											items={items}
+											onItemSelectionChange={
+												onItemSelectionChange
+											}
+										/>
+									)
+								)}
+							</ClayTableCell>
+						);
+					}
+					case 'select':
+						return (
+							<ClayTableCell
+								className="cell-select-item"
+								key={`${id}:select`}
+								textValue={Liferay.Language.get('select-item')}
+							>
+								{!item.editable && (
+									<SelectionComponent
+										checked={active}
+										onChange={() =>
+											onItemSelectionChange(item)
+										}
+										title={Liferay.Language.get(
+											'select-item'
+										)}
+										value={id}
+									/>
+								)}
+							</ClayTableCell>
+						);
+					default: {
+						if (item.editable) {
+							const field = cell as any;
+							let InputRenderer: any = null;
+
+							if (field.inlineEditSettings?.type) {
+								InputRenderer = getInputRendererById(
+									field.inlineEditSettings.type
+								);
+							}
+
+							const valuePath = Array.isArray(field.fieldName)
+								? field.fieldName.map((property: string) =>
+										property === 'LANG'
+											? Liferay.ThemeDisplay.getDefaultLanguageId()
+											: property
+									)
+								: [field.fieldName];
+
+							const rootPropertyName = valuePath[0];
+
+							const newItem = itemsChanges![0] || {};
+
+							return (
+								<ClayTableCell
+									className={cellColumnName}
+									key={`${id}:${cell.fieldName}`}
+								>
+									{InputRenderer ? (
+										<InputRenderer
+											updateItem={(value: string) => {
+												updateItem(
+													0,
+													rootPropertyName,
+													valuePath,
+													value
+												);
+											}}
+											value={
+												newItem[rootPropertyName] &&
+												newItem[rootPropertyName].value
+											}
+											valuePath={rootPropertyName}
+										/>
+									) : null}
+								</ClayTableCell>
+							);
 						}
-						onChange={() => selectItems(itemId)}
-						title={Liferay.Language.get('select-item')}
-						value={itemId}
-					/>
-				</DndTable.Cell>
-			)}
 
-			<ItemCells
-				fields={visibleFields}
-				item={item}
-				itemId={itemId}
-				itemInlineChanges={itemsChanges}
-				itemsActions={itemsActions}
-			/>
+						const localizedValue: ILocalizedItemDetails | null =
+							getLocalizedValue(item, cell.fieldName);
 
-			<DndTable.Cell className="item-actions" columnName="item-actions">
-				{(itemsActions?.length > 0 ||
-					item.actionDropdownItems?.length > 0) && (
-					<Actions
-						actions={itemsActions || item.actionDropdownItems}
-						itemData={item}
-						itemId={itemId}
-						menuActive={menuActive}
-						onMenuActiveChange={setMenuActive}
-					/>
-				)}{' '}
-			</DndTable.Cell>
-		</DndTable.Row>
+						const valuePath =
+							localizedValue?.valuePath ?? undefined;
+
+						return (
+							<ClayTableCell
+								className={cellColumnName}
+								key={`${id}:${cell.fieldName}`}
+							>
+								<CellRenderer
+									actions={
+										itemsActions || item.actionDropdownItems
+									}
+									field={cell}
+									itemData={item}
+									itemId={id}
+									itemInlineChanges={itemInlineChanges}
+									rootPropertyName={
+										localizedValue?.rootPropertyName ??
+										undefined
+									}
+									value={localizedValue?.value ?? undefined}
+									valuePath={valuePath}
+								/>
+							</ClayTableCell>
+						);
+					}
+				}
+			}}
+		</ClayTableRowOptionalDropTarget>
 	);
 };
 
 const Body = ({
-	highlightedItemsValue,
+	fields,
 	inlineAddingSettings,
+	itemInlineChanges,
 	items,
 	itemsActions,
-	itemsChanges,
-	nestedItemsKey,
-	nestedItemsReferenceKey,
-	selectItems,
-	selectable,
-	selectedItemsKey,
-	selectedItemsValue,
+	onItemSelectionChange,
 	selectionType,
-	visibleFields,
 }: {
-	highlightedItemsValue: any;
-	inlineAddingSettings: any;
+	fields: Array<Field>;
+	inlineAddingSettings?: {
+		apiURL?: string;
+		defaultBodyContent?: Record<string, any>;
+	};
+	itemInlineChanges?: {[key: string]: any};
 	items: Array<any>;
 	itemsActions: Array<IItemsActions>;
-	itemsChanges: any;
-	nestedItemsKey: string | undefined;
-	nestedItemsReferenceKey: string | undefined;
-	selectItems: Function;
-	selectable: boolean | undefined;
-	selectedItemsKey: string;
-	selectedItemsValue: any;
-	selectionType: string | undefined;
-	visibleFields: Array<any>;
+	onItemSelectionChange: Function;
+	selectionType?: 'single' | 'multiple';
 }) => {
-	const actionExists = Boolean(
-		itemsActions?.length ||
-			items?.find((item) => item.actionDropdownItems?.length)
-	);
+	const {
+		allItemsSelectedActive,
+		selectable,
+		selectedItemsKey,
+		selectedItemsValue,
+	} = useContext(FrontendDataSetContext);
+
+	const columns: Array<Field> = [
+		...(selectable ? [{fieldName: 'select'}] : []),
+		...fields,
+		{fieldName: 'actions'},
+	] as Column[];
 
 	return (
-		<DndTable.Body>
-			{inlineAddingSettings && (
-				<TableInlineAddingRow
-					fields={visibleFields}
-					selectable={selectable}
-				/>
-			)}
-
-			{!!items.length &&
-				items.map((item) => {
-					const itemId = item[selectedItemsKey ?? 'id'];
-
-					const nestedItems =
-						nestedItemsReferenceKey &&
-						item[nestedItemsReferenceKey];
-
+		<FDSDndProvider>
+			<ClayTableBody
+				items={
+					inlineAddingSettings ? [...items, defaultAddItem] : items
+				}
+			>
+				{(item: any) => {
 					return (
-						<React.Fragment key={itemId}>
-							<RowWithActions
-								active={highlightedItemsValue.includes(itemId)}
-								item={item}
-								itemId={itemId}
-								itemsActions={itemsActions}
-								itemsChanges={itemsChanges}
-								selectItems={selectItems}
-								selectable={selectable}
-								selected={selectedItemsValue.includes(itemId)}
-								selectedItemsValue={selectedItemsValue}
-								selectionType={selectionType}
-								visibleFields={visibleFields}
-							/>
-
-							{nestedItems &&
-								nestedItemsKey &&
-								nestedItems.map(
-									(nestedItem: any, i: number) => (
-										<DndTable.Row
-											className={classNames(
-												'nested',
-												highlightedItemsValue.includes(
-													nestedItem[nestedItemsKey]
-												) && 'active',
-												i === nestedItems.length - 1 &&
-													'last'
-											)}
-											key={nestedItem[nestedItemsKey]}
-											paddingLeftCells={selectable && 1}
-											paddingRightCells={
-												actionExists && 1
-											}
-										>
-											<ItemCells
-												fields={visibleFields}
-												item={nestedItem}
-												itemId={
-													nestedItem[nestedItemsKey]
-												}
-												itemsActions={itemsActions}
-											/>
-										</DndTable.Row>
-									)
-								)}
-						</React.Fragment>
+						<Row
+							active={
+								allItemsSelectedActive ||
+								!!selectedItemsValue?.find(
+									(element: any) =>
+										String(element) ===
+										String(
+											getObjectValueFromPath({
+												object: item,
+												path: selectedItemsKey,
+											})
+										)
+								)
+							}
+							columns={columns}
+							item={item}
+							itemInlineChanges={itemInlineChanges}
+							items={items}
+							itemsActions={itemsActions}
+							onItemSelectionChange={onItemSelectionChange}
+							selectionType={selectionType}
+						/>
 					);
-				})}
-		</DndTable.Body>
+				}}
+			</ClayTableBody>
+		</FDSDndProvider>
 	);
 };
+
+function ClayTableRowOptionalDropTarget({
+	children,
+	className,
+	item,
+	items,
+	onItemSelectionChange,
+	...otherProps
+}: React.ComponentProps<typeof ClayTableRow<Column>> & {
+	item: any;
+	onItemSelectionChange: Function;
+}) {
+	const [viewsContext] = useContext(ViewsContext);
+	const {selectable} = useContext(FrontendDataSetContext);
+
+	const {className: dropClassName, dropRef} = useFDSDrop({item});
+
+	const activeView: IView = viewsContext.activeView;
+
+	const props = {
+		...otherProps,
+		className: classNames(className, dropClassName),
+		items,
+		onClick: selectable
+			? () => {
+					onItemSelectionChange(item, true);
+				}
+			: undefined,
+		ref: dropRef,
+	};
+
+	return (
+		<ClayTableRow
+			{...props}
+			{...(activeView.setItemComponentProps?.({item, props}) ?? {})}
+		>
+			{children}
+		</ClayTableRow>
+	);
+}
+
+/**
+ * Wrapper on top of ClayCell to add column resizer capabilities. This
+ * should be removed when Clay implements this feature with accessibility.
+ */
+function HeadCellResizer({
+	children,
+	columnName,
+	...otherProps
+}: React.ComponentProps<typeof ClayTableCell> & {
+	columnName: string;
+}) {
+	const {
+		draggingAllowed,
+		draggingColumnName,
+		resizeColumn,
+		updateDraggingAllowed,
+		updateDraggingColumnName,
+	} = useContext(TableContext);
+
+	const [{modifiedFields}, viewsDispatch]: [
+		IViewsContext,
+		TViewsContextDispatch,
+	] = useContext(ViewsContext);
+
+	const cellRef = useRef<HTMLTableCellElement>(null);
+	const clientXRef = useRef({current: null});
+
+	useEffect(() => {
+		if (columnName && cellRef.current) {
+			const boundingClientRect = cellRef.current.getBoundingClientRect();
+
+			viewsDispatch({
+				type: EViewsActionTypes.UPDATE_FIELD,
+				value: {
+					name: columnName,
+					resizable: true,
+					width: boundingClientRect.width,
+				},
+			});
+		}
+	}, [columnName, viewsDispatch]);
+
+	const handleDrag = useMemo(() => {
+
+		// eslint-disable-next-line react-compiler/react-compiler
+		return throttle((event) => {
+			if (event.clientX === clientXRef.current || !cellRef.current) {
+				return;
+			}
+
+			updateDraggingColumnName(columnName);
+
+			clientXRef.current = event.clientX;
+
+			const {x: headerCellX} = cellRef.current.getClientRects()[0];
+			const newWidth = event.clientX - headerCellX;
+
+			resizeColumn(columnName, newWidth);
+		}, 20);
+	}, [columnName, resizeColumn, updateDraggingColumnName]);
+
+	function initializeDrag() {
+		window.addEventListener('mousemove', handleDrag);
+		window.addEventListener(
+			'mouseup',
+			() => {
+				updateDraggingAllowed(true);
+				updateDraggingColumnName(null);
+				window.removeEventListener('mousemove', handleDrag);
+			},
+			{once: true}
+		);
+	}
+
+	const width = useMemo(() => {
+		const columnDetails = modifiedFields[columnName];
+
+		return columnDetails && columnDetails.width;
+	}, [modifiedFields, columnName]);
+
+	return (
+		<ClayTableCell
+			{...otherProps}
+			UNSAFE_resizable
+			UNSAFE_resizerClassName={classNames('dnd-th-resizer', {
+				'is-active': columnName === draggingColumnName,
+				'is-allowed': draggingAllowed,
+			})}
+			UNSAFE_resizerOnMouseDown={initializeDrag}
+			ref={cellRef}
+			scope="col"
+			style={{width: width || 'auto'}}
+			width={width || 'auto'}
+		>
+			{children}
+		</ClayTableCell>
+	);
+}
+
+HeadCellResizer.displayName = 'Item';
+
+function AddActions() {
+	const {createInlineItem, itemsChanges, toggleItemInlineEdit} = useContext(
+		FrontendDataSetContext
+	);
+
+	const isMounted = useIsMounted();
+	const [loading, setLoading] = useState(false);
+	const itemHasChanged =
+		itemsChanges![0] && !!Object.keys(itemsChanges![0]).length;
+
+	return (
+		<div className="d-flex ml-auto">
+			<ClayButtonWithIcon
+				aria-labelledby={Liferay.Language.get('close')}
+				className="mr-1"
+				disabled={!itemHasChanged}
+				displayType="secondary"
+				onClick={() => {
+					toggleItemInlineEdit(0);
+				}}
+				size="sm"
+				symbol="times-small"
+			/>
+
+			{loading ? (
+				<ClayButton
+					aria-labelledby={Liferay.Language.get('loading')}
+					disabled
+					monospaced
+					size="sm"
+				>
+					<ClayLoadingIndicator size="sm" />
+				</ClayButton>
+			) : (
+				<ClayButtonWithIcon
+					aria-labelledby={Liferay.Language.get('confirm')}
+					disabled={loading || !itemHasChanged}
+					onClick={() => {
+						setLoading(true);
+
+						createInlineItem().finally(() => {
+							if (isMounted()) {
+								setLoading(false);
+							}
+						});
+					}}
+					size="sm"
+					symbol="check"
+				/>
+			)}
+		</div>
+	);
+}
+
+function CellRenderer({
+	actions,
+	field,
+	itemData,
+	itemId,
+	rootPropertyName,
+	value,
+	valuePath,
+}: {
+	actions: any;
+	field: any;
+	itemData: any;
+	itemId: string;
+	itemInlineChanges: any;
+	rootPropertyName: any;
+	value: any;
+	valuePath: any;
+}) {
+	const {
+		customDataRenderers,
+		customRenderers,
+		loadData,
+		onItemsChange,
+		openSidePanel,
+	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
+	const [{modifiedFields}] = useContext(ViewsContext) as any;
+
+	const cellRenderer = useMemo(() => {
+		const modifiedField = modifiedFields[field.fieldName];
+
+		if (
+			field.contentRendererClientExtension &&
+			modifiedField &&
+			!modifiedField.clientExtensionResolutionError
+		) {
+			const mergedField = {...field, ...modifiedField};
+
+			return {
+				htmlElementBuilder: mergedField.htmlElementBuilder,
+				type: 'clientExtension',
+			};
+		}
+
+		const contentRenderer = field.contentRenderer || 'default';
+
+		const customTableCellRenderer = customRenderers?.tableCell?.find(
+			(renderer: TRenderer) => renderer.name === contentRenderer
+		);
+
+		if (customTableCellRenderer) {
+			return customTableCellRenderer;
+		}
+
+		if (customDataRenderers && customDataRenderers[contentRenderer]) {
+			return {
+				component: customDataRenderers[contentRenderer],
+				type: 'internal',
+			};
+		}
+
+		return getInternalCellRenderer(contentRenderer);
+	}, [customDataRenderers, customRenderers, field, modifiedFields]);
+
+	if (cellRenderer?.type === 'clientExtension') {
+		return (
+			<>
+				<ClientExtension<FDSTableCellHTMLElementBuilderArgs>
+					args={{itemData, value}}
+					htmlElementBuilder={cellRenderer.htmlElementBuilder}
+				/>
+			</>
+		);
+	}
+
+	if (cellRenderer?.type === 'internal' && cellRenderer.component) {
+		const CellRendererComponent = cellRenderer.component;
+
+		return (
+			<>
+				{CellRendererComponent && (
+					<CellRendererComponent
+						actions={actions}
+						itemData={itemData}
+						itemId={itemId}
+						loadData={loadData}
+						onItemsChange={onItemsChange}
+						openSidePanel={openSidePanel}
+						options={field}
+						rootPropertyName={rootPropertyName}
+						value={value}
+						valuePath={valuePath}
+					/>
+				)}
+			</>
+		);
+	}
+
+	return null;
+}
+
+function getVisibleFieldsMap(
+	fields: Array<Field>,
+	visibleFields: Array<Field>,
+	selectable?: boolean
+) {
+	const visibleFieldsMap = new Map();
+
+	if (selectable) {
+		visibleFieldsMap.set('select', 0);
+	}
+
+	fields.forEach((field, index) => {
+		if (
+			visibleFields.findIndex(
+				(visibleField) => visibleField.fieldName === field.fieldName
+			) >= 0
+		) {
+			visibleFieldsMap.set(
+				String(field.fieldName),
+				selectable ? index + 1 : index
+			);
+		}
+	});
+
+	return visibleFieldsMap;
+}
 
 const Table = ({
 	items = [],
 	itemsActions,
+	onItemSelectionChange,
 	schema,
-	style,
 }: {
 	items: Array<any>;
 	itemsActions: Array<IItemsActions>;
-	schema: ISchema;
-	style: string;
+	onItemSelectionChange: Function;
+	schema: ITableSchema;
 }) => {
 	const {
-		highlightedItemsValue,
+		appURL,
+		id,
 		inlineAddingSettings,
 		itemsChanges,
 		nestedItemsKey,
 		nestedItemsReferenceKey,
-		selectItems,
+		portletId,
 		selectable,
-		selectedItemsKey = 'id',
-		selectedItemsValue,
 		selectionType,
+		updateActiveSorts,
+		updateVisibleFields,
 	} = useContext(FrontendDataSetContext);
-	const [
-		{
-			activeView: {quickActionsEnabled},
-			visibleFieldNames,
-		},
-	] = useContext(ViewsContext);
+
+	const [{sorts, visibleFieldNames}, viewsDispatch] =
+		useContext(ViewsContext);
 
 	const visibleFields = getVisibleFields({
 		fields: schema.fields,
@@ -427,73 +768,125 @@ const Table = ({
 		'item-actions'
 	);
 
-	if (Liferay.FeatureFlags['LPS-193005']) {
-		return (
-			<DndTable.TableContextProvider
-				columnNames={visibleFields.map((field) =>
-					String(field.fieldName)
+	const getSorting = (): Sorting | null => {
+		const activeSort = sorts.find((sort: any) => sort.active);
+
+		if (!activeSort) {
+			return null;
+		}
+
+		return {
+			column: activeSort.key,
+			direction:
+				activeSort.direction === 'desc' ? 'descending' : 'ascending',
+		};
+	};
+
+	const onSortChange = (sorting: Sorting | null) => {
+		let updatedSorts: TSort[] = [];
+
+		updatedSorts = sorts.map((sort: any) =>
+			sort.key === sorting?.column
+				? {
+						...sort,
+						active: true,
+						direction:
+							sorting?.direction === 'ascending' ? 'asc' : 'desc',
+					}
+				: {
+						...sort,
+						active: false,
+					}
+		);
+
+		const newSort: boolean = Boolean(
+			!sorts.find((sort: any) => sort.key === sorting?.column)
+		);
+
+		if (newSort) {
+			updatedSorts.push({
+				active: true,
+				direction: 'asc',
+				key: String(sorting?.column),
+			});
+		}
+
+		viewsDispatch(updateActiveSorts(updatedSorts));
+	};
+
+	return (
+		<TableContextProvider columnNames={columnNames}>
+			<ClayTable
+				alwaysVisibleColumns={
+					selectable ? defaultAlwaysVisibleColumns : undefined
+				}
+				itemIdKey={nestedItemsKey}
+				messages={{
+					columnsVisibility: Liferay.Language.get(
+						'manage-columns-visibility'
+					),
+					columnsVisibilityCell: itemsActions?.length
+						? Liferay.Language.get('item-actions')
+						: undefined,
+					columnsVisibilityDescription: Liferay.Language.get(
+						'at-least-one-column-must-remain-visible'
+					),
+					columnsVisibilityHeader:
+						Liferay.Language.get('columns-visibility'),
+					expandable: Liferay.Language.get('expandable'),
+					sortDescription: Liferay.Language.get('sortable-column'),
+					sorting: Liferay.Language.get(
+						'sorted-by-column-x-in-x-order'
+					),
+				}}
+				nestedKey={nestedItemsReferenceKey}
+				onSortChange={onSortChange}
+				onVisibleColumnsChange={(visibleColumns: any) => {
+					const visibleFieldNames: VisibleFieldNames = {};
+
+					schema.fields.forEach(({fieldName}) => {
+						visibleFieldNames[String(fieldName)] = false;
+					});
+
+					visibleColumns.forEach((value: any, key: any) => {
+						if (visibleFieldNames[key] !== undefined) {
+							visibleFieldNames[key] = true;
+						}
+					});
+
+					viewsDispatch(updateVisibleFields(visibleFieldNames));
+
+					saveViewSettings({
+						appURL,
+						id,
+						portletId,
+						settings: {visibleFieldNames},
+					});
+				}}
+				sort={getSorting()}
+				visibleColumns={getVisibleFieldsMap(
+					schema.fields as Array<Field>,
+					visibleFields,
+					selectable
 				)}
 			>
-				<ClayTable
-					fields={schema.fields as any}
+				<Head
+					fields={schema.fields as Array<Field>}
+					items={items}
+					selectionType={selectionType}
+				/>
+
+				<Body
+					fields={schema.fields as Array<Field>}
 					inlineAddingSettings={inlineAddingSettings}
 					itemInlineChanges={itemsChanges}
 					items={items}
 					itemsActions={itemsActions}
-					nestedItemsReferenceKey={nestedItemsReferenceKey}
-					selectItems={selectItems}
-					selectable={selectable}
-					selectedItemsKey={selectedItemsKey}
-					selectedItemsValue={selectedItemsValue}
+					onItemSelectionChange={onItemSelectionChange}
 					selectionType={selectionType}
 				/>
-			</DndTable.TableContextProvider>
-		);
-	}
-
-	return (
-		<DndTable.TableContextProvider columnNames={columnNames}>
-			{(inlineAddingSettings ||
-				(!inlineAddingSettings && !!items.length)) && (
-				<DndTable.Table
-					borderless
-					className={classNames(`table-style-${style}`, {
-						'with-quick-actions': quickActionsEnabled,
-					})}
-					hover={false}
-					responsive
-					striped
-				>
-					<Head
-						fields={visibleFields}
-						items={items}
-						itemsActions={itemsActions}
-						schema={schema}
-						selectItems={selectItems}
-						selectable={selectable}
-						selectedItemsKey={selectedItemsKey}
-						selectedItemsValue={selectedItemsValue}
-						selectionType={selectionType}
-					/>
-
-					<Body
-						highlightedItemsValue={highlightedItemsValue}
-						inlineAddingSettings={inlineAddingSettings}
-						items={items}
-						itemsActions={itemsActions}
-						itemsChanges={itemsChanges}
-						nestedItemsKey={nestedItemsKey}
-						nestedItemsReferenceKey={nestedItemsReferenceKey}
-						selectItems={selectItems}
-						selectable={selectable}
-						selectedItemsKey={selectedItemsKey}
-						selectedItemsValue={selectedItemsValue}
-						selectionType={selectionType}
-						visibleFields={visibleFields}
-					/>
-				</DndTable.Table>
-			)}
-		</DndTable.TableContextProvider>
+			</ClayTable>
+		</TableContextProvider>
 	);
 };
 

@@ -96,11 +96,11 @@ public class IllegalImportsCheck extends BaseFileCheck {
 		}
 
 		if (isPortalSource() && absolutePath.contains("/portal-kernel/") &&
-			content.contains("import javax.servlet.jsp.")) {
+			content.contains("import jakarta.servlet.jsp.")) {
 
 			addMessage(
 				fileName,
-				"Never import javax.servlet.jsp.* from portal-kernel, see " +
+				"Never import jakarta.servlet.jsp.* from portal-kernel, see " +
 					"LPS-47682");
 		}
 
@@ -173,7 +173,7 @@ public class IllegalImportsCheck extends BaseFileCheck {
 					"org.slf4j.Logger");
 		}
 
-		if (!absolutePath.contains("/modules/etl/") &&
+		if (!absolutePath.contains("/modules/integrations/") &&
 			!absolutePath.contains("/modules/sdk/")) {
 
 			if (isAttributeValue(_AVOID_OPTIONAL_KEY, absolutePath) &&
@@ -205,37 +205,38 @@ public class IllegalImportsCheck extends BaseFileCheck {
 		SourceFormatterArgs sourceFormatterArgs =
 			sourceProcessor.getSourceFormatterArgs();
 
-		if (sourceFormatterArgs.isFormatCurrentBranch()) {
-			String currentBranchFileDiff = GitUtil.getCurrentBranchFileDiff(
-				sourceFormatterArgs.getBaseDirName(),
-				sourceFormatterArgs.getGitWorkingBranchName(), absolutePath);
+		String currentBranchFileDiff = GitUtil.getCurrentBranchFileDiff(
+			sourceFormatterArgs.getBaseDirName(),
+			sourceFormatterArgs.getGitWorkingBranchName(), absolutePath);
 
-			List<String> replacedTaglibs = getAttributeValues(
-				_REPLACED_TAGLIBS_KEY, absolutePath);
+		for (String line : StringUtil.splitLines(currentBranchFileDiff)) {
+			if (!line.startsWith(StringPool.PLUS)) {
+				continue;
+			}
 
-			for (String line : StringUtil.splitLines(currentBranchFileDiff)) {
-				if (!line.startsWith(StringPool.PLUS)) {
+			for (String replacedTaglib :
+					getAttributeValues(_REPLACED_TAGLIBS_KEY, absolutePath)) {
+
+				String[] replacedTaglibArray = StringUtil.split(
+					replacedTaglib, "->");
+
+				if (replacedTaglibArray.length != 2) {
 					continue;
 				}
 
-				for (String replacedTaglib : replacedTaglibs) {
-					String[] replacedTaglibArray = StringUtil.split(
-						replacedTaglib, "->");
+				if (line.contains(replacedTaglibArray[0])) {
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"Use ", replacedTaglibArray[1], " instead of ",
+							replacedTaglibArray[0]));
 
-					if (replacedTaglibArray.length != 2) {
-						continue;
-					}
-
-					if (line.contains(replacedTaglibArray[0])) {
-						addMessage(
-							fileName,
-							StringBundler.concat(
-								"Use ", replacedTaglibArray[1], " instead of ",
-								replacedTaglibArray[0]));
-
-						break;
-					}
+					break;
 				}
+			}
+
+			if (line.contains("org.jsoup.")) {
+				addMessage(fileName, "Do not use org.jsoup, see LPD-42623");
 			}
 		}
 

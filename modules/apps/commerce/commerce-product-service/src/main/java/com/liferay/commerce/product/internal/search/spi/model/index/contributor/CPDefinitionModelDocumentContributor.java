@@ -27,8 +27,12 @@ import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalService;
+import com.liferay.commerce.product.service.CPConfigurationEntrySettingLocalService;
+import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
@@ -45,7 +49,9 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Localization;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
@@ -109,10 +115,11 @@ public class CPDefinitionModelDocumentContributor
 				cpDefinition.isAccountGroupFilterEnabled());
 			document.addKeyword(
 				CPField.ASSET_CATEGORY_NAMES,
-				_toLowerCaseStringArray(
+				TransformUtil.unsafeTransform(
 					_assetCategoryLocalService.getCategoryNames(
 						CPDefinition.class.getName(),
-						cpDefinition.getCPDefinitionId())));
+						cpDefinition.getCPDefinitionId()),
+					String::toLowerCase, String.class));
 
 			BigDecimal basePrice = _getBasePrice(cpDefinition.getCPInstances());
 
@@ -174,8 +181,13 @@ public class CPDefinitionModelDocumentContributor
 
 			document.addKeyword(
 				CPField.EXTERNAL_REFERENCE_CODE,
-				cProduct.getExternalReferenceCode());
+				cProduct.getExternalReferenceCode(), true);
 
+			document.addKeyword(
+				CPField.GTINS,
+				TransformUtil.transformToArray(
+					cpDefinition.getCPInstances(), CPInstance::getGtin,
+					String.class));
 			document.addNumber(CPField.HEIGHT, cpDefinition.getHeight());
 			document.addKeyword(
 				CPField.IS_IGNORE_SKU_COMBINATIONS,
@@ -207,7 +219,8 @@ public class CPDefinitionModelDocumentContributor
 			document.addKeyword(
 				CPField.PRODUCT_ID, cpDefinition.getCProductId());
 			document.addKeyword(
-				CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName());
+				CPField.PRODUCT_TYPE_NAME, cpDefinition.getProductTypeName(),
+				true);
 			document.addKeyword(CPField.PUBLISHED, cpDefinition.isPublished());
 			document.addText(
 				CPField.SHORT_DESCRIPTION,
@@ -217,8 +230,10 @@ public class CPDefinitionModelDocumentContributor
 			List<CPDefinitionSpecificationOptionValue>
 				cpDefinitionSpecificationOptionValues =
 					_getFilteredCPDefinitionSpecificationOptionValues(
-						cpDefinition.
-							getCPDefinitionSpecificationOptionValues());
+						_cpDefinitionSpecificationOptionValueLocalService.
+							getCPDefinitionSpecificationOptionValues(
+								cpDefinition.getCPDefinitionId(), null,
+								QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
 
 			document.addNumber(
 				CPField.SPECIFICATION_IDS,
@@ -236,13 +251,21 @@ public class CPDefinitionModelDocumentContributor
 							CPDefinitionSpecificationOptionValue.
 								getCPSpecificationOption()),
 					String.class));
-			document.addText(
+			document.addKeyword(
 				CPField.SPECIFICATION_VALUES_NAMES,
 				TransformUtil.transformToArray(
-					_getFilteredCPDefinitionSpecificationOptionValues(
-						cpDefinitionSpecificationOptionValues),
-					CPDefinitionSpecificationOptionValue ->
-						CPDefinitionSpecificationOptionValue.getValue(
+					cpDefinitionSpecificationOptionValues,
+					cpDefinitionSpecificationOptionValue ->
+						StringUtil.toLowerCase(
+							cpDefinitionSpecificationOptionValue.getValue(
+								cpDefinitionDefaultLanguageId)),
+					String.class));
+			document.addText(
+				CPField.SPECIFICATION_VALUES_NAMES + "_text",
+				TransformUtil.transformToArray(
+					cpDefinitionSpecificationOptionValues,
+					cpDefinitionSpecificationOptionValue ->
+						cpDefinitionSpecificationOptionValue.getValue(
 							cpDefinitionDefaultLanguageId),
 					String.class));
 
@@ -301,7 +324,9 @@ public class CPDefinitionModelDocumentContributor
 
 			document.addText(
 				Field.DESCRIPTION,
-				cpDefinition.getDescription(cpDefinitionDefaultLanguageId));
+				_htmlParser.extractText(
+					cpDefinition.getDescription(
+						cpDefinitionDefaultLanguageId)));
 			document.addKeyword(
 				Field.HIDDEN, _isHidden(cpDefinition, cProduct));
 			document.addText(
@@ -505,12 +530,10 @@ public class CPDefinitionModelDocumentContributor
 				document.addKeyword(type, linkedProductIds);
 			}
 
-			_expandoBridgeIndexer.addAttributes(
-				document, cpDefinition.getExpandoBridge());
+			_expandoBridgeIndexer.addAttributes(document, cpDefinition);
 
 			for (CPInstance cpInstance : cpDefinition.getCPInstances()) {
-				_expandoBridgeIndexer.addAttributes(
-					document, cpInstance.getExpandoBridge());
+				_expandoBridgeIndexer.addAttributes(document, cpInstance);
 			}
 
 			if (_log.isDebugEnabled()) {
@@ -582,19 +605,15 @@ public class CPDefinitionModelDocumentContributor
 			List<CPDefinitionOptionRel> cpDefinitionOptionRels)
 		throws Exception {
 
-		List<CPOption> cpOptions = new ArrayList<>();
+		return TransformUtil.transform(
+			cpDefinitionOptionRels,
+			cpDefinitionOptionRel -> {
+				if (!cpDefinitionOptionRel.isFacetable()) {
+					return null;
+				}
 
-		for (CPDefinitionOptionRel cpDefinitionOptionRel :
-				cpDefinitionOptionRels) {
-
-			if (!cpDefinitionOptionRel.isFacetable()) {
-				continue;
-			}
-
-			cpOptions.add(cpDefinitionOptionRel.getCPOption());
-		}
-
-		return cpOptions;
+				return cpDefinitionOptionRel.getCPOption();
+			});
 	}
 
 	private String _getCPSpecificationOptionKey(
@@ -609,25 +628,22 @@ public class CPDefinitionModelDocumentContributor
 					cpDefinitionSpecificationOptionValues)
 		throws Exception {
 
-		List<CPDefinitionSpecificationOptionValue>
-			filteredCPDefinitionSpecificationOptionValues = new ArrayList<>();
+		return TransformUtil.transform(
+			cpDefinitionSpecificationOptionValues,
+			cpDefinitionSpecificationOptionValue -> {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
 
-		for (CPDefinitionSpecificationOptionValue
-				cpDefinitionSpecificationOptionValue :
-					cpDefinitionSpecificationOptionValues) {
+				if (!cpDefinitionSpecificationOptionValue.isVisible() ||
+					!cpSpecificationOption.isFacetable() ||
+					!cpSpecificationOption.isVisible()) {
 
-			CPSpecificationOption cpSpecificationOption =
-				cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+					return null;
+				}
 
-			if (!cpSpecificationOption.isFacetable()) {
-				continue;
-			}
-
-			filteredCPDefinitionSpecificationOptionValues.add(
-				cpDefinitionSpecificationOptionValue);
-		}
-
-		return filteredCPDefinitionSpecificationOptionValues;
+				return cpDefinitionSpecificationOptionValue;
+			});
 	}
 
 	private String[] _getReverseCPDefinitionIds(long cProductId, String type) {
@@ -660,14 +676,6 @@ public class CPDefinitionModelDocumentContributor
 		return false;
 	}
 
-	private String[] _toLowerCaseStringArray(String[] categoryNames) {
-		for (int i = 0; i < categoryNames.length; i++) {
-			categoryNames[i] = categoryNames[i].toLowerCase();
-		}
-
-		return categoryNames;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPDefinitionModelDocumentContributor.class);
 
@@ -690,6 +698,16 @@ public class CPDefinitionModelDocumentContributor
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
 
 	@Reference
+	private CPConfigurationEntryLocalService _cpConfigurationEntryLocalService;
+
+	@Reference
+	private CPConfigurationEntrySettingLocalService
+		_cpConfigurationEntrySettingLocalService;
+
+	@Reference
+	private CPConfigurationListLocalService _cpConfigurationListLocalService;
+
+	@Reference
 	private CPDefinitionLinkLocalService _cpDefinitionLinkLocalService;
 
 	@Reference
@@ -699,6 +717,10 @@ public class CPDefinitionModelDocumentContributor
 	private CPDefinitionLocalService _cpDefinitionLocalService;
 
 	@Reference
+	private CPDefinitionSpecificationOptionValueLocalService
+		_cpDefinitionSpecificationOptionValueLocalService;
+
+	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
 
 	@Reference
@@ -706,6 +728,9 @@ public class CPDefinitionModelDocumentContributor
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private Language _language;

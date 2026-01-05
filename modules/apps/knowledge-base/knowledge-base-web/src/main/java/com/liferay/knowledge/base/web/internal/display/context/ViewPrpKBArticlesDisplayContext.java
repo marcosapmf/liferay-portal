@@ -14,10 +14,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -32,7 +32,7 @@ public class ViewPrpKBArticlesDisplayContext {
 		_iteratorURL = iteratorURL;
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 	}
 
 	public long getAssetCategoryId() {

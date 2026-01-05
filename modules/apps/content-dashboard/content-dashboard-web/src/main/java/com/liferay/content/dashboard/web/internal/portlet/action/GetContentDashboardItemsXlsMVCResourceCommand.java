@@ -42,6 +42,9 @@ import com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilt
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -58,9 +61,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -79,7 +79,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilterConfiguration",
 	property = {
-		"javax.portlet.name=" + ContentDashboardPortletKeys.CONTENT_DASHBOARD_ADMIN,
+		"jakarta.portlet.name=" + ContentDashboardPortletKeys.CONTENT_DASHBOARD_ADMIN,
 		"mvc.command.name=/content_dashboard/get_content_dashboard_items_xls"
 	},
 	service = MVCResourceCommand.class
@@ -155,6 +155,10 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 						contentDashboardItem.
 							getLatestContentDashboardItemVersions(locale);
 
+				if (ListUtil.isEmpty(latestContentDashboardItemVersions)) {
+					return StringPool.BLANK;
+				}
+
 				ContentDashboardItemVersion contentDashboardItemVersion =
 					latestContentDashboardItemVersions.get(0);
 
@@ -186,18 +190,17 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			contentDashboardItem.getDescription(locale)
 		);
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(locale);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(locale);
 
-		workbookBuilder.cell(_toString(specificInformationList, "extension"));
+		workbookBuilder.cell(_toString(specificInformations, "extension"));
 
-		workbookBuilder.cell(_toString(specificInformationList, "file-name"));
+		workbookBuilder.cell(_toString(specificInformations, "file-name"));
 
 		workbookBuilder.cell(
-			_toString(specificInformationList, "size")
+			_toString(specificInformations, "size")
 		).cell(
-			_toString(specificInformationList, "display-date")
+			_toString(specificInformations, "display-date")
 		).cell(
 			_toString(contentDashboardItem.getCreateDate())
 		);
@@ -340,16 +343,15 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 	}
 
 	private String _toString(
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList,
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations,
 		String fieldName) {
 
-		if (specificInformationList == null) {
+		if (specificInformations == null) {
 			return StringPool.BLANK;
 		}
 
 		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			if (Objects.equals(specificInformation.getKey(), fieldName)) {
 				return _toString(specificInformation.getValue());

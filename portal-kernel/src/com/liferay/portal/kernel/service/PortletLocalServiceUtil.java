@@ -368,6 +368,13 @@ public class PortletLocalServiceUtil {
 		return getService().getPortletByStrutsPath(companyId, strutsPath);
 	}
 
+	public static
+		com.liferay.portal.kernel.portlet.PortletFriendlyURLMapperMatch
+			getPortletFriendlyURLMapperMatch(String url) {
+
+		return getService().getPortletFriendlyURLMapperMatch(url);
+	}
+
 	public static List<Portlet> getPortlets() {
 		return getService().getPortlets();
 	}
@@ -425,15 +432,15 @@ public class PortletLocalServiceUtil {
 	}
 
 	public static void initEAR(
-		javax.servlet.ServletContext servletContext, String[] xmls,
+		jakarta.servlet.ServletContext servletContext, String[] xmls,
 		com.liferay.portal.kernel.plugin.PluginPackage pluginPackage) {
 
 		getService().initEAR(servletContext, xmls, pluginPackage);
 	}
 
 	public static List<Portlet> initWAR(
-		String servletContextName, javax.servlet.ServletContext servletContext,
-		String[] xmls,
+		String servletContextName,
+		jakarta.servlet.ServletContext servletContext, String[] xmls,
 		com.liferay.portal.kernel.plugin.PluginPackage pluginPackage) {
 
 		return getService().initWAR(
@@ -446,6 +453,12 @@ public class PortletLocalServiceUtil {
 
 	public static void removeCompanyPortletsPool(long companyId) {
 		getService().removeCompanyPortletsPool(companyId);
+	}
+
+	public static void removePortletModelResources(
+		long companyId, String portletId) {
+
+		getService().removePortletModelResources(companyId, portletId);
 	}
 
 	public static Portlet updatePortlet(

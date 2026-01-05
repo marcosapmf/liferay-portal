@@ -6,12 +6,10 @@
 package com.liferay.portal.minifier;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ProxyFactory;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.util.PropsUtil;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -19,9 +17,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Iván Zaera Avellón
@@ -39,20 +34,27 @@ public class MinifierUtilTest {
 			PropsUtil.get(PropsKeys.MINIFIER_ENABLED));
 
 		PropsUtil.set(PropsKeys.MINIFIER_ENABLED, "true");
-
-		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
-
-		_serviceRegistration = bundleContext.registerService(
-			JavaScriptMinifier.class,
-			ProxyFactory.newDummyInstance(JavaScriptMinifier.class), null);
 	}
 
 	@After
 	public void tearDown() {
-		_serviceRegistration.unregister();
-
 		PropsUtil.set(
 			PropsKeys.MINIFIER_ENABLED, String.valueOf(_minifierEnabled));
+	}
+
+	@Test
+	public void testProcessMinifiedCssWithContainerQuery() {
+		String minifiedCss = MinifierUtil.minifyCss(
+			"@container c-card-page (min-width: 540px)");
+
+		Assert.assertEquals(
+			"@container c-card-page (min-width:540px)", minifiedCss);
+
+		minifiedCss = MinifierUtil.minifyCss(
+			"@container     c-card-page    (min-width: 540px)   ;");
+
+		Assert.assertEquals(
+			"@container c-card-page (min-width:540px);", minifiedCss);
 	}
 
 	@Test
@@ -109,7 +111,5 @@ public class MinifierUtilTest {
 	}
 
 	private static boolean _minifierEnabled;
-
-	private ServiceRegistration<?> _serviceRegistration;
 
 }

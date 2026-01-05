@@ -20,8 +20,8 @@
 		<%= (String)request.getAttribute(AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS) %>;
 	var analyticsCookiesConsentMode =
 		<%= (boolean)request.getAttribute(AnalyticsWebKeys.ANALYTICS_COOKIES_EXPLICIT_CONSENT_MODE) %>;
-	var analyticsFeatureFlagEnabled =
-		<%= FeatureFlagManagerUtil.isEnabled("LPD-10588") %>;
+	var analyticsExternalReferenceCode =
+		'<%= (String)request.getAttribute(AnalyticsWebKeys.ANALYTICS_EXTERNAL_REFERENCE_CODE) %>';
 
 	var cookieManagers = {
 		'cookie.onetrust': {
@@ -93,7 +93,7 @@
 				return performanceCookieEnabled === 'true';
 			},
 			enabled: () => {
-				return Promise.resolve(analyticsFeatureFlagEnabled);
+				return Promise.resolve(true);
 			},
 			onConsentChange: (callbackFn) => {
 				Liferay.on('cookieBannerSetCookie', callbackFn);
@@ -146,6 +146,8 @@
 					request.context.channelId = analyticsClientChannelId;
 					request.context.groupId =
 						themeDisplay.getScopeGroupIdOrLiveGroupId();
+					request.context.layoutExternalReferenceCode =
+						analyticsExternalReferenceCode;
 
 					return request;
 				};
@@ -161,9 +163,11 @@
 
 				runMiddlewares();
 
-				Analytics.send('pageViewed', 'Page');
+				Analytics.send('pageViewed', 'Page', {
+					externalReferenceCode: analyticsExternalReferenceCode,
+				});
 
-				<c:if test="<%= GetterUtil.getBoolean(PropsUtil.get(PropsKeys.JAVASCRIPT_SINGLE_PAGE_APPLICATION_ENABLED)) %>">
+				<c:if test="<%= FrontendSPAUtil.isEnabled(company.getCompanyId()) %>">
 					Liferay.on('endNavigate', (event) => {
 						var allPromises = Object.keys(cookieManagers).map((key) =>
 							cookieManagers[key].enabled()
@@ -175,12 +179,13 @@
 							) {
 								Analytics.dispose();
 
-								var groupId =
-									themeDisplay.getScopeGroupIdOrLiveGroupId();
-
 								if (
 									!themeDisplay.isControlPanel() &&
-									analyticsClientGroupIds.indexOf(groupId) >= 0
+									analyticsClientGroupIds.indexOf(
+										String(
+											themeDisplay.getScopeGroupIdOrLiveGroupId()
+										)
+									) >= 0
 								) {
 									Analytics.create(config, [dxpMiddleware]);
 
@@ -194,6 +199,8 @@
 									runMiddlewares();
 
 									Analytics.send('pageViewed', 'Page', {
+										externalReferenceCode:
+											analyticsExternalReferenceCode,
 										page: event.path,
 									});
 								}

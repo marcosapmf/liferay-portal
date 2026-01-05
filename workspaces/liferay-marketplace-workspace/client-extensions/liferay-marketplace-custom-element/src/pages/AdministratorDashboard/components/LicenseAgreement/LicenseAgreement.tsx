@@ -3,23 +3,17 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 
-import './LicenseAgreement.scss';
-
-import ClayButton from '@clayui/button';
-
 import i18n from '../../../../i18n';
-import {Liferay} from '../../../../liferay/liferay';
-import {getSiteName} from '../../../../utils/getSite';
+import {getSiteName} from '../../../../utils/site';
+
+import './LicenseAgreement.scss';
+import {useMarketplaceContext} from '../../../../context/MarketplaceContext';
 
 const LicenseAgreement = () => {
-	const siteName = getSiteName();
-
-	const LicenseAgreementpath = Liferay.ThemeDisplay.getLayoutURL().replace(
-		'publisher-dashboard',
-		'license-agreement'
-	);
+	const {properties} = useMarketplaceContext();
 
 	return (
 		<div className="license-agreement-container">
@@ -38,7 +32,7 @@ const LicenseAgreement = () => {
 						displayType="secondary"
 						onClick={() =>
 							window.open(
-								`/documents/d/${siteName}/developer_agreement_marketplace-pdf`
+								`/documents/d/${getSiteName()}/${properties.publisherLicenseAgreement}`
 							)
 						}
 					>
@@ -73,15 +67,11 @@ const LicenseAgreement = () => {
 
 			<small>
 				By clicking on the button &quot;continue&quot; below, I confirm
-				that I have read and agree to be bound by the&nbsp;
-				<a href={LicenseAgreementpath} target="_blank">
-					<strong>
-						Liferay Publisher Program License Agreement.
-					</strong>
-				</a>
-				&nbsp; I also confirm that I am of the legal age of majority in
-				the jurisdiction where I reside (at least 18 years of age in
-				many countries).
+				that I have read and agree to be bound by the
+				<strong> Liferay Publisher License Agreement.</strong> I also
+				confirm that I am of the legal age of majority in the
+				jurisdiction where I reside (at least 18 years of age in many
+				countries).
 			</small>
 		</div>
 	);

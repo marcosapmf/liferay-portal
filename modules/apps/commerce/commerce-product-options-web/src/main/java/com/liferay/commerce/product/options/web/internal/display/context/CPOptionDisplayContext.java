@@ -17,22 +17,25 @@ import com.liferay.commerce.product.util.CommerceOptionTypeUtil;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.WindowStateException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-import javax.portlet.WindowStateException;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo
@@ -50,6 +53,21 @@ public class CPOptionDisplayContext {
 		_cpOption = cpOption;
 
 		cpRequestHelper = new CPRequestHelper(httpServletRequest);
+	}
+
+	public String getCommerceOptionTypeKeys() throws PortalException {
+		CPOptionConfiguration cpOptionConfiguration =
+			_configurationProvider.getConfiguration(
+				CPOptionConfiguration.class,
+				new SystemSettingsLocator(CPConstants.SERVICE_NAME_CP_OPTION));
+
+		return StringUtil.merge(
+			ArrayUtil.filter(
+				cpOptionConfiguration.allowedCommerceOptionTypes(),
+				commerceOptionType -> !Objects.equals(
+					CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+					commerceOptionType)),
+			StringPool.COMMA);
 	}
 
 	public List<CommerceOptionType> getCommerceOptionTypes()
@@ -197,14 +215,9 @@ public class CPOptionDisplayContext {
 	}
 
 	public boolean isCPOptionSelectDate() {
-		if (Objects.equals(
-				CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
-				_cpOption.getCommerceOptionTypeKey())) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+			_cpOption.getCommerceOptionTypeKey());
 	}
 
 	protected final CPRequestHelper cpRequestHelper;
@@ -228,8 +241,8 @@ public class CPOptionDisplayContext {
 		fdsActionDropdownItems.add(
 			new FDSActionDropdownItem(
 				null, "trash", "delete",
-				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"),
-				"delete", "delete", "headless"));
+				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"), null,
+				"delete", null));
 
 		return fdsActionDropdownItems;
 	}

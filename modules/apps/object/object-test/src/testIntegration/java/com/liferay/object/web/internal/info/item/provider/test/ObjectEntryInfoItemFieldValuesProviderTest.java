@@ -20,6 +20,7 @@ import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
@@ -56,9 +57,11 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -69,6 +72,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
@@ -122,7 +126,8 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false,
 				Collections.singletonList(
-					ListTypeEntryUtil.createListTypeEntry(_listTypeEntryKey)));
+					ListTypeEntryUtil.createListTypeEntry(_listTypeEntryKey)),
+				new ServiceContext());
 
 		_childObjectDefinition = _addObjectDefinition(
 			new AttachmentObjectFieldBuilder(
@@ -172,12 +177,13 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 			null, TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
 			_childObjectDefinition.getObjectDefinitionId(), 0,
-			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"oneToManyRelationshipName", false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 	}
 
+	@FeatureFlag("LPD-17564")
 	@Test
 	public void testObjectEntryInfoItemFieldValuesProvider() throws Exception {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
@@ -189,16 +195,20 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 		String parentTextObjectFieldNameValue = RandomTestUtil.randomString();
 
 		ObjectEntry parentObjectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"parentTextObjectFieldName", parentTextObjectFieldNameValue
 			).build(),
 			ServiceContextTestUtil.getServiceContext());
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			_childObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName_" +
 					_parentObjectDefinition.getPKObjectFieldName(),
@@ -206,7 +216,12 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 			).put(
 				"attachmentObjectFieldName", fileEntry.getFileEntryId()
 			).put(
+				"expirationDate",
+				new Date(System.currentTimeMillis() + Time.DAY)
+			).put(
 				"picklistObjectFieldName", _listTypeEntryKey
+			).put(
+				"reviewDate", new Date(System.currentTimeMillis() + Time.DAY)
 			).build(),
 			ServiceContextTestUtil.getServiceContext());
 
@@ -247,13 +262,15 @@ public class ObjectEntryInfoItemFieldValuesProviderTest {
 		throws Exception {
 
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
-			TestPropsValues.getUserId(), 0, false, true, true, false,
+			null, TestPropsValues.getUserId(), 0, null, false, true, false,
+			true, false, false, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			true, ObjectDefinitionConstants.SCOPE_SITE,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-			Arrays.asList(objectFields));
+			Collections.emptyList(), Arrays.asList(objectFields),
+			Collections.emptyList(), new ServiceContext());
 	}
 
 	private void _assertInfoFieldValue(

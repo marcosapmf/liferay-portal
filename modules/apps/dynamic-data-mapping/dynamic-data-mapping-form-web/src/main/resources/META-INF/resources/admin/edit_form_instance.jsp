@@ -22,6 +22,8 @@ if (!ddmFormAdminDisplayContext.isFormPublished()) {
 	disableCopyButton = true;
 }
 
+JSONObject formBuilderContextJSONObject = ddmFormAdminDisplayContext.getFormBuilderContextJSONObject();
+
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
@@ -145,6 +147,8 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 						"autosaveURL", autoSaveFormInstanceURL.toString()
 					).put(
 						"availableLanguageIds", ddmFormAdminDisplayContext.getAvailableLanguageIdsJSONArray()
+					).put(
+						"availableLocales", ddmFormAdminDisplayContext.getAvailableLocalesJSONArray()
 					).put(
 						"context", formBuilderContextJSONObject
 					).put(

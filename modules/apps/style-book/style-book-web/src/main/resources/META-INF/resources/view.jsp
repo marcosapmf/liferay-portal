@@ -7,12 +7,25 @@
 
 <%@ include file="/init.jsp" %>
 
+<c:if test='<%= SessionErrors.contains(liferayPortletRequest, "styleBookEntryPreviewFileExtensionInvalid") %>'>
+	<aui:script>
+		Liferay.Util.openToast({
+			message: '<liferay-ui:message key="file-type-is-invalid" />',
+			title: Liferay.Language.get('error'),
+			toastProps: {
+				autoClose: 5000,
+			},
+			type: 'danger',
+		});
+	</aui:script>
+</c:if>
+
 <%
-StyleBookDisplayContext styleBookDisplayContext = new StyleBookDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
+StyleBookDisplayContext styleBookDisplayContext = (StyleBookDisplayContext)request.getAttribute(StyleBookDisplayContext.class.getName());
 %>
 
 <clay:management-toolbar
-	managementToolbarDisplayContext="<%= new StyleBookManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, styleBookDisplayContext.getStyleBookEntriesSearchContainer()) %>"
+	managementToolbarDisplayContext="<%= (StyleBookManagementToolbarDisplayContext)request.getAttribute(StyleBookManagementToolbarDisplayContext.class.getName()) %>"
 	propsTransformer="{StyleBookManagementToolbarPropsTransformer} from style-book-web"
 />
 
@@ -20,7 +33,9 @@ StyleBookDisplayContext styleBookDisplayContext = new StyleBookDisplayContext(re
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<clay:container-fluid>
+<clay:container-fluid
+	size="xxxl"
+>
 	<aui:form action="<%= deleteStyleBookEntryURL %>" name="fm">
 		<liferay-ui:search-container
 			searchContainer="<%= styleBookDisplayContext.getStyleBookEntriesSearchContainer() %>"

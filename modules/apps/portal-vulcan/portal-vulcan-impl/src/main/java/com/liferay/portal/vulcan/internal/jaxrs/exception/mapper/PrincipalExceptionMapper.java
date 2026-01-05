@@ -5,15 +5,21 @@
 
 package com.liferay.portal.vulcan.internal.jaxrs.exception.mapper;
 
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Providers;
 
 /**
  * Converts any {@code PrincipalException} to a {@code 404} error in case it is
@@ -26,19 +32,38 @@ public class PrincipalExceptionMapper
 	extends BaseExceptionMapper<PrincipalException> {
 
 	@Override
-	protected Problem getProblem(PrincipalException principalException) {
-		Response.Status status = Response.Status.FORBIDDEN;
-
+	public Response toResponse(PrincipalException principalException) {
 		String method = _httpServletRequest.getMethod();
 
 		if (method.equals(HttpMethods.GET)) {
-			status = Response.Status.NOT_FOUND;
+			ExceptionMapper<NotFoundException> exceptionMapper =
+				_providers.getExceptionMapper(NotFoundException.class);
+
+			return exceptionMapper.toResponse(
+				new NotFoundException(principalException));
 		}
 
-		return new Problem(status, principalException.getMessage());
+		return super.toResponse(principalException);
 	}
+
+	@Override
+	protected Problem getProblem(PrincipalException principalException) {
+		if (_log.isWarnEnabled()) {
+			_log.warn(principalException);
+		}
+
+		return new Problem(
+			Response.Status.FORBIDDEN,
+			LanguageUtil.get(_httpServletRequest.getLocale(), "forbidden"));
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PrincipalExceptionMapper.class);
 
 	@Context
 	private HttpServletRequest _httpServletRequest;
+
+	@Context
+	private Providers _providers;
 
 }

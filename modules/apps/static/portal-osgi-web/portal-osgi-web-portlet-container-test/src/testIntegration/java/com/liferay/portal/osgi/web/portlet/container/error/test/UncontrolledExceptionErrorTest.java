@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -22,7 +21,11 @@ import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
-import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import java.io.IOException;
 
@@ -33,15 +36,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -51,11 +47,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class UncontrolledExceptionErrorTest
 	extends BasePortletContainerTestCase {
-
-	@ClassRule
-	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
 
 	@Before
 	@Override
@@ -131,14 +122,15 @@ public class UncontrolledExceptionErrorTest
 				"com.liferay.portlet.use-default-template",
 				Boolean.TRUE.toString()
 			).put(
-				"javax.portlet.display-name",
+				"jakarta.portlet.display-name",
 				"Uncontrolled Exception Error Portlet"
 			).put(
-				"javax.portlet.init-param.view-template", "/error_test/view.jsp"
+				"jakarta.portlet.init-param.view-template",
+				"/error_test/view.jsp"
 			).put(
-				"javax.portlet.name", _PORTLET_NAME
+				"jakarta.portlet.name", _PORTLET_NAME
 			).put(
-				"javax.portlet.resource-bundle", "content.Language"
+				"jakarta.portlet.resource-bundle", "content.Language"
 			).build(),
 			_PORTLET_NAME);
 

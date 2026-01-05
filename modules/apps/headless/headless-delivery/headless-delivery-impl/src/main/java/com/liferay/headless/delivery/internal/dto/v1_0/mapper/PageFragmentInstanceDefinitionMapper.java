@@ -23,6 +23,7 @@ import com.liferay.headless.delivery.dto.v1_0.Fragment;
 import com.liferay.headless.delivery.dto.v1_0.FragmentField;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldAction;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldBackgroundImage;
+import com.liferay.headless.delivery.dto.v1_0.FragmentFieldDate;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldHTML;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldImage;
 import com.liferay.headless.delivery.dto.v1_0.FragmentFieldText;
@@ -51,10 +52,10 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONDeserializer;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -69,6 +70,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -129,7 +131,8 @@ public class PageFragmentInstanceDefinitionMapper {
 
 		FragmentEntry fragmentEntry = _getFragmentEntry(
 			_fragmentCollectionContributorRegistry,
-			fragmentEntryLink.getFragmentEntryId(), rendererKey);
+			fragmentEntryLink.getFragmentEntryERC(),
+			fragmentEntryLink.getFragmentEntryGroupId(), rendererKey);
 
 		return new PageFragmentInstanceDefinition() {
 			{
@@ -191,134 +194,133 @@ public class PageFragmentInstanceDefinitionMapper {
 			return Collections.emptyList();
 		}
 
-		List<FragmentField> fragmentFields = new ArrayList<>();
-
 		Set<String> backgroundImageIds = jsonObject.keySet();
 
-		for (String backgroundImageId : backgroundImageIds) {
-			JSONObject imageJSONObject = jsonObject.getJSONObject(
-				backgroundImageId);
+		return TransformUtil.transform(
+			backgroundImageIds,
+			backgroundImageId -> {
+				JSONObject imageJSONObject = jsonObject.getJSONObject(
+					backgroundImageId);
 
-			Map<String, String> localizedValues =
-				LocalizedValueUtil.toLocalizedValues(imageJSONObject);
+				Map<String, String> localizedValues =
+					LocalizedValueUtil.toLocalizedValues(imageJSONObject);
 
-			fragmentFields.add(
-				new FragmentField() {
+				return new FragmentField() {
 					{
 						setId(() -> backgroundImageId);
 						setValue(
 							() -> _toFragmentFieldBackgroundImage(
 								imageJSONObject, localizedValues, saveMapping));
 					}
-				});
-		}
-
-		return fragmentFields;
+				};
+			});
 	}
 
 	private Map<String, Object> _getFragmentConfig(
 		FragmentEntryLink fragmentEntryLink) {
 
-		try {
-			JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
-				fragmentEntryLink.getEditableValues());
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
-			JSONObject configJSONObject =
-				editableValuesJSONObject.getJSONObject(
-					FragmentEntryProcessorConstants.
-						KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR);
+		if (editableValuesJSONObject == null) {
+			return Collections.emptyMap();
+		}
+
+		JSONObject configJSONObject = editableValuesJSONObject.getJSONObject(
+			FragmentEntryProcessorConstants.
+				KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR);
+
+		if (configJSONObject == null) {
+			configJSONObject =
+				_fragmentEntryConfigurationParser.
+					getConfigurationDefaultValuesJSONObject(
+						fragmentEntryLink.getConfigurationJSONObject());
 
 			if (configJSONObject == null) {
-				configJSONObject =
-					_fragmentEntryConfigurationParser.
-						getConfigurationDefaultValuesJSONObject(
-							fragmentEntryLink.getConfiguration());
-
-				if (configJSONObject == null) {
-					return Collections.emptyMap();
-				}
+				return Collections.emptyMap();
 			}
-
-			JSONObject jsonObject = configJSONObject;
-
-			List<String> excludedFragmentConfigurationFieldNames =
-				new ArrayList<>();
-
-			for (FragmentConfigurationField fragmentConfigurationField :
-					_fragmentEntryConfigurationParser.
-						getFragmentConfigurationFields(
-							fragmentEntryLink.getConfiguration())) {
-
-				if (ArrayUtil.contains(
-						_EXCLUDED_FRAGMENT_CONFIGURATION_FIELD_TYPES,
-						fragmentConfigurationField.getType())) {
-
-					excludedFragmentConfigurationFieldNames.add(
-						fragmentConfigurationField.getName());
-				}
-			}
-
-			return new HashMap<String, Object>() {
-				{
-					for (String key : jsonObject.keySet()) {
-						if (excludedFragmentConfigurationFieldNames.contains(
-								key)) {
-
-							put(key, jsonObject.get(key));
-
-							continue;
-						}
-
-						Object value =
-							_fragmentEntryConfigurationParser.getFieldValue(
-								fragmentEntryLink.getConfiguration(),
-								fragmentEntryLink.getEditableValues(),
-								LocaleUtil.getMostRelevantLocale(), key);
-
-						if (value == null) {
-							value = jsonObject.get(key);
-						}
-
-						if (value instanceof JSONObject) {
-							JSONObject valueJSONObject = (JSONObject)value;
-
-							if (valueJSONObject.has("color")) {
-								value = valueJSONObject.getString("color");
-							}
-						}
-
-						if (value instanceof JSONArray ||
-							value instanceof JSONObject) {
-
-							JSONDeserializer<Map<String, Object>>
-								jsonDeserializer =
-									_jsonFactory.createJSONDeserializer();
-
-							value = jsonDeserializer.deserialize(
-								value.toString());
-						}
-
-						put(key, value);
-					}
-				}
-			};
 		}
-		catch (JSONException jsonException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(jsonException);
+
+		List<String> excludedFragmentConfigurationFieldNames =
+			new ArrayList<>();
+
+		for (FragmentConfigurationField fragmentConfigurationField :
+				_fragmentEntryConfigurationParser.
+					getFragmentConfigurationFields(
+						fragmentEntryLink.getConfigurationJSONObject())) {
+
+			if (ArrayUtil.contains(
+					_EXCLUDED_FRAGMENT_CONFIGURATION_FIELD_TYPES,
+					fragmentConfigurationField.getType())) {
+
+				excludedFragmentConfigurationFieldNames.add(
+					fragmentConfigurationField.getName());
+			}
+		}
+
+		Map<String, Object> resultMap = new HashMap<>();
+
+		for (String key : configJSONObject.keySet()) {
+			Object value;
+
+			if (excludedFragmentConfigurationFieldNames.contains(key)) {
+				value = configJSONObject.get(key);
+
+				if ((value instanceof JSONObject) &&
+					JSONUtil.isEmpty((JSONObject)value)) {
+
+					value = Collections.emptyMap();
+				}
+			}
+			else {
+				value = _fragmentEntryConfigurationParser.getFieldValue(
+					fragmentEntryLink.getConfigurationJSONObject(),
+					fragmentEntryLink.getEditableValuesJSONObject(),
+					LocaleUtil.getMostRelevantLocale(), key);
 			}
 
-			return null;
+			if (value == null) {
+				value = configJSONObject.get(key);
+			}
+
+			if (value instanceof JSONObject valueJSONObject) {
+				if (valueJSONObject.has("color")) {
+					value = valueJSONObject.getString("color");
+				}
+				else {
+					JSONDeserializer<Map<String, Object>> jsonDeserializer =
+						_jsonFactory.createJSONDeserializer();
+
+					value = jsonDeserializer.deserialize(value.toString());
+				}
+			}
+
+			if (value instanceof JSONArray jsonArray) {
+				List<String> values = new ArrayList<>();
+
+				for (int i = 0; i < jsonArray.length(); i++) {
+					values.add(jsonArray.getString(i));
+				}
+
+				value = values.toArray(new String[0]);
+			}
+
+			resultMap.put(key, value);
 		}
+
+		return resultMap;
 	}
 
 	private FragmentEntry _getFragmentEntry(
 		FragmentCollectionContributorRegistry
 			fragmentCollectionContributorRegistry,
-		long fragmentEntryId, String rendererKey) {
+		String fragmentEntryERC, long fragmentEntryGroupId,
+		String rendererKey) {
 
 		FragmentEntry fragmentEntry =
-			_fragmentEntryLocalService.fetchFragmentEntry(fragmentEntryId);
+			_fragmentEntryLocalService.
+				fetchFragmentEntryByExternalReferenceCode(
+					fragmentEntryERC, fragmentEntryGroupId);
 
 		if (fragmentEntry != null) {
 			return fragmentEntry;
@@ -338,28 +340,55 @@ public class PageFragmentInstanceDefinitionMapper {
 			return new FragmentField[0];
 		}
 
-		JSONObject editableValuesJSONObject = null;
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
-		try {
-			editableValuesJSONObject = _jsonFactory.createJSONObject(
-				fragmentEntryLink.getEditableValues());
-		}
-		catch (JSONException jsonException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(jsonException);
+		JSONObject processedEditableValuesJSONObject =
+			_jsonFactory.createJSONObject();
+
+		String editableValues = fragmentEntryLink.getEditableValues();
+		String fragmentEntryLinkNamespace = fragmentEntryLink.getNamespace();
+
+		if (editableValues.contains(fragmentEntryLinkNamespace)) {
+			for (String key : editableValuesJSONObject.keySet()) {
+				Object value = editableValuesJSONObject.get(key);
+
+				if (!(value instanceof JSONObject)) {
+					processedEditableValuesJSONObject.put(key, value);
+
+					continue;
+				}
+
+				JSONObject duplicatedJSONObject =
+					_jsonFactory.createJSONObject();
+
+				JSONObject jsonObject = (JSONObject)value;
+
+				for (String curKey : jsonObject.keySet()) {
+					duplicatedJSONObject.put(
+						StringUtil.replace(
+							curKey, fragmentEntryLinkNamespace,
+							"[$NAMESPACE$]"),
+						jsonObject.get(curKey));
+				}
+
+				processedEditableValuesJSONObject.put(
+					key, duplicatedJSONObject);
 			}
+		}
 
-			return null;
+		if (SetUtil.isEmpty(processedEditableValuesJSONObject.keySet())) {
+			processedEditableValuesJSONObject = editableValuesJSONObject;
 		}
 
 		List<FragmentField> fragmentFields = new ArrayList<>(
 			_getBackgroundImageFragmentFields(
-				editableValuesJSONObject.getJSONObject(
+				processedEditableValuesJSONObject.getJSONObject(
 					FragmentEntryProcessorConstants.
 						KEY_BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR),
 				saveMapping));
 
-		JSONObject jsonObject = editableValuesJSONObject.getJSONObject(
+		JSONObject jsonObject = processedEditableValuesJSONObject.getJSONObject(
 			FragmentEntryProcessorConstants.
 				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR);
 
@@ -400,18 +429,13 @@ public class PageFragmentInstanceDefinitionMapper {
 		Map<String, String> editableTypes, JSONObject jsonObject,
 		boolean saveInlineContent, boolean saveMapping) {
 
-		List<FragmentField> fragmentFields = new ArrayList<>();
-
 		Set<String> textIds = jsonObject.keySet();
 
-		for (String textId : textIds) {
-			fragmentFields.add(
-				_toFragmentField(
-					editableTypes, jsonObject, saveInlineContent, saveMapping,
-					textId));
-		}
-
-		return fragmentFields;
+		return TransformUtil.transform(
+			textIds,
+			textId -> _toFragmentField(
+				editableTypes, jsonObject, saveInlineContent, saveMapping,
+				textId));
 	}
 
 	private WidgetInstance[] _getWidgetInstances(
@@ -751,6 +775,11 @@ public class PageFragmentInstanceDefinitionMapper {
 								textJSONObject, saveInlineContent, saveMapping);
 						}
 
+						if (Objects.equals(type, "date-time")) {
+							return _toFragmentFieldDate(
+								textJSONObject, saveMapping);
+						}
+
 						if (Objects.equals(type, "html")) {
 							return _toFragmentFieldHTML(
 								textJSONObject, saveMapping);
@@ -867,6 +896,51 @@ public class PageFragmentInstanceDefinitionMapper {
 		};
 	}
 
+	private FragmentFieldDate _toFragmentFieldDate(
+		JSONObject jsonObject, boolean saveMapping) {
+
+		return new FragmentFieldDate() {
+			{
+				setDate(
+					() -> {
+						if (FragmentMappedValueUtil.isSaveFragmentMappedValue(
+								jsonObject, saveMapping)) {
+
+							return _toFragmentMappedValue(
+								_toDefaultMappingValue(jsonObject, null),
+								jsonObject);
+						}
+
+						return null;
+					});
+				setDateFormat(
+					() -> {
+						JSONObject configJSONObject = jsonObject.getJSONObject(
+							"config");
+
+						if (configJSONObject == null) {
+							return null;
+						}
+
+						JSONObject dateFormatJSONObject =
+							configJSONObject.getJSONObject("dateFormat");
+
+						if (dateFormatJSONObject == null) {
+							return null;
+						}
+
+						return new FragmentInlineValue() {
+							{
+								setValue_i18n(
+									() -> JSONUtil.toStringMap(
+										dateFormatJSONObject));
+							}
+						};
+					});
+			}
+		};
+	}
+
 	private FragmentFieldHTML _toFragmentFieldHTML(
 		JSONObject jsonObject, boolean saveMapping) {
 
@@ -960,7 +1034,6 @@ public class PageFragmentInstanceDefinitionMapper {
 		return new FragmentFieldText() {
 			{
 				setFragmentLink(() -> _toFragmentLink(jsonObject, saveMapping));
-
 				setText(
 					() -> {
 						if (FragmentMappedValueUtil.isSaveFragmentMappedValue(
@@ -1108,12 +1181,12 @@ public class PageFragmentInstanceDefinitionMapper {
 											configJSONObject.getJSONObject(
 												"href");
 
-										if (hrefJSONObject != null) {
-											return JSONUtil.toStringMap(
-												hrefJSONObject);
+										if (hrefJSONObject == null) {
+											return null;
 										}
 
-										return null;
+										return JSONUtil.toStringMap(
+											hrefJSONObject);
 									});
 							}
 						};

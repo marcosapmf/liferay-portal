@@ -5,7 +5,6 @@
 
 package com.liferay.fragment.entry.processor.freemarker;
 
-import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.fragment.entry.processor.freemarker.internal.configuration.FreeMarkerFragmentEntryProcessorConfiguration;
 import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.helper.FragmentEntryLinkHelper;
@@ -19,8 +18,6 @@ import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
-import com.liferay.info.search.InfoSearchClassMapperRegistry;
-import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -35,13 +32,14 @@ import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Locale;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,10 +56,10 @@ public class FreeMarkerFragmentEntryProcessor
 
 	@Override
 	public JSONObject getDefaultEditableValuesJSONObject(
-		String html, String configuration) {
+		String html, JSONObject configurationJSONObject) {
 
 		return _fragmentEntryConfigurationParser.
-			getConfigurationDefaultValuesJSONObject(configuration);
+			getConfigurationDefaultValuesJSONObject(configurationJSONObject);
 	}
 
 	@Override
@@ -117,8 +115,8 @@ public class FreeMarkerFragmentEntryProcessor
 
 		JSONObject configurationValuesJSONObject =
 			_fragmentEntryConfigurationParser.getConfigurationJSONObject(
-				fragmentEntryLink.getConfiguration(),
-				fragmentEntryLink.getEditableValues(),
+				fragmentEntryLink.getConfigurationJSONObject(),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				fragmentEntryProcessorContext.getLocale());
 
 		template.putAll(
@@ -130,13 +128,19 @@ public class FreeMarkerFragmentEntryProcessor
 			).put(
 				"fragmentEntryLinkNamespace", fragmentEntryLink.getNamespace()
 			).put(
+				"fragmentName",
+				HtmlUtil.escape(
+					_fragmentEntryLinkHelper.getFragmentEntryName(
+						fragmentEntryLink,
+						fragmentEntryProcessorContext.getLocale()))
+			).put(
 				"layoutMode",
 				_getLayoutMode(
 					fragmentEntryProcessorContext.getHttpServletRequest())
 			).putAll(
 				_fragmentEntryConfigurationParser.getContextObjects(
 					configurationValuesJSONObject,
-					fragmentEntryLink.getConfiguration(),
+					fragmentEntryLink.getConfigurationJSONObject(),
 					_getInfoItem(
 						fragmentEntryProcessorContext.
 							getContextInfoItemReference()),
@@ -144,23 +148,18 @@ public class FreeMarkerFragmentEntryProcessor
 			).build());
 
 		if (fragmentEntryLink.isTypeInput()) {
-			FragmentEntryInputTemplateNodeContextHelper
-				fragmentEntryInputTemplateNodeContextHelper =
-					new FragmentEntryInputTemplateNodeContextHelper(
+			template.put(
+				"input",
+				_fragmentEntryInputTemplateNodeContextHelper.
+					toInputTemplateNode(
+						fragmentEntryProcessorContext.getAttributes(),
 						_fragmentEntryLinkHelper.getFragmentEntryName(
 							fragmentEntryLink,
 							fragmentEntryProcessorContext.getLocale()),
-						_dlAppLocalService, _fragmentEntryConfigurationParser,
-						_infoItemServiceRegistry,
-						_infoSearchClassMapperRegistry, _itemSelector);
-
-			template.put(
-				"input",
-				fragmentEntryInputTemplateNodeContextHelper.toInputTemplateNode(
-					fragmentEntryLink,
-					fragmentEntryProcessorContext.getHttpServletRequest(),
-					fragmentEntryProcessorContext.getInfoForm(),
-					fragmentEntryProcessorContext.getLocale()));
+						fragmentEntryLink,
+						fragmentEntryProcessorContext.getHttpServletRequest(),
+						fragmentEntryProcessorContext.getInfoForm(),
+						fragmentEntryProcessorContext.getLocale()));
 		}
 
 		template.prepareTaglib(
@@ -237,22 +236,17 @@ public class FreeMarkerFragmentEntryProcessor
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
-	private DLAppLocalService _dlAppLocalService;
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
 
 	@Reference
-	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+	private FragmentEntryInputTemplateNodeContextHelper
+		_fragmentEntryInputTemplateNodeContextHelper;
 
 	@Reference
 	private FragmentEntryLinkHelper _fragmentEntryLinkHelper;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
-
-	@Reference
-	private InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;
-
-	@Reference
-	private ItemSelector _itemSelector;
 
 	@Reference
 	private Language _language;

@@ -10,12 +10,12 @@ import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProviderUtil;
 import com.liferay.portal.upload.ServletFileUpload;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
@@ -44,7 +44,8 @@ public class ServletFileUploadImpl implements ServletFileUpload {
 						httpServletRequest.getCharacterEncoding()));
 
 		long fileMaxSize =
-			UploadServletRequestConfigurationProviderUtil.getMaxSize();
+			UploadServletRequestConfigurationProviderUtil.
+				getMaxSizeWithPadding();
 
 		servletFileUpload.setFileSizeMax(fileMaxSize);
 		servletFileUpload.setSizeMax(fileMaxSize);

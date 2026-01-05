@@ -57,6 +57,10 @@
 		<finder name="ReceiverUserId" return-type="Collection">
 			<finder-column name="receiverUserId" />
 		</finder>
+		<finder name="C_CN" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
@@ -344,7 +348,7 @@
 			<finder-column name="classNameId" />
 			<finder-column name="activityType" />
 		</finder>
-		<finder name="G_C_A_N" return-type="SocialActivitySetting">
+		<finder name="G_C_A_N" return-type="SocialActivitySetting" unique="true">
 			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
 			<finder-column name="activityType" />

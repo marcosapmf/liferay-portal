@@ -15,11 +15,11 @@ import com.liferay.commerce.order.web.internal.constants.CommerceOrderFDSNames;
 import com.liferay.commerce.order.web.internal.model.OrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPSubscriptionInfo;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPSubscriptionType;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.service.CommerceOrderItemService;
@@ -28,6 +28,7 @@ import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,6 +46,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.Format;
 
 import java.util.ArrayList;
@@ -53,8 +56,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -175,36 +176,37 @@ public class CommerceOrderItemFDSDataProvider
 
 		Locale locale = themeDisplay.getLocale();
 
-		List<OrderItem> orderItems = new ArrayList<>();
+		return TransformUtil.transform(
+			commerceOrderItems,
+			commerceOrderItem -> {
+				Format dateTimeFormat = FastDateFormatFactoryUtil.getDate(
+					locale, themeDisplay.getTimeZone());
 
-		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
-			Format dateTimeFormat = FastDateFormatFactoryUtil.getDate(
-				locale, themeDisplay.getTimeZone());
+				CommerceOrder commerceOrder =
+					commerceOrderItem.getCommerceOrder();
 
-			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+				CommerceOrderItemPrice commerceOrderItemPrice =
+					_commerceOrderPriceCalculation.getCommerceOrderItemPrice(
+						commerceOrder.getCommerceCurrency(), commerceOrderItem);
 
-			CommerceOrderItemPrice commerceOrderItemPrice =
-				_commerceOrderPriceCalculation.getCommerceOrderItemPrice(
-					commerceOrder.getCommerceCurrency(), commerceOrderItem);
+				String name = commerceOrderItem.getName(locale);
 
-			String name = commerceOrderItem.getName(locale);
+				StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
 
-			StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
+				List<KeyValuePair> keyValuePairs =
+					_cpInstanceHelper.getKeyValuePairs(
+						commerceOrderItem.getCPDefinitionId(),
+						commerceOrderItem.getJson(), locale);
 
-			List<KeyValuePair> keyValuePairs =
-				_cpInstanceHelper.getKeyValuePairs(
-					commerceOrderItem.getCPDefinitionId(),
-					commerceOrderItem.getJson(), locale);
+				for (KeyValuePair keyValuePair : keyValuePairs) {
+					stringJoiner.add(keyValuePair.getValue());
+				}
 
-			for (KeyValuePair keyValuePair : keyValuePairs) {
-				stringJoiner.add(keyValuePair.getValue());
-			}
+				String unitOfMeasureKey =
+					commerceOrderItem.getUnitOfMeasureKey();
 
-			String unitOfMeasureKey = commerceOrderItem.getUnitOfMeasureKey();
-
-			orderItems.add(
-				new OrderItem(
-					commerceOrderItem.getDeliveryGroup(),
+				return new OrderItem(
+					commerceOrderItem.getDeliveryGroupName(),
 					_getDiscount(commerceOrderItemPrice, locale),
 					_commerceOrderItemQuantityFormatter.format(
 						commerceOrderItem,
@@ -230,10 +232,8 @@ public class CommerceOrderItemFDSDataProvider
 					_getSubscriptionPeriod(
 						commerceOrderItem, httpServletRequest),
 					_getTotal(commerceOrderItemPrice, locale),
-					unitOfMeasureKey));
-		}
-
-		return orderItems;
+					unitOfMeasureKey);
+			});
 	}
 
 	private String _getPeriodKey(

@@ -33,10 +33,10 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -154,12 +154,13 @@ public class GetLayoutReportsDataStrutsAction implements StrutsAction {
 	}
 
 	private SegmentsExperience _getParentSegmentsExperience(
-		SegmentsExperience segmentsExperience) {
+		SegmentsExperience segmentsExperience, ThemeDisplay themeDisplay) {
 
 		List<SegmentsExperimentRel> segmentsExperimentRels =
 			_segmentsExperimentRelLocalService.
-				getSegmentsExperimentRelsBySegmentsExperienceId(
-					segmentsExperience.getSegmentsExperienceId());
+				getSegmentsExperimentRelsBySegmentsExperienceKey(
+					segmentsExperience.getSegmentsExperienceKey(),
+					themeDisplay.getPlid());
 
 		if (segmentsExperimentRels.isEmpty()) {
 			return null;
@@ -321,7 +322,7 @@ public class GetLayoutReportsDataStrutsAction implements StrutsAction {
 		SegmentsExperience segmentsExperience, ThemeDisplay themeDisplay) {
 
 		SegmentsExperience parentSegmentsExperience =
-			_getParentSegmentsExperience(segmentsExperience);
+			_getParentSegmentsExperience(segmentsExperience, themeDisplay);
 
 		if (parentSegmentsExperience != null) {
 			segmentsExperience = parentSegmentsExperience;

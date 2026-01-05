@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountConstants;
-import com.liferay.account.exception.NoSuchEntryException;
-import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.model.AccountEntryUserRel;
@@ -20,9 +18,9 @@ import com.liferay.account.service.AccountEntryUserRelService;
 import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountGroupService;
 import com.liferay.commerce.constants.CommerceAddressConstants;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
@@ -31,9 +29,10 @@ import com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0.Ac
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountMemberUtil;
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountOrganizationUtil;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -61,13 +60,13 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,11 +76,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account.properties",
 	scope = ServiceScope.PROTOTYPE, service = AccountResource.class
 )
+@Deprecated
 public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Override
@@ -99,14 +100,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryService.deleteAccountEntry(
 			accountEntry.getAccountEntryId());
@@ -122,24 +117,12 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
-
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), accountExternalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find Account with external reference code: " +
-					accountExternalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				accountExternalReferenceCode, contextCompany.getCompanyId());
 
 		AccountGroupRel accountGroupRel =
 			_accountGroupRelService.fetchAccountGroupRel(
@@ -168,14 +151,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		return _accountDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
@@ -224,14 +201,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_updateAccount(accountEntry.getAccountEntryId(), account);
 
@@ -294,14 +265,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		updateAccountLogo(accountEntry, multipartBody);
 
@@ -316,32 +281,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		AccountEntry accountEntry = null;
 
 		if (account.getId() != null) {
-			accountEntry = _accountEntryService.fetchAccountEntry(
+			accountEntry = _accountEntryService.getAccountEntry(
 				account.getId());
 		}
-		else if (account.getExternalReferenceCode() != null) {
+		else {
 			accountEntry =
-				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					account.getExternalReferenceCode());
-		}
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find Account with external reference code: " +
-					account.getExternalReferenceCode());
+				_accountEntryService.getAccountEntryByExternalReferenceCode(
+					account.getExternalReferenceCode(),
+					contextCompany.getCompanyId());
 		}
 
 		_accountGroupRelService.addAccountGroupRel(
@@ -370,6 +323,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws IOException, PortalException {
 
 		_accountEntryService.updateAccountEntry(
+			accountEntry.getExternalReferenceCode(),
 			accountEntry.getAccountEntryId(),
 			accountEntry.getParentAccountEntryId(), accountEntry.getName(),
 			accountEntry.getDescription(), true,
@@ -556,20 +510,23 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 							accountAddressId);
 
 					_commerceAddressService.updateCommerceAddress(
+						exisitingCommerceAddress.getExternalReferenceCode(),
 						exisitingCommerceAddress.getCommerceAddressId(),
-						accountAddress.getName(),
+						country.getCountryId(),
+						_getRegionId(country, accountAddress),
+						accountAddress.getCity(),
 						accountAddress.getDescription(),
+						accountAddress.getName(),
+						accountAddress.getPhoneNumber(),
 						accountAddress.getStreet1(),
 						accountAddress.getStreet2(),
-						accountAddress.getStreet3(), accountAddress.getCity(),
-						accountAddress.getZip(),
-						_getRegionId(country, accountAddress),
-						country.getCountryId(), accountAddress.getPhoneNumber(),
+						accountAddress.getStreet3(),
+						exisitingCommerceAddress.getSubtype(),
 						GetterUtil.getInteger(
 							accountAddress.getType(),
 							CommerceAddressConstants.
 								ADDRESS_TYPE_BILLING_AND_SHIPPING),
-						serviceContext);
+						accountAddress.getZip(), serviceContext);
 
 					if (GetterUtil.getBoolean(
 							accountAddress.getDefaultBilling())) {
@@ -598,19 +555,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 							accountAddress.getExternalReferenceCode(), null),
 						AccountEntry.class.getName(),
 						accountEntry.getAccountEntryId(),
-						accountAddress.getName(),
+						country.getCountryId(),
+						_getRegionId(country, accountAddress),
+						accountAddress.getCity(),
 						accountAddress.getDescription(),
+						accountAddress.getName(),
+						accountAddress.getPhoneNumber(),
 						accountAddress.getStreet1(),
 						accountAddress.getStreet2(),
-						accountAddress.getStreet3(), accountAddress.getCity(),
-						accountAddress.getZip(),
-						_getRegionId(country, accountAddress),
-						country.getCountryId(), accountAddress.getPhoneNumber(),
+						accountAddress.getStreet3(), StringPool.BLANK,
 						GetterUtil.getInteger(
 							accountAddress.getType(),
 							CommerceAddressConstants.
 								ADDRESS_TYPE_BILLING_AND_SHIPPING),
-						serviceContext);
+						accountAddress.getZip(), serviceContext);
 
 				if (GetterUtil.getBoolean(accountAddress.getDefaultBilling())) {
 					_accountEntryLocalService.updateDefaultBillingAddressId(

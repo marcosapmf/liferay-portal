@@ -19,13 +19,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.persistence.PersistenceException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,6 +41,7 @@ import java.net.URLConnection;
 
 import java.nio.ByteBuffer;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,13 +64,16 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Brian Wing Shun Chan
@@ -76,9 +81,9 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
  * @author Shuyang Zhou
  * @author Tomas Polesovsky
  */
-public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
+public class PortalHibernateConfiguration
+	implements FactoryBean<SessionFactory>, PersistenceExceptionTranslator {
 
-	@Override
 	public void afterPropertiesSet() throws IOException {
 		Dialect dialect = DialectDetector.getDialect(_dataSource);
 
@@ -95,10 +100,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 		Properties properties = PropsUtil.getProperties();
 
 		properties.remove("hibernate.cache.region.factory_class");
-
-		if (DBManagerUtil.getDBType(dialect) == DBType.SYBASE) {
-			properties.setProperty(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
-		}
 
 		properties.setProperty(
 			"hibernate.allow_update_outside_transaction", "true");
@@ -117,9 +118,7 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 		properties.setProperty(
 			"hibernate.query.sql.jdbc_style_params_base", "true");
-		properties.setProperty("javax.persistence.validation.mode", "none");
-
-		setHibernateProperties(properties);
+		properties.setProperty("jakarta.persistence.validation.mode", "none");
 
 		BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder =
 			new BootstrapServiceRegistryBuilder();
@@ -135,14 +134,57 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 				new CTModelIntegrator());
 			bootstrapServiceRegistryBuilder.applyIntegrator(
 				MVCCEventListenerIntegrator.INSTANCE);
-
-			setEntityInterceptor(new CTSQLInterceptor());
 		}
 
-		setMetadataSources(
+		Configuration configuration = new Configuration(
 			new MetadataSources(bootstrapServiceRegistryBuilder.build()));
 
-		super.afterPropertiesSet();
+		if (_mvccEnabled) {
+			configuration.setInterceptor(new CTSQLInterceptor());
+		}
+
+		configuration.addProperties(properties);
+
+		properties = configuration.getProperties();
+
+		properties.put(
+			"hibernate.classLoaders",
+			Collections.singleton(ClassUtils.getDefaultClassLoader()));
+
+		if (_dataSource != null) {
+			properties.put("hibernate.connection.datasource", _dataSource);
+		}
+
+		properties.put(
+			"hibernate.connection.handling_mode",
+			PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_HOLD);
+
+		_sessionFactory = _buildSessionFactory(configuration);
+	}
+
+	public void destroy() {
+		if (_sessionFactory != null) {
+			_sessionFactory.close();
+		}
+	}
+
+	@Override
+	public SessionFactory getObject() {
+		return _sessionFactory;
+	}
+
+	@Override
+	public Class<?> getObjectType() {
+		if (_sessionFactory != null) {
+			return _sessionFactory.getClass();
+		}
+
+		return SessionFactory.class;
+	}
+
+	@Override
+	public boolean isSingleton() {
+		return true;
 	}
 
 	public void setConfigurationResources(String[] configurationResources) {
@@ -150,8 +192,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 	}
 
 	public void setDataSource(DataSource dataSource) {
-		super.setDataSource(dataSource);
-
 		_dataSource = dataSource;
 	}
 
@@ -159,29 +199,44 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 		_mvccEnabled = mvccEnabled;
 	}
 
-	protected static Map<String, Class<?>> getPreloadClassLoaderClasses() {
-		try {
-			Map<String, Class<?>> classes = new HashMap<>();
+	@Override
+	public DataAccessException translateExceptionIfPossible(
+		RuntimeException runtimeException) {
 
-			for (String className : _PRELOAD_CLASS_NAMES) {
-				ClassLoader portalClassLoader =
-					PortalClassLoaderUtil.getClassLoader();
+		if (runtimeException instanceof HibernateException hibernateException) {
+			return SessionFactoryUtils.convertHibernateAccessException(
+				hibernateException);
+		}
+		else if (runtimeException instanceof PersistenceException) {
+			Throwable throwable = runtimeException.getCause();
 
-				Class<?> clazz = portalClassLoader.loadClass(className);
+			if (throwable instanceof HibernateException) {
+				HibernateException hibernateException =
+					(HibernateException)throwable;
 
-				classes.put(className, clazz);
+				return SessionFactoryUtils.convertHibernateAccessException(
+					hibernateException);
 			}
+		}
 
-			return classes;
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new RuntimeException(classNotFoundException);
-		}
+		return null;
 	}
 
-	@Override
-	protected SessionFactory buildSessionFactory(
-			LocalSessionFactoryBuilder localSessionFactoryBuilder)
+	protected ClassLoader getConfigurationClassLoader() {
+		Class<?> clazz = getClass();
+
+		return clazz.getClassLoader();
+	}
+
+	protected String[] getConfigurationResources() {
+		if (_configurationResources == null) {
+			return PropsUtil.getArray(PropsKeys.HIBERNATE_CONFIGS);
+		}
+
+		return _configurationResources;
+	}
+
+	private SessionFactory _buildSessionFactory(Configuration configuration)
 		throws HibernateException {
 
 		try {
@@ -189,7 +244,7 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 			for (String resource : resources) {
 				try {
-					readResource(localSessionFactoryBuilder, resource);
+					_readResource(configuration, resource);
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
@@ -202,8 +257,7 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 			_log.error(exception);
 		}
 
-		SessionFactory sessionFactory = super.buildSessionFactory(
-			localSessionFactoryBuilder);
+		SessionFactory sessionFactory = configuration.buildSessionFactory();
 
 		SessionFactoryImplementor sessionFactoryImplementor =
 			(SessionFactoryImplementor)sessionFactory;
@@ -232,59 +286,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 		}
 
 		return sessionFactory;
-	}
-
-	protected ClassLoader getConfigurationClassLoader() {
-		Class<?> clazz = getClass();
-
-		return clazz.getClassLoader();
-	}
-
-	protected String[] getConfigurationResources() {
-		if (_configurationResources == null) {
-			return PropsUtil.getArray(PropsKeys.HIBERNATE_CONFIGS);
-		}
-
-		return _configurationResources;
-	}
-
-	protected void readResource(Configuration configuration, String resource)
-		throws Exception {
-
-		ClassLoader classLoader = getConfigurationClassLoader();
-
-		if (resource.startsWith("classpath*:")) {
-			String name = resource.substring("classpath*:".length());
-
-			Enumeration<URL> enumeration = classLoader.getResources(name);
-
-			if (_log.isDebugEnabled() && !enumeration.hasMoreElements()) {
-				_log.debug("No resources found for " + name);
-			}
-
-			while (enumeration.hasMoreElements()) {
-				URL url = enumeration.nextElement();
-
-				readResource(configuration, url);
-			}
-		}
-		else {
-			readResource(configuration, classLoader.getResource(resource));
-		}
-	}
-
-	protected void readResource(Configuration configuration, URL url)
-		throws Exception {
-
-		if (url == null) {
-			return;
-		}
-
-		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
-				PortalHibernateConfiguration.class.getClassLoader())) {
-
-			configuration.addXmlMapping(_loadBinding(configuration, url));
-		}
 	}
 
 	private File _getCacheFile(URL url) {
@@ -372,11 +373,46 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 		return binding;
 	}
 
-	private static final Field _META_MODEL_FIELD;
+	private void _readResource(Configuration configuration, String resource)
+		throws Exception {
 
-	private static final String[] _PRELOAD_CLASS_NAMES =
-		PropsValues.
-			SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES;
+		ClassLoader classLoader = getConfigurationClassLoader();
+
+		if (resource.startsWith("classpath*:")) {
+			String name = resource.substring("classpath*:".length());
+
+			Enumeration<URL> enumeration = classLoader.getResources(name);
+
+			if (_log.isDebugEnabled() && !enumeration.hasMoreElements()) {
+				_log.debug("No resources found for " + name);
+			}
+
+			while (enumeration.hasMoreElements()) {
+				URL url = enumeration.nextElement();
+
+				_readResource(configuration, url);
+			}
+		}
+		else {
+			_readResource(configuration, classLoader.getResource(resource));
+		}
+	}
+
+	private void _readResource(Configuration configuration, URL url)
+		throws Exception {
+
+		if (url == null) {
+			return;
+		}
+
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				PortalHibernateConfiguration.class.getClassLoader())) {
+
+			configuration.addXmlMapping(_loadBinding(configuration, url));
+		}
+	}
+
+	private static final Field _META_MODEL_FIELD;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortalHibernateConfiguration.class);
@@ -398,6 +434,7 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 	private String[] _configurationResources;
 	private DataSource _dataSource;
 	private boolean _mvccEnabled = true;
+	private SessionFactory _sessionFactory;
 
 	private static class SessionFactoryDelegate {
 

@@ -1,6 +1,7 @@
 @component-name = "portal-content-management"
 definition {
 
+	property browser.chrome.version = "139.0";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -38,6 +39,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanAddInlineImage {
+		property portal.acceptance = "false";
+
 		BlogsNavigator.openToAddEntry(siteURLKey = "guest");
 
 		BlogsEntry.addTitle(entryTitle = "Blogs Entry Title");
@@ -82,7 +85,7 @@ definition {
 			entryContent = "Blog Entry Content New",
 			entryTitle = "Blog Entry Title New");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Friendly URL");
 
 		BlogsEntry.addCustomURL(customURL = "my-custom-url");
 
@@ -194,8 +197,6 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanRemoveSmallImage {
-		property testray.component.names = "WYSIWYG";
-
 		BlogsNavigator.openToAddEntry(
 			layoutName = "Blogs Page",
 			siteURLKey = "guest");
@@ -275,6 +276,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanSaveCoverImageAsDraft {
+		property portal.acceptance = "false";
+
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		Blogs.addEntryWithUploadedCoverImage(
@@ -312,6 +315,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanUploadAndPublishCoverImage {
+		property portal.acceptance = "false";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.addEntryWithUploadedCoverImage(
@@ -353,7 +358,7 @@ definition {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		Blogs.addEntryWithUploadedCoverImage(
-			coverImageName = "document_1",
+			coverImageName = "Document_1",
 			entryContent = "Blogs Entry Content new",
 			entrySubtitle = "Blogs Entry Subtitle new",
 			entryTitle = "Blogs Entry Title new",
@@ -375,6 +380,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanViewCaptionFieldAfterRemovingSmallImage {
+		property portal.acceptance = "false";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.addEntryWithUploadedCoverImage(
@@ -410,6 +417,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanViewCoverImageDetails {
+		property portal.acceptance = "false";
+
 		var imageId = JSONBlog.uploadBlogImage(
 			groupName = "Guest",
 			sourceFileName = "Document_1.jpg");
@@ -441,6 +450,8 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanViewCoverImageUploadedFromDM {
+		property portal.acceptance = "false";
+
 		for (var n : list "1,2") {
 			JSONFolder.addFolder(
 				dmFolderDescription = "DM Folder ${n} Description",
@@ -584,6 +595,8 @@ definition {
 	@description = "This ensures that an image in the Blogs small image can be rendered correctly after moving it to a folder."
 	@priority = 3
 	test CanViewSmallImageAfterMovingToFolder {
+		property portal.acceptance = "false";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
@@ -625,6 +638,8 @@ definition {
 	@description = "This is a test for LPS-67276. It ensures that the success message for the cover image does not display after publishing with the empty required fields."
 	@priority = 3
 	test SuccessMessageForCoverImageDoesNotDisplayAfterPublishingWithEmptyRequiredFields {
+		property portal.acceptance = "false";
+
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
 		Blogs.addEntryWithUploadedCoverImage(

@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseFolder;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -22,18 +20,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -57,12 +55,58 @@ public interface KnowledgeBaseFolderResource {
 			String callbackURL, Object object)
 		throws Exception;
 
+	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
 	public KnowledgeBaseFolder getKnowledgeBaseFolder(
 			Long knowledgeBaseFolderId)
 		throws Exception;
 
+	public Page<KnowledgeBaseFolder>
+			getKnowledgeBaseFolderKnowledgeBaseFoldersPage(
+				Long parentKnowledgeBaseFolderId, Pagination pagination)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getKnowledgeBaseFolderPermissionsPage(
+				Long knowledgeBaseFolderId, String roleNames)
+		throws Exception;
+
+	public KnowledgeBaseFolder
+			getSiteKnowledgeBaseFolderByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteKnowledgeBaseFolderPermissionsPage(
+				Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<KnowledgeBaseFolder> getSiteKnowledgeBaseFoldersPage(
+			Long siteId, Pagination pagination)
+		throws Exception;
+
 	public KnowledgeBaseFolder patchKnowledgeBaseFolder(
 			Long knowledgeBaseFolderId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
+			Long parentKnowledgeBaseFolderId,
+			KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
+			Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception;
+
+	public Response postSiteKnowledgeBaseFolderBatch(
+			Long siteId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postSiteKnowledgeBaseFoldersPageExportBatch(
+			Long siteId, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public KnowledgeBaseFolder putKnowledgeBaseFolder(
@@ -74,61 +118,15 @@ public interface KnowledgeBaseFolderResource {
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getKnowledgeBaseFolderPermissionsPage(
-				Long knowledgeBaseFolderId, String roleNames)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
 			putKnowledgeBaseFolderPermissionsPage(
 				Long knowledgeBaseFolderId,
 				com.liferay.portal.vulcan.permission.Permission[] permissions)
-		throws Exception;
-
-	public Page<KnowledgeBaseFolder>
-			getKnowledgeBaseFolderKnowledgeBaseFoldersPage(
-				Long parentKnowledgeBaseFolderId, Pagination pagination)
-		throws Exception;
-
-	public KnowledgeBaseFolder postKnowledgeBaseFolderKnowledgeBaseFolder(
-			Long parentKnowledgeBaseFolderId,
-			KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public Page<KnowledgeBaseFolder> getSiteKnowledgeBaseFoldersPage(
-			Long siteId, Pagination pagination)
-		throws Exception;
-
-	public Response postSiteKnowledgeBaseFoldersPageExportBatch(
-			Long siteId, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
-	public KnowledgeBaseFolder postSiteKnowledgeBaseFolder(
-			Long siteId, KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public Response postSiteKnowledgeBaseFolderBatch(
-			Long siteId, String callbackURL, Object object)
-		throws Exception;
-
-	public void deleteSiteKnowledgeBaseFolderByExternalReferenceCode(
-			Long siteId, String externalReferenceCode)
-		throws Exception;
-
-	public KnowledgeBaseFolder
-			getSiteKnowledgeBaseFolderByExternalReferenceCode(
-				Long siteId, String externalReferenceCode)
 		throws Exception;
 
 	public KnowledgeBaseFolder
 			putSiteKnowledgeBaseFolderByExternalReferenceCode(
 				Long siteId, String externalReferenceCode,
 				KnowledgeBaseFolder knowledgeBaseFolder)
-		throws Exception;
-
-	public Page<com.liferay.portal.vulcan.permission.Permission>
-			getSiteKnowledgeBaseFolderPermissionsPage(
-				Long siteId, String roleNames)
 		throws Exception;
 
 	public Page<com.liferay.portal.vulcan.permission.Permission>
@@ -159,7 +157,8 @@ public interface KnowledgeBaseFolderResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -184,19 +183,23 @@ public interface KnowledgeBaseFolderResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

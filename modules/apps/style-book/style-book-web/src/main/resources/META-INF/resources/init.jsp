@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -22,6 +22,7 @@ page import="com.liferay.petra.string.StringUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
+page import="com.liferay.portal.kernel.servlet.SessionErrors" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
@@ -29,6 +30,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.style.book.constants.StyleBookPortletKeys" %><%@
 page import="com.liferay.style.book.exception.DuplicateStyleBookEntryKeyException" %><%@
 page import="com.liferay.style.book.exception.StyleBookEntryFileException" %><%@
+page import="com.liferay.style.book.exception.StyleBookEntryThemeIdException" %><%@
 page import="com.liferay.style.book.web.internal.display.context.EditStyleBookEntryDisplayContext" %><%@
 page import="com.liferay.style.book.web.internal.display.context.ImportStyleBookDisplayContext" %><%@
 page import="com.liferay.style.book.web.internal.display.context.PreviewFragmentCollectionDisplayContext" %><%@
@@ -37,9 +39,9 @@ page import="com.liferay.style.book.web.internal.display.context.StyleBookManage
 page import="com.liferay.style.book.web.internal.frontend.taglib.clay.servlet.taglib.StyleBookVerticalCard" %><%@
 page import="com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry" %>
 
-<%@ page import="java.util.List" %>
+<%@ page import="jakarta.portlet.PortletRequest" %>
 
-<%@ page import="javax.portlet.PortletRequest" %>
+<%@ page import="java.util.List" %>
 
 <liferay-frontend:defineObjects />
 

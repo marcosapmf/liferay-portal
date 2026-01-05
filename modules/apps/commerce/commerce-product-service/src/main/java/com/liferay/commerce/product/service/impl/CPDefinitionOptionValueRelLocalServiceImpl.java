@@ -14,6 +14,7 @@ import com.liferay.commerce.product.exception.CPDefinitionOptionValueRelQuantity
 import com.liferay.commerce.product.exception.DuplicateCPDefinitionOptionValueRelKeyException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionOptionValueRelException;
 import com.liferay.commerce.product.exception.NoSuchCPInstanceUnitOfMeasureException;
+import com.liferay.commerce.product.helper.CPCollectionProviderHelper;
 import com.liferay.commerce.product.internal.util.CPDefinitionLocalServiceCircularDependencyUtil;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -34,10 +35,10 @@ import com.liferay.commerce.product.service.CPOptionLocalService;
 import com.liferay.commerce.product.service.CPOptionValueLocalService;
 import com.liferay.commerce.product.service.base.CPDefinitionOptionValueRelLocalServiceBaseImpl;
 import com.liferay.commerce.product.service.persistence.CPDefinitionOptionRelPersistence;
-import com.liferay.commerce.product.util.CPCollectionProviderHelper;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.info.pagination.Pagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -198,6 +199,10 @@ public class CPDefinitionOptionValueRelLocalServiceImpl
 		if (cpInstance != null) {
 			_validateLinkableCPInstance(cpInstance);
 		}
+
+		_validateLinkedCPDefinitionOptionValueRel(cpDefinitionOptionValueRel);
+		_validatePriceableCPDefinitionOptionValue(
+			cpDefinitionOptionValueRel, cpDefinitionOptionRel.getPriceType());
 
 		cpDefinitionOptionValueRel =
 			cpDefinitionOptionValueRelPersistence.update(
@@ -441,33 +446,28 @@ public class CPDefinitionOptionValueRelLocalServiceImpl
 		List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels,
 		List<CPInstanceOptionValueRel> cpInstanceOptionValueRels) {
 
-		List<CPDefinitionOptionValueRel> filteredCPDefinitionOptionValueRels =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			cpDefinitionOptionValueRels,
+			cpDefinitionOptionValueRel -> {
+				for (CPInstanceOptionValueRel cpInstanceOptionValueRel :
+						cpInstanceOptionValueRels) {
 
-		for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
-				cpDefinitionOptionValueRels) {
+					long cpDefinitionOptionValueRelId1 =
+						cpDefinitionOptionValueRel.
+							getCPDefinitionOptionValueRelId();
+					long cpDefinitionOptionValueRelId2 =
+						cpInstanceOptionValueRel.
+							getCPDefinitionOptionValueRelId();
 
-			for (CPInstanceOptionValueRel cpInstanceOptionValueRel :
-					cpInstanceOptionValueRels) {
+					if (cpDefinitionOptionValueRelId1 ==
+							cpDefinitionOptionValueRelId2) {
 
-				long cpDefinitionOptionValueRelId1 =
-					cpDefinitionOptionValueRel.
-						getCPDefinitionOptionValueRelId();
-				long cpDefinitionOptionValueRelId2 =
-					cpInstanceOptionValueRel.getCPDefinitionOptionValueRelId();
-
-				if (cpDefinitionOptionValueRelId1 ==
-						cpDefinitionOptionValueRelId2) {
-
-					filteredCPDefinitionOptionValueRels.add(
-						cpDefinitionOptionValueRel);
-
-					break;
+						return cpDefinitionOptionValueRel;
+					}
 				}
-			}
-		}
 
-		return filteredCPDefinitionOptionValueRels;
+				return null;
+			});
 	}
 
 	@Override

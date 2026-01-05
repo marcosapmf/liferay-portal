@@ -5,9 +5,11 @@
 
 package com.liferay.object.web.internal.object.entries.portlet.action;
 
-import com.liferay.object.exception.ObjectDefinitionScopeException;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.exception.ObjectEntryScopeException;
 import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
@@ -26,13 +28,13 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 /**
  * @author Marco Leo
@@ -111,19 +113,26 @@ public class EditObjectEntryMVCActionCommand extends BaseMVCActionCommand {
 				_objectEntryService.addObjectEntry(
 					_getGroupId(actionRequest, objectDefinition),
 					objectDefinition.getObjectDefinitionId(),
-					_getValues(actionRequest),
+					ObjectEntryFolderConstants.
+						PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+					null, _getValues(actionRequest),
 					ServiceContextFactory.getInstance(
 						objectDefinition.getClassName(), actionRequest));
 			}
 			else {
+				ObjectEntry objectEntry = _objectEntryService.getObjectEntry(
+					objectEntryId);
+
 				_objectEntryService.updateObjectEntry(
-					objectEntryId, _getValues(actionRequest),
+					objectEntry.getObjectEntryId(),
+					objectEntry.getObjectEntryFolderId(),
+					_getValues(actionRequest),
 					ServiceContextFactory.getInstance(
 						objectDefinition.getClassName(), actionRequest));
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof ObjectDefinitionScopeException ||
+			if (exception instanceof ObjectEntryScopeException ||
 				exception instanceof ObjectEntryValuesException) {
 
 				SessionErrors.add(actionRequest, exception.getClass());

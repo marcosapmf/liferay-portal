@@ -92,7 +92,7 @@ public class ExportImportLocalServiceTest {
 					null, TestPropsValues.getUserId(), group1.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					RandomTestUtil.randomString(), StringPool.BLANK,
+					null, RandomTestUtil.randomString(), StringPool.BLANK,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					serviceContext);
 
@@ -102,7 +102,7 @@ public class ExportImportLocalServiceTest {
 				serviceContext.getScopeGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
-				RandomTestUtil.randomString(),
+				null, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE, 0,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 

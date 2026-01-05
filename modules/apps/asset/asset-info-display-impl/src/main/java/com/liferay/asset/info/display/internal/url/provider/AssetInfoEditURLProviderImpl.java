@@ -22,9 +22,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,6 +82,24 @@ public class AssetInfoEditURLProviderImpl implements AssetInfoEditURLProvider {
 					redirect = HttpComponentsUtil.setParameter(
 						_portal.getLayoutRelativeURL(layout, themeDisplay),
 						"p_l_mode", mode);
+				}
+			}
+
+			if (Validator.isNotNull(redirect)) {
+				String backURL = ParamUtil.getString(
+					httpServletRequest, "backURL");
+
+				if (Validator.isNotNull(backURL)) {
+					redirect = HttpComponentsUtil.addParameter(
+						redirect, "p_l_back_url", backURL);
+				}
+
+				String backURLTitle = ParamUtil.getString(
+					httpServletRequest, "backURLTitle");
+
+				if (Validator.isNotNull(backURLTitle)) {
+					redirect = HttpComponentsUtil.addParameter(
+						redirect, "p_l_back_url_title", backURLTitle);
 				}
 			}
 

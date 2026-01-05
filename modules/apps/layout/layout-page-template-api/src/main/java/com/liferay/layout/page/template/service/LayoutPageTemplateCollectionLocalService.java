@@ -78,9 +78,11 @@ public interface LayoutPageTemplateCollectionLocalService
 	public LayoutPageTemplateCollection addLayoutPageTemplateCollection(
 		LayoutPageTemplateCollection layoutPageTemplateCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public LayoutPageTemplateCollection addLayoutPageTemplateCollection(
 			String externalReferenceCode, long userId, long groupId,
-			long parentLayoutPageTemplateCollectionId, String name,
+			long parentLayoutPageTemplateCollectionId,
+			String layoutPageTemplateCollectionKey, String name,
 			String description, int type, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -119,7 +121,10 @@ public interface LayoutPageTemplateCollectionLocalService
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
+	@SystemEvent(
+		action = SystemEventConstants.ACTION_SKIP,
+		type = SystemEventConstants.TYPE_DELETE
+	)
 	public LayoutPageTemplateCollection deleteLayoutPageTemplateCollection(
 			LayoutPageTemplateCollection layoutPageTemplateCollection)
 		throws PortalException;
@@ -396,8 +401,9 @@ public interface LayoutPageTemplateCollectionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public String getUniqueLayoutPageTemplateCollectionName(
-		long groupId, long layoutPageTemplateCollectionId, String sourceName,
-		int type);
+			long groupId, long layoutPageTemplateCollectionId,
+			String sourceName, int type)
+		throws PortalException;
 
 	public LayoutPageTemplateCollection moveLayoutPageTemplateCollection(
 			long layoutPageTemplateCollectionId,
@@ -418,10 +424,12 @@ public interface LayoutPageTemplateCollectionLocalService
 	public LayoutPageTemplateCollection updateLayoutPageTemplateCollection(
 		LayoutPageTemplateCollection layoutPageTemplateCollection);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public LayoutPageTemplateCollection updateLayoutPageTemplateCollection(
 			long layoutPageTemplateCollectionId, String name)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public LayoutPageTemplateCollection updateLayoutPageTemplateCollection(
 			long layoutPageTemplateCollectionId, String name,
 			String description)

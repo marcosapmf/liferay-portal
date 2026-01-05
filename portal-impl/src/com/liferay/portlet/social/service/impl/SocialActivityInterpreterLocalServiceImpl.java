@@ -16,8 +16,8 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.social.service.base.SocialActivityInterpreterLocalServiceBaseImpl;
 import com.liferay.social.kernel.model.SocialActivity;
 import com.liferay.social.kernel.model.SocialActivityFeedEntry;
@@ -29,11 +29,11 @@ import com.liferay.social.kernel.service.SocialActivityLocalService;
 import com.liferay.social.kernel.service.SocialActivitySetLocalService;
 import com.liferay.social.kernel.service.persistence.SocialActivityPersistence;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -65,7 +65,7 @@ public class SocialActivityInterpreterLocalServiceImpl
 
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			_bundleContext, SocialActivityInterpreter.class,
-			"(javax.portlet.name=*)",
+			"(jakarta.portlet.name=*)",
 			ServiceReferenceMapperFactory.createFromFunction(
 				_bundleContext, SocialActivityInterpreter::getSelector),
 			new ServiceTrackerCustomizer
@@ -83,7 +83,7 @@ public class SocialActivityInterpreterLocalServiceImpl
 							SocialRequestInterpreterImpl)) {
 
 						String portletId = (String)serviceReference.getProperty(
-							"javax.portlet.name");
+							"jakarta.portlet.name");
 
 						activityInterpreter = new SocialActivityInterpreterImpl(
 							portletId, activityInterpreter);

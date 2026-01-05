@@ -1,13 +1,13 @@
-@component-name = "portal-upgrades"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
+	property custom.properties = "passwords.encryption.algorithm.legacy=PBKDF2WithHmacSHA1/160/128000";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.liferay.virtual.instance = "false";
 	property test.run.type = "single";
-	property testray.component.names = "OAuth 2";
 	property testray.main.component.name = "Upgrades Security";
 
 	setUp {

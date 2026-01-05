@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.pricing.web.internal.portlet.action;
 
+import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommercePriceListService;
@@ -18,9 +19,9 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,8 +31,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
-		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
+		"jakarta.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
+		"jakarta.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
 		"mvc.command.name=/commerce_price_list/add_commerce_tier_price_entry"
 	},
 	service = MVCRenderCommand.class
@@ -48,6 +49,7 @@ public class AddCommerceTierPriceEntryMVCRenderCommand
 			commerceTierPriceEntryDisplayContext =
 				new CommerceTierCommercePriceEntryDisplayContext(
 					_commerceCatalogService, _commercePriceEntryService,
+					_commercePriceFormatter,
 					_commercePriceListModelResourcePermission,
 					_commercePriceListService, _commerceTierPriceEntryService,
 					_cpInstanceLocalService,
@@ -65,6 +67,9 @@ public class AddCommerceTierPriceEntryMVCRenderCommand
 
 	@Reference
 	private CommercePriceEntryService _commercePriceEntryService;
+
+	@Reference
+	private CommercePriceFormatter _commercePriceFormatter;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceList)"

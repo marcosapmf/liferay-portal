@@ -11,18 +11,18 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
+import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.util.CommerceUtil;
-import com.liferay.commerce.wish.list.constants.CommerceWishListActionKeys;
 import com.liferay.commerce.wish.list.constants.CommerceWishListPortletKeys;
+import com.liferay.commerce.wish.list.helper.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
-import com.liferay.commerce.wish.list.util.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.util.comparator.CommerceWishListNameComparator;
 import com.liferay.commerce.wish.list.web.internal.display.context.helper.CommerceWishListRequestHelper;
 import com.liferay.commerce.wish.list.web.internal.util.CommerceWishListPortletUtil;
@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.KeyValuePair;
@@ -44,14 +45,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.Iterator;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -61,6 +62,7 @@ public class CommerceWishListDisplayContext {
 
 	public CommerceWishListDisplayContext(
 		CommerceProductPriceCalculation commerceProductPriceCalculation,
+		CommerceProductViewPermission commerceProductViewPermission,
 		CommerceWishListHttpHelper commerceWishListHttpHelper,
 		CommerceWishListItemService commerceWishListItemService,
 		CommerceWishListService commerceWishListService,
@@ -70,6 +72,7 @@ public class CommerceWishListDisplayContext {
 		PortletResourcePermission portletResourcePermission) {
 
 		_commerceProductPriceCalculation = commerceProductPriceCalculation;
+		_commerceProductViewPermission = commerceProductViewPermission;
 		_commerceWishListHttpHelper = commerceWishListHttpHelper;
 		_commerceWishListItemService = commerceWishListItemService;
 		_commerceWishListService = commerceWishListService;
@@ -256,10 +259,21 @@ public class CommerceWishListDisplayContext {
 		CommerceContext commerceContext =
 			_commerceWishListRequestHelper.getCommerceContext();
 
+		long commerceAccountId = CommerceUtil.getCommerceAccountId(
+			commerceContext);
+		long commerceChannelGroupId =
+			commerceContext.getCommerceChannelGroupId();
+
+		if (!_commerceProductViewPermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), commerceAccountId,
+				commerceChannelGroupId, cpDefinitionId)) {
+
+			return null;
+		}
+
 		return _cpDefinitionHelper.getCPCatalogEntry(
-			CommerceUtil.getCommerceAccountId(commerceContext),
-			commerceContext.getCommerceChannelGroupId(), cpDefinitionId,
-			_commerceWishListRequestHelper.getLocale());
+			commerceAccountId, commerceChannelGroupId, cpDefinitionId,
+			_commerceWishListRequestHelper.getLocale(), false);
 	}
 
 	public String getCPDefinitionURL(
@@ -314,21 +328,39 @@ public class CommerceWishListDisplayContext {
 		_searchContainer.setResultsAndTotal(
 			() -> _commerceWishListService.getCommerceWishLists(
 				_commerceWishListRequestHelper.getScopeGroupId(),
-				_commerceWishListRequestHelper.getUserId(),
 				_searchContainer.getStart(), _searchContainer.getEnd(),
 				_searchContainer.getOrderByComparator()),
 			_commerceWishListService.getCommerceWishListsCount(
-				_commerceWishListRequestHelper.getScopeGroupId(),
-				_commerceWishListRequestHelper.getUserId()));
+				_commerceWishListRequestHelper.getScopeGroupId()));
 
 		return _searchContainer;
 	}
 
-	public boolean hasManageCommerceWishListsPermission() {
-		return _portletResourcePermission.contains(
-			_commerceWishListRequestHelper.getPermissionChecker(),
-			_commerceWishListRequestHelper.getScopeGroupId(),
-			CommerceWishListActionKeys.MANAGE_COMMERCE_WISH_LISTS);
+	public boolean hasCommerceChannel() throws PortalException {
+		CommerceContext commerceContext =
+			_commerceWishListRequestHelper.getCommerceContext();
+
+		if (commerceContext == null) {
+			return false;
+		}
+
+		long commerceChannelId = commerceContext.getCommerceChannelId();
+
+		if (commerceChannelId > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isProductVisibleToAccount(long cpDefinitionId)
+		throws PortalException {
+
+		return _commerceProductViewPermission.contains(
+			PermissionThreadLocal.getPermissionChecker(),
+			CommerceUtil.getCommerceAccountId(
+				_commerceWishListRequestHelper.getCommerceContext()),
+			cpDefinitionId);
 	}
 
 	private long _getDefaultCommerceWishListId() throws PortalException {
@@ -336,8 +368,7 @@ public class CommerceWishListDisplayContext {
 
 		CommerceWishList commerceWishList =
 			_commerceWishListService.fetchCommerceWishList(
-				_commerceWishListRequestHelper.getScopeGroupId(),
-				_commerceWishListRequestHelper.getUserId(), true,
+				_commerceWishListRequestHelper.getScopeGroupId(), true,
 				CommerceWishListNameComparator.getInstance(true));
 
 		if (commerceWishList != null) {
@@ -381,13 +412,8 @@ public class CommerceWishListDisplayContext {
 	}
 
 	private boolean _isContentPortlet() {
-		if (CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT.equals(
-				_commerceWishListRequestHelper.getPortletId())) {
-
-			return true;
-		}
-
-		return false;
+		return CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT.equals(
+			_commerceWishListRequestHelper.getPortletId());
 	}
 
 	private static final String _CLASS_NAME_COMMERCE_WISH_LIST =
@@ -399,6 +425,7 @@ public class CommerceWishListDisplayContext {
 
 	private final CommerceProductPriceCalculation
 		_commerceProductPriceCalculation;
+	private final CommerceProductViewPermission _commerceProductViewPermission;
 	private CommerceWishList _commerceWishList;
 	private final CommerceWishListHttpHelper _commerceWishListHttpHelper;
 	private final CommerceWishListItemService _commerceWishListItemService;

@@ -5,15 +5,19 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.Build;
+import com.liferay.jenkins.results.parser.BuildReport;
 import com.liferay.jenkins.results.parser.Dom4JUtil;
-import com.liferay.jenkins.results.parser.DownstreamBuild;
+import com.liferay.jenkins.results.parser.DownstreamBuildReport;
+import com.liferay.jenkins.results.parser.JenkinsConsoleTextLoader;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.QAWebsitesGitRepositoryJob;
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.TestReport;
+import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 
 import java.io.File;
@@ -37,15 +41,38 @@ import org.dom4j.Element;
 /**
  * @author Michael Hashimoto
  */
-public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
+public class BatchBuildTestrayCaseResult
+	<A extends TestClass, B extends TestClassMethod>
+		extends BuildTestrayCaseResult {
 
 	public BatchBuildTestrayCaseResult(
-		TestrayBuild testrayBuild, TopLevelBuild topLevelBuild,
-		AxisTestClassGroup axisTestClassGroup) {
+		AxisTestClassGroup axisTestClassGroup, TestClass testClass,
+		TestClassMethod testClassMethod, TestrayBuild testrayBuild,
+		TopLevelBuildReport topLevelBuildReport) {
 
-		super(testrayBuild, topLevelBuild);
+		super(testrayBuild, topLevelBuildReport);
 
 		_axisTestClassGroup = axisTestClassGroup;
+		_testClass = (A)testClass;
+		_testClassMethod = (B)testClassMethod;
+
+		initBuildReport();
+	}
+
+	public BatchBuildTestrayCaseResult(
+		AxisTestClassGroup axisTestClassGroup, TestClass testClass,
+		TestrayBuild testrayBuild, TopLevelBuildReport topLevelBuildReport) {
+
+		this(
+			axisTestClassGroup, testClass, null, testrayBuild,
+			topLevelBuildReport);
+	}
+
+	public BatchBuildTestrayCaseResult(
+		AxisTestClassGroup axisTestClassGroup, TestrayBuild testrayBuild,
+		TopLevelBuildReport topLevelBuildReport) {
+
+		this(axisTestClassGroup, null, null, testrayBuild, topLevelBuildReport);
 	}
 
 	public String getAxisName() {
@@ -57,21 +84,17 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 	}
 
 	@Override
-	public Build getBuild() {
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
+	public String getComponentName() {
+		JobProperty testrayComponentNameJobProperty = _getJobProperty(
+			"testray.component.name");
 
-		DownstreamBuild downstreamBuild = topLevelBuild.getDownstreamBuild(
-			getAxisName());
+		String testrayComponentName =
+			testrayComponentNameJobProperty.getValue();
 
-		if (downstreamBuild != null) {
-			return downstreamBuild;
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(testrayComponentName)) {
+			return testrayComponentName;
 		}
 
-		return topLevelBuild.getDownstreamAxisBuild(getAxisName());
-	}
-
-	@Override
-	public String getComponentName() {
 		try {
 			return JenkinsResultsParserUtil.getProperty(
 				JenkinsResultsParserUtil.getBuildProperties(),
@@ -82,29 +105,39 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		}
 	}
 
-	@Override
-	public String getErrors() {
-		Build build = getBuild();
+	public DownstreamBuildReport getDownstreamBuildReport() {
+		BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
-			return "Unable to run on CI";
-		}
-
-		if (!build.isFailing()) {
+		if (!(buildReport instanceof DownstreamBuildReport)) {
 			return null;
 		}
 
-		String result = build.getResult();
+		return (DownstreamBuildReport)buildReport;
+	}
+
+	@Override
+	public String getErrors() {
+		BuildReport buildReport = getBuildReport();
+
+		if (buildReport == null) {
+			return "Unable to run on CI";
+		}
+
+		if (!buildReport.isFailing()) {
+			return null;
+		}
+
+		String result = buildReport.getResult();
 
 		if (result == null) {
 			return "Unable to finish build on CI";
 		}
 
 		if (result.equals("ABORTED")) {
-			return build.getJobName() + " timed out after 2 hours";
+			return buildReport.getJobName() + " timed out after 2 hours";
 		}
 
-		String errorMessage = build.getFailureMessage();
+		String errorMessage = buildReport.getFailureMessage();
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
 			return "Failed for unknown reason";
@@ -213,6 +246,7 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 		testrayAttachments.add(_getGradlePluginsAttachment());
 		testrayAttachments.add(_getJenkinsConsoleTestrayAttachment());
+		testrayAttachments.add(getTopLevelBuildDatabaseTestrayAttachment());
 		testrayAttachments.add(getTopLevelBuildReportTestrayAttachment());
 		testrayAttachments.add(getTopLevelJenkinsConsoleTestrayAttachment());
 		testrayAttachments.add(getTopLevelJenkinsReportTestrayAttachment());
@@ -280,11 +314,6 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		return null;
 	}
 
-	protected String getAxisBuildURLPath() {
-		return JenkinsResultsParserUtil.combine(
-			getTopLevelBuildURLPath(), "/", getAxisName());
-	}
-
 	protected AxisTestClassGroup getAxisTestClassGroup() {
 		return _axisTestClassGroup;
 	}
@@ -293,8 +322,8 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		List<TestrayAttachment> testrayAttachments = new ArrayList<>();
 
 		TestrayAttachment testrayAttachment = getTestrayAttachment(
-			getBuild(), "Liferay Log",
-			getAxisBuildURLPath() + "/liferay-log.txt.gz");
+			getBuildReport(), "Liferay Log",
+			getAxisName() + "/liferay-log.txt.gz");
 
 		if (testrayAttachment == null) {
 			return testrayAttachments;
@@ -305,10 +334,8 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		for (int i = 1; i <= 5; i++) {
 			TestrayAttachment liferayLogTestrayAttachment =
 				getTestrayAttachment(
-					getBuild(), "Liferay Log (" + i + ")",
-					JenkinsResultsParserUtil.combine(
-						getAxisBuildURLPath(), "/liferay-log-",
-						String.valueOf(i), ".txt.gz"));
+					getBuildReport(), "Liferay Log (" + i + ")",
+					getAxisName() + "/liferay-log-" + i + ".txt.gz");
 
 			if (liferayLogTestrayAttachment == null) {
 				break;
@@ -324,8 +351,8 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		List<TestrayAttachment> testrayAttachments = new ArrayList<>();
 
 		TestrayAttachment testrayAttachment = getTestrayAttachment(
-			getBuild(), "Liferay OSGi Log",
-			getAxisBuildURLPath() + "/liferay-osgi-log.txt.gz");
+			getBuildReport(), "Liferay OSGi Log",
+			getAxisName() + "/liferay-osgi-log.txt.gz");
 
 		if (testrayAttachment == null) {
 			return testrayAttachments;
@@ -336,10 +363,8 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		for (int i = 1; i <= 5; i++) {
 			TestrayAttachment liferayOSGiLogTestrayAttachment =
 				getTestrayAttachment(
-					getBuild(), "Liferay OSGi Log (" + i + ")",
-					JenkinsResultsParserUtil.combine(
-						getAxisBuildURLPath(), "/liferay-osgi-log-",
-						String.valueOf(i), ".txt.gz"));
+					getBuildReport(), "Liferay OSGi Log (" + i + ")",
+					getAxisName() + "/liferay-osgi-log-" + i + ".txt.gz");
 
 			if (liferayOSGiLogTestrayAttachment == null) {
 				break;
@@ -351,82 +376,219 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		return testrayAttachments;
 	}
 
-	@Override
-	protected TestrayAttachment getTopLevelBuildReportTestrayAttachment() {
-		TopLevelBuildTestrayCaseResult topLevelBuildTestrayCaseResult =
-			getTopLevelBuildTestrayCaseResult();
+	protected A getTestClass() {
+		return _testClass;
+	}
 
-		if (topLevelBuildTestrayCaseResult == null) {
+	protected B getTestClassMethod() {
+		return _testClassMethod;
+	}
+
+	protected TestReport getTestReport() {
+		return null;
+	}
+
+	protected long getTestResultDuration() {
+		TestReport testReport = getTestReport();
+
+		if (testReport == null) {
+			return 0;
+		}
+
+		return testReport.getDuration();
+	}
+
+	protected String getTestResultErrors() {
+		String testResultErrors = null;
+
+		BuildReport buildReport = getBuildReport();
+
+		TestReport testReport = getTestReport();
+
+		if (testReport == null) {
+			if (buildReport == null) {
+				return "Unable to run build on CI";
+			}
+
+			String result = buildReport.getResult();
+
+			testResultErrors = "Failed prior to running test";
+
+			if (result == null) {
+				testResultErrors = "Unable to finish build on CI";
+			}
+
+			if (result.equals("ABORTED")) {
+				testResultErrors =
+					buildReport.getJobName() + " timed out after 2 hours";
+			}
+
+			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
+				testResultErrors = "Unable to run test on CI";
+			}
+
+			String failureMessage = buildReport.getFailureMessage();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(failureMessage)) {
+				return testResultErrors;
+			}
+
+			return testResultErrors + ": " + failureMessage;
+		}
+
+		if (testReport.isSkipped()) {
+			return "Failed to run test on CI";
+		}
+
+		if (!testReport.isFailing()) {
 			return null;
 		}
 
-		return topLevelBuildTestrayCaseResult.
-			getTopLevelBuildReportTestrayAttachment();
-	}
+		testResultErrors = testReport.getErrorDetails();
 
-	protected TopLevelBuildTestrayCaseResult
-		getTopLevelBuildTestrayCaseResult() {
-
-		if (_topLevelBuildTestrayCaseResult != null) {
-			return _topLevelBuildTestrayCaseResult;
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			testResultErrors = buildReport.getFailureMessage();
 		}
 
-		_topLevelBuildTestrayCaseResult =
-			TestrayFactory.newTopLevelBuildTestrayCaseResult(
-				getTestrayBuild(), getTopLevelBuild());
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			return "Failed for unknown reason";
+		}
 
-		return _topLevelBuildTestrayCaseResult;
+		if (testResultErrors.contains("\n")) {
+			testResultErrors = testResultErrors.substring(
+				0, testResultErrors.indexOf("\n"));
+		}
+
+		testResultErrors = testResultErrors.trim();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			return "Failed for unknown reason";
+		}
+
+		return testResultErrors;
+	}
+
+	protected Status getTestResultStatus() {
+		BuildReport buildReport = getBuildReport();
+
+		if (buildReport == null) {
+			return Status.UNTESTED;
+		}
+
+		TestReport testReport = getTestReport();
+
+		if (testReport == null) {
+			String result = buildReport.getResult();
+
+			if ((result == null) || result.equals("SUCCESS") ||
+				result.equals("UNSTABLE")) {
+
+				return Status.UNTESTED;
+			}
+
+			return Status.FAILED;
+		}
+
+		if (testReport.isFailing()) {
+			return Status.FAILED;
+		}
+		else if (testReport.isSkipped()) {
+			return Status.UNTESTED;
+		}
+
+		return Status.PASSED;
+	}
+
+	@Override
+	protected TestrayAttachment getTopLevelBuildReportTestrayAttachment() {
+		TopLevelStandaloneBuildTestrayCaseResult
+			topLevelStandaloneBuildTestrayCaseResult =
+				getTopLevelStandaloneBuildTestrayCaseResult();
+
+		if (topLevelStandaloneBuildTestrayCaseResult == null) {
+			return null;
+		}
+
+		return topLevelStandaloneBuildTestrayCaseResult.
+			getTopLevelBuildReportTestrayAttachment();
 	}
 
 	@Override
 	protected TestrayAttachment getTopLevelJenkinsConsoleTestrayAttachment() {
-		TopLevelBuildTestrayCaseResult topLevelBuildTestrayCaseResult =
-			getTopLevelBuildTestrayCaseResult();
+		TopLevelStandaloneBuildTestrayCaseResult
+			topLevelStandaloneBuildTestrayCaseResult =
+				getTopLevelStandaloneBuildTestrayCaseResult();
 
-		if (topLevelBuildTestrayCaseResult == null) {
+		if (topLevelStandaloneBuildTestrayCaseResult == null) {
 			return null;
 		}
 
-		return topLevelBuildTestrayCaseResult.
+		return topLevelStandaloneBuildTestrayCaseResult.
 			getTopLevelJenkinsConsoleTestrayAttachment();
 	}
 
 	@Override
 	protected TestrayAttachment getTopLevelJenkinsReportTestrayAttachment() {
-		TopLevelBuildTestrayCaseResult topLevelBuildTestrayCaseResult =
-			getTopLevelBuildTestrayCaseResult();
+		TopLevelStandaloneBuildTestrayCaseResult
+			topLevelStandaloneBuildTestrayCaseResult =
+				getTopLevelStandaloneBuildTestrayCaseResult();
 
-		if (topLevelBuildTestrayCaseResult == null) {
+		if (topLevelStandaloneBuildTestrayCaseResult == null) {
 			return null;
 		}
 
-		return topLevelBuildTestrayCaseResult.
+		return topLevelStandaloneBuildTestrayCaseResult.
 			getTopLevelJenkinsReportTestrayAttachment();
 	}
 
 	@Override
 	protected TestrayAttachment getTopLevelJobSummaryTestrayAttachment() {
-		TopLevelBuildTestrayCaseResult topLevelBuildTestrayCaseResult =
-			getTopLevelBuildTestrayCaseResult();
+		TopLevelStandaloneBuildTestrayCaseResult
+			topLevelStandaloneBuildTestrayCaseResult =
+				getTopLevelStandaloneBuildTestrayCaseResult();
 
-		if (topLevelBuildTestrayCaseResult == null) {
+		if (topLevelStandaloneBuildTestrayCaseResult == null) {
 			return null;
 		}
 
-		return topLevelBuildTestrayCaseResult.
+		return topLevelStandaloneBuildTestrayCaseResult.
 			getTopLevelJobSummaryTestrayAttachment();
+	}
+
+	protected TopLevelStandaloneBuildTestrayCaseResult
+		getTopLevelStandaloneBuildTestrayCaseResult() {
+
+		if (_topLevelStandaloneBuildTestrayCaseResult != null) {
+			return _topLevelStandaloneBuildTestrayCaseResult;
+		}
+
+		_topLevelStandaloneBuildTestrayCaseResult =
+			TestrayFactory.newTopLevelStandaloneBuildTestrayCaseResult(
+				getTestrayBuild(), getTopLevelBuildReport());
+
+		return _topLevelStandaloneBuildTestrayCaseResult;
+	}
+
+	@Override
+	protected void initBuildReport() {
+		TopLevelBuildReport topLevelBuildReport = getTopLevelBuildReport();
+
+		setBuildReport(
+			topLevelBuildReport.getDownstreamBuildReport(getAxisName()));
 	}
 
 	private List<TestrayAttachment> _getDockerLogsTestrayAttachments() {
 		List<TestrayAttachment> testrayAttachments = new ArrayList<>();
 
-		Build build = getBuild();
+		BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
+		if (buildReport == null) {
 			return testrayAttachments;
 		}
 
-		for (URL testrayAttachmentURL : build.getTestrayAttachmentURLs()) {
+		for (URL testrayAttachmentURL :
+				buildReport.getTestrayAttachmentURLs()) {
+
 			Matcher matcher = _dockerLogsURLPattern.matcher(
 				String.valueOf(testrayAttachmentURL));
 
@@ -436,8 +598,9 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 			testrayAttachments.add(
 				getTestrayAttachment(
-					build, "Docker Log (" + matcher.group("fileName") + ")",
-					getAxisBuildURLPath() + "/" + matcher.group("key")));
+					buildReport,
+					"Docker Log (" + matcher.group("fileName") + ")",
+					getAxisName() + "/" + matcher.group("key")));
 		}
 
 		return testrayAttachments;
@@ -446,13 +609,15 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 	private List<TestrayAttachment> _getGCLogsTestrayAttachments() {
 		List<TestrayAttachment> testrayAttachments = new ArrayList<>();
 
-		Build build = getBuild();
+		BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
+		if (buildReport == null) {
 			return testrayAttachments;
 		}
 
-		for (URL testrayAttachmentURL : build.getTestrayAttachmentURLs()) {
+		for (URL testrayAttachmentURL :
+				buildReport.getTestrayAttachmentURLs()) {
+
 			Matcher matcher = _gcLogsURLPattern.matcher(
 				String.valueOf(testrayAttachmentURL));
 
@@ -462,8 +627,8 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 			testrayAttachments.add(
 				getTestrayAttachment(
-					build, "GC Log (" + matcher.group("fileName") + ")",
-					getAxisBuildURLPath() + "/" + matcher.group("key")));
+					buildReport, "GC Log (" + matcher.group("fileName") + ")",
+					getAxisName() + "/" + matcher.group("key")));
 		}
 
 		return testrayAttachments;
@@ -471,29 +636,43 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 	private TestrayAttachment _getGradlePluginsAttachment() {
 		return getTestrayAttachment(
-			getBuild(), "Gradle Plugins Test Report",
-			getAxisBuildURLPath() + "/gradle_plugins.tar.gz");
+			getBuildReport(), "Gradle Plugins Test Report",
+			getAxisName() + "/gradle_plugins.tar.gz");
 	}
 
 	private TestrayAttachment _getJenkinsConsoleTestrayAttachment() {
 		String name = "Jenkins Console";
-		String key = getAxisBuildURLPath() + "/jenkins-console.txt.gz";
+		String key = getAxisName() + "/jenkins-console.txt.gz";
 
 		TestrayAttachment testrayAttachment = getTestrayAttachment(
-			getBuild(), name, key);
+			getBuildReport(), name, key);
 
 		if (testrayAttachment != null) {
 			return testrayAttachment;
 		}
 
-		final Build build = getBuild();
+		final BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
+		if (buildReport == null) {
 			return null;
 		}
 
+		TestrayCloudBucket testrayCloudBucket =
+			TestrayCloudBucket.getInstance();
+
+		String testrayCloudObjectPath = getTopLevelBuildURLPath() + "/" + key;
+
+		TestrayCloudObject testrayCloudObject =
+			testrayCloudBucket.getTestrayCloudObject(testrayCloudObjectPath);
+
+		if (testrayCloudObject != null) {
+			return new DefaultTestrayAttachment(
+				this, name, testrayCloudObjectPath,
+				testrayCloudObject.getURL());
+		}
+
 		return uploadTestrayAttachment(
-			name, key,
+			name, testrayCloudObjectPath,
 			new Callable<File>() {
 
 				@Override
@@ -504,8 +683,15 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 						getTestrayUploadBaseDir(), "jenkins-console.txt.gz");
 
 					try {
+						String buildURL = String.valueOf(
+							buildReport.getBuildURL());
+
+						JenkinsConsoleTextLoader jenkinsConsoleTextLoader =
+							JenkinsConsoleTextLoader.getInstance(buildURL);
+
 						JenkinsResultsParserUtil.write(
-							jenkinsConsoleFile, build.getConsoleText());
+							jenkinsConsoleFile,
+							jenkinsConsoleTextLoader.getConsoleText());
 
 						JenkinsResultsParserUtil.gzip(
 							jenkinsConsoleFile, jenkinsConsoleGzFile);
@@ -528,31 +714,33 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 	}
 
 	private JobProperty _getJobProperty(String basePropertyName) {
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
+		AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
 
-		Job job = topLevelBuild.getJob();
+		Job job = axisTestClassGroup.getJob();
 
 		if (job instanceof QAWebsitesGitRepositoryJob) {
-			AxisTestClassGroup axisTestClassGroup = getAxisTestClassGroup();
-
 			return JobPropertyFactory.newJobProperty(
-				basePropertyName, job, axisTestClassGroup.getTestBaseDir(),
+				basePropertyName, getBatchName(), job,
+				axisTestClassGroup.getTestBaseDir(),
 				JobProperty.Type.QA_WEBSITES_TEST_DIR);
 		}
 
-		return JobPropertyFactory.newJobProperty(basePropertyName, job);
+		return JobPropertyFactory.newJobProperty(
+			basePropertyName, getBatchName(), job);
 	}
 
 	private List<TestrayAttachment> _getJStacksTestrayAttachments() {
 		List<TestrayAttachment> testrayAttachments = new ArrayList<>();
 
-		Build build = getBuild();
+		BuildReport buildReport = getBuildReport();
 
-		if (build == null) {
+		if (buildReport == null) {
 			return testrayAttachments;
 		}
 
-		for (URL testrayAttachmentURL : build.getTestrayAttachmentURLs()) {
+		for (URL testrayAttachmentURL :
+				buildReport.getTestrayAttachmentURLs()) {
+
 			Matcher matcher = _jStacksURLPattern.matcher(
 				String.valueOf(testrayAttachmentURL));
 
@@ -562,8 +750,9 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 			testrayAttachments.add(
 				getTestrayAttachment(
-					build, "Docker Log (" + matcher.group("fileName") + ")",
-					getAxisBuildURLPath() + "/" + matcher.group("key")));
+					buildReport,
+					"Docker Log (" + matcher.group("fileName") + ")",
+					getAxisName() + "/" + matcher.group("key")));
 		}
 
 		return testrayAttachments;
@@ -571,8 +760,7 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 	private TestrayAttachment _getWarningsTestrayAttachment() {
 		return getTestrayAttachment(
-			getBuild(), "Warnings",
-			getAxisBuildURLPath() + "/warnings.html.gz");
+			getBuildReport(), "Warnings", getAxisName() + "/warnings.html.gz");
 	}
 
 	private static final Pattern _dockerLogsURLPattern = Pattern.compile(
@@ -583,6 +771,9 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 		"https?://.+/(?<key>jstacks/(?<fileName>[^/]+.log).txt.gz)");
 
 	private final AxisTestClassGroup _axisTestClassGroup;
-	private TopLevelBuildTestrayCaseResult _topLevelBuildTestrayCaseResult;
+	private A _testClass;
+	private B _testClassMethod;
+	private TopLevelStandaloneBuildTestrayCaseResult
+		_topLevelStandaloneBuildTestrayCaseResult;
 
 }

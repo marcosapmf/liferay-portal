@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.struts.LastPath;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -20,9 +21,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * @author Michael Young
@@ -81,7 +82,9 @@ public class DefaultLandingPageAction extends Action {
 				});
 		}
 
-		LastPath lastPath = new LastPath(StringPool.BLANK, path);
+		LastPath lastPath = new LastPath(
+			StringPool.BLANK,
+			FriendlyURLNormalizerUtil.normalizeWithEncoding(path));
 
 		httpSession.setAttribute(WebKeys.LAST_PATH, lastPath);
 

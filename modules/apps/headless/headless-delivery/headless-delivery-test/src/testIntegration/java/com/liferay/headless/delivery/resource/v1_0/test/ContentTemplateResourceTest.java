@@ -6,6 +6,8 @@
 package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
@@ -35,7 +37,6 @@ import java.io.InputStream;
 
 import java.util.Collections;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -45,12 +46,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ContentTemplateResourceTest
 	extends BaseContentTemplateResourceTestCase {
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetAssetLibraryContentTemplatesPageWithFilterStringEquals() {
-	}
 
 	@Override
 	@Test
@@ -74,12 +69,6 @@ public class ContentTemplateResourceTest
 						contentTemplate2, entityField.getName(), 1);
 				}
 			});
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSiteContentTemplatesPageWithFilterStringEquals() {
 	}
 
 	@Override
@@ -112,7 +101,10 @@ public class ContentTemplateResourceTest
 				Long assetLibraryId, ContentTemplate contentTemplate)
 		throws Exception {
 
-		return _getContentTemplate(testDepotEntry.getGroup());
+		DepotEntry depotEntry = DepotEntryLocalServiceUtil.getDepotEntry(
+			assetLibraryId);
+
+		return _getContentTemplate(depotEntry.getGroup());
 	}
 
 	@Override
@@ -132,10 +124,11 @@ public class ContentTemplateResourceTest
 	}
 
 	@Override
-	protected ContentTemplate testGraphQLContentTemplate_addContentTemplate()
+	protected ContentTemplate
+			testGraphQLSiteContentTemplate_addContentTemplate()
 		throws Exception {
 
-		return testGetSiteContentTemplate_addContentTemplate();
+		return _getContentTemplate(testGroup);
 	}
 
 	private DDMForm _deserialize(String content) {

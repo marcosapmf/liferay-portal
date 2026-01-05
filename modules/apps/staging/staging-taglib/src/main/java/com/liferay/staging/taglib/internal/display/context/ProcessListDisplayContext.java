@@ -21,12 +21,12 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -84,7 +84,7 @@ public class ProcessListDisplayContext {
 
 		_searchContainer = new SearchContainer(
 			(PortletRequest)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST),
+				JavaConstants.JAKARTA_PORTLET_REQUEST),
 			_getPortletURL(), null, "no-publish-processes-were-found");
 
 		_searchContainer.setOrderByCol(_getOrderByCol());
@@ -256,19 +256,11 @@ public class ProcessListDisplayContext {
 	}
 
 	private boolean _isNavigationCompleted() {
-		if (Objects.equals(_getNavigation(), "completed")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getNavigation(), "completed");
 	}
 
 	private boolean _isNavigationHome() {
-		if (Objects.equals(_getNavigation(), "all")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getNavigation(), "all");
 	}
 
 	private boolean _isOrderByAsc() {

@@ -5,8 +5,10 @@
 
 package com.liferay.knowledge.base.web.internal.change.tracking.spi.display;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
+import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -15,11 +17,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -63,6 +65,14 @@ public class KBArticleCTDisplayRenderer
 	}
 
 	@Override
+	public String renderPreview(DisplayContext<KBArticle> displayContext)
+		throws Exception {
+
+		return renderDisplayPagePreview(
+			_assetDisplayPageFriendlyURLProvider, displayContext);
+	}
+
+	@Override
 	protected void buildDisplay(DisplayBuilder<KBArticle> displayBuilder) {
 		KBArticle kbArticle = displayBuilder.getModel();
 
@@ -89,6 +99,10 @@ public class KBArticleCTDisplayRenderer
 			"last-modified", kbArticle.getModifiedDate()
 		);
 	}
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
 	private Portal _portal;

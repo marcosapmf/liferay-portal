@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import ClayLink from '@clayui/link';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -38,12 +38,12 @@ describe('SidebarPanelHeader', () => {
 		expect(screen.getByText('My Heading')).toBeInTheDocument();
 	});
 
-	it('closes the sidebar when the close button is pressed', () => {
+	it('closes the sidebar when the close button is pressed', async () => {
 		const dispatch = jest.fn();
 
 		renderComponent({dispatch});
 
-		userEvent.click(screen.getByTitle('close'));
+		await userEvent.click(screen.getByTitle('close'));
 
 		expect(dispatch).toBeCalledWith(
 			switchSidebarPanel({

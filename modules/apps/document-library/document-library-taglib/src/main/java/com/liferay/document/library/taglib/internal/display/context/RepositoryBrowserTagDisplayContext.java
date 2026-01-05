@@ -61,6 +61,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -68,10 +72,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -85,7 +85,7 @@ public class RepositoryBrowserTagDisplayContext {
 			fileShortcutModelResourcePermission,
 		ModelResourcePermission<Folder> folderModelResourcePermission,
 		long folderId, HttpServletRequest httpServletRequest,
-		LiferayPortletRequest liferayPortletRequest,
+		boolean includeExtension, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
 		PortletRequest portletRequest, long repositoryId, long rootFolderId,
 		boolean viewableByGuest) {
@@ -98,6 +98,7 @@ public class RepositoryBrowserTagDisplayContext {
 		_folderModelResourcePermission = folderModelResourcePermission;
 		_folderId = folderId;
 		_httpServletRequest = httpServletRequest;
+		_includeExtension = includeExtension;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_portletRequest = portletRequest;
@@ -191,13 +192,15 @@ public class RepositoryBrowserTagDisplayContext {
 
 		return new RepositoryBrowserManagementToolbarDisplayContext(
 			_actions, _folderId, _folderModelResourcePermission,
-			_httpServletRequest, _liferayPortletRequest,
+			_httpServletRequest, _includeExtension, _liferayPortletRequest,
 			_liferayPortletResponse, _repositoryId, getSearchContainer(),
 			_viewableByGuest);
 	}
 
 	public Map<String, Object> getRepositoryBrowserComponentContext() {
 		return HashMapBuilder.<String, Object>put(
+			"includeExtension", String.valueOf(_includeExtension)
+		).put(
 			"parentFolderId", String.valueOf(_folderId)
 		).put(
 			"repositoryBrowserURL", _getRepositoryBrowserURL()
@@ -355,19 +358,11 @@ public class RepositoryBrowserTagDisplayContext {
 	}
 
 	public boolean isDescriptiveDisplayStyle() {
-		if (Objects.equals(getDisplayStyle(), "descriptive")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "descriptive");
 	}
 
 	public boolean isIconDisplayStyle() {
-		if (Objects.equals(getDisplayStyle(), "icon")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "icon");
 	}
 
 	public boolean isRepositoryEntryNavigable(RepositoryEntry repositoryEntry) {
@@ -420,7 +415,8 @@ public class RepositoryBrowserTagDisplayContext {
 			dropdownItem -> {
 				dropdownItem.putData("action", "rename");
 				dropdownItem.putData(
-					"renameURL", _getRenameFileEntryURL(fileEntry));
+					"renameURL",
+					_getRenameFileEntryURL(fileEntry, _includeExtension));
 				dropdownItem.putData("value", fileEntry.getTitle());
 				dropdownItem.setIcon("pencil");
 				dropdownItem.setLabel(
@@ -617,10 +613,16 @@ public class RepositoryBrowserTagDisplayContext {
 		return null;
 	}
 
-	private String _getRenameFileEntryURL(FileEntry fileEntry) {
-		return HttpComponentsUtil.addParameter(
+	private String _getRenameFileEntryURL(
+		FileEntry fileEntry, boolean includeExtension) {
+
+		String renameFileEntryURL = HttpComponentsUtil.addParameter(
 			_getRepositoryBrowserURL(), "fileEntryId",
 			fileEntry.getFileEntryId());
+
+		return HttpComponentsUtil.addParameter(
+			renameFileEntryURL, "includeExtension",
+			String.valueOf(includeExtension));
 	}
 
 	private String _getRenameFolderURL(Folder folder) {
@@ -710,6 +712,7 @@ public class RepositoryBrowserTagDisplayContext {
 	private final ModelResourcePermission<Folder>
 		_folderModelResourcePermission;
 	private final HttpServletRequest _httpServletRequest;
+	private final boolean _includeExtension;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final PortletRequest _portletRequest;

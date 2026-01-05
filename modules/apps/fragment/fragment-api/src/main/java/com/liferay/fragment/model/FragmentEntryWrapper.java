@@ -58,6 +58,7 @@ public class FragmentEntryWrapper
 		attributes.put("configuration", getConfiguration());
 		attributes.put("icon", getIcon());
 		attributes.put("previewFileEntryId", getPreviewFileEntryId());
+		attributes.put("marketplace", isMarketplace());
 		attributes.put("readOnly", isReadOnly());
 		attributes.put("type", getType());
 		attributes.put("typeOptions", getTypeOptions());
@@ -204,6 +205,12 @@ public class FragmentEntryWrapper
 
 		if (previewFileEntryId != null) {
 			setPreviewFileEntryId(previewFileEntryId);
+		}
+
+		Boolean marketplace = (Boolean)attributes.get("marketplace");
+
+		if (marketplace != null) {
+			setMarketplace(marketplace);
 		}
 
 		Boolean readOnly = (Boolean)attributes.get("readOnly");
@@ -443,6 +450,16 @@ public class FragmentEntryWrapper
 	}
 
 	/**
+	 * Returns the marketplace of this fragment entry.
+	 *
+	 * @return the marketplace of this fragment entry
+	 */
+	@Override
+	public boolean getMarketplace() {
+		return model.getMarketplace();
+	}
+
+	/**
 	 * Returns the modified date of this fragment entry.
 	 *
 	 * @return the modified date of this fragment entry
@@ -500,6 +517,11 @@ public class FragmentEntryWrapper
 	@Override
 	public boolean getReadOnly() {
 		return model.getReadOnly();
+	}
+
+	@Override
+	public String getScopeERC() {
+		return model.getScopeERC();
 	}
 
 	/**
@@ -690,6 +712,16 @@ public class FragmentEntryWrapper
 	@Override
 	public boolean isIncomplete() {
 		return model.isIncomplete();
+	}
+
+	/**
+	 * Returns <code>true</code> if this fragment entry is marketplace.
+	 *
+	 * @return <code>true</code> if this fragment entry is marketplace; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isMarketplace() {
+		return model.isMarketplace();
 	}
 
 	/**
@@ -925,6 +957,16 @@ public class FragmentEntryWrapper
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
 		model.setLastPublishDate(lastPublishDate);
+	}
+
+	/**
+	 * Sets whether this fragment entry is marketplace.
+	 *
+	 * @param marketplace the marketplace of this fragment entry
+	 */
+	@Override
+	public void setMarketplace(boolean marketplace) {
+		model.setMarketplace(marketplace);
 	}
 
 	/**

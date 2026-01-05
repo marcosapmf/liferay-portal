@@ -293,6 +293,15 @@ public class SegmentsEntryLocalServiceWrapper
 			groupId, segmentsEntryKey);
 	}
 
+	@Override
+	public SegmentsEntry fetchSegmentsEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return _segmentsEntryLocalService.
+			fetchSegmentsEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the segments entry matching the UUID and group.
 	 *
@@ -392,6 +401,14 @@ public class SegmentsEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<SegmentsEntry> getSegmentsEntries(
+		long[] segmentsEntryIds, int start, int end) {
+
+		return _segmentsEntryLocalService.getSegmentsEntries(
+			segmentsEntryIds, start, end);
+	}
+
+	@Override
 	public java.util.List<SegmentsEntry> getSegmentsEntriesBySource(
 		String source, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<SegmentsEntry>
@@ -463,6 +480,16 @@ public class SegmentsEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsEntryLocalService.getSegmentsEntry(segmentsEntryId);
+	}
+
+	@Override
+	public SegmentsEntry getSegmentsEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _segmentsEntryLocalService.
+			getSegmentsEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
 	}
 
 	/**

@@ -22,7 +22,6 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.MultiVMPool;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -58,11 +57,11 @@ import com.liferay.portal.upgrade.test.util.UpgradeTestUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import jakarta.portlet.GenericPortlet;
+import jakarta.portlet.Portlet;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.GenericPortlet;
-import javax.portlet.Portlet;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -135,7 +134,7 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 				FragmentEntryProcessorConstants.
 					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
 				JSONUtil.put(
-					"element-text",
+					"element-html",
 					JSONUtil.put(
 						_SEGMENTS_EXPERIENCE_ID_PREFIX +
 							_SEGMENTS_EXPERIENCE_ID_DEFAULT,
@@ -218,8 +217,8 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), plid, segmentsExperienceId,
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(), plid,
+				segmentsExperienceId, layoutStructure.toString());
 
 		_assertFragmentStyledLayoutStructureItem(
 			fragmentEntryLinkId, plid, segmentsExperienceId);
@@ -231,12 +230,13 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 
 		FragmentEntry fragmentEntry =
 			_fragmentCollectionContributorRegistry.getFragmentEntry(
-				"BASIC_COMPONENT-heading");
+				"BASIC_COMPONENT-html");
 
 		FragmentEntryLink fragmentEntryLink =
 			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 				null, fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
-				fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
 				fragmentEntry.getJs(), layout,
 				fragmentEntry.getFragmentEntryKey(),
 				_SEGMENTS_EXPERIENCE_ID_DEFAULT, fragmentEntry.getType());
@@ -267,7 +267,7 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, plid, portletId, portlet,
 				null);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			_portletPreferenceValueLocalService.getPreferences(
 				portletPreferences);
 
@@ -285,8 +285,8 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 
 		FragmentEntryLink fragmentEntryLink =
 			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
-				null, StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK,
-				StringPool.BLANK, layout, StringPool.BLANK,
+				null, StringPool.BLANK, StringPool.BLANK, null, null,
+				StringPool.BLANK, StringPool.BLANK, layout, StringPool.BLANK,
 				_SEGMENTS_EXPERIENCE_ID_DEFAULT,
 				FragmentConstants.TYPE_PORTLET);
 
@@ -332,22 +332,22 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 		Assert.assertTrue(
 			Validator.isNotNull(fragmentEntryLink.getEditableValues()));
 
-		JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
 		JSONObject editableJSONObject = editableValuesJSONObject.getJSONObject(
 			FragmentEntryProcessorConstants.
 				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR);
 
-		JSONObject elementTextJSONObject = editableJSONObject.getJSONObject(
-			"element-text");
+		JSONObject elementHTMLJSONObject = editableJSONObject.getJSONObject(
+			"element-html");
 
 		Assert.assertTrue(
 			Validator.isNotNull(
-				elementTextJSONObject.getString("defaultValue")));
+				elementHTMLJSONObject.getString("defaultValue")));
 
 		Assert.assertEquals(
-			expectedValue, elementTextJSONObject.getString(_languageId));
+			expectedValue, elementHTMLJSONObject.getString(_languageId));
 	}
 
 	private void _assertFragmentEntryLink(
@@ -371,8 +371,8 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 		Assert.assertTrue(
 			Validator.isNotNull(fragmentEntryLink.getEditableValues()));
 
-		JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
 
 		Assert.assertEquals(
 			portletId, editableValuesJSONObject.getString("portletId"));
@@ -448,7 +448,7 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 			String expected, String name, long plid, String portletId)
 		throws Exception {
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			_portletPreferenceValueLocalService.getPreferences(
 				_portletPreferencesLocalService.getPortletPreferences(
 					PortletKeys.PREFS_OWNER_ID_DEFAULT,
@@ -473,7 +473,7 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 				HashMapDictionaryBuilder.put(
 					"com.liferay.portlet.instanceable", "true"
 				).put(
-					"javax.portlet.name", portletId
+					"jakarta.portlet.name", portletId
 				).build());
 
 		try {
@@ -584,9 +584,6 @@ public class LayoutPageTemplateStructureRelUpgradeProcessTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	@Inject
-	private JSONFactory _jsonFactory;
 
 	private String _languageId;
 	private Layout _layout;

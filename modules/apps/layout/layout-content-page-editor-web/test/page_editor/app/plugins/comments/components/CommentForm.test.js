@@ -7,7 +7,7 @@ import {cleanup, fireEvent, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import {StoreContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import CommentForm from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/comments/components/CommentForm';
@@ -94,15 +94,15 @@ describe('CommentForm', () => {
 	});
 
 	it('disables everything if form is loading', () => {
-		const {getByPlaceholderText, getByText} = renderForm({
+		const {getAllByRole, getByPlaceholderText} = renderForm({
 			loading: true,
 			showButtons: true,
 			submitButtonLabel: 'submit',
 		});
 
 		expect(getByPlaceholderText('type-your-comment-here')).toBeDisabled();
-		expect(getByText('submit')).toBeDisabled();
-		expect(getByText('cancel')).toBeDisabled();
+		expect(getAllByRole('button')[0]).toBeDisabled();
+		expect(getAllByRole('button')[1]).toBeDisabled();
 	});
 
 	it('calls onCancelButtonClick when cancel button is clicked', () => {
@@ -165,14 +165,14 @@ describe('CommentForm', () => {
 		expect(onSubmit).toHaveBeenCalled();
 	});
 
-	it('calls onTextareaChange callback when textare is changed', () => {
+	it('calls onTextareaChange callback when textare is changed', async () => {
 		const onChange = jest.fn();
 
 		const {getByPlaceholderText} = renderForm({
 			onTextareaChange: onChange,
 		});
 
-		userEvent.type(
+		await userEvent.type(
 			getByPlaceholderText('type-your-comment-here'),
 			'This is my comment'
 		);

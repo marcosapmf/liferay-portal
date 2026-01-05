@@ -5,7 +5,7 @@
 
 package com.liferay.fragment.web.internal.servlet.taglib.util;
 
-import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
+import com.liferay.fragment.collection.item.selector.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentEntry;
@@ -28,13 +28,13 @@ import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfig
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -72,7 +72,8 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 					DropdownItemListBuilder.add(
 						() ->
 							hasManageFragmentEntriesPermission &&
-							!_fragmentEntry.isTypeReact(),
+							!_fragmentEntry.isTypeReact() &&
+							!_fragmentEntry.isMarketplace(),
 						_getEditFragmentEntryActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -83,13 +84,15 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 					DropdownItemListBuilder.add(
 						() ->
 							hasManageFragmentEntriesPermission &&
-							!_fragmentEntry.isReadOnly(),
+							!_fragmentEntry.isReadOnly() &&
+							!_fragmentEntry.isMarketplace(),
 						_getUpdateFragmentEntryPreviewActionUnsafeConsumer()
 					).add(
 						() ->
 							hasManageFragmentEntriesPermission &&
 							!_fragmentEntry.isReadOnly() &&
-							(_fragmentEntry.getPreviewFileEntryId() > 0),
+							(_fragmentEntry.getPreviewFileEntryId() > 0) &&
+							!_fragmentEntry.isMarketplace(),
 						_getDeleteFragmentEntryPreviewActionUnsafeConsumer()
 					).add(
 						() ->
@@ -98,12 +101,14 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 							(_fragmentEntry.isDraft() ||
 							 (_fragmentEntry.fetchDraftFragmentEntry() !=
 								 null)) &&
-							!_fragmentEntry.isTypeReact(),
+							!_fragmentEntry.isTypeReact() &&
+							!_fragmentEntry.isMarketplace(),
 						_getDeleteDraftFragmentEntryActionUnsafeConsumer()
 					).add(
 						() ->
 							hasManageFragmentEntriesPermission &&
-							!_fragmentEntry.isReadOnly(),
+							!_fragmentEntry.isReadOnly() &&
+							!_fragmentEntry.isMarketplace(),
 						_getRenameFragmentEntryActionUnsafeConsumer()
 					).add(
 						() ->
@@ -111,7 +116,8 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 							!_fragmentEntry.isCacheable() &&
 							!_fragmentEntry.isReadOnly() &&
 							!_fragmentEntry.isTypeInput() &&
-							!_fragmentEntry.isTypeReact(),
+							!_fragmentEntry.isTypeReact() &&
+							!_fragmentEntry.isMarketplace(),
 						_getMarkAsCacheableActionUnsafeConsumer()
 					).add(
 						() ->
@@ -119,7 +125,8 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 							_fragmentEntry.isCacheable() &&
 							!_fragmentEntry.isReadOnly() &&
 							!_fragmentEntry.isTypeInput() &&
-							!_fragmentEntry.isTypeReact(),
+							!_fragmentEntry.isTypeReact() &&
+							!_fragmentEntry.isMarketplace(),
 						_getUnmarkAsCacheableActionUnsafeConsumer()
 					).add(
 						() ->
@@ -145,10 +152,13 @@ public class BasicFragmentEntryActionDropdownItemsProvider {
 						() ->
 							hasManageFragmentEntriesPermission &&
 							!_fragmentEntry.isReadOnly() &&
-							!_fragmentEntry.isTypeReact(),
+							!_fragmentEntry.isTypeReact() &&
+							!_fragmentEntry.isMarketplace(),
 						_getExportFragmentEntryActionUnsafeConsumer()
 					).add(
-						() -> hasManageFragmentEntriesPermission,
+						() ->
+							hasManageFragmentEntriesPermission &&
+							!_fragmentEntry.isMarketplace(),
 						_getCopyFragmentEntryActionUnsafeConsumer()
 					).add(
 						() ->

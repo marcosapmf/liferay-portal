@@ -6,6 +6,7 @@
 package com.liferay.site.navigation.item.selector.web.internal.display.context;
 
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -15,6 +16,7 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -38,18 +40,18 @@ import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryLis
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Víctor Galán
@@ -169,6 +171,23 @@ public class SelectSiteNavigationMenuDisplayContext {
 		return portletURL.toString();
 	}
 
+	public String getSiteNavigationMenuExternalReferenceCode() {
+		if (_siteNavigationMenuExternalReferenceCode != null) {
+			return _siteNavigationMenuExternalReferenceCode;
+		}
+
+		SiteNavigationMenu siteNavigationMenu =
+			SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
+				getSiteNavigationMenuId());
+
+		if (siteNavigationMenu != null) {
+			_siteNavigationMenuExternalReferenceCode =
+				siteNavigationMenu.getExternalReferenceCode();
+		}
+
+		return _siteNavigationMenuExternalReferenceCode;
+	}
+
 	public long getSiteNavigationMenuId() {
 		if (_siteNavigationMenuId != null) {
 			return _siteNavigationMenuId;
@@ -196,6 +215,36 @@ public class SelectSiteNavigationMenuDisplayContext {
 			() -> siteNavigationMenuItems, siteNavigationMenuItems.size());
 
 		return searchContainer;
+	}
+
+	public String getSiteNavigationMenuScopeExternalReferenceCode()
+		throws PortalException {
+
+		if (_siteNavigationMenuScopeExternalReferenceCode != null) {
+			return _siteNavigationMenuScopeExternalReferenceCode;
+		}
+
+		String siteNavigationMenuScopeExternalReferenceCode = StringPool.BLANK;
+
+		SiteNavigationMenu siteNavigationMenu =
+			SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
+				getSiteNavigationMenuId());
+
+		if ((siteNavigationMenu != null) &&
+			(siteNavigationMenu.getGroupId() !=
+				_themeDisplay.getScopeGroupId())) {
+
+			Group group = GroupLocalServiceUtil.getGroup(
+				siteNavigationMenu.getGroupId());
+
+			siteNavigationMenuScopeExternalReferenceCode =
+				group.getExternalReferenceCode();
+		}
+
+		_siteNavigationMenuScopeExternalReferenceCode =
+			siteNavigationMenuScopeExternalReferenceCode;
+
+		return _siteNavigationMenuScopeExternalReferenceCode;
 	}
 
 	public SearchContainer<SiteNavigationMenu>
@@ -307,7 +356,7 @@ public class SelectSiteNavigationMenuDisplayContext {
 
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		return PortletURLBuilder.create(
 			PortletURLUtil.clone(
@@ -410,7 +459,7 @@ public class SelectSiteNavigationMenuDisplayContext {
 
 	private PortletRequest _getPortletRequest() {
 		return (PortletRequest)_httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 	}
 
 	private SiteNavigationMenu _getPrivatePagesHierarchySiteNavigationMenu() {
@@ -497,38 +546,24 @@ public class SelectSiteNavigationMenuDisplayContext {
 	private List<SiteNavigationMenuEntry> _getSiteNavigationMenuItems()
 		throws PortalException, PortletException {
 
-		List<SiteNavigationMenuEntry> siteNavigationItems = new ArrayList<>();
-
 		if (getSiteNavigationMenuId() > 0) {
-			List<SiteNavigationMenuItem> siteNavigationMenuItems =
+			return TransformUtil.transform(
 				SiteNavigationMenuItemServiceUtil.getSiteNavigationMenuItems(
 					getSiteNavigationMenuId(),
-					getParentSiteNavigationMenuItemId());
-
-			for (SiteNavigationMenuItem siteNavigationMenuItem :
-					siteNavigationMenuItems) {
-
-				siteNavigationItems.add(
-					SiteNavigationMenuEntry.of(
-						_getSiteNavigationMenuItemName(siteNavigationMenuItem),
-						_getSelectSiteNavigationMenuLevelURL(
-							getSiteNavigationMenuId(),
-							siteNavigationMenuItem.
-								getSiteNavigationMenuItemId())));
-			}
-
-			return siteNavigationItems;
-		}
-
-		for (Layout layout : _getLayouts()) {
-			siteNavigationItems.add(
-				SiteNavigationMenuEntry.of(
-					layout.getName(_themeDisplay.getLocale()),
+					getParentSiteNavigationMenuItemId()),
+				siteNavigationMenuItem -> SiteNavigationMenuEntry.of(
+					_getSiteNavigationMenuItemName(siteNavigationMenuItem),
 					_getSelectSiteNavigationMenuLevelURL(
-						getSiteNavigationMenuId(), layout.getPlid())));
+						getSiteNavigationMenuId(),
+						siteNavigationMenuItem.getSiteNavigationMenuItemId())));
 		}
 
-		return siteNavigationItems;
+		return TransformUtil.transform(
+			_getLayouts(),
+			layout -> SiteNavigationMenuEntry.of(
+				layout.getName(_themeDisplay.getLocale()),
+				_getSelectSiteNavigationMenuLevelURL(
+					getSiteNavigationMenuId(), layout.getPlid())));
 	}
 
 	private List<SiteNavigationMenu> _getStaticSiteNavigationMenus() {
@@ -549,9 +584,11 @@ public class SelectSiteNavigationMenuDisplayContext {
 	private Long _parentSiteNavigationMenuItemId;
 	private final PortletURL _portletURL;
 	private Boolean _privateLayout;
+	private String _siteNavigationMenuExternalReferenceCode;
 	private Long _siteNavigationMenuId;
 	private final SiteNavigationMenuItemTypeRegistry
 		_siteNavigationMenuItemTypeRegistry;
+	private String _siteNavigationMenuScopeExternalReferenceCode;
 	private final ThemeDisplay _themeDisplay;
 
 }

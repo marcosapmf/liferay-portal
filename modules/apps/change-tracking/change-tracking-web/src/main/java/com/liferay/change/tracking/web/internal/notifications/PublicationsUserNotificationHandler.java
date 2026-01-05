@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pei-Jung Lan
  */
 @Component(
-	property = "javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+	property = "jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 	service = UserNotificationHandler.class
 )
 public class PublicationsUserNotificationHandler
@@ -74,6 +74,12 @@ public class PublicationsUserNotificationHandler
 				return _scheduledPublicationUserNotificationHandler;
 			}
 
+			if (notificationType ==
+					UserNotificationDefinition.NOTIFICATION_TYPE_UPDATE_ENTRY) {
+
+				return _publicationChangeSizeClassificationUserNotificationHandler;
+			}
+
 			return null;
 		}
 		catch (JSONException jsonException) {
@@ -90,6 +96,10 @@ public class PublicationsUserNotificationHandler
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private PublicationChangeSizeClassificationUserNotificationHandler
+		_publicationChangeSizeClassificationUserNotificationHandler;
 
 	@Reference
 	private PublicationInviteUserNotificationHandler

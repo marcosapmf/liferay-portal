@@ -7,6 +7,7 @@ package com.liferay.users.admin.internal.search.spi.model.permission.contributor
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -19,6 +20,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -55,6 +57,57 @@ public class UserSearchPermissionFilterContributorTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Test
+	public void testWhenHasOrganizationManageSuborganizationsUsersPermissionSearch()
+		throws Exception {
+
+		Organization organization1 = OrganizationTestUtil.addOrganization();
+
+		User user1 = _addOrganizationUser(organization1);
+
+		Assert.assertEquals(1, _performUserSearchCount(user1));
+
+		Role organizationRole = RoleTestUtil.addRole(
+			RoleConstants.TYPE_ORGANIZATION);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(), Organization.class.getName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(
+				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID),
+			organizationRole.getRoleId(), ActionKeys.MANAGE_SUBORGANIZATIONS);
+
+		_userGroupRoleLocalService.addUserGroupRole(
+			user1.getUserId(), organization1.getGroupId(),
+			organizationRole.getRoleId());
+
+		Organization organization2 = OrganizationTestUtil.addOrganization(
+			organization1.getOrganizationId(), RandomTestUtil.randomString(),
+			true);
+
+		_addOrganizationUser(organization2);
+
+		Assert.assertEquals(1, _performUserSearchCount(user1));
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(), Organization.class.getName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(
+				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID),
+			organizationRole.getRoleId(),
+			ActionKeys.MANAGE_SUBORGANIZATIONS_USERS);
+
+		Assert.assertEquals(2, _performUserSearchCount(user1));
+
+		Organization organization3 = OrganizationTestUtil.addOrganization(
+			organization2.getOrganizationId(), RandomTestUtil.randomString(),
+			true);
+
+		_addOrganizationUser(organization3);
+
+		Assert.assertEquals(3, _performUserSearchCount(user1));
+	}
 
 	@Test
 	public void testWhenHasOrganizationManageUsersPermissionSearch()
@@ -98,6 +151,26 @@ public class UserSearchPermissionFilterContributorTest {
 			new long[0], ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(2, _performUserSearchCount(user));
+	}
+
+	@Test
+	public void testWhenHasOwnerPermissionSearchWithGuestUser()
+		throws Exception {
+
+		Company company = CompanyLocalServiceUtil.getCompanyById(
+			TestPropsValues.getCompanyId());
+
+		User guestUser = company.getGuestUser();
+
+		Assert.assertEquals(0, _performUserSearchCount(guestUser));
+
+		UserTestUtil.addUser(
+			guestUser.getCompanyId(), guestUser.getUserId(),
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			new long[0], ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(0, _performUserSearchCount(guestUser));
 	}
 
 	private User _addOrganizationUser(Organization organization)

@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -54,7 +52,9 @@ public class FragmentInlineValue implements Serializable {
 			FragmentInlineValue.class, json);
 	}
 
-	@Schema(description = "The fragment's inline value.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The fragment's inline value."
+	)
 	public String getValue() {
 		if (_valueSupplier != null) {
 			value = _valueSupplier.get();
@@ -95,7 +95,9 @@ public class FragmentInlineValue implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _valueSupplier;
 
-	@Schema(description = "The localized fragment's inline values.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized fragment's inline values."
+	)
 	@Valid
 	public Map<String, String> getValue_i18n() {
 		if (_value_i18nSupplier != null) {
@@ -198,8 +200,8 @@ public class FragmentInlineValue implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentInlineValue",
 		name = "x-class-name"
 	)

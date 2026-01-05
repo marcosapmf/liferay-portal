@@ -23,11 +23,11 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.util.LinkedHashMap;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -124,7 +124,7 @@ public class CommerceTierPriceEntryIndexer
 			commerceTierPriceEntry.getCommercePriceEntryId());
 		document.addKeyword(
 			FIELD_EXTERNAL_REFERENCE_CODE,
-			commerceTierPriceEntry.getExternalReferenceCode());
+			commerceTierPriceEntry.getExternalReferenceCode(), true);
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(

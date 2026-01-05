@@ -10,8 +10,9 @@ import com.liferay.message.boards.settings.MBGroupServiceSettings;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.util.PortalUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Dante Wang
@@ -30,8 +31,10 @@ public class MBRequestUtil {
 			return captchaConfiguration;
 		}
 
-		captchaConfiguration = ConfigurationProviderUtil.getSystemConfiguration(
-			CaptchaConfiguration.class);
+		captchaConfiguration =
+			ConfigurationProviderUtil.getCompanyConfiguration(
+				CaptchaConfiguration.class,
+				PortalUtil.getCompanyId(httpServletRequest));
 
 		httpServletRequest.setAttribute(
 			_MB_CAPTCHA_CONFIGURATION, captchaConfiguration);

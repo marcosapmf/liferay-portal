@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Brian Wing Shun Chan
@@ -50,7 +48,7 @@ public class ElementInstance implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ElementInstance.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Configuration getConfigurationEntry() {
 		if (_configurationEntrySupplier != null) {
@@ -93,7 +91,7 @@ public class ElementInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<Configuration> _configurationEntrySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public SXPElement getSxpElement() {
 		if (_sxpElementSupplier != null) {
@@ -135,7 +133,7 @@ public class ElementInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<SXPElement> _sxpElementSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getSxpElementId() {
 		if (_sxpElementIdSupplier != null) {
 			sxpElementId = _sxpElementIdSupplier.get();
@@ -176,7 +174,7 @@ public class ElementInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _sxpElementIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getType() {
 		if (_typeSupplier != null) {
 			type = _typeSupplier.get();
@@ -215,7 +213,7 @@ public class ElementInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _typeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getUiConfigurationValues() {
 		if (_uiConfigurationValuesSupplier != null) {
@@ -352,8 +350,8 @@ public class ElementInstance implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.search.experiences.rest.dto.v1_0.ElementInstance",
 		name = "x-class-name"
 	)

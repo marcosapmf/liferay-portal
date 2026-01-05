@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -17,7 +17,6 @@ definition {
 	@priority = 5
 	test AddTemplateWithStructure {
 		property portal.acceptance = "true";
-		property testray.component.names = "Web Content Administration";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -156,7 +155,7 @@ definition {
 					structureName = "Basic Web Content",
 					templateDescription = "WC Template Description",
 					templateName = "WC Template Name",
-					templateScript = "<#assign portletRequestModel = objectUtil(\"com.liferay.portal.kernel.portlet.PortletRequestModel\", request.getAttribute(\"javax.portlet.request\"), request.getAttribute(\"javax.portlet.response\")) />");
+					templateScript = "<#assign portletRequestModel = objectUtil(\"com.liferay.portal.kernel.portlet.PortletRequestModel\", request.getAttribute(\"jakarta.portlet.request\"), request.getAttribute(\"jakarta.portlet.response\")) />");
 			}
 
 			task ("Add a web content") {

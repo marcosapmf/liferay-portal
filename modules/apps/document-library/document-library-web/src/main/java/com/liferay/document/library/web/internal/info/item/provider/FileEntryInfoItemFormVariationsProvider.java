@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
@@ -66,7 +67,8 @@ public class FileEntryInfoItemFormVariationsProvider
 				LocaleUtil.fromLanguageId(
 					dlFileEntryType.getDefaultLanguageId())
 			).values(
-				dlFileEntryType.getNameMap()
+				_localization.getLocalizationMap(
+					dlFileEntryType.getName(), true)
 			).build());
 	}
 
@@ -98,7 +100,8 @@ public class FileEntryInfoItemFormVariationsProvider
 						LocaleUtil.fromLanguageId(
 							dlFileEntryType.getDefaultLanguageId())
 					).values(
-						dlFileEntryType.getNameMap()
+						_localization.getLocalizationMap(
+							dlFileEntryType.getName(), true)
 					).build());
 			}
 		}
@@ -145,7 +148,38 @@ public class FileEntryInfoItemFormVariationsProvider
 						LocaleUtil.fromLanguageId(
 							dlFileEntryType.getDefaultLanguageId())
 					).values(
-						dlFileEntryType.getNameMap()
+						_localization.getLocalizationMap(
+							dlFileEntryType.getName(), true)
+					).build()));
+		}
+
+		return infoItemFormVariations;
+	}
+
+	@Override
+	public Collection<InfoItemFormVariation>
+		getInfoItemFormVariationsByCompanyId(long companyId) {
+
+		List<InfoItemFormVariation> infoItemFormVariations = new ArrayList<>();
+
+		infoItemFormVariations.add(_getBasicDocumentInfoItemFormVariation());
+
+		for (DLFileEntryType dlFileEntryType :
+				_dlFileEntryTypeLocalService.getFileEntryTypesByCompanyId(
+					companyId)) {
+
+			infoItemFormVariations.add(
+				new InfoItemFormVariation(
+					dlFileEntryType.getFileEntryTypeKey(),
+					dlFileEntryType.getGroupId(),
+					String.valueOf(dlFileEntryType.getFileEntryTypeId()),
+					InfoLocalizedValue.<String>builder(
+					).defaultLocale(
+						LocaleUtil.fromLanguageId(
+							dlFileEntryType.getDefaultLanguageId())
+					).values(
+						_localization.getLocalizationMap(
+							dlFileEntryType.getName(), true)
 					).build()));
 		}
 
@@ -170,7 +204,7 @@ public class FileEntryInfoItemFormVariationsProvider
 		throws PortalException {
 
 		return SiteConnectedGroupGroupProviderUtil.
-			getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true);
+			getCurrentAndAncestorSiteAndDepotGroupIds(groupId, false, true);
 	}
 
 	private DLFileEntryType _getDLFileEntryTypeByFileEntryTypeKey(
@@ -193,5 +227,8 @@ public class FileEntryInfoItemFormVariationsProvider
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference
+	private Localization _localization;
 
 }

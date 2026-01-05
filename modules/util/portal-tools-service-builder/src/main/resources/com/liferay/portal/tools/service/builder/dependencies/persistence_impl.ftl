@@ -133,7 +133,6 @@ import com.liferay.registry.RegistryUtil;
 
 <#if osgiModule>
 	import org.osgi.framework.ServiceRegistration;
-
 <#else>
 	import com.liferay.registry.ServiceRegistration;
 </#if>
@@ -546,11 +545,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					</#list>
 				};
 
-				${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1)
-					<#if serviceBuilder.isVersionLTE_7_3_0()>
-						, false
-					</#if>
-					);
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1), false);
+				</#if>
 				${finderCache}.putResult(_finderPathFetchBy${uniqueEntityFinder.name}, args, ${entity.variableName}ModelImpl
 					<#if serviceBuilder.isVersionLTE_7_3_0()>
 						, false
@@ -2868,9 +2865,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					</#if>
 
 					);
+
+				<#if entityFinder.isPretouch()>
+					_finderPathFetchBy${entityFinder.name}.touch();
+				</#if>
 			</#if>
 
-			<#if !entityFinder.hasCustomComparator()>
+			<#if !entityFinder.hasCustomComparator() && (entityFinder.isCollection() || serviceBuilder.isVersionLTE_7_3_0())>
 				_finderPathCountBy${entityFinder.name} =
 					<#if serviceBuilder.isVersionGTE_7_4_0()>
 						new FinderPath(

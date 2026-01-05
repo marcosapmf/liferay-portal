@@ -9,7 +9,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.web.internal.display.context.SearchScopePreference;
 import com.liferay.portal.search.web.internal.portlet.preferences.BasePortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 /**
  * @author André de Oliveira
@@ -35,6 +35,13 @@ public class SearchBarPortletPreferencesImpl
 		return getString(
 			SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY,
 			StringPool.BLANK);
+	}
+
+	@Override
+	public String getInputPlaceholder() {
+		return getString(
+			SearchBarPortletPreferences.PREFERENCE_KEY_INPUT_PLACEHOLDER,
+			"search-...");
 	}
 
 	@Override
@@ -65,6 +72,13 @@ public class SearchBarPortletPreferencesImpl
 			getSearchScopePreference();
 
 		return searchScopePreference.getPreferenceString();
+	}
+
+	@Override
+	public boolean isIncludeAttachments() {
+		return getBoolean(
+			SearchBarPortletPreferences.PREFERENCE_KEY_INCLUDE_ATTACHMENTS,
+			false);
 	}
 
 	@Override

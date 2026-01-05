@@ -1,0 +1,47 @@
+import groovy.json.JsonSlurper
+
+task runGradleTest
+
+runGradleTest {
+	dependsOn ":language:build"
+
+	doLast {
+		JsonSlurper jsonSlurper = new JsonSlurper()
+
+		_compareObjects("batch-engine-data.json", jsonSlurper.parse(project.file("expected/batch-engine-data.json")), jsonSlurper.parse(project.file("language/build/liferay-client-extension-build/batch/language.batch-engine-data.json")))
+		_compareObjects("client-extension-config.json", jsonSlurper.parse(project.file("expected/client-extension-config.json")), jsonSlurper.parse(project.file("language/build/liferay-client-extension-build/language.client-extension-config.json")))
+	}
+}
+
+private void _compareObjects(String fileName, Object object1, Object object2) {
+	if (object1 instanceof List) {
+		assert object2 instanceof List
+		assert (object1.size() == object2.size()) : "${fileName}"
+
+		object1.sort()
+		object2.sort()
+
+		object1.eachWithIndex {
+			Object value, int index ->
+
+			_compareObjects(fileName, value, object2[index])
+		}
+	}
+	else if (object1 instanceof Map) {
+		assert object2 instanceof Map
+		assert (object1.size() == object2.size()) : "${fileName}"
+
+		object1.each {
+			Object key, Object value ->
+
+			assert object2.containsKey(key) : "${fileName}: No key found"
+
+			if (!key.equals("buildTimestamp")) {
+				_compareObjects(fileName, value, object2.get(key))
+			}
+		}
+	}
+	else {
+		assert (object1 == object2) : "${fileName}"
+	}
+}

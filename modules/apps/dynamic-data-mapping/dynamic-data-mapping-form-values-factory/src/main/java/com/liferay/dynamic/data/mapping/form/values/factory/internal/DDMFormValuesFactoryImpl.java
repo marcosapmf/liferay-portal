@@ -31,6 +31,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,10 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -176,21 +176,19 @@ public class DDMFormValuesFactoryImpl implements DDMFormValuesFactory {
 		String ddmFormFieldParameterName,
 		Map<String, DDMFormField> ddmFormFieldsMap) {
 
-		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
-
 		String[] lastDDMFormFieldParameterNameParts =
 			DDMFormFieldParameterNameUtil.getLastDDMFormFieldParameterNameParts(
 				ddmFormFieldParameterName);
+
+		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue(
+			lastDDMFormFieldParameterNameParts
+				[DDMFormFieldParameterNameUtil.
+					DDM_FORM_FIELD_INSTANCE_ID_INDEX]);
 
 		String fieldName = lastDDMFormFieldParameterNameParts
 			[DDMFormFieldParameterNameUtil.DDM_FORM_FIELD_NAME_INDEX];
 
 		ddmFormFieldValue.setName(fieldName);
-
-		ddmFormFieldValue.setInstanceId(
-			lastDDMFormFieldParameterNameParts
-				[DDMFormFieldParameterNameUtil.
-					DDM_FORM_FIELD_INSTANCE_ID_INDEX]);
 
 		DDMFormField ddmFormField = ddmFormFieldsMap.get(fieldName);
 
@@ -439,13 +437,8 @@ public class DDMFormValuesFactoryImpl implements DDMFormValuesFactory {
 	}
 
 	private boolean _isDDMFormFieldParameter(String parameterName) {
-		if (parameterName.startsWith(
-				DDMFormRendererConstants.DDM_FORM_FIELD_NAME_PREFIX)) {
-
-			return true;
-		}
-
-		return false;
+		return parameterName.startsWith(
+			DDMFormRendererConstants.DDM_FORM_FIELD_NAME_PREFIX);
 	}
 
 	private void _poupulateDefaultDDMFormFieldParameterNames(

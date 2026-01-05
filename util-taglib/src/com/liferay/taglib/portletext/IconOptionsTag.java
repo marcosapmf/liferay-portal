@@ -18,13 +18,13 @@ import com.liferay.taglib.servlet.PipingServletResponseFactory;
 import com.liferay.taglib.ui.IconMenuTag;
 import com.liferay.taglib.ui.IconTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Brian Wing Shun Chan
@@ -99,14 +99,14 @@ public class IconOptionsTag extends IconTag {
 		HttpServletRequest httpServletRequest = getRequest();
 
 		return (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 	}
 
 	protected PortletResponse getPortletResponse() {
 		HttpServletRequest httpServletRequest = getRequest();
 
 		return (PortletResponse)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 	}
 
 	@Override
@@ -163,11 +163,11 @@ public class IconOptionsTag extends IconTag {
 
 			PortletRequest portletRequest =
 				(PortletRequest)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST);
+					JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 			PortletResponse portletResponse =
 				(PortletResponse)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE);
+					JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 			for (PortletConfigurationIcon portletConfigurationIcon :
 					_portletConfigurationIcons) {

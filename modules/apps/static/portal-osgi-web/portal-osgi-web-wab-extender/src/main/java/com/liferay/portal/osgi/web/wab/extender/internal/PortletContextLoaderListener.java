@@ -14,21 +14,23 @@ import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
 import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.ModuleFrameworkPropsValues;
 import com.liferay.portal.spring.aop.AopConfigurableApplicationContextConfigurator;
 import com.liferay.portal.spring.configurator.ConfigurableApplicationContextConfigurator;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -240,12 +242,12 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 			return null;
 		}
 
-		HashMapDictionary<String, Object> properties =
-			new HashMapDictionary<>();
+		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		if (osgiBeanProperties != null) {
-			properties.putAll(
-				OSGiBeanProperties.Convert.toMap(osgiBeanProperties));
+			properties = HashMapDictionaryBuilder.<String, Object>putAll(
+				OSGiBeanProperties.Convert.toMap(osgiBeanProperties)
+			).build();
 		}
 
 		properties.put("bean.id", beanName);

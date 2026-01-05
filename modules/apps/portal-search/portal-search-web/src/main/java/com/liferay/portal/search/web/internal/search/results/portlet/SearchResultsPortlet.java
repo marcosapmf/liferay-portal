@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -41,19 +42,19 @@ import com.liferay.portal.search.web.internal.result.display.context.builder.Sea
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,14 +75,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.restore-current-view=false",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Search Results",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/search/results/view.jsp",
-		"javax.portlet.name=" + SearchResultsPortletKeys.SEARCH_RESULTS,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Search Results",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/search/results/view.jsp",
+		"jakarta.portlet.name=" + SearchResultsPortletKeys.SEARCH_RESULTS,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=guest,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -234,10 +235,19 @@ public class SearchResultsPortlet extends MVCPortlet {
 		searchResultsPortletDisplayContext.setSearchContainer(
 			_buildSearchContainer(
 				documents, searchResponse.getTotalHits(),
-				portletSharedSearchResponse.getPaginationStart(),
+				GetterUtil.getInteger(
+					portletSharedSearchResponse.getParameter(
+						searchResultsPortletPreferences.
+							getPaginationStartParameterName(),
+						renderRequest)),
 				searchResultsPortletPreferences.
 					getPaginationStartParameterName(),
-				portletSharedSearchResponse.getPaginationDelta(),
+				GetterUtil.getInteger(
+					portletSharedSearchResponse.getParameter(
+						searchResultsPortletPreferences.
+							getPaginationDeltaParameterName(),
+						renderRequest),
+					searchResultsPortletPreferences.getPaginationDelta()),
 				searchResultsPortletPreferences.
 					getPaginationDeltaParameterName(),
 				renderRequest));
@@ -321,6 +331,8 @@ public class SearchResultsPortlet extends MVCPortlet {
 			assetEntryLocalService
 		).setAssetRendererFactoryLookup(
 			assetRendererFactoryLookup
+		).setClassNameLocalService(
+			_classNameLocalService
 		).setCurrentURL(
 			getCurrentURL(renderRequest)
 		).setDocument(
@@ -439,6 +451,9 @@ public class SearchResultsPortlet extends MVCPortlet {
 		return HttpComponentsUtil.removeParameter(
 			_portal.getCurrentURL(renderRequest), paginationStartParameterName);
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private Portal _portal;

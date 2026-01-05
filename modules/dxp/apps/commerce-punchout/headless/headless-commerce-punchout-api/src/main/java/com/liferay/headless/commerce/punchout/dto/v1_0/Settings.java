@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Jaclyn Ong
@@ -48,7 +46,7 @@ public class Settings implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Settings.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer[] getAllowedQuantities() {
 		if (_allowedQuantitiesSupplier != null) {
 			allowedQuantities = _allowedQuantitiesSupplier.get();
@@ -89,7 +87,7 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer[]> _allowedQuantitiesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getMaxQuantity() {
 		if (_maxQuantitySupplier != null) {
 			maxQuantity = _maxQuantitySupplier.get();
@@ -130,7 +128,7 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _maxQuantitySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getMinQuantity() {
 		if (_minQuantitySupplier != null) {
 			minQuantity = _minQuantitySupplier.get();
@@ -171,7 +169,7 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _minQuantitySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getMultipleQuantity() {
 		if (_multipleQuantitySupplier != null) {
 			multipleQuantity = _multipleQuantitySupplier.get();
@@ -302,8 +300,8 @@ public class Settings implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.punchout.dto.v1_0.Settings",
 		name = "x-class-name"
 	)

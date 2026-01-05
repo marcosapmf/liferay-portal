@@ -12,6 +12,7 @@ import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Role;
@@ -172,7 +173,11 @@ public class GetEmailNotificationRolesMVCResourceCommandTest {
 					JSONUtil.put("name", RoleConstants.OWNER),
 					JSONUtil.put("name", RoleConstants.PORTAL_CONTENT_REVIEWER),
 					JSONUtil.put("name", RoleConstants.POWER_USER),
+					JSONUtil.put("name", RoleConstants.PUBLICATIONS_ADMIN),
+					JSONUtil.put("name", RoleConstants.PUBLICATIONS_EDITOR),
+					JSONUtil.put("name", RoleConstants.PUBLICATIONS_PUBLISHER),
 					JSONUtil.put("name", RoleConstants.PUBLICATIONS_USER),
+					JSONUtil.put("name", RoleConstants.PUBLICATIONS_VIEWER),
 					JSONUtil.put("name", RoleConstants.USER),
 					JSONUtil.put(
 						"label", regularRole1.getTitle(LocaleUtil.getDefault())
@@ -192,9 +197,9 @@ public class GetEmailNotificationRolesMVCResourceCommandTest {
 
 	private Role _addAccountRole(User user) throws Exception {
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			user.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
+			StringPool.BLANK, user.getUserId(), 0L,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, null, RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext());

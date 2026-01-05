@@ -189,6 +189,12 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 								</span>
 							</c:when>
 							<c:otherwise>
+								<c:if test="<%= !Validator.isBlank(billingCommerceAddress.getSubtype()) %>">
+									<p class="mb-0">
+										<%= HtmlUtil.escape(billingCommerceAddress.getSubtype(locale)) %>
+									</p>
+								</c:if>
+
 								<p class="mb-0">
 									<%= HtmlUtil.escape(billingCommerceAddress.getStreet1()) %>
 								</p>
@@ -242,7 +248,7 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 					<commerce-ui:info-box
 						actionContext='<%=
 							HashMapBuilder.<String, Object>put(
-								"containerCssClasses", "modal-height-md"
+								"containerCssClasses", "modal-height-lg"
 							).put(
 								"namespace", liferayPortletResponse.getNamespace()
 							).put(
@@ -265,6 +271,12 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 								</span>
 							</c:when>
 							<c:otherwise>
+								<c:if test="<%= !Validator.isBlank(shippingCommerceAddress.getSubtype()) %>">
+									<p class="mb-0">
+										<%= HtmlUtil.escape(shippingCommerceAddress.getSubtype(locale)) %>
+									</p>
+								</c:if>
+
 								<p class="mb-0">
 									<%= HtmlUtil.escape(shippingCommerceAddress.getStreet1()) %>
 								</p>
@@ -300,7 +312,7 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 							).put(
 								"refreshOnClose", true
 							).put(
-								"size", "xl"
+								"size", "md"
 							).put(
 								"title", (commerceOrder.getPaymentCommerceTermEntryId() == 0) ? LanguageUtil.get(request, "payment-terms") : LanguageUtil.get(request, "edit-payment-terms")
 							).build()
@@ -338,7 +350,7 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 							).put(
 								"refreshOnClose", true
 							).put(
-								"size", "xl"
+								"size", "md"
 							).put(
 								"title", (commerceOrder.getDeliveryCommerceTermEntryId() == 0) ? LanguageUtil.get(request, "delivery-terms") : LanguageUtil.get(request, "edit-delivery-terms")
 							).build()
@@ -493,6 +505,7 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 				itemsPerPage="<%= 10 %>"
 				nestedItemsKey="orderItemId"
 				nestedItemsReferenceKey="orderItems"
+				propsTransformer="{CommerceOrderItemsFDSPropsTransformer} from commerce-order-web"
 			/>
 		</commerce-ui:panel>
 	</div>
@@ -503,15 +516,18 @@ boolean hasPermission = commerceOrderEditDisplayContext.hasModelPermission(comme
 			<portlet:param name="commerceOrderId" value="<%= String.valueOf(commerceOrderEditDisplayContext.getCommerceOrderId()) %>" />
 		</liferay-portlet:renderURL>
 
-		<commerce-ui:modal
-			id="order-summary-modal"
-			refreshPageOnClose="<%= true %>"
-			size="lg"
-			title='<%= LanguageUtil.get(request, "order-summary") %>'
-			url="<%= editOrderSummaryURL %>"
-		/>
-
 		<commerce-ui:panel
+			actionContext='<%=
+				HashMapBuilder.<String, Object>put(
+					"containerCssClasses", "modal-height-lg"
+				).put(
+					"namespace", liferayPortletResponse.getNamespace()
+				).put(
+					"refreshOnClose", true
+				).put(
+					"size", "lg"
+				).build()
+			%>'
 			actionLabel='<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPricesPermission() ? LanguageUtil.get(request, "edit") : null %>'
 			actionTargetId="order-summary-modal"
 			actionUrl="<%= commerceOrderEditDisplayContext.hasManageCommerceOrderPricesPermission() ? editOrderSummaryURL : null %>"

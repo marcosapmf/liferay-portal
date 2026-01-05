@@ -6,6 +6,7 @@
 package com.liferay.object.rest.test.util;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
@@ -17,6 +18,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -36,9 +38,14 @@ public class ObjectEntryTestUtil {
 			serviceContext.setAssetTagNames(keywords);
 		}
 
+		serviceContext.setAttribute(
+			"friendlyUrlMap", new HashMap<String, String>());
+
 		return ObjectEntryLocalServiceUtil.addObjectEntry(
-			TestPropsValues.getUserId(), groupId,
-			objectDefinition.getObjectDefinitionId(), values, serviceContext);
+			groupId, TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, values, serviceContext);
 	}
 
 	public static ObjectEntry addObjectEntry(

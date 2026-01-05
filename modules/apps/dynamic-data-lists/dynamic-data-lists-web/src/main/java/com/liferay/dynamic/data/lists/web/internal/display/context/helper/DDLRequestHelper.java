@@ -8,10 +8,10 @@ package com.liferay.dynamic.data.lists.web.internal.display.context.helper;
 import com.liferay.portal.kernel.display.context.helper.BaseRequestHelper;
 import com.liferay.portal.kernel.util.JavaConstants;
 
-import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Leonardo Barros
@@ -22,7 +22,7 @@ public class DDLRequestHelper extends BaseRequestHelper {
 		super(httpServletRequest);
 
 		_renderRequest = (RenderRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		_portletPreferences = _renderRequest.getPreferences();
 	}

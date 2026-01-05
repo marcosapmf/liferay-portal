@@ -26,11 +26,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -155,15 +155,17 @@ public class DDMFormFieldOptionsFactoryImpl
 					ddmFormField.getProperty("ddmDataProviderInstanceOutput"),
 					"Default-Output"));
 
-			List<KeyValuePair> keyValuesPairs =
+			List<KeyValuePair> keyValuePairs =
 				ddmDataProviderResponse.getOutput(
 					ddmDataProviderInstanceOutput, List.class);
 
-			if (keyValuesPairs == null) {
-				return ddmFormFieldOptions;
+			if (keyValuePairs == null) {
+				return _createDDMFormFieldOptions(
+					ddmFormField, ddmFormFieldRenderingContext,
+					"data-provider");
 			}
 
-			for (KeyValuePair keyValuePair : keyValuesPairs) {
+			for (KeyValuePair keyValuePair : keyValuePairs) {
 				ddmFormFieldOptions.addOptionLabel(
 					keyValuePair.getKey(),
 					ddmFormFieldRenderingContext.getLocale(),

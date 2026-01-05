@@ -14,7 +14,10 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,13 +52,44 @@ public class NotificationTypeUtil {
 					content, termName,
 					notificationTermEvaluator.evaluate(
 						NotificationTermEvaluator.Context.CONTENT,
-						notificationContext.getTermValues(), termName));
+						notificationContext, termName));
 			}
 		}
 
 		return content;
 	}
 
+	public static Set<String> getEmailAddresses(String value) {
+		if (Validator.isNull(value)) {
+			return Collections.emptySet();
+		}
+
+		Set<String> emailAddresses = new HashSet<>();
+
+		Matcher matcher = _emailAddressPattern.matcher(value);
+
+		while (matcher.find()) {
+			emailAddresses.add(matcher.group());
+		}
+
+		return emailAddresses;
+	}
+
+	public static boolean isEmailAddress(String value) {
+		Matcher matcher = _emailAddressPattern.matcher(value);
+
+		return matcher.find();
+	}
+
+	public static boolean isTermValue(String value) {
+		Matcher matcher = _termNamePattern.matcher(value);
+
+		return matcher.find();
+	}
+
+	private static final Pattern _emailAddressPattern = Pattern.compile(
+		"[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@" +
+			"(?:\\w(?:[\\w-]*\\w)?\\.)+(\\w(?:[\\w-]*\\w))");
 	private static final Pattern _termNamePattern = Pattern.compile(
 		"\\[%[^\\[%]+%\\]", Pattern.CASE_INSENSITIVE);
 

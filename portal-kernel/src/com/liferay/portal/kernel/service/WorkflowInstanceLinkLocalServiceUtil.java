@@ -137,6 +137,14 @@ public class WorkflowInstanceLinkLocalServiceUtil {
 		return getService().deleteWorkflowInstanceLink(workflowInstanceLink);
 	}
 
+	public static void deleteWorkflowInstanceLinkByWorkflowInstanceId(
+			long workflowInstanceId)
+		throws PortalException {
+
+		getService().deleteWorkflowInstanceLinkByWorkflowInstanceId(
+			workflowInstanceId);
+	}
+
 	public static void deleteWorkflowInstanceLinks(
 			long companyId, long groupId, String className, long classPK)
 		throws PortalException {
@@ -325,6 +333,12 @@ public class WorkflowInstanceLinkLocalServiceUtil {
 
 		return getService().getWorkflowInstanceLinks(
 			companyId, groupId, className, classPK);
+	}
+
+	public static List<WorkflowInstanceLink> getWorkflowInstanceLinks(
+		long companyId, String className) {
+
+		return getService().getWorkflowInstanceLinks(companyId, className);
 	}
 
 	/**

@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import ClayTable from '@clayui/table';
+import classNames from 'classnames';
 import {ReactNode} from 'react';
 
 import './Table.scss';
 
-import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
-import classNames from 'classnames';
-
 type TableProps<T = any> = {
 	Actions?: React.FC<{row: T}>;
+	children?: ReactNode;
 	className?: string;
 	columns: TableColumn<T>[];
+	hasHover?: boolean;
 	hasKebabButton?: boolean;
 	hasPagination?: boolean;
 	kebabClassName?: string;
@@ -52,8 +53,10 @@ type PaginationProps = {
 
 const Table: React.FC<TableProps> = ({
 	Actions,
+	children,
 	className,
 	columns,
+	hasHover = true,
 	hasKebabButton,
 	hasPagination,
 	kebabClassName = '',
@@ -63,7 +66,12 @@ const Table: React.FC<TableProps> = ({
 }) => {
 	return (
 		<>
-			<ClayTable borderless className={className} striped={false}>
+			<ClayTable
+				borderless
+				className={className}
+				hover={hasHover}
+				striped={false}
+			>
 				<ClayTable.Head>
 					<ClayTable.Row className="border-bottom header-row">
 						{columns.map((column, index) => (
@@ -90,7 +98,7 @@ const Table: React.FC<TableProps> = ({
 								'cursor-pointer':
 									typeof onClickRow === 'function',
 							})}
-							key={row.id || rowIndex}
+							key={rowIndex}
 						>
 							{columns.map((column, columnIndex) => {
 								const data = row[column.key];
@@ -134,6 +142,7 @@ const Table: React.FC<TableProps> = ({
 							)}
 						</ClayTable.Row>
 					))}
+					{children}
 				</ClayTable.Body>
 			</ClayTable>
 

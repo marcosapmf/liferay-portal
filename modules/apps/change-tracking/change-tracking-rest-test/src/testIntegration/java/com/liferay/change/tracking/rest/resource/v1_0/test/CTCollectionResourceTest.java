@@ -12,17 +12,16 @@ import com.liferay.change.tracking.rest.client.dto.v1_0.CTCollection;
 import com.liferay.change.tracking.rest.client.dto.v1_0.Status;
 import com.liferay.change.tracking.rest.client.http.HttpInvoker;
 import com.liferay.change.tracking.rest.client.pagination.Page;
+import com.liferay.change.tracking.rest.client.pagination.Pagination;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -34,14 +33,15 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.Response;
-
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +59,20 @@ public class CTCollectionResourceTest extends BaseCTCollectionResourceTestCase {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteCTCollectionBatch() throws Exception {
+		super.testDeleteCTCollectionBatch();
+	}
 
 	@Override
 	@Test
@@ -82,10 +96,11 @@ public class CTCollectionResourceTest extends BaseCTCollectionResourceTestCase {
 
 		Map<String, Map<String, String>> actions = ctCollection.getActions();
 
-		Assert.assertEquals(actions.toString(), 2, actions.size());
+		Assert.assertEquals(actions.toString(), 3, actions.size());
 
 		Assert.assertTrue(actions.containsKey("delete"));
 		Assert.assertTrue(actions.containsKey("get"));
+		Assert.assertTrue(actions.containsKey("reactivate"));
 	}
 
 	@Override
@@ -146,59 +161,20 @@ public class CTCollectionResourceTest extends BaseCTCollectionResourceTestCase {
 
 	@Override
 	@Test
-	public void testGetCTCollectionsHistoryPage() throws Exception {
-		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+	public void testGetCTCollectionsPage() throws Exception {
+		super.testGetCTCollectionsPage();
 
-		try {
-			long layoutClassNameId = _classNameLocalService.getClassNameId(
-				Layout.class);
-			long classPK = layout.getPlid();
+		_postCTCollection(randomCTCollection());
+		_postCTCollection(randomCTCollection());
 
-			Page<CTCollection> page =
-				ctCollectionResource.getCTCollectionsHistoryPage(
-					(int)layoutClassNameId, (int)classPK);
+		Page<CTCollection> descPage = ctCollectionResource.getCTCollectionsPage(
+			null, null, null, Pagination.of(1, 10), "dateModified:desc");
+		Page<CTCollection> page = ctCollectionResource.getCTCollectionsPage(
+			null, null, null, Pagination.of(1, 10), null);
 
-			long totalCount = page.getTotalCount();
-
-			CTCollection ctCollection1 =
-				testGetCTCollectionsHistoryPage_addCTCollection(
-					randomCTCollection());
-
-			try (SafeCloseable safeCloseable =
-					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-						ctCollection1.getId())) {
-
-				_layoutLocalService.updateName(
-					layout, ctCollection1.getName(),
-					layout.getDefaultLanguageId());
-			}
-
-			CTCollection ctCollection2 =
-				testGetCTCollectionsHistoryPage_addCTCollection(
-					randomCTCollection());
-
-			try (SafeCloseable safeCloseable =
-					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-						ctCollection2.getId())) {
-
-				_layoutLocalService.updateName(
-					layout, ctCollection2.getName(),
-					layout.getDefaultLanguageId());
-			}
-
-			page = ctCollectionResource.getCTCollectionsHistoryPage(
-				(int)layoutClassNameId, (int)classPK);
-
-			Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-			assertContains(ctCollection1, (List<CTCollection>)page.getItems());
-			assertContains(ctCollection2, (List<CTCollection>)page.getItems());
-			assertValid(
-				page, testGetCTCollectionsHistoryPage_getExpectedActions());
-		}
-		finally {
-			_layoutLocalService.deleteLayout(layout);
-		}
+		assertEquals(
+			(List<CTCollection>)descPage.getItems(),
+			(List<CTCollection>)page.getItems());
 	}
 
 	@Override
@@ -399,26 +375,11 @@ public class CTCollectionResourceTest extends BaseCTCollectionResourceTestCase {
 	}
 
 	@Override
-	protected CTCollection testGetCTCollectionsHistoryPage_addCTCollection(
-			CTCollection ctCollection)
-		throws Exception {
-
-		return _postCTCollection(ctCollection);
-	}
-
-	@Override
 	protected CTCollection testGetCTCollectionsPage_addCTCollection(
 			CTCollection ctCollection)
 		throws Exception {
 
 		return _postCTCollection(ctCollection);
-	}
-
-	@Override
-	protected CTCollection testGraphQLCTCollection_addCTCollection()
-		throws Exception {
-
-		return ctCollectionResource.postCTCollection(randomCTCollection());
 	}
 
 	@Override

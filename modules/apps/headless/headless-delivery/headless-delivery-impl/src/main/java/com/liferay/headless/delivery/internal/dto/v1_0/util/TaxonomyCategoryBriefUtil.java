@@ -8,7 +8,6 @@ package com.liferay.headless.delivery.internal.dto.v1_0.util;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryReference;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -18,10 +17,10 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.Objects;
-
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Javier Gamarra
@@ -87,10 +86,6 @@ public class TaxonomyCategoryBriefUtil {
 
 	private static TaxonomyCategoryReference _toTaxonomyCategoryReference(
 		AssetCategory assetCategory, DTOConverterContext dtoConverterContext) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-178052")) {
-			return null;
-		}
 
 		return new TaxonomyCategoryReference() {
 			{

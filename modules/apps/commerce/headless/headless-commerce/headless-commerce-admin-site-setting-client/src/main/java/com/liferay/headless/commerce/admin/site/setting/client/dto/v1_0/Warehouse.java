@@ -8,12 +8,12 @@ package com.liferay.headless.commerce.admin.site.setting.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.site.setting.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.site.setting.client.serdes.v1_0.WarehouseSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -212,16 +212,16 @@ public class Warehouse implements Cloneable, Serializable {
 
 	protected Double longitude;
 
-	public Number getMvccVersion() {
+	public Integer getMvccVersion() {
 		return mvccVersion;
 	}
 
-	public void setMvccVersion(Number mvccVersion) {
+	public void setMvccVersion(Integer mvccVersion) {
 		this.mvccVersion = mvccVersion;
 	}
 
 	public void setMvccVersion(
-		UnsafeSupplier<Number, Exception> mvccVersionUnsafeSupplier) {
+		UnsafeSupplier<Integer, Exception> mvccVersionUnsafeSupplier) {
 
 		try {
 			mvccVersion = mvccVersionUnsafeSupplier.get();
@@ -231,7 +231,7 @@ public class Warehouse implements Cloneable, Serializable {
 		}
 	}
 
-	protected Number mvccVersion;
+	protected Integer mvccVersion;
 
 	public Map<String, String> getName() {
 		return name;

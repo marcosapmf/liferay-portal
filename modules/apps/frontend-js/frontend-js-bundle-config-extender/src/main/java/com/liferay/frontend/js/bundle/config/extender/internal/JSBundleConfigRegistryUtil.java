@@ -9,12 +9,12 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringPool;
 
+import jakarta.servlet.ServletContext;
+
 import java.net.URL;
 
 import java.util.Collection;
 import java.util.Dictionary;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -78,20 +78,22 @@ public class JSBundleConfigRegistryUtil {
 
 			String jsConfig = headers.get("Liferay-JS-Config");
 
-			if (jsConfig != null) {
-				URL url = bundle.getEntry(jsConfig);
-
-				if (url != null) {
-					ServletContext servletContext = _bundleContext.getService(
-						serviceReference);
-
-					_lastModified = System.currentTimeMillis();
-
-					return new JSConfig(servletContext, url);
-				}
+			if (jsConfig == null) {
+				return null;
 			}
 
-			return null;
+			URL url = bundle.getEntry(jsConfig);
+
+			if (url == null) {
+				return null;
+			}
+
+			ServletContext servletContext = _bundleContext.getService(
+				serviceReference);
+
+			_lastModified = System.currentTimeMillis();
+
+			return new JSConfig(servletContext, url);
 		}
 
 		@Override

@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.RangeTermFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
@@ -91,11 +90,11 @@ public class CPDefinitionModelPreFilterContributor
 			BooleanFilter accountGroupIdsBooleanFilter = new BooleanFilter();
 
 			for (long accountGroupId : accountGroupIds) {
-				Filter termFilter = new TermFilter(
-					"commerceAccountGroupIds", String.valueOf(accountGroupId));
-
 				accountGroupIdsBooleanFilter.add(
-					termFilter, BooleanClauseOccur.SHOULD);
+					new TermFilter(
+						"commerceAccountGroupIds",
+						String.valueOf(accountGroupId)),
+					BooleanClauseOccur.SHOULD);
 			}
 
 			accountGroupsFilterEnableBooleanFilter.add(

@@ -30,6 +30,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "AuditEvent"
 				}
@@ -38,6 +40,9 @@
 				"properties": {
 					"name": {
 						"type": "string"
+					},
+					"newValue": {
+						"type": "object"
 					},
 					"oldValue": {
 						"type": "object"
@@ -49,8 +54,161 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "AuditFieldChange"
+				}
+			},
+			"Collaborator": {
+				"description": "Represents a collaborator for an entry.",
+				"properties": {
+					"actionIds": {
+						"description": "The collaborator actions for the shared asset.",
+						"items": {
+							"description": "The collaborator actions for the shared asset.",
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"actions": {
+						"additionalProperties": {
+							"description": "Block of actions allowed by the user making the request.",
+							"type": "object"
+						},
+						"description": "Block of actions allowed by the user making the request.",
+						"readOnly": true,
+						"type": "object"
+					},
+					"creator": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"dateExpired": {
+						"description": "The expiration date to be a collaborator of the asset.",
+						"format": "date-time",
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The collaborator external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"id": {
+						"description": "The collaborator ID.",
+						"format": "int64",
+						"type": "integer"
+					},
+					"name": {
+						"description": "The collaborator name.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"portrait": {
+						"description": "The collaborator portrait.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"share": {
+						"description": "If the collaborator can share or not the asset.",
+						"type": "boolean"
+					},
+					"type": {
+						"description": "The collaborator type.",
+						"example": "User",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.headless.object.dto.v1_0.Collaborator",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"required": [
+					"actionIds",
+					"type"
+				],
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Collaborator"
+				}
+			},
+			"Comment": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"description": "Block of actions allowed by the user making the request.",
+								"type": "string"
+							},
+							"description": "Block of actions allowed by the user making the request.",
+							"type": "object"
+						},
+						"description": "Block of actions allowed by the user making the request.",
+						"readOnly": true,
+						"type": "object"
+					},
+					"creator": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"dateCreated": {
+						"description": "The comment's creation date.",
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"dateModified": {
+						"description": "The comment's latest modification date.",
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The comment's external reference code.",
+						"type": "string"
+					},
+					"id": {
+						"description": "The comment's ID.",
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"numberOfComments": {
+						"description": "The number of child comments on this comment.",
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"parentCommentId": {
+						"description": "The ID of the comment's parent, if it exists.",
+						"format": "int64",
+						"type": "integer"
+					},
+					"text": {
+						"description": "The comment's text content.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.headless.delivery.dto.v1_0.Comment",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					}
+				},
+				"xml": {
+					"name": "Comment"
 				}
 			},
 			"Creator": {
@@ -62,6 +220,11 @@
 					},
 					"contentType": {
 						"description": "The type of the content.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The external reference code of the author.",
 						"readOnly": true,
 						"type": "string"
 					},
@@ -110,6 +273,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Creator"
 				}
@@ -126,7 +291,9 @@
 						"type": "array"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
 			},
 			"FacetValue": {
 				"properties": {
@@ -138,14 +305,125 @@
 						"type": "string"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"FileEntry": {
+				"properties": {
+					"alternativeText": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"fileBase64": {
+						"description": "optional field with the content of the document in Base64, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileBase64`)",
+						"type": "string"
+					},
+					"fileURL": {
+						"description": "optional field that specifies the source of the file to be downloaded, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)",
+						"type": "string"
+					},
+					"folder": {
+						"$ref": "#/components/schemas/Folder"
+					},
+					"id": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"link": {
+						"$ref": "#/components/schemas/Link"
+					},
+					"metadata": {
+						"additionalProperties": {
+							"description": "optional field that specifies the metadata of the file, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.metadata`)",
+							"type": "object"
+						},
+						"description": "optional field that specifies the metadata of the file, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.metadata`)",
+						"readOnly": true,
+						"type": "object"
+					},
+					"mimeType": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"previewURL": {
+						"description": "optional field that specifies the preview URL of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.previewURL`)",
+						"readOnly": true,
+						"type": "string"
+					},
+					"scope": {
+						"$ref": "#/components/schemas/Scope"
+					},
+					"thumbnailURL": {
+						"description": "optional field that specifies the thumbnail of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.thumbnailURL`)",
+						"readOnly": true,
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.FileEntry",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "FileEntry"
+				}
+			},
+			"Folder": {
+				"properties": {
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"siteId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Folder",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Folder"
+				}
+			},
+			"Link": {
+				"properties": {
+					"href": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Link",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Link"
+				}
 			},
 			"Object1": {
 				"properties": {
 					"actions": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"properties": {
 							"delete": {
 								"properties": {
@@ -174,7 +452,7 @@
 							"objectAction": {
 								"properties": {
 									"href": {
-										"default": "http://localhost:8080/o/c/object1s/by-external-reference-code/{object1ExternalReferenceCode}/object-actions/objectAction",
+										"default": "http://localhost:8080/o/c/object1s/by-external-reference-code/{externalReferenceCode}/object-actions/objectAction",
 										"type": "string"
 									},
 									"method": {
@@ -221,26 +499,23 @@
 							}
 						},
 						"readOnly": true,
-						"type": "object"
+						"type": "object",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"auditEvents": {
 						"description": "Optional field with the audit events associated with this object entry, can be embedded with nestedFields",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/AuditEvent"
 						},
 						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"creator": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
 						"readOnly": true,
-						"type": "string"
+						"type": "string",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"dateCreated": {
 						"format": "date-time",
@@ -252,72 +527,123 @@
 						"readOnly": true,
 						"type": "string"
 					},
-					"externalReferenceCode": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
-						"readOnly": false,
+					"defaultLanguageId": {
 						"type": "string"
+					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"externalReferenceCode": {
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
 					},
 					"field1": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
+						"$ref": "#/components/schemas/FileEntry"
+					},
+					"field2": {
 						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"friendlyUrlPath": {
+						"description": "A relative URL to the page's rendered content.",
 						"type": "string"
 					},
-					"id": {
-						"extensions": {
-							"x-parent-map": "properties"
+					"friendlyUrlPath_i18n": {
+						"additionalProperties": {
+							"description": "The localized relative URLs to the page's rendered content.",
+							"type": "string"
 						},
+						"description": "The localized relative URLs to the page's rendered content.",
+						"type": "object"
+					},
+					"id": {
 						"format": "int64",
 						"readOnly": true,
-						"type": "integer"
+						"type": "integer",
+						"x-parent-map": "properties"
 					},
 					"keywords": {
 						"description": "A list of keywords describing the object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"description": "A list of keywords describing the object entry.",
 							"type": "string"
 						},
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"permissions": {
+						"items": {
+							"$ref": "#/components/schemas/Permission"
+						},
 						"type": "array"
+					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
 					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
 					},
 					"status": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
+						"format": "int32",
 						"readOnly": true,
-						"type": "string"
+						"type": "integer",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"taxonomyCategoryBriefs": {
 						"description": "The categories associated with this object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"taxonomyCategoryIds": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"format": "int64",
 							"type": "integer"
 						},
 						"type": "array",
-						"writeOnly": true
+						"writeOnly": true,
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"x-class-name": {
 						"default": "com.liferay.object.rest.dto.v1_0.ObjectEntry",
@@ -331,8 +657,172 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+					"creator": {
+						"type": "string"
+					},
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"field2": {
+						"type": "string"
+					},
+					"folderId": {
+						"type": "integer"
+					},
+					"id": {
+						"type": "id"
+					},
+					"keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"status": {
+						"type": "integer"
+					},
+					"taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"title": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "integer"
+					},
+					"version": {
+						"type": "integer"
+					}
+				},
 				"xml": {
 					"name": "ObjectEntry"
+				}
+			},
+			"ObjectDefinitionBrief": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The object definition's external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"label": {
+						"description": "The object definition's label.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"objectFolderExternalReferenceCode": {
+						"description": "The object folder's external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ObjectDefinitionBrief",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ObjectDefinitionBrief"
+				}
+			},
+			"PageCollaborator": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Collaborator"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"PageComment": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Comment"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
 				}
 			},
 			"PageObject1": {
@@ -397,8 +887,6 @@
 						"type": "array"
 					},
 					"items": {
-						"extensions": {
-						},
 						"items": {
 							"$ref": "#/components/schemas/Object1"
 						},
@@ -426,7 +914,9 @@
 						"type": "string"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
 			},
 			"PagePermission": {
 				"properties": {
@@ -459,7 +949,7 @@
 							"objectAction": {
 								"properties": {
 									"href": {
-										"default": "http://localhost:8080/o/c/object1s/by-external-reference-code/{object1ExternalReferenceCode}/object-actions/objectAction",
+										"default": "http://localhost:8080/o/c/object1s/by-external-reference-code/{externalReferenceCode}/object-actions/objectAction",
 										"type": "string"
 									},
 									"method": {
@@ -536,7 +1026,49 @@
 						"type": "integer"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"ParentTaxonomyCategory": {
+				"description": "The category's parent category.",
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent taxonomy category's external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyCategory",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ParentTaxonomyCategory"
+				}
+			},
+			"ParentTaxonomyVocabulary": {
+				"description": "The parent category's `TaxonomyVocabulary`.",
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent category's `TaxonomyVocabulary` external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyVocabulary",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ParentTaxonomyVocabulary"
+				}
 			},
 			"Permission": {
 				"properties": {
@@ -546,13 +1078,57 @@
 						},
 						"type": "array"
 					},
+					"roleExternalReferenceCode": {
+						"type": "string"
+					},
 					"roleName": {
+						"type": "string"
+					},
+					"roleType": {
 						"type": "string"
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Permission"
+				}
+			},
+			"Scope": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The scope's external reference code.",
+						"type": "string"
+					},
+					"key": {
+						"description": "The scope's identifier.",
+						"type": "string"
+					},
+					"label": {
+						"description": "The scope's name.",
+						"type": "string"
+					},
+					"type": {
+						"description": "The scope's type.",
+						"enum": [
+							"AssetLibrary",
+							"Site",
+							"Space"
+						],
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.portal.vulcan.scope.Scope",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Scope"
 				}
 			},
 			"Status": {
@@ -573,7 +1149,12 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"code"
+				],
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Status"
 				}
@@ -585,6 +1166,19 @@
 						"description": "Optional field with the embedded taxonomy category, can be embedded with nestedFields",
 						"readOnly": true,
 						"type": "object"
+					},
+					"parentTaxonomyCategory": {
+						"$ref": "#/components/schemas/ParentTaxonomyCategory"
+					},
+					"parentTaxonomyVocabulary": {
+						"$ref": "#/components/schemas/ParentTaxonomyVocabulary"
+					},
+					"scope": {
+						"$ref": "#/components/schemas/Scope"
+					},
+					"taxonomyCategoryExternalReferenceCode": {
+						"description": "The category's external reference code.",
+						"type": "string"
 					},
 					"taxonomyCategoryId": {
 						"description": "The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API.",
@@ -613,6 +1207,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "TaxonomyCategoryBrief"
 				}
@@ -638,8 +1234,99 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "UserGroupBrief"
+				}
+			},
+			"ValidationError": {
+				"properties": {
+					"errorMessage": {
+						"type": "string"
+					},
+					"objectFieldName": {
+						"type": "string"
+					},
+					"objectValidationRuleExternalReferenceCode": {
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationError",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationError"
+				}
+			},
+			"ValidationRequest": {
+				"properties": {
+					"objectValidationRuleExternalReferenceCodes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"values": {
+						"$ref": "#/components/schemas/Object1"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationRequest",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationRequest"
+				}
+			},
+			"ValidationResponse": {
+				"properties": {
+					"validationErrors": {
+						"items": {
+							"$ref": "#/components/schemas/ValidationError"
+						},
+						"type": "array"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationResponse",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationResponse"
+				}
+			},
+			"Version": {
+				"properties": {
+					"number": {
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Version",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Version"
 				}
 			}
 		}
@@ -671,13 +1358,6 @@
 					{
 						"in": "query",
 						"name": "filter",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "flatten",
 						"schema": {
 							"type": "string"
 						}
@@ -748,8 +1428,6 @@
 			},
 			"post": {
 				"operationId": "postObject1",
-				"parameters": [
-				],
 				"requestBody": {
 					"content": {
 						"application/json": {
@@ -764,6 +1442,152 @@
 						}
 					}
 				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/approved": {
+			"get": {
+				"operationId": "getApprovedPage",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/approved/by-external-reference-code/{externalReferenceCode}": {
+			"get": {
+				"operationId": "getApprovedByExternalReferenceCode",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"default": {
 						"content": {
@@ -1064,13 +1888,21 @@
 				]
 			}
 		},
-		"/by-external-reference-code/{object1ExternalReferenceCode}/object-actions/objectAction": {
-			"put": {
-				"operationId": "putObject1ObjectAction",
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeByVersion",
 				"parameters": [
 					{
 						"in": "path",
-						"name": "object1ExternalReferenceCode",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -1083,6 +1915,786 @@
 							"application/json": {
 							},
 							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeCommentsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments/{commentExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"put": {
+				"operationId": "putByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments/{commentExternalReferenceCode}/child-comments": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeCommentChildCommentsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeCommentChildComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/object-actions/objectAction": {
+			"put": {
+				"operationId": "putObject1ObjectAction",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/subscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeSubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/unsubscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeUnsubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/versions": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
 							}
 						},
 						"description": "default response"
@@ -1163,6 +2775,7 @@
 						"name": "type",
 						"required": true,
 						"schema": {
+							"pattern": "json|yaml",
 							"type": "string"
 						}
 					}
@@ -1178,6 +2791,45 @@
 						"description": "default response"
 					}
 				}
+			}
+		},
+		"/validate": {
+			"post": {
+				"operationId": "postValidate",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
 			}
 		},
 		"/{object1Id}": {
@@ -1357,6 +3009,774 @@
 				]
 			}
 		},
+		"/{object1Id}/by-object-entry-folder-id/{object1FolderId}/copy": {
+			"post": {
+				"operationId": "postObject1ByObject1FolderCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-object-entry-folder-id/{object1FolderId}/copy-replace": {
+			"post": {
+				"operationId": "postObject1ByObject1FolderCopyReplace",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-object-entry-folder-id/{object1FolderId}/move": {
+			"post": {
+				"operationId": "postObject1ByObject1FolderMove",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-object-entry-folder-id/{object1FolderId}/move-replace": {
+			"post": {
+				"operationId": "postObject1ByObject1FolderMoveReplace",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteObject1ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			},
+			"get": {
+				"operationId": "getObject1ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postObject1ByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postObject1ByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putObject1ByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/collaborators": {
+			"get": {
+				"description": "Retrieves the collaborators of an object entry.",
+				"operationId": "getObject1CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"post": {
+				"description": "Add or update all the collaborators received in the request. Delete existing collaborators that are not included in the request.",
+				"operationId": "postObject1CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object1Id}/collaborators/by-type/{type}/{collaboratorId}": {
+			"delete": {
+				"description": "Deletes the collaborator for an object entry and returns a 204 if the operation succeeds.",
+				"operationId": "deleteObject1CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"get": {
+				"description": "Retrieves the collaborator for an object entry.",
+				"operationId": "getObject1CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"put": {
+				"description": "Add or update a collaborator received in the request.",
+				"operationId": "putObject1CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object1Id}/collaborators/export-batch": {
+			"post": {
+				"operationId": "postObject1CollaboratorsPageExportBatch",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "callbackURL",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contentType",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fieldNames",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object1Id}/expire": {
+			"post": {
+				"operationId": "postObject1Expire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
 		"/{object1Id}/object-actions/objectAction": {
 			"put": {
 				"operationId": "putObject1ObjectAction",
@@ -1491,6 +3911,69 @@
 							"application/xml": {
 								"schema": {
 									"$ref": "#/components/schemas/PagePermission"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object1"
+				]
+			}
+		},
+		"/{object1Id}/versions": {
+			"get": {
+				"operationId": "getObject1sVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
 								}
 							}
 						},

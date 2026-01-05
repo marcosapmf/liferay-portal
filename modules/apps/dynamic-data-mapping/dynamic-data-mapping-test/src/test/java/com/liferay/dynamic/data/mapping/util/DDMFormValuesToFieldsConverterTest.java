@@ -21,6 +21,7 @@ import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -28,7 +29,6 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -204,7 +204,7 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 		ddmFormValues.addDDMFormFieldValue(paulDDMFormFieldValue);
 
 		DDMFormFieldValue joeDDMFormFieldValue = createDDMFormFieldValue(
-			"rght", "Name", createLocalizedValue("Joe", "Joao", LocaleUtil.US));
+			"rght", "Name", createLocalizedValue("Joe", "João", LocaleUtil.US));
 
 		List<DDMFormFieldValue> joeNestedDDMFormFieldValues =
 			joeDDMFormFieldValue.getNestedDDMFormFieldValues();
@@ -213,19 +213,19 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 			createDDMFormFieldValue(
 				"latb", "Phone",
 				createLocalizedValue(
-					"Joe's Phone 1", "Telefone de Joao 1", LocaleUtil.US)));
+					"Joe's Phone 1", "Telefone de João 1", LocaleUtil.US)));
 
 		joeNestedDDMFormFieldValues.add(
 			createDDMFormFieldValue(
 				"jewp", "Phone",
 				createLocalizedValue(
-					"Joe's Phone 2", "Telefone de Joao 2", LocaleUtil.US)));
+					"Joe's Phone 2", "Telefone de João 2", LocaleUtil.US)));
 
 		joeNestedDDMFormFieldValues.add(
 			createDDMFormFieldValue(
 				"mkar", "Phone",
 				createLocalizedValue(
-					"Joe's Phone 3", "Telefone de Joao 3", LocaleUtil.US)));
+					"Joe's Phone 3", "Telefone de João 3", LocaleUtil.US)));
 
 		ddmFormValues.addDDMFormFieldValue(joeDDMFormFieldValue);
 
@@ -238,7 +238,7 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 
 		testField(
 			nameField, createValuesList("Paul", "Joe"),
-			createValuesList("Paulo", "Joao"), _availableLocales,
+			createValuesList("Paulo", "João"), _availableLocales,
 			LocaleUtil.US);
 
 		Field phoneField = fields.get("Phone");
@@ -250,8 +250,8 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 				"Joe's Phone 2", "Joe's Phone 3"),
 			createValuesList(
 				"Telefone de Paulo 1", "Telefone de Paulo 2",
-				"Telefone de Joao 1", "Telefone de Joao 2",
-				"Telefone de Joao 3"),
+				"Telefone de João 1", "Telefone de João 2",
+				"Telefone de João 3"),
 			_availableLocales, LocaleUtil.US);
 
 		Field fieldsDisplayField = fields.get(DDMImpl.FIELDS_DISPLAY_NAME);
@@ -344,7 +344,8 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 		Field field = fields.get("text");
 
 		Assert.assertEquals(
-			createValuesList(null, value), field.getValues(LocaleUtil.US));
+			createValuesList(StringPool.BLANK, value),
+			field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -546,15 +547,31 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 			fieldsDisplayField.getValue());
 	}
 
+	@Test
+	public void testConversionWithUndefinedField() throws Exception {
+		DDMForm ddmForm = createDDMForm();
+
+		addDDMFormFields(ddmForm, createTextDDMFormField("Title"));
+
+		DDMStructure ddmStructure = createStructure("Test Structure", ddmForm);
+
+		DDMFormValues ddmFormValues = createDDMFormValues(
+			ddmForm, _availableLocales, LocaleUtil.US);
+
+		Fields fields = _ddmFormValuesToFieldsConverter.convert(
+			ddmStructure, ddmFormValues);
+
+		Assert.assertNotNull(fields);
+
+		Field titleField = fields.get("Title");
+
+		Assert.assertEquals(StringPool.BLANK, titleField.getValue());
+	}
+
 	@Override
 	protected List<Serializable> createValuesList(String... valuesString) {
-		List<Serializable> values = new ArrayList<>();
-
-		for (String valueString : valuesString) {
-			values.add(valueString);
-		}
-
-		return values;
+		return TransformUtil.transformToList(
+			valuesString, valueString -> valueString);
 	}
 
 	protected void setUpAvailableLocales() {
@@ -587,7 +604,6 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 		DDMFormFieldValue nestedDDMFormFieldValue = new DDMFormFieldValue();
 
 		nestedDDMFormFieldValue.setFieldReference("text");
-		nestedDDMFormFieldValue.setInstanceId(RandomTestUtil.randomString());
 		nestedDDMFormFieldValue.setName("text");
 
 		if (value == null) {

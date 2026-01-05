@@ -15,13 +15,20 @@ import com.liferay.portal.kernel.settings.LocalizedValuesMap;
  * @author Olivér Kecskeméty
  */
 @ExtendedObjectClassDefinition(
-	category = "cookies", scope = ExtendedObjectClassDefinition.Scope.GROUP
+	category = "privacy", scope = ExtendedObjectClassDefinition.Scope.GROUP
 )
 @Meta.OCD(
 	id = "com.liferay.cookies.configuration.banner.CookiesBannerConfiguration",
 	localization = "content/Language", name = "cookie-banner-configuration-name"
 )
 public interface CookiesBannerConfiguration {
+
+	@ExtendedAttributeDefinition(requiredInput = true)
+	@Meta.AD(
+		deflt = "${language:cookies-banner-title}", name = "title",
+		required = false
+	)
+	public LocalizedValuesMap title();
 
 	@ExtendedAttributeDefinition(requiredInput = true)
 	@Meta.AD(

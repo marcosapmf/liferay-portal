@@ -17,18 +17,18 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Pavel Savinov
@@ -65,6 +65,16 @@ public interface SiteNavigationMenuItemType {
 		}
 
 		throw new UnsupportedOperationException();
+	}
+
+	public default String getDisplayIcon(
+		SiteNavigationMenuItem siteNavigationMenuItem) {
+
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.fastLoad(
+			siteNavigationMenuItem.getTypeSettings()
+		).build();
+
+		return unicodeProperties.getProperty("displayIcon", StringPool.BLANK);
 	}
 
 	public default String getIcon() {

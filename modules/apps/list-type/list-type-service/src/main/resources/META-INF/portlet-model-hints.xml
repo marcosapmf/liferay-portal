@@ -13,6 +13,7 @@
 		<field name="modifiedDate" type="Date" />
 		<field localized="true" name="name" type="String" />
 		<field name="system" type="boolean" />
+		<field name="status" type="int" />
 	</model>
 	<model name="com.liferay.list.type.model.ListTypeEntry">
 		<field name="mvccVersion" type="long" />
@@ -27,6 +28,8 @@
 		<field name="listTypeDefinitionId" type="long" />
 		<field name="key" type="String" />
 		<field localized="true" name="name" type="String" />
+		<field name="system" type="boolean" />
 		<field name="type" type="String" />
+		<field name="status" type="int" />
 	</model>
 </model-hints>

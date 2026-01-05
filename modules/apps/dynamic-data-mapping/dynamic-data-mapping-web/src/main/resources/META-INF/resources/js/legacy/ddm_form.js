@@ -1732,7 +1732,7 @@ AUI.add(
 				getUploadURL() {
 					const uploadParameters = {
 						'cmd': 'add_temp',
-						'javax.portlet.action':
+						'jakarta.portlet.action':
 							'/document_library/upload_file_entry',
 						'p_auth': Liferay.authToken,
 						'p_p_id': Liferay.PortletKeys.DOCUMENT_LIBRARY,
@@ -2424,7 +2424,7 @@ AUI.add(
 					const imageSelectorURL = form.get('imageSelectorURL');
 
 					let retVal = instance.getDocumentLibraryURL(
-						'com.liferay.journal.item.selector.criterion.JournalItemSelectorCriterion,com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion'
+						'com.liferay.journal.item.selector.JournalItemSelectorCriterion,com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion'
 					);
 
 					if (imageSelectorURL) {

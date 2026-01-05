@@ -967,12 +967,14 @@ definition {
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
 			value1 = ${keyReferenceCode});
 
-		Button.click(button = "Submit");
+		Click(
+			key_text = "Submit",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		if (isSet(uniqueERC)) {
 			Alert.viewErrorMessage(errorMessage = "Please enter a unique external reference code.");
 
-			Click(locator1 = "Button#CANCEL_SPECIAL");
+			Click(locator1 = "Button#CANCEL");
 		}
 
 		Click(locator1 = "Icon#BACK");
@@ -1357,7 +1359,11 @@ definition {
 				locator1 = "TextInput#GENERIC_TEXT_INPUT",
 				value1 = ${keyReferenceCode});
 
-			Button.click(button = "Submit");
+			SelectFrame.selectFrameTop();
+
+			Click(
+				key_text = "Submit",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
 		}
 
 		Type(
@@ -1515,8 +1521,10 @@ definition {
 
 	@summary = "Default summary"
 	macro gotoMenuTab(menuTab = null) {
+		var menuTabKey = StringUtil.replace(${menuTab}, " DEPRECATED", "");
+
 		AssertClick(
-			key_menuTab = ${menuTab},
+			key_menuTab = ${menuTabKey},
 			locator1 = "CommerceEntry#MENU_TAB",
 			value1 = ${menuTab});
 	}

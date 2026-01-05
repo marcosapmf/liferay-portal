@@ -8,6 +8,7 @@ package com.liferay.portal.security.sso.openid.connect.internal.servlet.filter.a
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -19,13 +20,13 @@ import com.liferay.portal.security.sso.openid.connect.internal.exception.Strange
 import com.liferay.portal.security.sso.openid.connect.internal.session.manager.OfflineOpenIdConnectSessionManager;
 import com.liferay.portal.servlet.filters.autologin.AutoLoginFilter;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,8 +50,7 @@ public class OpenIdConnectAutoLoginFilter extends AutoLoginFilter {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		return _openIdConnect.isEnabled(
-			_portal.getCompanyId(httpServletRequest));
+		return _openIdConnect.isEnabled(CompanyThreadLocal.getCompanyId());
 	}
 
 	@Override
@@ -89,8 +89,10 @@ public class OpenIdConnectAutoLoginFilter extends AutoLoginFilter {
 				userId -> _autoLoginUser(
 					httpServletRequest, httpServletResponse, userId));
 		}
-		catch (StrangersNotAllowedException |
+		catch (IllegalArgumentException | StrangersNotAllowedException |
 			   UserEmailAddressException.MustNotUseCompanyMx exception) {
+
+			_log.error(exception);
 
 			Class<?> clazz = exception.getClass();
 

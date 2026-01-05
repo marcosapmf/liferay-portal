@@ -15,10 +15,9 @@ import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.tools.ToolDependencies;
 
-import java.util.List;
-import java.util.logging.Level;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -116,8 +115,8 @@ public class InvokerFilterTest {
 
 		MockFilterChain mockFilterChain = new MockFilterChain();
 
-		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
-				InvokerFilter.class.getName(), Level.WARNING)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				InvokerFilter.class.getName(), LoggerTestUtil.WARN)) {
 
 			invokerFilter.doFilter(
 				mockHttpServletRequest, mockHttpServletResponse,

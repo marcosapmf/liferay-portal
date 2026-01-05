@@ -7,8 +7,15 @@ package com.liferay.fragment.collection.contributor.inputs;
 
 import com.liferay.fragment.contributor.BaseFragmentCollectionContributor;
 import com.liferay.fragment.contributor.FragmentCollectionContributor;
+import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.ListUtil;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
+
+import java.util.List;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,8 +36,34 @@ public class InputsFragmentCollectionContributor
 	}
 
 	@Override
+	public List<FragmentEntry> getFragmentEntries() {
+		return _filter(super.getFragmentEntries());
+	}
+
+	@Override
+	public List<FragmentEntry> getFragmentEntries(int type) {
+		return _filter(super.getFragmentEntries(type));
+	}
+
+	@Override
 	public ServletContext getServletContext() {
 		return _servletContext;
+	}
+
+	private List<FragmentEntry> _filter(List<FragmentEntry> fragmentEntries) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-17564")) {
+
+			Set<String> excludedKeys = Set.of(
+				"INPUTS-drag-and-drop-upload", "INPUTS-video-previewer-input");
+
+			fragmentEntries = ListUtil.filter(
+				fragmentEntries,
+				fragmentEntry -> !excludedKeys.contains(
+					fragmentEntry.getFragmentEntryKey()));
+		}
+
+		return fragmentEntries;
 	}
 
 	@Reference(

@@ -6,9 +6,9 @@
 package com.liferay.depot.web.internal.exportimport.data.handler;
 
 import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -20,7 +20,7 @@ import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.xml.Element;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Tardín
  */
 @Component(
-	property = "javax.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
+	property = "jakarta.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
 	service = PortletDataHandler.class
 )
 public class DepotAdminPortletDataHandler extends BasePortletDataHandler {
@@ -73,12 +73,13 @@ public class DepotAdminPortletDataHandler extends BasePortletDataHandler {
 		setDataAlwaysStaged(true);
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(DepotEntryGroupRel.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				getNamespace(), "site-connections", true, true, null,
 				DepotEntryGroupRel.class.getName()));
 		setPublishToLiveByDefault(true);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override

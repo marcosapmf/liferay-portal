@@ -20,8 +20,7 @@ import ${beanLocatorUtil};
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -70,6 +69,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import java.sql.Blob;
+import java.sql.Connection;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -507,17 +507,39 @@ import org.osgi.service.component.annotations.Reference;
 			</#if>
 		</#if>
 
-		<#if entity.hasExternalReferenceCode() && !entity.versionEntity??>
+		<#if entity.hasExternalReferenceCode()>
 			<#if serviceBuilder.isVersionGTE_7_4_0()>
-				@Override
-				public ${entity.name} fetch${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					return ${entity.variableName}Persistence.fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(externalReferenceCode, ${entity.externalReferenceCode}Id);
-				}
+				<#if entity.versionEntity??>
+					@Override
+					public ${entity.name} fetch${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${entity.variableName}Persistence.fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}_Head(externalReferenceCode, ${entity.externalReferenceCode}Id, true);
+					}
 
-				@Override
-				public ${entity.name} get${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) throws PortalException {
-					return ${entity.variableName}Persistence.findByERC_${entity.externalReferenceCode?cap_first[0..0]}(externalReferenceCode, ${entity.externalReferenceCode}Id);
-				}
+					@Override
+					public ${entity.name} fetch${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id, boolean head) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${entity.variableName}Persistence.fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}_Head(externalReferenceCode, ${entity.externalReferenceCode}Id, head);
+					}
+
+					@Override
+					public ${entity.name} get${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) throws PortalException {
+						return ${entity.variableName}Persistence.findByERC_${entity.externalReferenceCode?cap_first[0..0]}_Head(externalReferenceCode, ${entity.externalReferenceCode}Id, true);
+					}
+
+					@Override
+					public ${entity.name} get${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id, boolean head) throws PortalException {
+						return ${entity.variableName}Persistence.findByERC_${entity.externalReferenceCode?cap_first[0..0]}_Head(externalReferenceCode, ${entity.externalReferenceCode}Id, head);
+					}
+				<#else>
+					@Override
+					public ${entity.name} fetch${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+						return ${entity.variableName}Persistence.fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(externalReferenceCode, ${entity.externalReferenceCode}Id);
+					}
+
+					@Override
+					public ${entity.name} get${entity.name}ByExternalReferenceCode(String externalReferenceCode, long ${entity.externalReferenceCode}Id) throws PortalException {
+						return ${entity.variableName}Persistence.findByERC_${entity.externalReferenceCode?cap_first[0..0]}(externalReferenceCode, ${entity.externalReferenceCode}Id);
+					}
+				</#if>
 			<#else>
 				@Deprecated
 				@Override
@@ -1623,8 +1645,13 @@ import org.osgi.service.component.annotations.Reference;
 
 				if ((db.getDBType() != DBType.DB2) &&
 					(db.getDBType() != DBType.MYSQL) &&
-					(db.getDBType() != DBType.MARIADB) &&
-					(db.getDBType() != DBType.SYBASE)) {
+					(db.getDBType() != DBType.MARIADB)
+
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						&& (db.getDBType() != DBType.SYBASE)
+					</#if>
+
+					) {
 
 					_useTempFile = true;
 				}
@@ -1649,8 +1676,13 @@ import org.osgi.service.component.annotations.Reference;
 
 					if ((db.getDBType() != DBType.DB2) &&
 						(db.getDBType() != DBType.MYSQL) &&
-						(db.getDBType() != DBType.MARIADB) &&
-						(db.getDBType() != DBType.SYBASE)) {
+						(db.getDBType() != DBType.MARIADB)
+
+						<#if serviceBuilder.isVersionLTE_7_3_0()>
+							&& (db.getDBType() != DBType.SYBASE)
+						</#if>
+
+						) {
 
 						_useTempFile = true;
 					}
@@ -2053,21 +2085,26 @@ import org.osgi.service.component.annotations.Reference;
 		 * @param sql the sql query
 		 */
 		protected void runSQL(String sql) {
+			<#if entity.hasEntityColumns()>
+				DataSource dataSource = ${entity.variableName}Persistence.getDataSource();
+			<#else>
+				DataSource dataSource = InfrastructureUtil.getDataSource();
+			</#if>
+
+			DB db = DBManagerUtil.getDB();
+
+			Connection currentConnection = CurrentConnectionUtil.getConnection(dataSource);
+
 			try {
-				<#if entity.hasEntityColumns()>
-					DataSource dataSource = ${entity.variableName}Persistence.getDataSource();
-				<#else>
-					DataSource dataSource = InfrastructureUtil.getDataSource();
-				</#if>
+				if (currentConnection != null) {
+					db.runSQL(currentConnection, new String[] {sql});
 
-				DB db = DBManagerUtil.getDB();
+					return;
+				}
 
-				sql = db.buildSQL(sql);
-				sql = PortalUtil.transformSQL(sql);
-
-				SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource, sql);
-
-				sqlUpdate.update();
+				try (Connection connection = dataSource.getConnection()) {
+					db.runSQL(connection, new String[] {sql});
+				}
 			}
 			catch (Exception exception) {
 				throw new SystemException(exception);

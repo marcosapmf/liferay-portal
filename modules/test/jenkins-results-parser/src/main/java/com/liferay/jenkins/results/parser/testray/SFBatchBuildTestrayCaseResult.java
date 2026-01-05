@@ -5,25 +5,27 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.Build;
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.TopLevelBuildReport;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 
 /**
  * @author Michael Hashimoto
  */
-public class SFBatchBuildTestrayCaseResult extends BatchBuildTestrayCaseResult {
+public class SFBatchBuildTestrayCaseResult
+	extends BatchBuildTestrayCaseResult<TestClass, TestClassMethod> {
 
 	public SFBatchBuildTestrayCaseResult(
-		TestrayBuild testrayBuild, TopLevelBuild topLevelBuild,
-		AxisTestClassGroup axisTestClassGroup) {
+		AxisTestClassGroup axisTestClassGroup, TestrayBuild testrayBuild,
+		TopLevelBuildReport topLevelBuildReport) {
 
-		super(testrayBuild, topLevelBuild, axisTestClassGroup);
+		super(axisTestClassGroup, testrayBuild, topLevelBuildReport);
 	}
 
 	@Override
-	public Build getBuild() {
-		return getTopLevelBuild();
+	protected void initBuildReport() {
+		setBuildReport(getTopLevelBuildReport());
 	}
 
 }

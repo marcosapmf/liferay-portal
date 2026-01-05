@@ -35,6 +35,7 @@ import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.data.set.model.FDSSortItemBuilder;
 import com.liferay.frontend.data.set.model.FDSSortItemList;
 import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.knowledge.base.model.KBArticleModel;
@@ -47,6 +48,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -63,7 +65,15 @@ import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
 import com.liferay.portal.kernel.model.WorkflowInstanceLink;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.search.BooleanClause;
+import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.ExistsFilter;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -74,10 +84,13 @@ import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -85,32 +98,40 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.portal.search.sort.SortOrder;
+import com.liferay.portal.search.sort.Sorts;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
 
 import java.text.Format;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -209,6 +230,54 @@ public class ViewChangesDisplayContext {
 		return portletURL.toString();
 	}
 
+	public List<DropdownItem> getBulkActionDropdownItems() {
+		List<DropdownItem> bulkActionDropdownItems = new ArrayList<>();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-20183")) {
+			if (_ctCollection.isInProgress() ||
+				(_ctCollection.getStatus() ==
+					WorkflowConstants.STATUS_EXPIRED)) {
+
+				bulkActionDropdownItems.add(
+					new FDSActionDropdownItem(
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_move_changes"
+						).setRedirect(
+							_themeDisplay.getURLCurrent()
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).buildString(),
+						"move-folder", "move-changes",
+						_language.get(_httpServletRequest, "move-changes"),
+						"post", "move-changes", null));
+			}
+
+			if (_ctCollection.isInProgress()) {
+				bulkActionDropdownItems.add(
+					new FDSActionDropdownItem(
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_discard"
+						).setRedirect(
+							_themeDisplay.getURLCurrent()
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).buildString(),
+						"trash", "view-discard",
+						_language.get(_httpServletRequest, "discard-changes"),
+						"delete", "view-discard", null));
+			}
+		}
+
+		bulkActionDropdownItems.forEach(
+			dropdownItem -> dropdownItem.putData("highlighted", "true"));
+
+		return bulkActionDropdownItems;
+	}
+
 	public long getCtCollectionId() {
 		return _ctCollection.getCtCollectionId();
 	}
@@ -231,7 +300,7 @@ public class ViewChangesDisplayContext {
 				_language.get(_httpServletRequest, "review-change"), "get",
 				"get", null));
 
-		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) ||
+		if (_ctCollection.isInProgress() ||
 			(_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED)) {
 
 			fdsActionDropdownItems.add(
@@ -254,7 +323,7 @@ public class ViewChangesDisplayContext {
 					"move-changes", null));
 		}
 
-		if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
+		if (_ctCollection.isInProgress()) {
 			fdsActionDropdownItems.add(
 				new FDSActionDropdownItem(
 					PortletURLBuilder.createRenderURL(
@@ -278,7 +347,11 @@ public class ViewChangesDisplayContext {
 		return fdsActionDropdownItems;
 	}
 
-	public List<FDSFilter> getFDSFilters() {
+	public List<FDSFilter> getFDSFilters() throws PortalException {
+		long groupId = ParamUtil.getLong(_renderRequest, "groupId");
+		long modelClassNameId = ParamUtil.getLong(
+			_renderRequest, "modelClassNameId");
+
 		boolean showHideable = ParamUtil.getBoolean(
 			_renderRequest, "showHideable");
 
@@ -295,8 +368,8 @@ public class ViewChangesDisplayContext {
 
 		return ListUtil.fromArray(
 			new ChangeTypeSelectionFDSFilter(),
-			new SiteSelectionFDSFilter(siteNames),
-			new TypeNameSelectionFDSFilter(typeNames),
+			new SiteSelectionFDSFilter(groupId, siteNames),
+			new TypeNameSelectionFDSFilter(modelClassNameId, typeNames),
 			new UserSelectionFDSFilter(usersJSONObject.toMap()));
 	}
 
@@ -307,6 +380,84 @@ public class ViewChangesDisplayContext {
 			).setKey(
 				"typeName"
 			).build()
+		).build();
+	}
+
+	public Map<String, Object> getItemsOverview() {
+		boolean showHideable = ParamUtil.getBoolean(
+			_renderRequest, "showHideable");
+
+		Map<Long, String> siteNames = HashMapBuilder.put(
+			-1L, _language.get(_httpServletRequest, "system")
+		).putAll(
+			DisplayContextUtil.getSiteNames(
+				_ctCollection.getCtCollectionId(), showHideable, _themeDisplay)
+		).build();
+
+		JSONArray itemsOverviewJSONArray = JSONFactoryUtil.createJSONArray();
+
+		for (Map.Entry<Long, String> siteName : siteNames.entrySet()) {
+			Map<Long, ObjectValuePair<String, Integer>> objectValuePairs =
+				_getObjectValuePairs(
+					_ctCollection.getCtCollectionId(), siteName.getKey(),
+					showHideable, _themeDisplay);
+
+			if (objectValuePairs.isEmpty()) {
+				continue;
+			}
+
+			int siteCount = 0;
+			JSONArray typeNameAndCountJSONArray =
+				JSONFactoryUtil.createJSONArray();
+
+			for (Map.Entry<Long, ObjectValuePair<String, Integer>> entry :
+					objectValuePairs.entrySet()) {
+
+				ObjectValuePair<String, Integer> objectValuePair =
+					entry.getValue();
+
+				typeNameAndCountJSONArray.put(
+					JSONUtil.put(
+						"href",
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_changes"
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).setParameter(
+							"groupId", siteName.getKey()
+						).setParameter(
+							"modelClassNameId", entry.getKey()
+						).setParameter(
+							"showHideable", showHideable
+						).buildString()
+					).put(
+						"label",
+						StringBundler.concat(
+							objectValuePair.getKey(), " (",
+							objectValuePair.getValue(), ") ")
+					));
+
+				siteCount = siteCount + objectValuePair.getValue();
+			}
+
+			itemsOverviewJSONArray.put(
+				JSONUtil.put(
+					"siteCount", siteCount
+				).put(
+					"siteName", siteName.getValue()
+				).put(
+					"typeNameAndCount", typeNameAndCountJSONArray
+				));
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"itemsOverview", itemsOverviewJSONArray
+		).put(
+			"publicationSizeClassification",
+			_language.get(
+				_httpServletRequest, _ctCollection.getScoreSizeClassification())
 		).build();
 	}
 
@@ -486,8 +637,10 @@ public class ViewChangesDisplayContext {
 		).put(
 			"discardURL",
 			() -> {
-				if (_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) {
+				if (!_ctCollection.isInProgress() ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.DELETE)) {
 
 					return null;
 				}
@@ -531,9 +684,10 @@ public class ViewChangesDisplayContext {
 		).put(
 			"moveChangesURL",
 			() -> {
-				if (!FeatureFlagManagerUtil.isEnabled("LPS-171364") ||
-					(_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT)) {
+				if (!_ctCollection.isInProgress() ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.UPDATE)) {
 
 					return null;
 				}
@@ -817,8 +971,7 @@ public class ViewChangesDisplayContext {
 		).put(
 			"publishURL",
 			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) ||
+				if (!_ctCollection.isInProgress() ||
 					!CTCollectionPermission.contains(
 						_themeDisplay.getPermissionChecker(), _ctCollection,
 						CTActionKeys.PUBLISH)) {
@@ -879,8 +1032,7 @@ public class ViewChangesDisplayContext {
 		).put(
 			"scheduleURL",
 			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) ||
+				if (!_ctCollection.isInProgress() ||
 					!PropsValues.SCHEDULER_ENABLED ||
 					!CTCollectionPermission.contains(
 						_themeDisplay.getPermissionChecker(), _ctCollection,
@@ -1088,7 +1240,7 @@ public class ViewChangesDisplayContext {
 			PermissionChecker permissionChecker)
 		throws Exception {
 
-		if ((_ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
+		if (!_ctCollection.isInProgress() &&
 			(_ctCollection.getStatus() != WorkflowConstants.STATUS_EXPIRED)) {
 
 			return null;
@@ -1179,7 +1331,23 @@ public class ViewChangesDisplayContext {
 						"label", _language.get(_httpServletRequest, "edit")
 					).put(
 						"symbolLeft", "pencil"
-					));
+					)
+				).put(
+					JSONUtil.put(
+						"href",
+						PublicationsPortletURLUtil.getHref(
+							_renderResponse.createActionURL(),
+							ActionRequest.ACTION_NAME,
+							"/change_tracking/reindex_ct_collection",
+							"redirect", _themeDisplay.getURLCurrent(),
+							"ctCollectionId",
+							String.valueOf(_ctCollection.getCtCollectionId()))
+					).put(
+						"label", _language.get(_httpServletRequest, "reindex")
+					).put(
+						"symbolLeft", "reset"
+					)
+				);
 			}
 		}
 
@@ -1196,6 +1364,27 @@ public class ViewChangesDisplayContext {
 					"label", _language.get(_httpServletRequest, "permissions")
 				).put(
 					"symbolLeft", "password-policies"
+				));
+		}
+
+		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED) &&
+			CTCollectionPermission.contains(
+				_themeDisplay.getPermissionChecker(), _ctCollection,
+				CTActionKeys.PUBLISH)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getHref(
+						_renderResponse.createActionURL(),
+						ActionRequest.ACTION_NAME,
+						"/change_tracking/reactivate_ct_collection", "redirect",
+						_themeDisplay.getURLCurrent(), "ctCollectionId",
+						String.valueOf(_ctCollection.getCtCollectionId()))
+				).put(
+					"label", _language.get(_httpServletRequest, "reactivate")
+				).put(
+					"symbolLeft", "reset"
 				));
 		}
 
@@ -1228,6 +1417,87 @@ public class ViewChangesDisplayContext {
 			"Missing model from ", _ctCollection.getName(), ": {classPK=",
 			classPK, ", ctCollectionId=", _ctCollection.getCtCollectionId(),
 			", modelClassNameId=", modelClassNameId, "}");
+	}
+
+	private Map<Long, ObjectValuePair<String, Integer>> _getObjectValuePairs(
+		long ctCollectionId, long groupId, boolean showHideable,
+		ThemeDisplay themeDisplay) {
+
+		Map<Long, ObjectValuePair<String, Integer>> objectValuePairs =
+			new LinkedHashMap<>();
+
+		Searcher searcher = _searcherSnapshot.get();
+		Sorts sorts = _sortsSnapshot.get();
+
+		SearchRequestBuilderFactory searchRequestBuilderFactory =
+			_searchRequestBuilderFactorySnapshot.get();
+
+		SearchRequestBuilder searchRequestBuilder =
+			searchRequestBuilderFactory.builder(
+			).companyId(
+				themeDisplay.getCompanyId()
+			).entryClassNames(
+				CTEntry.class.getName()
+			).emptySearchEnabled(
+				true
+			).fields(
+				"modelClassNameId", "typeName"
+			).sorts(
+				sorts.field(
+					Field.getSortableFieldName(
+						"typeName_".concat(
+							LocaleUtil.toLanguageId(themeDisplay.getLocale()))),
+					SortOrder.ASC)
+			).withSearchContext(
+				searchContext -> {
+					searchContext.setAttribute(
+						"ctCollectionId", ctCollectionId);
+					searchContext.setAttribute("showHideable", showHideable);
+
+					if (groupId == -1) {
+						BooleanQueryImpl booleanQueryImpl =
+							new BooleanQueryImpl();
+
+						BooleanFilter booleanFilter = new BooleanFilter();
+
+						booleanFilter.add(
+							new ExistsFilter(Field.GROUP_ID),
+							BooleanClauseOccur.MUST_NOT);
+
+						booleanQueryImpl.setPreBooleanFilter(booleanFilter);
+
+						searchContext.setBooleanClauses(
+							new BooleanClause[] {
+								BooleanClauseFactoryUtil.create(
+									booleanQueryImpl,
+									BooleanClauseOccur.MUST.getName())
+							});
+					}
+					else {
+						searchContext.setAttribute(
+							Field.GROUP_ID, new long[] {groupId});
+					}
+				}
+			);
+
+		SearchResponse searchResponse = searcher.search(
+			searchRequestBuilder.build());
+
+		for (Document document : searchResponse.getDocuments()) {
+			ObjectValuePair<String, Integer> objectValuePair =
+				objectValuePairs.get(document.getLong("modelClassNameId"));
+
+			if (objectValuePair != null) {
+				objectValuePair.setValue(objectValuePair.getValue() + 1);
+			}
+			else {
+				objectValuePairs.put(
+					document.getLong("modelClassNameId"),
+					new ObjectValuePair(document.getString("typeName"), 1));
+			}
+		}
+
+		return objectValuePairs;
 	}
 
 	private Map<Long, List<Long>> _getRootPKsMap(CTClosure ctClosure) {
@@ -1326,7 +1596,7 @@ public class ViewChangesDisplayContext {
 			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
 				ctEntry, classPK, groupId);
 
-			if (workflowTasks == null) {
+			if (ListUtil.isEmpty(workflowTasks)) {
 				return true;
 			}
 
@@ -1339,14 +1609,8 @@ public class ViewChangesDisplayContext {
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					ctEntry.getCtCollectionId())) {
 
-			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
-				ctEntry, classPK, groupId);
-
-			if (workflowTasks == null) {
-				return true;
-			}
-
-			return false;
+			return ListUtil.isEmpty(
+				_getWorkflowTasks(ctEntry, classPK, groupId));
 		}
 	}
 
@@ -1405,10 +1669,6 @@ public class ViewChangesDisplayContext {
 					"modelClassPK", classPK
 				).put(
 					"modelKey", modelInfo._modelKey
-				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
 				).put(
 					"title",
 					_getTitle(
@@ -1512,10 +1772,6 @@ public class ViewChangesDisplayContext {
 				).put(
 					"modifiedTime", modifiedDate.getTime()
 				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
-				).put(
 					"timeDescription",
 					_language.getTimeDescription(
 						_httpServletRequest,
@@ -1542,20 +1798,18 @@ public class ViewChangesDisplayContext {
 					modelInfo._jsonObject.put("groupId", groupId);
 				}
 
-				if (FeatureFlagManagerUtil.isEnabled("LPD-10703")) {
-					int changeType = _ctDisplayRendererRegistry.getChangeType(
-						ctEntry, model);
+				int changeType = _ctDisplayRendererRegistry.getChangeType(
+					ctEntry, model);
 
-					if (_ctDisplayRendererRegistry.isWorkflowEnabled(
-							ctEntry, model) &&
-						(changeType != CTConstants.CT_CHANGE_TYPE_DELETION) &&
-						((Integer)modelAttributes.get("status") !=
-							WorkflowConstants.STATUS_DRAFT)) {
+				if (_ctDisplayRendererRegistry.isWorkflowEnabled(
+						ctEntry, model) &&
+					(changeType != CTConstants.CT_CHANGE_TYPE_DELETION) &&
+					((Integer)modelAttributes.get("status") !=
+						WorkflowConstants.STATUS_DRAFT)) {
 
-						modelInfo._jsonObject.put(
-							"showWorkflow",
-							!_isWorkflowTasksEmpty(ctEntry, groupId, model));
-					}
+					modelInfo._jsonObject.put(
+						"showWorkflow",
+						!_isWorkflowTasksEmpty(ctEntry, groupId, model));
 				}
 
 				modelInfo._site = _isSite(model);
@@ -1609,6 +1863,14 @@ public class ViewChangesDisplayContext {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ViewChangesDisplayContext.class);
+
+	private static final Snapshot<Searcher> _searcherSnapshot = new Snapshot<>(
+		ViewChangesDisplayContext.class, Searcher.class);
+	private static final Snapshot<SearchRequestBuilderFactory>
+		_searchRequestBuilderFactorySnapshot = new Snapshot<>(
+			ViewChangesDisplayContext.class, SearchRequestBuilderFactory.class);
+	private static final Snapshot<Sorts> _sortsSnapshot = new Snapshot<>(
+		ViewChangesDisplayContext.class, Sorts.class);
 
 	private final long _activeCTCollectionId;
 	private final BasePersistenceRegistry _basePersistenceRegistry;

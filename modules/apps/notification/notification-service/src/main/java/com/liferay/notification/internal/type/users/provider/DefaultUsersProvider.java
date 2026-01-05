@@ -7,12 +7,12 @@ package com.liferay.notification.internal.type.users.provider;
 
 import com.liferay.notification.constants.NotificationRecipientConstants;
 import com.liferay.notification.context.NotificationContext;
-import com.liferay.notification.model.NotificationRecipient;
-import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.util.List;
@@ -20,15 +20,13 @@ import java.util.List;
 /**
  * @author Feliphe Marinho
  */
-public class DefaultUsersProvider
-	extends BaseUsersProvider implements UsersProvider {
+public class DefaultUsersProvider implements UsersProvider {
 
 	public DefaultUsersProvider(
 		PermissionCheckerFactory permissionCheckerFactory,
 		UserLocalService userLocalService) {
 
-		super(permissionCheckerFactory);
-
+		_permissionCheckerFactory = permissionCheckerFactory;
 		_userLocalService = userLocalService;
 	}
 
@@ -38,25 +36,21 @@ public class DefaultUsersProvider
 	}
 
 	@Override
-	public List<User> provide(NotificationContext notificationContext)
+	public List<User> provide(
+			NotificationContext notificationContext, List<String> values)
 		throws PortalException {
 
-		NotificationTemplate notificationTemplate =
-			notificationContext.getNotificationTemplate();
-
-		NotificationRecipient notificationRecipient =
-			notificationTemplate.getNotificationRecipient();
-
 		return TransformUtil.unsafeTransform(
-			notificationRecipient.getNotificationRecipientSettings(),
-			notificationRecipientSetting -> {
+			values,
+			value -> {
 				User user = _userLocalService.getUserByScreenName(
-					notificationRecipientSetting.getCompanyId(),
-					notificationRecipientSetting.getValue());
+					notificationContext.getCompanyId(), value);
 
-				if (!hasViewPermission(
+				if (!ModelResourcePermissionUtil.contains(
+						_permissionCheckerFactory.create(user),
+						notificationContext.getGroupId(),
 						notificationContext.getClassName(),
-						notificationContext.getClassPK(), user)) {
+						notificationContext.getClassPK(), ActionKeys.VIEW)) {
 
 					return null;
 				}
@@ -65,6 +59,7 @@ public class DefaultUsersProvider
 			});
 	}
 
+	private final PermissionCheckerFactory _permissionCheckerFactory;
 	private final UserLocalService _userLocalService;
 
 }

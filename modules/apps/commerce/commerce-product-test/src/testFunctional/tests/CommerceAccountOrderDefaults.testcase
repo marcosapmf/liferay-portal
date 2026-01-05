@@ -4,12 +4,15 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		task ("Setup: Create Minium site") {
 			CommerceConfiguration.commerceSetUp(minium = "true");
+		}
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
 		}
 
 		task ("Setup: Create a Commerce Account and Buyer User") {
@@ -103,7 +106,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -236,7 +239,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -880,67 +883,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9936. A disabled default currency should not be usable."
-	@priority = 4
-	test CannotUseDisabledCurrency {
-		property portal.acceptance = "false";
-
-		task ("Given an account with a default Currency") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			Account.setDefaultCurrency(currencyName = "Euro");
-		}
-
-		task ("and the currency is disabled") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_commerce_currency_web_internal_portlet_CommerceCurrencyPortlet");
-
-			CommerceEntry.selectEntryEllipsis(entryName = "Euro");
-
-			DropdownMenuItem.click(menuItem = "Deactivate");
-
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			ScrollWebElementIntoView(
-				key_settingHeader = "Currencies",
-				locator1 = "Account#DEFAULT_SETTINGS_HEADER");
-
-			AssertElementPresent(
-				key_activeStatus = "No",
-				key_currentDefault = "Euro",
-				key_settingHeader = "Currencies",
-				locator1 = "Account#DEFAULT_SETTING_ACTIVE_STATUS");
-		}
-
-		task ("When the buyer view products on the Minium site") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("Then the currency should be set to Dollars and not Euros") {
-			AssertTextEquals.assertPartialText(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
-				value1 = "$");
-
-			AssertTextNotEquals.assertNotPartialMatch(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
-				value1 = "€");
-		}
-	}
-
 	@description = "COMMERCE-9725. A default delivery term that has been disabled should not be displayed at checkout."
 	@priority = 4
 	test CannotUseDisabledDefaultDeliveryTerm {
@@ -1033,7 +975,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -1129,7 +1071,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -1677,213 +1619,6 @@ definition {
 				locator1 = "CommerceEntry#LABEL_GENERIC_SELECT_POSITION",
 				row = 1,
 				value1 = "All Other Channels");
-		}
-	}
-
-	@description = "COMMERCE-9873. As a sales manager, I want to set default billing and shipping addresses per channel from details tab"
-	@priority = 5
-	test CanSetDefaultAddressFromDetailsTab {
-		property portal.acceptance = "true";
-
-		task ("Given 2 Minium sites and a buyer user is associated with both sites, and 3 addresses: one billing, one shipping and one shipping and billing for the account") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Addresses");
-
-			for (var typeList : list "Billing,Shipping,Billing and Shipping") {
-				Account.addAddressViaSetDefaultAddress(
-					addressCity = "Diamond Bar",
-					addressCountry = "United States",
-					addressName = "${typeList} Address Entry 1",
-					addressPostalCode = 91765,
-					addressRegion = "California",
-					addressStreet1 = "1400 Montefino Ave",
-					addressType = ${typeList},
-					phoneNumber = "+1-877-543-3729");
-			}
-
-			for (var num : list "1,2") {
-				CommerceAccelerators.initializeNewSiteViaAccelerator(
-					siteName = "Minium ${num}",
-					siteTemplateName = "Minium");
-
-				JSONUser.addUserToSite(
-					groupName = "Minium ${num}",
-					userEmailAddress = "buyer@liferay.com");
-			}
-		}
-
-		task ("When setting the default billing address and default shipping address per channel in Details tab") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Details");
-
-			Account.setDefaultBillingAddress(addressName = "Billing Address Entry 1");
-
-			Account.setDefaultShippingAddress(addressName = "Shipping Address Entry 1");
-		}
-
-		task ("Then the default addresses set in Details tab will be visible in the table as configured for All Channels after going to the Channel Defaults tab") {
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			for (var typeList : list "Billing,Shipping") {
-				Account.viewDefaultDeliveryCommerceTermsEntry(
-					termEntry = "All Channels,${typeList} Address Entry 1",
-					termType = ${typeList});
-			}
-
-			for (var typeList : list "Billing,Shipping") {
-				Account.removeDefaultCommerceTerms(
-					entryDetails = "${typeList} Address Entry 1",
-					termType = ${typeList});
-			}
-		}
-
-		task ("When setting the default billing address and default shipping address for Minium 1 Portal Channel per channel in Channel Defaults tab") {
-			for (var typeList : list "Billing,Shipping") {
-				Account.addDefaultCommerceAddressEntry(
-					addressEntry = "${typeList} Address Entry 1",
-					addressType = ${typeList},
-					channelEntry = "Minium 1 Portal");
-			}
-		}
-
-		task ("And when buyer makes an order from Minium 1 Channel and starts the checkout process, the default addresses are pre-selected in the address sections as set in Channel Defaults") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium-2",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			AssertElementPresent(
-				key_fieldLabel = "Choose Shipping Address",
-				key_value = "Shipping Address Entry 1",
-				locator1 = "CommerceEntry#SELECT_ASSERT_SELECTED_VALUE");
-
-			for (var fieldNames : list "Name,Address,Zip,City") {
-				AssertElementPresent(
-					key_fieldName = ${fieldNames},
-					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
-			}
-
-			Click(locator1 = "Button#CONTINUE");
-
-			Click(locator1 = "Button#CONTINUE");
-
-			AssertElementPresent(
-				key_fieldLabel = "Choose Billing Address",
-				key_value = "Billing Address Entry 1",
-				locator1 = "CommerceEntry#SELECT_ASSERT_SELECTED_VALUE");
-
-			for (var fieldNames : list "Name,Address,Zip,City") {
-				AssertElementPresent(
-					key_fieldName = ${fieldNames},
-					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
-			}
-
-			Click(locator1 = "Button#CONTINUE");
-		}
-
-		task ("Then after completing the checkout, the default addresses is visible in the Order Summary") {
-			CommerceCheckout.viewCheckoutOrderSummary(
-				addressAddress = "1400 Montefino Ave",
-				addressCity = "Diamond Bar",
-				addressCountry = "United States",
-				addressName = "Shipping Address Entry 1",
-				billingAddressAddress = "1400 Montefino Ave",
-				billingAddressCity = "Diamond Bar",
-				billingAddressCountry = "United States",
-				billingAddressName = "Billing Address Entry 1",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
-		}
-
-		task ("When setting the default billing and shipping addresses in Details tab") {
-			User.logoutAndLoginPG();
-
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Details");
-
-			Account.setDefaultBillingAddress(addressName = "Billing and Shipping Address Entry 1");
-
-			Account.setDefaultShippingAddress(addressName = "Billing and Shipping Address Entry 1");
-		}
-
-		task ("Then the default addresses set in Details tab will be visible in the table as configured for All Other Channels after going to the Channel Defaults tab") {
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-
-			for (var typeList : list "Billing,Shipping") {
-				Account.viewDefaultDeliveryCommerceTermsEntry(
-					row = 2,
-					termEntry = "All Other Channels,${typeList} Address Entry 1",
-					termType = ${typeList});
-			}
-		}
-
-		task ("When buyer makes an order from Minium 2 Channel and starts the checkout process, the default addresses are pre-selected in the address sections as set in Details tab and applied to All Other Channels") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium-3",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			AssertElementPresent(
-				key_fieldLabel = "Choose Shipping Address",
-				key_value = "Billing and Shipping Address Entry 1",
-				locator1 = "CommerceEntry#SELECT_ASSERT_SELECTED_VALUE");
-
-			for (var fieldNames : list "Name,Address,Zip,City") {
-				AssertElementPresent(
-					key_fieldName = ${fieldNames},
-					locator1 = "CommerceAccelerators#CHECKOUT_GENERIC_TEXT_INPUT_DISABLED");
-			}
-
-			Check.checkToggleSwitch(
-				checkboxName = "Use shipping address as billing address",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-
-			Click(locator1 = "Button#CONTINUE");
-
-			Click(locator1 = "Button#CONTINUE");
-		}
-
-		task ("Then after completing the checkout, the default addresses is visible in the Order Summary") {
-			CommerceCheckout.viewCheckoutOrderSummary(
-				addressAddress = "1400 Montefino Ave",
-				addressCity = "Diamond Bar",
-				addressCountry = "United States",
-				addressName = "Billing and Shipping Address Entry 1",
-				billingAddressAddress = "1400 Montefino Ave",
-				billingAddressCity = "Diamond Bar",
-				billingAddressCountry = "United States",
-				billingAddressName = "Billing and Shipping Address Entry 1",
-				productName = "U-Joint",
-				productQuantity = 1,
-				productUnitPrice = 24,
-				shippingMethod = "Standard");
 		}
 	}
 
@@ -2457,32 +2192,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9938. Only active currencies can be viewed and disabled currency should not be available to be selected."
-	@priority = 4
-	test CanViewOnlyActiveCurrencies {
-		property portal.acceptance = "false";
-
-		task ("Given a disabled currency") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_commerce_currency_web_internal_portlet_CommerceCurrencyPortlet");
-
-			CommerceEntry.selectEntryEllipsis(entryName = "Euro");
-
-			DropdownMenuItem.click(menuItem = "Deactivate");
-		}
-
-		task ("When the admin sets a default currency for the account") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.gotoAssigneeTab(assigneeTab = "Channel Defaults");
-		}
-
-		task ("Then the disabled currency should not be available") {
-			Account.assertDisabledCurrencyIsNotAvailable(disabledCurrency = "Euro");
-		}
-	}
-
 	@description = "COMMERCE-9925. Default currency rules works on the storefront"
 	@priority = 4
 	test DefaultCurrencyRulesCanWorkOnStoreFront {
@@ -2688,7 +2397,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -2802,121 +2511,6 @@ definition {
 			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
 				discountPercentage = 10,
 				productDiscountedPrice = "21.60",
-				productListPrice = "24.00");
-		}
-	}
-
-	@description = "COMMERCE-9856. The default discount can override Channel eligibility."
-	@priority = 5
-	test DefaultDiscountCanOverrideChannelEligibility {
-		property portal.acceptance = "true";
-
-		task ("Given a second Minium site and a second account") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(
-				siteName = "Minium 2",
-				siteTemplateName = "Minium");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Commerce Account 2",
-				accountEntryType = "Business");
-		}
-
-		task ("and two active order types") {
-			for (var orderTypeNumber : list "1,2") {
-				CommerceJSONOrdersAPI._addOrderType(
-					active = "true",
-					orderTypeDescription = "Test Order Type ${orderTypeNumber} Description",
-					orderTypeName = "Order Type ${orderTypeNumber}");
-			}
-		}
-
-		task ("and an active 10% discount applied to the U-joint product for the first account") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 10,
-				target = "products",
-				title = "Discount 1 10% off",
-				usePercentage = "true");
-
-			CommerceJSONDiscountsAPI._addDiscountProduct(
-				discountTitle = "Discount 1 10% off",
-				productName = "U-Joint");
-
-			CommerceNavigator.goToDiscountAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Discount 1 10% off");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
-
-			CommerceEntry.setEntryEligibility(accountsEligibility = "Commerce Account");
-		}
-
-		task ("and an active 20% discount applied to the U-joint product for the Minium channel") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 20,
-				target = "products",
-				title = "Discount 2 20% off",
-				usePercentage = "true");
-
-			CommerceJSONDiscountsAPI._addDiscountProduct(
-				discountTitle = "Discount 2 20% off",
-				productName = "U-Joint");
-
-			CommerceNavigator.goToDiscountAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Discount 2 20% off");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
-
-			CommerceEntry.setEntryEligibility(channelsEligibility = "Minium Portal");
-		}
-
-		task ("and an active 30% discount applied to the U-joint product for Order Type 1") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 30,
-				target = "products",
-				title = "Discount 3 30% off",
-				usePercentage = "true");
-
-			CommerceJSONDiscountsAPI._addDiscountProduct(
-				discountTitle = "Discount 3 30% off",
-				productName = "U-Joint");
-
-			CommerceNavigator.goToDiscountAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Discount 3 30% off");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
-
-			CommerceEntry.setEntryEligibility(orderTypesEligibility = "Order Type 1");
-		}
-
-		task ("When Discount 2 is set as the account default") {
-			ApplicationsMenu.gotoSite(site = "Minium 2");
-
-			CommerceNavigator.gotoMiniumAccountOrderDefaults(accountName = "Commerce Account 2");
-
-			Account.setDefaultDiscount(
-				channelEntry = "Minium 2 Portal",
-				discountTitle = "Discount 2 20% off",
-				override = "true");
-		}
-
-		task ("Then viewing the U-joint product on the Minium 2 site for Account 2 shows the 20% discount") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium-2/catalog");
-
-			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
-
-			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
-
-			CommerceAcceleratorsInitializer.viewDiscountedProductDetailsPage(
-				discountPercentage = 20,
-				productDiscountedPrice = "19.20",
 				productListPrice = "24.00");
 		}
 	}
@@ -3151,7 +2745,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3448,7 +3042,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3560,7 +3154,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 

@@ -87,7 +87,7 @@ public class CommerceOrderSystemObjectDefinitionManagerTest {
 		_commerceOrderLocalService.deleteCommerceOrders(
 			_commerceChannel.getGroupId());
 
-		CentralizedThreadLocal.clearShortLivedThreadLocals();
+		CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
 	}
 
 	@Test
@@ -151,6 +151,9 @@ public class CommerceOrderSystemObjectDefinitionManagerTest {
 		Assert.assertEquals(
 			String.valueOf(commerceOrder.getCommerceOrderTypeId()),
 			variables.get("orderTypeId"));
+		Assert.assertEquals(
+			String.valueOf(commerceOrder.getCommercePaymentMethodKey()),
+			variables.get("paymentMethod"));
 		Assert.assertEquals(
 			commerceOrder.getShippingAmount(), variables.get("shippingAmount"));
 		Assert.assertEquals(

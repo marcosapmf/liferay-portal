@@ -136,7 +136,11 @@ public class OAuthClientEntryPersistenceTest {
 
 		newOAuthClientEntry.setClientId(RandomTestUtil.randomString());
 
+		newOAuthClientEntry.setCustomClaimsJSON(RandomTestUtil.randomString());
+
 		newOAuthClientEntry.setInfoJSON(RandomTestUtil.randomString());
+
+		newOAuthClientEntry.setMetadataCacheTime(RandomTestUtil.nextLong());
 
 		newOAuthClientEntry.setOIDCUserInfoMapperJSON(
 			RandomTestUtil.randomString());
@@ -180,8 +184,14 @@ public class OAuthClientEntryPersistenceTest {
 			existingOAuthClientEntry.getClientId(),
 			newOAuthClientEntry.getClientId());
 		Assert.assertEquals(
+			existingOAuthClientEntry.getCustomClaimsJSON(),
+			newOAuthClientEntry.getCustomClaimsJSON());
+		Assert.assertEquals(
 			existingOAuthClientEntry.getInfoJSON(),
 			newOAuthClientEntry.getInfoJSON());
+		Assert.assertEquals(
+			existingOAuthClientEntry.getMetadataCacheTime(),
+			newOAuthClientEntry.getMetadataCacheTime());
 		Assert.assertEquals(
 			existingOAuthClientEntry.getOIDCUserInfoMapperJSON(),
 			newOAuthClientEntry.getOIDCUserInfoMapperJSON());
@@ -251,7 +261,8 @@ public class OAuthClientEntryPersistenceTest {
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "authRequestParametersJSON", true,
 			"authServerWellKnownURI", true, "clientId", true,
-			"oidcUserInfoMapperJSON", true, "tokenRequestParametersJSON", true);
+			"metadataCacheTime", true, "oidcUserInfoMapperJSON", true,
+			"tokenRequestParametersJSON", true);
 	}
 
 	@Test
@@ -565,7 +576,11 @@ public class OAuthClientEntryPersistenceTest {
 
 		oAuthClientEntry.setClientId(RandomTestUtil.randomString());
 
+		oAuthClientEntry.setCustomClaimsJSON(RandomTestUtil.randomString());
+
 		oAuthClientEntry.setInfoJSON(RandomTestUtil.randomString());
+
+		oAuthClientEntry.setMetadataCacheTime(RandomTestUtil.nextLong());
 
 		oAuthClientEntry.setOIDCUserInfoMapperJSON(
 			RandomTestUtil.randomString());

@@ -1,22 +1,29 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.116.0",
-		"@clayui/drop-down": "3.118.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/layout": "3.111.0",
-		"@clayui/link": "3.111.0",
-		"@clayui/list": "3.118.0",
-		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/panel": "3.116.0",
-		"@clayui/toolbar": "3.116.0",
+		"@ckeditor/ckeditor5-source-editing": "46.0.3",
+		"@clayui/alert": "3.148.0",
+		"@clayui/button": "3.156.0",
+		"@clayui/drop-down": "3.156.0",
+		"@clayui/form": "3.156.0",
+		"@clayui/icon": "3.144.1",
+		"@clayui/layout": "3.144.1",
+		"@clayui/link": "3.144.1",
+		"@clayui/list": "3.156.0",
+		"@clayui/loading-indicator": "3.144.1",
+		"@clayui/panel": "3.156.0",
+		"@clayui/toolbar": "3.156.0",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
 		"frontend-editor-ckeditor-web": "*",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
-		"react": "16.12.0"
+		"react": "18.2.0"
+	},
+	"jest": {
+		"setupFiles": [
+			"<rootDir>/jest-setup.config.js"
+		]
 	},
 	"main": "js/index.js",
 	"name": "translation-web",
@@ -26,5 +33,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "2.0.105"
+	"version": "2.0.128"
 }

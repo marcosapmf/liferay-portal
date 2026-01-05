@@ -12,10 +12,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 
-import java.io.IOException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,8 +29,8 @@ import org.osgi.service.component.annotations.Reference;
 public class AuthRedirectAction extends BaseSamlStrutsAction {
 
 	@Override
-	public boolean isEnabled() {
-		if (_samlProviderConfigurationHelper.isRoleSp()) {
+	public boolean isEnabled(HttpServletRequest httpServletRequest) {
+		if (!_samlProviderConfigurationHelper.isRoleIdp()) {
 			return _samlProviderConfigurationHelper.isEnabled();
 		}
 

@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.MissingFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
@@ -44,13 +43,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.filter.FilterBuilders;
 import com.liferay.portal.search.filter.TermsSetFilterBuilder;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -138,12 +137,11 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 
 			termsSetFilterBuilder.setValues(values);
 
-			Filter termFilter = new TermFilter(
-				"commerceAccountGroupIds_required_matches", "0");
-
 			BooleanFilter fieldBooleanFilter = new BooleanFilter();
 
-			fieldBooleanFilter.add(termFilter, BooleanClauseOccur.SHOULD);
+			fieldBooleanFilter.add(
+				new TermFilter("commerceAccountGroupIds_required_matches", "0"),
+				BooleanClauseOccur.SHOULD);
 			fieldBooleanFilter.add(
 				termsSetFilterBuilder.build(), BooleanClauseOccur.SHOULD);
 
@@ -223,7 +221,7 @@ public class CommercePriceListIndexer extends BaseIndexer<CommercePriceList> {
 		document.addText(Field.USER_NAME, commercePriceList.getUserName());
 		document.addKeyword(
 			FIELD_EXTERNAL_REFERENCE_CODE,
-			commercePriceList.getExternalReferenceCode());
+			commercePriceList.getExternalReferenceCode(), true);
 
 		long commerceCatalogId = _getCatalogId(commercePriceList);
 

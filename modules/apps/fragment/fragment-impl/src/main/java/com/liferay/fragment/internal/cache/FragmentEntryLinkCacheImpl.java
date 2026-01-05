@@ -14,6 +14,8 @@ import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.util.Locale;
 import java.util.Set;
@@ -62,9 +64,21 @@ public class FragmentEntryLinkCacheImpl implements FragmentEntryLinkCache {
 
 	@Override
 	public void removeFragmentEntryLinkCache(long fragmentEntryLinkId) {
-		removeFragmentEntryLinkCache(
+		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentEntryLinkId));
+				fragmentEntryLinkId);
+
+		if (fragmentEntryLink == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"No fragment entry link exists with the fragment entry " +
+						"link ID " + fragmentEntryLinkId);
+			}
+
+			return;
+		}
+
+		removeFragmentEntryLinkCache(fragmentEntryLink);
 	}
 
 	@Activate
@@ -91,6 +105,9 @@ public class FragmentEntryLinkCacheImpl implements FragmentEntryLinkCache {
 
 		return sb.toString();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryLinkCacheImpl.class);
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;

@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -53,7 +51,7 @@ public class SEOSettingsMapping implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(SEOSettingsMapping.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the description"
 	)
 	public String getDescriptionMappingFieldKey() {
@@ -102,7 +100,7 @@ public class SEOSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionMappingFieldKeySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Field of the content type that will be used as the HTML title"
 	)
 	public String getHtmlTitleMappingFieldKey() {
@@ -148,7 +146,7 @@ public class SEOSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _htmlTitleMappingFieldKeySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Robots of the page that renders the Display Page Template"
 	)
 	public String getRobots() {
@@ -193,7 +191,7 @@ public class SEOSettingsMapping implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _robotsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Internationalized field of the robots of the page that renders the Display Page Template"
 	)
 	@Valid
@@ -332,8 +330,8 @@ public class SEOSettingsMapping implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.content.dto.v1_0.SEOSettingsMapping",
 		name = "x-class-name"
 	)

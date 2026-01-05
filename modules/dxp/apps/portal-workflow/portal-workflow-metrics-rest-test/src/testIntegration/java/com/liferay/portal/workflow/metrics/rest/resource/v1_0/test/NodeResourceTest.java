@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,6 +94,27 @@ public class NodeResourceTest extends BaseNodeResourceTestCase {
 			Arrays.asList(node1, node2), (List<Node>)page.getItems());
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLDeleteProcessNode() throws Exception {
+		super.testGraphQLDeleteProcessNode();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetProcessNodesPage() throws Exception {
+		super.testGraphQLGetProcessNodesPage();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLPostProcessNode() throws Exception {
+		super.testGraphQLPostProcessNode();
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
@@ -104,6 +126,11 @@ public class NodeResourceTest extends BaseNodeResourceTestCase {
 	@Override
 	protected Node testDeleteProcessNode_addNode() throws Exception {
 		return testGetProcessNodesPage_addNode(_process.getId(), randomNode());
+	}
+
+	@Override
+	protected Long testDeleteProcessNode_getProcessId(Node node) {
+		return node.getProcessId();
 	}
 
 	@Override

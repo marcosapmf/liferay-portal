@@ -131,9 +131,11 @@ export default function SiteLanguageConfiguration({
 						{Liferay.Language.get('available-languages')}
 					</div>
 
-					{initialCurrentLanguages
-						.map((language) => language.label)
-						.join(', ')}
+					<p>
+						{initialCurrentLanguages
+							.map((language) => language.label)
+							.join(', ')}
+					</p>
 				</div>
 			) : (
 				<fieldset>
@@ -201,8 +203,9 @@ export default function SiteLanguageConfiguration({
 						}}
 						onItemsChange={handleItemsChange}
 						right={{
-							label: Liferay.Language.get('current'),
+							label: Liferay.Language.get('in-use'),
 						}}
+						size={10}
 					/>
 				</fieldset>
 			)}

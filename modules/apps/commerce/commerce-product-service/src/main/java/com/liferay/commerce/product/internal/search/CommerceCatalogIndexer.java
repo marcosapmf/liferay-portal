@@ -25,10 +25,10 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Locale;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -109,7 +109,7 @@ public class CommerceCatalogIndexer extends BaseIndexer<CommerceCatalog> {
 			CPField.CATALOG_DEFAULT_LANGUAGE_ID,
 			commerceCatalog.getCatalogDefaultLanguageId());
 		document.addKeyword(Field.GROUP_ID, commerceCatalog.getGroupId());
-		document.addKeyword(Field.NAME, commerceCatalog.getName());
+		document.addKeyword(Field.NAME, commerceCatalog.getName(), true);
 		document.addKeyword(
 			"accountEntryId", commerceCatalog.getAccountEntryId());
 

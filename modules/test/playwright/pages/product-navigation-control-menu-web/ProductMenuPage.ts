@@ -8,15 +8,21 @@ import {Locator, Page} from '@playwright/test';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 
 export class ProductMenuPage {
+	readonly backButton: Locator;
+	readonly blogsButton: Locator;
 	readonly closeProductMenuButton: Locator;
 	readonly configurationButton: Locator;
 	readonly contentAndDataButton: Locator;
 	readonly exportButton: Locator;
 	readonly formsButton: Locator;
 	readonly importButton: Locator;
+	readonly membershipsButton: Locator;
+	readonly messageBoardsButton: Locator;
+	readonly segmentsButton: Locator;
 	readonly openProductMenuButton: Locator;
 	readonly page: Page;
 	readonly pagesButton: Locator;
+	readonly peopleButton: Locator;
 	readonly productMenuHeader: Locator;
 	readonly publishingButton: Locator;
 	readonly siteBuilderButton: Locator;
@@ -25,6 +31,10 @@ export class ProductMenuPage {
 	readonly webContentButton: Locator;
 
 	constructor(page: Page) {
+		this.backButton = page.getByRole('link', {name: 'Back'});
+		this.blogsButton = page.getByRole('menuitem', {
+			name: 'Blogs',
+		});
 		this.configurationButton = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Configuration',
@@ -42,8 +52,18 @@ export class ProductMenuPage {
 		this.importButton = page.getByRole('menuitem', {
 			name: 'Import',
 		});
+		this.membershipsButton = page.getByRole('menuitem', {
+			name: 'Memberships',
+		});
+		this.messageBoardsButton = page.getByRole('menuitem', {
+			name: 'Message Boards',
+		});
+		this.segmentsButton = page.getByRole('menuitem', {
+			name: 'Segments',
+		});
 		this.page = page;
 		this.pagesButton = page.getByRole('menuitem', {name: 'Pages'});
+		this.peopleButton = page.getByRole('menuitem', {name: 'People'});
 		this.openProductMenuButton = page.getByLabel('Open Product Menu');
 		this.closeProductMenuButton = page.getByLabel('Close Product Menu');
 		this.productMenuHeader = page.locator(
@@ -83,14 +103,65 @@ export class ProductMenuPage {
 		return await this.page.getByText(templateName).getAttribute('href');
 	}
 
+	async goToBlogs() {
+		await this.openProductMenuIfClosed();
+
+		await this.contentAndDataButton.click();
+		await this.blogsButton.click();
+	}
+
 	async goToForms() {
 		await this.contentAndDataButton.click();
 		await this.formsButton.click();
 	}
 
+	async goToMemberships() {
+		await this.peopleButton.click();
+		await this.membershipsButton.click();
+	}
+
+	async goToMessageBoards() {
+		await this.openProductMenuIfClosed();
+
+		await this.contentAndDataButton.click();
+		await this.messageBoardsButton.click();
+	}
+
 	async goToPages() {
-		await this.siteBuilderButton.click();
-		await this.pagesButton.click();
+		await this.openProductMenuIfClosed();
+
+		const pagesLink = await this.page
+			.locator('#productMenuSidebar')
+			.getByRole('menuitem', {
+				exact: true,
+				includeHidden: true,
+				name: 'Pages',
+			})
+			.evaluate((element) => element.getAttribute('href'));
+
+		const waitForPagesReady = async () => {
+			await this.page.waitForSelector('form[id*="GroupPagesPortlet"]', {
+				state: 'visible',
+				timeout: 2000,
+			});
+		};
+
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			await this.page.goto(pagesLink, {
+				waitUntil: 'domcontentloaded',
+			});
+
+			try {
+				await waitForPagesReady();
+
+				return;
+			}
+			catch (error) {
+				if (attempt === 3) {
+					throw error;
+				}
+			}
+		}
 	}
 
 	async goToPublishingExport() {
@@ -103,14 +174,24 @@ export class ProductMenuPage {
 		await this.importButton.click();
 	}
 
+	async goToPublishingStaging() {
+		await this.publishingButton.click();
+		await this.stagingMenuItem.click();
+	}
+
+	async goToSegments() {
+		await this.peopleButton.click();
+		await this.segmentsButton.click();
+	}
+
 	async goToSiteSettings() {
 		await this.configurationButton.click();
 		await this.siteSettingsButton.click();
 	}
 
-	async goToTeams(siteUrl?: string) {
+	async goToTeams(siteURL?: string) {
 		await this.page.goto(
-			`/group${siteUrl || '/guest'}${PORTLET_URLS.teams}`
+			`/group${siteURL || '/guest'}${PORTLET_URLS.teams}`
 		);
 	}
 

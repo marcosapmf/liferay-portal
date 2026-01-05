@@ -174,14 +174,14 @@ public abstract class BaseUnnecessaryStatementCheck extends BaseCheck {
 			return;
 		}
 
-		List<DetailAST> methodCallDetailASTList = getMethodCalls(
+		List<DetailAST> methodCallDetailASTs = getMethodCalls(
 			assignDetailAST, "toString");
 
-		if (methodCallDetailASTList.size() != 1) {
+		if (methodCallDetailASTs.size() != 1) {
 			return;
 		}
 
-		DetailAST methodCallDetailAST = methodCallDetailASTList.get(0);
+		DetailAST methodCallDetailAST = methodCallDetailASTs.get(0);
 
 		DetailAST parentDetailAST = methodCallDetailAST.getParent();
 
@@ -204,9 +204,14 @@ public abstract class BaseUnnecessaryStatementCheck extends BaseCheck {
 
 		String methodName = getMethodName(methodCallDetailAST);
 
-		if (!methodName.equals("toString") ||
-			(getParameterDetailAST(methodCallDetailAST) != null)) {
+		if (!methodName.equals("toString")) {
+			return;
+		}
 
+		List<DetailAST> parameterExprDetailASTs = getParameterExprDetailASTs(
+			methodCallDetailAST);
+
+		if (!parameterExprDetailASTs.isEmpty()) {
 			return;
 		}
 
@@ -224,10 +229,10 @@ public abstract class BaseUnnecessaryStatementCheck extends BaseCheck {
 			return;
 		}
 
-		List<DetailAST> variableCallerDetailASTList =
-			getVariableCallerDetailASTList(parentDetailAST, variableName);
+		List<DetailAST> variableCallerDetailASTs = getVariableCallerDetailASTs(
+			parentDetailAST, variableName);
 
-		if (variableCallerDetailASTList.size() != 1) {
+		if (variableCallerDetailASTs.size() != 1) {
 			return;
 		}
 

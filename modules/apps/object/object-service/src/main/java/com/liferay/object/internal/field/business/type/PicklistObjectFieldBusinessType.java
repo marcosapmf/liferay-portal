@@ -7,7 +7,6 @@ package com.liferay.object.internal.field.business.type;
 
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
-import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
@@ -21,7 +20,6 @@ import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectState;
 import com.liferay.object.model.ObjectStateFlow;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectStateFlowLocalService;
 import com.liferay.object.service.ObjectStateLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -32,9 +30,11 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = ObjectFieldBusinessType.class
 )
 public class PicklistObjectFieldBusinessType
-	implements ObjectFieldBusinessType {
+	extends BaseObjectFieldBusinessType {
 
 	@Override
 	public Set<String> getAllowedObjectFieldSettingsNames() {
@@ -77,8 +77,42 @@ public class PicklistObjectFieldBusinessType
 	}
 
 	@Override
+	public Object getDisplayContextValue(
+			ObjectField objectField, long userId, Map<String, Object> values)
+		throws PortalException {
+
+		if (objectField.isLocalized()) {
+			return getLocalizedValues(objectField, userId, values);
+		}
+
+		return super.getDisplayContextValue(objectField, userId, values);
+	}
+
+	@Override
 	public String getLabel(Locale locale) {
 		return _language.get(locale, "picklist");
+	}
+
+	@Override
+	public Map<String, Object> getLocalizedValues(
+			ObjectField objectField, Long userId, Map<String, Object> values)
+		throws PortalException {
+
+		Map<String, Object> localizedValues = super.getLocalizedValues(
+			objectField, userId, values);
+
+		if (localizedValues == null) {
+			return null;
+		}
+
+		for (Map.Entry<String, Object> entry : localizedValues.entrySet()) {
+			localizedValues.put(
+				entry.getKey(),
+				_getValue(
+					objectField.getName(), entry.getValue(), new HashMap<>()));
+		}
+
+		return localizedValues;
 	}
 
 	@Override
@@ -93,22 +127,12 @@ public class PicklistObjectFieldBusinessType
 		throws PortalException {
 
 		return HashMapBuilder.<String, Object>put(
+			"listTypeDefinitionId", objectField.getListTypeDefinitionId()
+		).put(
 			"options",
 			_getDDMFormFieldOptions(objectField, objectFieldRenderingContext)
-		).put(
-			"predefinedValue",
-			() -> {
-				LocalizedValue localizedValue = new LocalizedValue(
-					objectFieldRenderingContext.getLocale());
-
-				localizedValue.addString(
-					objectFieldRenderingContext.getLocale(),
-					ObjectFieldSettingUtil.getDefaultValueAsString(
-						null, objectField.getObjectFieldId(),
-						_objectFieldSettingLocalService, null));
-
-				return localizedValue;
-			}
+		).putAll(
+			super.getProperties(objectField, objectFieldRenderingContext)
 		).build();
 	}
 
@@ -132,24 +156,30 @@ public class PicklistObjectFieldBusinessType
 
 	@Override
 	public Object getValue(
-			ObjectField objectField, long userId, Map<String, Object> values)
+			Long groupId, ObjectField objectField, long userId,
+			Map<String, Object> values)
 		throws PortalException {
 
-		Object value = values.get(objectField.getName());
+		return _getValue(
+			objectField.getName(),
+			super.getValue(groupId, objectField, userId, values), values);
+	}
 
-		if (value instanceof ListEntry) {
-			ListEntry listEntry = (ListEntry)value;
+	@Override
+	public boolean isAllowedObjectFieldSettingValue(
+		String objectFieldSettingName, String objectFieldSettingValue) {
 
-			values.put(objectField.getName(), listEntry.getKey());
+		if (super.isAllowedObjectFieldSettingValue(
+				objectFieldSettingName, objectFieldSettingValue) ||
+			(objectFieldSettingName.equals(
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE) &&
+			 objectFieldSettingValue.equals(
+				 ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER))) {
+
+			return true;
 		}
-		else if (value instanceof Map) {
-			values.put(
-				objectField.getName(),
-				MapUtil.getString((Map<String, String>)value, "key"));
-		}
 
-		return ObjectFieldBusinessType.super.getValue(
-			objectField, userId, values);
+		return false;
 	}
 
 	@Override
@@ -207,7 +237,7 @@ public class PicklistObjectFieldBusinessType
 			return;
 		}
 
-		ObjectFieldBusinessType.super.validateObjectFieldSettingsDefaultValue(
+		super.validateObjectFieldSettingsDefaultValue(
 			objectField, objectFieldSettingsValuesMap);
 
 		String defaultValueType = objectFieldSettingsValuesMap.get(
@@ -250,18 +280,19 @@ public class PicklistObjectFieldBusinessType
 			ObjectFieldRenderingContext objectFieldRenderingContext)
 		throws PortalException {
 
-		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions(
+			objectFieldRenderingContext.getLocale());
 
 		for (ListTypeEntry listTypeEntry :
 				_getListTypeEntries(objectField, objectFieldRenderingContext)) {
 
-			ddmFormFieldOptions.addOptionLabel(
-				listTypeEntry.getKey(), objectFieldRenderingContext.getLocale(),
-				GetterUtil.getString(
-					listTypeEntry.getName(
-						objectFieldRenderingContext.getLocale()),
-					listTypeEntry.getName(
-						listTypeEntry.getDefaultLanguageId())));
+			Map<Locale, String> nameMap = listTypeEntry.getNameMap();
+
+			for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
+				ddmFormFieldOptions.addOptionLabel(
+					listTypeEntry.getKey(), entry.getKey(),
+					GetterUtil.getString(entry.getValue()));
+			}
 		}
 
 		return ddmFormFieldOptions;
@@ -277,16 +308,15 @@ public class PicklistObjectFieldBusinessType
 				objectField.getListTypeDefinitionId());
 		}
 
-		String listEntryKey = ObjectFieldSettingUtil.getDefaultValueAsString(
-			null, objectField.getObjectFieldId(),
-			_objectFieldSettingLocalService, null);
+		String listEntryKey = String.valueOf(
+			ObjectFieldSettingUtil.getDefaultValue(null, objectField, null));
 
 		if (MapUtil.isNotEmpty(objectFieldRenderingContext.getProperties())) {
 			ListEntry listEntry =
 				(ListEntry)objectFieldRenderingContext.getProperty(
 					objectField.getName());
 
-			if (listEntry == null) {
+			if ((listEntry == null) || Validator.isNull(listEntry.getKey())) {
 				return _listTypeEntryLocalService.getListTypeEntries(
 					objectField.getListTypeDefinitionId());
 			}
@@ -324,14 +354,32 @@ public class PicklistObjectFieldBusinessType
 		return listTypeEntries;
 	}
 
+	private Object _getValue(
+		String objectFieldName, Object value, Map<String, Object> values) {
+
+		if (value instanceof ListEntry) {
+			ListEntry listEntry = (ListEntry)value;
+
+			values.put(objectFieldName, listEntry.getKey());
+
+			return listEntry.getKey();
+		}
+		else if (value instanceof Map) {
+			String key = MapUtil.getString((Map<String, String>)value, "key");
+
+			values.put(objectFieldName, key);
+
+			return key;
+		}
+
+		return value;
+	}
+
 	@Reference
 	private Language _language;
 
 	@Reference
 	private ListTypeEntryLocalService _listTypeEntryLocalService;
-
-	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
 	private ObjectStateFlowLocalService _objectStateFlowLocalService;

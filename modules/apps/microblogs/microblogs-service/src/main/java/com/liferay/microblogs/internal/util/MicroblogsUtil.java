@@ -9,6 +9,7 @@ import com.liferay.microblogs.constants.MicroblogsEntryConstants;
 import com.liferay.microblogs.constants.MicroblogsPortletKeys;
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.service.MicroblogsEntryLocalServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -34,18 +35,17 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.UserFirstNameComparator;
 import com.liferay.social.kernel.model.SocialRelationConstants;
-import com.liferay.subscription.model.Subscription;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+import jakarta.portlet.WindowStateException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-import javax.portlet.WindowStateException;
 
 /**
  * @author Jonathan Lee
@@ -213,22 +213,19 @@ public class MicroblogsUtil {
 	public static List<Long> getSubscriberUserIds(
 		MicroblogsEntry microblogsEntry) {
 
-		List<Long> receiverUserIds = new ArrayList<>();
-
-		List<Subscription> subscriptions =
+		return TransformUtil.transform(
 			SubscriptionLocalServiceUtil.getSubscriptions(
 				microblogsEntry.getCompanyId(), MicroblogsEntry.class.getName(),
-				getRootMicroblogsEntryId(microblogsEntry));
+				getRootMicroblogsEntryId(microblogsEntry)),
+			subscription -> {
+				long userId = subscription.getUserId();
 
-		for (Subscription subscription : subscriptions) {
-			if (microblogsEntry.getUserId() == subscription.getUserId()) {
-				continue;
-			}
+				if (microblogsEntry.getUserId() == userId) {
+					return null;
+				}
 
-			receiverUserIds.add(subscription.getUserId());
-		}
-
-		return receiverUserIds;
+				return userId;
+			});
 	}
 
 	public static boolean hasReplied(long parentMicroblogsEntryId, long userId)

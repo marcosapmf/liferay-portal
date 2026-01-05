@@ -5,7 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class UserPersonalSitePage {
 	readonly addWidgetButton: Locator;
@@ -13,6 +13,7 @@ export class UserPersonalSitePage {
 	readonly languageSelectorMenuItem: Locator;
 	readonly languageSelectorOptionsMenu: Locator;
 	readonly myDashboardMenuItem: Locator;
+	readonly myProfileMenuItem: Locator;
 	readonly page: Page;
 	readonly removeMenuItem: Locator;
 	readonly searchBar: Locator;
@@ -27,6 +28,9 @@ export class UserPersonalSitePage {
 			.getByRole('button', {exact: true, name: 'Add Content'});
 		this.myDashboardMenuItem = page.getByRole('menuitem', {
 			name: 'My Dashboard',
+		});
+		this.myProfileMenuItem = page.getByRole('menuitem', {
+			name: 'MY Profile',
 		});
 		this.page = page;
 		this.searchBar = page
@@ -43,7 +47,7 @@ export class UserPersonalSitePage {
 			await this.page.keyboard.press('Enter');
 			await this.languageSelectorMenuItem.waitFor({state: 'visible'});
 			await this.languageSelectorMenuItem.click();
-			await waitForSuccessAlert(
+			await waitForAlert(
 				this.page,
 				'Success:The application was added to the page.'
 			);

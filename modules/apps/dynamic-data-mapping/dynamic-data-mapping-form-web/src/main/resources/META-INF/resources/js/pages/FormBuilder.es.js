@@ -158,10 +158,12 @@ export default function FormBuilder() {
 	}, []);
 
 	useEffect(() => {
-		if (session && !session.get('autoExtend')) {
-			Liferay.Session.set('autoExtend', true);
+		if (session && !session.autoExtend) {
+			Liferay.Session.autoExtend = true;
 
-			return () => Liferay.Session.set('autoExtend', false);
+			return () => {
+				Liferay.Session.autoExtend = false;
+			};
 		}
 	}, [session]);
 

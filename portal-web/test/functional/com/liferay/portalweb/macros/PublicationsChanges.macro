@@ -121,9 +121,7 @@ definition {
 
 		WaitForElementPresent(locator1 = "PublicationsChanges#CHANGE_TYPE_BUTTON");
 
-		Click(
-			key_name = "Filter",
-			locator1 = "PublicationsChanges#SORT_BUTTON");
+		Click(locator1 = "PublicationsChanges#FILTER_BUTTON");
 
 		MenuItem.clickNoError(menuItem = ${menuItem});
 
@@ -158,6 +156,8 @@ definition {
 		Click(
 			key_menuItem = "Move Changes",
 			locator1 = "PublicationsChanges#REVIEW_CHANGE_DROPDOWN_ITEM");
+
+		Check.checkToggleSwitch(locator1 = "Publications#SHOW_HIDEABLE_TOGGLE_SWITCH");
 
 		Select(
 			ariaLabel = "Publication",

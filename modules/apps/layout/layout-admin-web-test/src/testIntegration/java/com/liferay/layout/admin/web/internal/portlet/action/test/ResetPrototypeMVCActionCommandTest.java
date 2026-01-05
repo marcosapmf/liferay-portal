@@ -11,7 +11,6 @@ import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
-import com.liferay.fragment.service.FragmentEntryLinkService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
@@ -36,6 +35,7 @@ import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.portlet.MockActionResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -51,17 +51,16 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionResponse;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -114,21 +113,19 @@ public class ResetPrototypeMVCActionCommandTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		Assert.assertNotNull(draftLayout);
-
 		FragmentEntry fragmentEntry = _addFragmentEntry();
 
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			null, fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
-			fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+			fragmentEntry.getExternalReferenceCode(),
+			fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), draftLayout,
 			fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(), null,
 			0,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				draftLayout.getPlid()));
 
-		ContentLayoutTestUtil.publishLayout(
-			_layoutLocalService.getLayout(draftLayout.getPlid()), layout);
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 
 		_propagateChanges(_group);
 
@@ -141,14 +138,15 @@ public class ResetPrototypeMVCActionCommandTest {
 		groupPublishedLayout = _removeFragmentEntryPublishAndGetLayout(
 			groupPublishedLayout);
 
-		MergeLayoutPrototypesThreadLocal.setSkipMerge(false);
-
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "doProcessAction",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			_getMockLiferayPortletActionRequest(
 				_getThemeDisplay(groupPublishedLayout)),
 			new MockActionResponse());
+
+		MergeLayoutPrototypesThreadLocal.clearMergeComplete();
+		MergeLayoutPrototypesThreadLocal.setSkipMerge(false);
 
 		groupPublishedLayout = _layoutLocalService.getLayout(
 			groupPublishedLayout.getPlid());
@@ -182,7 +180,7 @@ public class ResetPrototypeMVCActionCommandTest {
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			"Fragment Entry HTML", StringPool.BLANK, false, null, null, 0,
-			false, FragmentConstants.TYPE_COMPONENT, null,
+			false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 
@@ -269,12 +267,10 @@ public class ResetPrototypeMVCActionCommandTest {
 
 		Assert.assertNotNull(draftLayout);
 
-		long segmentsExperienceId =
-			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				draftLayout.getPlid());
-
 		LayoutStructure layoutStructure = _getLayoutStructure(
-			layout.getGroupId(), draftLayout, segmentsExperienceId);
+			layout.getGroupId(), draftLayout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid()));
 
 		List<DeletedLayoutStructureItem> deletedLayoutStructureItems =
 			layoutStructure.getDeletedLayoutStructureItems();
@@ -301,15 +297,10 @@ public class ResetPrototypeMVCActionCommandTest {
 			deletedItemIds.add(layoutStructureItem.getItemId());
 		}
 
-		draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
-
-		ContentLayoutTestUtil.publishLayout(
-			_layoutLocalService.getLayout(draftLayout.getPlid()), layout);
-
-		layout = _layoutLocalService.getLayout(layout.getPlid());
-
 		layoutStructure = _getLayoutStructure(
-			layout.getGroupId(), layout, segmentsExperienceId);
+			draftLayout.getGroupId(), draftLayout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid()));
 
 		Assert.assertArrayEquals(
 			deletedItemIds.toArray(new String[0]),
@@ -329,14 +320,37 @@ public class ResetPrototypeMVCActionCommandTest {
 				layoutStructureItem -> layoutStructureItem.getItemId(),
 				String.class));
 
-		return layout;
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		layoutStructure = _getLayoutStructure(
+			draftLayout.getGroupId(), draftLayout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid()));
+
+		deletedLayoutStructureItems =
+			layoutStructure.getDeletedLayoutStructureItems();
+
+		Assert.assertEquals(
+			deletedLayoutStructureItems.toString(), 0,
+			deletedLayoutStructureItems.size());
+
+		layoutStructure = _getLayoutStructure(
+			layout.getGroupId(), layout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid()));
+
+		deletedLayoutStructureItems =
+			layoutStructure.getDeletedLayoutStructureItems();
+
+		Assert.assertEquals(
+			deletedLayoutStructureItems.toString(), 0,
+			deletedLayoutStructureItems.size());
+
+		return _layoutLocalService.getLayout(layout.getPlid());
 	}
 
 	@Inject
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
-
-	@Inject
-	private FragmentEntryLinkService _fragmentEntryLinkService;
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;

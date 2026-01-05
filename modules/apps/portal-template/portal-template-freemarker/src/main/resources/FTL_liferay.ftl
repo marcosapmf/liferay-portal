@@ -1,12 +1,5 @@
 <#ftl strip_whitespace=true>
 
-<#--
-Use computer number format to prevent issues with locale settings. See
-LPS-30525.
--->
-
-<#setting number_format = "computer">
-
 <#assign
 	css_main_file = ""
 	is_signed_in = false
@@ -66,9 +59,9 @@ LPS-30525.
 	file_name
 >
 	<#if file_name == css_main_file>
-		<link class="lfr-css-file" href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, file_name))}" id="mainLiferayThemeCSS" rel="stylesheet" type="text/css" />
+		<link class="lfr-css-file" href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, file_name))}" id="mainLiferayThemeCSS" ${nonceAttribute} rel="stylesheet" type="text/css" />
 	<#else>
-		<link class="lfr-css-file" href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, file_name))}" rel="stylesheet" type="text/css" />
+		<link class="lfr-css-file" href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, file_name))}" ${nonceAttribute} rel="stylesheet" type="text/css" />
 	</#if>
 </#macro>
 

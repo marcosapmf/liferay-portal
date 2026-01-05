@@ -6,7 +6,6 @@
 package com.liferay.portal.security.audit.wiring.internal.servlet.filter;
 
 import com.liferay.petra.lang.CentralizedThreadLocal;
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.audit.AuditRequestThreadLocal;
@@ -24,7 +23,6 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.TryFilter;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -32,13 +30,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.security.audit.wiring.internal.configuration.AuditLogContextConfiguration;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.Filter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -93,24 +91,19 @@ public class AuditFilter extends BaseFilter implements TryFilter {
 		String userLogin = StringPool.BLANK;
 
 		if (userId != null) {
-			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
-						_portal.getCompanyId(httpServletRequest))) {
+			User user = _userLocalService.fetchUser(userId);
 
-				User user = _userLocalService.fetchUser(userId);
+			if (user != null) {
+				userEmailAddress = user.getEmailAddress();
 
-				if (user != null) {
-					userEmailAddress = user.getEmailAddress();
+				auditRequestThreadLocal.setRealUserEmailAddress(
+					userEmailAddress);
 
-					auditRequestThreadLocal.setRealUserEmailAddress(
-						userEmailAddress);
+				auditRequestThreadLocal.setRealUserId(userId);
 
-					auditRequestThreadLocal.setRealUserId(userId);
+				userLogin = _getUserLogin(user);
 
-					userLogin = _getUserLogin(user);
-
-					auditRequestThreadLocal.setRealUserLogin(userLogin);
-				}
+				auditRequestThreadLocal.setRealUserLogin(userLogin);
 			}
 		}
 
@@ -141,7 +134,7 @@ public class AuditFilter extends BaseFilter implements TryFilter {
 		httpServletResponse.setHeader(HttpHeaders.X_REQUEST_ID, xRequestId);
 
 		_auditLogContext.setContext(
-			remoteAddr, _portal.getCompanyId(httpServletRequest),
+			remoteAddr, CompanyThreadLocal.getCompanyId(),
 			httpServletRequest.getServerName(), userEmailAddress, userId,
 			userLogin, xRequestId);
 
@@ -231,9 +224,6 @@ public class AuditFilter extends BaseFilter implements TryFilter {
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
-
-	@Reference
-	private Portal _portal;
 
 	private ServiceRegistration<LogContext> _serviceRegistration;
 

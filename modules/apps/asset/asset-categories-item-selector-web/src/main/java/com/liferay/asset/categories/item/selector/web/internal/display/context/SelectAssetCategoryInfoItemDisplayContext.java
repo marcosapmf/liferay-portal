@@ -41,15 +41,15 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.service.permission.AssetCategoryPermission;
 import com.liferay.portlet.asset.util.comparator.AssetVocabularyGroupLocalizedTitleComparator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -221,45 +221,61 @@ public class SelectAssetCategoryInfoItemDisplayContext {
 			long vocabularyId, long categoryId)
 		throws Exception {
 
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		List<AssetCategory> categories =
+		List<AssetCategory> assetCategories =
 			AssetCategoryServiceUtil.getVocabularyCategories(
 				categoryId, vocabularyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				null);
 
-		for (AssetCategory category : categories) {
-			jsonArray.put(
-				JSONUtil.put(
-					"children",
-					() -> {
-						JSONArray childrenJSONArray = _getCategoriesJSONArray(
-							vocabularyId, category.getCategoryId());
+		return JSONUtil.toJSONArray(
+			assetCategories,
+			assetCategory -> JSONUtil.put(
+				"children",
+				() -> {
+					JSONArray childrenJSONArray = _getCategoriesJSONArray(
+						vocabularyId, assetCategory.getCategoryId());
 
-						if (childrenJSONArray.length() > 0) {
-							return childrenJSONArray;
-						}
+					if (childrenJSONArray.length() > 0) {
+						return childrenJSONArray;
+					}
 
+					return null;
+				}
+			).put(
+				"className", AssetCategory.class.getName()
+			).put(
+				"classNameId",
+				PortalUtil.getClassNameId(AssetCategory.class.getName())
+			).put(
+				"externalReferenceCode",
+				assetCategory.getExternalReferenceCode()
+			).put(
+				"icon", "categories"
+			).put(
+				"id", assetCategory.getCategoryId()
+			).put(
+				"name", assetCategory.getTitle(_themeDisplay.getLocale())
+			).put(
+				"nodePath",
+				assetCategory.getPath(_themeDisplay.getLocale(), true)
+			).put(
+				"scopeExternalReferenceCode",
+				() -> {
+					long scopeGroupId = _themeDisplay.getRefererGroupId();
+
+					if (scopeGroupId <= 0) {
+						scopeGroupId = _themeDisplay.getScopeGroupId();
+					}
+
+					if (assetCategory.getGroupId() == scopeGroupId) {
 						return null;
 					}
-				).put(
-					"className", AssetCategory.class.getName()
-				).put(
-					"classNameId",
-					PortalUtil.getClassNameId(AssetCategory.class.getName())
-				).put(
-					"icon", "categories"
-				).put(
-					"id", category.getCategoryId()
-				).put(
-					"name", category.getTitle(_themeDisplay.getLocale())
-				).put(
-					"nodePath",
-					category.getPath(_themeDisplay.getLocale(), true)
-				));
-		}
 
-		return jsonArray;
+					Group group = GroupLocalServiceUtil.getGroup(
+						assetCategory.getGroupId());
+
+					return group.getExternalReferenceCode();
+				}
+			));
 	}
 
 	private JSONArray _getVocabulariesJSONArray() throws Exception {

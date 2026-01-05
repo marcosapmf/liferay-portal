@@ -1,0 +1,18 @@
+@import 'atlas-variables';
+
+.lfr-object__entries-schedule-panel {
+	&-content {
+		.disabled {
+			.text-warning {
+				opacity: 1;
+			}
+		}
+	}
+
+	&-description {
+		color: $secondary;
+		font-weight: 400;
+		margin: 1rem 0;
+		text-align: justify;
+	}
+}

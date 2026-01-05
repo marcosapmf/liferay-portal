@@ -29,6 +29,14 @@ import com.liferay.taglib.BaseValidatorTagSupport;
 import com.liferay.taglib.aui.AUIUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+
 import java.io.IOException;
 
 import java.lang.reflect.InvocationHandler;
@@ -37,14 +45,6 @@ import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
 
 /**
  * @author Iván Zaera Avellón
@@ -91,6 +91,14 @@ public class EditorTag extends BaseValidatorTagSupport {
 
 	public Map<String, String> getFileBrowserParams() {
 		return _fileBrowserParams;
+	}
+
+	public boolean getFormInputEnabled() {
+		return _formInputEnabled;
+	}
+
+	public String getFormInputName() {
+		return _formInputName;
 	}
 
 	public String getHeight() {
@@ -150,6 +158,10 @@ public class EditorTag extends BaseValidatorTagSupport {
 		return _autoCreate;
 	}
 
+	public boolean isDisabled() {
+		return _disabled;
+	}
+
 	public boolean isInlineEdit() {
 		return _inlineEdit;
 	}
@@ -202,12 +214,24 @@ public class EditorTag extends BaseValidatorTagSupport {
 		_data = data;
 	}
 
+	public void setDisabled(boolean disabled) {
+		_disabled = disabled;
+	}
+
 	public void setEditorName(String editorName) {
 		_editorName = editorName;
 	}
 
 	public void setFileBrowserParams(Map<String, String> fileBrowserParams) {
 		_fileBrowserParams = fileBrowserParams;
+	}
+
+	public void setFormInputEnabled(boolean formInputEnabled) {
+		_formInputEnabled = formInputEnabled;
+	}
+
+	public void setFormInputName(String formInputName) {
+		_formInputName = formInputName;
 	}
 
 	public void setHeight(String height) {
@@ -286,8 +310,11 @@ public class EditorTag extends BaseValidatorTagSupport {
 		_contentsLanguageId = null;
 		_cssClass = null;
 		_data = null;
+		_disabled = false;
 		_editorName = null;
 		_fileBrowserParams = null;
+		_formInputEnabled = false;
+		_formInputName = null;
 		_height = null;
 		_inlineEdit = false;
 		_inlineEditSaveURL = null;
@@ -343,6 +370,10 @@ public class EditorTag extends BaseValidatorTagSupport {
 			httpServletRequest, "editorName", _getResolvedEditorName());
 		setNamespacedAttribute(
 			httpServletRequest, "fileBrowserParams", _fileBrowserParams);
+		setNamespacedAttribute(
+			httpServletRequest, "formInputEnabled", _formInputEnabled);
+		setNamespacedAttribute(
+			httpServletRequest, "formInputName", _formInputName);
 		setNamespacedAttribute(httpServletRequest, "height", _height);
 		setNamespacedAttribute(httpServletRequest, "initMethod", "initEditor");
 		setNamespacedAttribute(
@@ -369,6 +400,8 @@ public class EditorTag extends BaseValidatorTagSupport {
 
 		setNamespacedAttribute(
 			httpServletRequest, "required", String.valueOf(_required));
+		setNamespacedAttribute(
+			httpServletRequest, "disabled", String.valueOf(_disabled));
 		setNamespacedAttribute(
 			httpServletRequest, "resizable", String.valueOf(_resizable));
 		setNamespacedAttribute(
@@ -485,10 +518,10 @@ public class EditorTag extends BaseValidatorTagSupport {
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if ((portletRequest == null) || (portletResponse == null)) {
 			return AUIUtil.getNamespace(httpServletRequest);
@@ -504,7 +537,7 @@ public class EditorTag extends BaseValidatorTagSupport {
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		if (portletRequest == null) {
 			return RequestBackedPortletURLFactoryUtil.create(
@@ -550,8 +583,11 @@ public class EditorTag extends BaseValidatorTagSupport {
 	private String _contentsLanguageId;
 	private String _cssClass;
 	private Map<String, Object> _data;
+	private boolean _disabled;
 	private String _editorName;
 	private Map<String, String> _fileBrowserParams;
+	private boolean _formInputEnabled;
+	private String _formInputName;
 	private String _height;
 	private boolean _inlineEdit;
 	private String _inlineEditSaveURL;

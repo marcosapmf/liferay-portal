@@ -14,7 +14,7 @@ import com.liferay.saml.runtime.configuration.SamlProviderConfiguration;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.metadata.LocalEntityManager;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -60,7 +60,17 @@ public class MetadataManagerUtil {
 				PortalUtil.isSecure(httpServletRequest));
 			String localEntityId = localEntityManager.getLocalEntityId();
 
-			if (samlProviderConfigurationHelper.isRoleIdp()) {
+			if (samlProviderConfigurationHelper.isRoleIb()) {
+				return MetadataGeneratorUtil.buildIbEntityDescriptor(
+					portalURL, localEntityId,
+					_isSignAuthnRequest(samlProviderConfigurationHelper),
+					_isWantAuthnRequestSigned(samlProviderConfigurationHelper),
+					_isSignMetadata(samlProviderConfigurationHelper),
+					_getSigningCredential(
+						credentialResolver, localEntityManager),
+					encryptionCredential);
+			}
+			else if (samlProviderConfigurationHelper.isRoleIdp()) {
 				return MetadataGeneratorUtil.buildIdpEntityDescriptor(
 					portalURL, localEntityId,
 					_isWantAuthnRequestSigned(samlProviderConfigurationHelper),

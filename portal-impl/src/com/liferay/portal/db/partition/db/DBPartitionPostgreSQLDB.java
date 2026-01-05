@@ -5,10 +5,16 @@
 
 package com.liferay.portal.db.partition.db;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.db.PostgreSQLDB;
+import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.sql.Connection;
@@ -61,7 +67,7 @@ public class DBPartitionPostgreSQLDB implements DBPartitionDB {
 				"ruledefinition from pg_catalog.pg_rewrite join pg_catalog.",
 				"pg_class on pg_catalog.pg_rewrite.ev_class = ",
 				"pg_catalog.pg_class.oid where ",
-				"pg_catalog.pg_class.relnamespace ='", connection.getSchema(),
+				"pg_catalog.pg_class.relnamespace ='", _defaultPartitionName,
 				"'::regnamespace and (pg_catalog.pg_rewrite.rulename like ",
 				"'delete_%' or pg_catalog.pg_rewrite.rulename like ",
 				"'update_%')");
@@ -108,25 +114,86 @@ public class DBPartitionPostgreSQLDB implements DBPartitionDB {
 
 	@Override
 	public String getCreateTableSQL(
-		String fromPartitionName, String toPartitionName, String fromTableName,
-		String toTableName) {
+			Connection connection, String fromPartitionName,
+			String toPartitionName, String fromTableName, String toTableName)
+		throws SQLException {
 
-		return StringBundler.concat(
-			"create table if not exists ", toPartitionName, StringPool.PERIOD,
-			toTableName, " (like ", fromPartitionName, StringPool.PERIOD,
-			fromTableName, " including all)");
+		StringBundler sb = new StringBundler();
+
+		sb.append(
+			StringBundler.concat(
+				"create table if not exists ", toPartitionName,
+				StringPool.PERIOD, toTableName, " (like ", fromPartitionName,
+				StringPool.PERIOD, fromTableName,
+				" including all excluding indexes);\n"));
+
+		DB db = DBManagerUtil.getDB();
+
+		try (SafeCloseable safeCloseable = _setPartitionName(
+				fromPartitionName)) {
+
+			String[] primaryKeyColumnNames = db.getPrimaryKeyColumnNames(
+				connection, fromTableName);
+
+			if (ArrayUtil.isNotEmpty(primaryKeyColumnNames)) {
+				sb.append("alter table ");
+				sb.append(toPartitionName + StringPool.PERIOD + toTableName);
+				sb.append(" add primary key (");
+
+				for (String columnName : primaryKeyColumnNames) {
+					sb.append(columnName);
+					sb.append(StringPool.COMMA_AND_SPACE);
+				}
+
+				sb.setIndex(sb.index() - 1);
+
+				sb.append(");");
+			}
+
+			for (IndexMetadata indexMetadata :
+					db.getIndexMetadatas(
+						connection, fromTableName, null, false)) {
+
+				sb.append(StringPool.NEW_LINE);
+
+				sb.append(
+					StringUtil.replace(
+						indexMetadata.getCreateSQL(null), "on " + fromTableName,
+						StringBundler.concat(
+							"on ", toPartitionName, StringPool.PERIOD,
+							toTableName)));
+			}
+		}
+
+		return sb.toString();
 	}
 
 	@Override
 	public String getDefaultPartitionName(Connection connection)
 		throws SQLException {
 
-		return connection.getSchema();
+		if (_defaultPartitionName == null) {
+			_defaultPartitionName = connection.getSchema();
+		}
+
+		return _defaultPartitionName;
 	}
 
 	@Override
 	public String getDropPartitionSQL(String partitionName) {
 		return "drop schema if exists " + partitionName + " cascade";
+	}
+
+	@Override
+	public String[] getRenamePartitionSQLs(
+		Connection connection, String sourcePartitionName,
+		String targetPartitionName) {
+
+		return new String[] {
+			StringBundler.concat(
+				"alter schema ", sourcePartitionName, " rename to ",
+				targetPartitionName)
+		};
 	}
 
 	@Override
@@ -144,6 +211,10 @@ public class DBPartitionPostgreSQLDB implements DBPartitionDB {
 
 	@Override
 	public String getSchema(Connection connection, String partitionName) {
+		if (_partitionName.get() != null) {
+			return _partitionName.get();
+		}
+
 		return partitionName;
 	}
 
@@ -159,6 +230,15 @@ public class DBPartitionPostgreSQLDB implements DBPartitionDB {
 		connection.setSchema(partitionName);
 	}
 
+	private SafeCloseable _setPartitionName(String partitionName) {
+		_partitionName.set(partitionName);
+
+		return () -> _partitionName.set(null);
+	}
+
+	private static String _defaultPartitionName;
+	private static final ThreadLocal<String> _partitionName =
+		new CentralizedThreadLocal<>(String.class.getName());
 	private static final Pattern _rulePattern = Pattern.compile(
 		"create.* rule (.*?) as");
 

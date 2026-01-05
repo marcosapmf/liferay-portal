@@ -6,7 +6,7 @@ import {cleanup, render} from '@testing-library/react';
 import {
 	CommentsMetric,
 	DownloadsMetric,
-	PreviewsMetric,
+	ImpressionMadeMetric,
 	RatingsMetric
 } from 'shared/components/metric-card/metrics';
 import {
@@ -71,7 +71,7 @@ const WrappedComponent = ({empty = false}) => (
 					mockAssetTabsReq({
 						metrics: [
 							DownloadsMetric,
-							PreviewsMetric,
+							ImpressionMadeMetric,
 							CommentsMetric,
 							RatingsMetric
 						],
@@ -121,7 +121,7 @@ describe('DocumentsAndMediaMetricCard', () => {
 		expect(linkToTheDocumentation).toBeInTheDocument();
 		expect(linkToTheDocumentation).toHaveAttribute(
 			'href',
-			'https://learn.liferay.com/w/analytics-cloud/touchpoints/assets/documents-and-media#visitor-behavior'
+			'https://learn.liferay.com/w/dxp/personalization/analytics-cloud/touchpoints/assets-analytics/documents-and-media-analytics#visitor-behavior'
 		);
 	});
 });

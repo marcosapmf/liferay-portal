@@ -55,8 +55,6 @@
 		<put name="portlet_content" value="/portal/portlet_not_setup.jsp" />
 	</definition>
 
-	<definition name="portal.progress_poller" path="/portal/progress_poller.jsp" />
-
 	<definition extends="portal" name="portal.setup_wizard">
 		<put name="pop_up" value="true" />
 		<put name="title" value="basic-configuration" />
@@ -76,6 +74,11 @@
 	<definition extends="portal" name="portal.update_password">
 		<put name="title" value="new-password" />
 		<put name="content" value="/portal/update_password.jsp" />
+	</definition>
+
+	<definition extends="portal" name="portal.update_password_utility_page">
+		<put name="title" value="new-password" />
+		<put name="content" value="/portal/update_password_utility_page.jsp" />
 	</definition>
 
 	<definition extends="portal" name="portal.update_reminder_query">

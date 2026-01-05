@@ -5,14 +5,22 @@
 
 package com.liferay.batch.engine.action;
 
+import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
+import com.liferay.batch.engine.context.ImportTaskContext;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Carlos Correa
  */
+@ProviderType
 public interface ImportTaskPreAction {
 
-	public void run(BatchEngineImportTask batchEngineImportTask, Object item)
+	public void run(
+			BatchEngineImportTask batchEngineImportTask,
+			BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate,
+			ImportTaskContext importTaskContext, Object item)
 		throws Exception;
 
 }

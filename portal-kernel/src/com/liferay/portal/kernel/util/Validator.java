@@ -351,13 +351,8 @@ public class Validator {
 	 *         <code>false</code> otherwise
 	 */
 	public static boolean isContent(String s) {
-		if (isNotNull(
-				StringUtil.removeChars(s, CharPool.NEW_LINE, CharPool.TAB))) {
-
-			return true;
-		}
-
-		return false;
+		return isNotNull(
+			StringUtil.removeChars(s, CharPool.NEW_LINE, CharPool.TAB));
 	}
 
 	/**
@@ -599,17 +594,33 @@ public class Validator {
 	}
 
 	/**
-	 * Returns <code>true</code> if the string is a hexidecimal number. At
-	 * present the only requirement is that the string is not <code>null</code>;
-	 * it does not actually check the format of the string.
+	 * Returns <code>true</code> if the string is a hexadecimal number.
 	 *
-	 * @param  s the string to check
+	 * @param  hexString the string to check
 	 * @return <code>true</code> if the string is a hexidecimal number;
 	 *         <code>false</code> otherwise
 	 * @see    #isNull(String)
 	 */
-	public static boolean isHex(String s) {
-		if (isNull(s)) {
+	public static boolean isHex(String hexString) {
+		if (isBlank(hexString) || ((hexString.length() % 2) != 0)) {
+			return false;
+		}
+
+		for (int i = 0; i < hexString.length(); i++) {
+			char c = hexString.charAt(i);
+
+			if ((c >= CharPool.NUMBER_0) && (c <= CharPool.NUMBER_9)) {
+				continue;
+			}
+
+			if ((c >= CharPool.UPPER_CASE_A) && (c <= CharPool.UPPER_CASE_F)) {
+				continue;
+			}
+
+			if ((c >= CharPool.LOWER_CASE_A) && (c <= CharPool.LOWER_CASE_F)) {
+				continue;
+			}
+
 			return false;
 		}
 
@@ -1091,11 +1102,7 @@ public class Validator {
 
 		Matcher matcher = _variableNamePattern.matcher(variableName);
 
-		if (matcher.matches()) {
-			return true;
-		}
-
-		return false;
+		return matcher.matches();
 	}
 
 	/**
@@ -1195,7 +1202,8 @@ public class Validator {
 
 	private static final Pattern _emailAddressPattern = Pattern.compile(
 		"^[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@" +
-			"(?:\\w(?:[\\w-]*\\w)?\\.)+(\\w(?:[\\w-]*\\w))$");
+			"(?:[^\\W_](?:[0-9A-Za-z-]*[^\\W_])?\\.)+" +
+				"([^\\W_](?:[0-9A-Za-z-]*[^\\W_]))$");
 	private static final Pattern _ipv4AddressPattern;
 	private static final Pattern _ipv6AddressPattern;
 	private static final Pattern _variableNamePattern = Pattern.compile(

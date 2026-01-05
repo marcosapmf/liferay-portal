@@ -12,9 +12,11 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -28,10 +30,10 @@ import com.liferay.site.navigation.menu.item.layout.constants.SiteNavigationMenu
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
 
-import java.util.Arrays;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.Arrays;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
+		"jakarta.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
 		"mvc.command.name=/navigation_menu/add_asset_vocabulary_type_site_navigation_menu_items"
 	},
 	service = MVCActionCommand.class
@@ -88,19 +90,34 @@ public class AddAssetVocabularySiteNavigationMenuItemsMVCActionCommand
 						UnicodePropertiesBuilder.create(
 							true
 						).put(
-							"classPK",
+							"externalReferenceCode",
 							assetVocabularyJSONObject.getString(
-								"assetVocabularyId")
+								"externalReferenceCode")
 						).put(
-							"groupId",
-							assetVocabularyJSONObject.getString("groupId")
+							"scopeExternalReferenceCode",
+							() -> {
+								long groupId =
+									assetVocabularyJSONObject.getLong(
+										"groupId");
+
+								if (groupId == themeDisplay.getScopeGroupId()) {
+									return null;
+								}
+
+								Group group = _groupLocalService.fetchGroup(
+									groupId);
+
+								if (group == null) {
+									return null;
+								}
+
+								return group.getExternalReferenceCode();
+							}
 						).put(
 							"title",
 							assetVocabularyJSONObject.getString("title")
 						).put(
 							"type", "asset-vocabulary"
-						).put(
-							"uuid", assetVocabularyJSONObject.getString("uuid")
 						).buildString(),
 						serviceContext);
 
@@ -148,6 +165,9 @@ public class AddAssetVocabularySiteNavigationMenuItemsMVCActionCommand
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AddAssetVocabularySiteNavigationMenuItemsMVCActionCommand.class);
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

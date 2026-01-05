@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-GroupFragmentEntryLinkDisplayContext groupFragmentEntryLinkDisplayContext = new GroupFragmentEntryLinkDisplayContext(renderRequest, renderResponse);
+GroupFragmentEntryLinkDisplayContext groupFragmentEntryLinkDisplayContext = (GroupFragmentEntryLinkDisplayContext)request.getAttribute(GroupFragmentEntryLinkDisplayContext.class.getName());
 
 FragmentEntry fragmentEntry = groupFragmentEntryLinkDisplayContext.getFragmentEntry();
 
@@ -21,6 +21,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "usages-and-propagation-x",
 
 <clay:container-fluid
 	cssClass="container-form-lg"
+	size="xxxl"
 >
 	<clay:sheet>
 		<clay:row>
@@ -34,7 +35,8 @@ renderResponse.setTitle(LanguageUtil.format(request, "usages-and-propagation-x",
 
 				<portlet:actionURL name="/fragment/propagate_group_fragment_entry_changes" var="propagateGroupFragmentEntryChangesURL">
 					<portlet:param name="redirect" value="<%= currentURL %>" />
-					<portlet:param name="fragmentEntryId" value="<%= String.valueOf(fragmentEntry.getFragmentEntryId()) %>" />
+					<portlet:param name="fragmentEntryERC" value="<%= String.valueOf(fragmentEntry.getExternalReferenceCode()) %>" />
+					<portlet:param name="fragmentEntryScopeERC" value="<%= String.valueOf(fragmentEntry.getScopeERC()) %>" />
 				</portlet:actionURL>
 
 				<aui:form action="<%= propagateGroupFragmentEntryChangesURL %>" name="fm">

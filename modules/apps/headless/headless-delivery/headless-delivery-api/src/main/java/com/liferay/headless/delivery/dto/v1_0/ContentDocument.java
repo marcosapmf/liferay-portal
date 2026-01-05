@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -53,7 +51,7 @@ public class ContentDocument implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ContentDocument.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Block of actions allowed by the user making the request."
 	)
 	@Valid
@@ -100,7 +98,9 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(description = "The type of content.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The type of content."
+	)
 	public String getContentType() {
 		if (_contentTypeSupplier != null) {
 			contentType = _contentTypeSupplier.get();
@@ -141,7 +141,9 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _contentTypeSupplier;
 
-	@Schema(description = "The document's relative URL.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's relative URL."
+	)
 	public String getContentUrl() {
 		if (_contentUrlSupplier != null) {
 			contentUrl = _contentUrlSupplier.get();
@@ -182,7 +184,7 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _contentUrlSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "optional field with the content of the document in Base64, can be embedded with nestedFields"
 	)
 	public String getContentValue() {
@@ -227,7 +229,9 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _contentValueSupplier;
 
-	@Schema(description = "The document's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's description."
+	)
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -268,7 +272,7 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The document's content type (e.g., `application/pdf`, etc.)."
 	)
 	public String getEncodingFormat() {
@@ -313,7 +317,52 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _encodingFormatSupplier;
 
-	@Schema(description = "The document's file extension.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's externalReferenceCode."
+	)
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCodeSupplier != null) {
+			externalReferenceCode = _externalReferenceCodeSupplier.get();
+
+			_externalReferenceCodeSupplier = null;
+		}
+
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+
+		_externalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		_externalReferenceCodeSupplier = () -> {
+			try {
+				return externalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The document's externalReferenceCode.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _externalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's file extension."
+	)
 	public String getFileExtension() {
 		if (_fileExtensionSupplier != null) {
 			fileExtension = _fileExtensionSupplier.get();
@@ -354,7 +403,9 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _fileExtensionSupplier;
 
-	@Schema(description = "The document's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's ID."
+	)
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -393,7 +444,56 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(description = "The document's file size in bytes.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's scopeExternalReferenceCode."
+	)
+	public String getScopeExternalReferenceCode() {
+		if (_scopeExternalReferenceCodeSupplier != null) {
+			scopeExternalReferenceCode =
+				_scopeExternalReferenceCodeSupplier.get();
+
+			_scopeExternalReferenceCodeSupplier = null;
+		}
+
+		return scopeExternalReferenceCode;
+	}
+
+	public void setScopeExternalReferenceCode(
+		String scopeExternalReferenceCode) {
+
+		this.scopeExternalReferenceCode = scopeExternalReferenceCode;
+
+		_scopeExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setScopeExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			scopeExternalReferenceCodeUnsafeSupplier) {
+
+		_scopeExternalReferenceCodeSupplier = () -> {
+			try {
+				return scopeExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The document's scopeExternalReferenceCode.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String scopeExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _scopeExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's file size in bytes."
+	)
 	public Long getSizeInBytes() {
 		if (_sizeInBytesSupplier != null) {
 			sizeInBytes = _sizeInBytesSupplier.get();
@@ -434,7 +534,9 @@ public class ContentDocument implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _sizeInBytesSupplier;
 
-	@Schema(description = "The document's title.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The document's title."
+	)
 	public String getTitle() {
 		if (_titleSupplier != null) {
 			title = _titleSupplier.get();
@@ -594,6 +696,22 @@ public class ContentDocument implements Serializable {
 			sb.append("\"");
 		}
 
+		String externalReferenceCode = getExternalReferenceCode();
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		String fileExtension = getFileExtension();
 
 		if (fileExtension != null) {
@@ -620,6 +738,22 @@ public class ContentDocument implements Serializable {
 			sb.append("\"id\": ");
 
 			sb.append(id);
+		}
+
+		String scopeExternalReferenceCode = getScopeExternalReferenceCode();
+
+		if (scopeExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scopeExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(scopeExternalReferenceCode));
+
+			sb.append("\"");
 		}
 
 		Long sizeInBytes = getSizeInBytes();
@@ -655,8 +789,8 @@ public class ContentDocument implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentDocument",
 		name = "x-class-name"
 	)

@@ -27,36 +27,34 @@ public class DDMFormValuesConverterUtil {
 
 	public static List<DDMFormFieldValue> addMissingDDMFormFieldValues(
 		Collection<DDMFormField> ddmFormFields,
-		Map<String, List<DDMFormFieldValue>> ddmFormFieldValues) {
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap) {
 
-		List<DDMFormFieldValue> newDDMFormFieldValuesList = new ArrayList<>();
+		List<DDMFormFieldValue> newDDMFormFieldValues = new ArrayList<>();
 
 		for (DDMFormField ddmFormField : ddmFormFields) {
-			List<DDMFormFieldValue> ddmFormFieldValuesList =
-				ddmFormFieldValues.get(ddmFormField.getName());
+			List<DDMFormFieldValue> ddmFormFieldValues =
+				ddmFormFieldValuesMap.get(ddmFormField.getName());
 
-			if (ddmFormFieldValuesList == null) {
+			if (ddmFormFieldValues == null) {
 				DDMFormFieldValue ddmFormFieldValue =
 					_createDefaultDDMFormFieldValue(ddmFormField);
 
 				_populateNestedValues(
-					ddmFormField, ddmFormFieldValue, ddmFormFieldValues);
+					ddmFormField, ddmFormFieldValue, ddmFormFieldValuesMap);
 
-				newDDMFormFieldValuesList.add(ddmFormFieldValue);
+				newDDMFormFieldValues.add(ddmFormFieldValue);
 			}
 			else {
-				for (DDMFormFieldValue ddmFormFieldValue :
-						ddmFormFieldValuesList) {
-
+				for (DDMFormFieldValue ddmFormFieldValue : ddmFormFieldValues) {
 					_populateNestedValues(
-						ddmFormField, ddmFormFieldValue, ddmFormFieldValues);
+						ddmFormField, ddmFormFieldValue, ddmFormFieldValuesMap);
 
-					newDDMFormFieldValuesList.add(ddmFormFieldValue);
+					newDDMFormFieldValues.add(ddmFormFieldValue);
 				}
 			}
 		}
 
-		return newDDMFormFieldValuesList;
+		return newDDMFormFieldValues;
 	}
 
 	private static DDMFormFieldValue _createDefaultDDMFormFieldValue(
@@ -64,7 +62,6 @@ public class DDMFormValuesConverterUtil {
 
 		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
-		ddmFormFieldValue.setInstanceId(StringUtil.randomString());
 		ddmFormFieldValue.setName(ddmFormField.getName());
 
 		if (ddmFormField.isLocalizable()) {
@@ -79,7 +76,7 @@ public class DDMFormValuesConverterUtil {
 
 	private static void _populateNestedValues(
 		DDMFormField ddmFormField, DDMFormFieldValue ddmFormFieldValue,
-		Map<String, List<DDMFormFieldValue>> ddmFormFieldValues) {
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap) {
 
 		if (!StringUtil.equals(
 				ddmFormField.getType(), DDMFormFieldTypeConstants.FIELDSET)) {
@@ -102,16 +99,23 @@ public class DDMFormValuesConverterUtil {
 
 			expectedNames.add(nestedDDMFormField.getName());
 
-			List<DDMFormFieldValue> nestedDDMFormFieldValueList =
-				ddmFormFieldValues.get(nestedDDMFormField.getName());
+			List<DDMFormFieldValue> nestedDDMFormFieldValues =
+				ddmFormFieldValuesMap.get(nestedDDMFormField.getName());
 
-			if (nestedDDMFormFieldValueList == null) {
+			if (nestedDDMFormFieldValues == null) {
+				DDMFormFieldValue nestedDDMFormFieldValue =
+					_createDefaultDDMFormFieldValue(nestedDDMFormField);
+
 				ddmFormFieldValue.addNestedDDMFormFieldValue(
-					_createDefaultDDMFormFieldValue(nestedDDMFormField));
+					nestedDDMFormFieldValue);
+
+				_populateNestedValues(
+					nestedDDMFormField, nestedDDMFormFieldValue,
+					ddmFormFieldValuesMap);
 			}
 			else {
 				for (DDMFormFieldValue nestedDDMFormFieldValue :
-						nestedDDMFormFieldValueList) {
+						nestedDDMFormFieldValues) {
 
 					if (!currentNames.contains(
 							nestedDDMFormFieldValue.getName())) {
@@ -121,7 +125,7 @@ public class DDMFormValuesConverterUtil {
 
 						_populateNestedValues(
 							nestedDDMFormField, nestedDDMFormFieldValue,
-							ddmFormFieldValues);
+							ddmFormFieldValuesMap);
 					}
 				}
 			}

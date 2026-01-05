@@ -34,7 +34,7 @@ export default {
 		displayAllItems: CollectionLayoutDataItem['config']['displayAllItems'];
 		displayAllPages: CollectionLayoutDataItem['config']['displayAllPages'];
 		externalReferenceCode?: string | null;
-		languageId: string;
+		languageId: Liferay.Language.Locale;
 		listItemStyle:
 			| CollectionLayoutDataItem['config']['listItemStyle']
 			| null;
@@ -86,7 +86,7 @@ export default {
 	getCollectionFilters() {
 		return serviceFetch<Record<string, CollectionFilter>>(
 			config.getCollectionFiltersURL,
-			{}
+			{method: 'GET'}
 		);
 	},
 

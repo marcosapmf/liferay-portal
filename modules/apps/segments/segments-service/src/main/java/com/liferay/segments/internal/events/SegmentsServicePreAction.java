@@ -5,6 +5,7 @@
 
 package com.liferay.segments.internal.events;
 
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.LifecycleAction;
@@ -12,8 +13,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.SegmentsEntryRetriever;
@@ -24,11 +28,12 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.processor.SegmentsExperienceRequestProcessorRegistry;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.HashSet;
-import java.util.Set;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -136,6 +141,32 @@ public class SegmentsServicePreAction extends Action {
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
+
+		String portletNamespace = _portal.getPortletNamespace(
+			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET);
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				ParamUtil.getLong(
+					httpServletRequest,
+					portletNamespace + "segmentsExperienceId"));
+
+		if (permissionChecker.isGroupAdmin(themeDisplay.getScopeGroupId()) &&
+			Objects.equals(
+				ParamUtil.getString(
+					httpServletRequest, "p_l_mode", Constants.VIEW),
+				Constants.EDIT) &&
+			(segmentsExperience != null)) {
+
+			httpServletRequest.setAttribute(
+				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS,
+				new long[] {segmentsExperience.getSegmentsExperienceId()});
+
+			return;
+		}
 
 		if (!themeDisplay.isLifecycleRender()) {
 			return;

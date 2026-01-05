@@ -7,16 +7,20 @@ package com.liferay.portal.tools.service.builder.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.DataLimitExceededException;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.tools.service.builder.test.model.DataLimitEntry;
 import com.liferay.portal.tools.service.builder.test.service.DataLimitEntryLocalService;
 import com.liferay.portal.tools.service.builder.test.service.persistence.DataLimitEntryPersistence;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.Date;
 
@@ -38,31 +42,29 @@ public class DataLimitTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testDataLimit() {
-		_initializeDataLimit(3);
+	public void test() throws Exception {
+		_setDataLimitModelMaxCount(3);
 
 		try {
-			_testDataLimit();
+			_test();
 
 			// Asserting limit is per company
 
-			long companyId = CompanyThreadLocal.getCompanyId();
+			_company = CompanyTestUtil.addCompany(false);
 
-			CompanyThreadLocal.setCompanyId(companyId + 1);
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						_company.getCompanyId())) {
 
-			try {
-				_testDataLimit();
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyId);
+				_test();
 			}
 		}
 		finally {
-			_initializeDataLimit(0);
+			_setDataLimitModelMaxCount(0);
 		}
 	}
 
-	private void _initializeDataLimit(long dataLimit) {
+	private void _setDataLimitModelMaxCount(long dataLimit) {
 		ReflectionTestUtil.setFieldValue(
 			_dataLimitEntryPersistence, "_dataLimitModelMaxCount", 0);
 
@@ -76,7 +78,7 @@ public class DataLimitTest {
 			new Class<?>[] {Class.class}, DataLimitEntry.class);
 	}
 
-	private void _testDataLimit() {
+	private void _test() {
 
 		// Within data limit
 
@@ -118,6 +120,9 @@ public class DataLimitTest {
 
 		_dataLimitEntryLocalService.updateDataLimitEntry(dataLimitEntry3);
 	}
+
+	@DeleteAfterTestRun
+	private Company _company;
 
 	@Inject
 	private CounterLocalService _counterLocalService;

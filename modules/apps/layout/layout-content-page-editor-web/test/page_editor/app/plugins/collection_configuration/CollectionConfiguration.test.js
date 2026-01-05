@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -25,11 +25,6 @@ jest.mock(
 		),
 	})
 );
-
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
-	fetch: () => Promise.resolve({json: () => ({totalNumberOfItems: 4})}),
-}));
 
 const CONFIGURATION_DEFINITION = {
 	fieldSets: [
@@ -78,6 +73,12 @@ const renderComponent = () => {
 };
 
 describe('CollectionConfiguration', () => {
+	const mock = jest.requireMock('frontend-js-web');
+
+	mock.fetch.mockImplementation(() =>
+		Promise.resolve({json: () => ({totalNumberOfItems: 4})})
+	);
+
 	it('renders', () => {
 		renderComponent();
 
@@ -96,14 +97,14 @@ describe('CollectionConfiguration', () => {
 
 		const titleInput = screen.getByLabelText('Title');
 
-		userEvent.type(titleInput, 'This is a test');
+		await userEvent.type(titleInput, 'This is a test');
 
 		await act(async () => {
 			fireEvent.blur(titleInput);
 		});
 
 		expect(
-			screen.getByText('there-are-x-results-for-x')
+			screen.getByText('there-are-4-results-for-This is a test')
 		).toBeInTheDocument();
 	});
 
@@ -112,16 +113,16 @@ describe('CollectionConfiguration', () => {
 
 		const titleInput = screen.getByLabelText('Title');
 
-		userEvent.type(titleInput, 'This is a test');
+		await userEvent.type(titleInput, 'This is a test');
 
 		await act(async () => {
 			fireEvent.blur(titleInput);
 		});
 
-		userEvent.click(screen.getByText('clear'));
+		await userEvent.click(screen.getByText('clear'));
 
 		expect(
-			screen.queryByText('there-are-x-results-for-x')
+			screen.queryByText('there-are-4-results-for-This is a test')
 		).not.toBeInTheDocument();
 	});
 });

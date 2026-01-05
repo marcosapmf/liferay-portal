@@ -16,11 +16,11 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -63,7 +63,7 @@ public class SharingCollaboratorsBlogsEntryContentDashboardItemAction
 		try {
 			PortletResponse portletResponse =
 				(PortletResponse)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE);
+					JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 			return PortletURLBuilder.createRenderURL(
 				_portal.getLiferayPortletResponse(portletResponse),

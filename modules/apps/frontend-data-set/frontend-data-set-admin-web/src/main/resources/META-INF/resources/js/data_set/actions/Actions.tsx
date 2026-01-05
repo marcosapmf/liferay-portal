@@ -7,13 +7,14 @@ import ClayBreadcrumb from '@clayui/breadcrumb';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayTabs from '@clayui/tabs';
-import {fetch, openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {
-	API_URL,
 	DEFAULT_FETCH_HEADERS,
 	OBJECT_RELATIONSHIP,
+	PAGE_SIZE,
 } from '../../utils/constants';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
@@ -22,15 +23,21 @@ import ActionForm from './components/ActionForm';
 import ActionList from './components/ActionList';
 
 import '../../../css/Actions.scss';
+import getDataSetResourceURL from '../../utils/getDataSetResourceURL';
 import sortItems from '../../utils/sortItems';
 import {IOrderable} from '../../utils/types';
 
-export enum EActionType {
+export enum EActionTarget {
 	ASYNC = 'async',
 	HEADLESS = 'headless',
 	LINK = 'link',
 	MODAL = 'modal',
 	SIDEPANEL = 'sidePanel',
+}
+
+export enum EActionType {
+	CREATION = 'creation',
+	ITEM = 'item',
 }
 
 const SECTIONS = {
@@ -43,14 +50,14 @@ const SECTIONS = {
 };
 
 interface IAction extends IOrderable {
-	[OBJECT_RELATIONSHIP.DATA_SET_CREATION_ACTION]?: any;
-	[OBJECT_RELATIONSHIP.DATA_SET_ITEM_ACTION]?: any;
+	[OBJECT_RELATIONSHIP.DATA_SET_ACTIONS]?: any;
 	actions: {
 		delete: {
 			href: string;
 			method: string;
 		};
 	};
+	active: boolean;
 	confirmationMessage?: string;
 	confirmationMessageType?: string;
 	confirmationMessage_i18n?: {
@@ -60,6 +67,7 @@ interface IAction extends IOrderable {
 	errorMessage_i18n?: {
 		[key: string]: string;
 	};
+	externalReferenceCode: string;
 	icon: string;
 	label: string;
 	label_i18n: {
@@ -68,10 +76,12 @@ interface IAction extends IOrderable {
 	method?: string;
 	modalSize?: string;
 	permissionKey: string;
+	requestBody?: string;
 	successMessage?: string;
 	successMessage_i18n?: {
 		[key: string]: string;
 	};
+	target: EActionTarget;
 	title?: string;
 	title_i18n?: {
 		[key: string]: string;
@@ -87,6 +97,8 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 	const [loading, setLoading] = useState(true);
 	const [initialActionFormValues, setInitialActionFormValues] =
 		useState<IAction>();
+	const [toggleActiveDisabled, setToogleActiveDisabled] =
+		useState<boolean>(false);
 
 	const getBreadcrumbItems = () => {
 		const breadcrumbItems: React.ComponentProps<
@@ -139,16 +151,18 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 	const loadActions = async ({activeTab}: {activeTab: number}) => {
 		setLoading(true);
 
-		const relationShip =
-			activeTab === 0
-				? OBJECT_RELATIONSHIP.DATA_SET_ITEM_ACTION
-				: OBJECT_RELATIONSHIP.DATA_SET_CREATION_ACTION;
-		const relationshipID =
-			activeTab === 0
-				? OBJECT_RELATIONSHIP.DATA_SET_ITEM_ACTION_ID
-				: OBJECT_RELATIONSHIP.DATA_SET_CREATION_ACTION_ID;
+		const type = activeTab === 0 ? EActionType.ITEM : EActionType.CREATION;
 
-		const url = `${API_URL.ACTIONS}?filter=(${relationshipID} eq '${dataSet.id}')&nestedFields=${relationShip}&sort=dateCreated:asc`;
+		const url = getDataSetResourceURL({
+			dataSetERC: dataSet.externalReferenceCode,
+			params: {
+				filter: `type eq '${type}'`,
+				nestedFields: OBJECT_RELATIONSHIP.DATA_SET_ACTIONS,
+				pageSize: PAGE_SIZE,
+				sort: 'dateCreated:asc',
+			},
+			relationship: OBJECT_RELATIONSHIP.DATA_SET_ACTIONS,
+		});
 
 		if (activeTab === 0) {
 			setActiveSection(SECTIONS.ITEM_ACTIONS);
@@ -171,15 +185,22 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 
 		const responseJSON = await response.json();
 
-		const storedActions: IAction[] = responseJSON.items;
+		// Temporarily filtering by `action.type` since the `filter` parameter
+		// in the resource url isn't implemented yet. See LPD-62317.
+
+		const storedActions: IAction[] = (responseJSON.items || []).filter(
+			(action: IAction) => action.type === type
+		);
 
 		const actionTypeOrder =
-			activeTab === 0 ? 'fdsItemActionsOrder' : 'fdsCreationActionsOrder';
+			activeTab === 0 ? 'itemActionsOrder' : 'creationActionsOrder';
 
-		const fdsActionsOrder =
-			storedActions?.[0]?.[relationShip]?.[actionTypeOrder];
+		const actionsOrder =
+			storedActions?.[0]?.[OBJECT_RELATIONSHIP.DATA_SET_ACTIONS]?.[
+				actionTypeOrder
+			];
 
-		setActions(sortItems(storedActions, fdsActionsOrder) as IAction[]);
+		setActions(sortItems(storedActions, actionsOrder) as IAction[]);
 
 		setLoading(false);
 	};
@@ -196,7 +217,7 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 	const deleteAction = ({item}: {item: IAction}) => {
 		openModal({
 			bodyHTML: Liferay.Language.get(
-				'are-you-sure-you-want-to-delete-this-action'
+				'are-you-sure-you-want-to-delete-this-action?-fragments-using-it-will-be-affected'
 			),
 			buttons: [
 				{
@@ -211,9 +232,17 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 					onClick: ({processClose}: {processClose: Function}) => {
 						processClose();
 
-						fetch(item.actions.delete.href, {
+						const url = getDataSetResourceURL({
+							dataSetERC: dataSet.externalReferenceCode,
+							relatedResourceERC: String(
+								item.externalReferenceCode
+							),
+							relationship: OBJECT_RELATIONSHIP.DATA_SET_ACTIONS,
+						});
+
+						fetch(url, {
 							headers: DEFAULT_FETCH_HEADERS,
-							method: item.actions.delete.method,
+							method: 'DELETE',
 						})
 							.then(() => {
 								openDefaultSuccessToast();
@@ -241,28 +270,20 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 	};
 
 	const updateActionsOrder = async ({order}: {order: string}) => {
-		let actionTypeOrder =
-			activeTab === 0 ? 'fdsItemActionsOrder' : 'fdsCreationActionsOrder';
+		const actionTypeOrder =
+			activeTab === 0 ? 'itemActionsOrder' : 'creationActionsOrder';
 
-		let apiURL = API_URL.DATA_SETS;
+		const url = getDataSetResourceURL({
+			dataSetERC: dataSet.externalReferenceCode,
+		});
 
-		if (Liferay.FeatureFlags['LPD-15729']) {
-			actionTypeOrder =
-				activeTab === 0 ? 'itemActionsOrder' : 'creationActionsOrder';
-
-			apiURL = API_URL.DATA_SETS;
-		}
-
-		const response = await fetch(
-			`${apiURL}/by-external-reference-code/${dataSet.externalReferenceCode}`,
-			{
-				body: JSON.stringify({
-					[actionTypeOrder]: order,
-				}),
-				headers: DEFAULT_FETCH_HEADERS,
-				method: 'PATCH',
-			}
-		);
+		const response = await fetch(url, {
+			body: JSON.stringify({
+				[actionTypeOrder]: order,
+			}),
+			headers: DEFAULT_FETCH_HEADERS,
+			method: 'PATCH',
+		});
 
 		if (!response.ok) {
 			openDefaultFailureToast();
@@ -284,9 +305,53 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 		}
 	};
 
+	const updateActive = async (item: IAction) => {
+		setToogleActiveDisabled(true);
+
+		const url = getDataSetResourceURL({
+			dataSetERC: dataSet.externalReferenceCode,
+			relatedResourceERC: item.externalReferenceCode,
+			relationship: OBJECT_RELATIONSHIP.DATA_SET_ACTIONS,
+		});
+
+		const response = await fetch(url, {
+			body: JSON.stringify({active: !item.active}),
+			headers: DEFAULT_FETCH_HEADERS,
+			method: 'PATCH',
+		});
+
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
+
+		const dataSetAction: IAction = await response.json();
+
+		if (dataSetAction?.id) {
+			const updatedActions = actions.map((action) => {
+				if (action.id === dataSetAction.id) {
+					action = {...action, ...dataSetAction};
+				}
+
+				return action;
+			});
+
+			setActions(updatedActions);
+
+			openDefaultSuccessToast();
+		}
+		else {
+			openDefaultFailureToast();
+		}
+
+		setToogleActiveDisabled(false);
+	};
+
 	useEffect(() => {
 		loadActions({activeTab: 0});
 
+		// eslint-disable-next-line react-compiler/react-compiler
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -326,47 +391,59 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 						</ClayTabs>
 
 						<ClayTabs.Content active={activeTab} fade>
-							<ClayTabs.TabPane
-								aria-label={Liferay.Language.get(
-									'item-actions'
-								)}
-								className="item-actions-tab-pane"
-							>
-								<ActionList
-									actions={actions}
-									createAction={createAction}
-									creationMenuItemLabel={Liferay.Language.get(
-										'new-item-action'
+							{activeSection === SECTIONS.ITEM_ACTIONS && (
+								<ClayTabs.TabPane
+									aria-label={Liferay.Language.get(
+										'item-actions'
 									)}
-									deleteAction={deleteAction}
-									editAction={editAction}
-									noItemsButtonLabel={Liferay.Language.get(
-										'new-item-action'
-									)}
-									updateActionsOrder={updateActionsOrder}
-								/>
-							</ClayTabs.TabPane>
+									className="item-actions-tab-pane"
+								>
+									<ActionList
+										actions={actions}
+										createAction={createAction}
+										creationMenuItemLabel={Liferay.Language.get(
+											'new-item-action'
+										)}
+										deleteAction={deleteAction}
+										editAction={editAction}
+										noItemsButtonLabel={Liferay.Language.get(
+											'new-item-action'
+										)}
+										toogleActiveDisabled={
+											toggleActiveDisabled
+										}
+										updateActionsOrder={updateActionsOrder}
+										updateActive={updateActive}
+									/>
+								</ClayTabs.TabPane>
+							)}
 
-							<ClayTabs.TabPane
-								aria-label={Liferay.Language.get(
-									'creation-actions'
-								)}
-								className="creation-actions-tab-pane"
-							>
-								<ActionList
-									actions={actions}
-									createAction={createAction}
-									creationMenuItemLabel={Liferay.Language.get(
-										'new-creation-action'
+							{activeSection === SECTIONS.CREATION_ACTIONS && (
+								<ClayTabs.TabPane
+									aria-label={Liferay.Language.get(
+										'creation-actions'
 									)}
-									deleteAction={deleteAction}
-									editAction={editAction}
-									noItemsButtonLabel={Liferay.Language.get(
-										'new-creation-action'
-									)}
-									updateActionsOrder={updateActionsOrder}
-								/>
-							</ClayTabs.TabPane>
+									className="creation-actions-tab-pane"
+								>
+									<ActionList
+										actions={actions}
+										createAction={createAction}
+										creationMenuItemLabel={Liferay.Language.get(
+											'new-creation-action'
+										)}
+										deleteAction={deleteAction}
+										editAction={editAction}
+										noItemsButtonLabel={Liferay.Language.get(
+											'new-creation-action'
+										)}
+										toogleActiveDisabled={
+											toggleActiveDisabled
+										}
+										updateActionsOrder={updateActionsOrder}
+										updateActive={updateActive}
+									/>
+								</ClayTabs.TabPane>
+							)}
 						</ClayTabs.Content>
 					</>
 				)}

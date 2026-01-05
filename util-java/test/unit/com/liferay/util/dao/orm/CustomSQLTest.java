@@ -7,22 +7,15 @@ package com.liferay.util.dao.orm;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-
-import java.sql.SQLException;
-
-import java.util.Collections;
 
 import javax.sql.DataSource;
 
@@ -78,13 +71,6 @@ public class CustomSQLTest {
 					}
 
 				}));
-
-		Field propsField = ReflectionUtil.getDeclaredField(
-			PropsUtil.class, "_props");
-
-		_props = (Props)propsField.get(null);
-
-		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	@AfterClass
@@ -93,11 +79,6 @@ public class CustomSQLTest {
 			PortalUtil.class, "_portal");
 
 		portalField.set(null, _portal);
-
-		Field propsField = ReflectionUtil.getDeclaredField(
-			PropsUtil.class, "_props");
-
-		propsField.set(null, _props);
 	}
 
 	@Before
@@ -222,7 +203,6 @@ public class CustomSQLTest {
 	private static final long _USER_ID = 1234L;
 
 	private static Portal _portal;
-	private static Props _props;
 
 	private CustomSQL _customSQL;
 	private final QueryDefinition<Object> _queryDefinition =
@@ -230,7 +210,7 @@ public class CustomSQLTest {
 
 	private static class TestCustomSQL extends CustomSQL {
 
-		public TestCustomSQL() throws SQLException {
+		public TestCustomSQL() throws Exception {
 		}
 
 		@Override

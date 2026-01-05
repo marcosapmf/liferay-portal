@@ -43,13 +43,13 @@ import com.liferay.sharing.web.internal.constants.SharingPortletKeys;
 import com.liferay.sharing.web.internal.filter.SharedAssetsFilterItemRegistry;
 import com.liferay.sharing.web.internal.servlet.taglib.ui.SharingEntryDropdownItemContributorRegistry;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Sergio González
@@ -166,7 +166,7 @@ public class ViewSharedAssetsDisplayContext {
 				() -> _sharingEntryLocalService.getToUserSharingEntries(
 					_themeDisplay.getUserId(), classNameId,
 					searchContainer.getStart(), searchContainer.getEnd(),
-					new SharingEntryModifiedDateComparator(
+					SharingEntryModifiedDateComparator.getInstance(
 						Objects.equals(getSortingOrder(), "asc"))),
 				_sharingEntryLocalService.getToUserSharingEntriesCount(
 					_themeDisplay.getUserId(), classNameId));
@@ -176,7 +176,7 @@ public class ViewSharedAssetsDisplayContext {
 				() -> _sharingEntryLocalService.getFromUserSharingEntries(
 					_themeDisplay.getUserId(), classNameId,
 					searchContainer.getStart(), searchContainer.getEnd(),
-					new SharingEntryModifiedDateComparator(
+					SharingEntryModifiedDateComparator.getInstance(
 						Objects.equals(getSortingOrder(), "asc"))),
 				_sharingEntryLocalService.getFromUserSharingEntriesCount(
 					_themeDisplay.getUserId(), classNameId));
@@ -271,7 +271,9 @@ public class ViewSharedAssetsDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return HtmlUtil.escape(sharingEntryInterpreter.getTitle(sharingEntry));
+		return HtmlUtil.escape(
+			sharingEntryInterpreter.getTitle(
+				sharingEntry, _themeDisplay.getLocale()));
 	}
 
 	public String getSortingOrder() {
@@ -301,11 +303,7 @@ public class ViewSharedAssetsDisplayContext {
 			_sharingConfigurationFactory.getGroupSharingConfiguration(
 				_groupLocalService.getGroup(sharingEntry.getGroupId()));
 
-		if (!groupSharingConfiguration.isEnabled()) {
-			return false;
-		}
-
-		return true;
+		return groupSharingConfiguration.isEnabled();
 	}
 
 	private PortletURL _getURLEdit(

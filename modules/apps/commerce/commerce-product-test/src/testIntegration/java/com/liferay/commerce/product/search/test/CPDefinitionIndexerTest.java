@@ -101,7 +101,7 @@ public class CPDefinitionIndexerTest {
 
 	@Test
 	public void testSearch() throws Exception {
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(),
@@ -109,7 +109,7 @@ public class CPDefinitionIndexerTest {
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
-			catalog.getGroupId());
+			commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -123,7 +123,7 @@ public class CPDefinitionIndexerTest {
 		searchContext.setCompanyId(_group.getCompanyId());
 		searchContext.setEntryClassNames(
 			new String[] {CPDefinition.class.getName()});
-		searchContext.setGroupIds(new long[] {catalog.getGroupId()});
+		searchContext.setGroupIds(new long[] {commerceCatalog.getGroupId()});
 
 		Hits hits = _indexer.search(searchContext);
 
@@ -136,6 +136,53 @@ public class CPDefinitionIndexerTest {
 		Summary summary = _indexer.getSummary(document, LocaleUtil.US, null);
 
 		Assert.assertEquals("test", summary.getContent());
+	}
+
+	@Test
+	public void testSearchByGtin() throws Exception {
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogLocalService.addCommerceCatalog(
+				null, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(),
+				LocaleUtil.US.getDisplayLanguage(),
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
+			commerceCatalog.getGroupId());
+
+		cpInstance.setGtin(
+			RandomTestUtil.randomString() + cpInstance.getCPInstanceId());
+
+		cpInstance = _cpInstanceLocalService.updateCPInstance(cpInstance);
+
+		_indexer.reindex(cpInstance.getCPDefinition());
+
+		SearchContext searchContext = new SearchContext();
+
+		searchContext.setCompanyId(_group.getCompanyId());
+		searchContext.setEntryClassNames(
+			new String[] {CPDefinition.class.getName()});
+		searchContext.setGroupIds(new long[] {commerceCatalog.getGroupId()});
+		searchContext.setKeywords(RandomTestUtil.randomString());
+
+		Hits hits = _indexer.search(searchContext);
+
+		HitsAssert.assertNoHits(hits);
+
+		searchContext.setKeywords(cpInstance.getGtin());
+
+		hits = _indexer.search(searchContext);
+
+		Document actualDocument = HitsAssert.assertOnlyOne(hits);
+
+		Document expectedDocument = _indexer.getDocument(
+			cpInstance.getCPDefinition());
+
+		Assert.assertEquals(
+			expectedDocument.get("entryClassPK"),
+			actualDocument.get("entryClassPK"));
+		Assert.assertEquals(
+			expectedDocument.get("gtins"), cpInstance.getGtin());
 	}
 
 	private void _setUp(String expandoValue, CPInstance cpInstance)

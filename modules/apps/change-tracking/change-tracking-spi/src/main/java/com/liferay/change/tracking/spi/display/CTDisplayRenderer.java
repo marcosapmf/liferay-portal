@@ -8,11 +8,11 @@ package com.liferay.change.tracking.spi.display;
 import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.InputStream;
 
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Display renderer used to describe and render models of a given type. If an
@@ -99,10 +99,6 @@ public interface CTDisplayRenderer<T> {
 	 */
 	public default boolean isHideable(T model) {
 		return false;
-	}
-
-	public default boolean isMovable(T model) {
-		return !isHideable(model);
 	}
 
 	/**

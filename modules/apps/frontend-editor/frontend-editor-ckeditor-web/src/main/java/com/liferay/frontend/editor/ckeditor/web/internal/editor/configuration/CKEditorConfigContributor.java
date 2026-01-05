@@ -52,7 +52,8 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 
 		String extraPlugins =
 			"addimages,autogrow,autolink,colordialog,filebrowser," +
-				"itemselector,lfrpopup,media,stylescombo,videoembed";
+				"itemselector,lfrpopup,media,stylescombo,tableselection," +
+					"videoembed";
 
 		boolean inlineEdit = GetterUtil.getBoolean(
 			(String)inputEditorTaglibAttributes.get(
@@ -67,6 +68,9 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 		}
 
 		jsonObject.put(
+			"applicationTitle",
+			_language.get(themeDisplay.getLocale(), "rich-text-editor")
+		).put(
 			"extraPlugins", extraPlugins
 		).put(
 			"filebrowserWindowFeatures",

@@ -5,10 +5,14 @@
 
 package com.liferay.portal.test.rule;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.util.PropsUtil;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -16,7 +20,12 @@ import org.junit.Test;
 /**
  * @author Drew Brokke
  */
-@FeatureFlags("CLASS-123")
+@FeatureFlags(
+	featureFlags = {
+		@FeatureFlag("CLASS-123"),
+		@FeatureFlag(enable = false, value = "CLASS-456")
+	}
+)
 public class FeatureFlagTestRuleTest {
 
 	@ClassRule
@@ -24,15 +33,42 @@ public class FeatureFlagTestRuleTest {
 	public static final AggregateTestRule aggregateTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() throws PortalException {
+		PropsUtil.set(
+			FeatureFlagConstants.PORTAL_PROPERTY_KEY_FEATURE_FLAG +
+				".METHOD-456",
+			"true");
+	}
+
 	@Test
 	public void testAnnotateClass() throws Exception {
 		Assert.assertTrue(FeatureFlagManagerUtil.isEnabled("CLASS-123"));
+		Assert.assertFalse(FeatureFlagManagerUtil.isEnabled("CLASS-456"));
 	}
 
-	@FeatureFlags("METHOD-123")
+	@FeatureFlag("METHOD-123")
 	@Test
 	public void testAnnotateMethod() throws Exception {
 		Assert.assertTrue(FeatureFlagManagerUtil.isEnabled("METHOD-123"));
+	}
+
+	@FeatureFlags(
+		featureFlags = {
+			@FeatureFlag("METHOD-123"),
+			@FeatureFlag(enable = false, value = "METHOD-456")
+		}
+	)
+	@Test
+	public void testAnnotateMethodWithFeatureFlags() throws Exception {
+		Assert.assertTrue(FeatureFlagManagerUtil.isEnabled("METHOD-123"));
+		Assert.assertFalse(FeatureFlagManagerUtil.isEnabled("METHOD-456"));
+	}
+
+	@FeatureFlag(enable = false, value = "METHOD-456")
+	@Test
+	public void testDisableFeatureFlag() {
+		Assert.assertFalse(FeatureFlagManagerUtil.isEnabled("METHOD-456"));
 	}
 
 }

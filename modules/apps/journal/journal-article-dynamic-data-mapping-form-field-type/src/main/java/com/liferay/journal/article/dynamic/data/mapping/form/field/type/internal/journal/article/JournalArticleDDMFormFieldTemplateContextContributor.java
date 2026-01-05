@@ -30,10 +30,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -105,7 +105,8 @@ public class JournalArticleDDMFormFieldTemplateContextContributor
 			new JournalArticleItemSelectorReturnType());
 		infoItemItemSelectorCriterion.setRefererClassPK(
 			_getRefererClassPK(httpServletRequest));
-		infoItemItemSelectorCriterion.setStatus(WorkflowConstants.STATUS_ANY);
+		infoItemItemSelectorCriterion.setStatus(
+			WorkflowConstants.STATUS_APPROVED);
 
 		return String.valueOf(
 			_itemSelector.getItemSelectorURL(

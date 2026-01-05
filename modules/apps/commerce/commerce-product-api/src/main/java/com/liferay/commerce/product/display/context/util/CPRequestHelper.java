@@ -10,10 +10,10 @@ import com.liferay.portal.kernel.display.context.helper.BaseRequestHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.JavaConstants;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author     Alessio Antonio Rendina
@@ -27,14 +27,14 @@ public class CPRequestHelper extends BaseRequestHelper {
 		super(httpServletRequest);
 
 		Object portletRequest = httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		if (portletRequest instanceof RenderRequest) {
 			_renderRequest = (RenderRequest)portletRequest;
 		}
 
 		Object portletResponse = httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if (portletResponse instanceof RenderResponse) {
 			_renderResponse = (RenderResponse)portletResponse;

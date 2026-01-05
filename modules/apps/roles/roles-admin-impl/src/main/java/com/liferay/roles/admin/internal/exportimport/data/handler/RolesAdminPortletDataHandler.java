@@ -27,12 +27,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.roles.admin.constants.RolesAdminPortletKeys;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author David Mendez Gonzalez
  */
 @Component(
-	property = "javax.portlet.name=" + RolesAdminPortletKeys.ROLES_ADMIN,
+	property = "jakarta.portlet.name=" + RolesAdminPortletKeys.ROLES_ADMIN,
 	service = PortletDataHandler.class
 )
 public class RolesAdminPortletDataHandler extends BasePortletDataHandler {
@@ -66,7 +66,7 @@ public class RolesAdminPortletDataHandler extends BasePortletDataHandler {
 	protected void activate() {
 		setDataLevel(DataLevel.PORTAL);
 		setDeletionSystemEventStagedModelTypes(new StagedModelType(Role.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "roles", true, true,
 				new PortletDataHandlerControl[] {

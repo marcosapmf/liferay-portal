@@ -11,8 +11,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -45,7 +43,7 @@ public class TestrayBuildMetric implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(TestrayBuildMetric.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getTestrayBuildArchived() {
 		if (_testrayBuildArchivedSupplier != null) {
 			testrayBuildArchived = _testrayBuildArchivedSupplier.get();
@@ -86,7 +84,49 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _testrayBuildArchivedSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getTestrayBuildCPUUseTime() {
+		if (_testrayBuildCPUUseTimeSupplier != null) {
+			testrayBuildCPUUseTime = _testrayBuildCPUUseTimeSupplier.get();
+
+			_testrayBuildCPUUseTimeSupplier = null;
+		}
+
+		return testrayBuildCPUUseTime;
+	}
+
+	public void setTestrayBuildCPUUseTime(String testrayBuildCPUUseTime) {
+		this.testrayBuildCPUUseTime = testrayBuildCPUUseTime;
+
+		_testrayBuildCPUUseTimeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTestrayBuildCPUUseTime(
+		UnsafeSupplier<String, Exception>
+			testrayBuildCPUUseTimeUnsafeSupplier) {
+
+		_testrayBuildCPUUseTimeSupplier = () -> {
+			try {
+				return testrayBuildCPUUseTimeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String testrayBuildCPUUseTime;
+
+	@JsonIgnore
+	private Supplier<String> _testrayBuildCPUUseTimeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTestrayBuildDueDate() {
 		if (_testrayBuildDueDateSupplier != null) {
 			testrayBuildDueDate = _testrayBuildDueDateSupplier.get();
@@ -127,7 +167,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _testrayBuildDueDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTestrayBuildGitHash() {
 		if (_testrayBuildGitHashSupplier != null) {
 			testrayBuildGitHash = _testrayBuildGitHashSupplier.get();
@@ -168,7 +208,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _testrayBuildGitHashSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getTestrayBuildId() {
 		if (_testrayBuildIdSupplier != null) {
 			testrayBuildId = _testrayBuildIdSupplier.get();
@@ -209,7 +249,49 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _testrayBuildIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getTestrayBuildImportStatus() {
+		if (_testrayBuildImportStatusSupplier != null) {
+			testrayBuildImportStatus = _testrayBuildImportStatusSupplier.get();
+
+			_testrayBuildImportStatusSupplier = null;
+		}
+
+		return testrayBuildImportStatus;
+	}
+
+	public void setTestrayBuildImportStatus(String testrayBuildImportStatus) {
+		this.testrayBuildImportStatus = testrayBuildImportStatus;
+
+		_testrayBuildImportStatusSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setTestrayBuildImportStatus(
+		UnsafeSupplier<String, Exception>
+			testrayBuildImportStatusUnsafeSupplier) {
+
+		_testrayBuildImportStatusSupplier = () -> {
+			try {
+				return testrayBuildImportStatusUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String testrayBuildImportStatus;
+
+	@JsonIgnore
+	private Supplier<String> _testrayBuildImportStatusSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTestrayBuildName() {
 		if (_testrayBuildNameSupplier != null) {
 			testrayBuildName = _testrayBuildNameSupplier.get();
@@ -250,7 +332,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _testrayBuildNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTestrayBuildProductVersion() {
 		if (_testrayBuildProductVersionSupplier != null) {
 			testrayBuildProductVersion =
@@ -295,7 +377,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _testrayBuildProductVersionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getTestrayBuildPromoted() {
 		if (_testrayBuildPromotedSupplier != null) {
 			testrayBuildPromoted = _testrayBuildPromotedSupplier.get();
@@ -336,7 +418,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _testrayBuildPromotedSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTestrayBuildTaskStatus() {
 		if (_testrayBuildTaskStatusSupplier != null) {
 			testrayBuildTaskStatus = _testrayBuildTaskStatusSupplier.get();
@@ -378,7 +460,7 @@ public class TestrayBuildMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _testrayBuildTaskStatusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public TestrayStatusMetric getTestrayStatusMetric() {
 		if (_testrayStatusMetricSupplier != null) {
@@ -462,6 +544,22 @@ public class TestrayBuildMetric implements Serializable {
 			sb.append(testrayBuildArchived);
 		}
 
+		String testrayBuildCPUUseTime = getTestrayBuildCPUUseTime();
+
+		if (testrayBuildCPUUseTime != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"testrayBuildCPUUseTime\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(testrayBuildCPUUseTime));
+
+			sb.append("\"");
+		}
+
 		String testrayBuildDueDate = getTestrayBuildDueDate();
 
 		if (testrayBuildDueDate != null) {
@@ -504,6 +602,22 @@ public class TestrayBuildMetric implements Serializable {
 			sb.append("\"testrayBuildId\": ");
 
 			sb.append(testrayBuildId);
+		}
+
+		String testrayBuildImportStatus = getTestrayBuildImportStatus();
+
+		if (testrayBuildImportStatus != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"testrayBuildImportStatus\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(testrayBuildImportStatus));
+
+			sb.append("\"");
 		}
 
 		String testrayBuildName = getTestrayBuildName();
@@ -583,8 +697,8 @@ public class TestrayBuildMetric implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.testray.rest.dto.v1_0.TestrayBuildMetric",
 		name = "x-class-name"
 	)
@@ -630,7 +744,10 @@ public class TestrayBuildMetric implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

@@ -16,8 +16,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.runtime.exception.StatusException;
 import com.liferay.saml.util.JspUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @author Mika Koivisto
@@ -30,7 +30,7 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		if (!isEnabled()) {
+		if (!isEnabled(httpServletRequest)) {
 			return "/common/referer_js.jsp";
 		}
 
@@ -73,7 +73,7 @@ public abstract class BaseSamlStrutsAction implements StrutsAction {
 		return null;
 	}
 
-	public abstract boolean isEnabled();
+	public abstract boolean isEnabled(HttpServletRequest httpServletRequest);
 
 	protected abstract String doExecute(
 			HttpServletRequest httpServletRequest,

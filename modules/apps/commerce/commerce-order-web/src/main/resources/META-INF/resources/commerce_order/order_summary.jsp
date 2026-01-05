@@ -17,11 +17,12 @@ CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
 
 <portlet:actionURL name="/commerce_order/edit_commerce_order" var="editCommerceOrderSummaryActionURL" />
 
-<commerce-ui:modal-content>
+<div class="container-fluid container-fluid-max-xl p-4">
 	<aui:form action="<%= editCommerceOrderSummaryActionURL %>" cssClass="container-fluid container-fluid-max-xl p-0" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="orderSummary" />
-		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="commerceOrderId" type="hidden" value="<%= commerceOrder.getCommerceOrderId() %>" />
+
+		<liferay-ui:error exception="<%= CommerceOrderPriceException.class %>" message="please-enter-a-valid-price" />
 
 		<aui:input label="subtotal" name="subtotal" suffix="<%= HtmlUtil.escape(commerceCurrency.getCode()) %>" type="currency" value="<%= commerceOrderEditDisplayContext.getFormattedValue(commerceOrder.getSubtotal()) %>" wrapperCssClass="form-group-item">
 			<aui:validator name="min">0</aui:validator>
@@ -60,4 +61,4 @@ CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
 			<aui:validator name="number" />
 		</aui:input>
 	</aui:form>
-</commerce-ui:modal-content>
+</div>

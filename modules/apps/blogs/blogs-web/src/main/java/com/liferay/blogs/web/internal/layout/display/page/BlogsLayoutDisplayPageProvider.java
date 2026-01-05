@@ -10,13 +10,13 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.friendly.url.info.item.provider.InfoItemFriendlyURLProvider;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.layout.display.page.BaseLayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
@@ -59,35 +59,6 @@ public class BlogsLayoutDisplayPageProvider
 
 	@Override
 	public LayoutDisplayPageObjectProvider<BlogsEntry>
-		getLayoutDisplayPageObjectProvider(
-			InfoItemReference infoItemReference) {
-
-		InfoItemIdentifier infoItemIdentifier =
-			infoItemReference.getInfoItemIdentifier();
-
-		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
-			return null;
-		}
-
-		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
-			(ClassPKInfoItemIdentifier)
-				infoItemReference.getInfoItemIdentifier();
-
-		BlogsEntry blogsEntry = _blogsEntryLocalService.fetchBlogsEntry(
-			classPKInfoItemIdentifier.getClassPK());
-
-		if ((blogsEntry == null) || blogsEntry.isDraft() ||
-			blogsEntry.isInTrash()) {
-
-			return null;
-		}
-
-		return new BlogsLayoutDisplayPageObjectProvider(
-			_assetHelper, blogsEntry, _infoItemFriendlyURLProvider, _language);
-	}
-
-	@Override
-	public LayoutDisplayPageObjectProvider<BlogsEntry>
 		getLayoutDisplayPageObjectProvider(long groupId, String urlTitle) {
 
 		if (urlTitle.contains(StringPool.SLASH)) {
@@ -108,15 +79,56 @@ public class BlogsLayoutDisplayPageProvider
 		BlogsEntry blogsEntry = _blogsEntryLocalService.fetchEntry(
 			groupId, urlTitle);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-11147") &&
-			(blogsEntry == null)) {
-
+		if (blogsEntry == null) {
 			blogsEntry = _blogsEntryLocalService.fetchEntry(
 				groupId,
 				urlTitle.substring(urlTitle.lastIndexOf(StringPool.SLASH) + 1));
 		}
 
 		if ((blogsEntry == null) || blogsEntry.isInTrash()) {
+			return null;
+		}
+
+		return new BlogsLayoutDisplayPageObjectProvider(
+			_assetHelper, blogsEntry, _infoItemFriendlyURLProvider, _language);
+	}
+
+	@Override
+	protected BlogsLayoutDisplayPageObjectProvider
+		doGetLayoutDisplayPageObjectProvider(
+			long groupId, InfoItemReference infoItemReference) {
+
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier) &&
+			!(infoItemIdentifier instanceof ERCInfoItemIdentifier)) {
+
+			return null;
+		}
+
+		BlogsEntry blogsEntry = null;
+
+		if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)
+					infoItemReference.getInfoItemIdentifier();
+
+			blogsEntry = _blogsEntryLocalService.fetchBlogsEntry(
+				classPKInfoItemIdentifier.getClassPK());
+		}
+		else {
+			ERCInfoItemIdentifier ercInfoItemIdentifier =
+				(ERCInfoItemIdentifier)infoItemIdentifier;
+
+			blogsEntry =
+				_blogsEntryLocalService.fetchBlogsEntryByExternalReferenceCode(
+					ercInfoItemIdentifier.getExternalReferenceCode(), groupId);
+		}
+
+		if ((blogsEntry == null) || blogsEntry.isDraft() ||
+			blogsEntry.isInTrash()) {
+
 			return null;
 		}
 

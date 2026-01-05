@@ -28,18 +28,18 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER,
+		"jakarta.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER,
 		"mvc.path=-", "mvc.path=/view.jsp"
 	},
 	service = PortletToolbarContributor.class
@@ -102,11 +102,11 @@ public class AssetPublisherPortletToolbarContributor
 			WebKeys.THEME_DISPLAY);
 
 		if (scopeAssetPublisherAddItemHolders.size() == 1) {
-			Set<Map.Entry<Long, List<AssetPublisherAddItemHolder>>> entrySet =
+			Set<Map.Entry<Long, List<AssetPublisherAddItemHolder>>> entries =
 				scopeAssetPublisherAddItemHolders.entrySet();
 
 			Iterator<Map.Entry<Long, List<AssetPublisherAddItemHolder>>>
-				iterator = entrySet.iterator();
+				iterator = entries.iterator();
 
 			Map.Entry<Long, List<AssetPublisherAddItemHolder>>
 				scopeAddPortletURL = iterator.next();

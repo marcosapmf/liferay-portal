@@ -67,7 +67,7 @@ export function ModalImportContent({
 
 	const getImportButtonDisableState = () => {
 		if (
-			Liferay.FeatureFlags['LPS-187142'] &&
+			Liferay.FeatureFlags['LPD-34594'] &&
 			inputFile &&
 			importedObjectDefinitions
 		) {
@@ -96,7 +96,9 @@ export function ModalImportContent({
 
 	return (
 		<>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{modalImportContentTitle[modalImportKey]}
 			</ClayModal.Header>
 
@@ -225,9 +227,7 @@ export function ModalImportContent({
 											| ObjectDefinition[];
 
 										if (
-											Liferay.FeatureFlags[
-												'LPS-187142'
-											] &&
+											Liferay.FeatureFlags['LPD-34594'] &&
 											Array.isArray(JSONFile) &&
 											JSONFile[0].scope
 										) {

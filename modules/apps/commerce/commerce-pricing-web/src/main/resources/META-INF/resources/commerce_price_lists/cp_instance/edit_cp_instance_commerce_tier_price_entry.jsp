@@ -30,6 +30,8 @@ CPInstance cpInstance = cpInstanceCommerceTierPriceEntryDisplayContext.getCPInst
 		<aui:input name="cpInstanceId" type="hidden" value="<%= cpInstance.getCPInstanceId() %>" />
 
 		<liferay-ui:error exception="<%= CommerceTierPriceEntryMinQuantityException.class %>" message="the-specified-quantity-is-not-allowed" />
+		<liferay-ui:error exception="<%= CommerceTierPriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
+		<liferay-ui:error exception="<%= CommerceTierPriceEntryQuantityException.class %>" message="please-enter-a-valid-quantity" />
 		<liferay-ui:error exception="<%= DuplicateCommerceTierPriceEntryException.class %>" message="there-is-already-a-tier-price-entry-with-the-same-minimum-quantity" />
 
 		<div class="row">
@@ -63,7 +65,7 @@ CPInstance cpInstance = cpInstanceCommerceTierPriceEntryDisplayContext.getCPInst
 				}
 				%>
 
-				<aui:input label='<%= LanguageUtil.get(request, "quantity") %>' name="minQuantity" required="<%= true %>" value="<%= minQuantity.toString() %>">
+				<aui:input label='<%= LanguageUtil.get(request, "quantity") %>' name="minQuantity" required="<%= true %>" value="<%= minQuantity.toPlainString() %>">
 					<aui:validator name="min"><%= 0 %></aui:validator>
 				</aui:input>
 

@@ -10,10 +10,12 @@ import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.util.Constants;
@@ -22,11 +24,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.COMMERCE_PAYMENT_METHODS,
+		"jakarta.portlet.name=" + CPPortletKeys.COMMERCE_PAYMENT_METHODS,
 		"mvc.command.name=/commerce_payment_methods/edit_money_order_commerce_payment_method_configuration"
 	},
 	service = MVCActionCommand.class
@@ -78,20 +81,38 @@ public class EditMoneyOrderCommercePaymentMethodConfigurationMVCActionCommand
 
 		modifiableSettings.setValue("showMessagePage", showMessagePage);
 
-		UnicodeProperties unicodeProperties = PropertiesParamUtil.getProperties(
-			actionRequest, "settings--messageAsLocalizedXML_");
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-11235")) {
+			UnicodeProperties unicodeProperties =
+				PropertiesParamUtil.getProperties(
+					actionRequest, "settings--messageAsLocalizedXML_");
 
-		Map<String, String> messageMap = new HashMap<>();
+			Map<String, String> messageMap = new HashMap<>();
 
-		for (Map.Entry<String, String> entry : unicodeProperties.entrySet()) {
-			messageMap.put(entry.getKey(), entry.getValue());
+			for (Map.Entry<String, String> entry :
+					unicodeProperties.entrySet()) {
+
+				messageMap.put(entry.getKey(), entry.getValue());
+			}
+
+			String messageAsLocalizedXML = _localization.getXml(
+				messageMap, StringPool.BLANK, "messageAsLocalizedXML");
+
+			modifiableSettings.setValue(
+				"messageAsLocalizedXML", messageAsLocalizedXML);
 		}
+		else {
+			LocalizedValuesMap localizedValuesMap = new LocalizedValuesMap();
 
-		String messageAsLocalizedXML = _localization.getXml(
-			messageMap, StringPool.BLANK, "messageAsLocalizedXML");
+			Map<Locale, String> messageMap = _localization.getLocalizationMap(
+				actionRequest, "messageAsLocalizedXML");
 
-		modifiableSettings.setValue(
-			"messageAsLocalizedXML", messageAsLocalizedXML);
+			messageMap.forEach(localizedValuesMap::put);
+
+			modifiableSettings.setValue(
+				"messageAsLocalizedXML",
+				_localization.getXml(
+					localizedValuesMap, "messageAsLocalizedXML"));
+		}
 
 		modifiableSettings.store();
 	}

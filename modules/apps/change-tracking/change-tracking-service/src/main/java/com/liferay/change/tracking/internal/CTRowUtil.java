@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -122,7 +123,7 @@ public class CTRowUtil {
 		String[] uniqueIndexColumnNames, long targetCTCollectionId) {
 
 		StringBundler sb = new StringBundler(
-			(9 * uniqueIndexColumnNames.length) + 17);
+			(3 * uniqueIndexColumnNames.length) + 9);
 
 		sb.append("select ");
 		sb.append(primaryColumnName);
@@ -148,8 +149,7 @@ public class CTRowUtil {
 		String[] uniqueIndexColumnNames, long ctCollectionId,
 		Set<Long> primaryKeys) {
 
-		StringBundler sb = new StringBundler(
-			(9 * uniqueIndexColumnNames.length) + 17);
+		StringBundler sb = new StringBundler();
 
 		sb.append("select ");
 		sb.append(primaryColumnName);
@@ -166,7 +166,7 @@ public class CTRowUtil {
 		sb.append(tableName);
 		sb.append(" where ctCollectionId = ");
 		sb.append(ctCollectionId);
-		sb.append(" and ");
+		sb.append(" and (");
 		sb.append(primaryColumnName);
 		sb.append(" in (");
 
@@ -191,6 +191,50 @@ public class CTRowUtil {
 
 		sb.setStringAt(")", sb.index() - 1);
 
+		sb.append(")");
+
+		return sb.toString();
+	}
+
+	public static String getUpdateMVCCVersionSQL(
+		long ctCollectionId, List<Serializable> primaryKeys,
+		String primaryKeyName, String tableName) {
+
+		StringBundler sb = new StringBundler();
+
+		sb.append("select ");
+		sb.append(primaryKeyName);
+		sb.append(", mvccVersion from ");
+		sb.append(tableName);
+		sb.append(" where ctCollectionId = ");
+		sb.append(ctCollectionId);
+		sb.append(" and (");
+		sb.append(primaryKeyName);
+		sb.append(" in (");
+
+		int i = 0;
+
+		for (Serializable serializable : primaryKeys) {
+			if (i == _BATCH_SIZE) {
+				sb.setStringAt(")", sb.index() - 1);
+
+				sb.append(" or ");
+				sb.append(primaryKeyName);
+				sb.append(" in (");
+
+				i = 0;
+			}
+
+			sb.append(serializable);
+			sb.append(", ");
+
+			i++;
+		}
+
+		sb.setStringAt(")", sb.index() - 1);
+
+		sb.append(")");
+
 		return sb.toString();
 	}
 
@@ -203,11 +247,7 @@ public class CTRowUtil {
 
 		Collection<Integer> values = tableColumnsMap.values();
 
-		if (values.contains(Types.BLOB)) {
-			return true;
-		}
-
-		return false;
+		return values.contains(Types.BLOB);
 	}
 
 	private CTRowUtil() {

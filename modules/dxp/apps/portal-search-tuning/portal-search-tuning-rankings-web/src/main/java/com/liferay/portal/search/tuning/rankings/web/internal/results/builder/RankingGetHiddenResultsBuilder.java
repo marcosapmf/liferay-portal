@@ -27,10 +27,10 @@ import com.liferay.portal.search.tuning.rankings.index.RankingIndexReader;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.web.internal.util.RankingResultUtil;
 
-import java.util.List;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import java.util.List;
 
 /**
  * @author André de Oliveira
@@ -132,7 +132,6 @@ public class RankingGetHiddenResultsBuilder {
 			indexName, id);
 
 		getDocumentRequest.setFetchSource(true);
-		getDocumentRequest.setFetchSourceInclude("*");
 		getDocumentRequest.setType(type);
 
 		GetDocumentResponse getDocumentResponse = _searchEngineAdapter.execute(

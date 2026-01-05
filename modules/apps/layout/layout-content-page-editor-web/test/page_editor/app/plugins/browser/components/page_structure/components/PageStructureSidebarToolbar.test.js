@@ -3,18 +3,37 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {VIEWPORT_SIZES} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
+import {
+	ClipboardContextProvider,
+	useSetClipboard,
+} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext';
+import {useSetMovementSources} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext';
 import deleteItem from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/deleteItem';
 import duplicateItem from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/duplicateItem';
 import updateItemStyle from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/updateItemStyle';
 import PageStructureSidebarToolbar from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/browser/components/page_structure/components/PageStructureSidebarToolbar';
 import StoreMother from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
+
+jest.mock(
+	'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext',
+	() => {
+		const setClipboard = jest.fn();
+
+		return {
+			...jest.requireActual(
+				'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext'
+			),
+			useSetClipboard: () => setClipboard,
+		};
+	}
+);
 
 jest.mock(
 	'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/updateItemStyle',
@@ -31,10 +50,16 @@ jest.mock(
 	() => jest.fn()
 );
 
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
-	sub: jest.fn((langKey, arg) => langKey.replace('x', arg)),
-}));
+jest.mock(
+	'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext',
+	() => {
+		const setMovementSources = jest.fn();
+
+		return {
+			useSetMovementSources: () => setMovementSources,
+		};
+	}
+);
 
 const renderComponent = ({
 	activeItemIds = [],
@@ -43,26 +68,39 @@ const renderComponent = ({
 	render(
 		<StoreMother.Component
 			getState={() => ({
-				fragmentEntryLinks: {},
+				fragmentEntryLinks: {
+					fragment01: {editableValues: {}},
+					fragment02: {editableValues: {}},
+					fragment03: {editableValues: {}},
+				},
 				layoutData: {
 					items: {
 						fragment01: {
 							children: [],
-							config: {styles: {display: 'block'}},
+							config: {
+								fragmentEntryLinkId: 'fragment01',
+								styles: {display: 'block'},
+							},
 							itemId: 'fragment01',
 							parentId: 'root',
 							type: LAYOUT_DATA_ITEM_TYPES.fragment,
 						},
 						fragment02: {
 							children: [],
-							config: {styles: {display: 'none'}},
+							config: {
+								fragmentEntryLinkId: 'fragment02',
+								styles: {display: 'none'},
+							},
 							itemId: 'fragment02',
 							parentId: 'root',
 							type: LAYOUT_DATA_ITEM_TYPES.fragment,
 						},
 						fragment03: {
 							children: [],
-							config: {styles: {display: 'block'}},
+							config: {
+								fragmentEntryLinkId: 'fragment03',
+								styles: {display: 'block'},
+							},
 							itemId: 'fragment03',
 							parentId: 'root',
 							type: LAYOUT_DATA_ITEM_TYPES.fragment,
@@ -78,17 +116,15 @@ const renderComponent = ({
 				selectedViewportSize: viewportSize,
 			})}
 		>
-			<PageStructureSidebarToolbar activeItemIds={activeItemIds} />
+			<ClipboardContextProvider>
+				<PageStructureSidebarToolbar activeItemIds={activeItemIds} />
+			</ClipboardContextProvider>
 		</StoreMother.Component>
 	);
 
 describe('PageStructureSidebarToolbar', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = false;
+	beforeEach(() => {
+		jest.clearAllMocks();
 	});
 
 	it('shows the number of selected items', () => {
@@ -99,12 +135,12 @@ describe('PageStructureSidebarToolbar', () => {
 		expect(screen.getByText('2-items-selected')).toBeInTheDocument();
 	});
 
-	it('calls deleteItem when Delete action is pressed', () => {
+	it('calls deleteItem when Delete action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('delete'));
+		await userEvent.click(screen.getByText('delete'));
 
 		expect(deleteItem).toBeCalledWith(
 			expect.objectContaining({
@@ -113,12 +149,12 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls duplicateItem when Duplicate action is pressed', () => {
+	it('calls duplicateItem when Duplicate action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment03'],
 		});
 
-		userEvent.click(screen.getByText('duplicate'));
+		await userEvent.click(screen.getByText('duplicate'));
 
 		expect(duplicateItem).toBeCalledWith(
 			expect.objectContaining({
@@ -127,12 +163,12 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls updateItemStyle when Hide Fragments action is pressed', () => {
+	it('calls updateItemStyle when Hide Fragments action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment03', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('hide-fragments'));
+		await userEvent.click(screen.getByText('hide-fragments'));
 
 		expect(updateItemStyle).toBeCalledWith(
 			expect.objectContaining({
@@ -141,6 +177,19 @@ describe('PageStructureSidebarToolbar', () => {
 				styleValue: 'none',
 			})
 		);
+	});
+
+	it('calls useSetMovementSources when Move x Items action is pressed', async () => {
+		renderComponent({
+			activeItemIds: ['fragment01', 'fragment02'],
+		});
+
+		await userEvent.click(screen.getByText('move-2-items'));
+
+		expect(useSetMovementSources()).toBeCalledWith([
+			{isWidget: false, itemId: 'fragment01', type: 'fragment'},
+			{isWidget: false, itemId: 'fragment02', type: 'fragment'},
+		]);
 	});
 
 	it('does not show the button when it is a viewport other than desktop', () => {
@@ -160,5 +209,61 @@ describe('PageStructureSidebarToolbar', () => {
 		});
 
 		expect(screen.getByText('show-fragments')).toBeInTheDocument();
+	});
+
+	it('calls deleteItem when Delete action is pressed', async () => {
+		renderComponent({
+			activeItemIds: ['fragment01', 'fragment02'],
+		});
+
+		await userEvent.click(screen.getByText('delete'));
+
+		expect(deleteItem).toBeCalledWith(
+			expect.objectContaining({
+				itemIds: ['fragment01', 'fragment02'],
+			})
+		);
+	});
+
+	it('calls setClipboard and deleteItem when Cut action is pressed', async () => {
+		const setClipboard = useSetClipboard();
+
+		renderComponent({
+			activeItemIds: ['fragment01', 'fragment02'],
+		});
+
+		await userEvent.click(screen.getByText('cut'));
+
+		expect(deleteItem).toBeCalledWith(
+			expect.objectContaining({
+				itemIds: ['fragment01', 'fragment02'],
+			})
+		);
+
+		expect(setClipboard).toBeCalledWith(
+			expect.objectContaining(['fragment01', 'fragment02'])
+		);
+	});
+
+	it('calls setClipboard when Copy action is pressed', async () => {
+		const setClipboard = useSetClipboard();
+
+		renderComponent({
+			activeItemIds: ['fragment01', 'fragment02'],
+		});
+
+		await userEvent.click(screen.getByText('copy'));
+
+		expect(setClipboard).toBeCalledWith(
+			expect.objectContaining(['fragment01', 'fragment02'])
+		);
+	});
+
+	it('do not allow the Paste action on multiple selections', () => {
+		renderComponent({
+			activeItemIds: ['fragment01', 'fragment02'],
+		});
+
+		expect(screen.queryByText('paste')).not.toBeInTheDocument();
 	});
 });

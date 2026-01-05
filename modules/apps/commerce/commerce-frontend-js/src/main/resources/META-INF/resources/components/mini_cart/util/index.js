@@ -3,18 +3,34 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 
+import {ACCOUNT_ENTRY_ID_DEFAULT} from '../../../utilities/constants';
 import {
-	DEFAULT_ORDER_DETAILS_PORTLET_ID,
 	MAXIMUM_ALLOWED_QUANTITY_NOT_VALID_ERROR,
 	MAXIMUM_PRODUCT_QUANTITY_NOT_VALID_ERROR,
 	MINIMUM_PRODUCT_QUANTITY_NOT_VALID_ERROR,
-	ORDER_DETAILS_ENDPOINT,
-	ORDER_UUID_PARAMETER,
 	PRODUCT_MULTIPLE_OF_QUANTITY_NOT_VALID_ERROR,
 	PRODUCT_QUANTITY_NOT_VALID_ERROR,
+	WORKFLOW_STATUS_APPROVED,
 } from './constants';
+
+export function canSubmit({
+	accountId: rawAccountId,
+	cartItems = [],
+	id: orderId,
+	workflowStatusInfo: {code: workflowStatus = WORKFLOW_STATUS_APPROVED} = {},
+}) {
+	const accountId = parseInt(rawAccountId, 10);
+
+	const areAccountAndOrderSelected =
+		accountId !== ACCOUNT_ENTRY_ID_DEFAULT && !!orderId;
+	const areItemsPurchasable =
+		!hasErrors(cartItems) && workflowStatus === WORKFLOW_STATUS_APPROVED;
+
+	return areAccountAndOrderSelected && areItemsPurchasable;
+}
 
 export function getCorrectedQuantity(
 	productConfiguration,
@@ -197,12 +213,15 @@ export function generateProductPageURL(
 
 	if (!productLocalizedURL) {
 		const defaultLang = themeDisplay.getDefaultLanguageId();
+
 		productLocalizedURL = productRelativeURLs[defaultLang];
 	}
 
-	return [baseURL, productURLSeparator, productLocalizedURL]
-		.map((url) => url.replace(/^\//, '').replace(/\/$/, ''))
-		.join('/');
+	return productLocalizedURL
+		? [baseURL, productURLSeparator, productLocalizedURL]
+				.map((url) => url.replace(/^\//, '').replace(/\/$/, ''))
+				.join('/')
+		: '';
 }
 
 export function hasErrors(cartItems) {
@@ -240,44 +259,29 @@ export function filterOptions(jsonString) {
 		options = [];
 	}
 
-	return options.filter((option) => !!option.value.length);
+	return options.filter(
+		(option) =>
+			!!option.value.length && option.value.some((value) => !!value)
+	);
 }
 
 export function parseValue(value) {
-	return Array.isArray(value)
-		? value.filter((item) => item === 0 || item).join(', ')
-		: value;
-}
+	if (Array.isArray(value)) {
+		const [valueContent = ''] = value;
 
-export function regenerateOrderDetailURL(orderUUID, siteDefaultURL) {
-	if (!orderUUID || !siteDefaultURL) {
-		throw new Error(
-			`Cannot generate a new Order Detail URL. Invalid "${
-				siteDefaultURL ? 'orderUUID' : 'siteDefaultURL'
-			}"`
-		);
+		if (valueContent.includes('fileEntryId')) {
+			try {
+				const {title} = JSON.parse(valueContent);
+
+				return title;
+			}
+			catch (_ignore) {}
+		}
+
+		return value.filter((item) => item === 0 || item).join(', ');
 	}
 
-	const orderDetailURL = new URL(
-		`${siteDefaultURL}${ORDER_DETAILS_ENDPOINT}`
-	);
-
-	orderDetailURL.searchParams.append(
-		'p_p_id',
-		DEFAULT_ORDER_DETAILS_PORTLET_ID
-	);
-	orderDetailURL.searchParams.append('p_p_lifecycle', '0');
-	orderDetailURL.searchParams.append(
-		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_mvcRenderCommandName`,
-		'/commerce_open_order_content/edit_commerce_order'
-	);
-
-	orderDetailURL.searchParams.append(
-		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_${ORDER_UUID_PARAMETER}`,
-		orderUUID
-	);
-
-	return orderDetailURL.toString();
+	return value;
 }
 
 export function summaryDataMapper({

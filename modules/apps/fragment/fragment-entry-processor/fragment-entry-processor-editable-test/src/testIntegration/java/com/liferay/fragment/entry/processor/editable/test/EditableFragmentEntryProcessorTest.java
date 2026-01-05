@@ -24,7 +24,10 @@ import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
+import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
+import com.liferay.fragment.entry.processor.util.AnalyticsAttributesUtil;
 import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
@@ -42,21 +45,25 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
+import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.rest.test.util.ObjectEntryTestUtil;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -65,7 +72,6 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
@@ -76,6 +82,7 @@ import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ThemeLocalService;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -103,15 +110,15 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.hamcrest.CoreMatchers;
 
@@ -164,8 +171,14 @@ public class EditableFragmentEntryProcessorTest {
 
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
 
-		ServiceContextThreadLocal.pushServiceContext(
-			new MockServiceContext(_layout, _getThemeDisplay(LocaleUtil.US)));
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			_group, TestPropsValues.getUserId());
+
+		_serviceContext.setRequest(
+			ContentLayoutTestUtil.getMockHttpServletRequest(
+				_company, _group, _layout));
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 	}
 
 	@After
@@ -191,11 +204,12 @@ public class EditableFragmentEntryProcessorTest {
 
 		Assert.assertEquals(
 			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.getMostRelevantLocale(),
-					FragmentEntryLinkConstants.EDIT)));
+			StringUtil.trim(
+				_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+					fragmentEntryLink,
+					_getFragmentEntryProcessorContext(
+						LocaleUtil.getMostRelevantLocale(),
+						FragmentEntryLinkConstants.EDIT))));
 	}
 
 	@Test
@@ -209,8 +223,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		String editableValues = _getEditableFieldValues(
 			_portal.getClassNameId(
-				ObjectDefinition.class.getName() + "#" +
-					RandomTestUtil.randomLong()),
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+						RandomTestUtil.randomLong()),
 			classPK, fieldId,
 			"action/editable_values_action_default_text.json");
 
@@ -245,8 +260,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		String editableValues = _getEditableFieldValues(
 			_portal.getClassNameId(
-				ObjectDefinition.class.getName() + "#" +
-					RandomTestUtil.randomLong()),
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+						RandomTestUtil.randomLong()),
 			classPK, fieldId, "action/editable_values_action_inline_text.json");
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
@@ -275,8 +291,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		String editableValues = _getEditableFieldValues(
 			_portal.getClassNameId(
-				ObjectDefinition.class.getName() + "#" +
-					RandomTestUtil.randomLong()),
+				ObjectDefinitionConstants.
+					CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+						RandomTestUtil.randomLong()),
 			RandomTestUtil.randomLong(),
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
 				RandomTestUtil.randomLong(),
@@ -300,8 +317,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -332,8 +350,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -368,9 +387,12 @@ public class EditableFragmentEntryProcessorTest {
 
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.SPAIN);
 
-		ServiceContextThreadLocal.pushServiceContext(
-			new MockServiceContext(
-				_layout, _getThemeDisplay(LocaleUtil.SPAIN)));
+		ThemeDisplay themeDisplay = _serviceContext.getThemeDisplay();
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(LocaleUtil.SPAIN));
+		themeDisplay.setLocale(LocaleUtil.SPAIN);
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
 		try {
 			element = _getElement(
@@ -380,6 +402,10 @@ public class EditableFragmentEntryProcessorTest {
 		finally {
 			LocaleThreadLocal.setThemeDisplayLocale(
 				_originalThemeDisplayDefaultLocale);
+
+			themeDisplay.setLanguageId(
+				LocaleUtil.toLanguageId(_originalThemeDisplayDefaultLocale));
+			themeDisplay.setLocale(_originalThemeDisplayDefaultLocale);
 
 			ServiceContextThreadLocal.popServiceContext();
 		}
@@ -393,8 +419,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -419,8 +446,7 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals(
 			"page", element.attr("data-lfr-on-error-interaction"));
 		Assert.assertEquals(
-			_portal.getLayoutURL(
-				_layout, _getThemeDisplay(LocaleUtil.getSiteDefault())),
+			_portal.getLayoutURL(_layout, _serviceContext.getThemeDisplay()),
 			element.attr("data-lfr-on-error-page-url"));
 	}
 
@@ -429,8 +455,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -464,9 +491,12 @@ public class EditableFragmentEntryProcessorTest {
 
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.SPAIN);
 
-		ServiceContextThreadLocal.pushServiceContext(
-			new MockServiceContext(
-				_layout, _getThemeDisplay(LocaleUtil.SPAIN)));
+		ThemeDisplay themeDisplay = _serviceContext.getThemeDisplay();
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(LocaleUtil.SPAIN));
+		themeDisplay.setLocale(LocaleUtil.SPAIN);
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
 		try {
 			element = _getElement(
@@ -476,6 +506,10 @@ public class EditableFragmentEntryProcessorTest {
 		finally {
 			LocaleThreadLocal.setThemeDisplayLocale(
 				_originalThemeDisplayDefaultLocale);
+
+			themeDisplay.setLanguageId(
+				LocaleUtil.toLanguageId(_originalThemeDisplayDefaultLocale));
+			themeDisplay.setLocale(_originalThemeDisplayDefaultLocale);
 
 			ServiceContextThreadLocal.popServiceContext();
 		}
@@ -490,8 +524,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -522,8 +557,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -558,9 +594,12 @@ public class EditableFragmentEntryProcessorTest {
 
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.SPAIN);
 
-		ServiceContextThreadLocal.pushServiceContext(
-			new MockServiceContext(
-				_layout, _getThemeDisplay(LocaleUtil.SPAIN)));
+		ThemeDisplay themeDisplay = _serviceContext.getThemeDisplay();
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(LocaleUtil.SPAIN));
+		themeDisplay.setLocale(LocaleUtil.SPAIN);
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
 		try {
 			element = _getElement(
@@ -571,6 +610,10 @@ public class EditableFragmentEntryProcessorTest {
 			LocaleThreadLocal.setThemeDisplayLocale(
 				_originalThemeDisplayDefaultLocale);
 
+			themeDisplay.setLanguageId(
+				LocaleUtil.toLanguageId(_originalThemeDisplayDefaultLocale));
+			themeDisplay.setLocale(_originalThemeDisplayDefaultLocale);
+
 			ServiceContextThreadLocal.popServiceContext();
 		}
 
@@ -579,12 +622,14 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
+	@TestInfo("LPD-67912")
 	public void testFragmentEntryProcessorEditableActionMappedActionOnSuccessPage()
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -609,8 +654,42 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals(
 			"page", element.attr("data-lfr-on-success-interaction"));
 		Assert.assertEquals(
-			_portal.getLayoutURL(
-				_layout, _getThemeDisplay(LocaleUtil.getSiteDefault())),
+			_portal.getLayoutURL(_layout, _serviceContext.getThemeDisplay()),
+			element.attr("data-lfr-on-success-page-url"));
+
+		Group group = GroupTestUtil.addGroup();
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(group);
+
+		element = _getElement(
+			"data-lfr-editable-id", "editable_action",
+			StringUtil.replace(
+				_readJSONFileToString(
+					"action/editable_values_action_mapped_action_on_" +
+						"success_page_with_external_references_codes.json"),
+				new String[] {
+					"[$CLASS_NAME_ID$]", "[$CLASS_PK$]", "[$FIELD_ID$]",
+					"[$EXTERNAL_REFERENCE_CODE$]",
+					"[$SCOPE_EXTERNAL_REFERENCE_CODE$]"
+				},
+				new String[] {
+					String.valueOf(classNameId), String.valueOf(classPK),
+					fieldId, layout.getExternalReferenceCode(),
+					group.getExternalReferenceCode()
+				}),
+			"action/fragment_entry_action.html", LocaleUtil.getSiteDefault(),
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(
+			String.valueOf(classNameId),
+			element.attr("data-lfr-class-name-id"));
+		Assert.assertEquals(
+			String.valueOf(classPK), element.attr("data-lfr-class-pk"));
+		Assert.assertEquals(fieldId, element.attr("data-lfr-field-id"));
+		Assert.assertEquals(
+			"page", element.attr("data-lfr-on-success-interaction"));
+		Assert.assertEquals(
+			_portal.getLayoutURL(layout, _serviceContext.getThemeDisplay()),
 			element.attr("data-lfr-on-success-page-url"));
 	}
 
@@ -619,8 +698,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -654,9 +734,12 @@ public class EditableFragmentEntryProcessorTest {
 
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.SPAIN);
 
-		ServiceContextThreadLocal.pushServiceContext(
-			new MockServiceContext(
-				_layout, _getThemeDisplay(LocaleUtil.SPAIN)));
+		ThemeDisplay themeDisplay = _serviceContext.getThemeDisplay();
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(LocaleUtil.SPAIN));
+		themeDisplay.setLocale(LocaleUtil.SPAIN);
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
 		try {
 			element = _getElement(
@@ -666,6 +749,10 @@ public class EditableFragmentEntryProcessorTest {
 		finally {
 			LocaleThreadLocal.setThemeDisplayLocale(
 				_originalThemeDisplayDefaultLocale);
+
+			themeDisplay.setLanguageId(
+				LocaleUtil.toLanguageId(_originalThemeDisplayDefaultLocale));
+			themeDisplay.setLocale(_originalThemeDisplayDefaultLocale);
 
 			ServiceContextThreadLocal.popServiceContext();
 		}
@@ -680,8 +767,9 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				RandomTestUtil.randomLong());
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION +
+					RandomTestUtil.randomLong());
 		long classPK = RandomTestUtil.randomLong();
 		String fieldId =
 			ObjectAction.class.getSimpleName() + StringPool.UNDERLINE +
@@ -732,12 +820,13 @@ public class EditableFragmentEntryProcessorTest {
 			false);
 
 		long classNameId = _portal.getClassNameId(
-			ObjectDefinition.class.getName() + "#" +
-				objectDefinition.getObjectDefinitionId());
+			objectDefinition.getClassName());
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			_group.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"text", RandomTestUtil.randomString()
 			).build(),
@@ -772,6 +861,341 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
+	public void testFragmentEntryProcessorEditableAssertAnalyticsAttributesWithMappedImageInViewMode()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _addFragmentEntry(
+			"fragment_entry_image.html");
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				TestPropsValues.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"image-square",
+						JSONUtil.put(
+							"classNameId",
+							_portal.getClassNameId(JournalArticle.class)
+						).put(
+							"classPK", journalArticle.getResourcePrimKey()
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						).put(
+							"fieldId", "smallImage"
+						))
+				).toString(),
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				ServiceContextTestUtil.getServiceContext());
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "image-square", fragmentEntryLink,
+			LocaleUtil.US, FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(
+			AnalyticsAttributesUtil.ACTION_IMPRESSION,
+			element.attr("data-analytics-asset-action"));
+		Assert.assertEquals(
+			"smallImage", element.attr("data-analytics-asset-field"));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getResourcePrimKey()),
+			element.attr("data-analytics-asset-id"));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getDDMStructureId()),
+			element.attr("data-analytics-asset-subtype"));
+		Assert.assertEquals(
+			journalArticle.getTitle(LocaleUtil.US),
+			element.attr("data-analytics-asset-title"));
+		Assert.assertEquals(
+			JournalArticle.class.getName(),
+			element.attr("data-analytics-asset-type"));
+	}
+
+	@Test
+	public void testFragmentEntryProcessorEditableAssertAnalyticsAttributesWithMappedObjectEntry1()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _addFragmentEntry(
+			"fragment_entry_editable_text.html");
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					ObjectFieldUtil.createObjectField(
+						"Text", "String", true, true, null,
+						RandomTestUtil.randomString(), "title", false)),
+				false);
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			objectDefinition, "title", "titleValue");
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				TestPropsValues.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"editable_text",
+						JSONUtil.put(
+							"classNameId",
+							_portal.getClassNameId(
+								objectDefinition.getClassName())
+						).put(
+							"classPK", objectEntry.getPrimaryKey()
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						).put(
+							"fieldId", "title"
+						))
+				).toString(),
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				ServiceContextTestUtil.getServiceContext());
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", fragmentEntryLink,
+			LocaleUtil.US, FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(
+			AnalyticsAttributesUtil.ACTION_IMPRESSION,
+			element.attr("data-analytics-asset-action"));
+		Assert.assertEquals(
+			"title", element.attr("data-analytics-asset-field"));
+		Assert.assertEquals(
+			String.valueOf(objectEntry.getPrimaryKey()),
+			element.attr("data-analytics-asset-id"));
+		Assert.assertEquals(
+			"titleValue", element.attr("data-analytics-asset-title"));
+		Assert.assertEquals(
+			"object-entry", element.attr("data-analytics-asset-type"));
+		Assert.assertEquals(
+			objectEntry.getExternalReferenceCode(),
+			element.attr("data-analytics-external-reference-code"));
+		Assert.assertEquals(
+			objectDefinition.getName(),
+			element.attr("data-analytics-object-definition-name"));
+	}
+
+	@Test
+	public void testFragmentEntryProcessorEditableAssertAnalyticsAttributesWithMappedObjectEntry2()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _addFragmentEntry(
+			"fragment_entry_editable_text.html");
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					ObjectFieldUtil.createObjectField(
+						"LongText", "Clob", true, true, null,
+						RandomTestUtil.randomString(), "content", false)),
+				false);
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			objectDefinition, "content", "contentValue");
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				TestPropsValues.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"editable_text",
+						JSONUtil.put(
+							"classNameId",
+							_portal.getClassNameId(
+								objectDefinition.getClassName())
+						).put(
+							"classPK", objectEntry.getPrimaryKey()
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						).put(
+							"fieldId", "content"
+						))
+				).toString(),
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				ServiceContextTestUtil.getServiceContext());
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", fragmentEntryLink,
+			LocaleUtil.US, FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(
+			AnalyticsAttributesUtil.ACTION_VIEW,
+			element.attr("data-analytics-asset-action"));
+		Assert.assertEquals(
+			"content", element.attr("data-analytics-asset-field"));
+		Assert.assertEquals(
+			String.valueOf(objectEntry.getPrimaryKey()),
+			element.attr("data-analytics-asset-id"));
+		Assert.assertEquals(
+			"object-entry", element.attr("data-analytics-asset-type"));
+		Assert.assertEquals(
+			objectEntry.getExternalReferenceCode(),
+			element.attr("data-analytics-external-reference-code"));
+		Assert.assertEquals(
+			objectDefinition.getName(),
+			element.attr("data-analytics-object-definition-name"));
+	}
+
+	@Test
+	public void testFragmentEntryProcessorEditableAssertAnalyticsAttributesWithMappedTextInEditMode()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _addFragmentEntry(
+			"fragment_entry_editable_text.html");
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				TestPropsValues.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"editable_text",
+						JSONUtil.put(
+							"classNameId",
+							_portal.getClassNameId(JournalArticle.class)
+						).put(
+							"classPK", journalArticle.getResourcePrimKey()
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						).put(
+							"fieldId", "title"
+						))
+				).toString(),
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				ServiceContextTestUtil.getServiceContext());
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", fragmentEntryLink,
+			LocaleUtil.US, FragmentEntryLinkConstants.EDIT);
+
+		String attribute = element.attr("data-analytics-asset-action");
+
+		Assert.assertTrue(attribute.isEmpty());
+	}
+
+	@Test
+	public void testFragmentEntryProcessorEditableAssertAnalyticsAttributesWithMappedTextInViewMode()
+		throws Exception {
+
+		FragmentEntry fragmentEntry = _addFragmentEntry(
+			"fragment_entry_editable_text.html");
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.addFragmentEntryLink(
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				TestPropsValues.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"editable_text",
+						JSONUtil.put(
+							"classNameId",
+							_portal.getClassNameId(JournalArticle.class)
+						).put(
+							"classPK", journalArticle.getResourcePrimKey()
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						).put(
+							"fieldId", "title"
+						))
+				).toString(),
+				StringPool.BLANK, 0, null, fragmentEntry.getType(),
+				ServiceContextTestUtil.getServiceContext());
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", fragmentEntryLink,
+			LocaleUtil.US, FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(
+			AnalyticsAttributesUtil.ACTION_IMPRESSION,
+			element.attr("data-analytics-asset-action"));
+		Assert.assertEquals(
+			"title", element.attr("data-analytics-asset-field"));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getResourcePrimKey()),
+			element.attr("data-analytics-asset-id"));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getDDMStructureId()),
+			element.attr("data-analytics-asset-subtype"));
+		Assert.assertEquals(
+			journalArticle.getTitle(LocaleUtil.US),
+			element.attr("data-analytics-asset-title"));
+		Assert.assertEquals(
+			JournalArticle.class.getName(),
+			element.attr("data-analytics-asset-type"));
+	}
+
+	@Test
+	@TestInfo("LPD-34747")
+	public void testFragmentEntryProcessorEditableLinkInlineValueEditMode()
+		throws Exception {
+
+		_testFragmentEntryProcessorEditableLinkInlineValue(
+			"#", FragmentEntryLinkConstants.EDIT);
+	}
+
+	@Test
+	@TestInfo("LPD-34747")
+	public void testFragmentEntryProcessorEditableLinkInlineValueViewMode()
+		throws Exception {
+
+		_testFragmentEntryProcessorEditableLinkInlineValue(
+			"https://www.liferay.com", FragmentEntryLinkConstants.VIEW);
+	}
+
+	@Test
 	public void testFragmentEntryProcessorEditableLinkWithNestedEditablesInHtml()
 		throws Exception {
 
@@ -788,8 +1212,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				fragmentEntry.getExternalReferenceCode(),
+				fragmentEntry.getScopeERC(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				TestPropsValues.getPlid(), fragmentEntry.getCss(),
@@ -814,7 +1239,7 @@ public class EditableFragmentEntryProcessorTest {
 
 		_fragmentEntryLinkLocalService.updateFragmentEntryLink(
 			TestPropsValues.getUserId(),
-			fragmentEntryLink.getFragmentEntryLinkId(), editableValues);
+			fragmentEntryLink.getFragmentEntryLinkId(), editableValues, true);
 
 		int count =
 			_layoutClassedModelUsageLocalService.
@@ -837,10 +1262,78 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
+	@TestInfo("LPD-73556")
+	public void testFragmentEntryProcessorEditableMappedDLImage()
+		throws Exception {
+
+		long classNameId = _portal.getClassNameId(FileEntry.class);
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		String editableValues = JSONUtil.put(
+			FragmentEntryProcessorConstants.
+				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			JSONUtil.put(
+				"image-square",
+				JSONUtil.put(
+					"classNameId", classNameId
+				).put(
+					"externalReferenceCode", externalReferenceCode
+				).put(
+					"fieldId", "fileURL"
+				))
+		).toString();
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "image-square", editableValues,
+			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
+			FragmentEntryLinkConstants.EDIT);
+
+		Assert.assertEquals(
+			StringBundler.concat(
+				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAJCAYAAAA",
+				"7KqwyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1B",
+				"AACxjwv8YQUAAAAkSURBVHgB7cxBEQAACAIwtH8Pzw52kxD8OBZgNXsPQUOUw",
+				"CIgAz0DHTyygaAAAAAASUVORK5CYII="),
+			GetterUtil.getString(element.attr("src")));
+
+		FileEntry fileEntry = _addImageFileEntry(externalReferenceCode);
+
+		element = _getElement(
+			"data-lfr-editable-id", "image-square", editableValues,
+			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
+			FragmentEntryLinkConstants.EDIT);
+
+		Assert.assertEquals(
+			fileEntry.getFileEntryId(),
+			GetterUtil.getLong(element.attr("data-fileentryid")));
+
+		editableValues = _getEditableFieldValues(
+			classNameId, fileEntry.getFileEntryId(), "fileURL",
+			"fragment_entry_link_mapped_asset_field_image.json");
+
+		element = _getElement(
+			"data-lfr-editable-id", "image-square", editableValues,
+			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
+			FragmentEntryLinkConstants.EDIT);
+
+		Assert.assertEquals(
+			fileEntry.getFileEntryId(),
+			GetterUtil.getLong(element.attr("data-fileentryid")));
+
+		String src = element.attr("src");
+
+		Assert.assertFalse(src.contains("imagePreview=1"));
+		Assert.assertEquals(
+			_dlURLHelper.getPreviewURL(
+				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK),
+			src);
+	}
+
+	@Test
 	public void testFragmentEntryProcessorEditableMappedDLImageBackgroundImageFileEntryId()
 		throws Exception {
 
-		FileEntry fileEntry = _addImageFileEntry();
+		FileEntry fileEntry = _addImageFileEntry(RandomTestUtil.randomString());
 
 		String editableValues = _getEditableFieldValues(
 			_portal.getClassNameId(FileEntry.class), fileEntry.getFileEntryId(),
@@ -861,54 +1354,10 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
-	public void testFragmentEntryProcessorEditableMappedDLImageFileEntryId()
-		throws Exception {
-
-		FileEntry fileEntry = _addImageFileEntry();
-
-		String editableValues = _getEditableFieldValues(
-			_portal.getClassNameId(FileEntry.class), fileEntry.getFileEntryId(),
-			"fileURL", "fragment_entry_link_mapped_asset_field_image.json");
-
-		Element element = _getElement(
-			"data-lfr-editable-id", "image-square", editableValues,
-			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
-			FragmentEntryLinkConstants.EDIT);
-
-		Assert.assertEquals(
-			fileEntry.getFileEntryId(),
-			GetterUtil.getLong(element.attr("data-fileentryid")));
-	}
-
-	@Test
-	public void testFragmentEntryProcessorEditableMappedDLPreview()
-		throws Exception {
-
-		FileEntry fileEntry = _addImageFileEntry();
-
-		String editableValues = _getEditableFieldValues(
-			_portal.getClassNameId(FileEntry.class), fileEntry.getFileEntryId(),
-			"fileURL", "fragment_entry_link_mapped_asset_field_image.json");
-
-		Element element = _getElement(
-			"data-lfr-editable-id", "image-square", editableValues,
-			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
-			FragmentEntryLinkConstants.EDIT);
-
-		String src = element.attr("src");
-
-		Assert.assertFalse(src.contains("imagePreview=1"));
-		Assert.assertEquals(
-			_dlURLHelper.getPreviewURL(
-				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK),
-			src);
-	}
-
-	@Test
 	public void testFragmentEntryProcessorEditableMappedJournalArticleBackgroundImageFileEntryId()
 		throws Exception {
 
-		FileEntry fileEntry = _addImageFileEntry();
+		FileEntry fileEntry = _addImageFileEntry(RandomTestUtil.randomString());
 
 		String editableValues = _getJournalArticleEditableFieldValues(
 			"fragment_entry_link_mapped_asset_field_background_image.json",
@@ -931,7 +1380,7 @@ public class EditableFragmentEntryProcessorTest {
 	public void testFragmentEntryProcessorEditableMappedJournalArticleImageFileEntryId()
 		throws Exception {
 
-		FileEntry fileEntry = _addImageFileEntry();
+		FileEntry fileEntry = _addImageFileEntry(RandomTestUtil.randomString());
 
 		String editableValues = _getJournalArticleEditableFieldValues(
 			"fragment_entry_link_mapped_asset_field_image.json",
@@ -971,10 +1420,49 @@ public class EditableFragmentEntryProcessorTest {
 
 		Assert.assertEquals(
 			_getProcessedHTML("processed_fragment_entry_empty_string.html"),
+			StringUtil.trim(
+				_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+					fragmentEntryLink,
+					_getFragmentEntryProcessorContext(
+						LocaleUtil.US, FragmentEntryLinkConstants.EDIT))));
+	}
+
+	@Test
+	@TestInfo("LPS-124056")
+	public void testFragmentEntryProcessorEditableWithImageLazyLoading()
+		throws Exception {
+
+		FragmentEntryLink fragmentEntryLink =
+			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
+
+		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
+
+		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
+
+		fragmentEntryLink.setEditableValues(
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_without_image_lazy_" +
+					"loading.json"));
+
+		String content =
 			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
 				fragmentEntryLink,
 				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, FragmentEntryLinkConstants.EDIT)));
+					LocaleUtil.US, FragmentEntryLinkConstants.EDIT));
+
+		Assert.assertFalse(content.contains("loading=\"lazy\""));
+
+		fragmentEntryLink.setEditableValues(
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_with_image_lazy_loading." +
+					"json"));
+
+		content = _fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+			fragmentEntryLink,
+			_getFragmentEntryProcessorContext(
+				LocaleUtil.US, FragmentEntryLinkConstants.EDIT));
+
+		Assert.assertTrue(content.contains("loading=\"lazy\""));
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -1013,6 +1501,7 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
+	@TestInfo("LPD-60383")
 	public void testFragmentEntryProcessorEditableWithLocalizableImageAlt()
 		throws Exception {
 
@@ -1038,6 +1527,17 @@ public class EditableFragmentEntryProcessorTest {
 		Locale currentLocale = LocaleThreadLocal.getThemeDisplayLocale();
 
 		LocaleThreadLocal.setThemeDisplayLocale(
+			LocaleUtil.fromLanguageId("de_DE"));
+
+		Assert.assertThat(
+			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+				fragmentEntryLink,
+				_getFragmentEntryProcessorContext(
+					LocaleUtil.fromLanguageId("de_DE"),
+					FragmentEntryLinkConstants.EDIT)),
+			CoreMatchers.containsString("en_US-alt"));
+
+		LocaleThreadLocal.setThemeDisplayLocale(
 			LocaleUtil.fromLanguageId("es_ES"));
 
 		Assert.assertThat(
@@ -1049,6 +1549,98 @@ public class EditableFragmentEntryProcessorTest {
 			CoreMatchers.containsString("es_ES-alt"));
 
 		LocaleThreadLocal.setThemeDisplayLocale(currentLocale);
+	}
+
+	@Test
+	@TestInfo("LPD-67912")
+	public void testFragmentEntryProcessorEditableWithMappedLayout()
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				"BASIC_COMPONENT-heading");
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"element-text",
+						JSONUtil.put(
+							"config",
+							JSONUtil.put(
+								"layout",
+								JSONUtil.put(
+									"externalReferenceCode",
+									_layout.getExternalReferenceCode()
+								).put(
+									"title", RandomTestUtil.randomString()
+								)
+							).put(
+								"mapperType", "link"
+							)
+						).put(
+							"defaultValue", RandomTestUtil.randomString()
+						))
+				).put(
+					FragmentEntryProcessorConstants.
+						KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put("headingLevel", "h1")
+				).toString(),
+				fragmentEntry.getCss(), fragmentEntry.getConfiguration(), null,
+				null, fragmentEntry.getHtml(), fragmentEntry.getJs(), _layout,
+				fragmentEntry.getFragmentEntryKey(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
+				fragmentEntry.getType());
+
+		_testEditableWithLinkedLayoutReferencedByExternalReferenceCode(
+			fragmentEntryLink, _layout);
+
+		Group group = GroupTestUtil.addGroup();
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(group);
+
+		fragmentEntryLink = ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text",
+					JSONUtil.put(
+						"config",
+						JSONUtil.put(
+							"layout",
+							JSONUtil.put(
+								"externalReferenceCode",
+								layout.getExternalReferenceCode()
+							).put(
+								"scopeExternalReferenceCode",
+								group.getExternalReferenceCode()
+							).put(
+								"title", RandomTestUtil.randomString()
+							)
+						).put(
+							"mapperType", "link"
+						)
+					).put(
+						"defaultValue", RandomTestUtil.randomString()
+					))
+			).put(
+				FragmentEntryProcessorConstants.
+					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put("headingLevel", "h1")
+			).toString(),
+			fragmentEntry.getCss(), fragmentEntry.getConfiguration(), null,
+			null, fragmentEntry.getHtml(), fragmentEntry.getJs(), _layout,
+			fragmentEntry.getFragmentEntryKey(),
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				_layout.getPlid()),
+			fragmentEntry.getType());
+
+		_testEditableWithLinkedLayoutReferencedByExternalReferenceCode(
+			fragmentEntryLink, layout);
 	}
 
 	@Test
@@ -1068,10 +1660,11 @@ public class EditableFragmentEntryProcessorTest {
 
 		Assert.assertEquals(
 			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, FragmentEntryLinkConstants.EDIT)));
+			StringUtil.trim(
+				_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+					fragmentEntryLink,
+					_getFragmentEntryProcessorContext(
+						LocaleUtil.US, FragmentEntryLinkConstants.EDIT))));
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -1128,10 +1721,11 @@ public class EditableFragmentEntryProcessorTest {
 
 		Assert.assertEquals(
 			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.CHINESE, FragmentEntryLinkConstants.EDIT)));
+			StringUtil.trim(
+				_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+					fragmentEntryLink,
+					_getFragmentEntryProcessorContext(
+						LocaleUtil.CHINESE, FragmentEntryLinkConstants.EDIT))));
 	}
 
 	@Test
@@ -1189,14 +1783,15 @@ public class EditableFragmentEntryProcessorTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionService.addFragmentCollection(
-				null, _group.getGroupId(), "Fragment Collection",
+				null, _group.getGroupId(), RandomTestUtil.randomString(),
 				StringPool.BLANK, serviceContext);
 
 		return _fragmentEntryService.addFragmentEntry(
 			null, _group.getGroupId(),
-			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
-			"Fragment Entry", null, _readFileToString(htmlFile), null, false,
-			null, null, 0, false, FragmentConstants.TYPE_SECTION, null,
+			fragmentCollection.getFragmentCollectionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			_readFileToString(htmlFile), null, false, null, null, 0, false,
+			false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1207,8 +1802,9 @@ public class EditableFragmentEntryProcessorTest {
 		FragmentEntry fragmentEntry = _addFragmentEntry(htmlFileName);
 
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
-			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
-			fragmentEntry.getFragmentEntryId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+			fragmentEntry.getExternalReferenceCode(),
+			fragmentEntry.getScopeERC(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				_layout.getPlid()),
 			TestPropsValues.getPlid(), fragmentEntry.getCss(),
@@ -1217,7 +1813,9 @@ public class EditableFragmentEntryProcessorTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 
-	private FileEntry _addImageFileEntry() throws Exception {
+	private FileEntry _addImageFileEntry(String externalReferenceCode)
+		throws Exception {
+
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
@@ -1232,7 +1830,7 @@ public class EditableFragmentEntryProcessorTest {
 			RepositoryProviderUtil.getLocalRepository(_group.getGroupId());
 
 		return localRepository.addFileEntry(
-			null, TestPropsValues.getUserId(),
+			externalReferenceCode, TestPropsValues.getUserId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
@@ -1285,13 +1883,16 @@ public class EditableFragmentEntryProcessorTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
+				null, TestPropsValues.getUserId(), 0, null, false, true, false,
+				true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_SITE,
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, null);
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(), null, Collections.emptyList(),
+				new ServiceContext());
 
 		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
 			new TextObjectFieldBuilder(
@@ -1409,7 +2010,8 @@ public class EditableFragmentEntryProcessorTest {
 		throws Exception {
 
 		return new DefaultFragmentEntryProcessorContext(
-			_getHttpServletRequest(locale), null, mode, locale);
+			_getHttpServletRequest(locale), new MockHttpServletResponse(), mode,
+			locale);
 	}
 
 	private HttpServletRequest _getHttpServletRequest(Locale locale)
@@ -1419,7 +2021,7 @@ public class EditableFragmentEntryProcessorTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
@@ -1484,35 +2086,6 @@ public class EditableFragmentEntryProcessorTest {
 		return bodyElement.html();
 	}
 
-	private ThemeDisplay _getThemeDisplay(Locale locale) throws Exception {
-		ThemeDisplay themeDisplay = new ThemeDisplay();
-
-		themeDisplay.setCompany(_company);
-		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(locale));
-		themeDisplay.setLayout(_layout);
-		themeDisplay.setLocale(locale);
-
-		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
-			_group.getGroupId(), false);
-
-		themeDisplay.setLayoutSet(layoutSet);
-
-		themeDisplay.setLayoutTypePortlet(
-			(LayoutTypePortlet)_layout.getLayoutType());
-		themeDisplay.setLookAndFeel(
-			_themeLocalService.getTheme(
-				_company.getCompanyId(), layoutSet.getThemeId()),
-			null);
-		themeDisplay.setRealUser(TestPropsValues.getUser());
-		themeDisplay.setRequest(_getHttpServletRequest(locale));
-		themeDisplay.setResponse(new MockHttpServletResponse());
-		themeDisplay.setScopeGroupId(_group.getGroupId());
-		themeDisplay.setSiteGroupId(_group.getGroupId());
-		themeDisplay.setUser(TestPropsValues.getUser());
-
-		return themeDisplay;
-	}
-
 	private String _readFileToString(String fileName) throws Exception {
 		Class<?> clazz = getClass();
 
@@ -1527,6 +2100,52 @@ public class EditableFragmentEntryProcessorTest {
 			_readFileToString(jsonFileName));
 
 		return jsonObject.toString();
+	}
+
+	private void _testEditableWithLinkedLayoutReferencedByExternalReferenceCode(
+			FragmentEntryLink fragmentEntryLink, Layout layout)
+		throws Exception {
+
+		String content =
+			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+				fragmentEntryLink,
+				_getFragmentEntryProcessorContext(
+					LocaleUtil.getMostRelevantLocale(),
+					FragmentEntryLinkConstants.VIEW));
+
+		Assert.assertTrue(
+			content.contains(
+				_portal.getLayoutRelativeURL(
+					layout, _serviceContext.getThemeDisplay())));
+	}
+
+	private void _testFragmentEntryProcessorEditableLinkInlineValue(
+			String expectedHref, String mode)
+		throws Exception {
+
+		String editableValues = _readJSONFileToString(
+			"link/editable_values_link_inline.json");
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
+			editableValues, "link/fragment_entry_link.html");
+
+		String processedFragmentEntryLinkHTML =
+			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+				fragmentEntryLink,
+				_getFragmentEntryProcessorContext(
+					LocaleUtil.getSiteDefault(), mode));
+
+		Document document = _getDocument(processedFragmentEntryLinkHTML);
+
+		Element body = document.body();
+
+		Elements elements = body.getElementsByTag("a");
+
+		Element element = elements.get(0);
+
+		Assert.assertEquals(expectedHref, element.attr("href"));
+		Assert.assertEquals(
+			"Default Editable Values Link Text", element.text());
 	}
 
 	private String _toJSON(FileEntry fileEntry) {
@@ -1568,6 +2187,10 @@ public class EditableFragmentEntryProcessorTest {
 
 	@Inject
 	private DLURLHelper _dlURLHelper;
+
+	@Inject
+	private FragmentCollectionContributorRegistry
+		_fragmentCollectionContributorRegistry;
 
 	@Inject
 	private FragmentCollectionService _fragmentCollectionService;
@@ -1622,41 +2245,9 @@ public class EditableFragmentEntryProcessorTest {
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
+	private ServiceContext _serviceContext;
+
 	@Inject
 	private ThemeLocalService _themeLocalService;
-
-	private static class MockServiceContext extends ServiceContext {
-
-		public MockServiceContext(Layout layout, ThemeDisplay themeDisplay) {
-			_layout = layout;
-			_themeDisplay = themeDisplay;
-		}
-
-		@Override
-		public HttpServletRequest getRequest() {
-			HttpServletRequest httpServletRequest =
-				new MockHttpServletRequest();
-
-			httpServletRequest.setAttribute(WebKeys.LAYOUT, _layout);
-			httpServletRequest.setAttribute(
-				WebKeys.THEME_DISPLAY, _themeDisplay);
-
-			return httpServletRequest;
-		}
-
-		@Override
-		public HttpServletResponse getResponse() {
-			return new MockHttpServletResponse();
-		}
-
-		@Override
-		public ThemeDisplay getThemeDisplay() {
-			return _themeDisplay;
-		}
-
-		private final Layout _layout;
-		private final ThemeDisplay _themeDisplay;
-
-	}
 
 }

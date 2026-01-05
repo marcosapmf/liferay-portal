@@ -13,9 +13,9 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Locale;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -24,7 +24,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
-	enabled = false,
 	property = "object.scope.provider.key=" + ObjectDefinitionConstants.SCOPE_DEPOT,
 	service = ObjectScopeProvider.class
 )
@@ -44,7 +43,7 @@ public class DepotObjectScopeProviderImpl implements ObjectScopeProvider {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return _language.get(locale, "depot");
+		return _language.get(locale, "asset-library");
 	}
 
 	@Override

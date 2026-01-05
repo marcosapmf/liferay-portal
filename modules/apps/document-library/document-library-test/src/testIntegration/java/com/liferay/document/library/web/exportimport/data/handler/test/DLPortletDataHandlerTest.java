@@ -277,7 +277,8 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 	@Ignore
 	@Override
 	@Test
-	public void testGetExportConfigurationControls() throws Exception {
+	public void testGetExportConfigurationPortletDataHandlerControls()
+		throws Exception {
 	}
 
 	@Test
@@ -464,7 +465,7 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 
 	protected long addRepositoryEntries() throws Exception {
 		Repository repository = RepositoryLocalServiceUtil.addRepository(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			PortalUtil.getClassNameId(LiferayRepository.class.getName()),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			PortletKeys.BACKGROUND_TASK, StringPool.BLANK,
@@ -524,7 +525,7 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 			null, null, serviceContext);
 
 		DLAppLocalServiceUtil.addFileShortcut(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			folder.getFolderId(), fileEntry.getFileEntryId(), serviceContext);
 	}
 
@@ -535,11 +536,13 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 
 	@Override
 	protected String[] getDataPortletPreferences() {
-		return new String[] {"rootFolderId", "selectedRepositoryId"};
+		return new String[0];
 	}
 
 	@Override
-	protected PortletDataHandlerControl[] getExportControls() {
+	protected PortletDataHandlerControl[]
+		getExportPortletDataHandlerControls() {
+
 		return new PortletDataHandlerControl[] {
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "repositories", true, false, null,
@@ -565,8 +568,10 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 	}
 
 	@Override
-	protected PortletDataHandlerControl[] getImportControls() {
-		return getExportControls();
+	protected PortletDataHandlerControl[]
+		getImportPortletDataHandlerControls() {
+
+		return getExportPortletDataHandlerControls();
 	}
 
 	@Override
@@ -620,8 +625,10 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 	}
 
 	@Override
-	protected PortletDataHandlerControl[] getStagingControls() {
-		return getExportControls();
+	protected PortletDataHandlerControl[]
+		getStagingPortletDataHandlerControls() {
+
+		return getExportPortletDataHandlerControls();
 	}
 
 	@Override
@@ -655,7 +662,9 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 	}
 
 	@Override
-	protected boolean isGetExportConfigurationControlsTested() {
+	protected boolean
+		isGetExportConfigurationPortletDataHandlerControlsTested() {
+
 		return true;
 	}
 

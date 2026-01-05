@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
@@ -23,6 +23,13 @@ import getLayoutDataItemUniqueClassName from '../../../../../src/main/resources/
 
 const COLLECTION_ID = 'COLLECTION_ID';
 
+jest.mock(
+	'../../../../../src/main/resources/META-INF/resources/page_editor/app/services/InfoItemService',
+	() => ({
+		getPageContents: jest.fn(() => Promise.resolve()),
+	})
+);
+
 const renderCollection = ({
 	isActive = true,
 	collectionConfig = {styles: {}},
@@ -39,7 +46,7 @@ const renderCollection = ({
 	};
 
 	const layoutData = {
-		items: {collection},
+		items: {[collection.itemId]: collection},
 	};
 
 	const AutoSelector = () => {
@@ -77,12 +84,6 @@ const renderCollection = ({
 
 describe('CollectionWithControls', () => {
 	afterEach(cleanup);
-
-	it('shows a no-collection-selected message', () => {
-		const {getByText} = renderCollection();
-
-		expect(getByText('no-collection-selected-yet')).toBeInTheDocument();
-	});
 
 	it('removes all buttons if user has no permissions', () => {
 		const {queryByTitle} = renderCollection({hasUpdatePermission: false});

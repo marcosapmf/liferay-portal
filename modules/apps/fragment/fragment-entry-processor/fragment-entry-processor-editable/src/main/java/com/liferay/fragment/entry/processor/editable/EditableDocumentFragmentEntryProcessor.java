@@ -9,6 +9,7 @@ import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorCons
 import com.liferay.fragment.entry.processor.editable.mapper.EditableElementMapper;
 import com.liferay.fragment.entry.processor.editable.parser.EditableElementParser;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
+import com.liferay.fragment.entry.processor.util.AnalyticsAttributesUtil;
 import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.DocumentFragmentEntryProcessor;
@@ -16,6 +17,7 @@ import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,6 +34,9 @@ import java.util.Objects;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Collector;
+import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -55,8 +60,7 @@ public class EditableDocumentFragmentEntryProcessor
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
-		JSONObject jsonObject = _jsonFactory.createJSONObject(
-			fragmentEntryLink.getEditableValues());
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
 
 		if (jsonObject.length() == 0) {
 			jsonObject.put(
@@ -76,9 +80,24 @@ public class EditableDocumentFragmentEntryProcessor
 		Map<InfoItemReference, InfoItemFieldValues> infoDisplaysFieldValues =
 			new HashMap<>();
 
-		for (Element element :
-				document.select("lfr-editable,*[data-lfr-editable-id]")) {
+		Elements elements = Collector.collect(
+			new Evaluator() {
 
+				@Override
+				public boolean matches(Element root, Element element) {
+					if (element.hasAttr("data-lfr-editable-id") ||
+						Objects.equals(element.normalName(), "lfr-editable")) {
+
+						return true;
+					}
+
+					return false;
+				}
+
+			},
+			document.body());
+
+		for (Element element : elements) {
 			EditableElementParser editableElementParser =
 				_getEditableElementParser(element);
 
@@ -199,6 +218,14 @@ public class EditableDocumentFragmentEntryProcessor
 
 				element.removeAttr("view-tag-name");
 			}
+
+			if (fragmentEntryProcessorContext.isViewMode()) {
+				AnalyticsAttributesUtil.addAnalyticsAttributes(
+					editableValueJSONObject, element,
+					fragmentEntryProcessorContext,
+					_fragmentEntryProcessorHelper, infoDisplaysFieldValues,
+					_infoItemServiceRegistry);
+			}
 		}
 
 		if ((fragmentEntryProcessorContext.getPreviewClassNameId() > 0) &&
@@ -280,6 +307,9 @@ public class EditableDocumentFragmentEntryProcessor
 
 	@Reference
 	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
+
+	@Reference
+	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
 	private JSONFactory _jsonFactory;

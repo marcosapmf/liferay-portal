@@ -7,7 +7,7 @@ import ClayDatePicker from '@clayui/date-picker';
 import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import classnames from 'classnames';
-import moment from 'moment';
+import {dateUtils} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import ErrorMessage from '../ErrorMessage';
@@ -35,9 +35,11 @@ const DateField = ({
 			let isoDateString = null;
 
 			if (value) {
-				value = moment(value.replace(/(--)/gi, '00')).format(
-					'YYYY-MM-DD' +
-						(specificProps && specificProps.time ? ' HH:mm' : '')
+				value = dateUtils.format(
+					new Date(value.replace(/(--)/gi, '00')),
+					specificProps && specificProps.time
+						? 'yyyy-MM-dd HH:mm'
+						: 'yyyy-MM-dd'
 				);
 			}
 
@@ -97,14 +99,43 @@ const DateField = ({
 			</label>
 
 			<ClayDatePicker
+				ariaLabels={{
+					buttonChooseDate: `${Liferay.Language.get('select-date')}`,
+					buttonDot: `${Liferay.Language.get('select-current-date')}`,
+					buttonNextMonth: `${Liferay.Language.get(
+						'select-next-month'
+					)}`,
+					buttonPreviousMonth: `${Liferay.Language.get(
+						'select-previous-month'
+					)}`,
+					dialog: `${Liferay.Language.get('select-date')}`,
+					selectMonth: `${Liferay.Language.get('select-a-month')}`,
+					selectYear: `${Liferay.Language.get('select-a-year')}`,
+				}}
 				disabled={disabled || readOnly}
+				firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 				id={`${namespace}${id}`}
 				inputName={`${namespace}${name}`}
+				months={[
+					`${Liferay.Language.get('january')}`,
+					`${Liferay.Language.get('february')}`,
+					`${Liferay.Language.get('march')}`,
+					`${Liferay.Language.get('april')}`,
+					`${Liferay.Language.get('may')}`,
+					`${Liferay.Language.get('june')}`,
+					`${Liferay.Language.get('july')}`,
+					`${Liferay.Language.get('august')}`,
+					`${Liferay.Language.get('september')}`,
+					`${Liferay.Language.get('october')}`,
+					`${Liferay.Language.get('november')}`,
+					`${Liferay.Language.get('december')}`,
+				]}
 				onChange={onChangeHandler}
 				value={internalValue}
+				weekdaysShort={dateUtils.getWeekdaysShort()}
 				years={{
-					end: moment().year() + 100,
-					start: moment().year() - 100,
+					end: new Date().getFullYear() + 100,
+					start: new Date().getFullYear() - 100,
 				}}
 				{...specificProps}
 			/>
@@ -117,11 +148,11 @@ const DateField = ({
 
 			<div className="sidebar-dd">
 				{internalValue
-					? moment(internalValue).format(
-							'YYYY-MM-DD' +
-								(specificProps && specificProps.time
-									? ' HH:mm'
-									: '')
+					? dateUtils.format(
+							internalValue,
+							specificProps && specificProps.time
+								? 'yyyy-MM-dd HH:mm'
+								: 'yyyy-MM-dd'
 						)
 					: '-'}
 			</div>

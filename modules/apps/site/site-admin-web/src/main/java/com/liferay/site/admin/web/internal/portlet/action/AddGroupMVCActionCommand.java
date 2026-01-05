@@ -68,16 +68,16 @@ import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerRegistry;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -87,7 +87,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
+		"jakarta.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
 		"mvc.command.name=/site_admin/add_group"
 	},
 	service = MVCActionCommand.class
@@ -352,9 +352,10 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		Group liveGroup = _groupService.addGroup(
-			parentGroupId, GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap,
-			descriptionMap, type, manualMembership, membershipRestriction,
-			friendlyURL, true, inheritContent, active, serviceContext);
+			StringPool.BLANK, parentGroupId,
+			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, descriptionMap, type,
+			null, manualMembership, membershipRestriction, friendlyURL, true,
+			inheritContent, active, serviceContext);
 
 		LiveUsers.joinGroup(
 			themeDisplay.getCompanyId(), liveGroup.getGroupId(), userId);
@@ -668,7 +669,7 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 				workflowDefinitionLinks) {
 
 			_workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
-				group.getCreatorUserId(), group.getCompanyId(),
+				null, group.getCreatorUserId(), group.getCompanyId(),
 				group.getGroupId(), workflowDefinitionLink.getClassName(),
 				workflowDefinitionLink.getClassPK(),
 				workflowDefinitionLink.getTypePK(),

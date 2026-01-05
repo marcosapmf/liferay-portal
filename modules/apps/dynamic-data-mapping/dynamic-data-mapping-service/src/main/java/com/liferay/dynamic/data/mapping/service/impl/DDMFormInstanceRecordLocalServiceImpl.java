@@ -9,7 +9,8 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
+import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
+import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.exception.FormInstanceRecordGroupIdException;
 import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceRecordException;
 import com.liferay.dynamic.data.mapping.exception.StorageException;
@@ -19,12 +20,14 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.base.DDMFormInstanceRecordLocalServiceBaseImpl;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstancePersistence;
@@ -38,8 +41,10 @@ import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterSaveRequest;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterSaveResponse;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
+import com.liferay.dynamic.data.mapping.util.DDMFormUtil;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidator;
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -60,12 +65,14 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -74,8 +81,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
 
@@ -87,8 +97,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -189,9 +197,8 @@ public class DDMFormInstanceRecordLocalServiceImpl
 				continue;
 			}
 
-			User ddmFormDefaultUser = _userLocalService.fetchUserByScreenName(
-				user.getCompanyId(),
-				DDMFormConstants.DDM_FORM_DEFAULT_USER_SCREEN_NAME);
+			User ddmFormDefaultUser = DDMFormUtil.getDDMFormDefaultUser(
+				user.getCompanyId());
 
 			if ((ddmFormDefaultUser == null) ||
 				(ddmFormDefaultUser.getUserId() != dlFileEntry.getUserId())) {
@@ -213,20 +220,9 @@ public class DDMFormInstanceRecordLocalServiceImpl
 			serviceContext.getAssetTagNames(), serviceContext.getLocale(),
 			serviceContext.getAssetPriority());
 
-		if (serviceContext.getWorkflowAction() ==
-				WorkflowConstants.ACTION_PUBLISH) {
-
-			WorkflowHandlerRegistryUtil.startWorkflowInstance(
-				user.getCompanyId(), groupId, userId,
-				DDMFormInstanceRecord.class.getName(),
-				ddmFormInstanceRecordVersion.getFormInstanceRecordVersionId(),
-				ddmFormInstanceRecordVersion, serviceContext);
-
-			if (_isEmailNotificationEnabled(ddmFormInstance)) {
-				_ddmFormEmailNotificationSender.sendEmailNotification(
-					ddmFormInstanceRecord, serviceContext);
-			}
-		}
+		_startWorkflowInstance(
+			user.getCompanyId(), ddmFormInstance, ddmFormInstanceRecord,
+			ddmFormInstanceRecordVersion, groupId, serviceContext, userId);
 
 		return ddmFormInstanceRecord;
 	}
@@ -241,25 +237,24 @@ public class DDMFormInstanceRecordLocalServiceImpl
 			DDMFormInstanceRecord ddmFormInstanceRecord)
 		throws PortalException {
 
-		ddmFormInstanceRecordPersistence.remove(ddmFormInstanceRecord);
+		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
+			ddmFormInstanceRecord.getLatestFormInstanceRecordVersion();
 
-		List<DDMFormInstanceRecordVersion> ddmFormInstanceRecordVersions =
-			_ddmFormInstanceRecordVersionPersistence.findByFormInstanceRecordId(
-				ddmFormInstanceRecord.getFormInstanceRecordId());
+		if (ddmFormInstanceRecordVersion.getStatus() ==
+				WorkflowConstants.STATUS_APPROVED) {
 
-		for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
-				ddmFormInstanceRecordVersions) {
+			DDMFormInstanceReport ddmFormInstanceReport =
+				_ddmFormInstanceReportLocalService.
+					getFormInstanceReportByFormInstanceId(
+						ddmFormInstanceRecord.getFormInstanceId());
 
-			_ddmFormInstanceRecordVersionLocalService.
-				deleteDDMFormInstanceRecordVersion(
-					ddmFormInstanceRecordVersion);
+			_ddmFormInstanceReportLocalService.processFormInstanceReportEvent(
+				ddmFormInstanceReport.getFormInstanceReportId(),
+				ddmFormInstanceRecordVersion.getFormInstanceRecordVersionId(),
+				DDMFormInstanceReportConstants.EVENT_DELETE_RECORD_VERSION);
 		}
 
-		_assetEntryLocalService.deleteEntry(
-			DDMFormInstanceRecord.class.getName(),
-			ddmFormInstanceRecord.getFormInstanceRecordId());
-
-		return ddmFormInstanceRecord;
+		return _deleteFormInstanceRecord(ddmFormInstanceRecord);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -280,14 +275,17 @@ public class DDMFormInstanceRecordLocalServiceImpl
 	public void deleteFormInstanceRecords(long ddmFormInstanceId)
 		throws PortalException {
 
-		List<DDMFormInstanceRecord> ddmFormInstanceRecords =
-			ddmFormInstanceRecordPersistence.findByFormInstanceId(
-				ddmFormInstanceId);
+		Indexer<DDMFormInstanceRecord> indexer =
+			IndexerRegistryUtil.nullSafeGetIndexer(DDMFormInstanceRecord.class);
 
 		for (DDMFormInstanceRecord ddmFormInstanceRecord :
-				ddmFormInstanceRecords) {
+				ddmFormInstanceRecordPersistence.findByFormInstanceId(
+					ddmFormInstanceId)) {
 
-			deleteFormInstanceRecord(ddmFormInstanceRecord);
+			ddmFormInstanceRecord = _deleteFormInstanceRecord(
+				ddmFormInstanceRecord);
+
+			indexer.delete(ddmFormInstanceRecord);
 		}
 	}
 
@@ -524,20 +522,10 @@ public class DDMFormInstanceRecordLocalServiceImpl
 			return ddmFormInstanceRecord;
 		}
 
-		if (serviceContext.getWorkflowAction() ==
-				WorkflowConstants.ACTION_PUBLISH) {
-
-			WorkflowHandlerRegistryUtil.startWorkflowInstance(
-				user.getCompanyId(), ddmFormInstanceRecord.getGroupId(), userId,
-				DDMFormInstanceRecord.class.getName(),
-				ddmFormInstanceRecordVersion.getFormInstanceRecordVersionId(),
-				ddmFormInstanceRecordVersion, serviceContext);
-
-			if (_isEmailNotificationEnabled(ddmFormInstance)) {
-				_ddmFormEmailNotificationSender.sendEmailNotification(
-					ddmFormInstanceRecord, serviceContext);
-			}
-		}
+		_startWorkflowInstance(
+			user.getCompanyId(), ddmFormInstance, ddmFormInstanceRecord,
+			ddmFormInstanceRecordVersion, ddmFormInstanceRecord.getGroupId(),
+			serviceContext, userId);
 
 		return ddmFormInstanceRecord;
 	}
@@ -753,6 +741,58 @@ public class DDMFormInstanceRecordLocalServiceImpl
 		return primaryKey;
 	}
 
+	private DDMFormInstanceRecord _deleteFormInstanceRecord(
+			DDMFormInstanceRecord ddmFormInstanceRecord)
+		throws PortalException {
+
+		ddmFormInstanceRecord = ddmFormInstanceRecordPersistence.remove(
+			ddmFormInstanceRecord);
+
+		for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
+				_ddmFormInstanceRecordVersionPersistence.
+					findByFormInstanceRecordId(
+						ddmFormInstanceRecord.getFormInstanceRecordId())) {
+
+			_ddmFormInstanceRecordVersionLocalService.
+				deleteDDMFormInstanceRecordVersion(
+					ddmFormInstanceRecordVersion);
+		}
+
+		_assetEntryLocalService.deleteEntry(
+			DDMFormInstanceRecord.class.getName(),
+			ddmFormInstanceRecord.getFormInstanceRecordId());
+
+		return ddmFormInstanceRecord;
+	}
+
+	private String _getContextURL(
+		DDMFormInstanceRecord ddmFormInstanceRecord,
+		ServiceContext serviceContext) {
+
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		if (httpServletRequest == null) {
+			return null;
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay == null) {
+			return null;
+		}
+
+		return StringBundler.concat(
+			themeDisplay.getPortalURL(),
+			themeDisplay.getPathFriendlyURLPublic(), "/forms/shared/-/form/",
+			ddmFormInstanceRecord.getFormInstanceId(), "?",
+			_portal.getPortletNamespace(
+				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
+			"formInstanceRecordId=",
+			ddmFormInstanceRecord.getFormInstanceRecordId());
+	}
+
 	private Indexer<DDMFormInstanceRecord> _getDDMFormInstanceRecordIndexer() {
 		return _indexerRegistry.nullSafeGetIndexer(DDMFormInstanceRecord.class);
 	}
@@ -877,11 +917,40 @@ public class DDMFormInstanceRecordLocalServiceImpl
 		Map<String, Serializable> latestAttributes =
 			latestExpandoBridge.getAttributes();
 
-		if (!lastAttributes.equals(latestAttributes)) {
-			return false;
+		return lastAttributes.equals(latestAttributes);
+	}
+
+	private void _startWorkflowInstance(
+			long companyId, DDMFormInstance ddmFormInstance,
+			DDMFormInstanceRecord ddmFormInstanceRecord,
+			DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion,
+			long groupId, ServiceContext serviceContext, long userId)
+		throws PortalException {
+
+		if (serviceContext.getWorkflowAction() !=
+				WorkflowConstants.ACTION_PUBLISH) {
+
+			return;
 		}
 
-		return true;
+		WorkflowHandlerRegistryUtil.startWorkflowInstance(
+			companyId, groupId, userId, DDMFormInstanceRecord.class.getName(),
+			ddmFormInstanceRecordVersion.getFormInstanceRecordVersionId(),
+			ddmFormInstanceRecordVersion, serviceContext,
+			HashMapBuilder.<String, Serializable>put(
+				WorkflowConstants.CONTEXT_URL,
+				_getContextURL(ddmFormInstanceRecord, serviceContext)
+			).put(
+				"entryTitle",
+				ddmFormInstance.getName(serviceContext.getLocale())
+			).put(
+				"entryTitleXML", ddmFormInstance.getName()
+			).build());
+
+		if (_isEmailNotificationEnabled(ddmFormInstance)) {
+			_ddmFormEmailNotificationSender.sendEmailNotification(
+				ddmFormInstanceRecord, serviceContext);
+		}
 	}
 
 	private void _updateAsset(
@@ -1048,6 +1117,10 @@ public class DDMFormInstanceRecordLocalServiceImpl
 	@Reference
 	private DDMFormInstanceRecordVersionPersistence
 		_ddmFormInstanceRecordVersionPersistence;
+
+	@Reference
+	private DDMFormInstanceReportLocalService
+		_ddmFormInstanceReportLocalService;
 
 	@Reference
 	private DDMFormValuesValidator _ddmFormValuesValidator;

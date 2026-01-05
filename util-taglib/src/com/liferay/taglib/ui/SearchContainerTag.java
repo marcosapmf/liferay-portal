@@ -17,15 +17,15 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.ParamAndPropertyAncestorTagImpl;
 
+import jakarta.portlet.MimeResponse;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+
 import java.util.List;
-
-import javax.portlet.MimeResponse;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
 
 /**
  * @author Raymond Augé
@@ -73,7 +73,7 @@ public class SearchContainerTag<R> extends ParamAndPropertyAncestorTagImpl {
 			if (_iteratorURL == null) {
 				PortletResponse portletResponse =
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE);
+						JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 				MimeResponse mimeResponse = (MimeResponse)portletResponse;
 
@@ -83,7 +83,7 @@ public class SearchContainerTag<R> extends ParamAndPropertyAncestorTagImpl {
 			if (_searchContainer == null) {
 				PortletRequest portletRequest =
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST);
+						JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 				_searchContainer = new SearchContainer<>(
 					portletRequest, _displayTerms, _searchTerms, getCurParam(),

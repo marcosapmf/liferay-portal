@@ -20,13 +20,13 @@ import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.configuration.sharing.web.internal.constants.PortletConfigurationSharingPortletKeys;
 
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,15 +81,9 @@ public class WidgetPortletConfigurationIcon
 		PortletPreferences portletPreferences =
 			portletDisplay.getPortletPreferences();
 
-		boolean lfrWidgetShowAddAppLink = GetterUtil.getBoolean(
+		return GetterUtil.getBoolean(
 			portletPreferences.getValue("lfrWidgetShowAddAppLink", null),
 			PropsValues.THEME_PORTLET_SHARING_DEFAULT);
-
-		if (lfrWidgetShowAddAppLink) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override

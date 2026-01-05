@@ -43,6 +43,7 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 		_checkScalability(fileName, absolutePath, content);
 		_checkUnionStatement(fileName, content);
 
+		content = _fixBooleanValues(content);
 		content = _fixIncorrectAndOr(content);
 		content = _fixLowerCaseKeywords(content);
 		content = _fixMissingCountValue(content);
@@ -79,7 +80,7 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 
 		while (matcher.find()) {
 			addMessage(
-				fileName, "Incorrect line break after ','",
+				fileName, "Incorrect line break after \",\"",
 				getLineNumber(content, matcher.start()));
 		}
 	}
@@ -92,8 +93,8 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 		while (matcher.find()) {
 			addMessage(
 				fileName,
-				"There should be a line break after '" +
-					StringUtil.trim(matcher.group(1)),
+				"There should be a line break after \"" +
+					StringUtil.trim(matcher.group(1)) + "\"",
 				getLineNumber(content, matcher.end()));
 		}
 	}
@@ -167,7 +168,8 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 					content.substring(endLineStartPos, endPos));
 
 				addMessage(
-					fileName, "There should be a line break after '" + s,
+					fileName,
+					"There should be a line break after \"" + s + "\"",
 					endLineNumber);
 
 				continue;
@@ -199,8 +201,9 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					StringBundler.concat(
-						"Line starts with '", endLineTabCount, "' tabs, but '",
-						startLineTabCount, "' tabs are expected"),
+						"Line starts with \"", endLineTabCount,
+						"\" tabs, but \"", startLineTabCount,
+						"\" tabs are expected"),
 					endLineNumber);
 			}
 		}
@@ -274,6 +277,14 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 					getLineNumber(content, matcher.start(3)));
 			}
 		}
+	}
+
+	private String _fixBooleanValues(String content) {
+		content = content.replaceAll(
+			"(?i)(=\\s*)(false)\\b", "$1[\\$FALSE\\$]");
+		content = content.replaceAll("(?i)(=\\s*)(true)\\b", "$1[\\$TRUE\\$]");
+
+		return content;
 	}
 
 	private String _fixIncorrectAndOr(String content) {

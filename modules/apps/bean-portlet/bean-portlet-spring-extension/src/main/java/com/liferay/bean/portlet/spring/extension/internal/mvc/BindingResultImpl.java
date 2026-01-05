@@ -5,19 +5,20 @@
 
 package com.liferay.bean.portlet.spring.extension.internal.mvc;
 
+import com.liferay.petra.function.transform.TransformUtil;
+
+import jakarta.annotation.ManagedBean;
+
+import jakarta.mvc.binding.BindingError;
+import jakarta.mvc.binding.ParamError;
+import jakarta.mvc.binding.ValidationError;
+
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.ManagedBean;
-
-import javax.mvc.binding.BindingError;
-import javax.mvc.binding.ParamError;
-import javax.mvc.binding.ValidationError;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -43,27 +44,25 @@ public class BindingResultImpl implements MutableBindingResult, Serializable {
 	public Set<ParamError> getAllErrors() {
 		_consulted = true;
 
-		Set<ParamError> allErrors = new LinkedHashSet<>();
+		Set<ParamError> allParamErrors = new LinkedHashSet<>();
 
-		allErrors.addAll(_bindingErrors);
-		allErrors.addAll(_validationErrors);
+		allParamErrors.addAll(_bindingErrors);
+		allParamErrors.addAll(_validationErrors);
 
-		return allErrors;
+		return allParamErrors;
 	}
 
 	@Override
 	public List<String> getAllMessages() {
 		_consulted = true;
 
-		List<String> allMessages = new ArrayList<>();
+		List<String> allMessages = TransformUtil.transform(
+			_bindingErrors, bindingError -> bindingError.getMessage());
 
-		for (BindingError bindingError : _bindingErrors) {
-			allMessages.add(bindingError.getMessage());
-		}
-
-		for (ValidationError validationError : _validationErrors) {
-			allMessages.add(validationError.getMessage());
-		}
+		allMessages.addAll(
+			TransformUtil.transform(
+				_validationErrors,
+				validationError -> validationError.getMessage()));
 
 		return allMessages;
 	}
@@ -72,21 +71,21 @@ public class BindingResultImpl implements MutableBindingResult, Serializable {
 	public Set<ParamError> getErrors(String paramName) {
 		_consulted = true;
 
-		Set<ParamError> errors = new LinkedHashSet<>();
+		Set<ParamError> paramErrors = new LinkedHashSet<>();
 
 		for (BindingError bindingError : _bindingErrors) {
 			if (Objects.equals(bindingError.getParamName(), paramName)) {
-				errors.add(bindingError);
+				paramErrors.add(bindingError);
 			}
 		}
 
 		for (ValidationError validationError : _validationErrors) {
 			if (Objects.equals(validationError.getParamName(), paramName)) {
-				errors.add(validationError);
+				paramErrors.add(validationError);
 			}
 		}
 
-		return errors;
+		return paramErrors;
 	}
 
 	@Override

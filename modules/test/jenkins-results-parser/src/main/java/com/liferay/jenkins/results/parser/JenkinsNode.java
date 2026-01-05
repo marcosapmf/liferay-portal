@@ -5,15 +5,23 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.List;
+
 /**
  * @author Michael Hashimoto
  */
 public interface JenkinsNode<T> extends Comparable<T> {
+
+	public List<String> getAssignedLabels();
 
 	public JenkinsCohort getJenkinsCohort();
 
 	public JenkinsMaster getJenkinsMaster();
 
 	public String getName();
+
+	public boolean isIdle();
+
+	public boolean isOffline();
 
 }

@@ -12,7 +12,7 @@
 <%
 PublicationsConfigurationDisplayContext publicationsConfigurationDisplayContext = (PublicationsConfigurationDisplayContext)request.getAttribute(CTWebKeys.PUBLICATIONS_CONFIGURATION_DISPLAY_CONTEXT);
 
-renderResponse.setTitle(LanguageUtil.get(request, "settings"));
+renderResponse.setTitle(LanguageUtil.get(request, "publications"));
 
 if (publicationsConfigurationDisplayContext.isPublicationsEnabled()) {
 	portletDisplay.setURLBack(backURL);
@@ -22,6 +22,7 @@ if (publicationsConfigurationDisplayContext.isPublicationsEnabled()) {
 
 <clay:container-fluid
 	cssClass="container-form-lg"
+	fullWidth="<%= true %>"
 >
 	<aui:form action="<%= publicationsConfigurationDisplayContext.getActionURL() %>" method="post" name="fm">
 		<aui:input name="navigation" type="hidden" value="<%= publicationsConfigurationDisplayContext.getNavigation() %>" />

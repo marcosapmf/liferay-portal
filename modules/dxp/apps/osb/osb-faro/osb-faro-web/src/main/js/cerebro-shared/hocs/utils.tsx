@@ -46,6 +46,7 @@ const withEmpty: TWithEmpty = ({
 	emptyTitle,
 	primary
 } = {}) => Component => ({
+	filterEnabled = false,
 	items,
 	noResultsRenderer,
 	query,
@@ -53,7 +54,7 @@ const withEmpty: TWithEmpty = ({
 	...otherProps
 }) => {
 	if (items && !items.length && !total) {
-		if (query) {
+		if (query || filterEnabled) {
 			return (
 				<NoResultsDisplay
 					description={Liferay.Language.get(
@@ -62,7 +63,7 @@ const withEmpty: TWithEmpty = ({
 					icon={{
 						border: false,
 						size: Sizes.XXXLarge,
-						symbol: 'ac-no-results-found'
+						symbol: 'ac_no_results_found'
 					}}
 					title={Liferay.Language.get('there-are-no-results-found')}
 				/>

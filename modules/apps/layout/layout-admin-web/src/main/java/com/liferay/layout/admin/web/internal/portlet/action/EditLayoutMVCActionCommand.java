@@ -30,20 +30,20 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.sites.kernel.util.Sites;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+		"jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 		"mvc.command.name=/layout_admin/edit_layout"
 	},
 	service = MVCActionCommand.class
@@ -126,9 +126,10 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				layout.getParentLayoutId(), nameMap, layout.getTitleMap(),
 				layout.getDescriptionMap(), layout.getKeywordsMap(),
 				layout.getRobotsMap(), type, hidden, friendlyURLMap,
-				layout.isIconImage(), null, layout.getStyleBookEntryId(),
-				layout.getFaviconFileEntryId(), layout.getMasterLayoutPlid(),
-				serviceContext);
+				layout.isIconImage(), null, layout.getStyleBookEntryERC(),
+				layout.getFaviconFileEntryERC(),
+				layout.getFaviconFileEntryScopeERC(),
+				layout.getMasterLayoutPageTemplateEntryERC(), serviceContext);
 
 			UnicodeProperties formTypeSettingsUnicodeProperties =
 				PropertiesParamUtil.getProperties(
@@ -150,9 +151,11 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 					draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
 					type, draftLayout.isHidden(),
 					draftLayout.getFriendlyURLMap(), draftLayout.isIconImage(),
-					null, draftLayout.getStyleBookEntryId(),
-					draftLayout.getFaviconFileEntryId(),
-					draftLayout.getMasterLayoutPlid(), serviceContext);
+					null, draftLayout.getStyleBookEntryERC(),
+					draftLayout.getFaviconFileEntryERC(),
+					draftLayout.getFaviconFileEntryScopeERC(),
+					draftLayout.getMasterLayoutPageTemplateEntryERC(),
+					serviceContext);
 			}
 
 			themeDisplay.clearLayoutFriendlyURL(layout);
@@ -205,7 +208,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 					layout.getTypeSettingsProperties());
 			}
 
-			layout = _layoutService.updateLayout(
+			layout = _layoutService.updateTypeSettings(
 				groupId, layout.isPrivateLayout(), layout.getLayoutId(),
 				layoutTypeSettingsUnicodeProperties.toString());
 

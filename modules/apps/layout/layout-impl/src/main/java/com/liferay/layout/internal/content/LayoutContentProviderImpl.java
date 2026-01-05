@@ -5,7 +5,6 @@
 
 package com.liferay.layout.internal.content;
 
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.layout.content.LayoutContentProvider;
 import com.liferay.layout.crawler.LayoutCrawler;
@@ -28,15 +27,16 @@ import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HtmlParser;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.RenderLayoutContentThreadLocal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.Locale;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -109,6 +109,8 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 			HttpServletRequest originalThemeDisplayHttpServletRequest =
 				themeDisplay.getRequest();
 
+			String originalLanguageId = themeDisplay.getLanguageId();
+			Locale originalLocale = themeDisplay.getLocale();
 			Layout originalThemeDisplayLayout = themeDisplay.getLayout();
 			long originalThemeDisplayPlid = themeDisplay.getPlid();
 
@@ -125,6 +127,8 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 					themeDisplay.setPlid(layout.getPlid());
 				}
 
+				themeDisplay.setLanguageId(LocaleUtil.toLanguageId(locale));
+				themeDisplay.setLocale(locale);
 				themeDisplay.setRequest(httpServletRequest);
 
 				long segmentsExperienceId =
@@ -139,8 +143,7 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 							renderLayoutContent(
 								_fragmentRendererController, httpServletRequest,
 								httpServletResponse,
-								layoutPageTemplateStructure,
-								FragmentEntryLinkConstants.INDEX, locale,
+								layoutPageTemplateStructure, locale,
 								segmentsExperienceId);
 				}
 				catch (Exception exception) {
@@ -164,6 +167,8 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 					themeDisplay.setPlid(originalThemeDisplayPlid);
 				}
 
+				themeDisplay.setLanguageId(originalLanguageId);
+				themeDisplay.setLocale(originalLocale);
 				themeDisplay.setRequest(originalThemeDisplayHttpServletRequest);
 			}
 		}

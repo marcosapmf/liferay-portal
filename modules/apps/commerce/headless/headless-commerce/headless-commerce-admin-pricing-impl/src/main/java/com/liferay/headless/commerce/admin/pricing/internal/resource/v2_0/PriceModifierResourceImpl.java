@@ -18,8 +18,8 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifier;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceModifierUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.DateConfig;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -32,11 +32,10 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -62,8 +61,9 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -82,8 +82,9 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -97,12 +98,12 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierService.getCommercePriceModifiersCount(
 				commercePriceList.getCommercePriceListId());
 
 		return Page.of(
-			_toPriceModifiers(commercePriceModifiers), pagination, totalItems);
+			_toPriceModifiers(commercePriceModifiers), pagination, totalCount);
 	}
 
 	@Override
@@ -116,11 +117,11 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 				id, pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierService.getCommercePriceModifiersCount(id);
 
 		return Page.of(
-			_toPriceModifiers(commercePriceModifiers), pagination, totalItems);
+			_toPriceModifiers(commercePriceModifiers), pagination, totalCount);
 	}
 
 	@Override
@@ -138,8 +139,9 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -170,8 +172,9 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -192,8 +195,9 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -306,17 +310,10 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 			List<CommercePriceModifier> commercePriceModifiers)
 		throws Exception {
 
-		List<PriceModifier> priceModifiers = new ArrayList<>();
-
-		for (CommercePriceModifier commercePriceModifier :
-				commercePriceModifiers) {
-
-			priceModifiers.add(
-				_toPriceModifier(
-					commercePriceModifier.getCommercePriceModifierId()));
-		}
-
-		return priceModifiers;
+		return transform(
+			commercePriceModifiers,
+			commercePriceModifier -> _toPriceModifier(
+				commercePriceModifier.getCommercePriceModifierId()));
 	}
 
 	private void _updateNestedResources(

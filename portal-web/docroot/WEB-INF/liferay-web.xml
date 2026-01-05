@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+<web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
 	<filter>
 		<filter-name>Absolute Redirects Filter</filter-name>
 		<filter-class>com.liferay.portal.servlet.filters.absoluteredirects.AbsoluteRedirectsFilter</filter-class>
@@ -202,6 +202,10 @@
 		<filter-class>com.liferay.portal.servlet.filters.password.modified.PasswordModifiedFilter</filter-class>
 	</filter>
 	<filter>
+		<filter-name>Portal Instances Filter</filter-name>
+		<filter-class>com.liferay.portal.servlet.filters.portal.instances.PortalInstancesFilter</filter-class>
+	</filter>
+	<filter>
 		<filter-name>Secure Friendly URL Servlet Filter</filter-name>
 		<filter-class>com.liferay.portal.servlet.filters.secure.SecureFilter</filter-class>
 		<init-param>
@@ -329,10 +333,12 @@
 		<filter-name>WebLogic Include Filter</filter-name>
 		<filter-class>com.liferay.portal.servlet.filters.weblogic.WebLogicIncludeFilter</filter-class>
 	</filter>
-	<filter>
-		<filter-name>WebSphere Async Servlet Request Filter</filter-name>
-		<filter-class>com.liferay.portal.servlet.filters.websphere.WebSphereAsyncServletRequestFilter</filter-class>
-	</filter>
+	<filter-mapping>
+		<filter-name>Portal Instances Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>ERROR</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
 	<filter-mapping>
 		<filter-name>Ignore Filter - FTL</filter-name>
 		<url-pattern>*.ftl</url-pattern>
@@ -828,12 +834,5 @@
 		<filter-name>WebLogic Include Filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>INCLUDE</dispatcher>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>WebSphere Async Servlet Request Filter</filter-name>
-		<url-pattern>/*</url-pattern>
-		<dispatcher>FORWARD</dispatcher>
-		<dispatcher>INCLUDE</dispatcher>
-		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 </web-app>

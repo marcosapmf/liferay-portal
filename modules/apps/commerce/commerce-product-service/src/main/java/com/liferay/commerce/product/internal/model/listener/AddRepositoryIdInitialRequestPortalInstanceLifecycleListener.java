@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -65,6 +66,10 @@ public class AddRepositoryIdInitialRequestPortalInstanceLifecycleListener
 
 		PermissionThreadLocal.setPermissionChecker(null);
 
+		String principalName = PrincipalThreadLocal.getName();
+
+		PrincipalThreadLocal.setName(null);
+
 		try {
 			List<CommerceCatalog> commerceCatalogs =
 				_commerceCatalogLocalService.getCommerceCatalogs(
@@ -104,13 +109,20 @@ public class AddRepositoryIdInitialRequestPortalInstanceLifecycleListener
 
 				serviceContext.setUserId(user.getCompanyId());
 
-				Repository repository = _repositoryLocalService.addRepository(
-					user.getUserId(), company.getGroupId(),
-					_portal.getClassNameId(PortletRepository.class.getName()),
-					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-					PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO, null,
-					CPConstants.SERVICE_NAME_PRODUCT, new UnicodeProperties(),
-					true, serviceContext);
+				Repository repository = _repositoryLocalService.fetchRepository(
+					company.getGroupId(), PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO,
+					CPConstants.SERVICE_NAME_PRODUCT);
+
+				if (repository == null) {
+					repository = _repositoryLocalService.addRepository(
+						null, user.getUserId(), company.getGroupId(),
+						_portal.getClassNameId(
+							PortletRepository.class.getName()),
+						DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+						PropsKeys.IMAGE_DEFAULT_COMPANY_LOGO, null,
+						CPConstants.SERVICE_NAME_PRODUCT,
+						new UnicodeProperties(), true, serviceContext);
+				}
 
 				Image image = ImageToolUtil.getDefaultCompanyLogo();
 
@@ -136,6 +148,8 @@ public class AddRepositoryIdInitialRequestPortalInstanceLifecycleListener
 		}
 		finally {
 			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+
+			PrincipalThreadLocal.setName(principalName);
 		}
 	}
 

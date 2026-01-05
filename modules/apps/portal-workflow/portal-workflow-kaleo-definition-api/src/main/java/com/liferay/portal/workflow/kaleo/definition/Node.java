@@ -52,11 +52,7 @@ public abstract class Node implements ActionAware, NotificationAware {
 
 		Node node = (Node)object;
 
-		if (!Objects.equals(_name, node._name)) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals(_name, node._name);
 	}
 
 	@Override
@@ -148,6 +144,14 @@ public abstract class Node implements ActionAware, NotificationAware {
 		return ListUtil.fromCollection(_outgoingTransitions.values());
 	}
 
+	public Set<Setting> getSettings() {
+		if (_settings == null) {
+			return Set.of();
+		}
+
+		return _settings;
+	}
+
 	public Set<Timer> getTimers() {
 		if (_timers == null) {
 			return Collections.emptySet();
@@ -179,6 +183,10 @@ public abstract class Node implements ActionAware, NotificationAware {
 		_notifications = notifications;
 	}
 
+	public void setSettings(Set<Setting> settings) {
+		_settings = settings;
+	}
+
 	public void setTimers(Set<Timer> timers) {
 		_timers = timers;
 	}
@@ -193,6 +201,7 @@ public abstract class Node implements ActionAware, NotificationAware {
 	private Set<Notification> _notifications;
 	private final Map<String, Transition> _outgoingTransitions =
 		new LinkedHashMap<>();
+	private Set<Setting> _settings;
 	private Set<Timer> _timers;
 
 }

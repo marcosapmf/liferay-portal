@@ -22,13 +22,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.user.associated.data.web.internal.constants.UADConstants;
 import com.liferay.user.associated.data.web.internal.display.ViewUADEntitiesDisplay;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Drew Brokke
@@ -99,11 +99,7 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 	public Boolean isShowInfoButton() {
 		String applicationKey = _viewUADEntitiesDisplay.getApplicationKey();
 
-		if (applicationKey.equals(UADConstants.ALL_APPLICATIONS)) {
-			return false;
-		}
-
-		return true;
+		return !applicationKey.equals(UADConstants.ALL_APPLICATIONS);
 	}
 
 	@Override

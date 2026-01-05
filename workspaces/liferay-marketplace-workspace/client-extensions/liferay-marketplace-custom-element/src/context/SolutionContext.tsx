@@ -12,15 +12,19 @@ import {
 } from 'react';
 import {useParams} from 'react-router-dom';
 
+import {breadcrumbStore} from '../components/Breadcrumb/BreadcrumbStore';
 import {UploadedFile} from '../components/FileList/FileList';
 import Loading from '../components/Loading';
-import {PRODUCT_SPECIFICATION_KEY, PRODUCT_TAGS} from '../enums/Product';
-import {ProductVocabulary} from '../enums/ProductVocabulary';
+import {
+	ProductSpecificationKey,
+	ProductTags,
+	ProductVocabulary,
+} from '../enums/Product';
 import {useGetVocabulariesAndCategories} from '../hooks/data/useGetVocabulariesAndCategories';
-import HeadlessCommerceAdminCatalogImpl from '../services/rest/HeadlessCommerceAdminCatalog';
+import HeadlessCommerceAdminCatalog from '../services/rest/HeadlessCommerceAdminCatalog';
 import {safeJSONParse} from '../utils/util';
 
-export enum BLOCK_DIRECTIONS {
+export enum BlockDirections {
 	DELETE,
 	MOVE_DOWN,
 	MOVE_TO_BOTTOM,
@@ -96,7 +100,7 @@ export enum SolutionTypes {
 
 type SolutionPayload = {
 	[SolutionTypes.SET_BLOCK_MOVE]: {
-		direction: BLOCK_DIRECTIONS;
+		direction: BlockDirections;
 		index: number;
 	};
 	[SolutionTypes.SET_CLEANUP]: undefined;
@@ -270,11 +274,11 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 			}
 
 			const appIcon = (_product.images ?? []).find(({tags}) =>
-				tags?.includes(PRODUCT_TAGS.SOLUTION_PROFILE_APP_ICON)
+				tags?.includes(ProductTags.SOLUTION_PROFILE_APP_ICON)
 			);
 
 			const solutionHeaderImages = (_product.images ?? []).filter(
-				({tags}) => tags?.includes(PRODUCT_TAGS.SOLUTION_HEADER)
+				({tags}) => tags?.includes(ProductTags.SOLUTION_HEADER)
 			);
 
 			let contentType = {
@@ -295,14 +299,14 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 			} as HeaderContentType;
 
 			const headerVideoUrl = specificationsMap.get(
-				PRODUCT_SPECIFICATION_KEY.SOLUTION_HEADER_VIDEO_URL
+				ProductSpecificationKey.SOLUTION_HEADER_VIDEO_URL
 			);
 
 			if (headerVideoUrl) {
 				contentType = {
 					content: {
 						headerVideoDescription: specificationsMap.get(
-							PRODUCT_SPECIFICATION_KEY.SOLUTION_HEADER_VIDEO_DESCRIPTION
+							ProductSpecificationKey.SOLUTION_HEADER_VIDEO_DESCRIPTION
 						),
 						headerVideoUrl,
 					},
@@ -311,7 +315,7 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 			}
 
 			const solutionCompanyEmail = specificationsMap.get(
-				PRODUCT_SPECIFICATION_KEY.SOLUTION_COMPANY_EMAIL
+				ProductSpecificationKey.SOLUTION_COMPANY_EMAIL
 			);
 
 			const company = {...solutionInitialState.company};
@@ -321,27 +325,27 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 
 				company.description =
 					specificationsMap.get(
-						PRODUCT_SPECIFICATION_KEY.SOLUTION_COMPANY_DESCRIPTION
+						ProductSpecificationKey.SOLUTION_COMPANY_DESCRIPTION
 					) || '';
 
 				company.phone =
 					specificationsMap.get(
-						PRODUCT_SPECIFICATION_KEY.SOLUTION_COMPANY_PHONE
+						ProductSpecificationKey.SOLUTION_COMPANY_PHONE
 					) || '';
 
 				company.website =
 					specificationsMap.get(
-						PRODUCT_SPECIFICATION_KEY.SOLUTION_COMPANY_WEBSITE
+						ProductSpecificationKey.SOLUTION_COMPANY_WEBSITE
 					) || '';
 			}
 
 			const blockDetails = specificationsMap.get(
-				PRODUCT_SPECIFICATION_KEY.SOLUTION_DETAILS_BLOCKS
+				ProductSpecificationKey.SOLUTION_DETAILS_BLOCKS
 			);
 
 			if (blockDetails) {
 				const solutionDetailsImages = _product.images.filter(({tags}) =>
-					tags?.includes(PRODUCT_TAGS.SOLUTION_DETAILS)
+					tags?.includes(ProductTags.SOLUTION_DETAILS)
 				);
 
 				const blocks = safeJSONParse(
@@ -390,7 +394,7 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 
 			newState.contactUs =
 				specificationsMap.get(
-					PRODUCT_SPECIFICATION_KEY.SOLUTION_CONTACT_EMAIL
+					ProductSpecificationKey.SOLUTION_CONTACT_EMAIL
 				) || '';
 
 			return {
@@ -401,10 +405,10 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 				header: {
 					contentType,
 					description: specificationsMap.get(
-						PRODUCT_SPECIFICATION_KEY.SOLUTION_HEADER_DESCRIPTION
+						ProductSpecificationKey.SOLUTION_HEADER_DESCRIPTION
 					),
 					title: specificationsMap.get(
-						PRODUCT_SPECIFICATION_KEY.SOLUTION_HEADER_TITLE
+						ProductSpecificationKey.SOLUTION_HEADER_TITLE
 					),
 				} as unknown as SolutionInitialState['header'],
 				profile: {
@@ -488,27 +492,27 @@ const reducer = (state: SolutionInitialState, action: AppActions) => {
 			const blockToMove = blocks[index];
 
 			const moveActions = {
-				[BLOCK_DIRECTIONS.MOVE_TO_TOP]: () => {
+				[BlockDirections.MOVE_TO_TOP]: () => {
 					blocks.splice(index, 1);
 					blocks.unshift(blockToMove);
 				},
-				[BLOCK_DIRECTIONS.MOVE_TO_BOTTOM]: () => {
+				[BlockDirections.MOVE_TO_BOTTOM]: () => {
 					blocks.splice(index, 1);
 					blocks.push(blockToMove);
 				},
-				[BLOCK_DIRECTIONS.MOVE_UP]: () => {
+				[BlockDirections.MOVE_UP]: () => {
 					const newIndex = index - 1;
 
 					blocks[index] = blocks[newIndex];
 					blocks[newIndex] = blockToMove;
 				},
-				[BLOCK_DIRECTIONS.MOVE_DOWN]: () => {
+				[BlockDirections.MOVE_DOWN]: () => {
 					const newIndex = index + 1;
 
 					blocks[index] = blocks[newIndex];
 					blocks[newIndex] = blockToMove;
 				},
-				[BLOCK_DIRECTIONS.DELETE]: () => {
+				[BlockDirections.DELETE]: () => {
 					blocks.splice(index, 1);
 				},
 			};
@@ -535,12 +539,12 @@ export const SolutionContext = createContext<
 >([solutionInitialState, () => null]);
 
 type SolutionContextProviderProps = {
-	catalogId: number;
+	catalogId?: number;
 	children: ReactNode;
 };
 
 export default function SolutionContextProvider({
-	catalogId,
+	catalogId = 0,
 	children,
 }: SolutionContextProviderProps) {
 	const [state, dispatch] = useReducer(reducer, solutionInitialState);
@@ -556,15 +560,21 @@ export default function SolutionContextProvider({
 			return;
 		}
 
-		HeadlessCommerceAdminCatalogImpl.getProduct(
+		HeadlessCommerceAdminCatalog.getProduct(
 			productId as string,
 			new URLSearchParams({
 				nestedFields: 'attachments,images,productSpecifications',
 			})
 		)
-			.then((response) =>
-				dispatch({payload: response, type: SolutionTypes.SET_CONTEXT})
-			)
+			.then((response) => {
+				dispatch({payload: response, type: SolutionTypes.SET_CONTEXT});
+				breadcrumbStore.send({
+					replacements: {
+						[productId]: response.name?.en_US,
+					},
+					type: 'setReplacements',
+				});
+			})
 			.catch(console.error);
 	}, [productId]);
 

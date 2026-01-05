@@ -500,6 +500,15 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	}
 
 	@Override
+	public SearchRequestBuilder storedFields(String... storedFields) {
+		_withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setStoredFields(
+				storedFields));
+
+		return this;
+	}
+
+	@Override
 	public SearchRequestBuilder withFacetContext(
 		Consumer<FacetContext> facetContextConsumer) {
 
@@ -570,24 +579,10 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		for (SearchRequestBuilder searchRequestBuilder :
 				searchRequestBuilders) {
 
-			SearchRequest searchRequest = searchRequestBuilder.build();
-
-			SearchContext searchContext = _getSearchContext(searchRequest);
-
-			searchContext.setEnd(_searchContext.getEnd());
-			searchContext.setStart(_searchContext.getStart());
-
-			searchRequests.add(searchRequest);
+			searchRequests.add(searchRequestBuilder.build());
 		}
 
 		return searchRequests;
-	}
-
-	private SearchContext _getSearchContext(SearchRequest searchRequest) {
-		SearchRequestBuilder searchRequestBuilder =
-			_searchRequestBuilderFactory.builder(searchRequest);
-
-		return searchRequestBuilder.withSearchContextGet(Function.identity());
 	}
 
 	private SearchRequestImpl _getSearchRequestImpl(

@@ -1,0 +1,10 @@
+{
+	"friendlyURL": "/guest-login",
+	"hidden": true,
+	"name_i18n": {
+		"en_US": "Guest Login"
+	},
+	"private": false,
+	"system": false,
+	"type": "content"
+}

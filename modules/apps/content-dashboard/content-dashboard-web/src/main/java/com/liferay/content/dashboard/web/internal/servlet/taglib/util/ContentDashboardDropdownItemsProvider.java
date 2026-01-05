@@ -22,10 +22,10 @@ import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -75,6 +75,20 @@ public class ContentDashboardDropdownItemsProvider {
 							"className", infoItemReference.getClassName()
 						).put(
 							"classPK", classPK
+						).put(
+							"contentPerformanceDataFetchURL",
+							ResourceURLBuilder.createResourceURL(
+								_liferayPortletResponse
+							).setBackURL(
+								_portal.getCurrentURL(_liferayPortletRequest)
+							).setParameter(
+								"className", infoItemReference.getClassName()
+							).setParameter(
+								"classPK", classPK
+							).setResourceID(
+								"/content_dashboard" +
+									"/get_content_performance_info"
+							).buildString()
 						).put(
 							"fetchURL",
 							ResourceURLBuilder.createResourceURL(

@@ -19,34 +19,63 @@ import com.liferay.change.tracking.rest.client.pagination.Page;
 import com.liferay.change.tracking.rest.client.pagination.Pagination;
 import com.liferay.change.tracking.rest.client.resource.v1_0.CTRemoteResource;
 import com.liferay.change.tracking.rest.client.serdes.v1_0.CTRemoteSerDes;
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,13 +84,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -70,6 +97,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author David Truong
@@ -80,12 +110,14 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,10 +131,25 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 		_ctRemoteResource.setContextCompany(testCompany);
 
-		CTRemoteResource.Builder builder = CTRemoteResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		ctRemoteResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		ctRemoteResource = CTRemoteResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +163,32 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTRemote ctRemote1 = randomCTRemote();
+
+		String json = objectMapper.writeValueAsString(ctRemote1);
+
+		CTRemote ctRemote2 = CTRemoteSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(ctRemote1, ctRemote2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTRemote ctRemote = randomCTRemote();
+
+		String json1 = objectMapper.writeValueAsString(ctRemote);
+		String json2 = CTRemoteSerDes.toJSON(ctRemote);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +203,6 @@ public abstract class BaseCTRemoteResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CTRemote ctRemote1 = randomCTRemote();
-
-		String json = objectMapper.writeValueAsString(ctRemote1);
-
-		CTRemote ctRemote2 = CTRemoteSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(ctRemote1, ctRemote2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CTRemote ctRemote = randomCTRemote();
-
-		String json1 = objectMapper.writeValueAsString(ctRemote);
-		String json2 = CTRemoteSerDes.toJSON(ctRemote);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -192,6 +230,428 @@ public abstract class BaseCTRemoteResourceTestCase {
 		Assert.assertEquals(regex, ctRemote.getName());
 		Assert.assertEquals(regex, ctRemote.getOwnerName());
 		Assert.assertEquals(regex, ctRemote.getUrl());
+	}
+
+	@Test
+	public void testDeleteCTRemote() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CTRemote ctRemote = testDeleteCTRemote_addCTRemote();
+
+		assertHttpResponseStatusCode(
+			204, ctRemoteResource.deleteCTRemoteHttpResponse(ctRemote.getId()));
+
+		assertHttpResponseStatusCode(
+			404, ctRemoteResource.getCTRemoteHttpResponse(ctRemote.getId()));
+		assertHttpResponseStatusCode(
+			404, ctRemoteResource.getCTRemoteHttpResponse(0L));
+	}
+
+	protected CTRemote testDeleteCTRemote_addCTRemote() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteCTRemote() throws Exception {
+
+		// No namespace
+
+		CTRemote ctRemote1 = testGraphQLDeleteCTRemote_addCTRemote();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteCTRemote",
+						new HashMap<String, Object>() {
+							{
+								put("id", ctRemote1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteCTRemote"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"cTRemote",
+					new HashMap<String, Object>() {
+						{
+							put("id", ctRemote1.getId());
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace changeTracking_v1_0
+
+		CTRemote ctRemote2 = testGraphQLDeleteCTRemote_addCTRemote();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"deleteCTRemote",
+							new HashMap<String, Object>() {
+								{
+									put("id", ctRemote2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/changeTracking_v1_0",
+				"Object/deleteCTRemote"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"changeTracking_v1_0",
+					new GraphQLField(
+						"cTRemote",
+						new HashMap<String, Object>() {
+							{
+								put("id", ctRemote2.getId());
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected CTRemote testGraphQLDeleteCTRemote_addCTRemote()
+		throws Exception {
+
+		return testGraphQLCTRemote_addCTRemote();
+	}
+
+	@Test
+	public void testDeleteCTRemoteBatch() throws Exception {
+		CTRemote ctRemote1 = testDeleteCTRemoteBatch_addCTRemote();
+
+		testDeleteCTRemoteBatch_deleteCTRemote(202, null, ctRemote1.getId());
+
+		assertHttpResponseStatusCode(
+			404, ctRemoteResource.getCTRemoteHttpResponse(ctRemote1.getId()));
+	}
+
+	protected CTRemote testDeleteCTRemoteBatch_addCTRemote() throws Exception {
+		return testDeleteCTRemote_addCTRemote();
+	}
+
+	protected void testDeleteCTRemoteBatch_deleteCTRemote(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			ctRemoteResource.deleteCTRemoteBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetCTRemote() throws Exception {
+		CTRemote postCTRemote = testGetCTRemote_addCTRemote();
+
+		CTRemote getCTRemote = ctRemoteResource.getCTRemote(
+			postCTRemote.getId());
+
+		assertEquals(postCTRemote, getCTRemote);
+		assertValid(getCTRemote);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		CTRemote postCTRemote = testGetCTRemote_addCTRemote();
+
+		CTRemote getCTRemote = ctRemoteResource.getCTRemote(
+			postCTRemote.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.change.tracking.rest.dto.v1_0.CTRemote"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postCTRemote.getId());
+
+		assertEquals(getCTRemote, CTRemoteSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected CTRemote testGetCTRemote_addCTRemote() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetCTRemote() throws Exception {
+		CTRemote ctRemote = testGraphQLGetCTRemote_addCTRemote();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				ctRemote,
+				CTRemoteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"cTRemote",
+								new HashMap<String, Object>() {
+									{
+										put("id", ctRemote.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/cTRemote"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctRemote,
+				CTRemoteSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTRemote",
+									new HashMap<String, Object>() {
+										{
+											put("id", ctRemote.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTRemote"))));
+	}
+
+	@Test
+	public void testGraphQLGetCTRemoteNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"cTRemote",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTRemote",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected CTRemote testGraphQLGetCTRemote_addCTRemote() throws Exception {
+		return testGraphQLCTRemote_addCTRemote();
 	}
 
 	@Test
@@ -230,10 +690,10 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 	@Test
 	public void testGetCTRemotesPageWithPagination() throws Exception {
-		Page<CTRemote> ctRemotePage = ctRemoteResource.getCTRemotesPage(
+		Page<CTRemote> ctRemotesPage = ctRemoteResource.getCTRemotesPage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(ctRemotePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(ctRemotesPage.getTotalCount());
 
 		CTRemote ctRemote1 = testGetCTRemotesPage_addCTRemote(randomCTRemote());
 
@@ -435,220 +895,66 @@ public abstract class BaseCTRemoteResourceTestCase {
 	}
 
 	@Test
-	public void testPostCTRemote() throws Exception {
-		CTRemote randomCTRemote = randomCTRemote();
-
-		CTRemote postCTRemote = testPostCTRemote_addCTRemote(randomCTRemote);
-
-		assertEquals(randomCTRemote, postCTRemote);
-		assertValid(postCTRemote);
-	}
-
-	protected CTRemote testPostCTRemote_addCTRemote(CTRemote ctRemote)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteCTRemote() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		CTRemote ctRemote = testDeleteCTRemote_addCTRemote();
-
-		assertHttpResponseStatusCode(
-			204, ctRemoteResource.deleteCTRemoteHttpResponse(ctRemote.getId()));
-
-		assertHttpResponseStatusCode(
-			404, ctRemoteResource.getCTRemoteHttpResponse(ctRemote.getId()));
-
-		assertHttpResponseStatusCode(
-			404, ctRemoteResource.getCTRemoteHttpResponse(ctRemote.getId()));
-	}
-
-	protected CTRemote testDeleteCTRemote_addCTRemote() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteCTRemote() throws Exception {
+	public void testGraphQLGetCTRemotesPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"cTRemotes",
+			new HashMap<String, Object>() {
+				{
+					put("search", null);
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
 
 		// No namespace
 
-		CTRemote ctRemote1 = testGraphQLDeleteCTRemote_addCTRemote();
+		JSONObject cTRemotesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/cTRemotes");
 
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteCTRemote",
-						new HashMap<String, Object>() {
-							{
-								put("id", ctRemote1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteCTRemote"));
+		long totalCount = cTRemotesJSONObject.getLong("totalCount");
 
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"cTRemote",
-					new HashMap<String, Object>() {
-						{
-							put("id", ctRemote1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
+		CTRemote ctRemote1 = testGraphQLCTRemote_addCTRemote(randomCTRemote());
 
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
+		CTRemote ctRemote2 = testGraphQLCTRemote_addCTRemote(randomCTRemote());
 
-		// Using the namespace changeTracking_v1_0
-
-		CTRemote ctRemote2 = testGraphQLDeleteCTRemote_addCTRemote();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"changeTracking_v1_0",
-						new GraphQLField(
-							"deleteCTRemote",
-							new HashMap<String, Object>() {
-								{
-									put("id", ctRemote2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/changeTracking_v1_0",
-				"Object/deleteCTRemote"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"changeTracking_v1_0",
-					new GraphQLField(
-						"cTRemote",
-						new HashMap<String, Object>() {
-							{
-								put("id", ctRemote2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected CTRemote testGraphQLDeleteCTRemote_addCTRemote()
-		throws Exception {
-
-		return testGraphQLCTRemote_addCTRemote();
-	}
-
-	@Test
-	public void testGetCTRemote() throws Exception {
-		CTRemote postCTRemote = testGetCTRemote_addCTRemote();
-
-		CTRemote getCTRemote = ctRemoteResource.getCTRemote(
-			postCTRemote.getId());
-
-		assertEquals(postCTRemote, getCTRemote);
-		assertValid(getCTRemote);
-	}
-
-	protected CTRemote testGetCTRemote_addCTRemote() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetCTRemote() throws Exception {
-		CTRemote ctRemote = testGraphQLGetCTRemote_addCTRemote();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				ctRemote,
-				CTRemoteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"cTRemote",
-								new HashMap<String, Object>() {
-									{
-										put("id", ctRemote.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/cTRemote"))));
-
-		// Using the namespace changeTracking_v1_0
-
-		Assert.assertTrue(
-			equals(
-				ctRemote,
-				CTRemoteSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"changeTracking_v1_0",
-								new GraphQLField(
-									"cTRemote",
-									new HashMap<String, Object>() {
-										{
-											put("id", ctRemote.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/changeTracking_v1_0",
-						"Object/cTRemote"))));
-	}
-
-	@Test
-	public void testGraphQLGetCTRemoteNotFound() throws Exception {
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
+		cTRemotesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/cTRemotes");
 
 		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"cTRemote",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
+			totalCount + 2, cTRemotesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			ctRemote1,
+			Arrays.asList(
+				CTRemoteSerDes.toDTOs(cTRemotesJSONObject.getString("items"))));
+		assertContains(
+			ctRemote2,
+			Arrays.asList(
+				CTRemoteSerDes.toDTOs(cTRemotesJSONObject.getString("items"))));
 
 		// Using the namespace changeTracking_v1_0
 
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"changeTracking_v1_0",
-						new GraphQLField(
-							"cTRemote",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
+		cTRemotesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("changeTracking_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/changeTracking_v1_0",
+			"JSONObject/cTRemotes");
 
-	protected CTRemote testGraphQLGetCTRemote_addCTRemote() throws Exception {
-		return testGraphQLCTRemote_addCTRemote();
+		Assert.assertEquals(
+			totalCount + 2, cTRemotesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			ctRemote1,
+			Arrays.asList(
+				CTRemoteSerDes.toDTOs(cTRemotesJSONObject.getString("items"))));
+		assertContains(
+			ctRemote2,
+			Arrays.asList(
+				CTRemoteSerDes.toDTOs(cTRemotesJSONObject.getString("items"))));
 	}
 
 	@Test
@@ -678,6 +984,32 @@ public abstract class BaseCTRemoteResourceTestCase {
 	}
 
 	@Test
+	public void testPostCTRemote() throws Exception {
+		CTRemote randomCTRemote = randomCTRemote();
+
+		CTRemote postCTRemote = testPostCTRemote_addCTRemote(randomCTRemote);
+
+		assertEquals(randomCTRemote, postCTRemote);
+		assertValid(postCTRemote);
+	}
+
+	protected CTRemote testPostCTRemote_addCTRemote(CTRemote ctRemote)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLPostCTRemote() throws Exception {
+		CTRemote randomCTRemote = randomCTRemote();
+
+		CTRemote ctRemote = testGraphQLCTRemote_addCTRemote(randomCTRemote);
+
+		Assert.assertTrue(equals(randomCTRemote, ctRemote));
+	}
+
+	@Test
 	public void testPutCTRemote() throws Exception {
 		CTRemote postCTRemote = testPutCTRemote_addCTRemote();
 
@@ -701,9 +1033,168 @@ public abstract class BaseCTRemoteResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		CTRemote ctRemote1 = testBatchEngineDeleteImportTask_addCTRemote();
+
+		testBatchEngineDeleteImportTask_deleteCTRemote(
+			200, null, ctRemote1.getId());
+
+		assertHttpResponseStatusCode(
+			404, ctRemoteResource.getCTRemoteHttpResponse(ctRemote1.getId()));
+	}
+
+	protected CTRemote testBatchEngineDeleteImportTask_addCTRemote()
+		throws Exception {
+
+		return testDeleteCTRemote_addCTRemote();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteCTRemote(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.change.tracking.rest.dto.v1_0.CTRemote", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
 	protected CTRemote testGraphQLCTRemote_addCTRemote() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGraphQLCTRemote_addCTRemote(randomCTRemote());
+	}
+
+	protected CTRemote testGraphQLCTRemote_addCTRemote(CTRemote ctRemote)
+		throws Exception {
+
+		JSONDeserializer<CTRemote> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(CTRemote.class)) {
+
+			if (getGraphQLValue(field.get(ctRemote)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(ctRemote)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createCTRemote",
+						new HashMap<String, Object>() {
+							{
+								put("ctRemote", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createCTRemote"),
+			CTRemote.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(CTRemote ctRemote, List<CTRemote> ctRemotes) {
@@ -899,6 +1390,8 @@ public abstract class BaseCTRemoteResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1274,13 +1767,11 @@ public abstract class BaseCTRemoteResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1290,7 +1781,7 @@ public abstract class BaseCTRemoteResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(ctRemote.getDateCreated()));
+				sb.append(_format.format(ctRemote.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1305,13 +1796,11 @@ public abstract class BaseCTRemoteResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1321,7 +1810,7 @@ public abstract class BaseCTRemoteResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(ctRemote.getDateModified()));
+				sb.append(_format.format(ctRemote.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1588,7 +2077,30 @@ public abstract class BaseCTRemoteResourceTestCase {
 		return randomCTRemote();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected CTRemoteResource ctRemoteResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1598,12 +2110,12 @@ public abstract class BaseCTRemoteResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1612,11 +2124,16 @@ public abstract class BaseCTRemoteResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1648,6 +2165,24 @@ public abstract class BaseCTRemoteResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1669,16 +2204,6 @@ public abstract class BaseCTRemoteResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1776,10 +2301,34 @@ public abstract class BaseCTRemoteResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseCTRemoteResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.change.tracking.rest.resource.v1_0.CTRemoteResource
 		_ctRemoteResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

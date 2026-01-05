@@ -4,7 +4,6 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Roles";
 	property testray.main.component.name = "Staging";
 
 	setUp {
@@ -46,8 +45,6 @@ definition {
 
 	@priority = 3
 	test AccessStaging {
-		property portal.acceptance = "true";
-
 		task ("Given: a regular user is added") {
 			JSONStaging.enableLocalStaging(groupName = "Site Name");
 

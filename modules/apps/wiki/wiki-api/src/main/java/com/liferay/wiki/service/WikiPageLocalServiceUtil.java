@@ -423,6 +423,12 @@ public class WikiPageLocalServiceUtil {
 		return getService().fetchPage(nodeId, title, version);
 	}
 
+	public static PersistedModel fetchPersistedModel(
+		Serializable primaryKeyObj) {
+
+		return getService().fetchPersistedModel(primaryKeyObj);
+	}
+
 	public static WikiPage fetchWikiPage(long pageId) {
 		return getService().fetchWikiPage(pageId);
 	}
@@ -491,8 +497,8 @@ public class WikiPageLocalServiceUtil {
 	}
 
 	public static com.liferay.wiki.model.WikiPageDisplay getDisplay(
-			long nodeId, String title, javax.portlet.PortletURL viewPageURL,
-			java.util.function.Supplier<javax.portlet.PortletURL>
+			long nodeId, String title, jakarta.portlet.PortletURL viewPageURL,
+			java.util.function.Supplier<jakarta.portlet.PortletURL>
 				editPageURLSupplier,
 			String attachmentURLPrefix)
 		throws PortalException {
@@ -633,8 +639,8 @@ public class WikiPageLocalServiceUtil {
 	}
 
 	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
-			long nodeId, String title, javax.portlet.PortletURL viewPageURL,
-			javax.portlet.PortletURL editPageURL, String attachmentURLPrefix)
+			long nodeId, String title, jakarta.portlet.PortletURL viewPageURL,
+			jakarta.portlet.PortletURL editPageURL, String attachmentURLPrefix)
 		throws PortalException {
 
 		return getService().getPageDisplay(
@@ -642,8 +648,8 @@ public class WikiPageLocalServiceUtil {
 	}
 
 	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
-			WikiPage page, javax.portlet.PortletURL viewPageURL,
-			javax.portlet.PortletURL editPageURL, String attachmentURLPrefix)
+			WikiPage page, jakarta.portlet.PortletURL viewPageURL,
+			jakarta.portlet.PortletURL editPageURL, String attachmentURLPrefix)
 		throws PortalException {
 
 		return getService().getPageDisplay(
@@ -651,8 +657,8 @@ public class WikiPageLocalServiceUtil {
 	}
 
 	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
-			WikiPage page, javax.portlet.PortletURL viewPageURL,
-			javax.portlet.PortletURL editPageURL, String attachmentURLPrefix,
+			WikiPage page, jakarta.portlet.PortletURL viewPageURL,
+			jakarta.portlet.PortletURL editPageURL, String attachmentURLPrefix,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
@@ -662,8 +668,8 @@ public class WikiPageLocalServiceUtil {
 	}
 
 	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
-			WikiPage page, javax.portlet.PortletURL viewPageURL,
-			java.util.function.Supplier<javax.portlet.PortletURL>
+			WikiPage page, jakarta.portlet.PortletURL viewPageURL,
+			java.util.function.Supplier<jakarta.portlet.PortletURL>
 				editPageURLSupplier,
 			String attachmentURLPrefix,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)

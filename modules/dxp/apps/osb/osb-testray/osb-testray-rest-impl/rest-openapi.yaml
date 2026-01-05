@@ -16,9 +16,9 @@ info:
         "OSB Testray REST API. A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
         'com.liferay.osb.testray.rest.client', and version '1.0.0'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-    title: "OSB Testray REST"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+    title: OSB Testray REST
     version: v1.0
 openapi: 3.0.1
 paths:
@@ -26,18 +26,18 @@ paths:
         get:
             operationId: getCompareRuns
             parameters:
-                - in: path
-                  name: idRunA
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
-                - in: path
-                  name: idRunB
-                  required: true
-                  schema:
-                      format: int64
-                      type: integer
+                -   in: path
+                    name: idRunA
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
+                -   in: path
+                    name: idRunB
+                    required: true
+                    schema:
+                        format: int64
+                        type: integer
             responses:
                 200:
                     content:

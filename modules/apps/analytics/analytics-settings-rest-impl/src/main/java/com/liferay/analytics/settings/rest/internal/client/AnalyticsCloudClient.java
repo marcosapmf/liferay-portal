@@ -30,14 +30,19 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.InetAddressUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.HttpURLConnection;
@@ -47,6 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -106,6 +112,8 @@ public class AnalyticsCloudClient {
 
 		JSONObject connectionTokenJSONObject = _decodeToken(connectionToken);
 
+		_validateConnectionTokenURL(connectionTokenJSONObject.getString("url"));
+
 		Http.Options options = new Http.Options();
 
 		options.addPart("name", company.getName());
@@ -136,13 +144,18 @@ public class AnalyticsCloudClient {
 	}
 
 	public AnalyticsDataSource disconnectAnalyticsDataSource(
-			AnalyticsConfiguration analyticsConfiguration)
+			AnalyticsConfiguration analyticsConfiguration, Company company)
 		throws Exception {
 
 		try {
 			Http.Options options = _getOptions(analyticsConfiguration);
 
-			options.addHeader(HttpHeaders.CONTENT_LENGTH, "0");
+			options.addHeader("Content-Type", ContentTypes.APPLICATION_JSON);
+			options.setBody(
+				JSONUtil.put(
+					"url", company.getPortalURL(0)
+				).toString(),
+				ContentTypes.APPLICATION_JSON, StringPool.UTF8);
 			options.setLocation(
 				String.format(
 					"%s/api/1.0/data-sources/%s/disconnect",
@@ -199,7 +212,7 @@ public class AnalyticsCloudClient {
 			url = HttpComponentsUtil.addParameter(url, "page", page);
 			url = HttpComponentsUtil.addParameter(url, "size", size);
 
-			if (!ArrayUtil.isEmpty(sorts)) {
+			if (ArrayUtil.isNotEmpty(sorts)) {
 				StringBundler sb = new StringBundler(sorts.length * 3);
 
 				for (Sort sort : sorts) {
@@ -336,10 +349,64 @@ public class AnalyticsCloudClient {
 	}
 
 	public AnalyticsDataSource updateAnalyticsDataSourceDetails(
+			AnalyticsConfiguration analyticsConfiguration,
+			Boolean contentRecommenderMostPopularItemsEnabled,
+			Boolean contentRecommenderUserPersonalizationEnabled)
+		throws Exception {
+
+		try {
+			Http.Options options = _getOptions(analyticsConfiguration);
+
+			options.addHeader("Content-Type", ContentTypes.APPLICATION_JSON);
+			options.setBody(
+				JSONUtil.put(
+					"contentRecommenderMostPopularItemsEnabled",
+					contentRecommenderMostPopularItemsEnabled
+				).put(
+					"contentRecommenderUserPersonalizationEnabled",
+					contentRecommenderUserPersonalizationEnabled
+				).toString(),
+				ContentTypes.APPLICATION_JSON, StringPool.UTF8);
+			options.setLocation(
+				String.format(
+					"%s/api/1.0/data-sources/%s/details",
+					analyticsConfiguration.liferayAnalyticsFaroBackendURL(),
+					analyticsConfiguration.liferayAnalyticsDataSourceId()));
+			options.setPut(true);
+
+			String content = _http.URLtoString(options);
+
+			Http.Response response = options.getResponse();
+
+			if (response.getResponseCode() == HttpURLConnection.HTTP_OK) {
+				return ObjectMapperHolder._objectMapper.readValue(
+					content, AnalyticsDataSource.class);
+			}
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("Response code " + response.getResponseCode());
+			}
+
+			throw new PortalException(
+				"Unable to update analytics data source content recommender " +
+					"details");
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			throw new PortalException(
+				"Unable to update analytics data source content recommender " +
+					"details",
+				exception);
+		}
+	}
+
+	public AnalyticsDataSource updateAnalyticsDataSourceDetails(
 			Boolean accountsSelected,
 			AnalyticsConfiguration analyticsConfiguration,
-			Boolean commerceChannelsSelected, Boolean contactsSelected,
-			Boolean sitesSelected)
+			Boolean contactsSelected)
 		throws Exception {
 
 		try {
@@ -350,11 +417,7 @@ public class AnalyticsCloudClient {
 				JSONUtil.put(
 					"accountsSelected", accountsSelected
 				).put(
-					"commerceChannelsSelected", commerceChannelsSelected
-				).put(
 					"contactsSelected", contactsSelected
-				).put(
-					"sitesSelected", sitesSelected
 				).toString(),
 				ContentTypes.APPLICATION_JSON, StringPool.UTF8);
 			options.setLocation(
@@ -417,7 +480,21 @@ public class AnalyticsCloudClient {
 				}
 
 				return JSONUtil.put(
-					"id", String.valueOf(group.getClassPK())
+					"id",
+					() -> {
+						if (!Objects.equals(
+								group.getClassNameId(),
+								PortalUtil.getClassNameId(Group.class)) &&
+							!Objects.equals(
+								group.getClassNameId(),
+								PortalUtil.getClassNameId(
+									Organization.class))) {
+
+							return String.valueOf(group.getClassPK());
+						}
+
+						return String.valueOf(group.getGroupId());
+					}
 				).put(
 					"name",
 					() -> {
@@ -454,6 +531,24 @@ public class AnalyticsCloudClient {
 				analyticsConfiguration.liferayAnalyticsProjectId()));
 
 		return options;
+	}
+
+	private void _validateConnectionTokenURL(String url) throws Exception {
+		String analyticsCloudDomainAllowed = PropsUtil.get(
+			PropsKeys.ANALYTICS_CLOUD_DOMAIN_ALLOWED);
+
+		if (StringUtil.equals(analyticsCloudDomainAllowed, StringPool.STAR)) {
+			return;
+		}
+
+		String domain = HttpComponentsUtil.getDomain(url);
+
+		if (InetAddressUtil.isLocalInetAddress(
+				InetAddressUtil.getInetAddressByName(domain)) ||
+			!StringUtil.endsWith(domain, analyticsCloudDomainAllowed)) {
+
+			throw new DataSourceConnectionException("Invalid URL domain");
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

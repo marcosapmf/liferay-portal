@@ -13,6 +13,7 @@ import com.liferay.blogs.service.BlogsEntryServiceUtil;
 import com.liferay.blogs.web.internal.frontend.taglib.clay.servlet.taglib.BlogsEntryVerticalCard;
 import com.liferay.blogs.web.internal.security.permission.resource.BlogsEntryPermission;
 import com.liferay.blogs.web.internal.util.BlogsUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -49,19 +50,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.trash.TrashHelper;
 
-import java.util.ArrayList;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Sergio González
@@ -209,16 +209,11 @@ public class BlogsViewEntriesDisplayContext {
 	}
 
 	private boolean _isOrderByColRelevance() {
-		if (Objects.equals(
-				ParamUtil.getString(
-					_httpServletRequest,
-					SearchContainer.DEFAULT_ORDER_BY_COL_PARAM),
-				"relevance")) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			ParamUtil.getString(
+				_httpServletRequest,
+				SearchContainer.DEFAULT_ORDER_BY_COL_PARAM),
+			"relevance");
 	}
 
 	private void _populateResults(SearchContainer<BlogsEntry> searchContainer)
@@ -237,19 +232,13 @@ public class BlogsViewEntriesDisplayContext {
 			SearchContainerResults<AssetEntry> searchContainerResults =
 				BlogsUtil.getSearchContainerResults(searchContainer);
 
-			List<AssetEntry> assetEntries = searchContainerResults.getResults();
-
-			List<BlogsEntry> entriesResults = new ArrayList<>(
-				assetEntries.size());
-
-			for (AssetEntry assetEntry : assetEntries) {
-				entriesResults.add(
-					BlogsEntryLocalServiceUtil.getEntry(
-						assetEntry.getClassPK()));
-			}
+			List<BlogsEntry> blogsEntries = TransformUtil.transform(
+				searchContainerResults.getResults(),
+				assetEntry -> BlogsEntryLocalServiceUtil.getEntry(
+					assetEntry.getClassPK()));
 
 			searchContainer.setResultsAndTotal(
-				() -> entriesResults, searchContainerResults.getTotal());
+				() -> blogsEntries, searchContainerResults.getTotal());
 		}
 		else if (Validator.isNull(keywords)) {
 			String entriesNavigation = ParamUtil.getString(
@@ -327,25 +316,10 @@ public class BlogsViewEntriesDisplayContext {
 			Hits hits = indexer.search(searchContext);
 
 			searchContainer.setResultsAndTotal(
-				() -> {
-					List<BlogsEntry> blogsEntries = new ArrayList<>();
-
-					List<SearchResult> searchResults =
-						SearchResultUtil.getSearchResults(
-							hits, LocaleUtil.getDefault());
-
-					for (SearchResult searchResult : searchResults) {
-						BlogsEntry blogsEntry = _toBlogsEntry(searchResult);
-
-						if (blogsEntry == null) {
-							continue;
-						}
-
-						blogsEntries.add(blogsEntry);
-					}
-
-					return blogsEntries;
-				},
+				() -> TransformUtil.transform(
+					SearchResultUtil.getSearchResults(
+						hits, LocaleUtil.getDefault()),
+					searchResult -> _toBlogsEntry(searchResult)),
 				hits.getLength());
 		}
 	}

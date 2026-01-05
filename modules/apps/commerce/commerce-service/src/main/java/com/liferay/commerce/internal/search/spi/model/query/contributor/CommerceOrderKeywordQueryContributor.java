@@ -13,6 +13,9 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.WildcardQuery;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
+import com.liferay.portal.kernel.search.generic.MultiMatchQuery;
+import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.search.generic.WildcardQueryImpl;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -46,13 +49,34 @@ public class CommerceOrderKeywordQueryContributor
 		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "accountName", false);
 		_queryHelper.addSearchTerm(
-			booleanQuery, searchContext, "externalReferenceCode", false);
+			booleanQuery, searchContext, "addressName", false);
+		_queryHelper.addSearchTerm(booleanQuery, searchContext, "city", false);
 		_queryHelper.addSearchTerm(
-			booleanQuery, searchContext, "orderCreatorEmailAddress", false);
+			booleanQuery, searchContext, "countryIsoCode", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "countryName", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "externalReferenceCode", false);
 		_queryHelper.addSearchTerm(booleanQuery, searchContext, "name", false);
 		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "orderCreatorEmailAddress", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "orderItemNames", false);
+		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "purchaseOrderNumber", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "regionName", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "shippingAddressExternalReference",
+			false);
 		_queryHelper.addSearchTerm(booleanQuery, searchContext, "sku", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "street1", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "street2", false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, "street3", false);
+		_queryHelper.addSearchTerm(booleanQuery, searchContext, "zip", false);
 
 		if (Validator.isNotNull(keywords)) {
 			try {
@@ -61,9 +85,29 @@ public class CommerceOrderKeywordQueryContributor
 				booleanQuery.add(
 					_getTrailingWildcardQuery(Field.ENTRY_CLASS_PK, keywords),
 					BooleanClauseOccur.SHOULD);
-				booleanQuery.add(
-					_getTrailingWildcardQuery("accountName", keywords),
+
+				BooleanQuery searchBooleanQuery = new BooleanQueryImpl();
+
+				searchBooleanQuery.add(
+					new TermQueryImpl("accountName.1_10_ngram", keywords),
 					BooleanClauseOccur.SHOULD);
+
+				MultiMatchQuery multiMatchQuery = new MultiMatchQuery(keywords);
+
+				multiMatchQuery.addFields("accountName", "accountName.reverse");
+				multiMatchQuery.setType(MultiMatchQuery.Type.PHRASE_PREFIX);
+
+				searchBooleanQuery.add(
+					multiMatchQuery, BooleanClauseOccur.SHOULD);
+
+				if (searchContext.isAndSearch()) {
+					booleanQuery.add(
+						searchBooleanQuery, BooleanClauseOccur.MUST);
+				}
+				else {
+					booleanQuery.add(
+						searchBooleanQuery, BooleanClauseOccur.SHOULD);
+				}
 			}
 			catch (ParseException parseException) {
 				throw new SystemException(parseException);

@@ -122,7 +122,7 @@ public class WorkflowHandlerRegistryUtil {
 
 		workflowContext = HashMapBuilder.create(
 			workflowContext
-		).put(
+		).<String, Serializable>put(
 			WorkflowConstants.CONTEXT_COMPANY_ID, String.valueOf(companyId)
 		).put(
 			WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME, className
@@ -141,6 +141,8 @@ public class WorkflowHandlerRegistryUtil {
 		).put(
 			WorkflowConstants.CONTEXT_USER_ID, String.valueOf(userId)
 		).build();
+
+		workflowHandler.contributeWorkflowContext(workflowContext);
 
 		T updatedModel = workflowHandler.updateStatus(
 			model, status, workflowContext);
@@ -242,11 +244,7 @@ public class WorkflowHandlerRegistryUtil {
 			WorkflowInstanceManagerUtil.getWorkflowInstance(
 				companyId, workflowInstanceLink.getWorkflowInstanceId());
 
-		if (!workflowInstance.isComplete()) {
-			return true;
-		}
-
-		return false;
+		return !workflowInstance.isComplete();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

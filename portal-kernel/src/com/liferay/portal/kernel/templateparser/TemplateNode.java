@@ -30,6 +30,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -41,11 +46,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Alexander Chow
  * @author Raymond Augé
@@ -53,9 +53,10 @@ import javax.servlet.http.HttpServletRequest;
 public class TemplateNode extends LinkedHashMap<String, Object> {
 
 	public TemplateNode(
-		ThemeDisplay themeDisplay, String name, String data, String type,
-		Map<String, String> attributes) {
+		Locale locale, ThemeDisplay themeDisplay, String name, String data,
+		String type, Map<String, String> attributes) {
 
+		_locale = locale;
 		_themeDisplay = themeDisplay;
 
 		put("attributes", attributes);
@@ -64,6 +65,15 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 		put("type", type);
 		put("options", new ArrayList<String>());
 		put("optionsMap", new LinkedHashMap<String, String>());
+	}
+
+	public TemplateNode(
+		ThemeDisplay themeDisplay, String name, String data, String type,
+		Map<String, String> attributes) {
+
+		this(
+			LocaleUtil.getMostRelevantLocale(), themeDisplay, name, data, type,
+			attributes);
 	}
 
 	public void appendChild(TemplateNode templateNode) {
@@ -133,7 +143,8 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	@Override
 	public Object clone() {
 		TemplateNode templateNode = new TemplateNode(
-			_themeDisplay, getName(), getData(), getType(), getAttributes());
+			_locale, _themeDisplay, getName(), getData(), getType(),
+			getAttributes());
 
 		for (Map.Entry<String, TemplateNode> entry :
 				_childTemplateNodes.entrySet()) {
@@ -368,10 +379,10 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 			PortletRequest portletRequest =
 				(PortletRequest)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST);
+					JavaConstants.JAKARTA_PORTLET_REQUEST);
 			PortletResponse portletResponse =
 				(PortletResponse)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE);
+					JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 			return assetRenderer.getURLViewInContext(
 				PortalUtil.getLiferayPortletRequest(portletRequest),
@@ -524,7 +535,7 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 		String data = _getData();
 
 		DecimalFormat decimalFormat = (DecimalFormat)DecimalFormat.getInstance(
-			LocaleUtil.getMostRelevantLocale());
+			_locale);
 
 		DecimalFormatSymbols decimalFormatSymbols =
 			decimalFormat.getDecimalFormatSymbols();
@@ -537,7 +548,7 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 		decimalFormat.setMaximumFractionDigits(Integer.MAX_VALUE);
 		decimalFormat.setParseBigDecimal(true);
 
-		return decimalFormat.format(GetterUtil.getDouble(data));
+		return decimalFormat.format(GetterUtil.getDouble(data, _locale));
 	}
 
 	private static final String _RANDOM_ID = StringUtil.randomId();
@@ -546,6 +557,7 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 	private final Map<String, TemplateNode> _childTemplateNodes =
 		new LinkedHashMap<>();
+	private final Locale _locale;
 	private final List<TemplateNode> _siblingTemplateNodes = new ArrayList<>();
 	private final ThemeDisplay _themeDisplay;
 

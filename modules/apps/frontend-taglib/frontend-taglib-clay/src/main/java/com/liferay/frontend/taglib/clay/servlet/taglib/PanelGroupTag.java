@@ -6,12 +6,11 @@
 package com.liferay.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
-import com.liferay.petra.string.StringPool;
+
+import jakarta.servlet.jsp.JspException;
 
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.jsp.JspException;
 
 /**
  * @author Eduardo Allegrini
@@ -21,8 +20,6 @@ public class PanelGroupTag extends BaseContainerTag {
 	@Override
 	public int doStartTag() throws JspException {
 		setAttributeNamespace(_ATTRIBUTE_NAMESPACE);
-		setDynamicAttribute(StringPool.BLANK, "aria-orientation", "vertical");
-		setDynamicAttribute(StringPool.BLANK, "role", "tablist");
 
 		return super.doStartTag();
 	}

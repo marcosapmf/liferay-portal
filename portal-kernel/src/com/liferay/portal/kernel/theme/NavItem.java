@@ -17,12 +17,15 @@ import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Serializable;
 
@@ -32,8 +35,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Represents a portal navigation item, providing access to layouts and metadata
@@ -50,7 +51,7 @@ public class NavItem implements Serializable {
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		if (parentLayouts == null) {
+		if (ListUtil.isEmpty(parentLayouts)) {
 			return Collections.emptyList();
 		}
 
@@ -58,12 +59,16 @@ public class NavItem implements Serializable {
 			LayoutLocalServiceUtil.getLayoutChildLayouts(parentLayouts);
 
 		for (List<Layout> childLayouts : layoutChildLayouts.values()) {
+			Map<Layout, Layout> draftLayouts =
+				LayoutLocalServiceUtil.fetchDraftLayouts(childLayouts);
+
 			Iterator<Layout> iterator = childLayouts.iterator();
 
 			while (iterator.hasNext()) {
 				Layout childLayout = iterator.next();
 
-				if (_isContentLayoutDraft(childLayout) ||
+				if (_isContentLayoutDraft(
+						childLayout, draftLayouts.get(childLayout)) ||
 					!_isLayoutRevisionDisplayable(childLayout) ||
 					childLayout.isHidden() ||
 					!LayoutPermissionUtil.contains(
@@ -77,11 +82,15 @@ public class NavItem implements Serializable {
 
 		List<NavItem> navItems = new ArrayList<>(parentLayouts.size());
 
+		Map<Layout, Layout> draftLayouts =
+			LayoutLocalServiceUtil.fetchDraftLayouts(parentLayouts);
+
 		for (Layout parentLayout : parentLayouts) {
 			List<Layout> childLayouts = layoutChildLayouts.get(
 				parentLayout.getPlid());
 
-			if (_isContentLayoutDraft(parentLayout) ||
+			if (_isContentLayoutDraft(
+					parentLayout, draftLayouts.get(parentLayout)) ||
 				!_isLayoutRevisionDisplayable(parentLayout)) {
 
 				continue;
@@ -167,6 +176,10 @@ public class NavItem implements Serializable {
 		}
 
 		return _children;
+	}
+
+	public String getDisplayIcon() throws Exception {
+		return StringPool.BLANK;
 	}
 
 	public Map<String, Serializable> getExpandoAttributes() {
@@ -299,13 +312,7 @@ public class NavItem implements Serializable {
 	 * @throws Exception if an exception occurred
 	 */
 	public boolean hasBrowsableChildren() throws Exception {
-		List<NavItem> browsableChildren = getBrowsableChildren();
-
-		if (!browsableChildren.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _hasBrowsableChildren(getChildren());
 	}
 
 	/**
@@ -319,11 +326,7 @@ public class NavItem implements Serializable {
 	public boolean hasChildren() throws Exception {
 		List<NavItem> children = getChildren();
 
-		if (!children.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return !children.isEmpty();
 	}
 
 	@Override
@@ -369,13 +372,16 @@ public class NavItem implements Serializable {
 			layout.getAncestorPlid());
 	}
 
-	private static boolean _isContentLayoutDraft(Layout layout) {
+	private static boolean _isContentLayoutDraft(
+		Layout layout, Layout draftLayout) {
+
 		if (!layout.isTypeContent()) {
 			return false;
 		}
 
-		if (layout.fetchDraftLayout() != null) {
-			return !layout.isPublished();
+		if (draftLayout != null) {
+			return !GetterUtil.getBoolean(
+				draftLayout.getTypeSettingsProperty("published"));
 		}
 
 		if (layout.isApproved() && !layout.isHidden() && !layout.isSystem()) {
@@ -404,11 +410,7 @@ public class NavItem implements Serializable {
 		LayoutTypeController layoutTypeController =
 			layoutType.getLayoutTypeController();
 
-		if (layoutTypeController.isWorkflowEnabled()) {
-			return true;
-		}
-
-		return false;
+		return layoutTypeController.isWorkflowEnabled();
 	}
 
 	private NavItem(
@@ -438,6 +440,20 @@ public class NavItem implements Serializable {
 		}
 
 		return navItems;
+	}
+
+	private boolean _hasBrowsableChildren(List<NavItem> navItems)
+		throws Exception {
+
+		for (NavItem navItem : navItems) {
+			if (navItem.isBrowsable() ||
+				_hasBrowsableChildren(navItem.getChildren())) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private List<NavItem> _browsableChildren;

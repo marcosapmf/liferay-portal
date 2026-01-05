@@ -5,25 +5,25 @@
 
 package com.liferay.jenkins.results.parser;
 
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+
 import java.io.File;
 import java.io.IOException;
 
 import java.util.Properties;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.json.JSONObject;
 
@@ -61,10 +61,17 @@ public class NotificationUtil {
 			body, attachmentFileName, null);
 	}
 
-	public static void sendEmail(
+	public static synchronized void sendEmail(
 		String senderEmailAddress, String senderName,
 		String recipientEmailAddress, String subject, String body,
 		String attachmentFileName, String mimeType) {
+
+		Thread thread = Thread.currentThread();
+
+		if (thread.getContextClassLoader() == null) {
+			thread.setContextClassLoader(
+				NotificationUtil.class.getClassLoader());
+		}
 
 		body = JenkinsResultsParserUtil.redact(body);
 		subject = JenkinsResultsParserUtil.redact(subject);
@@ -85,6 +92,10 @@ public class NotificationUtil {
 		}
 
 		try {
+			if (!senderEmailAddress.endsWith(".liferay.com")) {
+				senderEmailAddress = senderEmailAddress + ".lax.liferay.com";
+			}
+
 			mimeMessage.setFrom(
 				new InternetAddress(senderEmailAddress, senderName));
 			mimeMessage.setRecipients(
@@ -110,9 +121,18 @@ public class NotificationUtil {
 
 				File attachmentFile = new File(attachmentFileName);
 
-				attachmentBodyPart.setFileName(attachmentFile.getName());
+				long attachmentFileSize = attachmentFile.length();
 
-				multipart.addBodyPart(attachmentBodyPart);
+				if (attachmentFileSize < _MAX_ATTACHMENT_FILE_SIZE) {
+					attachmentBodyPart.setFileName(attachmentFile.getName());
+
+					multipart.addBodyPart(attachmentBodyPart);
+				}
+				else {
+					System.out.println(
+						"Attachment file size for " + attachmentFile +
+							" exceeds 10MB cannot be attached to email");
+				}
 			}
 
 			mimeMessage.setContent(multipart);
@@ -121,13 +141,12 @@ public class NotificationUtil {
 
 			Transport transport = session.getTransport();
 
-			Properties buildProperties =
-				JenkinsResultsParserUtil.getBuildProperties();
-
 			transport.connect(
-				buildProperties.getProperty("email.smtp.server"),
-				buildProperties.getProperty("email.smtp.username"),
-				buildProperties.getProperty("email.smtp.password"));
+				JenkinsResultsParserUtil.getBuildProperty("email.smtp.server"),
+				JenkinsResultsParserUtil.getBuildProperty(
+					"email.smtp.username"),
+				JenkinsResultsParserUtil.getBuildProperty(
+					"email.smtp.password"));
 
 			transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
 
@@ -137,9 +156,39 @@ public class NotificationUtil {
 		}
 		catch (IOException | MessagingException exception) {
 			System.out.println("Unable to send email.");
-			System.out.println(exception.getMessage());
+
+			String message = exception.getMessage();
+
+			System.out.println(message);
 
 			exception.printStackTrace();
+
+			Throwable throwable = exception.getCause();
+
+			if (throwable != null) {
+				String throwableMessage = throwable.getMessage();
+
+				if (throwableMessage.contains("no object DCH for MIME type")) {
+					return;
+				}
+			}
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("Sender: ");
+			sb.append(senderEmailAddress);
+			sb.append("\nRecipient: ");
+			sb.append(recipientEmailAddress);
+			sb.append("\nSubject: ");
+			sb.append(subject);
+			sb.append("\nBody: ");
+			sb.append(body);
+			sb.append("\nError: ");
+			sb.append(message);
+			sb.append("\n\n<@U04GTH03Q>");
+
+			sendSlackNotification(
+				sb.toString(), "ci-notifications", "Unable to send email");
 		}
 	}
 
@@ -198,6 +247,8 @@ public class NotificationUtil {
 			ioException.printStackTrace();
 		}
 	}
+
+	private static final long _MAX_ATTACHMENT_FILE_SIZE = 1024 * 1024 * 10;
 
 	static {
 		Thread thread = Thread.currentThread();

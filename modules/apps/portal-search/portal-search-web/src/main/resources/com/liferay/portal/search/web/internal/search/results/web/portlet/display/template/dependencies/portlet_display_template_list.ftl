@@ -16,7 +16,7 @@
 							<span class="sticker">
 								<span class="sticker-overlay">
 									<img
-										alt="${languageUtil.get(locale, "thumbnail")}"
+										alt="${entry.getContent()!entry.getTitle() + ' ' + languageUtil.get(locale, 'thumbnail')}"
 										class="sticker-img"
 										src="${entry.getThumbnailURLString()}"
 									/>
@@ -57,7 +57,7 @@
 										<span class="subtext-item">
 											&#183;
 
-											<@liferay.language key="written-by" />
+											<@liferay.language key="by" />
 
 											<strong>${htmlUtil.escape(entry.getCreatorUserName())}</strong>
 										</span>

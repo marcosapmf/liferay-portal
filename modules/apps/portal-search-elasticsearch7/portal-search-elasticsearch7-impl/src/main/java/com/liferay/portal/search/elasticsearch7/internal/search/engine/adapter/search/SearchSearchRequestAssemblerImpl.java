@@ -17,7 +17,9 @@ import com.liferay.portal.search.collapse.InnerCollapse;
 import com.liferay.portal.search.elasticsearch7.internal.groupby.GroupByTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlightTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlighterTranslator;
-import com.liferay.portal.search.elasticsearch7.internal.sort.SortTranslator;
+import com.liferay.portal.search.elasticsearch7.internal.legacy.sort.SortTranslator;
+import com.liferay.portal.search.elasticsearch7.internal.query.ElasticsearchQueryTranslator;
+import com.liferay.portal.search.elasticsearch7.internal.sort.ElasticsearchSortFieldTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.stats.StatsTranslator;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.groupby.GroupByRequest;
@@ -59,6 +61,7 @@ public class SearchSearchRequestAssemblerImpl
 			searchSourceBuilder, searchSearchRequest, searchRequest);
 
 		_setCollapse(searchSourceBuilder, searchSearchRequest);
+		_setFetchFields(searchSourceBuilder, searchSearchRequest);
 		_setFetchSource(searchSourceBuilder, searchSearchRequest);
 		_setGroupBy(searchSourceBuilder, searchSearchRequest);
 		_setGroupByRequests(searchSourceBuilder, searchSearchRequest);
@@ -133,6 +136,23 @@ public class SearchSearchRequestAssemblerImpl
 		searchSourceBuilder.collapse(collapseBuilder);
 	}
 
+	private void _setFetchFields(
+		SearchSourceBuilder searchSourceBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		String[] selectedFieldNames =
+			searchSearchRequest.getSelectedFieldNames();
+
+		if (ArrayUtil.isNotEmpty(selectedFieldNames)) {
+			for (String selectedFieldName : selectedFieldNames) {
+				searchSourceBuilder.fetchField(selectedFieldName);
+			}
+		}
+		else {
+			searchSourceBuilder.fetchField(StringPool.STAR);
+		}
+	}
+
 	private void _setFetchSource(
 		SearchSourceBuilder searchSourceBuilder,
 		SearchSearchRequest searchSearchRequest) {
@@ -152,6 +172,9 @@ public class SearchSearchRequestAssemblerImpl
 			searchSourceBuilder.fetchSource(
 				searchSearchRequest.getFetchSourceIncludes(),
 				searchSearchRequest.getFetchSourceExcludes());
+		}
+		else {
+			searchSourceBuilder.fetchSource(false);
 		}
 	}
 
@@ -209,8 +232,7 @@ public class SearchSearchRequestAssemblerImpl
 				searchSearchRequest.getHighlightFieldNames(),
 				searchSearchRequest.isHighlightRequireFieldMatch(),
 				searchSearchRequest.getHighlightFragmentSize(),
-				searchSearchRequest.getHighlightSnippetSize(),
-				searchSearchRequest.isLuceneSyntax());
+				searchSearchRequest.getHighlightSnippetSize());
 		}
 	}
 
@@ -288,16 +310,13 @@ public class SearchSearchRequestAssemblerImpl
 		SearchSourceBuilder searchSourceBuilder,
 		SearchSearchRequest searchSearchRequest) {
 
-		String[] selectedFieldNames =
-			searchSearchRequest.getSelectedFieldNames();
+		String[] storedFields = searchSearchRequest.getStoredFields();
 
-		if (!ArrayUtil.isEmpty(selectedFieldNames)) {
-			searchSourceBuilder.storedFields(
-				ListUtil.fromArray(selectedFieldNames));
+		if (ArrayUtil.isEmpty(storedFields)) {
+			return;
 		}
-		else {
-			searchSourceBuilder.storedField(StringPool.STAR);
-		}
+
+		searchSourceBuilder.storedFields(ListUtil.fromArray(storedFields));
 	}
 
 	private void _setTrackScores(
@@ -326,23 +345,17 @@ public class SearchSearchRequestAssemblerImpl
 	@Reference
 	private GroupByRequestFactory _groupByRequestFactory;
 
-	@Reference
-	private GroupByTranslator _groupByTranslator;
-
-	@Reference
-	private HighlighterTranslator _highlighterTranslator;
-
+	private final GroupByTranslator _groupByTranslator =
+		new GroupByTranslator();
+	private final HighlighterTranslator _highlighterTranslator =
+		new HighlighterTranslator();
 	private final HighlightTranslator _highlightTranslator =
 		new HighlightTranslator();
-
-	@Reference(target = "(search.engine.impl=Elasticsearch)")
-	private QueryTranslator<QueryBuilder> _queryTranslator;
-
-	@Reference
-	private SortFieldTranslator<SortBuilder<?>> _sortFieldTranslator;
-
-	@Reference
-	private SortTranslator _sortTranslator;
+	private final QueryTranslator<QueryBuilder> _queryTranslator =
+		new ElasticsearchQueryTranslator();
+	private final SortFieldTranslator<SortBuilder<?>> _sortFieldTranslator =
+		new ElasticsearchSortFieldTranslator();
+	private final SortTranslator _sortTranslator = new SortTranslator();
 
 	@Reference
 	private StatsRequestBuilderFactory _statsRequestBuilderFactory;

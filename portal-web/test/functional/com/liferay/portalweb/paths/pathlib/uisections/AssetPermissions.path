@@ -16,16 +16,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MORE_OPTIONS_LINK</td>
-	<td>//button[contains(@class,'btn')][normalize-space(text())='More Options']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>HIDE_OPTIONS_LINK</td>
-	<td>//input[contains(@id,'inputPermissionsShowOptions') and @value='false']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>PERMISSIONS_CHECKBOX</td>
 	<td>//tr[contains(.,'${key_roleTitle}')]//input[@value='${key_permissionDefinitionKey}']</td>
 	<td></td>
@@ -38,16 +28,6 @@
 <tr>
 	<td>GUEST_VIEW_CHECKBOX</td>
 	<td>//input[@id='guest_ACTION_VIEW']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>OWNER_VIEW_CHECKBOX</td>
-	<td>//input[@id='owner_ACTION_VIEW']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SITE_MEMBER_VIEW_CHECKBOX</td>
-	<td>//input[@id='site-member_ACTION_VIEW']</td>
 	<td></td>
 </tr>
 </tbody>

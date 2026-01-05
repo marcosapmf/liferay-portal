@@ -32,13 +32,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1103,7 +1101,6 @@ public class AccountEntryUserRelPersistenceImpl
 		"accountEntryUserRel.accountUserId = ?";
 
 	private FinderPath _finderPathFetchByAEI_AUI;
-	private FinderPath _finderPathCountByAEI_AUI;
 
 	/**
 	 * Returns the account entry user rel where accountEntryId = &#63; and accountUserId = &#63; or throws a <code>NoSuchEntryUserRelException</code> if it could not be found.
@@ -1227,23 +1224,6 @@ public class AccountEntryUserRelPersistenceImpl
 					}
 				}
 				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {
-									accountEntryId, accountUserId
-								};
-							}
-
-							_log.warn(
-								"AccountEntryUserRelPersistenceImpl.fetchByAEI_AUI(long, long, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
 					AccountEntryUserRel accountEntryUserRel = list.get(0);
 
 					result = accountEntryUserRel;
@@ -1294,49 +1274,14 @@ public class AccountEntryUserRelPersistenceImpl
 	 */
 	@Override
 	public int countByAEI_AUI(long accountEntryId, long accountUserId) {
-		FinderPath finderPath = _finderPathCountByAEI_AUI;
+		AccountEntryUserRel accountEntryUserRel = fetchByAEI_AUI(
+			accountEntryId, accountUserId);
 
-		Object[] finderArgs = new Object[] {accountEntryId, accountUserId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_ACCOUNTENTRYUSERREL_WHERE);
-
-			sb.append(_FINDER_COLUMN_AEI_AUI_ACCOUNTENTRYID_2);
-
-			sb.append(_FINDER_COLUMN_AEI_AUI_ACCOUNTUSERID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(accountEntryId);
-
-				queryPos.add(accountUserId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (accountEntryUserRel == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_AEI_AUI_ACCOUNTENTRYID_2 =
@@ -1453,7 +1398,6 @@ public class AccountEntryUserRelPersistenceImpl
 			accountEntryUserRelModelImpl.getAccountUserId()
 		};
 
-		finderCache.putResult(_finderPathCountByAEI_AUI, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByAEI_AUI, args, accountEntryUserRelModelImpl);
 	}
@@ -1938,11 +1882,6 @@ public class AccountEntryUserRelPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByAEI_AUI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"accountEntryId", "accountUserId"}, true);
-
-		_finderPathCountByAEI_AUI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByAEI_AUI",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"accountEntryId", "accountUserId"}, false);
 
 		AccountEntryUserRelUtil.setPersistence(this);
 	}

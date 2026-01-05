@@ -18,9 +18,9 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroupProduct;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.ProductGroupEntityModel;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductGroupProductUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductGroupResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -33,10 +33,10 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -63,8 +63,9 @@ public class ProductGroupResourceImpl extends BaseProductGroupResourceImpl {
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -94,8 +95,9 @@ public class ProductGroupResourceImpl extends BaseProductGroupResourceImpl {
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -143,8 +145,9 @@ public class ProductGroupResourceImpl extends BaseProductGroupResourceImpl {
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -164,19 +167,31 @@ public class ProductGroupResourceImpl extends BaseProductGroupResourceImpl {
 		throws Exception {
 
 		CommercePricingClass commercePricingClass = _addOrUpdateProductGroup(
-			productGroup);
+			productGroup.getExternalReferenceCode(), productGroup);
+
+		return _toProductGroup(
+			commercePricingClass.getCommercePricingClassId());
+	}
+
+	@Override
+	public ProductGroup putProductGroupByExternalReferenceCode(
+			String externalReferenceCode, ProductGroup productGroup)
+		throws Exception {
+
+		CommercePricingClass commercePricingClass = _addOrUpdateProductGroup(
+			externalReferenceCode, productGroup);
 
 		return _toProductGroup(
 			commercePricingClass.getCommercePricingClassId());
 	}
 
 	private CommercePricingClass _addOrUpdateProductGroup(
-			ProductGroup productGroup)
+			String externalReferenceCode, ProductGroup productGroup)
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
 			_commercePricingClassService.addOrUpdateCommercePricingClass(
-				productGroup.getExternalReferenceCode(), 0L,
+				externalReferenceCode, 0L,
 				LanguageUtils.getLocalizedMap(productGroup.getTitle()),
 				LanguageUtils.getLocalizedMap(productGroup.getDescription()),
 				_serviceContextHelper.getServiceContext());

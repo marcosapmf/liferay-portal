@@ -78,7 +78,8 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), "NOME"
 				).build(),
-				2, true, 0.0, BigDecimal.ONE, _cpInstance.getSku());
+				2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE,
+				_cpInstance.getSku());
 	}
 
 	@After
@@ -122,7 +123,8 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 					StringPool.BLANK, _user.getUserId(),
 					commerceInventoryWarehouseActive.
 						getCommerceInventoryWarehouseId(),
-					BigDecimal.ONE, _cpInstance.getSku(), StringPool.BLANK);
+					BigDecimal.ONE, BigDecimal.ZERO, _cpInstance.getSku(),
+					StringPool.BLANK);
 
 		Assert.assertNotNull(commerceInventoryWarehouseItem);
 		Assert.assertEquals(
@@ -157,7 +159,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-1"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		_cpInstanceUnitOfMeasureLocalService.addCPInstanceUnitOfMeasure(
 			_user.getUserId(), _cpInstance.getCPInstanceId(), true,
@@ -165,7 +167,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-2"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		CommerceInventoryWarehouse commerceInventoryWarehouseActive =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
@@ -176,7 +178,8 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 				StringPool.BLANK, _user.getUserId(),
 				commerceInventoryWarehouseActive.
 					getCommerceInventoryWarehouseId(),
-				BigDecimal.ONE, cpInstance.getSku(), StringPool.BLANK);
+				BigDecimal.ONE, BigDecimal.ZERO, cpInstance.getSku(),
+				StringPool.BLANK);
 	}
 
 	@Test
@@ -202,7 +205,8 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 					StringPool.BLANK, _user.getUserId(),
 					commerceInventoryWarehouseActive.
 						getCommerceInventoryWarehouseId(),
-					BigDecimal.ONE, RandomTestUtil.randomString(),
+					BigDecimal.ONE, BigDecimal.ZERO,
+					RandomTestUtil.randomString(),
 					_cpInstanceUnitOfMeasure.getKey()));
 	}
 
@@ -228,7 +232,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 					StringPool.BLANK, _user.getUserId(),
 					commerceInventoryWarehouseActive.
 						getCommerceInventoryWarehouseId(),
-					BigDecimal.ONE, _cpInstance.getSku(),
+					BigDecimal.ONE, BigDecimal.ZERO, _cpInstance.getSku(),
 					_cpInstanceUnitOfMeasure.getKey()));
 	}
 
@@ -257,7 +261,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 					StringPool.BLANK, _user.getUserId(),
 					commerceInventoryWarehouseActive.
 						getCommerceInventoryWarehouseId(),
-					BigDecimal.ONE, _cpInstance.getSku(),
+					BigDecimal.ONE, BigDecimal.ZERO, _cpInstance.getSku(),
 					RandomTestUtil.randomString()));
 	}
 
@@ -288,7 +292,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-1"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		_cpInstanceUnitOfMeasureLocalService.addCPInstanceUnitOfMeasure(
 			_user.getUserId(), _cpInstance.getCPInstanceId(), true,
@@ -296,7 +300,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-2"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		CommerceInventoryWarehouse commerceInventoryWarehouseActive =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
@@ -307,7 +311,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 				StringPool.BLANK, _user.getUserId(),
 				commerceInventoryWarehouseActive.
 					getCommerceInventoryWarehouseId(),
-				BigDecimal.ONE, cpInstance.getSku(),
+				BigDecimal.ONE, BigDecimal.ZERO, cpInstance.getSku(),
 				RandomTestUtil.randomString());
 	}
 

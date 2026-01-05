@@ -5,8 +5,10 @@
 
 package com.liferay.fragment.renderer;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.liferay.portal.kernel.json.JSONObject;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -16,7 +18,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface FragmentRendererController {
 
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext);
 
 	public String render(

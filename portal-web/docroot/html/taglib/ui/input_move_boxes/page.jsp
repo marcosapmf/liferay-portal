@@ -36,7 +36,7 @@ Map<String, Object> data = new HashMap<String, Object>();
 <div class="taglib-move-boxes <%= cssClass %> <%= leftReorder ? "left-reorder" : StringPool.BLANK %> <%= rightReorder ? "right-reorder" : StringPool.BLANK %>" id="<%= randomNamespace %>input-move-boxes">
 	<div class="row selector-container">
 		<div class="col-md-4 left-selector-column">
-			<aui:select cssClass="choice-selector left-selector" label="<%= leftTitle %>" multiple="<%= true %>" name="<%= leftBoxName %>" onChange="<%= Validator.isNotNull(leftOnChange) ? leftOnChange : StringPool.BLANK %>" size="10">
+			<aui:select cssClass="choice-selector left-selector" label="<%= leftTitle %>" multiple="<%= true %>" name="<%= leftBoxName %>" onChange="<%= Validator.isNotNull(leftOnChange) ? leftOnChange : StringPool.BLANK %>">
 
 				<%
 				data.put("selected", true);
@@ -57,7 +57,7 @@ Map<String, Object> data = new HashMap<String, Object>();
 		<div class="col-md-1 move-arrow-buttons"></div>
 
 		<div class="col-md-4 right-selector-column">
-			<aui:select cssClass="choice-selector right-selector" label="<%= rightTitle %>" multiple="<%= true %>" name="<%= rightBoxName %>" onChange="<%= Validator.isNotNull(rightOnChange) ? rightOnChange : StringPool.BLANK %>" size="10">
+			<aui:select cssClass="choice-selector right-selector" label="<%= rightTitle %>" multiple="<%= true %>" name="<%= rightBoxName %>" onChange="<%= Validator.isNotNull(rightOnChange) ? rightOnChange : StringPool.BLANK %>">
 
 				<%
 				data.put("selected", false);
@@ -77,27 +77,90 @@ Map<String, Object> data = new HashMap<String, Object>();
 	</div>
 </div>
 
-<aui:script use="liferay-input-move-boxes">
-	new Liferay.InputMoveBoxes(
-		{
-			contentBox: '#<%= randomNamespace %>input-move-boxes',
+<aui:script type="module">
+	import React from '<%= FrontendESMUtil.buildExportsURL(themeDisplay, "frontend-js-react-web", "react") %>';
+	import {ClayDualListBox} from '<%= FrontendESMUtil.buildExportsURL(themeDisplay, "frontend-taglib-clay", "@clayui/form") %>';
+	import {render} from '<%= FrontendESMUtil.buildURL(themeDisplay, "frontend-js-react-web") %>';
 
-			<c:if test="<%= leftBoxMaxItems != null %>">
-				leftBoxMaxItems: <%= leftBoxMaxItems %>,
-			</c:if>
+	function main({initialItems}) {
+		const [items, setItems] = React.useState(initialItems);
 
-			<c:if test="<%= rightBoxMaxItems != null %>">
-				rightBoxMaxItems: <%= rightBoxMaxItems %>,
-			</c:if>
+		return React.createElement(
+			ClayDualListBox,
+			{
+				ariaLabels: {
+					transferRTL: '<%= LanguageUtil.format(request, "move-selected-items-from-x-to-x", new Object[] {rightTitle, leftTitle}, false) %>',
+					transferLTR: '<%= LanguageUtil.format(request, "move-selected-items-from-x-to-x", new Object[] {leftTitle, rightTitle}, false) %>'
+				},
+				items: items,
+				left: {
+					id: '<portlet:namespace /><%= leftBoxName %>',
+					label: '<%= leftTitle %>'
+				},
+				leftMaxItems: <%= leftBoxMaxItems %>,
+				onItemsChange: (newItems) => {
+					const initialLeftItemsLength = items[0].length;
+					const newLeftItemsLength = newItems[0].length;
 
-			strings: {
-				LEFT_MOVE_DOWN: '<%= UnicodeLanguageUtil.format(request, "move-selected-item-in-x-one-position-down", leftTitle, false) %>',
-				LEFT_MOVE_UP: '<%= UnicodeLanguageUtil.format(request, "move-selected-item-in-x-one-position-up", leftTitle, false) %>',
-				MOVE_LEFT: '<%= UnicodeLanguageUtil.format(request, "move-selected-items-from-x-to-x", new Object[] {rightTitle, leftTitle}, false) %>',
-				MOVE_RIGHT: '<%= UnicodeLanguageUtil.format(request, "move-selected-items-from-x-to-x", new Object[] {leftTitle, rightTitle}, false) %>',
-				RIGHT_MOVE_DOWN: '<%= UnicodeLanguageUtil.format(request, "move-selected-item-in-x-one-position-down", rightTitle, false) %>',
-				RIGHT_MOVE_UP: '<%= UnicodeLanguageUtil.format(request, "move-selected-item-in-x-one-position-up", rightTitle, false) %>'
+					let fromBox = document.getElementById('<portlet:namespace /><%= leftBoxName %>');
+					let toBox = document.getElementById('<portlet:namespace /><%= rightBoxName %>');
+
+					if (initialLeftItemsLength > newLeftItemsLength) {
+						fromBox = document.getElementById('<portlet:namespace /><%= rightBoxName %>');
+						toBox = document.getElementById('<portlet:namespace /><%= leftBoxName %>');
+					}
+
+					setItems(newItems);
+
+					Liferay.fire('inputmoveboxes:moveItem', {fromBox, toBox});
+					Liferay.fire('inputmoveboxes:orderItem');
+				},
+				right: {
+					id: '<portlet:namespace /><%= rightBoxName %>',
+					label: '<%= rightTitle %>'
+				},
+				rightMaxItems: <%= rightBoxMaxItems %>,
+				size: 10,
 			}
-		}
-	).render();
+		);
+	}
+
+	render(
+		main,
+		{
+			initialItems: [
+				[
+					<%
+					for (int i = 0; i < leftList.size(); i++) {
+						KeyValuePair kvp = (KeyValuePair)leftList.get(i);
+					%>
+
+						{
+							label: '<%= HtmlUtil.escapeJS(kvp.getValue()) %>',
+							value: '<%= HtmlUtil.escapeJS(kvp.getKey()) %>'
+						},
+					<%
+					}
+					%>
+
+				],
+				[
+					<%
+					for (int i = 0; i < rightList.size(); i++) {
+						KeyValuePair kvp = (KeyValuePair)rightList.get(i);
+					%>
+
+						{
+							label: '<%= HtmlUtil.escapeJS(kvp.getValue()) %>',
+							value: '<%= HtmlUtil.escapeJS(kvp.getKey()) %>'
+						},
+					<%
+					}
+					%>
+
+				]
+			]
+		},
+		document.querySelector('#<%= randomNamespace %>input-move-boxes')
+	);
 </aui:script>

@@ -11,10 +11,9 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -24,7 +23,9 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -40,6 +41,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -56,6 +58,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -85,9 +88,78 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getGroupId(), TestPropsValues.getUserId());
 
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
 		_assetVocabulary = _assetVocabularyLocalService.addVocabulary(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			RandomTestUtil.randomString(), _serviceContext);
+	}
+
+	@After
+	public void tearDown() {
+		ServiceContextThreadLocal.popServiceContext();
+	}
+
+	@Test
+	public void testGetAssetVocabularyFromSiteNavigationMenuItemAcrossSites()
+		throws Exception {
+
+		AssetVocabulary assetVocabulary1 =
+			_assetVocabularyLocalService.addVocabulary(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), _serviceContext);
+
+		Group group = GroupTestUtil.addGroup();
+
+		SiteNavigationMenu siteNavigationMenu =
+			_siteNavigationMenuLocalService.addSiteNavigationMenu(
+				null, TestPropsValues.getUserId(), group.getGroupId(),
+				RandomTestUtil.randomString(),
+				SiteNavigationConstants.TYPE_DEFAULT, true, _serviceContext);
+
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			_siteNavigationMenuItemLocalService.addSiteNavigationMenuItem(
+				null, TestPropsValues.getUserId(), group.getGroupId(),
+				siteNavigationMenu.getSiteNavigationMenuId(), 0,
+				SiteNavigationMenuItemTypeConstants.ASSET_VOCABULARY,
+				UnicodePropertiesBuilder.create(
+					true
+				).put(
+					"externalReferenceCode",
+					assetVocabulary1.getExternalReferenceCode()
+				).put(
+					"scopeExternalReferenceCode",
+					_group.getExternalReferenceCode()
+				).put(
+					"title", assetVocabulary1.getTitle()
+				).put(
+					"type", "asset-vocabulary"
+				).buildString(),
+				_serviceContext);
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			UnicodePropertiesBuilder.fastLoad(
+				siteNavigationMenuItem.getTypeSettings()
+			).build();
+
+		String scopeExternalReferenceCode = typeSettingsUnicodeProperties.get(
+			"scopeExternalReferenceCode");
+
+		ERCInfoItemIdentifier ercInfoItemIdentifier = new ERCInfoItemIdentifier(
+			typeSettingsUnicodeProperties.get("externalReferenceCode"),
+			scopeExternalReferenceCode);
+
+		group = _groupLocalService.fetchGroupByExternalReferenceCode(
+			ercInfoItemIdentifier.getScopeExternalReferenceCode(),
+			siteNavigationMenu.getCompanyId());
+
+		AssetVocabulary assetVocabulary2 =
+			_assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					ercInfoItemIdentifier.getExternalReferenceCode(),
+					group.getGroupId());
+
+		Assert.assertEquals(assetVocabulary1, assetVocabulary2);
 	}
 
 	@Test
@@ -214,12 +286,10 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 	public void testGetRegularURLAssetCategoryTypeWithDisplayPageTemplate()
 		throws Exception {
 
-		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			null, _group.getCreatorUserId(), _group.getGroupId(), 0,
-			_portal.getClassNameId(AssetCategory.class.getName()), 0,
-			RandomTestUtil.randomString(),
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
-			0, _serviceContext);
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			_group.getGroupId(),
+			_portal.getClassNameId(AssetCategory.class.getName()), 0, true,
+			WorkflowConstants.STATUS_APPROVED);
 
 		AssetCategory assetCategory = _addAssetCategory(0);
 
@@ -245,8 +315,9 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
 				new InfoItemReference(
 					AssetCategory.class.getName(),
-					new ClassPKInfoItemIdentifier(
-						assetCategory.getCategoryId())),
+					new ERCInfoItemIdentifier(
+						assetCategory.getExternalReferenceCode(),
+						_group.getExternalReferenceCode())),
 				themeDisplay),
 			siteNavigationMenuItemType.getRegularURL(
 				mockHttpServletRequest, assetCategorySiteNavigationMenuItem));
@@ -615,12 +686,10 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 	public void testIsBrowsableAssetCategoryTypeWithDisplayPageTemplate()
 		throws Exception {
 
-		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			null, _group.getCreatorUserId(), _group.getGroupId(), 0,
-			_portal.getClassNameId(AssetCategory.class.getName()), 0,
-			RandomTestUtil.randomString(),
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
-			0, _serviceContext);
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			_group.getGroupId(),
+			_portal.getClassNameId(AssetCategory.class.getName()), 0, true,
+			WorkflowConstants.STATUS_APPROVED);
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
@@ -707,9 +776,8 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 				Field.DEFAULT_LANGUAGE_ID,
 				LocaleUtil.toLanguageId(defaultLocale)
 			).put(
-				"classPK", String.valueOf(assetVocabulary.getVocabularyId())
-			).put(
-				"groupId", String.valueOf(assetVocabulary.getGroupId())
+				"externalReferenceCode",
+				assetVocabulary.getExternalReferenceCode()
 			).put(
 				"localizedNames", localizedNames
 			).put(
@@ -722,8 +790,6 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 			).put(
 				"useCustomName",
 				String.valueOf(!Objects.equals(localizedNames, "{}"))
-			).put(
-				"uuid", assetVocabulary.getUuid()
 			).buildString(),
 			_serviceContext);
 	}
@@ -814,12 +880,20 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 		Assert.assertEquals(
 			"asset-category", typeSettingsUnicodeProperties.get("type"));
 		Assert.assertEquals(
-			assetCategory.getCategoryId(),
-			GetterUtil.getLong(typeSettingsUnicodeProperties.get("classPK")));
+			assetCategory.getExternalReferenceCode(),
+			GetterUtil.getString(
+				typeSettingsUnicodeProperties.get("externalReferenceCode")));
+
+		AssetVocabulary assetVocabulary =
+			_assetVocabularyLocalService.getAssetVocabulary(
+				assetCategory.getVocabularyId());
+
 		Assert.assertEquals(
-			_assetVocabulary.getVocabularyId(),
-			GetterUtil.getLong(
-				typeSettingsUnicodeProperties.get("assetVocabularyId")));
+			assetVocabulary.getExternalReferenceCode(),
+			GetterUtil.getString(
+				typeSettingsUnicodeProperties.get(
+					"assetVocabularyExternalReferenceCode")));
+
 		Assert.assertEquals(
 			assetCategory.getTitle(locale),
 			typeSettingsUnicodeProperties.get("title"));
@@ -840,8 +914,9 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 	}
 
 	private SiteNavigationMenuItem _getSiteNavigationMenuItemByCategoryId(
-		AssetCategory assetCategory, Locale locale,
-		List<SiteNavigationMenuItem> siteNavigationMenuItems) {
+			AssetCategory assetCategory, Locale locale,
+			List<SiteNavigationMenuItem> siteNavigationMenuItems)
+		throws Exception {
 
 		SiteNavigationMenuItem assetCategorySiteNavigationMenuItem = null;
 
@@ -857,17 +932,24 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 					typeSettingsUnicodeProperties.get("type"),
 					"asset-category") ||
 				!Objects.equals(
-					assetCategory.getCategoryId(),
-					GetterUtil.getLong(
-						typeSettingsUnicodeProperties.get("classPK")))) {
+					assetCategory.getExternalReferenceCode(),
+					GetterUtil.getString(
+						typeSettingsUnicodeProperties.get(
+							"externalReferenceCode")))) {
 
 				continue;
 			}
 
+			AssetVocabulary assetVocabulary =
+				_assetVocabularyLocalService.getAssetVocabulary(
+					assetCategory.getVocabularyId());
+
 			Assert.assertEquals(
-				assetCategory.getVocabularyId(),
-				GetterUtil.getLong(
-					typeSettingsUnicodeProperties.get("assetVocabularyId")));
+				assetVocabulary.getExternalReferenceCode(),
+				GetterUtil.getString(
+					typeSettingsUnicodeProperties.get(
+						"assetVocabularyExternalReferenceCode")));
+
 			Assert.assertEquals(
 				assetCategory.getTitle(locale),
 				typeSettingsUnicodeProperties.get("title"));
@@ -914,8 +996,7 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 	private Group _group;
 
 	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
+	private GroupLocalService _groupLocalService;
 
 	@Inject
 	private Portal _portal;

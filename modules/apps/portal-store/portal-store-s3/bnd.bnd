@@ -1,7 +1,9 @@
 Bundle-Name: Liferay Portal Store S3
 Bundle-SymbolicName: com.liferay.portal.store.s3
-Bundle-Version: 6.0.39
+Bundle-Version: 6.0.46
 Import-Package:\
+	!com.amazon.ion.*,\
+	\
 	!com.ibm.aspera.faspmanager2,\
 	\
 	!com.sun.javadoc,\
@@ -11,6 +13,10 @@ Import-Package:\
 	!com.sun.org.apache.xpath.internal,\
 	!com.sun.tools.doclets.standard,\
 	\
+	!javax.servlet,\
+	\
+	!javax.xml.bind,\
+	\
 	!org.apache.avalon.framework.logger,\
 	!org.apache.log,\
 	\
@@ -18,6 +24,9 @@ Import-Package:\
 	\
 	!org.joda.convert,\
 	\
+	!software.amazon.awssdk.crt.*,\
+	!software.amazon.awssdk.crtcore.*,\
+	!software.amazon.awssdk.utilslite.*,\
 	!software.amazon.ion.*,\
 	\
 	*

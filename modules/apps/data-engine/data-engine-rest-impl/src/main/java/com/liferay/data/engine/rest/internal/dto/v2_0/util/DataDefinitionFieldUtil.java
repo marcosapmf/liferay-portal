@@ -26,6 +26,7 @@ import com.liferay.portal.events.ThemeServicePreAction;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -44,6 +45,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,9 +55,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Carolina Barbosa
@@ -96,7 +97,9 @@ public class DataDefinitionFieldUtil {
 
 		EditorConfiguration editorConfiguration =
 			EditorConfigurationFactoryUtil.getEditorConfiguration(
-				StringPool.BLANK, ddmFormFieldType, "ckeditor_classic",
+				StringPool.BLANK, ddmFormFieldType,
+				FeatureFlagManagerUtil.isEnabled("LPD-11235") ?
+					"ckeditor5_classic" : "ckeditor_classic",
 				new HashMap<>(), themeDisplay,
 				RequestBackedPortletURLFactoryUtil.create(httpServletRequest));
 
@@ -218,11 +221,11 @@ public class DataDefinitionFieldUtil {
 						ddmFormFieldOptions.getOptionLabels(optionValue);
 
 					for (Locale locale : localizedValue.getAvailableLocales()) {
-						List<JSONObject> values = options.computeIfAbsent(
+						List<JSONObject> jsonObjects = options.computeIfAbsent(
 							LanguageUtil.getLanguageId(locale),
 							languageId -> new ArrayList<>());
 
-						values.add(
+						jsonObjects.add(
 							JSONUtil.put(
 								"label", localizedValue.getString(locale)
 							).put(
@@ -308,16 +311,20 @@ public class DataDefinitionFieldUtil {
 			}
 		}
 
-		if (Validator.isNotNull(customProperties.get("ddmStructureId")) &&
-			Validator.isNull(customProperties.get("ddmStructureKey"))) {
+		String ddmStructureId = GetterUtil.getString(
+			customProperties.get("ddmStructureId"));
 
+		if (Validator.isNotNull(ddmStructureId)) {
 			DDMStructure ddmStructure =
 				ddmStructureLocalService.fetchDDMStructure(
-					GetterUtil.getLong(customProperties.get("ddmStructureId")));
+					GetterUtil.getLong(ddmStructureId));
 
 			if (ddmStructure != null) {
 				customProperties.put(
 					"ddmStructureKey", ddmStructure.getStructureKey());
+				customProperties.put(
+					"externalReferenceCode",
+					ddmStructure.getExternalReferenceCode());
 			}
 		}
 

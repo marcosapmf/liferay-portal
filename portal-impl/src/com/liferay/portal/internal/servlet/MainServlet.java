@@ -60,6 +60,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -87,13 +89,22 @@ import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.util.MaintenanceUtil;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.ShutdownUtil;
 import com.liferay.portlet.PortletBagFactory;
 import com.liferay.portlet.PortletFilterFactory;
 import com.liferay.portlet.PortletURLListenerFactory;
 import com.liferay.social.kernel.util.SocialConfigurationUtil;
+
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletContext;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -107,17 +118,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletContext;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -384,8 +384,6 @@ public class MainServlet extends HttpServlet {
 
 		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
 			DBUpgrader.upgradeModules();
-
-			StartupHelperUtil.setUpgrading(false);
 		}
 		else if (PropsValues.DATABASE_INDEXES_UPDATE_ON_STARTUP &&
 				 !StartupHelperUtil.isDBNew()) {
@@ -626,10 +624,11 @@ public class MainServlet extends HttpServlet {
 
 		try (Connection connection = DataAccess.getConnection()) {
 			PortalUpgradeProcess.updateBuildInfo(connection);
+			PortalUpgradeProcess.updateVersionDisplayName(connection);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to update build information", exception);
+				_log.warn("Unable to update release information", exception);
 			}
 		}
 	}
@@ -983,7 +982,7 @@ public class MainServlet extends HttpServlet {
 
 		if (PropsValues.PORTAL_JAAS_ENABLE) {
 			try {
-				userId = JAASHelper.getJaasUserId(companyId, remoteUser);
+				userId = JAASHelper.getJAASUserId(companyId, remoteUser);
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {

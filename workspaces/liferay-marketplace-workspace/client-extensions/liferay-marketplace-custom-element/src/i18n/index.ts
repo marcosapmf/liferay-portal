@@ -10,15 +10,13 @@ export const languages = {
 	en_US,
 };
 
-type Word = keyof typeof en_US;
+export type Word = keyof typeof en_US;
 
 export function translate(
 	word: Word,
-	languageId = Liferay.ThemeDisplay.getLanguageId()
+	languageId = Liferay.ThemeDisplay.getDefaultLanguageId()
 ): string {
-	const languageProperties =
-		(languages as any)[languageId] ||
-		Liferay.ThemeDisplay.getDefaultLanguageId();
+	const languageProperties = (languages as any)[languageId];
 
 	return languageProperties[word] || word;
 }

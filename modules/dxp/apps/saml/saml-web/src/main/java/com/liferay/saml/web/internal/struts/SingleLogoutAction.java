@@ -9,8 +9,8 @@ import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.servlet.profile.SingleLogoutProfile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
 public class SingleLogoutAction extends BaseSamlStrutsAction {
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isEnabled(HttpServletRequest httpServletRequest) {
 		return _samlProviderConfigurationHelper.isEnabled();
 	}
 
@@ -40,7 +40,7 @@ public class SingleLogoutAction extends BaseSamlStrutsAction {
 
 		String requestURI = httpServletRequest.getRequestURI();
 
-		if (_samlProviderConfigurationHelper.isRoleIdp() &&
+		if (!_samlProviderConfigurationHelper.isRoleSp() &&
 			requestURI.endsWith("/slo_logout")) {
 
 			_singleLogoutProfile.processIdpLogout(

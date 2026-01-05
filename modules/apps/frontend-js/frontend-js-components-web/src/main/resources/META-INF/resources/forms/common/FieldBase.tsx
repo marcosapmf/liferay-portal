@@ -8,14 +8,14 @@ import ClayIcon from '@clayui/icon';
 import ClayPopover from '@clayui/popover';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
-import React, {ReactNode, useState} from 'react';
+import React, {useState} from 'react';
 
 import FieldFeedback from './FieldFeedback';
 
 import './FieldBase.scss';
 
 interface FieldBaseProps {
-	children: ReactNode;
+	children: React.ReactNode;
 	className?: string;
 	disabled?: boolean;
 	errorMessage?: string;
@@ -34,11 +34,16 @@ interface FieldBaseProps {
 	warningMessage?: string;
 }
 
-function RequiredMask() {
+export function RequiredMask({disabled}: {disabled?: boolean}) {
 	return (
 		<>
 			<span className="ml-1 reference-mark text-warning">
-				<ClayIcon symbol="asterisk" />
+				<ClayIcon
+					className={classNames({
+						'field-base-disabled-icon': disabled,
+					})}
+					symbol="asterisk"
+				/>
 			</span>
 
 			<span className="hide-accessible sr-only">
@@ -75,7 +80,7 @@ export default function FieldBase({
 				<label className={classNames({disabled})} htmlFor={id}>
 					{label}
 
-					{required && <RequiredMask />}
+					{required && <RequiredMask disabled={disabled} />}
 				</label>
 			)}
 

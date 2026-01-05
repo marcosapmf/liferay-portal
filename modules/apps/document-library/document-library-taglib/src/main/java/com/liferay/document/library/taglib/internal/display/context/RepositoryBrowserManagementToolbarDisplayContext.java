@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -40,7 +40,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 	public RepositoryBrowserManagementToolbarDisplayContext(
 		Set<String> actions, long folderId,
 		ModelResourcePermission<Folder> folderModelResourcePermission,
-		HttpServletRequest httpServletRequest,
+		HttpServletRequest httpServletRequest, boolean includeExtension,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, long repositoryId,
 		SearchContainer<Object> searchContainer, boolean viewableByGuest) {
@@ -52,6 +52,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 		_actions = actions;
 		_folderId = folderId;
 		_folderModelResourcePermission = folderModelResourcePermission;
+		_includeExtension = includeExtension;
 		_repositoryId = repositoryId;
 		_viewableByGuest = viewableByGuest;
 
@@ -69,11 +70,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 
 				User user = _themeDisplay.getUser();
 
-				if (user.isGuestUser()) {
-					return false;
-				}
-
-				return true;
+				return !user.isGuestUser();
 			},
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteEntries");
@@ -110,6 +107,8 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 					ActionKeys.ADD_DOCUMENT),
 			dropdownItem -> {
 				dropdownItem.putData("action", "uploadFile");
+				dropdownItem.putData(
+					"includeExtension", String.valueOf(_includeExtension));
 				dropdownItem.setIcon("upload");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "file-upload"));
@@ -154,11 +153,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isSelectable() {
-		if (_actions.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !_actions.isEmpty();
 	}
 
 	@Override
@@ -181,6 +176,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 	private final long _folderId;
 	private final ModelResourcePermission<Folder>
 		_folderModelResourcePermission;
+	private final boolean _includeExtension;
 	private final long _repositoryId;
 	private final ThemeDisplay _themeDisplay;
 	private final boolean _viewableByGuest;

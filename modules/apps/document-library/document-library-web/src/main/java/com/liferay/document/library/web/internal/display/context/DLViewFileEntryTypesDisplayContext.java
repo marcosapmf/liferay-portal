@@ -23,11 +23,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Carlos Lancha
@@ -52,25 +52,24 @@ public class DLViewFileEntryTypesDisplayContext {
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (DLPermission.contains(
+		if (!DLPermission.contains(
 				themeDisplay.getPermissionChecker(),
 				themeDisplay.getScopeGroupId(), ActionKeys.ADD_DOCUMENT_TYPE)) {
 
-			return CreationMenuBuilder.addPrimaryDropdownItem(
-				dropdownItem -> {
-					dropdownItem.setHref(
-						renderResponse.createRenderURL(),
-						"mvcRenderCommandName",
-						"/document_library/edit_file_entry_type", "redirect",
-						PortalUtil.getCurrentURL(_httpServletRequest));
-					dropdownItem.setLabel(
-						LanguageUtil.format(
-							_httpServletRequest, "new-x", "document-type"));
-				}
-			).build();
+			return null;
 		}
 
-		return null;
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					renderResponse.createRenderURL(), "mvcRenderCommandName",
+					"/document_library/edit_file_entry_type", "redirect",
+					PortalUtil.getCurrentURL(_httpServletRequest));
+				dropdownItem.setLabel(
+					LanguageUtil.format(
+						_httpServletRequest, "new-x", "document-type"));
+			}
+		).build();
 	}
 
 	public String getSearchActionURL() {

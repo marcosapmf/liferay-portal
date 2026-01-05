@@ -21,6 +21,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PortalImpl;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.StringWriter;
 
 import java.lang.reflect.Field;
@@ -31,9 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import java.util.Collections;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -131,7 +131,7 @@ public class ComponentTagTest {
 		);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, liferayPortletConfig);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, liferayPortletConfig);
 
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);

@@ -69,6 +69,8 @@ public class NotificationTemplateObjectActionExecutorImpl
 				objectDefinition.getClassName()
 			).classPK(
 				GetterUtil.getLong(termValues.get("id"))
+			).companyId(
+				objectDefinition.getCompanyId()
 			).externalReferenceCode(
 				GetterUtil.getString(termValues.get("externalReferenceCode"))
 			).groupId(

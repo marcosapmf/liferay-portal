@@ -1,6 +1,5 @@
+apply from: "../../build-jakarta-transformer.gradle"
+
 dependencies {
-	compileOnly group: "javax.servlet", name: "javax.servlet-api", transitive: false, version: "3.0.1"
-	compileOnly group: "org.osgi", name: "org.osgi.service.http", transitive: false, version: "1.2.1"
-	compileOnly group: "org.osgi", name: "org.osgi.service.http.whiteboard", transitive: false, version: "1.0.0"
-	compileOnly group: "org.osgi", name: "osgi.core", transitive: false, version: "6.0.0"
+	compileOnly group: "com.liferay", name: "org.osgi.service.http", transitive: false, version: "1.2.2.LIFERAY-PATCHED-1"
 }

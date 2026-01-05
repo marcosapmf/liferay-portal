@@ -9,7 +9,6 @@ import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.cache.CacheField;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
@@ -31,6 +30,8 @@ public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 
 		try {
 			_contentAsXML = WorkflowDefinitionContentUtil.toXML(getContent());
+
+			contentAsXMLUpdateEntityCacheBiConsumer.accept(this, _contentAsXML);
 		}
 		catch (WorkflowException workflowException) {
 			ReflectionUtil.throwException(workflowException);
@@ -41,17 +42,18 @@ public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 
 	@Override
 	public KaleoDefinition getKaleoDefinition() throws PortalException {
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setCompanyId(getCompanyId());
-
 		return KaleoDefinitionLocalServiceUtil.getKaleoDefinition(
-			getName(), serviceContext);
+			getKaleoDefinitionId());
 	}
 
 	@Override
 	public KaleoNode getKaleoStartNode() throws PortalException {
 		return KaleoNodeLocalServiceUtil.getKaleoNode(getStartKaleoNodeId());
+	}
+
+	@Override
+	public void setContentAsXML(String contentAsXML) {
+		_contentAsXML = contentAsXML;
 	}
 
 	protected int getVersion(String version) {

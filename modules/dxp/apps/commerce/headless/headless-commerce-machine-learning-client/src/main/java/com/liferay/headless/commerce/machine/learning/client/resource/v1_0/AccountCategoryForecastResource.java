@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.machine.learning.client.pagination.Paginati
 import com.liferay.headless.commerce.machine.learning.client.problem.Problem;
 import com.liferay.headless.commerce.machine.learning.client.serdes.v1_0.AccountCategoryForecastSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.net.URL;
 
 import java.text.DateFormat;
@@ -23,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Generated;
 
 /**
  * @author Riccardo Ferrari
@@ -149,8 +149,8 @@ public interface AccountCategoryForecastResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -304,8 +304,10 @@ public interface AccountCategoryForecastResource {
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-machine-learning/v1.0/accountCategoryForecasts/by-monthlyRevenue");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

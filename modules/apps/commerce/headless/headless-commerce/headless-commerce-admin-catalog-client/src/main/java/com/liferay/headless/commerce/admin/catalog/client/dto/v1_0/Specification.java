@@ -8,12 +8,12 @@ package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.SpecificationSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -149,6 +149,27 @@ public class Specification implements Cloneable, Serializable {
 
 	protected Long listTypeDefinitionId;
 
+	public Long[] getListTypeDefinitionIds() {
+		return listTypeDefinitionIds;
+	}
+
+	public void setListTypeDefinitionIds(Long[] listTypeDefinitionIds) {
+		this.listTypeDefinitionIds = listTypeDefinitionIds;
+	}
+
+	public void setListTypeDefinitionIds(
+		UnsafeSupplier<Long[], Exception> listTypeDefinitionIdsUnsafeSupplier) {
+
+		try {
+			listTypeDefinitionIds = listTypeDefinitionIdsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long[] listTypeDefinitionIds;
+
 	public OptionCategory getOptionCategory() {
 		return optionCategory;
 	}
@@ -212,6 +233,27 @@ public class Specification implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> title;
+
+	public Boolean getVisible() {
+		return visible;
+	}
+
+	public void setVisible(Boolean visible) {
+		this.visible = visible;
+	}
+
+	public void setVisible(
+		UnsafeSupplier<Boolean, Exception> visibleUnsafeSupplier) {
+
+		try {
+			visible = visibleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean visible;
 
 	@Override
 	public Specification clone() throws CloneNotSupportedException {

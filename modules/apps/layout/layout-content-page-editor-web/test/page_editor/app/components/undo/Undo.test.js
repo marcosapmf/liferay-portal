@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -64,22 +64,22 @@ describe('Undo', () => {
 		});
 	});
 
-	it('calls onUndo when the Undo button is pressed', () => {
+	it('calls onUndo when the Undo button is pressed', async () => {
 		renderUndoComponent();
 
 		const {onUndo} = useUndoRedoActions();
 
-		userEvent.click(screen.getByTitle('undo'));
+		await userEvent.click(screen.getByTitle('undo'));
 
 		expect(onUndo).toBeCalled();
 	});
 
-	it('calls onRedo when the Redo button is pressed', () => {
+	it('calls onRedo when the Redo button is pressed', async () => {
 		renderUndoComponent();
 
 		const {onRedo} = useUndoRedoActions();
 
-		userEvent.click(screen.getByTitle('redo'));
+		await userEvent.click(screen.getByTitle('redo'));
 
 		expect(onRedo).toBeCalled();
 	});

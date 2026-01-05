@@ -8,13 +8,13 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserGroupBrief;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -56,6 +56,20 @@ public class UserGroupBriefSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(userGroupBrief.getDescription()));
+
+			sb.append("\"");
+		}
+
+		if (userGroupBrief.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(userGroupBrief.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -111,6 +125,15 @@ public class UserGroupBriefSerDes {
 				"description", String.valueOf(userGroupBrief.getDescription()));
 		}
 
+		if (userGroupBrief.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(userGroupBrief.getExternalReferenceCode()));
+		}
+
 		if (userGroupBrief.getId() == null) {
 			map.put("id", null);
 		}
@@ -146,6 +169,11 @@ public class UserGroupBriefSerDes {
 			if (Objects.equals(jsonParserFieldName, "description")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -164,6 +192,14 @@ public class UserGroupBriefSerDes {
 			if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					userGroupBrief.setDescription((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					userGroupBrief.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -222,6 +258,10 @@ public class UserGroupBriefSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

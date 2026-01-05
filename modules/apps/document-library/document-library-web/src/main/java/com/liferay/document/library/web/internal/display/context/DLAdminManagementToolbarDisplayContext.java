@@ -9,8 +9,8 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
-import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.digital.signature.configuration.DigitalSignatureConfiguration;
 import com.liferay.digital.signature.configuration.DigitalSignatureConfigurationUtil;
@@ -19,8 +19,8 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
-import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeService;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
 import com.liferay.document.library.web.internal.display.context.helper.DLPortletInstanceSettingsHelper;
@@ -45,7 +45,6 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -72,21 +71,21 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
+
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.TreeSet;
 
 /**
  * @author Alejandro Tardín
@@ -97,6 +96,7 @@ public class DLAdminManagementToolbarDisplayContext
 	public DLAdminManagementToolbarDisplayContext(
 		AssetVocabularyService assetVocabularyService,
 		DLAdminDisplayContext dlAdminDisplayContext,
+		DLFileEntryTypeService dlFileEntryTypeService,
 		DLTrashHelper dlTrashHelper, HttpServletRequest httpServletRequest,
 		ItemSelector itemSelector, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
@@ -108,6 +108,7 @@ public class DLAdminManagementToolbarDisplayContext
 
 		_assetVocabularyService = assetVocabularyService;
 		_dlAdminDisplayContext = dlAdminDisplayContext;
+		_dlFileEntryTypeService = dlFileEntryTypeService;
 		_dlTrashHelper = dlTrashHelper;
 		_httpServletRequest = httpServletRequest;
 		_itemSelector = itemSelector;
@@ -399,6 +400,12 @@ public class DLAdminManagementToolbarDisplayContext
 
 	@Override
 	public Boolean getSupportsBulkActions() {
+		if (_dlAdminDisplayContext.isSearch() ||
+			_dlAdminDisplayContext.hasFilterParameters()) {
+
+			return false;
+		}
+
 		return true;
 	}
 
@@ -436,21 +443,11 @@ public class DLAdminManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isDisabled() {
-		try {
-			int count =
-				DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(
-					_dlAdminDisplayContext.getRepositoryId(), _getFolderId(),
-					WorkflowConstants.STATUS_ANY, true);
-
-			if (count <= 0) {
-				return true;
-			}
-
-			return false;
+		if (searchContainer.getTotal() <= 0) {
+			return true;
 		}
-		catch (PortalException portalException) {
-			throw new SystemException(portalException);
-		}
+
+		return false;
 	}
 
 	@Override
@@ -559,7 +556,7 @@ public class DLAdminManagementToolbarDisplayContext
 							"extension",
 							() -> ArrayUtil.remove(extensions, extension)));
 					labelItem.setCloseable(true);
-					labelItem.setLabel(_getLabel("extension", extension));
+					labelItem.setLabel(_getLabel("extension[file]", extension));
 				});
 		}
 	}
@@ -595,13 +592,7 @@ public class DLAdminManagementToolbarDisplayContext
 			"selectedCategoryIds",
 			StringUtil.merge(_getAssetCategoryIds(), StringPool.COMMA)
 		).setParameter(
-			"vocabularyIds",
-			StringUtil.merge(
-				_assetVocabularyService.getGroupsVocabularies(
-					_getGroupIds(), DLFileEntryConstants.getClassName()),
-				assetVocabulary -> String.valueOf(
-					assetVocabulary.getVocabularyId()),
-				StringPool.COMMA)
+			"vocabularyIds", _getAssetVocabularyIds()
 		).buildString();
 	}
 
@@ -624,6 +615,25 @@ public class DLAdminManagementToolbarDisplayContext
 					_liferayPortletRequest),
 				_liferayPortletResponse.getNamespace() + "selectTag",
 				assetTagsItemSelectorCriterion));
+	}
+
+	private String _getAssetVocabularyIds() {
+		Set<AssetVocabulary> assetVocabularies = new TreeSet<>();
+
+		for (DLFileEntryType dlFileEntryType :
+				_dlFileEntryTypeService.getFileEntryTypes(_getGroupIds())) {
+
+			assetVocabularies.addAll(
+				_assetVocabularyService.getGroupsVocabularies(
+					_getGroupIds(), DLFileEntryConstants.getClassName(),
+					dlFileEntryType.getFileEntryTypeId()));
+		}
+
+		return StringUtil.merge(
+			assetVocabularies,
+			assetVocabulary -> String.valueOf(
+				assetVocabulary.getVocabularyId()),
+			StringPool.COMMA);
 	}
 
 	private PortletURL _getCurrentRenderURL() {
@@ -663,7 +673,7 @@ public class DLAdminManagementToolbarDisplayContext
 
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		ItemSelector itemSelector =
 			(ItemSelector)_httpServletRequest.getAttribute(
@@ -881,7 +891,7 @@ public class DLAdminManagementToolbarDisplayContext
 					"extensionsFilterURL", _getExtensionsItemSelectorURL());
 				dropdownItem.setActive(!extensionsIsEmpty);
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "extension"));
+					LanguageUtil.get(_httpServletRequest, "extension[file]"));
 			}
 		).add(
 			dropdownItem -> {
@@ -1043,13 +1053,8 @@ public class DLAdminManagementToolbarDisplayContext
 	private boolean _isEnableOnBulk() {
 		long folderId = ParamUtil.getLong(_httpServletRequest, "folderId");
 
-		if (_hasWorkflowDefinitionLink(
-				folderId, DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL)) {
-
-			return false;
-		}
-
-		return true;
+		return !_hasWorkflowDefinitionLink(
+			folderId, DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
 	}
 
 	private boolean _isSearch() {
@@ -1077,6 +1082,7 @@ public class DLAdminManagementToolbarDisplayContext
 	private final AssetVocabularyService _assetVocabularyService;
 	private final PortletURL _currentURLObj;
 	private final DLAdminDisplayContext _dlAdminDisplayContext;
+	private final DLFileEntryTypeService _dlFileEntryTypeService;
 	private final DLPortletInstanceSettingsHelper
 		_dlPortletInstanceSettingsHelper;
 	private final DLRequestHelper _dlRequestHelper;

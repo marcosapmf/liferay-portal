@@ -3,37 +3,75 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {FrameLocator, Locator, Page} from '@playwright/test';
 
+import {waitForAlert} from '../../../utils/waitForAlert';
 import {ViewObjectDefinitionsPage} from '../ViewObjectDefinitionsPage';
 
 export class ObjectFieldsPage {
+	readonly iframeLocator: FrameLocator;
 	readonly addObjectFieldButton: Locator;
+	readonly advancedTab: Locator;
+	readonly aggregationFieldDropdown: Locator;
+	readonly aggregationFunctionDropdown: Locator;
+	readonly agreggationRelationshipDropdown: Locator;
 	readonly deleteObjectFieldOption: Locator;
+	readonly editFieldSaveButton: Locator;
+	readonly externalReferenceCodeField: Locator;
 	readonly fieldsTabItem: Locator;
-	readonly page: Page;
-	readonly viewObjectDefinitionsPage: ViewObjectDefinitionsPage;
-	readonly saveButton: Locator;
+	readonly maximumFileSize: Locator;
 	readonly objectFieldLabelInput: Locator;
 	readonly objectFieldOptionsDropdown: Locator;
+	readonly page: Page;
+	readonly saveButton: Locator;
+	readonly selectOptionButton: Locator;
+	readonly useDefaultValueToggle: Locator;
+	readonly viewObjectDefinitionsPage: ViewObjectDefinitionsPage;
 
 	constructor(page: Page) {
+		this.iframeLocator = page.frameLocator('iframe');
 		this.addObjectFieldButton = page.getByLabel('Add Object Field');
+		this.advancedTab = this.iframeLocator.getByRole('tab', {
+			name: 'Advanced',
+		});
+		this.aggregationFieldDropdown = page.getByLabel('FieldMandatory');
+		this.aggregationFunctionDropdown = page.getByLabel('FunctionMandatory');
+		this.agreggationRelationshipDropdown = page.getByLabel(
+			'RelationshipMandatory'
+		);
 		this.deleteObjectFieldOption = page.getByRole('menuitem', {
 			name: 'Delete',
 		});
-		this.fieldsTabItem = page.locator('.navbar-text-truncate').filter({
+		this.editFieldSaveButton = page
+			.frameLocator('iframe')
+			.getByRole('button', {name: 'Save'});
+		this.externalReferenceCodeField = page
+			.frameLocator('iframe')
+			.locator('[name="externalReferenceCode"]');
+		this.fieldsTabItem = page.locator('.nav-item .nav-link').filter({
 			hasText: 'Fields',
 		});
-		this.page = page;
+		this.maximumFileSize = page
+			.frameLocator('iframe')
+			.getByLabel('Maximum File Size' + 'Mandatory');
 		this.objectFieldLabelInput = page.locator('input[name="label"]');
 		this.objectFieldOptionsDropdown = page.getByText('Select an Option');
+		this.page = page;
 		this.saveButton = page.getByRole('button', {name: 'Save'});
+		this.selectOptionButton = this.iframeLocator.getByRole('combobox');
+		this.useDefaultValueToggle = this.iframeLocator.getByRole('switch', {
+			name: 'Use Default Value',
+		});
 		this.viewObjectDefinitionsPage = new ViewObjectDefinitionsPage(page);
 	}
 
 	async addObjectField({
+		aggregationField,
+		aggregationFieldFunction,
+		aggregationFieldRelationship,
 		attachmentSource,
+		autoIncrementInitialValue,
+		formulaFieldOutput,
 		listTypeDefinitionName,
 		objectFieldBusinessType,
 		objectFieldLabel,
@@ -50,10 +88,42 @@ export class ObjectFieldsPage {
 			.getByRole('option', {exact: true, name: objectFieldBusinessType})
 			.click();
 
+		if (objectFieldBusinessType === 'Aggregation') {
+			await this.agreggationRelationshipDropdown.click();
+			await this.page
+				.getByRole('option', {name: aggregationFieldRelationship})
+				.click();
+
+			await this.aggregationFunctionDropdown.click();
+			await this.page
+				.getByRole('option', {name: aggregationFieldFunction})
+				.click();
+
+			if (aggregationField) {
+				await this.aggregationFieldDropdown.click();
+				await this.page
+					.getByRole('option', {name: aggregationField})
+					.click();
+			}
+		}
+
 		if (objectFieldBusinessType === 'Attachment') {
 			await this.objectFieldOptionsDropdown.click();
 			await this.page
 				.getByRole('option', {name: attachmentSource})
+				.click();
+		}
+
+		if (objectFieldBusinessType === 'Auto Increment') {
+			await this.page
+				.getByRole('spinbutton')
+				.fill(autoIncrementInitialValue);
+		}
+
+		if (objectFieldBusinessType === 'Formula') {
+			await this.objectFieldOptionsDropdown.click();
+			await this.page
+				.getByRole('option', {name: formulaFieldOutput})
 				.click();
 		}
 
@@ -70,16 +140,47 @@ export class ObjectFieldsPage {
 		await this.saveButton.click();
 	}
 
-	async deleteObjectField(nth: number) {
-		await this.page.locator('.dnd-td.item-actions').nth(nth).waitFor();
+	async deleteObjectField(confirmDeletion: boolean, nth: number) {
+		await this.page.locator('.cell-item-actions').nth(nth).waitFor();
 
 		await this.page
-			.locator('.dnd-td.item-actions')
+			.locator('.cell-item-actions')
 			.nth(nth)
 			.locator('.dropdown-toggle')
 			.click();
 
 		await this.deleteObjectFieldOption.click();
+
+		if (confirmDeletion) {
+			await this.page.getByRole('button', {name: 'Delete'}).click();
+		}
+	}
+
+	async deleteObjectFieldByLabel(label: string) {
+		await this.page
+			.getByRole('row')
+			.filter({hasText: label})
+			.locator('.dropdown-toggle')
+			.click();
+
+		await this.deleteObjectFieldOption.click();
+
+		await this.page.getByRole('button', {name: 'Delete'}).click();
+	}
+
+	async disableDefaultValue(objectFieldName: string) {
+		await this.openObjectField(objectFieldName);
+
+		await this.advancedTab.click();
+
+		await this.useDefaultValueToggle.uncheck();
+
+		await this.editFieldSaveButton.click();
+
+		await waitForAlert(
+			this.page,
+			'The object field was updated successfully'
+		);
 	}
 
 	async goto(objectDefinitionLabel: string) {
@@ -90,5 +191,103 @@ export class ObjectFieldsPage {
 		);
 
 		await this.fieldsTabItem.click();
+	}
+
+	async openObjectField(fieldLabel: string) {
+		await this.page
+			.getByRole('cell')
+			.getByRole('link')
+			.filter({hasText: fieldLabel})
+			.click();
+	}
+
+	async selectDefaultValue(value: string) {
+		await this.selectOptionButton.click();
+
+		const selectOptionLocator = this.iframeLocator.getByRole('option', {
+			exact: true,
+			name: value,
+		});
+
+		await selectOptionLocator.click();
+	}
+
+	async setDefaultValue({
+		defaultValue,
+		objectFieldBusinessType,
+		objectFieldName,
+	}: {
+		defaultValue: string;
+		objectFieldBusinessType: string;
+		objectFieldName: string;
+	}) {
+		await this.openObjectField(objectFieldName);
+
+		await this.advancedTab.click();
+
+		await this.useDefaultValueToggle.check({timeout: 1000});
+
+		if (objectFieldBusinessType === 'Boolean') {
+			await this.selectDefaultValue(defaultValue);
+		}
+
+		if (objectFieldBusinessType === 'Date') {
+			await this.iframeLocator
+				.getByPlaceholder('__/__/____')
+				.fill(defaultValue);
+		}
+
+		if (objectFieldBusinessType === 'DateTime') {
+			await this.iframeLocator
+				.getByPlaceholder('__/__/____ __:__ _')
+				.fill(defaultValue);
+		}
+
+		if (
+			objectFieldBusinessType === 'Decimal' ||
+			objectFieldBusinessType === 'Integer' ||
+			objectFieldBusinessType === 'LongInteger' ||
+			objectFieldBusinessType === 'PrecisionDecimal'
+		) {
+			await this.iframeLocator
+				.getByPlaceholder('Enter a default value.')
+				.fill(defaultValue);
+		}
+
+		if (
+			objectFieldBusinessType === 'LongText' ||
+			objectFieldBusinessType === 'Text'
+		) {
+			await this.iframeLocator
+				.getByLabel('Default ValueMandatory')
+				.fill(defaultValue);
+		}
+
+		if (objectFieldBusinessType === 'RichText') {
+			await this.iframeLocator
+				.getByLabel('Rich Text Editor')
+				.nth(1)
+				.fill(defaultValue);
+		}
+
+		await this.editFieldSaveButton.click();
+
+		await waitForAlert(
+			this.page,
+			'The object field was updated successfully'
+		);
+	}
+
+	getMaximumFileSizeErrorMessage({
+		maximumFileSizeAllowed,
+	}: {
+		maximumFileSizeAllowed: string;
+	}) {
+		return this.page
+			.frameLocator('iframe')
+			.getByText(
+				`File size is larger than the allowed overall maximum upload request size ${maximumFileSizeAllowed} MB.`,
+				{exact: true}
+			);
 	}
 }

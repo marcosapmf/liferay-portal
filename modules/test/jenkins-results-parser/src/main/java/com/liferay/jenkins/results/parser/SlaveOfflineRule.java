@@ -64,7 +64,7 @@ public class SlaveOfflineRule {
 		return notificationRecipients;
 	}
 
-	public boolean getOfflineSibling() {
+	public boolean isOfflineSibling() {
 		return Boolean.parseBoolean(offlineSibling);
 	}
 
@@ -125,7 +125,9 @@ public class SlaveOfflineRule {
 			build.getBuildURL(), ". \n\n", slaveOfflineRuleString,
 			"\n\n\nOffline Slave URL: ", jenkinsSlave.getComputerURL(), "\n");
 
-		if (getOfflineSibling() && (jenkinsMaster.getSlavesPerHost() == 2)) {
+		if (!JenkinsResultsParserUtil.isCloudCINode() && isOfflineSibling() &&
+			(jenkinsMaster.getSlavesPerHost() == 2)) {
+
 			Set<JenkinsSlave> siblingJenkinsSlaves = jenkinsSlave.getSiblings();
 
 			for (JenkinsSlave siblingJenkinsSlave : siblingJenkinsSlaves) {
@@ -152,11 +154,12 @@ public class SlaveOfflineRule {
 
 		jenkinsSlave.takeSlavesOffline(message);
 
-		if ((notificationRecipients != null) &&
+		if (!JenkinsResultsParserUtil.isCloudCINode() &&
+			(notificationRecipients != null) &&
 			!notificationRecipients.isEmpty()) {
 
 			NotificationUtil.sendEmail(
-				message, "jenkins", "Slave Offline", notificationRecipients);
+				message, "jenkins", "Slave offline", notificationRecipients);
 		}
 	}
 

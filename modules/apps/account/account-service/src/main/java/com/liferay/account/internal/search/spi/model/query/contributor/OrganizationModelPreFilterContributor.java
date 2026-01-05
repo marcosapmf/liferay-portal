@@ -75,49 +75,50 @@ public class OrganizationModelPreFilterContributor
 			return;
 		}
 
-		List<Organization> accountsOrgsTree = (List<Organization>)params.get(
+		List<Organization> organizations = (List<Organization>)params.get(
 			"accountsOrgsTree");
 
-		if (accountsOrgsTree != null) {
-			BooleanFilter treePathBooleanFilter = new BooleanFilter();
-
-			if (accountsOrgsTree.isEmpty()) {
-				TermQuery termQuery = new TermQueryImpl(
-					Field.TREE_PATH, StringPool.BLANK);
-
-				treePathBooleanFilter.add(new QueryFilter(termQuery));
-			}
-
-			PermissionChecker permissionChecker =
-				PermissionThreadLocal.getPermissionChecker();
-
-			for (Organization organization : accountsOrgsTree) {
-				String treePath;
-
-				try {
-					treePath = organization.buildTreePath();
-
-					if ((permissionChecker != null) &&
-						OrganizationPermissionUtil.contains(
-							permissionChecker, organization,
-							AccountActionKeys.
-								MANAGE_SUBORGANIZATIONS_ACCOUNTS)) {
-
-						treePath = treePath + "*";
-					}
-				}
-				catch (PortalException portalException) {
-					throw new RuntimeException(portalException);
-				}
-
-				WildcardQuery wildcardQuery = new WildcardQueryImpl(
-					Field.TREE_PATH, treePath);
-
-				treePathBooleanFilter.add(new QueryFilter(wildcardQuery));
-			}
-
-			booleanFilter.add(treePathBooleanFilter, BooleanClauseOccur.MUST);
+		if (organizations == null) {
+			return;
 		}
+
+		BooleanFilter treePathBooleanFilter = new BooleanFilter();
+
+		if (organizations.isEmpty()) {
+			TermQuery termQuery = new TermQueryImpl(
+				Field.TREE_PATH, StringPool.BLANK);
+
+			treePathBooleanFilter.add(new QueryFilter(termQuery));
+		}
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		for (Organization organization : organizations) {
+			String treePath;
+
+			try {
+				treePath = organization.buildTreePath();
+
+				if ((permissionChecker != null) &&
+					OrganizationPermissionUtil.contains(
+						permissionChecker, organization,
+						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS)) {
+
+					treePath = treePath + "*";
+				}
+			}
+			catch (PortalException portalException) {
+				throw new RuntimeException(portalException);
+			}
+
+			WildcardQuery wildcardQuery = new WildcardQueryImpl(
+				Field.TREE_PATH, treePath);
+
+			treePathBooleanFilter.add(new QueryFilter(wildcardQuery));
+		}
+
+		booleanFilter.add(treePathBooleanFilter, BooleanClauseOccur.MUST);
 	}
 
 }

@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -81,6 +81,10 @@ SiteFacetPortletInstanceConfiguration siteFacetPortletInstanceConfiguration = sc
 								onClick="Liferay.Search.FacetUtil.clearSelections(event);"
 							>
 								<strong><liferay-ui:message key="clear" /></strong>
+
+								<span class="sr-only">
+									<liferay-ui:message arguments="site-facet-portlet-instance-configuration-name" key="x-filter" />
+								</span>
 							</clay:button>
 						</c:if>
 
@@ -96,16 +100,18 @@ SiteFacetPortletInstanceConfiguration siteFacetPortletInstanceConfiguration = sc
 								<li class="facet-value">
 									<div class="custom-checkbox custom-control">
 										<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= i %>">
-											<input
-												class="custom-control-input facet-term"
-												data-term-id="<%= bucketDisplayContext.getFilterValue() %>"
-												disabled
-												id="<portlet:namespace />term_<%= i %>"
-												name="<portlet:namespace />term_<%= i %>"
-												onChange="Liferay.Search.FacetUtil.changeSelection(event);"
-												type="checkbox"
-												<%= bucketDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
-											/>
+											<liferay-ui:csp>
+												<input
+													class="custom-control-input facet-term"
+													data-term-id="<%= bucketDisplayContext.getFilterValue() %>"
+													disabled
+													id="<portlet:namespace />term_<%= i %>"
+													name="<portlet:namespace />term_<%= i %>"
+													onChange="Liferay.Search.FacetUtil.changeSelection(event);"
+													type="checkbox"
+													<%= bucketDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
+												/>
+											</liferay-ui:csp>
 
 											<span class="custom-control-label term-name <%= bucketDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 												<span class="custom-control-label-text">

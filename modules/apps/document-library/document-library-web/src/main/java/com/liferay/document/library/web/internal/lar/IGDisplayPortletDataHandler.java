@@ -12,9 +12,9 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Raymond Augé
  */
 @Component(
-	property = "javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
+	property = "jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
 	service = PortletDataHandler.class
 )
 public class IGDisplayPortletDataHandler extends BasePortletDataHandler {
@@ -38,8 +38,7 @@ public class IGDisplayPortletDataHandler extends BasePortletDataHandler {
 	@Activate
 	protected void activate() {
 		setDataLevel(DataLevel.PORTLET_INSTANCE);
-		setDataPortletPreferences("rootFolderId", "selectedRepositoryId");
-		setExportControls(new PortletDataHandlerControl[0]);
+		setExportPortletDataHandlerControls(new PortletDataHandlerControl[0]);
 		setPublishToLiveByDefault(PropsValues.DL_PUBLISH_TO_LIVE_BY_DEFAULT);
 	}
 
@@ -57,9 +56,12 @@ public class IGDisplayPortletDataHandler extends BasePortletDataHandler {
 		portletPreferences.setValue("fileEntryColumns", StringPool.BLANK);
 		portletPreferences.setValue("folderColumns", StringPool.BLANK);
 		portletPreferences.setValue("foldersPerPage", StringPool.BLANK);
-		portletPreferences.setValue("repositoryId", StringPool.BLANK);
-		portletPreferences.setValue("rootFolderId", StringPool.BLANK);
-		portletPreferences.setValue("selectedRepositoryId", StringPool.BLANK);
+		portletPreferences.setValue(
+			"rootFolderExternalReferenceCode", StringPool.BLANK);
+		portletPreferences.setValue(
+			"selectedGroupExternalReferenceCode", StringPool.BLANK);
+		portletPreferences.setValue(
+			"selectedRepositoryExternalReferenceCode", StringPool.BLANK);
 		portletPreferences.setValue("showSubfolders", StringPool.BLANK);
 
 		return portletPreferences;

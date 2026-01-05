@@ -94,7 +94,7 @@ public class XMLUpgradeRemovedDefinitionsCheck extends BaseFileCheck {
 				upgradeToVersionDTDFileName);
 
 		if (upgradeToXMLDefinitionJSONObject != null) {
-			_checkXMLDefintions(
+			_checkXMLDefinitions(
 				fileName, content, upgradeFromXMLDefinitionJSONObject,
 				upgradeToVersion, upgradeToXMLDefinitionJSONObject);
 		}
@@ -137,9 +137,10 @@ public class XMLUpgradeRemovedDefinitionsCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					StringBundler.concat(
-						"Attribute '", childElementName,
-						"' is no longer a valid attribute for element '",
-						elementName, "' in version '", upgradeToVersion, "'"));
+						"Attribute \"", childElementName,
+						"\" is no longer a valid attribute for element \"",
+						elementName, "\" in version \"", upgradeToVersion,
+						"\""));
 			}
 
 			_checkElement(
@@ -148,7 +149,7 @@ public class XMLUpgradeRemovedDefinitionsCheck extends BaseFileCheck {
 		}
 	}
 
-	private void _checkXMLDefintions(
+	private void _checkXMLDefinitions(
 		String fileName, String content,
 		JSONObject upgradeFromXMLDefinitionJSONObject, String upgradeToVersion,
 		JSONObject upgradeToXMLDefinitionJSONObject) {

@@ -26,19 +26,46 @@ public class BasicFragmentCompositionActionDropdownItemsProviderTest
 		LiferayUnitTestRule.INSTANCE;
 
 	@Test
-	public void testGetActionDropdowns() throws Exception {
+	public void testGetActionDropdownItemsForFragmentComposition()
+		throws Exception {
+
 		setUpFragmentPermission(true);
 
 		BasicFragmentCompositionActionDropdownItemsProvider
 			basicFragmentCompositionActionDropdownItemsProvider =
 				new BasicFragmentCompositionActionDropdownItemsProvider(
-					Mockito.mock(FragmentComposition.class), renderRequest,
-					renderResponse);
+					_fragmentComposition, renderRequest, renderResponse);
 
 		assertDropdownItemsInCorrectOrder(
 			basicFragmentCompositionActionDropdownItemsProvider.
 				getActionDropdownItems(),
 			"change-thumbnail", "rename", "export", "move", "delete");
 	}
+
+	@Test
+	public void testGetActionDropdownItemsForMarketplaceFragmentComposition()
+		throws Exception {
+
+		setUpFragmentPermission(true);
+
+		Mockito.when(
+			_fragmentComposition.isMarketplace()
+		).thenReturn(
+			true
+		);
+
+		BasicFragmentCompositionActionDropdownItemsProvider
+			basicFragmentCompositionActionDropdownItemsProvider =
+				new BasicFragmentCompositionActionDropdownItemsProvider(
+					_fragmentComposition, renderRequest, renderResponse);
+
+		assertDropdownItemsInCorrectOrder(
+			basicFragmentCompositionActionDropdownItemsProvider.
+				getActionDropdownItems(),
+			"move", "delete");
+	}
+
+	private final FragmentComposition _fragmentComposition = Mockito.mock(
+		FragmentComposition.class);
 
 }

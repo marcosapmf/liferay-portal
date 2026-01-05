@@ -9,13 +9,13 @@ import com.liferay.object.admin.rest.client.dto.v1_0.ObjectLayoutBox;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectLayoutRow;
 import com.liferay.object.admin.rest.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -118,9 +118,7 @@ public class ObjectLayoutBoxSerDes {
 			sb.append("\"type\": ");
 
 			sb.append("\"");
-
 			sb.append(objectLayoutBox.getType());
-
 			sb.append("\"");
 		}
 
@@ -326,6 +324,10 @@ public class ObjectLayoutBoxSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

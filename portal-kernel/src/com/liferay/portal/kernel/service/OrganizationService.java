@@ -198,6 +198,11 @@ public interface OrganizationService extends BaseService {
 		long gtOrganizationId, long companyId, long parentOrganizationId,
 		int size);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, String name)
+		throws PortalException;
+
 	/**
 	 * Returns the organization with the primary key.
 	 *
@@ -210,7 +215,7 @@ public interface OrganizationService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Organization getOrganizationByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**

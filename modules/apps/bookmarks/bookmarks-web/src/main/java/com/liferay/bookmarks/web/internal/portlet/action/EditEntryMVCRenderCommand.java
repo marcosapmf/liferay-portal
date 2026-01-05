@@ -7,11 +7,17 @@ package com.liferay.bookmarks.web.internal.portlet.action;
 
 import com.liferay.bookmarks.constants.BookmarksPortletKeys;
 import com.liferay.bookmarks.model.BookmarksEntry;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.ParamUtil;
+
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -22,13 +28,26 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS,
-		"javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
+		"jakarta.portlet.name=" + BookmarksPortletKeys.BOOKMARKS,
+		"jakarta.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
 		"mvc.command.name=/bookmarks/edit_entry"
 	},
 	service = MVCRenderCommand.class
 )
 public class EditEntryMVCRenderCommand extends BaseEntryMVCRenderCommand {
+
+	@Override
+	public String render(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws PortletException {
+
+		long entryId = ParamUtil.getLong(renderRequest, "entryId");
+
+		CTTimelineUtil.setCTTimelineKeys(
+			renderRequest, BookmarksEntry.class, entryId);
+
+		return super.render(renderRequest, renderResponse);
+	}
 
 	@Override
 	protected void checkPermissions(

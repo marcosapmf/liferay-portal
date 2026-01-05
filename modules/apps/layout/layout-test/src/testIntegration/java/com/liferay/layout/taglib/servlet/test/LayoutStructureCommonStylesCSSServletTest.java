@@ -28,8 +28,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -80,7 +80,8 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	public void testDoesNotRender() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(),
 				_read("layout_structure_container_fixed.json"));
 
 		MockHttpServletResponse mockHttpServletResponse =
@@ -99,8 +100,8 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	public void testRenderCommonStyles() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
-				_read("layout_structure.json"));
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(), _read("layout_structure.json"));
 
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
@@ -116,7 +117,8 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	public void testRenderCommonStylesWithCustomCSS() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(),
 				_read("layout_structure_with_custom_css.json"));
 
 		MockHttpServletResponse mockHttpServletResponse =
@@ -135,7 +137,8 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	public void testRenderCommonStylesWithResponsive() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(),
 				_read("layout_structure_with_responsive_styles.json"));
 
 		MockHttpServletResponse mockHttpServletResponse =
@@ -154,7 +157,8 @@ public class LayoutStructureCommonStylesCSSServletTest {
 	public void testRenderEmptyTagWhenItDoesNotHaveStyles() throws Exception {
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(),
 				_read("layout_structure_without_styles.json"));
 
 		MockHttpServletResponse mockHttpServletResponse =

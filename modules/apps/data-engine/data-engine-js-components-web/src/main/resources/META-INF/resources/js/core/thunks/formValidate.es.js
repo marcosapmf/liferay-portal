@@ -9,6 +9,7 @@ import {EVENT_TYPES} from '../actions/eventTypes.es';
 
 export default function formValidate({
 	activePage,
+	containerId,
 	defaultLanguageId,
 	editingLanguageId,
 	formId,
@@ -26,6 +27,7 @@ export default function formValidate({
 		}
 
 		return evaluate(null, {
+			containerId,
 			defaultLanguageId,
 			editingLanguageId,
 			formId,
@@ -49,10 +51,6 @@ export default function formValidate({
 			);
 
 			if (!validForm) {
-				if (ddmFormSubmitButton) {
-					ddmFormSubmitButton.disabled = false;
-				}
-
 				dispatch({
 					payload: {
 						newPages: evaluatedPages,
@@ -62,7 +60,7 @@ export default function formValidate({
 				});
 			}
 
-			return Promise.resolve(validForm);
+			return Promise.resolve([ddmFormSubmitButton, validForm]);
 		});
 	};
 }

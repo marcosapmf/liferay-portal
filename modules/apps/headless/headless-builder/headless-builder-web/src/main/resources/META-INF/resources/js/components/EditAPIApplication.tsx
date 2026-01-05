@@ -9,7 +9,8 @@ import {Heading} from '@clayui/core';
 import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import ClayNavigationBar from '@clayui/navigation-bar';
-import {localStorage, openModal, openToast} from 'frontend-js-web';
+import {openModal, openToast} from 'frontend-js-components-web';
+import {localStorage} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import EndpointsContent from '../components/EndpointsContent';
@@ -364,7 +365,12 @@ export default function EditAPIApplication({
 				{activeNav === 'details' && (
 					<ClayLayout.Container className="api-app-details mt-5">
 						<ClayCard className="pt-2">
-							<ClayModal.Header withTitle={false}>
+							<ClayModal.Header
+								closeButtonAriaLabel={Liferay.Language.get(
+									'close'
+								)}
+								withTitle={false}
+							>
 								<Heading
 									fontSize={5}
 									level={3}

@@ -88,6 +88,75 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
+	public KaleoLog addInstanceEndKaleoLog(
+			KaleoInstanceToken kaleoInstanceToken,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		KaleoLog kaleoLog = _createKaleoLog(
+			kaleoInstanceToken, LogType.INSTANCE_END, serviceContext);
+
+		kaleoLog.setEndDate(kaleoLog.getCreateDate());
+
+		try {
+			KaleoLog previousKaleoLog = _getPreviousLog(
+				kaleoLog.getKaleoInstanceTokenId(), 0, LogType.INSTANCE_START);
+
+			Date startDate = previousKaleoLog.getStartDate();
+
+			Date endDate = kaleoLog.getEndDate();
+
+			kaleoLog.setDuration(endDate.getTime() - startDate.getTime());
+		}
+		catch (NoSuchLogException noSuchLogException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchLogException);
+			}
+		}
+
+		return kaleoLogPersistence.update(kaleoLog);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public KaleoLog addInstanceFailKaleoLog(
+			KaleoInstanceToken kaleoInstanceToken, String comment,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		KaleoLog kaleoLog = _createKaleoLog(
+			kaleoInstanceToken, LogType.INSTANCE_FAIL, serviceContext);
+
+		kaleoLog.setComment(comment);
+
+		KaleoInstance kaleoInstance = kaleoInstanceToken.getKaleoInstance();
+
+		kaleoLog.setWorkflowContext(kaleoInstance.getWorkflowContext());
+
+		return kaleoLogPersistence.update(kaleoLog);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public KaleoLog addInstanceStartKaleoLog(
+			KaleoInstanceToken kaleoInstanceToken,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		KaleoLog kaleoLog = _createKaleoLog(
+			kaleoInstanceToken, LogType.INSTANCE_START, serviceContext);
+
+		kaleoLog.setStartDate(kaleoLog.getCreateDate());
+
+		KaleoInstance kaleoInstance = kaleoInstanceToken.getKaleoInstance();
+
+		kaleoLog.setWorkflowContext(kaleoInstance.getWorkflowContext());
+
+		return kaleoLogPersistence.update(kaleoLog);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
 	public KaleoLog addNodeEntryKaleoLog(
 			KaleoInstanceToken kaleoInstanceToken, KaleoNode sourceKaleoNode,
 			KaleoNode targetKaleoNode, ServiceContext serviceContext)
@@ -136,7 +205,7 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 		try {
 			KaleoLog previousKaleoLog = _getPreviousLog(
 				kaleoLog.getKaleoInstanceTokenId(), kaleoLog.getKaleoClassPK(),
-				LogType.WORKFLOW_INSTANCE_START);
+				LogType.INSTANCE_START);
 
 			Date startDate = previousKaleoLog.getStartDate();
 
@@ -346,58 +415,6 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 		kaleoLog.setComment(comment);
 		kaleoLog.setWorkflowContext(
 			WorkflowContextUtil.convert(workflowContext));
-
-		return kaleoLogPersistence.update(kaleoLog);
-	}
-
-	@Indexable(type = IndexableType.REINDEX)
-	@Override
-	public KaleoLog addWorkflowInstanceEndKaleoLog(
-			KaleoInstanceToken kaleoInstanceToken,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		KaleoLog kaleoLog = _createKaleoLog(
-			kaleoInstanceToken, LogType.WORKFLOW_INSTANCE_END, serviceContext);
-
-		kaleoLog.setEndDate(kaleoLog.getCreateDate());
-
-		try {
-			KaleoLog previousKaleoLog = _getPreviousLog(
-				kaleoLog.getKaleoInstanceTokenId(), 0,
-				LogType.WORKFLOW_INSTANCE_START);
-
-			Date startDate = previousKaleoLog.getStartDate();
-
-			Date endDate = kaleoLog.getEndDate();
-
-			kaleoLog.setDuration(endDate.getTime() - startDate.getTime());
-		}
-		catch (NoSuchLogException noSuchLogException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchLogException);
-			}
-		}
-
-		return kaleoLogPersistence.update(kaleoLog);
-	}
-
-	@Indexable(type = IndexableType.REINDEX)
-	@Override
-	public KaleoLog addWorkflowInstanceStartKaleoLog(
-			KaleoInstanceToken kaleoInstanceToken,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		KaleoLog kaleoLog = _createKaleoLog(
-			kaleoInstanceToken, LogType.WORKFLOW_INSTANCE_START,
-			serviceContext);
-
-		kaleoLog.setStartDate(kaleoLog.getCreateDate());
-
-		KaleoInstance kaleoInstance = kaleoInstanceToken.getKaleoInstance();
-
-		kaleoLog.setWorkflowContext(kaleoInstance.getWorkflowContext());
 
 		return kaleoLogPersistence.update(kaleoLog);
 	}

@@ -8,11 +8,11 @@ package com.liferay.headless.commerce.delivery.cart.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.cart.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.cart.client.serdes.v1_0.ShippingMethodSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -45,6 +45,27 @@ public class ShippingMethod implements Cloneable, Serializable {
 	}
 
 	protected String description;
+
+	public String getEngineKey() {
+		return engineKey;
+	}
+
+	public void setEngineKey(String engineKey) {
+		this.engineKey = engineKey;
+	}
+
+	public void setEngineKey(
+		UnsafeSupplier<String, Exception> engineKeyUnsafeSupplier) {
+
+		try {
+			engineKey = engineKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String engineKey;
 
 	public Long getId() {
 		return id;

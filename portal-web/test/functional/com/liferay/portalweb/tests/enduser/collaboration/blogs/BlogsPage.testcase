@@ -1,6 +1,7 @@
 @component-name = "portal-content-management"
 definition {
 
+	property browser.chrome.version = "139.0";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -59,6 +60,7 @@ definition {
 	@priority = 3
 	@refactordone
 	test AbstractDescriptionPersistsWhenTypingInContentField {
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -68,7 +70,7 @@ definition {
 
 		BlogsEntry.addTitle(entryTitle = "Blogs Entry Title");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Configuration");
 
 		BlogsEntry.addCustomAbstract(entryAbstractDescription = "Blogs Entry Abstract Description");
 
@@ -87,6 +89,7 @@ definition {
 	@priority = 3
 	test CanAddCommentToBlogEntryWhenEntryIsDisplayedWithDPT {
 		property custom.properties = "virtual.hosts.default.site.name=Guest";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -146,8 +149,6 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanDeleteComment {
-		property testray.component.names = "Comment";
-
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
@@ -171,6 +172,7 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanDisplayViewCountForEntry {
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -199,8 +201,6 @@ definition {
 	@priority = 5
 	@refactorneeded
 	test CanEditComment {
-		property testray.component.names = "Comment";
-
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
@@ -259,8 +259,6 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanEditMultipleComments {
-		property testray.component.names = "Comment";
-
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
@@ -302,6 +300,10 @@ definition {
 	@priority = 4
 	@refactordone
 	test CannotViewBlogEntryScopedToAnotherPage {
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
+
 		task ("Set up a blog widget on another page scoped to that page") {
 			JSONLayout.addPublicLayout(
 				groupName = "Guest",
@@ -382,9 +384,9 @@ definition {
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Friendly URL");
 
-		AssertChecked(locator1 = "Radio#AUTOMATIC_URL");
+		AssertChecked(locator1 = "Radio#DEFAULT_URL");
 
 		ScrollWebElementIntoView(locator1 = "Button#PUBLISH");
 
@@ -394,7 +396,7 @@ definition {
 			locator1 = "TextInput#BLOGS_ENTRY_URL",
 			value1 = "custom-url");
 
-		Check(locator1 = "Radio#AUTOMATIC_URL");
+		Check(locator1 = "Radio#DEFAULT_URL");
 
 		AssertTextEquals(
 			locator1 = "TextInput#BLOGS_ENTRY_URL",
@@ -487,9 +489,9 @@ definition {
 	@priority = 3
 	@refactordone
 	test CanSubscribeToComment {
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Comment";
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -519,7 +521,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Friendly URL");
 
 		ScrollWebElementIntoView(locator1 = "Button#PUBLISH");
 
@@ -537,7 +539,7 @@ definition {
 			groupName = "Guest",
 			siteURLKey = "guest");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Configuration");
 
 		ScrollWebElementIntoView(locator1 = "Button#PUBLISH");
 
@@ -595,6 +597,10 @@ definition {
 	test CanViewEntriesOnMultiplePagesWithDifferentScopes {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable Scope Configuration") {
+			Portlet.enableScopeConfiguration();
+		}
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -680,11 +686,14 @@ definition {
 	}
 
 	@description = "This is a test for LPS-94990. It checks that a blog entry can be viewed when using a display page template."
-	@ignore = "true"
 	@priority = 5
 	test CanViewEntryUsingDisplayPageTemplate {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		// To avoid interference from other tests about the NPE assertion，skip run it on virtal instance, see LPS-185660.
 
@@ -843,7 +852,7 @@ definition {
 			groupName = "Guest",
 			siteURLKey = "guest");
 
-		Panel.expandPanel(panel = "Configuration");
+		Blogs.expandPanel(panel = "Friendly URL");
 
 		BlogsEntry.addCustomURL(customURL = "this-should-redirect-to-the-previous-entry");
 
@@ -887,7 +896,8 @@ definition {
 
 			RelatedAssets.selectAsset(
 				assetTitle = "Blogs Entry1 Title",
-				assetType = "Blogs Entry");
+				assetType = "Blogs Entry",
+				scopeAssetType = "Blogs Entry");
 
 			PortletEntry.publish();
 		}
@@ -955,6 +965,8 @@ definition {
 	@description = "This test checks that the javascript in the user name will not be executed when viewing an entry on page."
 	@priority = 3
 	test XSSIsNotExecutedWhenViewingUsernameInBlog {
+		property portal.acceptance = "false";
+
 		Navigator.openURL();
 
 		UserBar.gotoDropdownItem(dropdownItem = "Account Settings");

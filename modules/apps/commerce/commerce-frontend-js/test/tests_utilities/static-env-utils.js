@@ -4,7 +4,11 @@
  */
 
 const Liferay = {
+	...global.Liferay,
 	FeatureFlags: {},
+	Icons: {
+		spritemap: '/assets',
+	},
 	Language: {
 		available: {
 			ar_SA: 'Arabic (Saudi Arabia)',

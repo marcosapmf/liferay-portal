@@ -14,7 +14,9 @@ import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +31,10 @@ public class ResourcesFragmentEntryProcessorUtil {
 		throws PortalException {
 
 		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
-				fragmentEntryLink.getFragmentEntryId());
+			FragmentEntryLocalServiceUtil.
+				fetchFragmentEntryByExternalReferenceCode(
+					fragmentEntryLink.getFragmentEntryERC(),
+					fragmentEntryLink.getFragmentEntryGroupId());
 
 		if (fragmentEntry == null) {
 			return code;
@@ -47,8 +51,16 @@ public class ResourcesFragmentEntryProcessorUtil {
 				continue;
 			}
 
-			FileEntry fileEntry = fragmentCollection.getResource(
-				matcher.group(1));
+			String fileName = matcher.group(1);
+
+			FileEntry fileEntry = fragmentCollection.getResource(fileName);
+
+			if ((fileEntry == null) &&
+				Validator.isNotNull(FileUtil.getExtension(fileName))) {
+
+				fileEntry = fragmentCollection.getResource(
+					FileUtil.stripExtension(fileName));
+			}
 
 			String fileEntryURL = StringPool.BLANK;
 

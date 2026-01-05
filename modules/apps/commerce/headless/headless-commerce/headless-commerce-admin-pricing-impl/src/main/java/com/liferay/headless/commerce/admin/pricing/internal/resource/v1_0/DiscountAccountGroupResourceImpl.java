@@ -14,16 +14,15 @@ import com.liferay.commerce.discount.service.CommerceDiscountService;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.DiscountAccountGroupUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.DiscountAccountGroupResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,8 +55,9 @@ public class DiscountAccountGroupResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -73,14 +73,14 @@ public class DiscountAccountGroupResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(
 					commerceDiscount.getCommerceDiscountId());
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -95,13 +95,13 @@ public class DiscountAccountGroupResourceImpl
 						id, pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(id);
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -112,8 +112,9 @@ public class DiscountAccountGroupResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -168,19 +169,11 @@ public class DiscountAccountGroupResourceImpl
 				commerceDiscountCommerceAccountGroupRels)
 		throws Exception {
 
-		List<DiscountAccountGroup> discountAccountGroups = new ArrayList<>();
-
-		for (CommerceDiscountCommerceAccountGroupRel
-				commerceDiscountCommerceAccountGroupRel :
-					commerceDiscountCommerceAccountGroupRels) {
-
-			discountAccountGroups.add(
-				_toDiscountAccountGroup(
-					commerceDiscountCommerceAccountGroupRel.
-						getCommerceDiscountCommerceAccountGroupRelId()));
-		}
-
-		return discountAccountGroups;
+		return transform(
+			commerceDiscountCommerceAccountGroupRels,
+			commerceDiscountCommerceAccountGroupRel -> _toDiscountAccountGroup(
+				commerceDiscountCommerceAccountGroupRel.
+					getCommerceDiscountCommerceAccountGroupRelId()));
 	}
 
 	@Reference

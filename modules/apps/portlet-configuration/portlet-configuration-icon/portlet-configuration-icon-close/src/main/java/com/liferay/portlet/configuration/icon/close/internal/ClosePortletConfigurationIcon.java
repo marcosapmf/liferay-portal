@@ -13,11 +13,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.ServletContext;
+
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,7 +40,7 @@ public class ClosePortletConfigurationIcon
 
 	@Override
 	public String getIconCssClass() {
-		return "item-remove portlet-close portlet-close-icon";
+		return "trash";
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class ClosePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return _language.get(getLocale(portletRequest), "remove");
+		return _language.get(getLocale(portletRequest), "delete");
 	}
 
 	@Override

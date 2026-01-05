@@ -1,3 +1,7 @@
+@Library('WorkflowCiSharedLib') _
+
+def osbFaroImage
+
 pipeline {
 	agent {
 		kubernetes {
@@ -10,7 +14,7 @@ pipeline {
 		LABEL_BUILD_DATE = "${sh(script: "date -u +%Y-%m-%dT%H:%M:%SZ", returnStdout: true).trim()}"
 		IMAGE_NAME = "liferaycloud/com-liferay-osb-faro"
 		IMAGE_TAG_SUFFIX = "${FARO_ENVIRONMENT}-${sh(script: "date +%Y%m%d", returnStdout: true).trim()}-${sh(script: "git rev-parse --short=7 ${GIT_COMMIT}", returnStdout: true).trim()}"
-		JAVA_HOME = "/opt/java/jdk8u292-b10"
+		JAVA_HOME = "${JAVA_17_HOME}"
 
 		DOCKER_BUILD_ARGS = "--build-arg LABEL_BUILD_DATE=${LABEL_BUILD_DATE} --build-arg LABEL_VCS_REF=${GIT_COMMIT} --no-cache -f ./Dockerfile ./"
 	}
@@ -21,7 +25,8 @@ pipeline {
 				withCredentials([
 					string(credentialsId: "analytics_cloud_ci_ssh", variable: "SECRET"),
 					string(credentialsId: "analytics_cloud_faro_license", variable: "LICENSE"),
-					usernamePassword(credentialsId: "liferay-nexus-repository-credentials", passwordVariable: "NEXUS_PASSWORD", usernameVariable: "NEXUS_USERNAME")
+					string(credentialsId: "analytics_cloud_faro_pendo_api_key", variable: "FARO_PENDO_API_KEY"),
+					usernamePassword(credentialsId: "liferay_nexus_repository_credentials", passwordVariable: "NEXUS_PASSWORD", usernameVariable: "NEXUS_USERNAME")
 				]) {
 					sh '''
 						export ANT_OPTS=-Xmx6g
@@ -78,13 +83,25 @@ pipeline {
 			steps {
 				dir("modules/dxp/apps/osb/osb-faro/osb-faro-docker/cloud") {
 					script {
-						withDockerRegistry([credentialsId: "dockerhub", url: ""]) {
-							osbFaroImage = docker.build(
-								"${IMAGE_NAME}:${IMAGE_TAG_SUFFIX}",
-								"${DOCKER_BUILD_ARGS}")
+						osbFaroImage = docker.build(
+							"${IMAGE_NAME}:${IMAGE_TAG_SUFFIX}",
+							"${DOCKER_BUILD_ARGS}")
+					}
+				}
+			}
+		}
 
-                            osbFaroImage.push()
-                        }
+		stage("Prisma Cloud Scan") {
+			steps {
+				prismaScanImage([osbFaroImage.imageName()])
+			}
+		}
+
+		stage("Push Docker Image") {
+			steps {
+				script {
+					withDockerRegistry([credentialsId: "dockerhub", url: ""]) {
+						osbFaroImage.push()
 					}
 				}
 			}

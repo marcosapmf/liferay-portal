@@ -5,45 +5,42 @@
 
 import {Locator, Page} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForLoading} from '../../tests/osb-faro-web/main/utils/loading';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import {waitForAlert} from '../../utils/waitForAlert';
 import {InstanceSettingsPage} from '../configuration-admin-web/InstanceSettingsPage';
 
 export class LoginInstanceSettingsPage {
 	readonly instanceSettingsPage: InstanceSettingsPage;
 	readonly page: Page;
 	readonly saveButton: Locator;
-	readonly updateButton: Locator;
 
 	constructor(page: Page) {
 		this.instanceSettingsPage = new InstanceSettingsPage(page);
 		this.page = page;
-		this.saveButton = page.getByRole('button', {name: 'Save'});
-		this.updateButton = page.getByRole('button', {name: 'Update'});
+		this.saveButton = page.getByRole('button', {name: /save|update/i});
 	}
 
 	async goto() {
 		await this.instanceSettingsPage.goToInstanceSetting('Login', 'Login');
+		await waitForLoading(this.page);
 	}
 
 	async enableLoginPrompt() {
 		await this.page.getByLabel('Prompt Enabled').check();
-		await this.saveConfiguration();
-		await waitForSuccessAlert(this.page);
+		await this.saveButton.click();
+		await waitForAlert(this.page);
 	}
 
-	async disableLoginPrompt() {
-		await this.page.getByLabel('Prompt Enabled').uncheck();
-		await this.saveConfiguration();
-		await waitForSuccessAlert(this.page);
-	}
-
-	async saveConfiguration() {
-		if (await this.page.isVisible('button:has-text("Update")')) {
-			this.updateButton.click();
-
-			return;
-		}
-
-		this.saveButton.click();
+	async resetLoginPrompt() {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				name: 'Reset Default Values',
+			}),
+			trigger: this.page.getByRole('button', {
+				name: 'Actions',
+			}),
+		});
 	}
 }

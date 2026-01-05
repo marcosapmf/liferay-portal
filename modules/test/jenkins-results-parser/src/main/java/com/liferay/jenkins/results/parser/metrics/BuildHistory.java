@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -49,6 +51,10 @@ public class BuildHistory {
 
 	public boolean containsTopLevelBuildURL(String url) {
 		return _topLevelBuildURLs.contains(url);
+	}
+
+	public Map<String, BuildJSONObject> getBuildJSONObjectsMap() {
+		return _buildJSONObjectsMap;
 	}
 
 	public Map<String, Long> getDailyInvokedBuilds() {
@@ -101,6 +107,15 @@ public class BuildHistory {
 		return table.getJSONArray(intervalDays);
 	}
 
+	public JSONArray getTableJSONArray(
+		String groupIdentifierName, int intervalDays,
+		List<String> metricNames) {
+
+		Table table = _getTable(groupIdentifierName);
+
+		return table.getJSONArray(intervalDays, metricNames);
+	}
+
 	public JSONObject getTimelineJSONObject() {
 		Timeline timeline = _getTimeline();
 
@@ -134,6 +149,7 @@ public class BuildHistory {
 			setStartTime(buildHistory.getStartTime());
 		}
 
+		_buildJSONObjectsMap.putAll(buildHistory.getBuildJSONObjectsMap());
 		_topLevelBuildURLs.addAll(buildHistory.getTopLevelBuildURLs());
 	}
 
@@ -143,6 +159,27 @@ public class BuildHistory {
 
 	public void setStartTime(long startTime) {
 		_startTime = startTime;
+	}
+
+	public enum TableMetric {
+
+		AVERAGE_DOWNSTREAM_BUILD_DURATION("Average Downstream Build Duration"),
+		AVERAGE_TOP_LEVEL_BUILD_DURATION("Average Top Level Build Duration"),
+		INVOKED_BUILDS("Invoked Builds"),
+		INVOKED_TOP_LEVEL_BUILDS("Invoked Top Level Builds"),
+		TOTAL_SERVER_DURATION("Total Server Duration");
+
+		@Override
+		public String toString() {
+			return _string;
+		}
+
+		private TableMetric(String string) {
+			_string = string;
+		}
+
+		private final String _string;
+
 	}
 
 	protected static JSONArray getTimeJSONArray(long duration, long startTime) {
@@ -166,6 +203,19 @@ public class BuildHistory {
 	protected class Table {
 
 		public JSONArray getJSONArray(int intervalDays) {
+			return getJSONArray(
+				intervalDays,
+				Arrays.asList(
+					TableMetric.AVERAGE_DOWNSTREAM_BUILD_DURATION.toString(),
+					TableMetric.AVERAGE_TOP_LEVEL_BUILD_DURATION.toString(),
+					TableMetric.INVOKED_BUILDS.toString(),
+					TableMetric.INVOKED_TOP_LEVEL_BUILDS.toString(),
+					TableMetric.TOTAL_SERVER_DURATION.toString()));
+		}
+
+		public JSONArray getJSONArray(
+			int intervalDays, List<String> metricNames) {
+
 			JSONArray jsonArray = new JSONArray();
 
 			String[][] dateStringsArray = _split(
@@ -175,6 +225,8 @@ public class BuildHistory {
 
 			String[] dateStrings = new String[dateStringsArray.length];
 
+			Long[] averageDownstreamBuildDurations =
+				new Long[dateStringsArray.length];
 			Long[] averageTopLevelBuildDurations =
 				new Long[dateStringsArray.length];
 			Long[] invokedBuilds = new Long[dateStringsArray.length];
@@ -194,6 +246,9 @@ public class BuildHistory {
 				long topLevelBuildDuration = _getTotalValue(
 					_dailyTotalTopLevelBuildDurations, dateStringsArray[i]);
 
+				averageDownstreamBuildDurations[i] = _getQuotient(
+					totalServerDurations[i] - topLevelBuildDuration,
+					invokedBuilds[i] - invokedTopLevelBuilds[i]);
 				averageTopLevelBuildDurations[i] = _getQuotient(
 					topLevelBuildDuration, invokedTopLevelBuilds[i]);
 			}
@@ -209,41 +264,85 @@ public class BuildHistory {
 					}
 				});
 
-			rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Invoked Builds");
-						addAll(Arrays.asList(invokedBuilds));
-					}
-				});
+			if (metricNames == null) {
+				metricNames = Arrays.asList(
+					TableMetric.AVERAGE_DOWNSTREAM_BUILD_DURATION.toString(),
+					TableMetric.AVERAGE_TOP_LEVEL_BUILD_DURATION.toString(),
+					TableMetric.INVOKED_BUILDS.toString(),
+					TableMetric.INVOKED_TOP_LEVEL_BUILDS.toString(),
+					TableMetric.TOTAL_SERVER_DURATION.toString());
+			}
 
-			rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Invoked Top Level Builds");
-						addAll(Arrays.asList(invokedTopLevelBuilds));
-					}
-				});
+			if (metricNames.contains(
+					TableMetric.AVERAGE_DOWNSTREAM_BUILD_DURATION.toString())) {
 
-			rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Average Top Level Build Duration");
-						addAll(Arrays.asList(averageTopLevelBuildDurations));
-					}
-				});
+				rows.add(
+					new ArrayList<Object>() {
+						{
+							add(getName());
+							add(
+								TableMetric.AVERAGE_DOWNSTREAM_BUILD_DURATION.
+									toString());
+							addAll(
+								Arrays.asList(averageDownstreamBuildDurations));
+						}
+					});
+			}
 
-			rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Total Server Duration");
-						addAll(Arrays.asList(totalServerDurations));
-					}
-				});
+			if (metricNames.contains(
+					TableMetric.AVERAGE_TOP_LEVEL_BUILD_DURATION.toString())) {
+
+				rows.add(
+					new ArrayList<Object>() {
+						{
+							add(getName());
+							add(
+								TableMetric.AVERAGE_TOP_LEVEL_BUILD_DURATION.
+									toString());
+							addAll(
+								Arrays.asList(averageTopLevelBuildDurations));
+						}
+					});
+			}
+
+			if (metricNames.contains(TableMetric.INVOKED_BUILDS.toString())) {
+				rows.add(
+					new ArrayList<Object>() {
+						{
+							add(getName());
+							add(TableMetric.INVOKED_BUILDS.toString());
+							addAll(Arrays.asList(invokedBuilds));
+						}
+					});
+			}
+
+			if (metricNames.contains(
+					TableMetric.INVOKED_TOP_LEVEL_BUILDS.toString())) {
+
+				rows.add(
+					new ArrayList<Object>() {
+						{
+							add(getName());
+							add(
+								TableMetric.INVOKED_TOP_LEVEL_BUILDS.
+									toString());
+							addAll(Arrays.asList(invokedTopLevelBuilds));
+						}
+					});
+			}
+
+			if (metricNames.contains(
+					TableMetric.TOTAL_SERVER_DURATION.toString())) {
+
+				rows.add(
+					new ArrayList<Object>() {
+						{
+							add(getName());
+							add(TableMetric.TOTAL_SERVER_DURATION.toString());
+							addAll(Arrays.asList(totalServerDurations));
+						}
+					});
+			}
 
 			for (List<Object> row : rows) {
 				jsonArray.put(new JSONArray(row));
@@ -401,6 +500,12 @@ public class BuildHistory {
 		if (buildJSONObject.isTopLevelBuild()) {
 			_topLevelBuildURLs.add(buildJSONObject.getURL());
 
+			String buildIdentifier = _getBuildIdentifier(buildJSONObject);
+
+			if (buildIdentifier != null) {
+				_buildJSONObjectsMap.put(buildIdentifier, buildJSONObject);
+			}
+
 			_addData(_dailyInvokedTopLevelBuilds, dateString, 1L);
 			_addData(
 				_dailyTotalTopLevelBuildDurations, dateString,
@@ -419,6 +524,55 @@ public class BuildHistory {
 		}
 
 		dataMap.put(key, dataMap.get(key) + value);
+	}
+
+	private String _getBuildIdentifier(BuildJSONObject buildJSONObject) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(_getJobName(buildJSONObject.getURL()));
+		sb.append("/");
+
+		Map<String, String> parametersMap = buildJSONObject.getParameters();
+
+		String portalUpstreamSHA = parametersMap.get("PORTAL_GIT_COMMIT");
+
+		String portalSenderSHA = portalUpstreamSHA;
+
+		if (portalUpstreamSHA == null) {
+			portalSenderSHA = parametersMap.get("GITHUB_SENDER_BRANCH_SHA");
+			portalUpstreamSHA = parametersMap.get("GITHUB_UPSTREAM_BRANCH_SHA");
+		}
+
+		if ((portalSenderSHA == null) || (portalUpstreamSHA == null)) {
+			return null;
+		}
+
+		if (portalUpstreamSHA.length() > 8) {
+			portalUpstreamSHA = portalUpstreamSHA.substring(0, 7);
+		}
+
+		sb.append(portalUpstreamSHA);
+		sb.append("/");
+
+		if (portalSenderSHA.length() > 8) {
+			portalSenderSHA = portalSenderSHA.substring(0, 7);
+		}
+
+		sb.append(portalSenderSHA);
+		sb.append("/");
+		sb.append(parametersMap.get("CI_TEST_SUITE"));
+
+		return sb.toString();
+	}
+
+	private String _getJobName(String buildURL) {
+		Matcher matcher = _jobURLPattern.matcher(String.valueOf(buildURL));
+
+		if (matcher.find()) {
+			return matcher.group("jobName");
+		}
+
+		return null;
 	}
 
 	private Long _getQuotient(Long value1, Long value2) {
@@ -496,6 +650,12 @@ public class BuildHistory {
 
 	private static final long _TIMELINE_SAMPLE_PERIOD_MINUTES = 15;
 
+	private static final Pattern _jobURLPattern = Pattern.compile(
+		"https?://(?<masterHostname>test-\\d+-\\d+)(\\.liferay\\.com)?/job/" +
+			"(?<jobName>[^/]+)/?");
+
+	private final Map<String, BuildJSONObject> _buildJSONObjectsMap =
+		new TreeMap<>();
 	private final Map<String, Long> _dailyInvokedBuilds = new TreeMap<>();
 	private final Map<String, Long> _dailyInvokedTopLevelBuilds =
 		new TreeMap<>();

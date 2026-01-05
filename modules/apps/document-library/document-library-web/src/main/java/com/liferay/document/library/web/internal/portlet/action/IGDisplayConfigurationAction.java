@@ -6,17 +6,16 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLPortletKeys;
-import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.web.internal.display.context.IGConfigurationDisplayContext;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.trash.TrashHelper;
 
-import javax.portlet.PortletConfig;
+import jakarta.portlet.PortletConfig;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -25,7 +24,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
-	property = "javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
+	property = "jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
 	service = ConfigurationAction.class
 )
 public class IGDisplayConfigurationAction
@@ -45,14 +44,11 @@ public class IGDisplayConfigurationAction
 		httpServletRequest.setAttribute(
 			IGConfigurationDisplayContext.class.getName(),
 			new IGConfigurationDisplayContext(
-				_dlAppLocalService, _itemSelector, httpServletRequest,
+				_itemSelector, httpServletRequest,
 				_portletPreferencesLocalService, _trashHelper));
 
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
-
-	@Reference
-	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private ItemSelector _itemSelector;

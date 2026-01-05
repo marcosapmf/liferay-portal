@@ -19,16 +19,16 @@ import java.util.regex.Pattern;
 public abstract class BaseJavaTerm implements JavaTerm {
 
 	public BaseJavaTerm(
-		String name, String content, String accessModifier, int lineNumber,
-		boolean isAbstract, boolean isFinal, boolean isStatic) {
+		String accessModifier, String content, boolean isAbstract,
+		boolean isFinal, boolean isStatic, int lineNumber, String name) {
 
-		_name = name;
-		_content = content;
 		_accessModifier = accessModifier;
-		_lineNumber = lineNumber;
+		_content = content;
 		_isAbstract = isAbstract;
 		_isFinal = isFinal;
 		_isStatic = isStatic;
+		_lineNumber = lineNumber;
+		_name = name;
 	}
 
 	@Override
@@ -84,6 +84,11 @@ public abstract class BaseJavaTerm implements JavaTerm {
 	}
 
 	@Override
+	public JavaMethod getParentJavaMethod() {
+		return _parentJavaMethod;
+	}
+
+	@Override
 	public JavaSignature getSignature() {
 		return null;
 	}
@@ -96,11 +101,7 @@ public abstract class BaseJavaTerm implements JavaTerm {
 
 		Matcher matcher = pattern.matcher(_content);
 
-		if (matcher.find()) {
-			return true;
-		}
-
-		return false;
+		return matcher.find();
 	}
 
 	@Override
@@ -128,11 +129,8 @@ public abstract class BaseJavaTerm implements JavaTerm {
 
 	@Override
 	public boolean isDefault() {
-		if (Objects.equals(_accessModifier, JavaTerm.ACCESS_MODIFIER_DEFAULT)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			_accessModifier, JavaTerm.ACCESS_MODIFIER_DEFAULT);
 	}
 
 	@Override
@@ -187,31 +185,19 @@ public abstract class BaseJavaTerm implements JavaTerm {
 
 	@Override
 	public boolean isPrivate() {
-		if (Objects.equals(_accessModifier, JavaTerm.ACCESS_MODIFIER_PRIVATE)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			_accessModifier, JavaTerm.ACCESS_MODIFIER_PRIVATE);
 	}
 
 	@Override
 	public boolean isProtected() {
-		if (Objects.equals(
-				_accessModifier, JavaTerm.ACCESS_MODIFIER_PROTECTED)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			_accessModifier, JavaTerm.ACCESS_MODIFIER_PROTECTED);
 	}
 
 	@Override
 	public boolean isPublic() {
-		if (Objects.equals(_accessModifier, JavaTerm.ACCESS_MODIFIER_PUBLIC)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_accessModifier, JavaTerm.ACCESS_MODIFIER_PUBLIC);
 	}
 
 	@Override
@@ -224,6 +210,11 @@ public abstract class BaseJavaTerm implements JavaTerm {
 		_parentJavaClass = javaClass;
 	}
 
+	@Override
+	public void setParentJavaMethod(JavaMethod javaMethod) {
+		_parentJavaMethod = javaMethod;
+	}
+
 	private final String _accessModifier;
 	private final String _content;
 	private final boolean _isAbstract;
@@ -232,5 +223,6 @@ public abstract class BaseJavaTerm implements JavaTerm {
 	private final int _lineNumber;
 	private final String _name;
 	private JavaClass _parentJavaClass;
+	private JavaMethod _parentJavaMethod;
 
 }

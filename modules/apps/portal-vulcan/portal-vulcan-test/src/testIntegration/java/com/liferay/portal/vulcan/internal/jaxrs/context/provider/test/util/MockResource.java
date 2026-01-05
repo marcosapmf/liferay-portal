@@ -5,16 +5,17 @@
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider.test.util;
 
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.StringEntityField;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author Cristina González
@@ -31,6 +32,10 @@ public class MockResource implements EntityModelResource {
 	@GET
 	public String mockGet(String string) {
 		return "";
+	}
+
+	@Override
+	public void setContextCompany(Company contextCompany) {
 	}
 
 	private static final EntityModel _ENTITY_MODEL = new EntityModel() {

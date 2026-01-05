@@ -36,7 +36,7 @@ public class ListTypeEntryServiceImpl extends ListTypeEntryServiceBaseImpl {
 	@Override
 	public ListTypeEntry addListTypeEntry(
 			String externalReferenceCode, long listTypeDefinitionId, String key,
-			Map<Locale, String> nameMap)
+			Map<Locale, String> nameMap, boolean system)
 		throws PortalException {
 
 		ListTypeDefinition listTypeDefinition =
@@ -49,7 +49,7 @@ public class ListTypeEntryServiceImpl extends ListTypeEntryServiceBaseImpl {
 
 		return listTypeEntryLocalService.addListTypeEntry(
 			externalReferenceCode, getUserId(), listTypeDefinitionId, key,
-			nameMap);
+			nameMap, system);
 	}
 
 	@Override
@@ -64,6 +64,23 @@ public class ListTypeEntryServiceImpl extends ListTypeEntryServiceBaseImpl {
 			ActionKeys.UPDATE);
 
 		return listTypeEntryLocalService.deleteListTypeEntry(listTypeEntryId);
+	}
+
+	@Override
+	public ListTypeEntry fetchListTypeEntry(
+			long listTypeDefinitionId, String key)
+		throws PortalException {
+
+		ListTypeEntry listTypeEntry =
+			listTypeEntryLocalService.fetchListTypeEntry(
+				listTypeDefinitionId, key);
+
+		if (listTypeEntry != null) {
+			_listTypeDefinitionModelResourcePermission.check(
+				getPermissionChecker(), listTypeDefinitionId, ActionKeys.VIEW);
+		}
+
+		return listTypeEntry;
 	}
 
 	@Override
@@ -118,6 +135,30 @@ public class ListTypeEntryServiceImpl extends ListTypeEntryServiceBaseImpl {
 			ActionKeys.VIEW);
 
 		return listTypeEntry;
+	}
+
+	@Override
+	public ListTypeEntry getOrAddEmptyListTypeEntry(
+			long userId, long listTypeDefinitionId, String key)
+		throws PortalException {
+
+		ListTypeEntry listTypeEntry = listTypeEntryService.fetchListTypeEntry(
+			listTypeDefinitionId, key);
+
+		if (listTypeEntry != null) {
+			return listTypeEntry;
+		}
+
+		ListTypeDefinition listTypeDefinition =
+			_listTypeDefinitionPersistence.findByPrimaryKey(
+				listTypeDefinitionId);
+
+		_listTypeDefinitionModelResourcePermission.check(
+			getPermissionChecker(),
+			listTypeDefinition.getListTypeDefinitionId(), ActionKeys.UPDATE);
+
+		return listTypeEntryLocalService.getOrAddEmptyListTypeEntry(
+			userId, listTypeDefinitionId, key);
 	}
 
 	@Override

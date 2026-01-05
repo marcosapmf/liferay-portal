@@ -6,25 +6,26 @@
 package com.liferay.commerce.wish.list.web.internal.portlet;
 
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
+import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.wish.list.constants.CommerceWishListConstants;
 import com.liferay.commerce.wish.list.constants.CommerceWishListPortletKeys;
+import com.liferay.commerce.wish.list.helper.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
-import com.liferay.commerce.wish.list.util.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.web.internal.display.context.CommerceWishListDisplayContext;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,14 +45,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.scopeable=true",
-		"javax.portlet.display-name=Commerce Wish List Content",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/wish_list_content/view.jsp",
-		"javax.portlet.name=" + CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.supported-public-render-parameter=commerceWishListId",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Commerce Wish List Content",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.view-template=/wish_list_content/view.jsp",
+		"jakarta.portlet.name=" + CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=power-user,user",
+		"jakarta.portlet.supported-public-render-parameter=commerceWishListId",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -64,9 +65,9 @@ public class CommerceWishListContentPortlet extends MVCPortlet {
 
 		CommerceWishListDisplayContext commerceWishListDisplayContext =
 			new CommerceWishListDisplayContext(
-				commerceProductPriceCalculation, commerceWishListHttpHelper,
-				commerceWishListItemService, commerceWishListService,
-				cpDefinitionHelper, cpInstanceHelper,
+				commerceProductPriceCalculation, _commerceProductViewPermission,
+				commerceWishListHttpHelper, commerceWishListItemService,
+				commerceWishListService, cpDefinitionHelper, cpInstanceHelper,
 				portal.getHttpServletRequest(renderRequest),
 				_portletResourcePermission);
 
@@ -96,6 +97,9 @@ public class CommerceWishListContentPortlet extends MVCPortlet {
 
 	@Reference
 	protected Portal portal;
+
+	@Reference
+	private CommerceProductViewPermission _commerceProductViewPermission;
 
 	@Reference(
 		target = "(resource.name=" + CommerceWishListConstants.RESOURCE_NAME + ")"

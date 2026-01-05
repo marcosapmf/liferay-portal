@@ -20,11 +20,11 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_SPECIFICATION_OPTIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_SPECIFICATION_OPTIONS,
 		"mvc.command.name=/cp_specification_options/edit_cp_specification_option"
 	},
 	service = MVCActionCommand.class
@@ -118,8 +118,6 @@ public class EditCPSpecificationOptionMVCActionCommand
 
 		long cpOptionCategoryId = ParamUtil.getLong(
 			actionRequest, "CPOptionCategoryId");
-		long listTypeDefinitionId = ParamUtil.getLong(
-			actionRequest, "listTypeDefinitionId");
 		Map<Locale, String> titleMap = _localization.getLocalizationMap(
 			actionRequest, "title");
 		Map<Locale, String> descriptionMap = _localization.getLocalizationMap(
@@ -127,6 +125,7 @@ public class EditCPSpecificationOptionMVCActionCommand
 		boolean facetable = ParamUtil.getBoolean(actionRequest, "facetable");
 		String key = ParamUtil.getString(actionRequest, "key");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
+		boolean visible = ParamUtil.getBoolean(actionRequest, "visible");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CPSpecificationOption.class.getName(), actionRequest);
@@ -139,8 +138,8 @@ public class EditCPSpecificationOptionMVCActionCommand
 
 			cpSpecificationOption =
 				_cpSpecificationOptionService.addCPSpecificationOption(
-					null, cpOptionCategoryId, listTypeDefinitionId, titleMap,
-					descriptionMap, facetable, key, priority, serviceContext);
+					null, cpOptionCategoryId, null, titleMap, descriptionMap,
+					facetable, key, priority, visible, serviceContext);
 		}
 		else {
 
@@ -148,9 +147,9 @@ public class EditCPSpecificationOptionMVCActionCommand
 
 			cpSpecificationOption =
 				_cpSpecificationOptionService.updateCPSpecificationOption(
-					null, cpSpecificationOptionId, cpOptionCategoryId,
-					listTypeDefinitionId, titleMap, descriptionMap, facetable,
-					key, priority, serviceContext);
+					null, cpSpecificationOptionId, cpOptionCategoryId, null,
+					titleMap, descriptionMap, facetable, key, priority, visible,
+					serviceContext);
 		}
 
 		return cpSpecificationOption;

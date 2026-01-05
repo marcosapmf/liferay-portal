@@ -27,13 +27,13 @@ public class QAWebsitesGitRepositoryJob
 	extends GitRepositoryJob implements PortalTestClassJob, TestSuiteJob {
 
 	@Override
-	public String getBranchName() {
-		return _upstreamBranchName;
+	public Set<String> getAppServerTypes() {
+		return new HashSet<>();
 	}
 
 	@Override
-	public Set<String> getDistTypes() {
-		return new HashSet<>();
+	public String getBranchName() {
+		return _upstreamBranchName;
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class QAWebsitesGitRepositoryJob
 		for (String projectName : getProjectNames()) {
 			if (projectName.equals("playwright")) {
 				return new HashSet<>(
-					Collections.singletonList("qa-websites-playwright-jdk8"));
+					Collections.singletonList("qa-websites-playwright"));
 			}
 		}
 

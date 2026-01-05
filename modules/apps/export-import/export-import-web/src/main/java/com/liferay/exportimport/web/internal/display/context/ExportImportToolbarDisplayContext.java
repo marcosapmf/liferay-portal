@@ -14,6 +14,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -28,15 +29,15 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.site.display.context.GroupDisplayContextHelper;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Péter Alius
@@ -84,7 +85,9 @@ public class ExportImportToolbarDisplayContext {
 
 					cmd = Constants.EXPORT;
 					label = "custom-export";
-					mvcPath = "/export/new_export/export_layouts.jsp";
+					mvcPath = FeatureFlagManagerUtil.isEnabled("LPD-57655") ?
+						"/revamp/export/new_export.jsp" :
+							"/export/new_export/export_layouts.jsp";
 				}
 				else {
 					cmd = Constants.IMPORT;

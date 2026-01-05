@@ -22,7 +22,6 @@ import com.liferay.headless.delivery.dto.v1_0.StructuredContent;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.dto.v1_0.util.ContentFieldUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.AggregateRatingUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RelatedContentUtil;
@@ -41,12 +40,13 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.GroupUtil;
@@ -55,14 +55,14 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -127,7 +127,7 @@ public class StructuredContentDTOConverter
 					() -> _toContentFields(
 						_dlAppService, _dlURLHelper, dtoConverterContext,
 						journalArticle, _journalArticleService,
-						_layoutLocalService));
+						_layoutService));
 				setContentStructureId(ddmStructure::getStructureId);
 				setCreator(
 					() -> CreatorUtil.toCreator(
@@ -254,7 +254,7 @@ public class StructuredContentDTOConverter
 			DTOConverterContext dtoConverterContext,
 			JournalArticle journalArticle,
 			JournalArticleService journalArticleService,
-			LayoutLocalService layoutLocalService)
+			LayoutService layoutService)
 		throws Exception {
 
 		DDMFormValues ddmFormValues = journalArticle.getDDMFormValues();
@@ -263,7 +263,7 @@ public class StructuredContentDTOConverter
 			ddmFormValues.getDDMFormFieldValues(),
 			ddmFormFieldValue -> ContentFieldUtil.toContentField(
 				ddmFormFieldValue, dlAppService, dlURLHelper,
-				dtoConverterContext, journalArticleService, layoutLocalService),
+				dtoConverterContext, journalArticleService, layoutService),
 			ContentField.class);
 	}
 
@@ -292,16 +292,9 @@ public class StructuredContentDTOConverter
 						() -> LocalizedMapUtil.getI18nMap(
 							acceptAllLanguages, ddmTemplate.getNameMap()));
 					setMarkedAsDefault(
-						() -> {
-							if (Objects.equals(
-									ddmTemplate.getTemplateKey(),
-									journalArticle.getDDMTemplateKey())) {
-
-								return true;
-							}
-
-							return false;
-						});
+						() -> Objects.equals(
+							ddmTemplate.getTemplateKey(),
+							journalArticle.getDDMTemplateKey()));
 					setRenderedContentURL(
 						() -> JaxRsLinkUtil.getJaxRsLink(
 							"headless-delivery",
@@ -338,7 +331,7 @@ public class StructuredContentDTOConverter
 				ddmStructure.getStructureId(), dtoConverterContext,
 				journalArticle.getGroupId(), journalArticle,
 				_infoItemServiceRegistry, _layoutDisplayPageProviderRegistry,
-				_layoutLocalService, _layoutPageTemplateEntryService,
+				_layoutService, _layoutPageTemplateEntryService,
 				"getStructuredContentRenderedContentByDisplayPageDisplayPage" +
 					"Key");
 
@@ -389,10 +382,10 @@ public class StructuredContentDTOConverter
 		_layoutDisplayPageProviderRegistry;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
 
 	@Reference
-	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+	private LayoutService _layoutService;
 
 	@Reference
 	private Portal _portal;

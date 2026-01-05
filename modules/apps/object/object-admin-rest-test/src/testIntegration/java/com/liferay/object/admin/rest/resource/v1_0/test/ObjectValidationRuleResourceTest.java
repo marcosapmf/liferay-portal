@@ -18,7 +18,6 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
@@ -33,7 +32,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
-@FeatureFlags("LPD-29637")
 @RunWith(Arquillian.class)
 public class ObjectValidationRuleResourceTest
 	extends BaseObjectValidationRuleResourceTestCase {
@@ -204,6 +202,18 @@ public class ObjectValidationRuleResourceTest
 
 	@Override
 	protected ObjectValidationRule
+			testGraphQLGetObjectDefinitionByExternalReferenceCodeObjectValidationRulesPageObjectDefinitionObjectValidationRule_addObjectValidationRule(
+				String objectDefinitionExternalReferenceCode,
+				ObjectValidationRule objectValidationRule)
+		throws Exception {
+
+		return objectValidationRuleResource.
+			postObjectDefinitionByExternalReferenceCodeObjectValidationRule(
+				objectDefinitionExternalReferenceCode, objectValidationRule);
+	}
+
+	@Override
+	protected ObjectValidationRule
 			testGraphQLObjectValidationRule_addObjectValidationRule()
 		throws Exception {
 
@@ -211,6 +221,22 @@ public class ObjectValidationRuleResourceTest
 			postObjectDefinitionObjectValidationRule(
 				_objectDefinition.getObjectDefinitionId(),
 				randomObjectValidationRule());
+	}
+
+	@Override
+	protected Long
+		testGraphQLPostObjectDefinitionByExternalReferenceCodeObjectValidationRule_getObjectDefinitionId(
+			ObjectValidationRule objectValidationRule) {
+
+		return objectValidationRule.getObjectDefinitionId();
+	}
+
+	@Override
+	protected Long
+		testGraphQLPostObjectDefinitionObjectValidationRule_getObjectDefinitionId(
+			ObjectValidationRule objectValidationRule) {
+
+		return objectValidationRule.getObjectDefinitionId();
 	}
 
 	@Override

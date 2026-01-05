@@ -21,9 +21,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,8 +77,7 @@ public class FunctionCommerceShippingEngineOptionsPageFDSDataProvider
 			httpServletRequest, "commerceChannelId");
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			themeDisplay.getCompanyId(), commerceChannelId,
-			themeDisplay.getUserId(), 0, 0);
+			0, commerceChannelId, null, 0, themeDisplay.getCompanyId());
 
 		return commerceShippingEngine.getCommerceShippingOptions(
 			commerceContext, null, themeDisplay.getLocale());

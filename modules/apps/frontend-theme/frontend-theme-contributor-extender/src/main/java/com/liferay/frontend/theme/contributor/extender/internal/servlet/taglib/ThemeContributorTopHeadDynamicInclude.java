@@ -8,6 +8,7 @@ package com.liferay.frontend.theme.contributor.extender.internal.servlet.taglib;
 import com.liferay.frontend.theme.contributor.extender.internal.BundleWebResources;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
@@ -16,6 +17,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -23,9 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -217,7 +218,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 		long themeLastModified, HttpServletRequest httpServletRequest,
 		String portalURL, PrintWriter printWriter) {
 
-		printWriter.write("<link data-senna-track=\"permanent\" href=\"");
+		printWriter.write("<link");
+		printWriter.write(
+			ContentSecurityPolicyNonceProviderUtil.getNonce(
+				httpServletRequest));
+		printWriter.write(" data-senna-track=\"permanent\" href=\"");
 
 		String staticResourceURL = _portal.getStaticResourceURL(
 			httpServletRequest, _comboContextPath, "minifierType=css",
@@ -263,7 +268,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 					StringBundler.concat(
 						portalURL, _portal.getPathProxy(), resourceURL),
 					themeLastModified));
-			printWriter.write("\" rel=\"stylesheet\" type = \"text/css\" />\n");
+			printWriter.write(StringPool.QUOTE);
+			printWriter.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonce(
+					httpServletRequest));
+			printWriter.write(" rel=\"stylesheet\" type = \"text/css\" />\n");
 		}
 	}
 

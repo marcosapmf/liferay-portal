@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -56,11 +56,11 @@ page import="com.liferay.portal.kernel.service.permission.PortalPermissionUtil" 
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.service.permission.UserGroupPermissionUtil" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %><%@
 page import="com.liferay.user.groups.admin.constants.UserGroupsAdminPortletKeys" %><%@
@@ -71,10 +71,10 @@ page import="com.liferay.user.groups.admin.web.internal.portlet.action.ActionUti
 page import="com.liferay.user.groups.admin.web.internal.servlet.taglib.util.UserActionDropdownItems" %><%@
 page import="com.liferay.users.admin.constants.UsersAdminPortletKeys" %>
 
+<%@ page import="jakarta.portlet.PortletURL" %>
+
 <%@ page import="java.util.LinkedHashMap" %><%@
 page import="java.util.List" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -79,7 +79,7 @@ page import="java.util.Objects" %>
 <portlet:defineObjects />
 
 <%
-FragmentDisplayContext fragmentEntriesDisplayContext = new FragmentDisplayContext(request, renderRequest, renderResponse);
+FragmentDisplayContext fragmentDisplayContext = new FragmentDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <%@ include file="/init-ext.jsp" %>

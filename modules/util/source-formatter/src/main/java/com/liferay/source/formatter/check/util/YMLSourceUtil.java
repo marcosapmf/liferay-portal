@@ -5,14 +5,10 @@
 
 package com.liferay.source.formatter.check.util;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author Peter Shin
@@ -20,135 +16,51 @@ import java.util.regex.Pattern;
  */
 public class YMLSourceUtil {
 
-	public static List<String> getContentBlocks(
-		String content, Pattern styleBlockPattern) {
+	public static boolean isBlockStyle(String line) {
+		String trimmedLine = StringUtil.trimTrailing(line);
 
-		List<String> contentBlocks = new ArrayList<>();
+		if (trimmedLine.endsWith(">") || trimmedLine.endsWith(">+") ||
+			trimmedLine.endsWith(">-") || trimmedLine.endsWith("|") ||
+			trimmedLine.endsWith("|+") || trimmedLine.endsWith("|-")) {
 
-		Matcher matcher = styleBlockPattern.matcher(content);
-
-		int lastEndPos = 0;
-
-		while (matcher.find()) {
-			contentBlocks.add(
-				content.substring(lastEndPos, matcher.start(1) - 1));
-			contentBlocks.add(
-				content.substring(matcher.start(1), matcher.end(1)));
-
-			lastEndPos = matcher.end(1) + 1;
+			return true;
 		}
 
-		if (lastEndPos < content.length()) {
-			contentBlocks.add(content.substring(lastEndPos));
-		}
-
-		if (contentBlocks.isEmpty()) {
-			contentBlocks.add(content);
-		}
-
-		return contentBlocks;
+		return false;
 	}
 
-	public static List<String> getDefinitions(String content, String indent) {
-		List<String> definitions = new ArrayList<>();
+	public static List<String> splitDocuments(String content) {
+		List<String> documents = new ArrayList<>();
 
-		String[] lines = content.split("\n");
+		content = content.trim();
 
-		StringBundler sb = new StringBundler();
-
-		for (String line : lines) {
-			if (line.length() == 0) {
-				sb.append("\n");
-
-				continue;
-			}
-
-			if (line.matches(" +")) {
-				sb.append(line);
-
-				sb.append("\n");
-
-				continue;
-			}
-
-			if (!line.startsWith(indent)) {
-				continue;
-			}
-
-			String s = line.substring(indent.length(), indent.length() + 1);
-
-			if (!s.equals(StringPool.SPACE) && (sb.length() != 0)) {
-				sb.setIndex(sb.index() - 1);
-
-				definitions.add(sb.toString());
-
-				sb.setIndex(0);
-			}
-
-			sb.append(line);
-			sb.append("\n");
+		if (content.endsWith("\n---")) {
+			content = content.substring(0, content.length() - 4);
 		}
 
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
+		if (content.startsWith("---\n")) {
+			content = content.substring(4);
 		}
 
-		definitions.add(sb.toString());
+		int x = -1;
 
-		return definitions;
-	}
+		while (true) {
+			x = content.lastIndexOf("\n---\n");
 
-	public static String getNestedDefinitionIndent(String definition) {
-		String[] lines = StringUtil.splitLines(definition);
-
-		if (lines.length <= 1) {
-			return StringPool.BLANK;
-		}
-
-		for (int i = 1; i < lines.length; i++) {
-			String line = lines[i];
-
-			String indent = line.replaceFirst("^( +).+", "$1");
-
-			if (!indent.equals(line)) {
-				return indent;
-			}
-		}
-
-		return StringPool.BLANK;
-	}
-
-	public static List<String> splitDirectives(String content) {
-		List<String> directives = new ArrayList<>();
-
-		String[] lines = content.split("\n");
-
-		StringBundler sb = new StringBundler();
-
-		for (String line : lines) {
-			if (!line.equals("---")) {
-				sb.append(line);
-				sb.append("\n");
-
-				continue;
+			if (x == -1) {
+				break;
 			}
 
-			if (sb.index() > 0) {
-				sb.setIndex(sb.index() - 1);
+			String s = content.substring(x + 5);
 
-				directives.add(sb.toString());
+			documents.add(0, s);
 
-				sb.setIndex(0);
-			}
+			content = content.substring(0, x);
 		}
 
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
+		documents.add(0, content);
 
-			directives.add(sb.toString());
-		}
-
-		return directives;
+		return documents;
 	}
 
 }

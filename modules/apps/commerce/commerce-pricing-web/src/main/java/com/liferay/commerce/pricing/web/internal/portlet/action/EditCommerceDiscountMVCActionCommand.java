@@ -7,6 +7,7 @@ package com.liferay.commerce.pricing.web.internal.portlet.action;
 
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
+import com.liferay.commerce.discount.exception.CommerceDiscountAmountException;
 import com.liferay.commerce.discount.exception.CommerceDiscountCouponCodeException;
 import com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException;
 import com.liferay.commerce.discount.exception.CommerceDiscountMinPriceValueException;
@@ -22,13 +23,13 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.math.BigDecimal;
 
 import java.util.Calendar;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_DISCOUNT,
+		"jakarta.portlet.name=" + CommercePricingPortletKeys.COMMERCE_DISCOUNT,
 		"mvc.command.name=/commerce_discount/edit_commerce_discount"
 	},
 	service = MVCActionCommand.class
@@ -71,8 +72,9 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
-			else if (throwable instanceof
-						CommerceDiscountMaxPriceValueException ||
+			else if (throwable instanceof CommerceDiscountAmountException ||
+					 throwable instanceof
+						 CommerceDiscountMaxPriceValueException ||
 					 throwable instanceof
 						 CommerceDiscountMinPriceValueException) {
 
@@ -164,7 +166,10 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 		String level = ParamUtil.getString(actionRequest, "level");
 
 		BigDecimal[] discountLevels = _getDiscountLevels(
-			level, _commercePriceFormatter.parse(actionRequest, "amount"));
+			level,
+			_commercePriceFormatter.parse(
+				actionRequest, false, CommerceDiscount.class.getName(),
+				"amount"));
 
 		int limitationTimes = ParamUtil.getInteger(
 			actionRequest, "limitationTimes");
@@ -196,7 +201,8 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 			commerceDiscountId, title, target, useCouponCode, couponCode,
 			usePercentage,
 			_commercePriceFormatter.parse(
-				actionRequest, "maximumDiscountAmount"),
+				actionRequest, false, CommerceDiscount.class.getName(),
+				"maximumDiscountAmount"),
 			level, discountLevels[0], discountLevels[1], discountLevels[2],
 			discountLevels[3],
 			_getLimitationType(limitationTimes, limitationTimesPerAccount),

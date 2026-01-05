@@ -1,8 +1,10 @@
+import ClayAlert from '@clayui/alert';
 import ClayLink from '@clayui/link';
 import EmptyState from 'shared/components/workspaces/EmptyState';
 import JoinableWorkspacesWrapper from 'shared/components/workspaces/JoinableWorkspacesWrapper';
 import Loading from 'shared/components/Loading';
 import React from 'react';
+import URLConstants from 'shared/util/url-constants';
 import WorkspaceList from 'shared/components/workspaces/workspace-list';
 import WorkspacesBasePage from 'shared/components/workspaces/BasePage';
 import {ENABLE_ADD_TRIAL_WORKSPACE} from 'shared/util/constants';
@@ -10,10 +12,12 @@ import {isString} from 'lodash';
 import {PLANS} from 'shared/util/subscriptions';
 import {Redirect} from 'react-router';
 import {Routes, toRoute} from 'shared/util/router';
+import {sub} from 'shared/util/lang';
 import {
 	useFetchJoinableProjects,
 	useFetchProjects
 } from 'shared/hooks/useProjects';
+import {useIncidentAlert} from 'shared/hooks/useIncidentAlert';
 
 export const routingFn = ({projects}) => {
 	if (projects.length === 1 && !projects[0].groupId) {
@@ -91,6 +95,13 @@ const WorkspacesContent = ({
 
 const Workspaces: any = () => {
 	const {data: projects, loading} = useFetchProjects();
+
+	const {
+		data: preferences,
+		loading: loadingPreferences,
+		onClose
+	} = useIncidentAlert();
+
 	const {
 		data: joinableProjects,
 		loading: loadingJoinableProjects
@@ -135,6 +146,33 @@ const Workspaces: any = () => {
 	return (
 		<div className='workspaces-root' key='Workspaces'>
 			<WorkspacesBasePage details={handleDetails()} title={handleTitle()}>
+				{!loadingPreferences && preferences.incidentAlertEnabled && (
+					<ClayAlert
+						displayType='warning'
+						onClose={onClose}
+						symbol='info-circle'
+						title={Liferay.Language.get('warning')}
+						variant='inline'
+					>
+						{sub(
+							Liferay.Language.get(
+								'maintenance-is-scheduled-for-x-and-may-impact-your-workflow'
+							),
+							['November 13']
+						)}
+						<ClayLink
+							className='ml-1'
+							decoration='underline'
+							href={URLConstants.StatusPageAnnouncements}
+							target='_blank'
+						>
+							{Liferay.Language.get(
+								'visit-our-status-page-for-more-details'
+							)}
+						</ClayLink>
+					</ClayAlert>
+				)}
+
 				<WorkspacesContent
 					joinableProjects={joinableProjects}
 					loading={loading}

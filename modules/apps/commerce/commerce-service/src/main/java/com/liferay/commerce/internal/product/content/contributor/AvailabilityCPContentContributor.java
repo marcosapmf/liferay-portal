@@ -5,6 +5,10 @@
 
 package com.liferay.commerce.internal.product.content.contributor;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngineRegistry;
 import com.liferay.commerce.inventory.constants.CommerceInventoryAvailabilityConstants;
@@ -25,9 +29,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,15 +80,33 @@ public class AvailabilityCPContentContributor implements CPContentContributor {
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
 				cpDefinitionInventory);
 
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
+
 		boolean displayAvailability =
-			cpDefinitionInventoryEngine.isDisplayAvailability(cpInstance);
+			cpDefinitionInventoryEngine.isDisplayAvailability(
+				commerceContext.getCPConfigurationListId(
+					cpInstance.getGroupId()),
+				cpInstance);
 
 		if (displayAvailability) {
+			long accountEntryId = AccountConstants.ACCOUNT_ENTRY_ID_ANY;
+
+			AccountEntry accountEntry = commerceContext.getAccountEntry();
+
+			if (accountEntry != null) {
+				accountEntryId = accountEntry.getAccountEntryId();
+			}
+
 			String availabilityStatus =
 				_commerceInventoryEngine.getAvailabilityStatus(
-					cpInstance.getCompanyId(), cpInstance.getGroupId(),
-					commerceChannel.getGroupId(),
-					cpDefinitionInventoryEngine.getMinStockQuantity(cpInstance),
+					cpInstance.getCompanyId(), accountEntryId,
+					cpInstance.getGroupId(), commerceChannel.getGroupId(),
+					cpDefinitionInventoryEngine.getMinStockQuantity(
+						commerceContext.getCPConfigurationListId(
+							cpInstance.getGroupId()),
+						cpInstance),
 					cpInstance.getSku(), StringPool.BLANK);
 
 			ThemeDisplay themeDisplay =

@@ -9,9 +9,9 @@ import com.liferay.fragment.collection.filter.FragmentCollectionFilter;
 import com.liferay.fragment.collection.filter.keyword.display.context.FragmentCollectionFilterKeywordDisplayContext;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -19,13 +19,13 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,7 +38,7 @@ public class FragmentCollectionFilterKeyword
 	implements FragmentCollectionFilter {
 
 	@Override
-	public String getConfiguration() {
+	public JSONObject getConfigurationJSONObject() {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", LocaleUtil.getMostRelevantLocale(), getClass());
 
@@ -56,7 +56,7 @@ public class FragmentCollectionFilterKeyword
 				_log.debug(jsonException);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -80,7 +80,8 @@ public class FragmentCollectionFilterKeyword
 			httpServletRequest.setAttribute(
 				FragmentCollectionFilterKeywordDisplayContext.class.getName(),
 				new FragmentCollectionFilterKeywordDisplayContext(
-					getConfiguration(), _fragmentEntryConfigurationParser,
+					getConfigurationJSONObject(),
+					_fragmentEntryConfigurationParser,
 					fragmentRendererContext));
 
 			RequestDispatcher requestDispatcher =

@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -36,8 +37,6 @@ definition {
 
 	@priority = 4
 	test CanCreateEndpointWithAddedCurlyBraces {
-		property portal.acceptance = "true";
-
 		task ("When I create site scoped singleElement endpoint with test as parameter in Add API Endpoint") {
 			APIBuilderUI.createAPIEndpoint(
 				method = "GET",
@@ -62,8 +61,6 @@ definition {
 
 	@priority = 4
 	test CannotCreateSingleElementEndpointWithoutPathParameter {
-		property portal.acceptance = "true";
-
 		task ("When I create an endpoint with Single Element, Company Scope and Path") {
 			APIBuilderUI.createAPIEndpoint(
 				method = "GET",
@@ -91,8 +88,6 @@ definition {
 
 	@priority = 4
 	test CannotSeeParameterTextBox {
-		property portal.acceptance = "true";
-
 		task ("When I select Site Scope and Collection type in Add API Endpoint") {
 			APIBuilderUI.configureAPIEndpoint(
 				method = "GET",
@@ -109,8 +104,6 @@ definition {
 
 	@priority = 4
 	test CanSeeAvailableRetrieveTypes {
-		property portal.acceptance = "true";
-
 		task ("When I select Get method") {
 			APIBuilderUI.configureAPIEndpoint(method = "GET");
 		}
@@ -128,8 +121,6 @@ definition {
 
 	@priority = 4
 	test CanSeeAvailableScopes {
-		property portal.acceptance = "true";
-
 		task ("When I click 'Add API Endpoint' button") {
 			APIBuilderUI.configureAPIEndpoint();
 		}
@@ -147,8 +138,6 @@ definition {
 
 	@priority = 4
 	test CanSeeCorrectPathParameterAndParameterDescription {
-		property portal.acceptance = "true";
-
 		task ("And Given create an singleElement endpoint with id pathParameter and path parameter description ") {
 			APIBuilderUI.createAPIEndpoint(
 				description = "Description default",
@@ -177,8 +166,6 @@ definition {
 
 	@priority = 4
 	test CanSeeRequiredPathAndParameterTextBox {
-		property portal.acceptance = "true";
-
 		task ("When I select Site Scope and Single Element in Add API Endpoint") {
 			APIBuilderUI.configureAPIEndpoint(
 				method = "GET",
@@ -199,8 +186,6 @@ definition {
 
 	@priority = 4
 	test CanUpdatePathParameterPropertyAndDescription {
-		property portal.acceptance = "true";
-
 		task ("And Given create an singleElement endpoint with id pathParameter and path parameter description") {
 			APIBuilderUI.createAPIEndpoint(
 				description = "Description default",

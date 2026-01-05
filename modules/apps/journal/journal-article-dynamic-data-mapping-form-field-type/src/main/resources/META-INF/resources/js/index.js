@@ -5,8 +5,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {ReactFieldBase} from 'dynamic-data-mapping-form-field-type';
-import {openSelectionModal} from 'frontend-js-web';
+import {ReactFieldBase} from 'dynamic-data-mapping-form-field-type/api';
+import {openSelectionModal} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 function parseInputValue(inputValue) {

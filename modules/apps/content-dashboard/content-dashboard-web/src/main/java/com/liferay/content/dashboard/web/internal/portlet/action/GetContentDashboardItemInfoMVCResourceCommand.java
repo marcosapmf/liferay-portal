@@ -41,12 +41,18 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -61,11 +67,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -74,7 +75,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentDashboardPortletKeys.CONTENT_DASHBOARD_ADMIN,
+		"jakarta.portlet.name=" + ContentDashboardPortletKeys.CONTENT_DASHBOARD_ADMIN,
 		"mvc.command.name=/content_dashboard/get_content_dashboard_item_info"
 	},
 	service = MVCResourceCommand.class
@@ -126,7 +127,8 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 					"createDate",
 					_toString(contentDashboardItem.getCreateDate())
 				).put(
-					"description", contentDashboardItem.getDescription(locale)
+					"description",
+					HtmlUtil.escape(contentDashboardItem.getDescription(locale))
 				).put(
 					"downloadURL",
 					_getDownloadURL(contentDashboardItem, httpServletRequest)
@@ -364,14 +366,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			contentDashboardItem.getContentDashboardItemActions(
 				httpServletRequest, ContentDashboardItemAction.Type.DOWNLOAD);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return contentDashboardItemAction.getURL();
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return contentDashboardItemAction.getURL();
 	}
 
 	private String _getFetchSharingButtonURL(
@@ -383,14 +385,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 				httpServletRequest,
 				ContentDashboardItemAction.Type.SHARING_BUTTON);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return contentDashboardItemAction.getURL();
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return contentDashboardItemAction.getURL();
 	}
 
 	private String _getFetchSharingCollaboratorsURL(
@@ -402,14 +404,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 				httpServletRequest,
 				ContentDashboardItemAction.Type.SHARING_COLLABORATORS);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return contentDashboardItemAction.getURL();
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return contentDashboardItemAction.getURL();
 	}
 
 	private JSONArray _getLatestContentDashboardItemVersionsJSONArray(
@@ -438,14 +440,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 				httpServletRequest,
 				ContentDashboardItemAction.Type.PREVIEW_IMAGE);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return contentDashboardItemAction.getURL();
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return contentDashboardItemAction.getURL();
 	}
 
 	private JSONObject _getPreviewJSONObject(
@@ -468,14 +470,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			contentDashboardItem.getContentDashboardItemActions(
 				httpServletRequest, ContentDashboardItemAction.Type.PREVIEW);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return contentDashboardItemAction.getURL();
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return contentDashboardItemAction.getURL();
 	}
 
 	private JSONArray _getSpecificFieldsJSONArray(
@@ -483,12 +485,11 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(locale);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(locale);
 
 		for (ContentDashboardItem.SpecificInformation specificInformation :
-				specificInformationList) {
+				specificInformations) {
 
 			jsonArray.put(specificInformation.toJSONObject(_language, locale));
 		}
@@ -504,24 +505,24 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			contentDashboardItem.getContentDashboardItemActions(
 				httpServletRequest, ContentDashboardItemAction.Type.SUBSCRIBE);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return JSONUtil.put(
-				"disabled", contentDashboardItemAction.isDisabled()
-			).put(
-				"icon", contentDashboardItemAction.getIcon()
-			).put(
-				"label",
-				contentDashboardItemAction.getLabel(
-					_portal.getLocale(httpServletRequest))
-			).put(
-				"url", contentDashboardItemAction.getURL()
-			);
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return JSONUtil.put(
+			"disabled", contentDashboardItemAction.isDisabled()
+		).put(
+			"icon", contentDashboardItemAction.getIcon()
+		).put(
+			"label",
+			contentDashboardItemAction.getLabel(
+				_portal.getLocale(httpServletRequest))
+		).put(
+			"url", contentDashboardItemAction.getURL()
+		);
 	}
 
 	private JSONObject _getSubscribeJSONObject(
@@ -549,24 +550,24 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 				httpServletRequest,
 				ContentDashboardItemAction.Type.UNSUBSCRIBE);
 
-		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
-			ContentDashboardItemAction contentDashboardItemAction =
-				contentDashboardItemActions.get(0);
-
-			return JSONUtil.put(
-				"disabled", contentDashboardItemAction.isDisabled()
-			).put(
-				"icon", contentDashboardItemAction.getIcon()
-			).put(
-				"label",
-				contentDashboardItemAction.getLabel(
-					_portal.getLocale(httpServletRequest))
-			).put(
-				"url", contentDashboardItemAction.getURL()
-			);
+		if (ListUtil.isEmpty(contentDashboardItemActions)) {
+			return null;
 		}
 
-		return null;
+		ContentDashboardItemAction contentDashboardItemAction =
+			contentDashboardItemActions.get(0);
+
+		return JSONUtil.put(
+			"disabled", contentDashboardItemAction.isDisabled()
+		).put(
+			"icon", contentDashboardItemAction.getIcon()
+		).put(
+			"label",
+			contentDashboardItemAction.getLabel(
+				_portal.getLocale(httpServletRequest))
+		).put(
+			"url", contentDashboardItemAction.getURL()
+		);
 	}
 
 	private JSONObject _getUserJSONObject(

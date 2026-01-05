@@ -10,15 +10,17 @@ import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
+import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
+import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,22 +39,26 @@ public class TestCustomCommerceContextFactory
 	public CommerceContext create(HttpServletRequest httpServletRequest) {
 		return new TestCustomCommerceContextHttp(
 			httpServletRequest, _accountGroupLocalService,
-			_commerceAccountHelper, _commerceChannelAccountEntryRelLocalService,
+			_commerceAccountHelper, _commerceCatalogLocalService,
+			_commerceChannelAccountEntryRelLocalService,
 			_commerceChannelLocalService, _commerceCurrencyLocalService,
-			_commerceOrderHttpHelper, _configurationProvider, _portal);
+			_commerceOrderHttpHelper, _configurationProvider,
+			_cpConfigurationListDiscovery, _portal);
 	}
 
 	@Override
 	public CommerceContext create(
-		long companyId, long commerceChannelGroupId, long userId, long orderId,
-		long commerceAccountId) {
+		long commerceAccountId, long commerceChannelGroupId,
+		String commerceCurrencyCode, long commerceOrderId, long companyId) {
 
 		return new TestCustomCommerceContext(
-			companyId, commerceChannelGroupId, orderId, commerceAccountId,
 			_accountEntryLocalService, _accountGroupLocalService,
-			_commerceChannelAccountEntryRelLocalService,
-			_commerceChannelLocalService, _commerceCurrencyLocalService,
-			_commerceOrderService, _configurationProvider);
+			commerceAccountId, _commerceCatalogLocalService,
+			_commerceChannelAccountEntryRelLocalService, commerceChannelGroupId,
+			_commerceChannelLocalService, commerceCurrencyCode,
+			_commerceCurrencyLocalService, commerceOrderId,
+			_commerceOrderService, companyId, _configurationProvider,
+			_cpConfigurationListDiscovery);
 	}
 
 	@Reference
@@ -63,6 +69,9 @@ public class TestCustomCommerceContextFactory
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
+
+	@Reference
+	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	@Reference
 	private CommerceChannelAccountEntryRelLocalService
@@ -82,6 +91,9 @@ public class TestCustomCommerceContextFactory
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private CPConfigurationListDiscovery _cpConfigurationListDiscovery;
 
 	@Reference
 	private Portal _portal;

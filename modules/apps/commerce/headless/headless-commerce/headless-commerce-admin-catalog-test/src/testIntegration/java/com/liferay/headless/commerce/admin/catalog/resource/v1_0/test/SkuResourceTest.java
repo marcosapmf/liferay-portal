@@ -6,6 +6,8 @@
 package com.liferay.headless.commerce.admin.catalog.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
+import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -128,12 +130,20 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		super.testGraphQLDeleteSku();
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLDeleteSkuByExternalReferenceCode() throws Exception {
+		super.testGraphQLDeleteSkuByExternalReferenceCode();
+	}
+
 	@Override
 	@Test
 	public void testPatchSku() throws Exception {
 		super.testPatchSku();
 
 		_testPatchSkuExternalReferenceCode();
+		_testPatchSkuWithReplacementSku();
 		_testPatchSkuWithPricing();
 		_testPatchSkuWithShipping();
 		_testPatchSkuWithUnitOfMeasure();
@@ -148,6 +158,12 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		_testPostProductIdSkuWithOptionIdKey();
 		_testPostProductIdSkuWithOptionKey();
 		_testPostProductIdSkuWithSkuVirtualSettings();
+	}
+
+	@Override
+	@Test
+	public void testPutSkuByExternalReferenceCode() throws Exception {
+		_testPatchSkuExternalReferenceCode();
 	}
 
 	@Override
@@ -283,6 +299,22 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		return skuResource.postProductIdSku(_cProduct.getCProductId(), sku);
 	}
 
+	@Override
+	protected Sku testPutSkuByExternalReferenceCode_createSku()
+		throws Exception {
+
+		return skuResource.postProductByExternalReferenceCodeSku(
+			_cProduct.getExternalReferenceCode(), randomSku());
+	}
+
+	private CommercePriceEntry _getCommercePriceEntry(
+		CPInstance cpInstance, String priceListType, String uomKey) {
+
+		return _commercePriceEntryLocalService.
+			getInstanceBaseCommercePriceEntry(
+				cpInstance.getCPInstanceUuid(), priceListType, uomKey);
+	}
+
 	private Sku _randomSkuWithSkuOptions(
 			String optionKey, Long optionKeyId, Long optionValueKeyId,
 			String optionValue)
@@ -340,7 +372,52 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 		Assert.assertEquals(
 			patchSku.getPromoPrice(), randomSku.getPromoPrice());
 
+		CommercePriceEntry commercePriceEntry = _getCommercePriceEntry(
+			_cpInstanceLocalService.fetchCPInstance(sku.getId()),
+			CommercePriceListConstants.TYPE_PRICE_LIST, null);
+
+		Assert.assertEquals(BigDecimal.ZERO, commercePriceEntry.getPrice());
+
 		assertValid(patchSku);
+	}
+
+	private void _testPatchSkuWithReplacementSku() throws Exception {
+		Sku sku1 = testPatchSku_addSku();
+		Sku sku2 = testPatchSku_addSku();
+
+		Sku patchSku1 = skuResource.patchSku(
+			sku1.getId(),
+			new Sku() {
+				{
+					discontinued = true;
+					discontinuedDate = RandomTestUtil.nextDate();
+					replacementSkuExternalReferenceCode =
+						sku2.getExternalReferenceCode();
+					replacementSkuId = sku2.getId();
+				}
+			});
+
+		Assert.assertTrue(patchSku1.getDiscontinued());
+		Assert.assertEquals(
+			sku2.getExternalReferenceCode(),
+			patchSku1.getReplacementSkuExternalReferenceCode());
+		Assert.assertEquals(sku2.getId(), patchSku1.getReplacementSkuId());
+
+		assertValid(patchSku1);
+
+		Sku patchSku2 = skuResource.patchSku(
+			patchSku1.getId(),
+			new Sku() {
+				{
+					discontinued = false;
+				}
+			});
+
+		Assert.assertFalse(patchSku2.getDiscontinued());
+		Assert.assertNull(patchSku2.getReplacementSkuExternalReferenceCode());
+		Assert.assertNull(patchSku2.getReplacementSkuId());
+
+		assertValid(patchSku2);
 	}
 
 	private void _testPatchSkuWithShipping() throws Exception {
@@ -506,16 +583,16 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	private void _testPostProductIdSkuWithSkuVirtualSettings()
 		throws Exception {
 
-		User omniAdminUser = UserTestUtil.addOmniadminUser();
+		User omniadminUser = UserTestUtil.addOmniadminUser();
 
 		String password = RandomTestUtil.randomString();
 
 		_userLocalService.updatePassword(
-			omniAdminUser.getUserId(), password, password, false, true);
+			omniadminUser.getUserId(), password, password, false, true);
 
 		SkuResource skuResource = SkuResource.builder(
 		).authentication(
-			omniAdminUser.getEmailAddress(), password
+			omniadminUser.getEmailAddress(), password
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(

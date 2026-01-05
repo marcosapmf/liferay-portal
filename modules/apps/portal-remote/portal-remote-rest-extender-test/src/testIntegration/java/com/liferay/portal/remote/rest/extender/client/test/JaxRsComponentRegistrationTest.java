@@ -12,6 +12,8 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import jakarta.ws.rs.core.Application;
+
 import java.net.URL;
 
 import java.util.Dictionary;
@@ -21,8 +23,6 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import javax.ws.rs.core.Application;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.endpoint.Server;
@@ -108,9 +108,10 @@ public class JaxRsComponentRegistrationTest {
 				ServiceTrackerFactory.open(
 					_bundleContext,
 					StringBundler.concat(
-						"(&(objectClass=", Bus.class.getName(), ")(",
+						"(&(",
 						HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH,
-						"=/rest-test))"));
+						"=/rest-test)(objectClass=", Bus.class.getName(),
+						"))"));
 
 			Bus bus = serviceTracker.waitForService(10000L);
 

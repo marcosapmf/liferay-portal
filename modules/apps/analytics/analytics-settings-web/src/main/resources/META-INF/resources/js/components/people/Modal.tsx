@@ -45,7 +45,9 @@ interface IModalProps {
 	title: string;
 }
 
-const Modal: React.FC<IModalProps> = ({
+const Modal: React.FC<
+	{children?: React.ReactNode | undefined} & IModalProps
+> = ({
 	columns,
 	emptyState,
 	name,
@@ -61,7 +63,11 @@ const Modal: React.FC<IModalProps> = ({
 
 	return (
 		<ClayModal center observer={observer} size="lg">
-			<ClayModal.Header>{title}</ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
+				{title}
+			</ClayModal.Header>
 
 			<ClayModal.Body>
 				<Table<TRawItem>

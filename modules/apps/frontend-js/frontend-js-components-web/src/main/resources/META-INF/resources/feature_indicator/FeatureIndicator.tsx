@@ -54,7 +54,7 @@ export default function FeatureIndicator({
 	let learnMessageResourceKey = 'beta-features';
 	let popoverText = Liferay.Language.get('this-feature-is-in-testing');
 	let popoverTitle = Liferay.Language.get('beta-feature');
-	let symbol = 'info-panel-open';
+	let symbol = 'info-circle-open';
 	let tooltipTitle = Liferay.Language.get('open-beta-definition');
 
 	if (type === 'deprecated') {
@@ -75,7 +75,7 @@ export default function FeatureIndicator({
 						closeOnClickOutside
 						data-tooltip-align={tooltipAlign}
 						disableScroll
-						header={Liferay.Language.get(popoverTitle)}
+						header={popoverTitle}
 						id={ariaControlsId}
 						onShowChange={setShow}
 						role="dialog"
@@ -92,10 +92,12 @@ export default function FeatureIndicator({
 								title={tooltipTitle}
 								translucent
 							>
-								<span className="inline-item">{label}</span>
+								<span className="inline-item text-uppercase">
+									{label}
+								</span>
 
 								{symbol && (
-									<span className="inline-item inline-item-after">
+									<span className="inline-item inline-item-after ml-2">
 										<ClayIcon symbol={symbol} />
 									</span>
 								)}

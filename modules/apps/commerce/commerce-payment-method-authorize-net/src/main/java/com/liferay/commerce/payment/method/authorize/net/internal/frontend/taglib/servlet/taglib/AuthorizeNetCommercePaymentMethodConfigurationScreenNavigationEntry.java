@@ -21,13 +21,13 @@ import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ParameterMapSettingsLocator;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -80,13 +80,8 @@ public class AuthorizeNetCommercePaymentMethodConfigurationScreenNavigationEntry
 			return false;
 		}
 
-		if (AuthorizeNetCommercePaymentMethod.KEY.equals(
-				commercePaymentMethodGroupRel.getPaymentIntegrationKey())) {
-
-			return true;
-		}
-
-		return false;
+		return AuthorizeNetCommercePaymentMethod.KEY.equals(
+			commercePaymentMethodGroupRel.getPaymentIntegrationKey());
 	}
 
 	@Override

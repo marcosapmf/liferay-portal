@@ -52,12 +52,13 @@ public class AccountGroupLocalServiceUtil {
 	}
 
 	public static AccountGroup addAccountGroup(
-			long userId, String description, String name,
+			String externalReferenceCode, long userId, String description,
+			String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addAccountGroup(
-			userId, description, name, serviceContext);
+			externalReferenceCode, userId, description, name, serviceContext);
 	}
 
 	public static AccountGroup checkGuestAccountGroup(long companyId)
@@ -373,6 +374,15 @@ public class AccountGroupLocalServiceUtil {
 		return getService().getIndexableActionableDynamicQuery();
 	}
 
+	public static AccountGroup getOrAddEmptyAccountGroup(
+			String externalReferenceCode, long companyId, long userId,
+			String name)
+		throws PortalException {
+
+		return getService().getOrAddEmptyAccountGroup(
+			externalReferenceCode, companyId, userId, name);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -429,12 +439,14 @@ public class AccountGroupLocalServiceUtil {
 	}
 
 	public static AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name,
+			String externalReferenceCode, long accountGroupId,
+			String description, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateAccountGroup(
-			accountGroupId, description, name, serviceContext);
+			externalReferenceCode, accountGroupId, description, name,
+			serviceContext);
 	}
 
 	public static AccountGroup updateExternalReferenceCode(

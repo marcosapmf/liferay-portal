@@ -9,9 +9,9 @@ import com.liferay.headless.commerce.admin.payment.dto.v1_0.Payment;
 import com.liferay.headless.commerce.admin.payment.resource.v1_0.PaymentResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -19,15 +19,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -44,6 +44,37 @@ public class Query {
 
 		_paymentResourceComponentServiceObjects =
 			paymentResourceComponentServiceObjects;
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {payment(id: ___){actions, amount, amountFormatted, author, callbackURL, cancelURL, channelId, comment, createDate, currencyCode, currencyExternalReferenceCode, currencyId, errorMessages, externalReferenceCode, id, languageId, payload, paymentIntegrationKey, paymentIntegrationType, paymentStatus, paymentStatusStatus, reasonKey, reasonName, redirectURL, relatedItemId, relatedItemName, relatedItemNameLabel, transactionCode, type, typeLabel}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Payment payment(@GraphQLName("id") Long id) throws Exception {
+		return _applyComponentServiceObjects(
+			_paymentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			paymentResource -> paymentResource.getPayment(id));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {paymentByExternalReferenceCode(externalReferenceCode: ___){actions, amount, amountFormatted, author, callbackURL, cancelURL, channelId, comment, createDate, currencyCode, currencyExternalReferenceCode, currencyId, errorMessages, externalReferenceCode, id, languageId, payload, paymentIntegrationKey, paymentIntegrationType, paymentStatus, paymentStatusStatus, reasonKey, reasonName, redirectURL, relatedItemId, relatedItemName, relatedItemNameLabel, transactionCode, type, typeLabel}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Payment paymentByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_paymentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			paymentResource ->
+				paymentResource.getPaymentByExternalReferenceCode(
+					externalReferenceCode));
 	}
 
 	/**
@@ -69,37 +100,6 @@ public class Query {
 					_filterBiFunction.apply(paymentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(paymentResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {paymentByExternalReferenceCode(externalReferenceCode: ___){actions, amount, amountFormatted, callbackURL, cancelURL, channelId, comment, createDate, currencyCode, errorMessages, externalReferenceCode, id, languageId, payload, paymentIntegrationKey, paymentIntegrationType, paymentStatus, paymentStatusStatus, reasonKey, reasonName, redirectURL, relatedItemId, relatedItemName, relatedItemNameLabel, transactionCode, type, typeLabel}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Payment paymentByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_paymentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			paymentResource ->
-				paymentResource.getPaymentByExternalReferenceCode(
-					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {payment(id: ___){actions, amount, amountFormatted, callbackURL, cancelURL, channelId, comment, createDate, currencyCode, errorMessages, externalReferenceCode, id, languageId, payload, paymentIntegrationKey, paymentIntegrationType, paymentStatus, paymentStatusStatus, reasonKey, reasonName, redirectURL, relatedItemId, relatedItemName, relatedItemNameLabel, transactionCode, type, typeLabel}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Payment payment(@GraphQLName("id") Long id) throws Exception {
-		return _applyComponentServiceObjects(
-			_paymentResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			paymentResource -> paymentResource.getPayment(id));
 	}
 
 	@GraphQLName("PaymentPage")
@@ -164,6 +164,10 @@ public class Query {
 		paymentResource.setContextUriInfo(_uriInfo);
 		paymentResource.setContextUser(_user);
 		paymentResource.setGroupLocalService(_groupLocalService);
+		paymentResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		paymentResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		paymentResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -172,12 +176,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

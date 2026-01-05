@@ -16,11 +16,11 @@ import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 
+import jakarta.portlet.PortletPreferences;
+
+import jakarta.servlet.ServletContext;
+
 import java.util.Locale;
-
-import javax.portlet.PortletPreferences;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -84,11 +84,7 @@ public class ADTFormNavigatorEntry extends BaseJSPFormNavigatorEntry<Void> {
 		String renderSelection = GetterUtil.getString(
 			portletPreferences.getValue("renderSelection", null), "custom");
 
-		if (renderSelection.equals("adt")) {
-			return true;
-		}
-
-		return false;
+		return renderSelection.equals("adt");
 	}
 
 	@Reference

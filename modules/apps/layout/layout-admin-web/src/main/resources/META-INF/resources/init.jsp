@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -42,11 +42,7 @@ page import="com.liferay.layout.admin.web.internal.display.context.LayoutsAdminM
 page import="com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.OrphanPortletsDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.OrphanPortletsManagementToolbarDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.SelectCollectionManagementToolbarDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.SelectLayoutCollectionDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.SelectLayoutPageTemplateEntryDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib.CollectionProvidersVerticalCard" %><%@
-page import="com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib.CollectionsVerticalCard" %><%@
 page import="com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib.LayoutUtilityPageEntryVerticalCard" %><%@
 page import="com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib.SelectBasicTemplatesNavigationCard" %><%@
 page import="com.liferay.layout.admin.web.internal.frontend.taglib.clay.servlet.taglib.SelectBasicTemplatesVerticalCard" %><%@
@@ -65,7 +61,9 @@ page import="com.liferay.portal.kernel.exception.GroupInheritContentException" %
 page import="com.liferay.portal.kernel.exception.ImageTypeException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutFriendlyURLException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutFriendlyURLsException" %><%@
+page import="com.liferay.portal.kernel.exception.LayoutJavaScriptException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutNameException" %><%@
+page import="com.liferay.portal.kernel.exception.LayoutSetJavaScriptException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutTypeException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchGroupException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchLayoutException" %><%@
@@ -127,6 +125,7 @@ page import="com.liferay.portal.kernel.util.MapUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropertiesParamUtil" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.ResourceBundleUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
@@ -134,19 +133,18 @@ page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.webserver.WebServerServletTokenUtil" %><%@
 page import="com.liferay.portal.util.LayoutTypeControllerTracker" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.segments.exception.RequiredSegmentsExperienceException" %><%@
 page import="com.liferay.site.navigation.model.SiteNavigationMenu" %>
+
+<%@ page import="jakarta.portlet.PortletRequest" %><%@
+page import="jakarta.portlet.PortletURL" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Locale" %><%@
 page import="java.util.Map" %><%@
+page import="java.util.NavigableMap" %><%@
 page import="java.util.Objects" %><%@
-page import="java.util.ResourceBundle" %><%@
-page import="java.util.TreeMap" %>
-
-<%@ page import="javax.portlet.PortletRequest" %><%@
-page import="javax.portlet.PortletURL" %>
+page import="java.util.ResourceBundle" %>
 
 <liferay-frontend:defineObjects />
 

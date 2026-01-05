@@ -107,10 +107,10 @@ public class JavaDuplicateVariableCheck extends BaseJavaTermCheck {
 						addMessage(
 							fileName,
 							StringBundler.concat(
-								javaVariable.getAccessModifier(), " variable '",
-								variableName,
-								"' already exists in extended class '",
-								variableClassName, "'"),
+								javaVariable.getAccessModifier(),
+								" variable \"", variableName,
+								"\" already exists in extended class \"",
+								variableClassName, "\""),
 							javaVariable.getLineNumber());
 					}
 				}

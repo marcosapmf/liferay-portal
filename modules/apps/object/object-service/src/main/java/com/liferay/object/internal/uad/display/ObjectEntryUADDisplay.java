@@ -27,13 +27,13 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.user.associated.data.display.BaseModelUADDisplay;
 
+import jakarta.portlet.PortletRequest;
+
 import java.io.Serializable;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
 
 /**
  * @author Carolina Barbosa
@@ -105,11 +105,7 @@ public class ObjectEntryUADDisplay extends BaseModelUADDisplay<ObjectEntry> {
 			_objectScopeProviderRegistry.getObjectScopeProvider(
 				_objectDefinition.getScope());
 
-		if (objectScopeProvider.isGroupAware()) {
-			return true;
-		}
-
-		return false;
+		return objectScopeProvider.isGroupAware();
 	}
 
 	@Override

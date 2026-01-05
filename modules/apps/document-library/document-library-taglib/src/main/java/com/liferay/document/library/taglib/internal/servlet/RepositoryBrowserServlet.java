@@ -32,16 +32,17 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.File;
 import java.io.IOException;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -128,6 +129,27 @@ public class RepositoryBrowserServlet extends HttpServlet {
 				httpServletRequest, "fileEntryId");
 
 			if (fileEntryId != 0) {
+				boolean includeExtension = ParamUtil.getBoolean(
+					httpServletRequest, "includeExtension");
+
+				if (includeExtension) {
+					FileEntry fileEntry = _dlAppService.getFileEntry(
+						fileEntryId);
+
+					if (fileEntry != null) {
+						String fileExtension = fileEntry.getExtension();
+						String lowerCaseName = StringUtil.toLowerCase(name);
+
+						if (Validator.isNotNull(fileExtension) &&
+							!StringUtil.endsWith(
+								lowerCaseName,
+								"." + StringUtil.toLowerCase(fileExtension))) {
+
+							name = name + "." + fileExtension;
+						}
+					}
+				}
+
 				_dlAppService.updateFileEntry(
 					fileEntryId, null, null, name, null, null, null,
 					DLVersionNumberIncrease.NONE, (byte[])null, null, null,
@@ -195,7 +217,14 @@ public class RepositoryBrowserServlet extends HttpServlet {
 				String sourceFileName = uploadServletRequest.getFileName(
 					"file");
 
-				String title = FileUtil.stripExtension(sourceFileName);
+				String title = sourceFileName;
+
+				boolean includeExtension = ParamUtil.getBoolean(
+					httpServletRequest, "includeExtension");
+
+				if (!includeExtension) {
+					title = FileUtil.stripExtension(sourceFileName);
+				}
 
 				ServiceContext serviceContext =
 					ServiceContextFactory.getInstance(

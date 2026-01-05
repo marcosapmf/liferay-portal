@@ -5,33 +5,95 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {ApiHelpers} from '../../helpers/ApiHelpers';
+
 export class FormBuilderSidePanelPage {
+	readonly addMultipleSelectionButton: Locator;
+	readonly addSelectFromListButton: Locator;
 	readonly addSelectOptionButton: Locator;
+	readonly addSingleSelectionButton: Locator;
+	readonly addTextButton: Locator;
 	readonly advancedTab: Locator;
+	readonly allowGuestUsersToggle: Locator;
 	readonly backButton: Locator;
+	readonly collapsibleToggleSwitch: Locator;
+	readonly helpText: Locator;
 	readonly htmlAutocompleteAttributeField: Locator;
+	readonly inputMaskToggle: Locator;
+	readonly label: Locator;
+	readonly numericTypeDecimal: Locator;
 	readonly objectFieldSelect: Locator;
 	readonly page: Page;
+	readonly paragraphFieldTextarea: Locator;
+	readonly paragraphFieldTitle: Locator;
+	readonly predefinedValueField: Locator;
+	readonly repeatableFieldToggleSwitch: Locator;
+	readonly requireConfirmationToggleSwitch: Locator;
+	readonly requiredFieldToggleSwitch: Locator;
 
 	constructor(page: Page) {
-		this.advancedTab = page.getByRole('tab', {
-			name: 'Advanced',
+		this.addMultipleSelectionButton = page.getByRole('button', {
+			name: 'Press enter to add Multiple Selection field.',
+		});
+		this.addSelectFromListButton = page.getByRole('button', {
+			name: 'Press enter to add Select',
 		});
 		this.addSelectOptionButton = page.getByRole('button', {
 			name: 'Add Option',
 		});
+		this.addSingleSelectionButton = page.getByRole('button', {
+			name: 'Press enter to add Single',
+		});
+		this.addTextButton = page.getByRole('button', {
+			name: 'Press enter to add Text field',
+		});
+		this.advancedTab = page.getByRole('tab', {
+			name: 'Advanced',
+		});
+		this.allowGuestUsersToggle = page.getByLabel(
+			'Allow Guest Users to Send Files'
+		);
 		this.backButton = page.getByRole('button', {name: 'Back'});
+		this.collapsibleToggleSwitch = page.getByRole('switch', {
+			name: 'Collapsible',
+		});
+		this.helpText = page.getByLabel('Help Text');
 		this.htmlAutocompleteAttributeField = page.getByLabel(
 			'HTML Autocomplete Attribute'
 		);
+		this.inputMaskToggle = page.getByLabel('Input Mask');
+		this.label = page.getByLabel('Label', {exact: true}).first();
+		this.numericTypeDecimal = page.getByLabel('Decimal', {exact: true});
 		this.objectFieldSelect = page.getByLabel('Object Field');
 		this.page = page;
+		this.paragraphFieldTextarea = page
+			.frameLocator('iframe')
+			.locator('.cke_editable');
+		this.paragraphFieldTitle = page.getByPlaceholder('Enter a title.');
+		this.predefinedValueField = page.getByLabel('Predefined Value');
+		this.repeatableFieldToggleSwitch = page.getByRole('switch', {
+			name: 'Repeatable',
+		});
+		this.requiredFieldToggleSwitch = page.getByText('Required Field');
+		this.requireConfirmationToggleSwitch = page.getByLabel(
+			'Require Confirmation'
+		);
 	}
 
 	async addFieldByDoubleClick(formFieldTypeTitle: FormFieldTypeTitle) {
 		await this.page
 			.getByTitle(formFieldTypeTitle, {exact: true})
 			.dblclick();
+	}
+
+	async addFieldToFieldGroup(
+		sourceField: FormFieldTypeTitle,
+		position: number
+	) {
+		await this.page
+			.getByRole('tabpanel')
+			.getByTitle(sourceField, {exact: true})
+			.dragTo(this.page.locator('.ddm-drag').nth(position));
 	}
 
 	async clickAdvancedTab() {
@@ -42,11 +104,50 @@ export class FormBuilderSidePanelPage {
 		await this.backButton.click();
 	}
 
+	async dragAndDropField(sourceFieldName: string, target: string | number) {
+		const sourceLocator = this.page
+			.locator(
+				`.ddm-field-container[data-field-name="${sourceFieldName}"]`
+			)
+			.locator('.ddm-drag');
+
+		let targetLocator;
+
+		if (typeof target === 'string') {
+			targetLocator = this.page.locator(
+				`.ddm-field-container[data-field-name="${target}"].ddm-target`
+			);
+		}
+		else {
+			targetLocator = this.page.locator('.col-ddm.col-md-12').nth(target);
+		}
+
+		// We need this pause to render forms group (if applicable)
+
+		await sourceLocator.dragTo(targetLocator);
+
+		await this.page.waitForTimeout(1000);
+	}
+
+	async fillParagraphField(apiHelpers: ApiHelpers, text: string) {
+		await this.paragraphFieldTextarea.fill(text);
+
+		// filling is not enough, we need need a key event to make it work
+
+		await this.paragraphFieldTextarea.press('End');
+
+		await apiHelpers.dynamicDataMapping.waitForDDMEvaluate(this.page);
+	}
+
 	async selectObjectField(objectFieldLabel: string) {
 		await this.objectFieldSelect.click();
 
 		const option = this.getSelectOptionLocator(objectFieldLabel);
 		await option.click();
+	}
+
+	async getFieldReference() {
+		return this.page.getByLabel('Field Reference').inputValue();
 	}
 
 	getSelectOptionLocator(optionLabel: string) {

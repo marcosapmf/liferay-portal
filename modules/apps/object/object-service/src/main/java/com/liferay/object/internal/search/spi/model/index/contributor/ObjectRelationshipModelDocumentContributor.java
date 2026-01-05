@@ -27,10 +27,14 @@ public class ObjectRelationshipModelDocumentContributor
 		Document document, ObjectRelationship objectRelationship) {
 
 		document.addText(Field.NAME, objectRelationship.getName());
+		document.addKeyword("edge", objectRelationship.isEdge());
 		document.addLocalizedKeyword(
 			"localized_label", objectRelationship.getLabelMap(), true, true);
 		document.addKeyword(
 			"objectDefinitionId", objectRelationship.getObjectDefinitionId1());
+		document.addKeyword(
+			"objectRelationshipId",
+			objectRelationship.getObjectRelationshipId());
 		document.addKeyword("system", objectRelationship.isSystem());
 
 		document.remove(Field.USER_NAME);

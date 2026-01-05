@@ -5,7 +5,7 @@
 
 package com.liferay.commerce.internal.servlet.filter;
 
-import com.liferay.commerce.context.CommerceGroupThreadLocal;
+import com.liferay.commerce.util.CommerceGroupThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -13,11 +13,11 @@ import com.liferay.portal.kernel.servlet.BaseFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,6 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 		"url-pattern=/o/headless-commerce-admin-site-setting/*",
 		"url-pattern=/o/headless-commerce-delivery-cart/*",
 		"url-pattern=/o/headless-commerce-delivery-catalog/*",
+		"url-pattern=/o/headless-commerce-delivery-order/*",
 		"url-pattern=/o/headless-commerce-machine-learning/*",
 		"url-pattern=/o/headless-commerce-punchout/*"
 	},

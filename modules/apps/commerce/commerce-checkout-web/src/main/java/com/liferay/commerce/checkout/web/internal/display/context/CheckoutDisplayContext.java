@@ -23,11 +23,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.taglib.servlet.PipingServletResponseFactory;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.PageContext;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.PageContext;
+import java.util.List;
 
 /**
  * @author Marco Leo
@@ -114,6 +114,10 @@ public class CheckoutDisplayContext {
 			(CommerceContext)_httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		if (commerceContext == null) {
+			return false;
+		}
+
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 
 		if (commerceChannelId > 0) {
@@ -131,11 +135,7 @@ public class CheckoutDisplayContext {
 		List<CommerceOrderItem> commerceOrderItems =
 			_commerceOrder.getCommerceOrderItems();
 
-		if (commerceOrderItems.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return commerceOrderItems.isEmpty();
 	}
 
 	public boolean isOrderSummaryShowFullAddressEnabled()

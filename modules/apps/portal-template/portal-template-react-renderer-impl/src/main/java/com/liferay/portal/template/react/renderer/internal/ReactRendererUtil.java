@@ -20,14 +20,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Chema Balsas
@@ -162,35 +162,35 @@ public class ReactRendererUtil {
 
 		JSONSerializer jsonSerializer = jsonFactory.createJSONSerializer();
 
-		StringBundler javascriptSB = new StringBundler(13);
+		StringBundler javaScriptSB = new StringBundler(13);
 
-		javascriptSB.append("index");
-		javascriptSB.append(placeholderId);
-		javascriptSB.append(".render(renderFunction");
-		javascriptSB.append(placeholderId);
-		javascriptSB.append(".default, ");
+		javaScriptSB.append("index");
+		javaScriptSB.append(placeholderId);
+		javaScriptSB.append(".render(renderFunction");
+		javaScriptSB.append(placeholderId);
+		javaScriptSB.append(".default, ");
 
 		if (Validator.isNotNull(propsTransformer)) {
-			javascriptSB.append("propsTransformer");
-			javascriptSB.append(placeholderId);
-			javascriptSB.append(".default(");
-			javascriptSB.append(jsonSerializer.serializeDeep(props));
-			javascriptSB.append(")");
+			javaScriptSB.append("propsTransformer");
+			javaScriptSB.append(placeholderId);
+			javaScriptSB.append(".default(");
+			javaScriptSB.append(jsonSerializer.serializeDeep(props));
+			javaScriptSB.append(")");
 		}
 		else {
-			javascriptSB.append(jsonSerializer.serializeDeep(props));
+			javaScriptSB.append(jsonSerializer.serializeDeep(props));
 		}
 
-		javascriptSB.append(", '");
-		javascriptSB.append(placeholderId);
-		javascriptSB.append("');");
+		javaScriptSB.append(", '");
+		javaScriptSB.append(placeholderId);
+		javaScriptSB.append("');");
 
 		if (componentDescriptor.isPositionInLine()) {
 			ScriptData scriptData = new ScriptData();
 
 			scriptData.append(
 				portal.getPortletId(httpServletRequest),
-				javascriptSB.toString(), dependenciesSB.toString(),
+				javaScriptSB.toString(), dependenciesSB.toString(),
 				ScriptData.ModulesType.ES6);
 
 			scriptData.writeTo(writer);
@@ -208,7 +208,7 @@ public class ReactRendererUtil {
 
 			scriptData.append(
 				portal.getPortletId(httpServletRequest),
-				javascriptSB.toString(), dependenciesSB.toString(),
+				javaScriptSB.toString(), dependenciesSB.toString(),
 				ScriptData.ModulesType.ES6);
 		}
 	}

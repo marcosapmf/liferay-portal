@@ -5,6 +5,8 @@
 
 package com.liferay.saml.opensaml.integration.internal.resolver;
 
+import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -12,18 +14,17 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ContactLocalService;
 import com.liferay.portal.kernel.service.ContactLocalServiceUtil;
-import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.Digester;
-import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -40,6 +41,7 @@ import com.liferay.saml.opensaml.integration.internal.field.expression.handler.D
 import com.liferay.saml.opensaml.integration.internal.field.expression.handler.MembershipsUserFieldExpressionHandler;
 import com.liferay.saml.opensaml.integration.internal.processor.factory.UserProcessorFactoryImpl;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
+import com.liferay.saml.opensaml.integration.internal.util.SamlProvisioningUtil;
 import com.liferay.saml.opensaml.integration.resolver.UserResolver;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.service.SamlPeerBindingLocalService;
@@ -57,12 +59,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 import org.mockito.stubbing.Answer;
@@ -96,38 +100,32 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_mockDigesterUtil();
-		_mockLanguageUtil();
-
-		getMockPortalService(
-			OrganizationLocalServiceUtil.class, OrganizationLocalService.class);
-
 		_company = _mockCompany();
+		_expandoValueLocalService = _mockExpandoValueLocalService();
+		_mockLanguageUtil();
+		_mockSamlProvisioningUtil();
 		_prefsProps = _mockPrefsProps();
 		_samlProviderConfigurationHelper =
 			_mockSamlProviderConfigurationHelper();
 		_samlSpIdpConnection = _mockSamlSpIdConnection();
-
+		_testUserFieldExpressionResolver =
+			new TestUserFieldExpressionResolver();
 		_userGroupLocalService = _mockUserGroupLocalService();
 		_userLocalService = _mockUserLocalService();
 
-		_userFieldExpressionHandlerRegistry =
-			_mockDefaultUserFieldExpressionRegistry(
-				_createDefaultUserFieldExpressionHandler(
-					_userLocalService, _prefsProps),
-				_createMembershipsUserFieldExpressionHandler(
-					_userGroupLocalService));
+		ClassNameLocalService classNameLocalService =
+			_mockClassNameLocalService();
 
-		_testUserFieldExpressionResolver =
-			new TestUserFieldExpressionResolver();
-
-		_userFieldExpressionResolverRegistry =
-			_mockUserFieldExpressionResolverRegistry(
-				_testUserFieldExpressionResolver);
+		ReflectionTestUtil.setFieldValue(
+			_defaultUserResolver, "_classNameLocalService",
+			classNameLocalService);
 
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_companyLocalService",
 			_mockCompanyLocalService(_company));
+		ReflectionTestUtil.setFieldValue(
+			_defaultUserResolver, "_expandoValueLocalService",
+			_expandoValueLocalService);
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_samlPeerBindingLocalService",
 			_mockSamlPeerBindingLocalService());
@@ -139,15 +137,60 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 			_mockSamlSpIdConnectionLocalService(_samlSpIdpConnection));
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_userFieldExpressionHandlerRegistry",
-			_userFieldExpressionHandlerRegistry);
+			_mockDefaultUserFieldExpressionRegistry(
+				_createDefaultUserFieldExpressionHandler(
+					_userLocalService, _prefsProps),
+				_createMembershipsUserFieldExpressionHandler(
+					classNameLocalService, _expandoValueLocalService,
+					_userGroupLocalService, _userLocalService)));
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_userFieldExpressionResolverRegistry",
-			_userFieldExpressionResolverRegistry);
+			_mockUserFieldExpressionResolverRegistry(
+				_testUserFieldExpressionResolver));
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_userLocalService", _userLocalService);
 		ReflectionTestUtil.setFieldValue(
 			_defaultUserResolver, "_userProcessorFactory",
 			new UserProcessorFactoryImpl());
+	}
+
+	@After
+	public void tearDown() {
+		_samlProvisioningUtilMockedStatic.close();
+	}
+
+	@Test
+	public void testAddUserProvisioningSource() throws Exception {
+		Mockito.when(
+			_company.isStrangers()
+		).thenReturn(
+			true
+		);
+
+		Mockito.when(
+			_company.isStrangersWithMx()
+		).thenReturn(
+			true
+		);
+
+		_initMessageContext(
+			true, NameIDType.EMAIL, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS);
+		_initUnknownUserHandling(false);
+
+		_testUserFieldExpressionResolver.setUserFieldExpression("emailAddress");
+
+		User resolvedUser = _defaultUserResolver.resolveUser(
+			new UserResolverSAMLContextImpl(_messageContext),
+			new ServiceContext());
+
+		Assert.assertNotNull(resolvedUser);
+
+		Mockito.verify(
+			_expandoValueLocalService, Mockito.times(1)
+		).addValue(
+			_USER_CLASS_NAME_ID, _EXPANDO_TABLE_ID, _EXPANDO_COLUMN_ID,
+			resolvedUser.getUserId(), _SAML_IDP_ENTITY_ID
+		);
 	}
 
 	@Test
@@ -390,24 +433,53 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		_attributes.add(
 			OpenSamlUtil.buildAttribute(
 				"membership:userGroups",
-				new String[] {_USER_GROUP_NAME, "INVALID_USER_GROUP"}));
+				new String[] {
+					_USER_GROUP_NAME_EXISTING, _USER_GROUP_NAME_NEW
+				}));
 
 		_testUserFieldExpressionResolver.setUserFieldExpression("emailAddress");
 
-		User user = _defaultUserResolver.resolveUser(
-			new UserResolverSAMLContextImpl(_messageContext),
-			new ServiceContext());
+		ServiceContextThreadLocal.pushServiceContext(new ServiceContext());
+
+		User user = null;
+
+		try {
+			user = _defaultUserResolver.resolveUser(
+				new UserResolverSAMLContextImpl(_messageContext),
+				ServiceContextThreadLocal.getServiceContext());
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		Mockito.verify(
+			_userGroupLocalService, Mockito.times(1)
+		).addUserGroup(
+			Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
+			Mockito.eq(_USER_GROUP_NAME_NEW), Mockito.anyString(),
+			Mockito.eq(null)
+		);
+
+		Mockito.verify(
+			_userGroupLocalService, Mockito.times(1)
+		).fetchUserGroup(
+			Mockito.anyLong(), Mockito.eq(_USER_GROUP_NAME_EXISTING)
+		);
 
 		Assert.assertNotNull(user);
 
 		List<UserGroup> userGroups = _userGroupLocalService.getUserUserGroups(
 			user.getUserId());
 
-		Assert.assertEquals(userGroups.toString(), 1, userGroups.size());
+		Assert.assertEquals(userGroups.toString(), 2, userGroups.size());
 
 		UserGroup userGroup = userGroups.get(0);
 
-		Assert.assertEquals(_USER_GROUP_NAME, userGroup.getName());
+		Assert.assertEquals(_USER_GROUP_NAME_EXISTING, userGroup.getName());
+
+		userGroup = userGroups.get(1);
+
+		Assert.assertEquals(_USER_GROUP_NAME_NEW, userGroup.getName());
 	}
 
 	private User _createBlankUser() {
@@ -439,17 +511,29 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 
 	private MembershipsUserFieldExpressionHandler
 		_createMembershipsUserFieldExpressionHandler(
-			UserGroupLocalService userGroupLocalService) {
+			ClassNameLocalService classNameLocalService,
+			ExpandoValueLocalService expandoValueLocalService,
+			UserGroupLocalService userGroupLocalService,
+			UserLocalService userLocalService) {
 
 		MembershipsUserFieldExpressionHandler
 			membershipsUserFieldExpressionHandler =
 				new MembershipsUserFieldExpressionHandler();
 
 		ReflectionTestUtil.setFieldValue(
+			membershipsUserFieldExpressionHandler, "_classNameLocalService",
+			classNameLocalService);
+		ReflectionTestUtil.setFieldValue(
+			membershipsUserFieldExpressionHandler, "_expandoValueLocalService",
+			expandoValueLocalService);
+		ReflectionTestUtil.setFieldValue(
 			membershipsUserFieldExpressionHandler, "_processingIndex", 100);
 		ReflectionTestUtil.setFieldValue(
 			membershipsUserFieldExpressionHandler, "_userGroupLocalService",
 			userGroupLocalService);
+		ReflectionTestUtil.setFieldValue(
+			membershipsUserFieldExpressionHandler, "_userLocalService",
+			userLocalService);
 
 		return membershipsUserFieldExpressionHandler;
 	}
@@ -704,6 +788,19 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		);
 	}
 
+	private ClassNameLocalService _mockClassNameLocalService() {
+		ClassNameLocalService classNameLocalService = Mockito.mock(
+			ClassNameLocalService.class);
+
+		Mockito.when(
+			classNameLocalService.getClassNameId(User.class.getName())
+		).thenReturn(
+			_USER_CLASS_NAME_ID
+		);
+
+		return classNameLocalService;
+	}
+
 	private Company _mockCompany() {
 		Company company = Mockito.mock(Company.class);
 
@@ -764,18 +861,22 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		return userFieldExpressionHandlerRegistry;
 	}
 
-	private void _mockDigesterUtil() {
-		DigesterUtil digesterUtil = new DigesterUtil();
+	private ExpandoValueLocalService _mockExpandoValueLocalService()
+		throws Exception {
 
-		Digester digester = Mockito.mock(Digester.class);
+		ExpandoValueLocalService expandoValueLocalService = Mockito.mock(
+			ExpandoValueLocalService.class);
 
 		Mockito.when(
-			digester.digest(Mockito.nullable(String.class))
+			expandoValueLocalService.addValue(
+				Mockito.any(Long.class), Mockito.any(Long.class),
+				Mockito.any(Long.class), Mockito.any(Long.class),
+				Mockito.any(String.class))
 		).thenReturn(
-			RandomTestUtil.randomString()
+			null
 		);
 
-		digesterUtil.setDigester(digester);
+		return expandoValueLocalService;
 	}
 
 	private void _mockLanguageUtil() {
@@ -794,8 +895,8 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 
 		Mockito.when(
 			samlPeerBindingLocalService.fetchSamlPeerBinding(
-				Mockito.any(Long.class), Mockito.any(boolean.class),
-				Mockito.nullable(String.class), Mockito.nullable(String.class),
+				Mockito.any(Long.class), Mockito.nullable(String.class),
+				Mockito.any(boolean.class), Mockito.nullable(String.class),
 				Mockito.nullable(String.class), Mockito.nullable(String.class))
 		).thenReturn(
 			null
@@ -819,20 +920,53 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		return samlProviderConfigurationHelper;
 	}
 
+	private void _mockSamlProvisioningUtil() {
+		_samlProvisioningUtilMockedStatic = Mockito.mockStatic(
+			SamlProvisioningUtil.class);
+
+		ExpandoColumn expandoColumn = Mockito.mock(ExpandoColumn.class);
+
+		Mockito.when(
+			expandoColumn.getColumnId()
+		).thenReturn(
+			_EXPANDO_COLUMN_ID
+		);
+
+		Mockito.when(
+			expandoColumn.getTableId()
+		).thenReturn(
+			_EXPANDO_TABLE_ID
+		);
+
+		_samlProvisioningUtilMockedStatic.when(
+			() -> SamlProvisioningUtil.getOrAddExpandoColumn(
+				Mockito.any(Long.class), Mockito.any(String.class),
+				Mockito.any(String.class))
+		).thenReturn(
+			expandoColumn
+		);
+	}
+
 	private SamlSpIdpConnection _mockSamlSpIdConnection() throws Exception {
 		SamlSpIdpConnection samlSpIdpConnection = Mockito.mock(
 			SamlSpIdpConnection.class);
 
 		Mockito.when(
-			samlSpIdpConnection.getNormalizedUserAttributeMappings()
+			samlSpIdpConnection.getSamlIdpEntityId()
 		).thenReturn(
-			PropertiesUtil.load(_ATTRIBUTE_MAPPINGS)
+			_SAML_IDP_ENTITY_ID
 		);
 
 		Mockito.when(
 			samlSpIdpConnection.isUnknownUsersAreStrangers()
 		).thenReturn(
 			true
+		);
+
+		Mockito.when(
+			samlSpIdpConnection.getNormalizedUserAttributeMappings()
+		).thenReturn(
+			PropertiesUtil.load(_ATTRIBUTE_MAPPINGS)
 		);
 
 		return samlSpIdpConnection;
@@ -876,19 +1010,33 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 	private UserGroupLocalService _mockUserGroupLocalService()
 		throws Exception {
 
-		UserGroupLocalService userGroupLocalService = Mockito.mock(
-			UserGroupLocalService.class);
+		UserGroupLocalService userGroupLocalService = getMockPortalService(
+			UserGroupLocalServiceUtil.class, UserGroupLocalService.class);
 
-		UserGroup userGroup = new UserGroupImpl();
+		UserGroup existingUserGroup = new UserGroupImpl();
 
-		userGroup.setUserGroupId(1);
-		userGroup.setName(_USER_GROUP_NAME);
+		existingUserGroup.setUserGroupId(1);
+		existingUserGroup.setName(_USER_GROUP_NAME_EXISTING);
 
 		Mockito.when(
 			userGroupLocalService.fetchUserGroup(
-				Mockito.anyLong(), Mockito.eq(userGroup.getName()))
+				Mockito.anyLong(), Mockito.eq(existingUserGroup.getName()))
 		).thenReturn(
-			userGroup
+			existingUserGroup
+		);
+
+		UserGroup newUserGroup = new UserGroupImpl();
+
+		newUserGroup.setUserGroupId(2);
+		newUserGroup.setName(_USER_GROUP_NAME_NEW);
+
+		Mockito.when(
+			userGroupLocalService.addUserGroup(
+				Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
+				Mockito.eq(newUserGroup.getName()), Mockito.anyString(),
+				Mockito.eq(null))
+		).thenReturn(
+			newUserGroup
 		);
 
 		List<UserGroup> userGroups = new ArrayList<>();
@@ -906,8 +1054,11 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 				for (long userGroupId :
 						(long[])invocationOnMock.getArgument(1)) {
 
-					if (userGroupId == userGroup.getUserGroupId()) {
-						userGroups.add(userGroup);
+					if (userGroupId == existingUserGroup.getUserGroupId()) {
+						userGroups.add(existingUserGroup);
+					}
+					else if (userGroupId == newUserGroup.getUserGroupId()) {
+						userGroups.add(newUserGroup);
 					}
 				}
 
@@ -939,6 +1090,13 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		"emailAddress=emailAddress\nfirstName=firstName\nlastName=lastName\n" +
 			"screenName=screenName";
 
+	private static final long _EXPANDO_COLUMN_ID = RandomTestUtil.randomLong();
+
+	private static final long _EXPANDO_TABLE_ID = RandomTestUtil.randomLong();
+
+	private static final String _SAML_IDP_ENTITY_ID =
+		RandomTestUtil.randomString();
+
 	private static final String _SAML_NAME_IDENTIFIER_VALUE = "testNameIdValue";
 
 	private static final String _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS =
@@ -946,22 +1104,26 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 
 	private static final String _SUBJECT_NAME_IDENTIFIER_SCREEN_NAME = "test";
 
-	private static final String _USER_GROUP_NAME =
+	private static final long _USER_CLASS_NAME_ID = RandomTestUtil.randomLong();
+
+	private static final String _USER_GROUP_NAME_EXISTING =
+		RandomTestUtil.randomString();
+
+	private static final String _USER_GROUP_NAME_NEW =
 		RandomTestUtil.randomString();
 
 	private List<Attribute> _attributes;
 	private Company _company;
 	private final DefaultUserResolver _defaultUserResolver =
 		new DefaultUserResolver();
+	private ExpandoValueLocalService _expandoValueLocalService;
 	private MessageContext<Response> _messageContext;
 	private PrefsProps _prefsProps;
 	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;
+	private MockedStatic<SamlProvisioningUtil>
+		_samlProvisioningUtilMockedStatic;
 	private SamlSpIdpConnection _samlSpIdpConnection;
 	private TestUserFieldExpressionResolver _testUserFieldExpressionResolver;
-	private UserFieldExpressionHandlerRegistry
-		_userFieldExpressionHandlerRegistry;
-	private UserFieldExpressionResolverRegistry
-		_userFieldExpressionResolverRegistry;
 	private UserGroupLocalService _userGroupLocalService;
 	private UserLocalService _userLocalService;
 

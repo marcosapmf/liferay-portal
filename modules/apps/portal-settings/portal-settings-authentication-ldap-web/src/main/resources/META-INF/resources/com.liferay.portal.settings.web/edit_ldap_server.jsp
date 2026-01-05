@@ -14,7 +14,7 @@ String backURL = ParamUtil.getString(request, "backURL", redirect);
 
 long ldapServerId = ParamUtil.getLong(request, "ldapServerId");
 
-LDAPServerConfiguration ldapServerConfiguration = ldapServerConfigurationProvider.getConfiguration(themeDisplay.getCompanyId(), ldapServerId);
+LDAPServerConfiguration ldapServerConfiguration = ldapServerConfigurationProvider.getConfiguration(ActionUtil.getCompanyId(request), ldapServerId);
 
 String ldapServerName = ldapServerConfiguration.serverName();
 String ldapBaseProviderUrl = ldapServerConfiguration.baseProviderURL();
@@ -190,7 +190,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			<aui:fieldset>
 				<h3><liferay-ui:message key="users" /></h3>
 
-				<aui:input cssClass="lfr-input-text-container" helpMessage="enter-the-search-filter-that-is-used-to-test-the-validity-of-a-user" label="authentication-search-filter" name='<%= "ldap--" + LDAPConstants.AUTH_SEARCH_FILTER + "--" %>' type="text" value="<%= ldapAuthSearchFilter %>" />
+				<aui:input cssClass="lfr-input-text-container" helpMessage="authentication-search-filter-help" label="authentication-search-filter" name='<%= "ldap--" + LDAPConstants.AUTH_SEARCH_FILTER + "--" %>' type="text" value="<%= ldapAuthSearchFilter %>" />
 
 				<aui:input cssClass="lfr-input-text-container" label="import-search-filter" name='<%= "ldap--" + LDAPConstants.USER_SEARCH_FILTER + "--" %>' type="text" value="<%= ldapUserSearchFilter %>" />
 

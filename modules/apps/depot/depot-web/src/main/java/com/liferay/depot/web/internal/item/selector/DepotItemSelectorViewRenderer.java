@@ -5,6 +5,7 @@
 
 package com.liferay.depot.web.internal.item.selector;
 
+import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.depot.web.internal.application.controller.DepotApplicationController;
 import com.liferay.depot.web.internal.constants.DepotAdminWebKeys;
 import com.liferay.depot.web.internal.display.context.DepotApplicationDisplayContext;
@@ -17,6 +18,7 @@ import com.liferay.item.selector.ItemSelectorViewRenderer;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -27,16 +29,16 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.PortalIncludeUtil;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.jsp.PageContext;
+
 import java.io.IOException;
 
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Alicia García
@@ -152,6 +154,9 @@ public class DepotItemSelectorViewRenderer implements ItemSelectorViewRenderer {
 				 className.equals(JournalFolder.class.getName())) {
 
 			return JournalPortletKeys.JOURNAL;
+		}
+		else if (className.startsWith(ObjectDefinition.class.getName())) {
+			return AssetListPortletKeys.ASSET_LIST;
 		}
 
 		return StringPool.BLANK;

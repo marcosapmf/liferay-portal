@@ -1,67 +1,93 @@
 const currentLength = document.getElementById(
-	`${fragmentNamespace}-current-length`
+	`${fragmentElementId}-current-length`
 );
-const formGroup = document.getElementById(`${fragmentNamespace}-form-group`);
-const lengthInfo = document.getElementById(`${fragmentNamespace}-length-info`);
+const errorMessage = document.getElementById(
+	`${fragmentElementId}-text-input-error-message`
+);
+const formGroup = document.getElementById(`${fragmentElementId}-form-group`);
+const inputElement = document.getElementById(`${fragmentElementId}-text-input`);
+const lengthInfo = document.getElementById(`${fragmentElementId}-length-info`);
 const lengthWarning = document.getElementById(
-	`${fragmentNamespace}-length-warning`
+	`${fragmentElementId}-length-warning`
 );
 const lengthWarningText = document.getElementById(
-	`${fragmentNamespace}-length-warning-text`
+	`${fragmentElementId}-length-warning-text`
 );
-const inputElement = document.getElementById(`${fragmentNamespace}-text-input`);
-
-function enableLenghtWarning() {
-	formGroup.classList.add('has-error');
-	lengthInfo.classList.add('text-danger', 'font-weight-semi-bold');
-	lengthWarning.classList.remove('sr-only');
-
-	const warningText = lengthWarningText.getAttribute('data-error-message');
-	lengthWarningText.innerText = warningText;
-
-	if (!configuration.showCharactersCount) {
-		lengthInfo.classList.remove('sr-only');
-	}
-}
-
-function disableLengthWarning() {
-	formGroup.classList.remove('has-error');
-	lengthInfo.classList.remove('text-danger', 'font-weight-semi-bold');
-	lengthWarning.classList.add('sr-only');
-
-	const validText = lengthWarningText.getAttribute('data-valid-message');
-	lengthWarningText.innerText = validText;
-
-	if (!configuration.showCharactersCount) {
-		lengthInfo.classList.add('sr-only');
-	}
-}
-
-function onInputKeyup(event) {
-	const length = event.target.value.length;
-
-	currentLength.innerText = length;
-
-	if (length > input.attributes.maxLength) {
-		enableLenghtWarning();
-	}
-	else if (formGroup.classList.contains('has-error')) {
-		disableLengthWarning();
-	}
-}
 
 function main() {
 	if (layoutMode === 'edit' && inputElement) {
 		inputElement.setAttribute('disabled', true);
 	}
 	else {
-		currentLength.innerText = inputElement.value.length;
+		import('@liferay/fragment-impl/api').then(
+			({
+				handleInputLengthError,
+				hideLengthError,
+				registerLocalizedInput,
+				registerUnlocalizedInput,
+			}) => {
+				currentLength.innerText = inputElement.value.length;
 
-		if (inputElement.value.length > input.attributes.maxLength) {
-			enableLenghtWarning();
-		}
+				if (
+					!errorMessage &&
+					inputElement.value.length > input.attributes.maxLength
+				) {
+					hideLengthError({
+						configuration,
+						formGroup,
+						lengthInfo,
+						lengthWarning,
+						lengthWarningText,
+					});
+				}
 
-		inputElement.addEventListener('keyup', onInputKeyup);
+				const onKeyup = (event) =>
+					handleInputLengthError({
+						configuration,
+						currentLength,
+						errorMessage,
+						event,
+						formGroup,
+						input,
+						lengthInfo,
+						lengthWarning,
+						lengthWarningText,
+					});
+
+				inputElement.addEventListener('keyup', onKeyup);
+
+				const defaultLanguageId = themeDisplay.getDefaultLanguageId();
+
+				if (input.localizable) {
+					const {onChange} = registerLocalizedInput({
+						defaultLanguageId,
+						initialValues: input.valueI18n,
+						inputElement,
+						inputName: input.name,
+						localizationInputsContainer: inputElement.parentNode,
+						namespace: fragmentElementId,
+					});
+
+					inputElement.addEventListener('change', (event) => {
+						onChange(event.target.value);
+					});
+				}
+				else {
+					registerUnlocalizedInput({
+						defaultLanguageId,
+						inputElement,
+						readOnlyInputLabel: document.getElementById(
+							`${fragmentElementId}-text-input-readonly`
+						),
+						unlocalizedFieldsState:
+							input.attributes.unlocalizedFieldsState,
+						unlocalizedMessageContainer: document.getElementById(
+							`${fragmentElementId}-unlocalized-info`
+						),
+					});
+				}
+			}
+		);
 	}
 }
 

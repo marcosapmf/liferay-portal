@@ -19,7 +19,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -28,12 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -55,8 +53,10 @@ public class PageRule implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PageRule.class, json);
 	}
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The custom name of a Page rule."
+	)
 	@JsonGetter("conditionType")
-	@Schema(description = "The custom name of a Page rule.")
 	@Valid
 	public ConditionType getConditionType() {
 		if (_conditionTypeSupplier != null) {
@@ -109,7 +109,9 @@ public class PageRule implements Serializable {
 	@JsonIgnore
 	private Supplier<ConditionType> _conditionTypeSupplier;
 
-	@Schema(description = "The page rule ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rule ID."
+	)
 	public String getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -148,7 +150,9 @@ public class PageRule implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _idSupplier;
 
-	@Schema(description = "The custom name of a Page rule.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The custom name of a Page rule."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -187,7 +191,9 @@ public class PageRule implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "A list of actions of a Page rule.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of actions of a Page rule."
+	)
 	@Valid
 	public PageRuleAction[] getPageRuleActions() {
 		if (_pageRuleActionsSupplier != null) {
@@ -230,7 +236,9 @@ public class PageRule implements Serializable {
 	@JsonIgnore
 	private Supplier<PageRuleAction[]> _pageRuleActionsSupplier;
 
-	@Schema(description = "A list of conditions of a Page rule.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of conditions of a Page rule."
+	)
 	@Valid
 	public PageRuleCondition[] getPageRuleConditions() {
 		if (_pageRuleConditionsSupplier != null) {
@@ -310,9 +318,7 @@ public class PageRule implements Serializable {
 			sb.append("\"conditionType\": ");
 
 			sb.append("\"");
-
 			sb.append(conditionType);
-
 			sb.append("\"");
 		}
 
@@ -397,8 +403,8 @@ public class PageRule implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageRule",
 		name = "x-class-name"
 	)

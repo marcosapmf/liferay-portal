@@ -31,11 +31,11 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -163,14 +163,15 @@ public class AssetCategoriesManagementToolbarDisplayContext
 					).setParameter(
 						"parentCategoryId",
 						() -> {
-							if (_assetCategoriesDisplayContext.getCategoryId() >
-									0) {
+							long categoryId =
+								_assetCategoriesDisplayContext.getCategoryId();
 
-								return _assetCategoriesDisplayContext.
-									getCategoryId();
+							if (categoryId <= 0) {
+								return null;
 							}
 
-							return null;
+							return _assetCategoriesDisplayContext.
+								getCategoryId();
 						}
 					).setParameter(
 						"vocabularyId",

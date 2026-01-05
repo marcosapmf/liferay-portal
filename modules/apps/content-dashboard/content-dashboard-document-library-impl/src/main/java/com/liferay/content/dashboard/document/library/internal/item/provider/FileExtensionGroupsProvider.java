@@ -17,7 +17,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MimeTypes;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -90,7 +90,7 @@ public class FileExtensionGroupsProvider {
 		}
 
 		public boolean containsExtension(String extension) {
-			if (!ArrayUtil.isEmpty(_extensions)) {
+			if (ArrayUtil.isNotEmpty(_extensions)) {
 				return ArrayUtil.contains(_extensions, extension);
 			}
 

@@ -70,7 +70,8 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 		long repositoryId = count + 1000;
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(COMPANY_IDS[0])) {
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					COMPANY_IDS[0])) {
 
 			long groupId = count + 100;
 
@@ -81,7 +82,8 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 		}
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(COMPANY_IDS[1])) {
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					COMPANY_IDS[1])) {
 
 			long groupId = count + 200;
 
@@ -102,7 +104,8 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 		String name = RandomTestUtil.randomString();
 
 		Group group = _groupLocalService.addGroup(
-			user.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID, null, 0,
+			StringPool.BLANK, user.getUserId(),
+			GroupConstants.DEFAULT_PARENT_GROUP_ID, null, 0,
 			GroupConstants.DEFAULT_LIVE_GROUP_ID,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), name
@@ -110,10 +113,10 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
 			).build(),
-			GroupConstants.TYPE_SITE_OPEN, true,
+			GroupConstants.TYPE_SITE_OPEN, null, true,
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
 			StringPool.SLASH + FriendlyURLNormalizerUtil.normalize(name), true,
-			true, new ServiceContext());
+			false, true, new ServiceContext());
 
 		Assert.assertEquals(groupId, group.getGroupId());
 
@@ -127,7 +130,7 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 
 		com.liferay.portal.kernel.model.Repository repository =
 			_repositoryLocalService.addRepository(
-				user.getUserId(), group.getGroupId(),
+				null, user.getUserId(), group.getGroupId(),
 				_portal.getClassNameId(LiferayRepository.class.getName()),
 				dlFolder.getFolderId(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), "Test Portlet",
@@ -144,13 +147,15 @@ public class RepositoryFactoryDBPartitionTest extends BaseDBPartitionTestCase {
 		long count2 = 1;
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(COMPANY_IDS[0])) {
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					COMPANY_IDS[0])) {
 
 			count1 = _counterLocalService.increment();
 		}
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(COMPANY_IDS[1])) {
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					COMPANY_IDS[1])) {
 
 			count2 = _counterLocalService.increment();
 		}

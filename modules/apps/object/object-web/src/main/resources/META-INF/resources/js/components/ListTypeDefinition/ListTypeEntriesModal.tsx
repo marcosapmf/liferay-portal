@@ -12,8 +12,7 @@ import {
 	constantsUtils,
 	invalidateRequired,
 } from '@liferay/object-js-components-web';
-import {InputLocalized} from 'frontend-js-components-web';
-import {openToast} from 'frontend-js-web';
+import {InputLocalized, openToast} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
@@ -157,7 +156,7 @@ function ListTypeEntriesModal() {
 			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
-		if (specialCharactersInString(key as string)) {
+		if (key && specialCharactersInString(key)) {
 			errors.key = Liferay.Language.get(
 				'key-must-only-contain-letters-and-digits'
 			);
@@ -222,7 +221,11 @@ function ListTypeEntriesModal() {
 
 	return header ? (
 		<ClayModal observer={observer}>
-			<ClayModal.Header>{header}</ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
+				{header}
+			</ClayModal.Header>
 
 			<ClayModal.Body>
 				{errors.key && (
@@ -256,6 +259,7 @@ function ListTypeEntriesModal() {
 					<Input
 						disabled={system}
 						error={errors.externalReferenceCode}
+						id="externalReferenceCodeInput"
 						label={Liferay.Language.get('external-reference-code')}
 						name="externalReferenceCode"
 						onChange={({target}) =>

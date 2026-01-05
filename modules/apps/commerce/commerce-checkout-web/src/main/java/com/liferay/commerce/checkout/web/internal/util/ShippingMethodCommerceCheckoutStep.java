@@ -42,17 +42,17 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -204,7 +204,19 @@ public class ShippingMethodCommerceCheckoutStep
 				commerceShippingOptions) {
 
 			if (shippingOptionName.equals(commerceShippingOption.getKey())) {
-				return commerceShippingOption.getAmount();
+				BigDecimal shippingAmount = commerceShippingOption.getAmount();
+
+				if (CommerceOrderUtil.isCommerceOrderMultishipping(
+						commerceOrder)) {
+
+					return shippingAmount.multiply(
+						BigDecimal.valueOf(
+							CommerceOrderUtil.
+								getCommerceOrderDeliveryGroupNamesCount(
+									commerceOrder)));
+				}
+
+				return shippingAmount;
 			}
 		}
 
@@ -273,7 +285,7 @@ public class ShippingMethodCommerceCheckoutStep
 							commerceOrder.getCommerceOrderId(),
 							commerceOrder.getBillingAddressId(),
 							commerceOrder.getCommerceAccountId(),
-							commerceOrder.getCommerceCurrencyId(),
+							commerceOrder.getCommerceCurrencyCode(),
 							commerceOrder.getCommerceOrderTypeId(),
 							commerceShippingMethodId,
 							commerceOrder.getDeliveryCommerceTermEntryId(),

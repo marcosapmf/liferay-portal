@@ -5,11 +5,12 @@
 
 import React from 'react';
 
-import './OrderDetailsHeader.scss';
 import OrderDetailsStatusDescription from './OrderDetailsStatusDescription';
 
+import './OrderDetailsHeader.scss';
+
 type OrderDetailsProps = {
-	className: string;
+	className?: string;
 	hasOrderDescription?: string;
 	hasOrderDetails?: boolean;
 	image?: string;
@@ -34,13 +35,14 @@ const OrderDetailsHeader: React.FC<OrderDetailsProps> = ({
 			<img
 				alt="App Icon"
 				className="order-details-publisher-icon"
+				draggable={false}
 				src={image}
 			/>
 
-			<div className="align-items-center ml-4">
-				<div className="d-flex justify-content-start">
-					<h2 className="text-weight-bold">{name}</h2>
-					{version && <p className="ml-2 my-1">v{version}</p>}
+			<div className="d-flex flex-column justify-content-between ml-4">
+				<div className="align-items-center d-flex justify-content-start">
+					<h2 className="m-0 text-weight-bold">{name}</h2>
+					{version && <p className="ml-2 my-0">v{version}</p>}
 				</div>
 
 				{hasOrderDetails && (

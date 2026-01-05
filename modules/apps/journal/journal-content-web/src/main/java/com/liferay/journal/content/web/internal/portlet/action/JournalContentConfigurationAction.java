@@ -25,26 +25,31 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.trash.TrashHelper;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(
-	property = "javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
+	property = "jakarta.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 	service = ConfigurationAction.class
 )
 public class JournalContentConfigurationAction
@@ -74,11 +79,11 @@ public class JournalContentConfigurationAction
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		httpServletRequest.setAttribute(
 			ItemSelector.class.getName(), _itemSelector);
@@ -87,9 +92,8 @@ public class JournalContentConfigurationAction
 
 		try {
 			JournalContentDisplayContext.create(
-				portletRequest, portletResponse,
-				_portal.getClassNameId(DDMStructure.class),
-				_ddmTemplateModelResourcePermission, _itemSelector,
+				portletRequest, portletResponse, _ddmTemplateLocalService,
+				_ddmTemplateModelResourcePermission, _itemSelector, _portal,
 				_trashHelper);
 		}
 		catch (PortalException portalException) {
@@ -107,7 +111,12 @@ public class JournalContentConfigurationAction
 			ActionResponse actionResponse)
 		throws Exception {
 
-		setPreference(actionRequest, "articleId", _getArticleId(actionRequest));
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		setPreference(
+			actionRequest, "articleExternalReferenceCode",
+			_getArticleExternalReferenceCode(actionRequest));
 
 		String[] contentMetadataAssetAddonEntryKeys =
 			ParamUtil.getParameterValues(
@@ -117,9 +126,38 @@ public class JournalContentConfigurationAction
 			actionRequest, "contentMetadataAssetAddonEntryKeys",
 			StringUtil.merge(contentMetadataAssetAddonEntryKeys));
 
+		String ddmTemplateKey = ParamUtil.getString(
+			actionRequest, "ddmTemplateKey");
+
+		String ddmTemplateExternalReferenceCode = StringPool.BLANK;
+
+		if (Validator.isNotNull(ddmTemplateKey)) {
+			DDMTemplate ddmTemplate = _ddmTemplateLocalService.fetchTemplate(
+				themeDisplay.getScopeGroupId(),
+				_portal.getClassNameId(DDMStructure.class), ddmTemplateKey,
+				true);
+
+			if (ddmTemplate != null) {
+				ddmTemplateExternalReferenceCode =
+					ddmTemplate.getExternalReferenceCode();
+			}
+		}
+
 		setPreference(
-			actionRequest, "groupId",
-			String.valueOf(_getArticleGroupId(actionRequest)));
+			actionRequest, "ddmTemplateExternalReferenceCode",
+			ddmTemplateExternalReferenceCode);
+
+		long groupId = _getArticleGroupId(actionRequest);
+
+		if (groupId > 0) {
+			Group group = _groupLocalService.fetchGroup(groupId);
+
+			if (group != null) {
+				setPreference(
+					actionRequest, "groupExternalReferenceCode",
+					group.getExternalReferenceCode());
+			}
+		}
 
 		String[] userToolAssetAddonEntryKeys = ParamUtil.getParameterValues(
 			actionRequest, "userToolAssetAddonEntryKeys");
@@ -137,9 +175,11 @@ public class JournalContentConfigurationAction
 		throws Exception {
 
 		JournalArticle journalArticle =
-			_journalArticleLocalService.fetchArticle(
-				_getArticleGroupId(actionRequest),
-				_getArticleId(actionRequest));
+			_journalArticleLocalService.
+				fetchLatestArticleByExternalReferenceCode(
+					_getArticleGroupId(actionRequest),
+					_getArticleExternalReferenceCode(actionRequest),
+					WorkflowConstants.STATUS_APPROVED, true);
 
 		if (journalArticle == null) {
 			return;
@@ -162,21 +202,8 @@ public class JournalContentConfigurationAction
 			ddmTemplateId);
 	}
 
-	private long _getArticleGroupId(PortletRequest portletRequest) {
-		long assetEntryId = GetterUtil.getLong(
-			getParameter(portletRequest, "assetEntryId"));
-
-		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-			assetEntryId);
-
-		if (assetEntry == null) {
-			return 0;
-		}
-
-		return assetEntry.getGroupId();
-	}
-
-	private String _getArticleId(PortletRequest portletRequest)
+	private String _getArticleExternalReferenceCode(
+			PortletRequest portletRequest)
 		throws Exception {
 
 		long assetEntryId = GetterUtil.getLong(
@@ -193,27 +220,49 @@ public class JournalContentConfigurationAction
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
 				JournalArticle.class);
 
+		if (articleAssetRendererFactory == null) {
+			return StringPool.BLANK;
+		}
+
 		AssetRenderer<JournalArticle> articleAssetRenderer =
 			articleAssetRendererFactory.getAssetRenderer(
 				assetEntry.getClassPK());
 
+		if (articleAssetRenderer == null) {
+			return StringPool.BLANK;
+		}
+
 		JournalArticle article = articleAssetRenderer.getAssetObject();
 
-		return StringUtil.toUpperCase(article.getArticleId());
+		return article.getExternalReferenceCode();
 	}
 
-	private long _getDDMTemplateId(PortletRequest portletRequest)
-		throws Exception {
+	private long _getArticleGroupId(PortletRequest portletRequest) {
+		long assetEntryId = GetterUtil.getLong(
+			getParameter(portletRequest, "assetEntryId"));
 
-		String ddmTemplateKey = getParameter(portletRequest, "ddmTemplateKey");
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			assetEntryId);
 
-		if (Validator.isNull(ddmTemplateKey)) {
+		if (assetEntry == null) {
 			return 0;
 		}
 
-		DDMTemplate ddmTemplate = _ddmTemplateLocalService.fetchTemplate(
-			_getArticleGroupId(portletRequest),
-			_portal.getClassNameId(DDMStructure.class), ddmTemplateKey, true);
+		return assetEntry.getGroupId();
+	}
+
+	private long _getDDMTemplateId(PortletRequest portletRequest) {
+		String ddmTemplateExternalReferenceCode = getParameter(
+			portletRequest, "ddmTemplateExternalReferenceCode");
+
+		if (Validator.isNull(ddmTemplateExternalReferenceCode)) {
+			return 0;
+		}
+
+		DDMTemplate ddmTemplate =
+			_ddmTemplateLocalService.fetchDDMTemplateByExternalReferenceCode(
+				ddmTemplateExternalReferenceCode,
+				_getArticleGroupId(portletRequest), true);
 
 		if (ddmTemplate == null) {
 			return 0;
@@ -239,6 +288,9 @@ public class JournalContentConfigurationAction
 	)
 	private ModelResourcePermission<DDMTemplate>
 		_ddmTemplateModelResourcePermission;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ItemSelector _itemSelector;

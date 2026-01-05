@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Locale;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -112,7 +112,7 @@ public class CommerceChannelIndexer extends BaseIndexer<CommerceChannel> {
 		document.addKeyword(
 			CPField.COMMERCE_CHANNEL_GROUP_ID, group.getGroupId());
 
-		document.addKeyword(Field.NAME, commerceChannel.getName());
+		document.addKeyword(Field.NAME, commerceChannel.getName(), true);
 		document.addKeyword(
 			Field.SCOPE_GROUP_ID, commerceChannel.getSiteGroupId());
 		document.addKeyword(

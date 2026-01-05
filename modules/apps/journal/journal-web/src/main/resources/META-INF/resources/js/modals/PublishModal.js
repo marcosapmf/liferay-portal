@@ -14,11 +14,13 @@ import ScheduleOptions from '../ScheduleOptions';
 export default function PublishModal({
 	actionButton,
 	articleId,
+	buttonDisabled,
 	displayDate: defaultDisplayDate,
 	onCloseModal,
 	onPublishButtonClick,
 	permissionsURL,
 	portletNamespace,
+	showPermissionsOptions,
 	timeZone,
 	workflowEnabled,
 }) {
@@ -39,10 +41,37 @@ export default function PublishModal({
 	const [displayDate, setDisplayDate] = useState(defaultDisplayDate);
 	const [dateError, setDateError] = useState('');
 	const [showErrorAlert, setShowErrorAlert] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	const handleButtonClick = () => {
+		if (isSubmitting) {
+			return;
+		}
+
+		if (!displayDate && actionButton === 'schedule') {
+			setDateError(Liferay.Language.get('please-enter-a-valid-date'));
+			setShowErrorAlert(true);
+
+			return;
+		}
+
+		if (dateError) {
+			setShowErrorAlert(true);
+
+			return;
+		}
+
+		setIsSubmitting(true);
+		onPublishButtonClick(actionButton);
+	};
 
 	return (
 		<ClayModal className="m-0" observer={observer} size="md">
-			<ClayModal.Header>{heading}</ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
+				{heading}
+			</ClayModal.Header>
 
 			<ClayModal.Body className="m-0">
 				{showErrorAlert && dateError ? (
@@ -69,14 +98,15 @@ export default function PublishModal({
 					/>
 				) : null}
 
-				{(!articleId || Liferay.FeatureFlags['LPD-11228']) && (
-					<div className="mt-3">
-						<PermissionsOptions
-							formId={formId}
-							permissionsURL={permissionsURL}
-						/>
-					</div>
-				)}
+				{(!articleId || Liferay.FeatureFlags['LPD-11228']) &&
+					showPermissionsOptions && (
+						<div className="mt-3">
+							<PermissionsOptions
+								formId={formId}
+								permissionsURL={permissionsURL}
+							/>
+						</div>
+					)}
 			</ClayModal.Body>
 
 			<ClayModal.Footer
@@ -87,28 +117,10 @@ export default function PublishModal({
 						</ClayButton>
 
 						<ClayButton
+							disabled={buttonDisabled}
 							displayType="primary"
 							form={formId}
-							onClick={() => {
-								if (
-									!displayDate &&
-									actionButton === 'schedule'
-								) {
-									setDateError(
-										Liferay.Language.get(
-											'please-enter-a-valid-date'
-										)
-									);
-									setShowErrorAlert(true);
-								}
-								else if (dateError) {
-									setShowErrorAlert(true);
-								}
-								else {
-									onPublishButtonClick();
-									onClose();
-								}
-							}}
+							onClick={handleButtonClick}
 							type={
 								dateError ||
 								(!displayDate && actionButton === 'schedule')
@@ -147,7 +159,7 @@ function getLabels({actionButton, articleId, workflowEnabled}) {
 		return {
 			button: workflowEnabled
 				? Liferay.Language.get('submit-for-workflow')
-				: Liferay.Language.get('schedule'),
+				: Liferay.Language.get('schedule[verb]'),
 			description: articleId
 				? workflowEnabled
 					? Liferay.Language.get(

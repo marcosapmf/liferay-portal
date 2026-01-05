@@ -26,18 +26,16 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -88,35 +86,19 @@ public class AssetPublisherConfigurationFormNavigatorTest {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
+	@FeatureFlag(enable = false, value = "LPD-13311")
 	@Test
 	public void testViewOrderOfFieldsetsInAssetSelectionWhenSelectionStyleIsDynamic1()
 		throws PortalException {
 
-		String value = PropsUtil.get(
-			_companyLocalService.getCompany(TestPropsValues.getCompanyId()),
-			"feature.flag.LPD-13311");
-
-		try {
-			PropsUtil.addProperties(
-				UnicodePropertiesBuilder.setProperty(
-					"feature.flag.LPD-13311", "false"
-				).build());
-
-			_assertFormNavigatorEntryKeys(
-				new String[] {
-					"asset-selection", "scope", "source", "filter", "ordering",
-					"create-asset-list"
-				});
-		}
-		finally {
-			PropsUtil.addProperties(
-				UnicodePropertiesBuilder.setProperty(
-					"feature.flag.LPD-13311", value
-				).build());
-		}
+		_assertFormNavigatorEntryKeys(
+			new String[] {
+				"asset-selection", "scope", "source", "filter", "ordering",
+				"create-asset-list"
+			});
 	}
 
-	@FeatureFlags("LPD-13311")
+	@FeatureFlag("LPD-13311")
 	@Test
 	public void testViewOrderOfFieldsetsInAssetSelectionWhenSelectionStyleIsDynamic2()
 		throws PortalException {

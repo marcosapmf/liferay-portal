@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
@@ -21,12 +22,12 @@ import com.liferay.portal.search.web.internal.search.bar.portlet.display.context
 import com.liferay.portal.search.web.internal.search.bar.portlet.helper.SearchBarPrecedenceHelper;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -50,14 +51,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.restore-current-view=false",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Search Bar",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/search/bar/view.jsp",
-		"javax.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Search Bar",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/search/bar/view.jsp",
+		"jakarta.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=guest,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -74,7 +75,8 @@ public class SearchBarPortlet extends MVCPortlet {
 		try {
 			searchBarPortletDisplayContextFactory =
 				new SearchBarPortletDisplayContextFactory(
-					layoutLocalService, portal, renderRequest);
+					layoutLocalService, portal, renderRequest,
+					userLocalService);
 
 			SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 				searchBarPortletDisplayContextFactory.create(
@@ -128,6 +130,9 @@ public class SearchBarPortlet extends MVCPortlet {
 
 	@Reference
 	protected SearchCapabilities searchCapabilities;
+
+	@Reference
+	protected UserLocalService userLocalService;
 
 	private static final String _ALIAS = "search-bar";
 

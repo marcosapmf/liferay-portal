@@ -33,14 +33,14 @@
 		<column name="classPK" type="long" />
 		<column name="treePath" type="String" />
 		<column accessor="true" name="articleId" type="String" />
-		<column change-tracking-resolution-type="merge" name="version" type="double" />
+		<column name="version" type="double" />
 		<column name="urlTitle" type="String" uad-nonanonymizable="true" />
 		<column name="DDMStructureId" type="long" />
 		<column name="DDMTemplateKey" type="String" />
 		<column name="defaultLanguageId" type="String" />
 		<column name="layoutUuid" type="String" />
 		<column name="displayDate" type="Date" />
-		<column change-tracking-resolution-type="merge" name="expirationDate" type="Date" />
+		<column name="expirationDate" type="Date" />
 		<column name="reviewDate" type="Date" />
 		<column name="indexable" type="boolean" />
 		<column name="smallImage" type="boolean" />
@@ -49,9 +49,9 @@
 		<column name="smallImageURL" type="String" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
-		<column change-tracking-resolution-type="merge" name="statusByUserId" type="long" />
-		<column change-tracking-resolution-type="merge" name="statusByUserName" type="String" uad-anonymize-field-name="fullName" />
-		<column change-tracking-resolution-type="merge" name="statusDate" type="Date" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" uad-anonymize-field-name="fullName" />
+		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
 
@@ -120,10 +120,6 @@
 			<finder-column name="groupId" />
 			<finder-column name="layoutUuid" />
 		</finder>
-		<finder name="G_NotL" return-type="Collection">
-			<finder-column name="groupId" />
-			<finder-column arrayable-operator="AND" comparator="!=" name="layoutUuid" />
-		</finder>
 		<finder name="G_ST" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="status" />
@@ -159,6 +155,11 @@
 			<finder-column name="externalReferenceCode" />
 			<finder-column name="version" />
 		</finder>
+		<finder name="G_ERC_ST" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="externalReferenceCode" />
+			<finder-column arrayable-operator="OR" name="status" />
+		</finder>
 		<finder name="G_F_ST" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="folderId" />
@@ -183,6 +184,11 @@
 			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
 			<finder-column name="layoutUuid" />
+		</finder>
+		<finder name="G_C_NotL" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="classNameId" />
+			<finder-column arrayable-operator="AND" comparator="!=" name="layoutUuid" />
 		</finder>
 		<finder name="G_A_V" return-type="JournalArticle" unique="true">
 			<finder-column name="groupId" />
@@ -235,26 +241,13 @@
 
 		<!-- Finder methods -->
 
-		<finder name="ArticlePK" return-type="Collection">
-			<finder-column name="articlePK" />
-		</finder>
-		<finder name="C_A" return-type="JournalArticleLocalization">
+		<finder name="C_A" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="articlePK" />
-		</finder>
-		<finder name="A_L" return-type="JournalArticleLocalization" unique="true">
-			<finder-column name="articlePK" />
-			<finder-column name="languageId" />
 		</finder>
 		<finder name="C_A_L" return-type="JournalArticleLocalization" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="articlePK" />
-			<finder-column name="languageId" />
-		</finder>
-		<finder name="C_A_T_L" return-type="JournalArticleLocalization" unique="true">
-			<finder-column name="companyId" />
-			<finder-column name="articlePK" />
-			<finder-column name="title" />
 			<finder-column name="languageId" />
 		</finder>
 	</entity>
@@ -424,8 +417,8 @@
 
 		<column name="parentFolderId" parent-container-model="true" type="long" />
 		<column name="treePath" type="String" />
-		<column change-tracking-resolution-type="merge" name="name" type="String" uad-nonanonymizable="true" />
-		<column change-tracking-resolution-type="merge" name="description" type="String" uad-nonanonymizable="true" />
+		<column name="name" type="String" uad-nonanonymizable="true" />
+		<column name="description" type="String" uad-nonanonymizable="true" />
 		<column name="restrictionType" type="int" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />

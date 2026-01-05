@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.segments.asah.connector.internal.client.AsahFaroBackendClient;
 import com.liferay.segments.asah.connector.internal.client.AsahFaroBackendClientImpl;
 import com.liferay.segments.asah.connector.internal.client.model.Experiment;
@@ -43,20 +42,21 @@ import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperiment;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceService;
 import com.liferay.segments.service.SegmentsExperimentRelService;
 import com.liferay.segments.service.SegmentsExperimentService;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -69,7 +69,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.segments.asah.connector.internal.configuration.SegmentsExperimentConfiguration",
 	property = {
-		"javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
+		"jakarta.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
 		"mvc.command.name=/segments_experiment/get_data"
 	},
 	service = MVCResourceCommand.class
@@ -145,9 +145,13 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			long groupId, long plid, long segmentsExperienceId)
 		throws PortalException {
 
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
+
 		SegmentsExperiment segmentsExperiment =
 			_segmentsExperimentService.fetchSegmentsExperiment(
-				groupId, segmentsExperienceId, plid);
+				groupId, segmentsExperience.getSegmentsExperienceKey(), plid);
 
 		if (segmentsExperiment == null) {
 			return null;
@@ -170,7 +174,7 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 				segmentsExperiment.getStatus(), status.getValue())) {
 
 			if (experiment.getWinnerDXPVariantId() != null) {
-				SegmentsExperience segmentsExperience =
+				segmentsExperience =
 					_segmentsExperienceService.getSegmentsExperience(
 						segmentsExperiment.getGroupId(),
 						experiment.getWinnerDXPVariantId(),
@@ -195,8 +199,13 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			Layout layout, long segmentsExperienceId)
 		throws Exception {
 
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
+
 		return _segmentsExperimentService.fetchSegmentsExperiment(
-			layout.getGroupId(), segmentsExperienceId, layout.getPlid());
+			layout.getGroupId(), segmentsExperience.getSegmentsExperienceKey(),
+			layout.getPlid());
 	}
 
 	private String _getContentPageEditorPortletNamespace() {
@@ -209,8 +218,6 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 			HttpServletRequest httpServletRequest, String redirect,
 			long segmentsExperienceId)
 		throws Exception {
-
-		Group group = layout.getGroup();
 
 		return JSONUtil.put(
 			"contentPageEditorNamespace",
@@ -237,15 +244,6 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 						PortletRequest.ACTION_PHASE)
 				).setActionName(
 					"/layout_content_page_editor/add_segments_experience"
-				).setGlobalParameter(
-					_getContentPageEditorPortletNamespace() + "groupId",
-					group.getGroupId()
-				).setGlobalParameter(
-					_getContentPageEditorPortletNamespace() + "p_l_mode",
-					Constants.EDIT
-				).setGlobalParameter(
-					_getContentPageEditorPortletNamespace() + "plid",
-					layout.getPlid()
 				).buildString()
 			).put(
 				"deleteSegmentsExperimentURL",
@@ -355,9 +353,7 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 				_analyticsSettingsManager.isSiteIdSynced(
 					group.getCompanyId(), _getLiveGroupId(group.getGroupId()))
 			).put(
-				"url",
-				PrefsPropsUtil.getString(
-					group.getCompanyId(), "liferayAnalyticsURL")
+				"url", analyticsConfiguration.liferayAnalyticsURL()
 			)
 		).put(
 			"hideSegmentsExperimentPanelURL",
@@ -499,6 +495,9 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 
 	@Reference
 	private PortletURLFactory _portletURLFactory;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	@Reference
 	private SegmentsExperienceService _segmentsExperienceService;

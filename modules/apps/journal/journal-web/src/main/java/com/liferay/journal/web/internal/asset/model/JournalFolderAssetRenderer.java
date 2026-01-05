@@ -26,14 +26,14 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alexander Chow
@@ -74,13 +74,13 @@ public class JournalFolderAssetRenderer
 	public String getJspPath(
 		HttpServletRequest httpServletRequest, String template) {
 
-		if (template.equals(TEMPLATE_FULL_CONTENT)) {
-			httpServletRequest.setAttribute(WebKeys.JOURNAL_FOLDER, _folder);
-
-			return "/asset/folder_" + template + ".jsp";
+		if (!template.equals(TEMPLATE_FULL_CONTENT)) {
+			return null;
 		}
 
-		return null;
+		httpServletRequest.setAttribute(WebKeys.JOURNAL_FOLDER, _folder);
+
+		return "/asset/folder_" + template + ".jsp";
 	}
 
 	@Override

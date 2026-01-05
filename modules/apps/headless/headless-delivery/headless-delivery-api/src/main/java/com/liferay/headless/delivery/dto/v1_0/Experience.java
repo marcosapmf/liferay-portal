@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -54,7 +52,9 @@ public class Experience implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Experience.class, json);
 	}
 
-	@Schema(description = "the experience's key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The experience's key."
+	)
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -86,14 +86,16 @@ public class Experience implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "the experience's key.")
+	@GraphQLField(description = "The experience's key.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String key;
 
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
-	@Schema(description = "the experience's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The experience's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -125,14 +127,16 @@ public class Experience implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "the experience's name.")
+	@GraphQLField(description = "The experience's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "the localized experience's names.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized experience's names."
+	)
 	@Valid
 	public Map<String, String> getName_i18n() {
 		if (_name_i18nSupplier != null) {
@@ -168,14 +172,16 @@ public class Experience implements Serializable {
 		};
 	}
 
-	@GraphQLField(description = "the localized experience's names.")
+	@GraphQLField(description = "The localized experience's names.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> name_i18n;
 
 	@JsonIgnore
 	private Supplier<Map<String, String>> _name_i18nSupplier;
 
-	@Schema(description = "A list of segments the experience is used for.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A list of segments the experience is used for."
+	)
 	@Valid
 	public Segment[] getSegments() {
 		if (_segmentsSupplier != null) {
@@ -317,8 +323,8 @@ public class Experience implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Experience",
 		name = "x-class-name"
 	)

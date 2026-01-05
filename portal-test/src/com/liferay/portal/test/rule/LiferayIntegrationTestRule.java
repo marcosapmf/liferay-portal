@@ -30,16 +30,18 @@ public class LiferayIntegrationTestRule extends AggregateTestRule {
 	private static TestRule[] _getTestRules() {
 		List<TestRule> testRules = new ArrayList<>();
 
+		testRules.add(DBPartitionTestRule.INSTANCE);
+
 		if (System.getenv("JENKINS_HOME") != null) {
 			testRules.add(TimeoutTestRule.INSTANCE);
 		}
 
 		testRules.add(FeatureFlagTestRule.INSTANCE);
+		testRules.add(LanguageIdsTestRule.INSTANCE);
 		testRules.add(PortalRunModeClassTestRule.INSTANCE);
 		testRules.add(SynchronousDestinationTestRule.INSTANCE);
 		testRules.add(DataGuardTestRule.INSTANCE);
 		testRules.add(LogAssertionTestRule.INSTANCE);
-		testRules.add(SybaseDumpTransactionLogTestRule.INSTANCE);
 		testRules.add(ClearThreadLocalClassTestRule.INSTANCE);
 		testRules.add(UniqueStringRandomizerBumperClassTestRule.INSTANCE);
 		testRules.add(CompanyProviderClassTestRule.INSTANCE);

@@ -14,7 +14,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Roberto Díaz
  */
 @Component(
-	property = "javax.portlet.name=" + PageCommentsPortletKeys.PAGE_COMMENTS,
+	property = "jakarta.portlet.name=" + PageCommentsPortletKeys.PAGE_COMMENTS,
 	service = LayoutAssetEntryProvider.class
 )
 public class PageCommentsLayoutAssetEntryProvider
@@ -33,19 +33,21 @@ public class PageCommentsLayoutAssetEntryProvider
 	public AssetEntry getLayoutAssetEntry(
 		HttpServletRequest httpServletRequest, Layout layout) {
 
-		if (layout.isTypeAssetDisplay()) {
-			String portletNamespace = _portal.getPortletNamespace(
-				ParamUtil.getString(httpServletRequest, "p_p_id"));
+		if (!layout.isTypeAssetDisplay()) {
+			return null;
+		}
 
-			String className = ParamUtil.getString(
-				httpServletRequest, portletNamespace + "className");
+		String portletNamespace = _portal.getPortletNamespace(
+			ParamUtil.getString(httpServletRequest, "p_p_id"));
 
-			long classPK = ParamUtil.getLong(
-				httpServletRequest, portletNamespace + "classPK");
+		String className = ParamUtil.getString(
+			httpServletRequest, portletNamespace + "className");
 
-			if (Validator.isNotNull(className) && (classPK != 0)) {
-				return _assetEntryLocalService.fetchEntry(className, classPK);
-			}
+		long classPK = ParamUtil.getLong(
+			httpServletRequest, portletNamespace + "classPK");
+
+		if (Validator.isNotNull(className) && (classPK != 0)) {
+			return _assetEntryLocalService.fetchEntry(className, classPK);
 		}
 
 		return null;

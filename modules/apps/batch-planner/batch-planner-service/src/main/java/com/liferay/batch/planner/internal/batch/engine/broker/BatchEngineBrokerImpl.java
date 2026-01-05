@@ -29,6 +29,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.File;
 import java.io.FileInputStream;
 
@@ -38,8 +40,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -179,7 +179,7 @@ public class BatchEngineBrokerImpl implements BatchEngineBroker {
 
 		_exportTaskResource.postExportTask(
 			batchPlannerPlan.getInternalClassName(),
-			batchPlannerPlan.getExternalType(), null,
+			batchPlannerPlan.getExternalType(), null, null,
 			String.valueOf(batchPlannerPlan.getBatchPlannerPlanId()),
 			StringUtil.merge(
 				_getHeaderNames(
@@ -222,7 +222,7 @@ public class BatchEngineBrokerImpl implements BatchEngineBroker {
 				(createStrategy == CreateStrategy.UPSERT)) {
 
 				importTaskResource.postImportTask(
-					batchPlannerPlan.getInternalClassName(), null,
+					batchPlannerPlan.getInternalClassName(), null, null, null,
 					createStrategy.name(),
 					String.valueOf(batchPlannerPlan.getBatchPlannerPlanId()),
 					_getFieldNameMapping(

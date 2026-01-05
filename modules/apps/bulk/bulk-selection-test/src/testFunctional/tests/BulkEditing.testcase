@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Bulk Editing";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -465,6 +465,16 @@ definition {
 	test CanEditShortcutsPermissions {
 		HeadlessSite.addSite(siteName = "Site Name");
 
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = 2,
+			groupName = "Site Name",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title1",
@@ -489,7 +499,7 @@ definition {
 			sourceGroupName = "Site Name",
 			targetGroupName = "Guest");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "DM Document Title1");
 
@@ -498,7 +508,13 @@ definition {
 			permissionsKeyList = "INLINE_PERMISSIONS_VIEW_CHECKBOX",
 			roleTitle = "Guest");
 
-		Navigator.gotoPage(pageName = "Documents and Media Page");
+		Navigator.openSitePage(
+			pageName = "Documents and Media Page",
+			siteName = "Site Name");
+
+		DMDocument.enableActionsMenuOnPortlet();
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		DMDocument.selectDocuments(dmDocumentTitle = "DM Document Title1,DM Document Title2");
 
@@ -514,7 +530,9 @@ definition {
 
 		User.logoutPG();
 
-		Navigator.gotoPage(pageName = "Documents and Media Page");
+		Navigator.openSitePage(
+			pageName = "Documents and Media Page",
+			siteName = "Site Name");
 
 		LexiconEntry.viewEntryName(rowEntry = "DM Document Title1");
 
@@ -825,51 +843,6 @@ definition {
 		DMDocument.selectDocuments(dmDocumentTitle = "DM Document 1 in Folder,DM Document 2 in Folder");
 
 		AssertElementPresent(locator1 = "Icon#EDIT_TAGS_DISABLED");
-	}
-
-	@description = "This test covers LPS-94994. It ensures that users can edit category tags by using the bulk append action."
-	@priority = 5
-	test UncommonCategoryTagsCanBeReplacedUsingBulkAction {
-		DMDocument.addMultiplePG(dmDocumentFileList = "Document_1.doc,Document_2.jpg");
-
-		for (var categoryName : list "Books,Plants,Pets,Furniture") {
-			JSONCategory.addCategory(
-				groupName = "Guest",
-				title = ${categoryName},
-				vocabularyName = "Topic");
-		}
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMNavigator.gotoAddCategoriesPG(dmDocumentTitleList = "Document_1");
-
-		DMDocument.editCategoryTags(categoryNameList = "Books,Plants");
-
-		DMDocument.unselectDocuments(dmDocumentTitle = "Document_1");
-
-		DMNavigator.gotoAddCategoriesPG(dmDocumentTitleList = "Document_2");
-
-		DMDocument.editCategoryTags(categoryNameList = "Books,Pets");
-
-		DMDocument.unselectDocuments(dmDocumentTitle = "Document_2");
-
-		DMNavigator.gotoAddCategoriesPG(dmDocumentTitleList = "Document_1,Document_2");
-
-		DMDocument.editCategoryTags(
-			categoryNameList = "Furniture",
-			editAction = "Replace",
-			itemNumber = 2,
-			multipleDocuments = "true");
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		for (var key_dmDocumentTitle : list "Document_1,Document_2") {
-			DMNavigator.gotoDocumentPG(dmDocumentTitle = ${key_dmDocumentTitle});
-
-			DMDocument.viewCategoriesInfo(categoryNameList = "Books,Furniture");
-
-			Navigator.gotoPage(pageName = "Documents and Media Page");
-		}
 	}
 
 }

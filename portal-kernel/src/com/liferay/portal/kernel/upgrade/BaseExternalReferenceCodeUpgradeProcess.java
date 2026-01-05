@@ -5,14 +5,13 @@
 
 package com.liferay.portal.kernel.upgrade;
 
-import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.StringBundler;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import com.liferay.portal.kernel.util.StringUtil;
 
 /**
  * @author Amos Fong
@@ -23,20 +22,44 @@ public abstract class BaseExternalReferenceCodeUpgradeProcess
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		for (String[] tableAndPrimaryKeyColumnName :
-				getTableAndPrimaryKeyColumnNames()) {
+		String[] tableNames = getTableNames();
 
-			String tableName = tableAndPrimaryKeyColumnName[0];
-			String primKeyColumnName = tableAndPrimaryKeyColumnName[1];
-
-			upgradeExternalReferenceCode(tableName, primKeyColumnName);
+		for (String tableName : tableNames) {
+			upgradeExternalReferenceCode(tableName);
 		}
 	}
 
-	protected abstract String[][] getTableAndPrimaryKeyColumnNames();
+	protected String getPrimaryKeyColumnName(String tableName)
+		throws Exception {
 
-	protected void upgradeExternalReferenceCode(
-			String tableName, String primKeyColumnName)
+		String[] primaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, tableName);
+
+		if (primaryKeyColumnNames.length == 0) {
+			throw new Exception("Table " + tableName + " has no primary key");
+		}
+
+		if (primaryKeyColumnNames.length > 1) {
+			primaryKeyColumnNames = ArrayUtil.filter(
+				primaryKeyColumnNames,
+				name -> !StringUtil.equalsIgnoreCase(name, "ctCollectionId"));
+		}
+
+		if (primaryKeyColumnNames.length > 1) {
+			throw new Exception(
+				"Table " + tableName + " has too many primary key columns");
+		}
+
+		return primaryKeyColumnNames[0];
+	}
+
+	protected abstract String[] getTableNames();
+
+	protected boolean isUseUUID(String tableName) throws Exception {
+		return hasColumn(tableName, "uuid_");
+	}
+
+	protected void upgradeExternalReferenceCode(String tableName)
 		throws Exception {
 
 		if (!hasTable(tableName)) {
@@ -54,58 +77,39 @@ public abstract class BaseExternalReferenceCodeUpgradeProcess
 				tableName, "externalReferenceCode", "VARCHAR(75)");
 		}
 
+		String primaryKeyColumnName = getPrimaryKeyColumnName(tableName);
+
+		boolean useUUID = isUseUUID(tableName);
+
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			StringBundler selectSB = new StringBundler(7);
-
-			selectSB.append("select ");
-			selectSB.append(primKeyColumnName);
-
-			boolean hasUuid = hasColumn(tableName, "uuid_");
-
-			if (hasUuid) {
-				selectSB.append(", uuid_");
-			}
-
-			selectSB.append(" from ");
-			selectSB.append(tableName);
-			selectSB.append(" where externalReferenceCode is null or ");
-			selectSB.append("externalReferenceCode = ''");
-
-			StringBundler updateSB = new StringBundler(5);
-
-			updateSB.append("update ");
-			updateSB.append(tableName);
-			updateSB.append(" set externalReferenceCode = ? where ");
-			updateSB.append(primKeyColumnName);
-			updateSB.append(" = ?");
-
-			try (PreparedStatement preparedStatement1 =
-					connection.prepareStatement(selectSB.toString());
-				ResultSet resultSet = preparedStatement1.executeQuery();
-				PreparedStatement preparedStatement2 =
-					AutoBatchPreparedStatementUtil.autoBatch(
-						connection, updateSB.toString())) {
-
-				while (resultSet.next()) {
-					long primKey = resultSet.getLong(1);
-
-					if (hasUuid) {
-						String uuid = resultSet.getString(2);
-
-						preparedStatement2.setString(1, uuid);
+			processConcurrently(
+				StringBundler.concat(
+					"select distinct ", useUUID ? "uuid_, " : StringPool.BLANK,
+					primaryKeyColumnName, " from ", tableName,
+					" where externalReferenceCode is null or ",
+					"externalReferenceCode = ''"),
+				StringBundler.concat(
+					"update ", tableName,
+					" set externalReferenceCode = ? where ",
+					primaryKeyColumnName, " = ?"),
+				resultSet -> new Object[] {
+					useUUID ? resultSet.getString("uuid_") : null,
+					resultSet.getLong(primaryKeyColumnName)
+				},
+				(values, preparedStatement) -> {
+					if (useUUID) {
+						preparedStatement.setString(1, (String)values[0]);
 					}
 					else {
-						preparedStatement2.setString(
-							1, String.valueOf(primKey));
+						preparedStatement.setString(
+							1, String.valueOf(values[1]));
 					}
 
-					preparedStatement2.setLong(2, primKey);
+					preparedStatement.setLong(2, (long)values[1]);
 
-					preparedStatement2.addBatch();
-				}
-
-				preparedStatement2.executeBatch();
-			}
+					preparedStatement.addBatch();
+				},
+				null);
 		}
 	}
 

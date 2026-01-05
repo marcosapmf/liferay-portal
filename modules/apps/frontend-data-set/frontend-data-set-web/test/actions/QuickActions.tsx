@@ -6,7 +6,7 @@
 import {render, screen} from '@testing-library/react';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 
 import {IItemsActions} from '../../src/main/resources/META-INF/resources';
@@ -57,7 +57,7 @@ const testItemData = {
 const clickCallback = jest.fn();
 
 describe('QuickActions', () => {
-	it('displays a list of available actions', () => {
+	it('displays a list of available actions', async () => {
 		render(
 			<QuickActions
 				actions={testActions}
@@ -75,7 +75,7 @@ describe('QuickActions', () => {
 			`/o/data-test-endpoint/${testItemData.id}`
 		);
 
-		userEvent.click(firstQuickAction);
+		await userEvent.click(firstQuickAction);
 
 		expect(clickCallback).toHaveBeenCalledWith({
 			action: testActions[0],

@@ -30,9 +30,27 @@ public class PlaywrightTestSelector extends BaseTestSelector {
 
 		validate();
 
-		_playwrightJobProperties.add(
-			getJobProperty(
-				_PLAYWRIGHT_TEST_PROJECT, JobProperty.Type.MODULE_TEST_DIR));
+		JobProperty jobProperty = getJobProperty(
+			"playwright.test.project", JobProperty.Type.MODULE_TEST_DIR);
+
+		if (jobProperty.getValue() == null) {
+			jobProperty = getJobProperty(
+				"playwright.projects.includes",
+				JobProperty.Type.MODULE_TEST_DIR);
+		}
+
+		_playwrightJobProperties.add(jobProperty);
+	}
+
+	public JobProperty getPlaywrightExcludesJobProperty() {
+		JobProperty excludesJobProperty = getJobProperty(
+			"playwright.projects.excludes", JobProperty.Type.MODULE_TEST_DIR);
+
+		if (excludesJobProperty.getValue() != null) {
+			return excludesJobProperty;
+		}
+
+		return null;
 	}
 
 	public Set<JobProperty> getPlaywrightJobProperties() {
@@ -54,11 +72,31 @@ public class PlaywrightTestSelector extends BaseTestSelector {
 
 	@Override
 	public void validate() throws RelevantRuleConfigurationException {
-		validate(_PLAYWRIGHT_TEST_PROJECT);
-	}
+		if ((getProperty("playwright.projects.includes") == null) &&
+			(getProperty("playwright.test.project") == null)) {
 
-	private static final String _PLAYWRIGHT_TEST_PROJECT =
-		"playwright.test.project";
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("Unable to create batch ");
+			sb.append(getBatchName());
+			sb.append(" since playwright.projects.includes[");
+			sb.append(getRelevantRuleName());
+			sb.append("][");
+			sb.append(getTestSuiteName());
+			sb.append("][");
+			sb.append(getBatchName());
+			sb.append("] or playwright.test.project[");
+			sb.append(getRelevantRuleName());
+			sb.append("][");
+			sb.append(getTestSuiteName());
+			sb.append("][");
+			sb.append(getBatchName());
+			sb.append("] is not set in ");
+			sb.append(getPropertiesFile());
+
+			throw new RelevantRuleConfigurationException(sb.toString());
+		}
+	}
 
 	private final Set<JobProperty> _playwrightJobProperties = new HashSet<>();
 

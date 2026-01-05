@@ -15,6 +15,8 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface StagingGroupHelper {
 
+	public Group fetchCompanyGroup(long companyId);
+
 	public Group fetchLiveGroup(Group group);
 
 	public Group fetchLiveGroup(long groupId);
@@ -34,6 +36,14 @@ public interface StagingGroupHelper {
 	public Group getStagedPortletGroup(Group group, String portletId);
 
 	public long getStagedPortletGroupId(long groupId, String portletId);
+
+	public boolean isCompanyGroup(Group group);
+
+	public boolean isCompanyGroup(long companyId, long groupId);
+
+	public boolean isCompanyGroupFriendlyURL(String friendlyURL);
+
+	public boolean isDepotGroup(long groupId);
 
 	public boolean isLiveGroup(Group group);
 

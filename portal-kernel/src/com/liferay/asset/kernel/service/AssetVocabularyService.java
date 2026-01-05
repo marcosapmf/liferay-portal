@@ -85,8 +85,17 @@ public interface AssetVocabularyService extends BaseService {
 
 	public void deleteVocabulary(long vocabularyId) throws PortalException;
 
+	public AssetVocabulary deleteVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetVocabulary fetchVocabulary(long vocabularyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetVocabulary fetchVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -163,6 +172,11 @@ public interface AssetVocabularyService extends BaseService {
 			OrderByComparator<AssetVocabulary> orderByComparator)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long groupId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -187,20 +201,21 @@ public interface AssetVocabularyService extends BaseService {
 		throws PortalException;
 
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings)
 		throws PortalException;
 
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			int visibilityType)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType)
 		throws PortalException;
 
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String title, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long vocabularyId, String title,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType, ServiceContext serviceContext)
 		throws PortalException;
 
 }

@@ -6,14 +6,19 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
+import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectPortletKeys;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Alejandro Tardín
@@ -23,11 +28,19 @@ public class ObjectDefinitionUtil {
 	public static String getModifiableSystemObjectDefinitionRESTContextPath(
 		String name) {
 
-		if (PortalRunMode.isTestMode() && Objects.equals(name, "Test")) {
+		if (PortalRunMode.isTestMode() && StringUtil.startsWith(name, "Test")) {
 			return "/test";
 		}
 
 		return _allowedModifiableSystemObjectDefinitionNames.get(name);
+	}
+
+	public static String getPortletId(String className) {
+		return StringUtil.replaceFirst(
+			className,
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION,
+			ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE);
 	}
 
 	public static boolean isAllowedModifiableSystemObjectDefinitionName(
@@ -40,21 +53,29 @@ public class ObjectDefinitionUtil {
 		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
 	}
 
-	public static boolean
-		isAllowedUnmodifiableSystemObjectDefinitionExternalReferenceCode(
-			String externalReferenceCode, String name) {
+	public static boolean isDefaultFriendlyURLSeparator(
+		String friendlyURLSeparator) {
 
-		if (PortalRunMode.isTestMode()) {
+		FriendlyURLResolver friendlyURLResolver =
+			FriendlyURLResolverRegistryUtil.
+				getFriendlyURLResolverByDefaultURLSeparator(
+					FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY);
+
+		if ((friendlyURLResolver != null) &&
+			StringUtil.equals(
+				StringUtil.removeSubstring(
+					friendlyURLResolver.getURLSeparator(), StringPool.SLASH),
+				friendlyURLSeparator)) {
+
 			return true;
 		}
 
-		return StringUtil.equals(
-			_allowedUnmodifiableSystemObjectDefinitionNames.get(name),
-			externalReferenceCode);
+		return false;
 	}
 
 	public static boolean isInvokerBundleAllowed() {
-		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
+		if (ObjectDefinitionThreadLocal.isSkipBundleAllowedCheck() ||
+			PortalInstances.isCurrentCompanyInDeletionProcess() ||
 			PortalRunMode.isTestMode() || StartupHelperUtil.isUpgrading()) {
 
 			return true;
@@ -86,10 +107,13 @@ public class ObjectDefinitionUtil {
 	}
 
 	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
-		"com.liferay.commerce.service", "com.liferay.cookies.impl",
+		"com.liferay.ai.hub.site.initializer", "com.liferay.commerce.service",
+		"com.liferay.cookies.impl", "com.liferay.digital.sales.room.impl",
 		"com.liferay.frontend.data.set.admin.web",
+		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.notification.service", "com.liferay.object.service"
+		"com.liferay.mcp.server", "com.liferay.notification.service",
+		"com.liferay.object.service", "com.liferay.site.initializer.cms"
 	};
 
 	private static final Map<String, String>
@@ -108,9 +132,48 @@ public class ObjectDefinitionUtil {
 		).put(
 			"Bookmark", "/bookmarks"
 		).put(
-			"CommerceReturn", "/commerce-returns"
+			"CMSBasicDocument", "/cms/basic-documents"
 		).put(
-			"CommerceReturnItem", "/commerce-return-items"
+			"CMSBasicWebContent", "/cms/basic-web-contents"
+		).put(
+			"CMSBlog", "/cms/blogs"
+		).put(
+			"CMSBulkActionTask", "/cms/bulk-action-tasks"
+		).put(
+			"CMSBulkActionTaskItem", "/cms/bulk-action-task-items"
+		).put(
+			"CMSDefaultPermission", "/cms/default-permissions"
+		).put(
+			"CMSExternalVideo", "/cms/external-videos"
+		).put(
+			"CommerceReturn", "/commerce/returns"
+		).put(
+			"CommerceReturnItem", "/commerce/return-items"
+		).put(
+			"DataSet", "/data-set-admin/data-sets"
+		).put(
+			"DataSetAction", "/data-set-admin/actions"
+		).put(
+			"DataSetCardsSection", "/data-set-admin/cards-sections"
+		).put(
+			"DataSetClientExtensionFilter",
+			"/data-set-admin/client-extension-filters"
+		).put(
+			"DataSetDateFilter", "/data-set-admin/date-filters"
+		).put(
+			"DataSetListSection", "/data-set-admin/list-sections"
+		).put(
+			"DataSetSelectionFilter", "/data-set-admin/selection-filters"
+		).put(
+			"DataSetSnapshot", "/data-set-admin/snapshots"
+		).put(
+			"DataSetSort", "/data-set-admin/sorts"
+		).put(
+			"DataSetTableSection", "/data-set-admin/table-sections"
+		).put(
+			"DSRRoom", "/digital-sales-room/rooms"
+		).put(
+			"DSRTemplate", "/digital-sales-room/templates"
 		).put(
 			"FDSAction", "/data-set-manager/actions"
 		).put(
@@ -135,29 +198,17 @@ public class ObjectDefinitionUtil {
 		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
 		).put(
+			"KnowledgeBase", "/cms/knowledge-bases"
+		).put(
+			"MCPServer", "/mcp/servers"
+		).put(
+			"MCPServerPrompt", "/mcp/server-prompts"
+		).put(
 			"NecessaryCookieEntry", "/necessary-cookies-entries"
 		).put(
 			"PerformanceCookieEntry", "/performance-cookies-entries"
 		).put(
 			"PersonalizationCookieEntry", "/personalization-cookies-entries"
-		).build();
-	private static final Map<String, String>
-		_allowedUnmodifiableSystemObjectDefinitionNames = HashMapBuilder.put(
-			"AccountEntry", "L_ACCOUNT"
-		).put(
-			"Address", "L_POSTAL_ADDRESS"
-		).put(
-			"CommerceOrder", "L_COMMERCE_ORDER"
-		).put(
-			"CommerceOrderItem", "L_COMMERCE_ORDER_ITEM"
-		).put(
-			"CommercePricingClass", "L_COMMERCE_PRODUCT_GROUP"
-		).put(
-			"CPDefinition", "L_COMMERCE_PRODUCT_DEFINITION"
-		).put(
-			"Organization", "L_ORGANIZATION"
-		).put(
-			"User", "L_USER"
 		).build();
 
 }

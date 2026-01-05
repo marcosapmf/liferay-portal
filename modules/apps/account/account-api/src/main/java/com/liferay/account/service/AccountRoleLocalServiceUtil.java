@@ -331,6 +331,15 @@ public class AccountRoleLocalServiceUtil {
 		return getService().getIndexableActionableDynamicQuery();
 	}
 
+	public static AccountRole getOrAddEmptyAccountRole(
+			String externalReferenceCode, long companyId, long userId,
+			long accountEntryId, String name)
+		throws PortalException {
+
+		return getService().getOrAddEmptyAccountRole(
+			externalReferenceCode, companyId, userId, accountEntryId, name);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

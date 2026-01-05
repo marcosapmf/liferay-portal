@@ -7,7 +7,7 @@ import ClayButton from '@clayui/button';
 import ClayDatePicker from '@clayui/date-picker';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import {format, fromUnixTime, getUnixTime, parse} from 'date-fns';
+import {dateUtils} from 'frontend-js-web';
 import React from 'react';
 
 function DateInput({disabled, name, setFieldTouched, setFieldValue, value}) {
@@ -20,19 +20,55 @@ function DateInput({disabled, name, setFieldTouched, setFieldValue, value}) {
 	return (
 		<div className="date-picker-input" onBlur={() => setFieldTouched(name)}>
 			<ClayDatePicker
+				ariaLabels={{
+					buttonChooseDate: `${Liferay.Language.get('select-date')}`,
+					buttonDot: `${Liferay.Language.get('select-current-date')}`,
+					buttonNextMonth: `${Liferay.Language.get(
+						'select-next-month'
+					)}`,
+					buttonPreviousMonth: `${Liferay.Language.get(
+						'select-previous-month'
+					)}`,
+					dialog: `${Liferay.Language.get('select-date')}`,
+					selectMonth: `${Liferay.Language.get('select-a-month')}`,
+					selectYear: `${Liferay.Language.get('select-a-year')}`,
+				}}
 				dateFormat="MM/dd/yyyy"
 				disabled={disabled}
+				firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
+				months={[
+					`${Liferay.Language.get('january')}`,
+					`${Liferay.Language.get('february')}`,
+					`${Liferay.Language.get('march')}`,
+					`${Liferay.Language.get('april')}`,
+					`${Liferay.Language.get('may')}`,
+					`${Liferay.Language.get('june')}`,
+					`${Liferay.Language.get('july')}`,
+					`${Liferay.Language.get('august')}`,
+					`${Liferay.Language.get('september')}`,
+					`${Liferay.Language.get('october')}`,
+					`${Liferay.Language.get('november')}`,
+					`${Liferay.Language.get('december')}`,
+				]}
 				onKeyDown={_handleKeyDown}
 				onValueChange={(value) => {
 					setFieldValue(
 						name,
-						getUnixTime(parse(value, 'MM/dd/yyyy', new Date()))
+						Math.floor(
+							dateUtils.parse(value, 'MM/dd/yyyy').getTime() /
+								1000
+						)
 					);
 				}}
 				placeholder="MM/DD/YYYY"
 				readOnly
 				sizing="sm"
-				value={value ? format(fromUnixTime(value), 'MM/dd/yyyy') : ''}
+				value={
+					value
+						? dateUtils.format(new Date(value * 1000), 'MM/dd/yyyy')
+						: ''
+				}
+				weekdaysShort={dateUtils.getWeekdaysShort()}
 				years={{
 					end: 2024,
 					start: 1997,

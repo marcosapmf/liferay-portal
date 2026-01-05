@@ -7,8 +7,6 @@ package com.liferay.headless.commerce.admin.account.resource.v1_0;
 
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.User;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -23,18 +21,18 @@ import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -50,21 +48,36 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AccountResource {
 
-	public Response postAccountGroupByExternalReferenceCodeAccount(
-			String externalReferenceCode, Account account)
+	public Response deleteAccount(Long id) throws Exception;
+
+	public Response deleteAccountBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Response deleteAccountByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
 	public Response deleteAccountGroupByExternalReferenceCodeAccount(
 			String accountExternalReferenceCode, String externalReferenceCode)
 		throws Exception;
 
-	public Page<Account> getAccountsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public Account getAccount(Long id) throws Exception;
+
+	public Account getAccountByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
-	public Response postAccountsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
+	public Page<Account> getAccountsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Response patchAccount(Long id, Account account) throws Exception;
+
+	public Response patchAccountByExternalReferenceCode(
+			String externalReferenceCode, Account account)
 		throws Exception;
 
 	public Account postAccount(Account account) throws Exception;
@@ -72,32 +85,22 @@ public interface AccountResource {
 	public Response postAccountBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response deleteAccountByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Account getAccountByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public Response patchAccountByExternalReferenceCode(
-			String externalReferenceCode, Account account)
-		throws Exception;
-
 	public Response postAccountByExternalReferenceCodeLogo(
 			String externalReferenceCode, MultipartBody multipartBody)
 		throws Exception;
 
-	public Response deleteAccount(Long id) throws Exception;
-
-	public Response deleteAccountBatch(String callbackURL, Object object)
+	public Response postAccountGroupByExternalReferenceCodeAccount(
+			String externalReferenceCode, Account account)
 		throws Exception;
 
-	public Account getAccount(Long id) throws Exception;
-
-	public Response patchAccount(Long id, Account account) throws Exception;
-
 	public Response postAccountLogo(Long id, MultipartBody multipartBody)
+		throws Exception;
+
+	public Response postAccountsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -122,7 +125,8 @@ public interface AccountResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -147,19 +151,23 @@ public interface AccountResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

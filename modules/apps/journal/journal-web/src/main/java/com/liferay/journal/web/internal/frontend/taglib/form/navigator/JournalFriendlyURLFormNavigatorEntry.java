@@ -7,11 +7,9 @@ package com.liferay.journal.web.internal.frontend.taglib.form.navigator;
 
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.web.internal.util.JournalUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,13 +36,7 @@ public class JournalFriendlyURLFormNavigatorEntry
 
 	@Override
 	public boolean isVisible(User user, JournalArticle article) {
-		if (FeatureFlagManagerUtil.isEnabled("LPS-114700") ||
-			JournalUtil.isEditDefaultValues(article)) {
-
-			return false;
-		}
-
-		return true;
+		return false;
 	}
 
 	@Override

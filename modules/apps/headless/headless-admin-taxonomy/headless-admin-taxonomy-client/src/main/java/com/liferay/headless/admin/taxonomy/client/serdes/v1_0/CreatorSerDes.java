@@ -8,13 +8,13 @@ package com.liferay.headless.admin.taxonomy.client.serdes.v1_0;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.Creator;
 import com.liferay.headless.admin.taxonomy.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -68,6 +68,20 @@ public class CreatorSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(creator.getContentType()));
+
+			sb.append("\"");
+		}
+
+		if (creator.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(creator.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -185,6 +199,15 @@ public class CreatorSerDes {
 			map.put("contentType", String.valueOf(creator.getContentType()));
 		}
 
+		if (creator.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(creator.getExternalReferenceCode()));
+		}
+
 		if (creator.getFamilyName() == null) {
 			map.put("familyName", null);
 		}
@@ -250,6 +273,11 @@ public class CreatorSerDes {
 			else if (Objects.equals(jsonParserFieldName, "contentType")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "familyName")) {
 				return false;
 			}
@@ -285,6 +313,14 @@ public class CreatorSerDes {
 			else if (Objects.equals(jsonParserFieldName, "contentType")) {
 				if (jsonParserFieldValue != null) {
 					creator.setContentType((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					creator.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "familyName")) {
@@ -362,6 +398,10 @@ public class CreatorSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

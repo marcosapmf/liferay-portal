@@ -314,11 +314,11 @@ public class DDLRecordSetLocalServiceImpl
 	 */
 	@Override
 	public void deleteRecordSets(long groupId) throws PortalException {
-		List<DDLRecordSet> recordSets = ddlRecordSetPersistence.findByGroupId(
-			groupId);
+		List<DDLRecordSet> ddlRecordSets =
+			ddlRecordSetPersistence.findByGroupId(groupId);
 
-		for (DDLRecordSet recordSet : recordSets) {
-			ddlRecordSetLocalService.deleteRecordSet(recordSet);
+		for (DDLRecordSet ddlRecordSet : ddlRecordSets) {
+			ddlRecordSetLocalService.deleteRecordSet(ddlRecordSet);
 		}
 	}
 
@@ -438,8 +438,7 @@ public class DDLRecordSetLocalServiceImpl
 	 */
 	@Override
 	public DDMFormValues getRecordSetSettingsDDMFormValues(
-			DDLRecordSet recordSet)
-		throws PortalException {
+		DDLRecordSet recordSet) {
 
 		DDMForm ddmForm = DDMFormFactory.create(DDLRecordSetSettings.class);
 

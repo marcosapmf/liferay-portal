@@ -12,6 +12,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.encryptor.EncryptorException;
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -28,6 +30,7 @@ import com.liferay.portal.kernel.portlet.PortletModeFactory;
 import com.liferay.portal.kernel.portlet.PortletQName;
 import com.liferay.portal.kernel.portlet.PortletQNameUtil;
 import com.liferay.portal.kernel.portlet.WindowStateFactory;
+import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
@@ -40,13 +43,35 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletURLListenerFactory;
 import com.liferay.portlet.PublicRenderParametersPool;
 import com.liferay.portlet.RenderParametersPool;
+
+import jakarta.portlet.MimeResponse;
+import jakarta.portlet.MutableActionParameters;
+import jakarta.portlet.MutableRenderParameters;
+import jakarta.portlet.MutableResourceParameters;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletModeException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletSecurityException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.PortletURLGenerationListener;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceURL;
+import jakarta.portlet.WindowState;
+import jakarta.portlet.WindowStateException;
+import jakarta.portlet.annotations.PortletSerializable;
+import jakarta.portlet.annotations.RenderStateScoped;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -63,27 +88,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-
-import javax.portlet.MimeResponse;
-import javax.portlet.MutableActionParameters;
-import javax.portlet.MutableRenderParameters;
-import javax.portlet.MutableResourceParameters;
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletModeException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletSecurityException;
-import javax.portlet.PortletURL;
-import javax.portlet.PortletURLGenerationListener;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceURL;
-import javax.portlet.WindowState;
-import javax.portlet.WindowStateException;
-import javax.portlet.annotations.PortletSerializable;
-import javax.portlet.annotations.RenderStateScoped;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -1017,9 +1021,27 @@ public class PortletURLImpl
 			});
 
 		if (_doAsUserId > 0) {
-			sb.append("doAsUserId=");
-			sb.append(processValue(key, _doAsUserId));
-			sb.append(StringPool.AMPERSAND);
+			try {
+				Company company = PortalUtil.getCompany(_httpServletRequest);
+
+				byte[] doAsUserIdBytes = new byte[Long.BYTES];
+
+				BigEndianCodec.putLong(doAsUserIdBytes, 0, _doAsUserId);
+
+				String doAsUserIdString = StringUtil.bytesToHexString(
+					ChecksumUtil.appendChecksum(
+						EncryptorUtil.encryptUnencoded(
+							company.getKeyObj(), doAsUserIdBytes)));
+
+				sb.append("doAsUserId=");
+				sb.append(processValue(key, doAsUserIdString));
+				sb.append(StringPool.AMPERSAND);
+			}
+			catch (EncryptorException | PortalException exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
 		}
 		else {
 			String doAsUserId = themeDisplay.getDoAsUserId();

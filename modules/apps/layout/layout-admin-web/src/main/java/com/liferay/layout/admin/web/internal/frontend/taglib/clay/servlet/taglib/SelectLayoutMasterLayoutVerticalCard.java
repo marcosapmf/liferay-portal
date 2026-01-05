@@ -9,7 +9,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.VerticalCard;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -17,13 +16,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Jürgen Kappler
@@ -62,12 +61,6 @@ public class SelectLayoutMasterLayoutVerticalCard implements VerticalCard {
 				).setRedirect(
 					ParamUtil.getString(_httpServletRequest, "redirect")
 				).setParameter(
-					"collectionPK",
-					ParamUtil.getString(_httpServletRequest, "collectionPK")
-				).setParameter(
-					"collectionType",
-					ParamUtil.getString(_httpServletRequest, "collectionType")
-				).setParameter(
 					"groupId", ParamUtil.getLong(_httpServletRequest, "groupId")
 				).setParameter(
 					"masterLayoutPlid", _layoutPageTemplateEntry.getPlid()
@@ -76,8 +69,6 @@ public class SelectLayoutMasterLayoutVerticalCard implements VerticalCard {
 					ParamUtil.getBoolean(_httpServletRequest, "privateLayout")
 				).setParameter(
 					"selPlid", ParamUtil.getLong(_httpServletRequest, "selPlid")
-				).setParameter(
-					"type", LayoutConstants.TYPE_COLLECTION
 				).setWindowState(
 					LiferayWindowState.POP_UP
 				).buildString());

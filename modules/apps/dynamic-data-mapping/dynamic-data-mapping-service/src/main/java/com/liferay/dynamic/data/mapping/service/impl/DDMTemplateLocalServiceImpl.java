@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -507,6 +508,36 @@ public class DDMTemplateLocalServiceImpl
 		for (DDMTemplate template : templates) {
 			ddmTemplateLocalService.deleteTemplate(template);
 		}
+	}
+
+	@Override
+	public DDMTemplate fetchDDMTemplateByExternalReferenceCode(
+		String externalReferenceCode, long groupId,
+		boolean includeAncestorTemplates) {
+
+		DDMTemplate template = ddmTemplatePersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+
+		if (template != null) {
+			return template;
+		}
+
+		if (!includeAncestorTemplates) {
+			return null;
+		}
+
+		for (long ancestorSiteGroupId :
+				_getAncestorSiteAndDepotGroupIds(groupId)) {
+
+			template = ddmTemplatePersistence.fetchByERC_G(
+				externalReferenceCode, ancestorSiteGroupId);
+
+			if (template != null) {
+				return template;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -1576,8 +1607,14 @@ public class DDMTemplateLocalServiceImpl
 	}
 
 	@Activate
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		modified(properties);
+	}
+
 	@Modified
-	protected void activate(Map<String, Object> properties) {
+	protected void modified(Map<String, Object> properties) {
 		ddmWebConfiguration = ConfigurableUtil.createConfigurable(
 			DDMWebConfiguration.class, properties);
 	}

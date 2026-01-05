@@ -15,10 +15,11 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionC
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
+		"jakarta.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"mvc.command.name=/fragment/propagate_group_fragment_entry_changes"
 	},
 	service = MVCActionCommand.class
@@ -44,8 +45,10 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		long fragmentEntryId = ParamUtil.getLong(
-			actionRequest, "fragmentEntryId");
+		String fragmentEntryERC = ParamUtil.getString(
+			actionRequest, "fragmentEntryERC");
+		String fragmentEntryScopeERC = ParamUtil.getString(
+			actionRequest, "fragmentEntryScopeERC");
 		long[] groupIds = ParamUtil.getLongValues(actionRequest, "rowIds");
 
 		for (long groupId : groupIds) {
@@ -54,11 +57,24 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommand
 
 			actionableDynamicQuery.setAddCriteriaMethod(
 				dynamicQuery -> {
-					Property fragmentEntryIdProperty =
-						PropertyFactoryUtil.forName("fragmentEntryId");
+					Property fragmentEntryERCProperty =
+						PropertyFactoryUtil.forName("fragmentEntryERC");
 
 					dynamicQuery.add(
-						fragmentEntryIdProperty.eq(fragmentEntryId));
+						fragmentEntryERCProperty.eq(fragmentEntryERC));
+
+					Property fragmentEntryScopeERCProperty =
+						PropertyFactoryUtil.forName("fragmentEntryScopeERC");
+
+					if (Validator.isNull(fragmentEntryScopeERC)) {
+						dynamicQuery.add(
+							fragmentEntryScopeERCProperty.isNull());
+					}
+					else {
+						dynamicQuery.add(
+							fragmentEntryScopeERCProperty.eq(
+								fragmentEntryScopeERC));
+					}
 				});
 			actionableDynamicQuery.setCompanyId(themeDisplay.getCompanyId());
 			actionableDynamicQuery.setGroupId(groupId);

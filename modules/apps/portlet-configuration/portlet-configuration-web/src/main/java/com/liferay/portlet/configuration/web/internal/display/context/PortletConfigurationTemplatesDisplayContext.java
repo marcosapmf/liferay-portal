@@ -27,14 +27,14 @@ import com.liferay.portlet.configuration.web.internal.servlet.taglib.util.Archiv
 import com.liferay.portlet.configuration.web.internal.util.comparator.ArchivedSettingsModifiedDateComparator;
 import com.liferay.portlet.configuration.web.internal.util.comparator.ArchivedSettingsNameComparator;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -96,11 +96,12 @@ public class PortletConfigurationTemplatesDisplayContext {
 		OrderByComparator<ArchivedSettings> orderByComparator = null;
 
 		if (Objects.equals(getOrderByCol(), "modified-date")) {
-			orderByComparator = new ArchivedSettingsModifiedDateComparator(
-				orderByAsc);
+			orderByComparator =
+				ArchivedSettingsModifiedDateComparator.getInstance(orderByAsc);
 		}
 		else {
-			orderByComparator = new ArchivedSettingsNameComparator(orderByAsc);
+			orderByComparator = ArchivedSettingsNameComparator.getInstance(
+				orderByAsc);
 		}
 
 		archivedSettingsSearchContainer.setOrderByComparator(orderByComparator);

@@ -39,9 +39,9 @@ import com.liferay.headless.commerce.admin.channel.resource.v1_0.TaxCategoryReso
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.TermResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -50,15 +50,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -275,7 +275,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {categoryDisplayPage(id: ___){actions, categoryId, id, pageUuid}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {categoryDisplayPage(id: ___){actions, categoryExternalReferenceCode, categoryId, groupExternalReferenceCode, id, pageUuid}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public CategoryDisplayPage categoryDisplayPage(@GraphQLName("id") Long id)
@@ -350,7 +350,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {accountAddressChannelChannel(accountAddressChannelId: ___){accountExternalReferenceCode, accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {accountAddressChannelChannel(accountAddressChannelId: ___){accountExternalReferenceCode, accountId, currencyCode, currencyExternalReferenceCode, currencyId, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public Channel accountAddressChannelChannel(
@@ -363,6 +363,39 @@ public class Query {
 			this::_populateResourceContext,
 			channelResource -> channelResource.getAccountAddressChannelChannel(
 				accountAddressChannelId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channel(channelId: ___){accountExternalReferenceCode, accountId, currencyCode, currencyExternalReferenceCode, currencyId, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(description = "Retrive information of the given Channel.")
+	public Channel channel(@GraphQLName("channelId") Long channelId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource -> channelResource.getChannel(channelId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelByExternalReferenceCode(externalReferenceCode: ___){accountExternalReferenceCode, accountId, currencyCode, currencyExternalReferenceCode, currencyId, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField(description = "Retrive information of the given Channel.")
+	public Channel channelByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_channelResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			channelResource ->
+				channelResource.getChannelByExternalReferenceCode(
+					externalReferenceCode));
 	}
 
 	/**
@@ -388,39 +421,6 @@ public class Query {
 					_filterBiFunction.apply(channelResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(channelResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelByExternalReferenceCode(externalReferenceCode: ___){accountExternalReferenceCode, accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField(description = "Retrive information of the given Channel.")
-	public Channel channelByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource ->
-				channelResource.getChannelByExternalReferenceCode(
-					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channel(channelId: ___){accountExternalReferenceCode, accountId, currencyCode, externalReferenceCode, id, name, siteGroupId, type}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField(description = "Retrive information of the given Channel.")
-	public Channel channel(@GraphQLName("channelId") Long channelId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_channelResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			channelResource -> channelResource.getChannel(channelId));
 	}
 
 	/**
@@ -714,7 +714,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {productDisplayPage(id: ___){actions, id, pageTemplateUuid, pageUuid, productId}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {productDisplayPage(id: ___){actions, id, pageTemplateUuid, pageUuid, productExternalReferenceCode, productId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ProductDisplayPage productDisplayPage(@GraphQLName("id") Long id)
@@ -1686,6 +1686,10 @@ public class Query {
 		accountResource.setContextUriInfo(_uriInfo);
 		accountResource.setContextUser(_user);
 		accountResource.setGroupLocalService(_groupLocalService);
+		accountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		accountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		accountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1702,6 +1706,10 @@ public class Query {
 		accountAddressChannelResource.setContextUriInfo(_uriInfo);
 		accountAddressChannelResource.setContextUser(_user);
 		accountAddressChannelResource.setGroupLocalService(_groupLocalService);
+		accountAddressChannelResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		accountAddressChannelResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		accountAddressChannelResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1718,6 +1726,10 @@ public class Query {
 		categoryDisplayPageResource.setContextUriInfo(_uriInfo);
 		categoryDisplayPageResource.setContextUser(_user);
 		categoryDisplayPageResource.setGroupLocalService(_groupLocalService);
+		categoryDisplayPageResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		categoryDisplayPageResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		categoryDisplayPageResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1731,6 +1743,10 @@ public class Query {
 		channelResource.setContextUriInfo(_uriInfo);
 		channelResource.setContextUser(_user);
 		channelResource.setGroupLocalService(_groupLocalService);
+		channelResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		channelResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		channelResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1747,6 +1763,10 @@ public class Query {
 		channelAccountResource.setContextUriInfo(_uriInfo);
 		channelAccountResource.setContextUser(_user);
 		channelAccountResource.setGroupLocalService(_groupLocalService);
+		channelAccountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		channelAccountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		channelAccountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1766,6 +1786,10 @@ public class Query {
 		defaultCategoryDisplayPageResource.setContextUser(_user);
 		defaultCategoryDisplayPageResource.setGroupLocalService(
 			_groupLocalService);
+		defaultCategoryDisplayPageResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		defaultCategoryDisplayPageResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		defaultCategoryDisplayPageResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1785,6 +1809,10 @@ public class Query {
 		defaultProductDisplayPageResource.setContextUser(_user);
 		defaultProductDisplayPageResource.setGroupLocalService(
 			_groupLocalService);
+		defaultProductDisplayPageResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		defaultProductDisplayPageResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		defaultProductDisplayPageResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1799,6 +1827,10 @@ public class Query {
 		orderTypeResource.setContextUriInfo(_uriInfo);
 		orderTypeResource.setContextUser(_user);
 		orderTypeResource.setGroupLocalService(_groupLocalService);
+		orderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		orderTypeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		orderTypeResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1818,6 +1850,10 @@ public class Query {
 		paymentMethodGroupRelOrderTypeResource.setContextUser(_user);
 		paymentMethodGroupRelOrderTypeResource.setGroupLocalService(
 			_groupLocalService);
+		paymentMethodGroupRelOrderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		paymentMethodGroupRelOrderTypeResource.
+			setResourcePermissionLocalService(_resourcePermissionLocalService);
 		paymentMethodGroupRelOrderTypeResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1837,6 +1873,10 @@ public class Query {
 		paymentMethodGroupRelTermResource.setContextUser(_user);
 		paymentMethodGroupRelTermResource.setGroupLocalService(
 			_groupLocalService);
+		paymentMethodGroupRelTermResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		paymentMethodGroupRelTermResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		paymentMethodGroupRelTermResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1854,6 +1894,10 @@ public class Query {
 		productDisplayPageResource.setContextUriInfo(_uriInfo);
 		productDisplayPageResource.setContextUser(_user);
 		productDisplayPageResource.setGroupLocalService(_groupLocalService);
+		productDisplayPageResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		productDisplayPageResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		productDisplayPageResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1873,6 +1917,10 @@ public class Query {
 		shippingFixedOptionOrderTypeResource.setContextUser(_user);
 		shippingFixedOptionOrderTypeResource.setGroupLocalService(
 			_groupLocalService);
+		shippingFixedOptionOrderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		shippingFixedOptionOrderTypeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		shippingFixedOptionOrderTypeResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1892,6 +1940,10 @@ public class Query {
 		shippingFixedOptionTermResource.setContextUser(_user);
 		shippingFixedOptionTermResource.setGroupLocalService(
 			_groupLocalService);
+		shippingFixedOptionTermResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		shippingFixedOptionTermResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		shippingFixedOptionTermResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1908,6 +1960,10 @@ public class Query {
 		shippingMethodResource.setContextUriInfo(_uriInfo);
 		shippingMethodResource.setContextUser(_user);
 		shippingMethodResource.setGroupLocalService(_groupLocalService);
+		shippingMethodResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		shippingMethodResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		shippingMethodResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1922,6 +1978,10 @@ public class Query {
 		taxCategoryResource.setContextUriInfo(_uriInfo);
 		taxCategoryResource.setContextUser(_user);
 		taxCategoryResource.setGroupLocalService(_groupLocalService);
+		taxCategoryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		taxCategoryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		taxCategoryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1935,6 +1995,9 @@ public class Query {
 		termResource.setContextUriInfo(_uriInfo);
 		termResource.setContextUser(_user);
 		termResource.setGroupLocalService(_groupLocalService);
+		termResource.setResourceActionLocalService(_resourceActionLocalService);
+		termResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		termResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1974,12 +2037,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

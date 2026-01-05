@@ -5,14 +5,14 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.numeric.input.mask;
 
-import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSettingsTestCase;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.dynamic.data.mapping.test.util.BaseDDMFormFieldTemplateContextContributorTestCase;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -36,7 +36,7 @@ import org.mockito.Mockito;
  * @author Carolina Barbosa
  */
 public class NumericInputMaskDDMFormFieldTemplateContextContributorTest
-	extends BaseDDMFormFieldTypeSettingsTestCase {
+	extends BaseDDMFormFieldTemplateContextContributorTestCase {
 
 	@ClassRule
 	@Rule
@@ -53,22 +53,55 @@ public class NumericInputMaskDDMFormFieldTemplateContextContributorTest
 
 		_setUpLanguage();
 
-		_setUpLanguageUtil();
 		_setUpPortal();
 	}
 
 	@Test
 	public void testGetParameters() {
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext =
+			createDDMFormFieldRenderingContext();
+
 		Map<String, Object> parameters =
 			_numericInputMaskDDMFormFieldTemplateContextContributor.
 				getParameters(
-					new DDMFormField("field", "numeric"),
-					_createDDMFormFieldRenderingContext());
+					new DDMFormField(
+						"field", DDMFormFieldTypeConstants.NUMERIC),
+					ddmFormFieldRenderingContext);
 
-		Assert.assertEquals("$", parameters.get("append"));
+		Assert.assertEquals("", parameters.get("append"));
 		Assert.assertEquals("prefix", parameters.get("appendType"));
 		Assert.assertEquals(2, parameters.get("decimalPlaces"));
+		Assert.assertEquals(".", parameters.get("decimalSymbol"));
+		Assert.assertEquals("none", parameters.get("thousandsSeparator"));
+
+		ddmFormFieldRenderingContext.setValue(
+			JSONUtil.put(
+				"append", "%"
+			).put(
+				"appendType", "suffix"
+			).put(
+				"decimalPlaces", 3
+			).put(
+				"symbols",
+				JSONUtil.put(
+					"decimalSymbol", ","
+				).put(
+					"thousandsSeparator", "\'"
+				)
+			).toString());
+
+		parameters =
+			_numericInputMaskDDMFormFieldTemplateContextContributor.
+				getParameters(
+					new DDMFormField(
+						"field", DDMFormFieldTypeConstants.NUMERIC),
+					ddmFormFieldRenderingContext);
+
+		Assert.assertEquals("%", parameters.get("append"));
+		Assert.assertEquals("suffix", parameters.get("appendType"));
+		Assert.assertEquals(3, parameters.get("decimalPlaces"));
 		Assert.assertEquals(",", parameters.get("decimalSymbol"));
+		Assert.assertEquals("\'", parameters.get("thousandsSeparator"));
 
 		List<Object> decimalSymbols = (List<Object>)parameters.get(
 			"decimalSymbols");
@@ -151,30 +184,6 @@ public class NumericInputMaskDDMFormFieldTemplateContextContributorTest
 			thousandsSeparators.get(4));
 	}
 
-	private DDMFormFieldRenderingContext _createDDMFormFieldRenderingContext() {
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext =
-			new DDMFormFieldRenderingContext();
-
-		ddmFormFieldRenderingContext.setLocale(LocaleUtil.US);
-		ddmFormFieldRenderingContext.setValue(
-			JSONUtil.put(
-				"append", "$"
-			).put(
-				"appendType", "prefix"
-			).put(
-				"decimalPlaces", 2
-			).put(
-				"symbols",
-				JSONUtil.put(
-					"decimalSymbol", ","
-				).put(
-					"thousandsSeparator", "\'"
-				)
-			).toString());
-
-		return ddmFormFieldRenderingContext;
-	}
-
 	private void _setUpJSONFactory() {
 		ReflectionTestUtil.setFieldValue(
 			_numericInputMaskDDMFormFieldTemplateContextContributor,
@@ -211,12 +220,6 @@ public class NumericInputMaskDDMFormFieldTemplateContextContributorTest
 		ReflectionTestUtil.setFieldValue(
 			_numericInputMaskDDMFormFieldTemplateContextContributor,
 			"_language", language);
-	}
-
-	private void _setUpLanguageUtil() {
-		LanguageUtil languageUtil = new LanguageUtil();
-
-		languageUtil.setLanguage(language);
 	}
 
 	private void _setUpPortal() {

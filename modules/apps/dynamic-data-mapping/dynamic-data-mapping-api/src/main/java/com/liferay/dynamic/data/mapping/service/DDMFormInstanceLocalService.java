@@ -359,6 +359,10 @@ public interface DDMFormInstanceLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DDMFormInstance getFormInstanceByStructureId(long structureId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DDMFormInstance> getFormInstances(long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -369,8 +373,7 @@ public interface DDMFormInstanceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DDMFormValues getFormInstanceSettingsFormValues(
-			DDMFormInstance formInstance)
-		throws PortalException;
+		DDMFormInstance formInstance);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DDMFormInstanceSettings getFormInstanceSettingsModel(

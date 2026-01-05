@@ -26,17 +26,17 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Provides a skeletal implementation of the {@link PanelApp} to minimize the
@@ -69,7 +69,7 @@ public abstract class BasePanelApp implements PanelApp {
 
 			return LanguageUtil.get(
 				resourceBundle,
-				JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+				JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 					getPortletId());
 		}
 		catch (MissingResourceException missingResourceException) {
@@ -80,7 +80,7 @@ public abstract class BasePanelApp implements PanelApp {
 
 		return LanguageUtil.get(
 			locale,
-			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+			JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 				getPortletId());
 	}
 

@@ -33,12 +33,9 @@ export enum ETabs {
 	Sites = 1,
 }
 
-const AssignModal: React.FC<IAssignModalProps> = ({
-	observer,
-	onCancel,
-	onSubmit,
-	property,
-}) => {
+const AssignModal: React.FC<
+	{children?: React.ReactNode | undefined} & IAssignModalProps
+> = ({observer, onCancel, onSubmit, property}) => {
 	const {
 		name,
 		dataSources: [
@@ -60,7 +57,9 @@ const AssignModal: React.FC<IAssignModalProps> = ({
 
 	return (
 		<ClayModal center observer={observer} size="lg">
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{sub(Liferay.Language.get('assign-to-x'), name)}
 			</ClayModal.Header>
 
@@ -169,10 +168,9 @@ interface IAssignModalWrapperProps {
 	property: TProperty | null;
 }
 
-const AssignModalWrapper: React.FC<IAssignModalWrapperProps> = ({
-	property,
-	...otherProps
-}) => {
+const AssignModalWrapper: React.FC<
+	{children?: React.ReactNode | undefined} & IAssignModalWrapperProps
+> = ({property, ...otherProps}) => {
 	if (!property) {
 		return null;
 	}

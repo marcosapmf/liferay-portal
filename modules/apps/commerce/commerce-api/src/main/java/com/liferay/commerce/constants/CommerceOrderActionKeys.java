@@ -35,6 +35,9 @@ public class CommerceOrderActionKeys {
 	public static final String MANAGE_COMMERCE_ORDER_DELIVERY_TERMS =
 		"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS";
 
+	public static final String MANAGE_COMMERCE_ORDER_MULTISHIPPING =
+		"MANAGE_COMMERCE_ORDER_MULTISHIPPING";
+
 	public static final String MANAGE_COMMERCE_ORDER_NOTES =
 		"MANAGE_COMMERCE_ORDER_NOTES";
 
@@ -70,5 +73,8 @@ public class CommerceOrderActionKeys {
 
 	public static final String VIEW_OPEN_COMMERCE_ORDERS =
 		"VIEW_OPEN_COMMERCE_ORDERS";
+
+	public static final String VIEW_ORGANIZATION_COMMERCE_ORDERS =
+		"VIEW_ORGANIZATION_COMMERCE_ORDERS";
 
 }

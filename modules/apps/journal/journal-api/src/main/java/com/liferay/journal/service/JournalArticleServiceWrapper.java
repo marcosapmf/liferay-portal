@@ -1352,8 +1352,10 @@ public class JournalArticleServiceWrapper
 	 * @return The matching web content articles
 	 */
 	@Override
-	public java.util.List<JournalArticle> getLayoutArticles(long groupId) {
-		return _journalArticleService.getLayoutArticles(groupId);
+	public java.util.List<JournalArticle> getLayoutArticles(
+		long groupId, long classNameId) {
+
+		return _journalArticleService.getLayoutArticles(groupId, classNameId);
 	}
 
 	/**
@@ -1379,9 +1381,10 @@ public class JournalArticleServiceWrapper
 	 */
 	@Override
 	public java.util.List<JournalArticle> getLayoutArticles(
-		long groupId, int start, int end) {
+		long groupId, long classNameId, int start, int end) {
 
-		return _journalArticleService.getLayoutArticles(groupId, start, end);
+		return _journalArticleService.getLayoutArticles(
+			groupId, classNameId, start, end);
 	}
 
 	/**
@@ -1392,8 +1395,9 @@ public class JournalArticleServiceWrapper
 	 * @return the number of matching web content articles
 	 */
 	@Override
-	public int getLayoutArticlesCount(long groupId) {
-		return _journalArticleService.getLayoutArticlesCount(groupId);
+	public int getLayoutArticlesCount(long groupId, long classNameId) {
+		return _journalArticleService.getLayoutArticlesCount(
+			groupId, classNameId);
 	}
 
 	/**
@@ -1570,6 +1574,15 @@ public class JournalArticleServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_journalArticleService.restoreArticleFromTrash(groupId, articleId);
+	}
+
+	@Override
+	public JournalArticle revertArticle(
+			long groupId, String articleId, double version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalArticleService.revertArticle(
+			groupId, articleId, version);
 	}
 
 	@Override

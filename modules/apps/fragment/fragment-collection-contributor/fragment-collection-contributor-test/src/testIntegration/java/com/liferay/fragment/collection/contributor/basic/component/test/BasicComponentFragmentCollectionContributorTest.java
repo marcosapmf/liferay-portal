@@ -9,7 +9,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentEntry;
-import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.DefaultFragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
@@ -20,6 +19,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -30,13 +30,14 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.Locale;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -56,6 +57,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Víctor Galán
  */
+@FeatureFlag("LPD-17564")
 @RunWith(Arquillian.class)
 public class BasicComponentFragmentCollectionContributorTest {
 
@@ -72,6 +74,41 @@ public class BasicComponentFragmentCollectionContributorTest {
 	}
 
 	@Test
+	@TestInfo("LPD-51802")
+	public void testAccordionAccessibility() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				"BASIC_COMPONENT-accordion");
+
+		Document document = Jsoup.parseBodyFragment(
+			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+				_fragmentEntryLinkService.addFragmentEntryLink(
+					null, _group.getGroupId(), null,
+					fragmentEntry.getExternalReferenceCode(),
+					fragmentEntry.getScopeERC(), 0, layout.getPlid(),
+					fragmentEntry.getCss(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+					StringPool.BLANK, StringPool.BLANK, 0, null,
+					fragmentEntry.getType(),
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId())),
+				_getFragmentEntryProcessorContext(
+					layout, LocaleUtil.getMostRelevantLocale())));
+
+		Elements elements = document.select("[aria-controls]");
+
+		Assert.assertEquals(elements.toString(), 1, elements.size());
+
+		for (Element element : elements) {
+			Assert.assertNotNull(
+				document.getElementById(element.attr("aria-controls")));
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-26242")
 	public void testSliderAccessibility() throws Exception {
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
@@ -79,23 +116,24 @@ public class BasicComponentFragmentCollectionContributorTest {
 			_fragmentCollectionContributorRegistry.getFragmentEntry(
 				"BASIC_COMPONENT-slider");
 
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkService.addFragmentEntryLink(
-				null, _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(), 0, layout.getPlid(),
-				fragmentEntry.getCss(), fragmentEntry.getHtml(),
-				fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
-				StringPool.BLANK, StringPool.BLANK, 0, null,
-				fragmentEntry.getType(),
-				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
-
 		Document document = Jsoup.parseBodyFragment(
 			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
+				_fragmentEntryLinkService.addFragmentEntryLink(
+					null, _group.getGroupId(), null,
+					fragmentEntry.getExternalReferenceCode(),
+					fragmentEntry.getScopeERC(), 0, layout.getPlid(),
+					fragmentEntry.getCss(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+					StringPool.BLANK, StringPool.BLANK, 0, null,
+					fragmentEntry.getType(),
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId())),
 				_getFragmentEntryProcessorContext(
 					layout, LocaleUtil.getMostRelevantLocale())));
 
 		Elements elements = document.select("[aria-controls]");
+
+		Assert.assertFalse(elements.toString(), elements.isEmpty());
 
 		for (Element element : elements) {
 			Assert.assertNotNull(
@@ -121,7 +159,7 @@ public class BasicComponentFragmentCollectionContributorTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();

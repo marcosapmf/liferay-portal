@@ -14,6 +14,7 @@ import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.change.tracking.registry.CTModelRegistration;
 import com.liferay.portal.change.tracking.registry.CTModelRegistry;
@@ -81,7 +82,7 @@ public class CTSQLTransformerTest {
 				"create table MainTable (mainTableId LONG not null, ",
 				"ctCollectionId LONG not null, companyId LONG, groupId LONG, ",
 				"name VARCHAR(20), primary key (mainTableId, ",
-				"ctCollectionId));"));
+				"ctCollectionId))"));
 
 		_db.runSQL("insert into MainTable values (1, 0, 2, 3, 'mt1 v1')");
 		_db.runSQL("insert into MainTable values (2, 0, 2, 3, 'mt2 v1')");
@@ -1069,7 +1070,7 @@ public class CTSQLTransformerTest {
 
 	@SafeVarargs
 	private final void _assertQuery(
-			String inputSQLFile, String expectedOutputSQLFile,
+			String inputSQLFileName, String expectedOutputSQLFileName,
 			long ctCollectionId,
 			UnsafeConsumer<PreparedStatement, Exception>
 				preparedStatementUnsafeConsumer,
@@ -1086,17 +1087,18 @@ public class CTSQLTransformerTest {
 
 		_ctPreferencesLocalService.updateCTPreferences(ctPreferences);
 
-		long originalCompanyId = CompanyThreadLocal.getCompanyId();
-
 		long originalUserId = PrincipalThreadLocal.getUserId();
 
-		CompanyThreadLocal.setCompanyId(companyId);
-
-		PrincipalThreadLocal.setName(userId);
-
-		try (Connection connection = DataAccess.getConnection();
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					companyId, ctCollectionId);
+			Connection connection = DataAccess.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				_getSQL(inputSQLFile, expectedOutputSQLFile, ctCollectionId))) {
+				_getSQL(
+					inputSQLFileName, expectedOutputSQLFileName,
+					ctCollectionId))) {
+
+			PrincipalThreadLocal.setName(userId);
 
 			preparedStatementUnsafeConsumer.accept(preparedStatement);
 
@@ -1113,8 +1115,6 @@ public class CTSQLTransformerTest {
 			}
 		}
 		finally {
-			CompanyThreadLocal.setCompanyId(originalCompanyId);
-
 			PrincipalThreadLocal.setName(originalUserId);
 		}
 	}
@@ -1133,7 +1133,7 @@ public class CTSQLTransformerTest {
 	}
 
 	private void _assertUpdate(
-			String inputSQLFile, String expectedOutputSQLFile,
+			String inputSQLFileName, String expectedOutputSQLFileName,
 			long ctCollectionId,
 			UnsafeConsumer<PreparedStatement, Exception>
 				preparedStatementUnsafeConsumer)
@@ -1149,42 +1149,41 @@ public class CTSQLTransformerTest {
 
 		_ctPreferencesLocalService.updateCTPreferences(ctPreferences);
 
-		long originalCompanyId = CompanyThreadLocal.getCompanyId();
-
 		long originalUserId = PrincipalThreadLocal.getUserId();
 
-		CompanyThreadLocal.setCompanyId(companyId);
-
-		PrincipalThreadLocal.setName(userId);
-
-		try (Connection connection = DataAccess.getConnection();
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					companyId, ctCollectionId);
+			Connection connection = DataAccess.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(
-				_getSQL(inputSQLFile, expectedOutputSQLFile, ctCollectionId))) {
+				_getSQL(
+					inputSQLFileName, expectedOutputSQLFileName,
+					ctCollectionId))) {
+
+			PrincipalThreadLocal.setName(userId);
 
 			preparedStatementUnsafeConsumer.accept(preparedStatement);
 
 			Assert.assertEquals(1, preparedStatement.executeUpdate());
 		}
 		finally {
-			CompanyThreadLocal.setCompanyId(originalCompanyId);
-
 			PrincipalThreadLocal.setName(originalUserId);
 		}
 	}
 
 	private String _getSQL(
-			String inputSQLFile, String expectedOutputSQLFile,
+			String inputSQLFileName, String expectedOutputSQLFileName,
 			long ctCollectionId)
 		throws Exception {
 
 		String inputSQL = StreamUtil.toString(
 			CTSQLTransformerTest.class.getResourceAsStream(
-				"dependencies/" + inputSQLFile));
+				"dependencies/" + inputSQLFileName));
 
 		String expectedOutputSQL = _normalizeSQL(
 			StreamUtil.toString(
 				CTSQLTransformerTest.class.getResourceAsStream(
-					"dependencies/" + expectedOutputSQLFile)));
+					"dependencies/" + expectedOutputSQLFileName)));
 
 		expectedOutputSQL = StringUtil.replace(
 			expectedOutputSQL, "[$", "$]",

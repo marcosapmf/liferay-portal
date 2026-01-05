@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -47,7 +46,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /**
  * @author Carolina Barbosa
  */
-@FeatureFlags("LPD-17965")
 @RunWith(Arquillian.class)
 public class SystemObjectEntrySingleFormVariationInfoCollectionProviderTest {
 
@@ -80,14 +78,14 @@ public class SystemObjectEntrySingleFormVariationInfoCollectionProviderTest {
 				getSystemObjectDefinitionManager(objectDefinition.getName());
 
 		long organizationId1 = systemObjectDefinitionManager.addBaseModel(
-			TestPropsValues.getUser(),
+			false, TestPropsValues.getUser(),
 			HashMapBuilder.<String, Object>put(
 				"comment", "Comment 1"
 			).put(
 				"name", "Name 1"
 			).build());
 		long organizationId2 = systemObjectDefinitionManager.addBaseModel(
-			TestPropsValues.getUser(),
+			false, TestPropsValues.getUser(),
 			HashMapBuilder.<String, Object>put(
 				"comment", "Comment 2"
 			).put(

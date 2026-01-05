@@ -10,16 +10,35 @@ import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.service.CPDAvailabilityEstimateService;
 import com.liferay.commerce.service.CPDefinitionInventoryService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductConfiguration;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 /**
  * @author Alessio Antonio Rendina
  * @author Igor Beslic
  */
 public class ProductConfigurationUtil {
+
+	public static String getAllowedOrderQuantities(
+		BigDecimal[] allowedOrderQuantities,
+		String defaultAllowedOrderQuantities) {
+
+		if (allowedOrderQuantities != null) {
+			return StringUtil.merge(allowedOrderQuantities, StringPool.SPACE);
+		}
+
+		if (Validator.isNull(defaultAllowedOrderQuantities)) {
+			return null;
+		}
+
+		return defaultAllowedOrderQuantities;
+	}
 
 	public static void updateCPDAvailabilityEstimate(
 			CPDAvailabilityEstimateService cpdAvailabilityEstimateService,
@@ -77,27 +96,12 @@ public class ProductConfigurationUtil {
 			BigDecimalUtil.get(
 				productConfiguration.getMaxOrderQuantity(),
 				cpDefinitionInventory.getMaxOrderQuantity()),
-			_getAllowedOrderQuantities(
-				cpDefinitionInventory, productConfiguration),
+			getAllowedOrderQuantities(
+				productConfiguration.getAllowedOrderQuantities(),
+				cpDefinitionInventory.getAllowedOrderQuantities()),
 			BigDecimalUtil.get(
 				productConfiguration.getMultipleOrderQuantity(),
 				cpDefinitionInventory.getMultipleOrderQuantity()));
-	}
-
-	private static String _getAllowedOrderQuantities(
-		CPDefinitionInventory cpDefinitionInventory,
-		ProductConfiguration productConfiguration) {
-
-		if (productConfiguration.getAllowedOrderQuantities() != null) {
-			return StringUtil.merge(
-				productConfiguration.getAllowedOrderQuantities());
-		}
-
-		if (cpDefinitionInventory == null) {
-			return null;
-		}
-
-		return cpDefinitionInventory.getAllowedOrderQuantities();
 	}
 
 }

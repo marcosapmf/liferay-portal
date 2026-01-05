@@ -14,9 +14,9 @@ import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @author Brian Wing Shun Chan
@@ -30,13 +30,13 @@ public class GZipFilter extends BasePortalFilter {
 	public GZipFilter() {
 
 		// The compression filter will work on JBoss, Tomcat, WebLogic,
-		// and WebSphere, but may break on other servers
+		// but may break on other servers
 
 		boolean filterEnabled = false;
 
 		if (super.isFilterEnabled() &&
 			(ServerDetector.isJBoss() || ServerDetector.isTomcat() ||
-			 ServerDetector.isWebLogic() || ServerDetector.isWebSphere())) {
+			 ServerDetector.isWebLogic())) {
 
 			filterEnabled = true;
 		}
@@ -73,16 +73,12 @@ public class GZipFilter extends BasePortalFilter {
 	}
 
 	protected boolean isCompress(HttpServletRequest httpServletRequest) {
-		if (ParamUtil.getBoolean(httpServletRequest, _COMPRESS, true)) {
-			return true;
-		}
-
-		return false;
+		return ParamUtil.getBoolean(httpServletRequest, _COMPRESS, true);
 	}
 
 	protected boolean isInclude(HttpServletRequest httpServletRequest) {
 		String uri = (String)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_SERVLET_INCLUDE_REQUEST_URI);
+			JavaConstants.JAKARTA_SERVLET_INCLUDE_REQUEST_URI);
 
 		if (uri == null) {
 			return false;

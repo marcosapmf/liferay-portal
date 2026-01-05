@@ -1,4 +1,4 @@
-@component-name = "portal-security"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -67,7 +67,6 @@ definition {
 	@description = "This is a use case for LPS-142518. TC-8 Verify that cookies will have 12 months of lifetime when they are accepted."
 	@priority = 5
 	test VerifyCookiesLifetime {
-		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -80,7 +79,7 @@ definition {
 		}
 
 		task ("Then: Cookie category related cookies are saved with 12 months as expiration time.") {
-			CookieBanner.checkIfCookiesHasSixMonthsAsExpirationDate();
+			CookieBanner.checkIfCookiesHaveTwelveMonthsAsExpirationDate();
 		}
 	}
 
@@ -91,12 +90,12 @@ definition {
 		property test.run.type = "single";
 
 		task ("Given: Site Administrator disabled the cookie preference handling in instance level and the implicit cookie consent mode.") {
-			CookiePreferenceHandlingAdmin.disablePreferenceHandlingWithOutCookieConsentInSiteSettings(
+			CookiePreferenceHandlingAdmin.disablePreferenceHandlingInSiteSettings(
 				baseURL = "http://localhost:8080",
 				portlet = "Preference Handling",
 				siteURLKey = "guest");
 
-			CookiePreferenceHandlingAdmin.disablePreferenceHandling(explicitMode = "disable");
+			CookiePreferenceHandlingAdmin.disablePreferenceHandling();
 		}
 
 		task ("When: End User first visits the site") {
@@ -128,7 +127,7 @@ definition {
 		property test.run.type = "single";
 
 		task ("Given: Site Administrator enabled the cookie preference handling in instance level and the explicit cookie consent mode.") {
-			CookiePreferenceHandlingAdmin.disablePreferenceHandlingWithOutCookieConsentInSiteSettings(
+			CookiePreferenceHandlingAdmin.disablePreferenceHandlingInSiteSettings(
 				baseURL = "http://localhost:8080",
 				portlet = "Preference Handling",
 				siteURLKey = "guest");
@@ -215,7 +214,7 @@ definition {
 		property test.run.type = "single";
 
 		task ("Given: Site Administrator enabled the cookie preference handling in instance level and the explicit cookie consent mode.") {
-			CookiePreferenceHandlingAdmin.disablePreferenceHandlingWithOutCookieConsentInSiteSettings(
+			CookiePreferenceHandlingAdmin.disablePreferenceHandlingInSiteSettings(
 				baseURL = "http://localhost:8080",
 				portlet = "Preference Handling",
 				siteURLKey = "guest");

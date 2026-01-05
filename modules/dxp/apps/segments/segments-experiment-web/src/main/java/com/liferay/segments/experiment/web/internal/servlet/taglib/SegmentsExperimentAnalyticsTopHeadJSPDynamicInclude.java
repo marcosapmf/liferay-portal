@@ -8,6 +8,7 @@ package com.liferay.segments.experiment.web.internal.servlet.taglib;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -18,11 +19,11 @@ import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,6 +61,13 @@ public class SegmentsExperimentAnalyticsTopHeadJSPDynamicInclude
 		catch (Exception exception) {
 			throw new IOException(exception);
 		}
+
+		Layout layout = themeDisplay.getLayout();
+
+		httpServletRequest.setAttribute(
+			SegmentsExperimentWebKeys.
+				SEGMENTS_ANALYTICS_EXTERNAL_REFERENCE_CODE,
+			layout.getExternalReferenceCode());
 
 		SegmentsExperienceManager segmentsExperienceManager =
 			new SegmentsExperienceManager(_segmentsExperienceLocalService);

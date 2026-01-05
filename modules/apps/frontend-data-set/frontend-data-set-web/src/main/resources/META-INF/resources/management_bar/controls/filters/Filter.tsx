@@ -7,11 +7,11 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {loadModule} from 'frontend-js-web';
 import React, {ReactElement, useContext, useEffect, useState} from 'react';
 
+import FrontendDataSetContext from '../../../FrontendDataSetContext';
 import ViewsContext from '../../../views/ViewsContext';
 
 // @ts-ignore
 
-import {VIEWS_ACTION_TYPES} from '../../../views/viewsReducer';
 import clientExtensionFilterImplementation from './implementation/ClientExtensionFilter';
 import dateRangeFilterImplementation from './implementation/DateRangeFilter';
 import selectionFilterImplementation from './implementation/SelectionFilter';
@@ -25,6 +25,7 @@ export interface FilterImplementation<
 }
 
 export interface FilterImplementationArgs<T> {
+	active: boolean;
 	id: string;
 	selectedData: T;
 	setFilter: (args: SetFilterArgs) => void;
@@ -41,9 +42,13 @@ interface FilterConfiguration {
 	id: string;
 }
 
-interface FilterComponentArgs {
+export interface IFilter {
+	clientExtensionResolutionError: any;
 	id: string;
+	label: string;
 	moduleURL: string;
+	onClose: () => void;
+	selectedItemsLabel: string;
 	type: 'clientExtension' | 'dateRange' | 'selection';
 }
 
@@ -53,25 +58,8 @@ const FILTER_IMPLEMENTATIONS = {
 	selection: selectionFilterImplementation,
 };
 
-// @ts-ignore
-
-const getComponent = Liferay.Loader?.require ? loadModule : getFakeComponent;
-
-function getFakeComponent() {
-	return new Promise((resolve) => {
-		setTimeout(
-			() =>
-				resolve(() => (
-					<div className="custom-component">
-						fakely fetched component
-					</div>
-				)),
-			3000
-		);
-	});
-}
-
-const Filter = ({id, moduleURL, type, ...otherProps}: FilterComponentArgs) => {
+const Filter = ({id, moduleURL, onClose, type, ...otherProps}: IFilter) => {
+	const {setSearching, updateFilters} = useContext(FrontendDataSetContext);
 	const [{filters}, viewsDispatch] = useContext(ViewsContext);
 
 	const filterImplementation = FILTER_IMPLEMENTATIONS[type];
@@ -86,7 +74,7 @@ const Filter = ({id, moduleURL, type, ...otherProps}: FilterComponentArgs) => {
 
 	useEffect(() => {
 		if (moduleURL) {
-			getComponent(moduleURL).then((FetchedComponent: React.Component) =>
+			loadModule(moduleURL).then((FetchedComponent: React.Component) =>
 				setComponent(() => FetchedComponent)
 			);
 		}
@@ -109,22 +97,31 @@ const Filter = ({id, moduleURL, type, ...otherProps}: FilterComponentArgs) => {
 			...otherProps,
 		};
 
-		newFilter.odataFilterString =
-			filterImplementation.getOdataString(newFilter);
+		newFilter.odataFilterString = filterImplementation.getOdataString(
+			newFilter as any
+		);
 		newFilter.selectedItemsLabel =
-			filterImplementation.getSelectedItemsLabel(newFilter);
+			filterImplementation.getSelectedItemsLabel(newFilter as any);
 
-		viewsDispatch({
-			type: VIEWS_ACTION_TYPES.UPDATE_FILTERS,
-			value: filters.map((filter: FilterConfiguration) =>
-				filter.id === filterId ? newFilter : filter
-			),
-		});
+		setSearching(true);
+
+		viewsDispatch(
+			updateFilters(
+				filters.map((filter: FilterConfiguration) =>
+					filter.id === filterId ? newFilter : filter
+				)
+			)
+		);
 	};
 
 	return Component ? (
 		<div className="data-set-filter">
-			<Component id={id} setFilter={setFilter} {...otherProps} />
+			<Component
+				id={id}
+				onClose={onClose}
+				setFilter={setFilter}
+				{...otherProps}
+			/>
 		</div>
 	) : (
 		<ClayLoadingIndicator size="sm" />

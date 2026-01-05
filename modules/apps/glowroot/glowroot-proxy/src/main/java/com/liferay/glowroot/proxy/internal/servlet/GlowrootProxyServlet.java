@@ -20,6 +20,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.Serializable;
 
 import java.nio.charset.StandardCharsets;
@@ -29,11 +34,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
 
 import org.mitre.dsmiley.httpproxy.ProxyServlet;
 
@@ -195,8 +195,8 @@ public class GlowrootProxyServlet extends ProxyServlet implements Serializable {
 
 		@Override
 		public Enumeration<String> getHeaderNames() {
-			if (_headerNameSet == null) {
-				_headerNameSet = new HashSet<>();
+			if (_headerNames == null) {
+				_headerNames = new HashSet<>();
 
 				Enumeration<String> enumeration = super.getHeaderNames();
 
@@ -206,12 +206,12 @@ public class GlowrootProxyServlet extends ProxyServlet implements Serializable {
 					if (!StringUtil.equalsIgnoreCase(
 							"Accept-Encoding", headerName)) {
 
-						_headerNameSet.add(headerName);
+						_headerNames.add(headerName);
 					}
 				}
 			}
 
-			return Collections.enumeration(_headerNameSet);
+			return Collections.enumeration(_headerNames);
 		}
 
 		@Override
@@ -229,7 +229,7 @@ public class GlowrootProxyServlet extends ProxyServlet implements Serializable {
 			super(httpServletRequest);
 		}
 
-		private Set<String> _headerNameSet;
+		private Set<String> _headerNames;
 
 	}
 

@@ -11,6 +11,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
+import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -207,6 +209,21 @@ public class DB2DB extends BaseDB {
 	}
 
 	@Override
+	public String getCharacterSet(Connection connection) throws SQLException {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select value from sysibmadm.dbcfg where name = 'codeset'")) {
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getString(1);
+				}
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
+	@Override
 	public String getPopulateSQL(String databaseName, String sqlContent) {
 		return StringBundler.concat(
 			"connect to ", databaseName, ";\n", sqlContent);
@@ -215,10 +232,16 @@ public class DB2DB extends BaseDB {
 	@Override
 	public String getRecreateSQL(String databaseName) {
 		return StringBundler.concat(
-			"drop database ", databaseName, ";\n", "create database ",
-			databaseName,
+			"drop database ", databaseName, ";\ncreate database ", databaseName,
 			" pagesize 32768 temporary tablespace managed by automatic ",
 			"storage;\n");
+	}
+
+	@Override
+	public boolean isSupportsCharacterSet(Connection connection)
+		throws SQLException {
+
+		return Objects.equals(getCharacterSet(connection), "UTF-8");
 	}
 
 	@Override
@@ -436,6 +459,16 @@ public class DB2DB extends BaseDB {
 		return _DB2;
 	}
 
+	protected boolean isNullable(String tableName, String columnName)
+		throws SQLException {
+
+		try (Connection connection = DataAccess.getConnection()) {
+			DBInspector dbInspector = new DBInspector(connection);
+
+			return dbInspector.isNullable(tableName, columnName);
+		}
+	}
+
 	protected boolean isRequiresReorgTable(
 			Connection connection, String tableName)
 		throws SQLException {
@@ -545,14 +578,20 @@ public class DB2DB extends BaseDB {
 					String defaultValue = template[template.length - 2];
 
 					if (Validator.isBlank(defaultValue)) {
-						line = line.concat(
+						runSQL(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ set default 0;",
+								REWORD_TEMPLATE, template));
+
+						runSQL(
 							StringUtil.replace(
 								"alter table @table@ alter column " +
 									"@old-column@ drop default;",
 								REWORD_TEMPLATE, template));
 					}
 					else {
-						line = line.concat(
+						runSQL(
 							StringUtil.replace(
 								"alter table @table@ alter column " +
 									"@old-column@ set default @default@;",
@@ -561,23 +600,23 @@ public class DB2DB extends BaseDB {
 
 					String nullable = template[template.length - 1];
 
-					if (!Validator.isBlank(nullable)) {
-						String nullableAlter;
+					if (Objects.equals(nullable, "not null") &&
+						isNullable(template[0], template[1])) {
 
-						if (nullable.equals("not null")) {
-							nullableAlter = StringUtil.replace(
+						runSQL(
+							StringUtil.replace(
 								"alter table @table@ alter column " +
 									"@old-column@ set not null;",
-								REWORD_TEMPLATE, template);
-						}
-						else {
-							nullableAlter = StringUtil.replace(
+								REWORD_TEMPLATE, template));
+					}
+					else if (!Objects.equals(nullable, "not null") &&
+							 !isNullable(template[0], template[1])) {
+
+						runSQL(
+							StringUtil.replace(
 								"alter table @table@ alter column " +
 									"@old-column@ drop not null;",
-								REWORD_TEMPLATE, template);
-						}
-
-						runSQL(nullableAlter);
+								REWORD_TEMPLATE, template));
 					}
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
@@ -615,8 +654,8 @@ public class DB2DB extends BaseDB {
 	private static final String[] _DB2 = {
 		"--", "1", "0", "'1970-01-01-00.00.00.000000'", "current timestamp",
 		" blob", " blob", " decimal(30, 16)", " smallint", " timestamp",
-		" double", " integer", " bigint", " varchar(4000)", " clob", " varchar",
-		" generated always as identity", "commit"
+		" double", " integer", " bigint", " varchar(4000)", " clob(2G)",
+		" varchar", " generated always as identity", "commit"
 	};
 
 	private static final int _SQL_STRING_SIZE = 4000;

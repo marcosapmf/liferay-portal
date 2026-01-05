@@ -8,11 +8,11 @@ package com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0.PriceSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -192,6 +192,52 @@ public class Price implements Cloneable, Serializable {
 	}
 
 	protected Boolean priceOnApplication;
+
+	public Double getPricingQuantityPrice() {
+		return pricingQuantityPrice;
+	}
+
+	public void setPricingQuantityPrice(Double pricingQuantityPrice) {
+		this.pricingQuantityPrice = pricingQuantityPrice;
+	}
+
+	public void setPricingQuantityPrice(
+		UnsafeSupplier<Double, Exception> pricingQuantityPriceUnsafeSupplier) {
+
+		try {
+			pricingQuantityPrice = pricingQuantityPriceUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Double pricingQuantityPrice;
+
+	public String getPricingQuantityPriceFormatted() {
+		return pricingQuantityPriceFormatted;
+	}
+
+	public void setPricingQuantityPriceFormatted(
+		String pricingQuantityPriceFormatted) {
+
+		this.pricingQuantityPriceFormatted = pricingQuantityPriceFormatted;
+	}
+
+	public void setPricingQuantityPriceFormatted(
+		UnsafeSupplier<String, Exception>
+			pricingQuantityPriceFormattedUnsafeSupplier) {
+
+		try {
+			pricingQuantityPriceFormatted =
+				pricingQuantityPriceFormattedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String pricingQuantityPriceFormatted;
 
 	public Double getPromoPrice() {
 		return promoPrice;

@@ -8,35 +8,53 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountListTypeConstants;
-import com.liferay.account.exception.NoSuchGroupException;
+import com.liferay.account.constants.AccountPortletKeys;
+import com.liferay.account.exception.DuplicateAccountGroupRelException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountGroupService;
+import com.liferay.account.service.AccountRoleLocalService;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountContactInformation;
-import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
+import com.liferay.headless.admin.user.dto.v1_0.AccountGroupBrief;
+import com.liferay.headless.admin.user.dto.v1_0.AccountRole;
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
-import com.liferay.headless.admin.user.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
+import com.liferay.headless.admin.user.dto.v1_0.TaxonomyCategoryBrief;
+import com.liferay.headless.admin.user.dto.v1_0.TaxonomyCategoryReference;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
-import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderEmailAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderPhoneUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderWebsiteUtil;
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.AccountEntityModel;
+import com.liferay.headless.admin.user.internal.util.v1_0.ResourcePermissionUtil;
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.EmailAddress;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -50,17 +68,24 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.ContactService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
+import com.liferay.portal.kernel.service.OrganizationService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -72,6 +97,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
+import com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider;
+
+import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,8 +107,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -93,10 +119,15 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account.properties",
-	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
-	service = AccountResource.class
+	property = {
+		"export.import.vulcan.batch.engine.task.item.delegate=true",
+		"nested.field.support=true"
+	},
+	scope = ServiceScope.PROTOTYPE, service = AccountResource.class
 )
-public class AccountResourceImpl extends BaseAccountResourceImpl {
+public class AccountResourceImpl
+	extends BaseAccountResourceImpl
+	implements ExportImportVulcanBatchEngineTaskItemDelegate<Account> {
 
 	@Override
 	public void deleteAccount(Long accountId) throws Exception {
@@ -136,6 +167,35 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 						_accountResourceDTOConverter, externalReferenceCode),
 					organizationId);
 		}
+	}
+
+	@Override
+	public void deleteOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] accountIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		deleteOrganizationAccounts(
+			organization.getOrganizationId(), accountIds);
+	}
+
+	@Override
+	public void
+			deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode,
+				String[] externalReferenceCodes)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		deleteOrganizationAccountsByExternalReferenceCode(
+			organization.getOrganizationId(), externalReferenceCodes);
 	}
 
 	@Override
@@ -192,15 +252,9 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				accountGroupExternalReferenceCode,
 				contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					accountGroupExternalReferenceCode);
-		}
 
 		return getAccountGroupAccountsPage(
 			accountGroup.getAccountGroupId(), search, filter, pagination,
@@ -247,7 +301,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					document.get(Field.ENTRY_CLASS_PK));
 
 				return _toAccount(
-					_accountEntryService.getAccountEntry(accountEntryId));
+					_accountEntryLocalService.getAccountEntry(accountEntryId));
 			});
 	}
 
@@ -255,7 +309,50 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
 		throws Exception {
 
-		return _entityModel;
+		return new AccountEntityModel(
+			EntityFieldsUtil.getEntityFields(
+				_portal.getClassNameId(AccountEntry.class.getName()),
+				contextCompany.getCompanyId(), _expandoColumnLocalService,
+				_expandoTableLocalService));
+	}
+
+	@Override
+	public ExportImportDescriptor getExportImportDescriptor() {
+		return new ExportImportDescriptor() {
+
+			@Override
+			public String getLabelLanguageKey() {
+				return "accounts";
+			}
+
+			@Override
+			public String getModelClassName() {
+				return AccountEntry.class.getName();
+			}
+
+			@Override
+			public List<String> getNestedFields() {
+				return List.of(
+					"accountGroupBriefs", "accountRoles", "creator", "keywords",
+					"logoBase64", "postalAddresses", "taxonomyCategoryBriefs");
+			}
+
+			@Override
+			public String getPortletId() {
+				return AccountPortletKeys.ACCOUNT_ENTRIES_ADMIN;
+			}
+
+			@Override
+			public String getResourceClassName() {
+				return AccountResourceImpl.class.getName();
+			}
+
+			@Override
+			public Scope getScope() {
+				return Scope.COMPANY;
+			}
+
+		};
 	}
 
 	@NestedField(
@@ -286,6 +383,38 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	@Override
+	public Page<Account> getOrganizationByExternalReferenceCodeAccountsPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return getOrganizationAccountsPage(
+			String.valueOf(organization.getOrganizationId()), search, filter,
+			pagination, sorts);
+	}
+
+	@Override
+	public Page<Account>
+			getOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage(
+				String organizationExternalReferenceCode, String search,
+				Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		return getOrganizationAccountsPage(
+			String.valueOf(organization.getOrganizationId()), search, filter,
+			pagination, sorts);
+	}
+
+	@Override
 	public Account patchAccount(Long accountId, Account account)
 		throws Exception {
 
@@ -293,9 +422,12 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			accountId);
 
 		accountEntry = _accountEntryService.updateAccountEntry(
+			GetterUtil.getString(
+				account.getExternalReferenceCode(),
+				accountEntry.getExternalReferenceCode()),
 			accountId,
-			GetterUtil.getLong(
-				account.getParentAccountId(),
+			_getParentAccountId(
+				account,
 				GetterUtil.getLong(
 					accountEntry.getParentAccountEntryId(),
 					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT)),
@@ -316,103 +448,21 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					WorkflowConstants.STATUS_APPROVED)),
 			_createServiceContext(account));
 
-		accountEntry = _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			GetterUtil.getString(
-				account.getExternalReferenceCode(),
-				accountEntry.getExternalReferenceCode()));
-
-		_addAddresses(accountId, account);
-
-		_accountEntryLocalService.updateDefaultBillingAddressId(
-			accountId,
-			GetterUtil.getLong(
-				account.getDefaultBillingAddressId(),
-				accountEntry.getDefaultBillingAddressId()));
-
-		_accountEntryLocalService.updateDefaultShippingAddressId(
-			accountEntry.getAccountEntryId(),
-			GetterUtil.getLong(
-				account.getDefaultShippingAddressId(),
-				accountEntry.getDefaultShippingAddressId()));
-
-		Long[] organizationIds = account.getOrganizationIds();
-
-		if (organizationIds != null) {
-			_accountEntryOrganizationRelLocalService.
-				setAccountEntryOrganizationRels(
-					accountId, ArrayUtil.toArray(organizationIds));
-		}
-
-		UserAccount[] userAccounts = account.getAccountUserAccounts();
-
-		if (userAccounts != null) {
-			_accountEntryUserRelLocalService.setAccountEntryUserRels(
-				accountId,
-				transformToLongArray(
-					Arrays.asList(userAccounts), UserAccount::getId));
-		}
-
-		AccountContactInformation accountContactInformation =
-			account.getAccountContactInformation();
-
-		if (accountContactInformation != null) {
-			UsersAdminUtil.updateAddresses(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getContactAddresses(account, accountEntry));
-			UsersAdminUtil.updateEmailAddresses(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getEmailAddresses(account, accountEntry));
-			UsersAdminUtil.updatePhones(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getPhones(account, accountEntry));
-			UsersAdminUtil.updateWebsites(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getWebsites(account, accountEntry));
-
-			Contact contact = accountEntry.fetchContact();
-
-			if (contact == null) {
-				_addOrUpdateContact(
-					0, contextUser.getUserId(), AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970,
-					GetterUtil.getString(accountContactInformation.getSms()),
-					GetterUtil.getString(
-						accountContactInformation.getFacebook()),
-					GetterUtil.getString(accountContactInformation.getJabber()),
-					GetterUtil.getString(accountContactInformation.getSkype()),
-					GetterUtil.getString(
-						accountContactInformation.getTwitter()),
-					null);
-			}
-			else {
-				_addOrUpdateContact(
-					contact.getContactId(), contact.getUserId(),
-					contact.getClassName(), contact.getClassPK(),
-					contact.getEmailAddress(), contact.getFirstName(),
-					contact.getMiddleName(), contact.getLastName(),
-					contact.getPrefixListTypeId(),
-					contact.getSuffixListTypeId(), contact.isMale(), 0, 1, 1970,
-					GetterUtil.getString(
-						accountContactInformation.getSms(), contact.getSmsSn()),
-					GetterUtil.getString(
-						accountContactInformation.getFacebook(),
-						contact.getFacebookSn()),
-					GetterUtil.getString(
-						accountContactInformation.getJabber(),
-						contact.getJabberSn()),
-					GetterUtil.getString(
-						accountContactInformation.getSkype(),
-						contact.getSkypeSn()),
-					GetterUtil.getString(
-						accountContactInformation.getTwitter(),
-						contact.getTwitterSn()),
-					contact.getJobTitle());
-			}
-		}
+		accountEntry = _updateNestedResources(account, accountEntry, accountId);
 
 		return _toAccount(accountEntry);
+	}
+
+	@Override
+	public Account patchAccountByExternalReferenceCode(
+			String externalReferenceCode, Account account)
+		throws Exception {
+
+		AccountEntry accountEntry =
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return patchAccount(accountEntry.getAccountEntryId(), account);
 	}
 
 	@Override
@@ -440,68 +490,17 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Override
 	public Account postAccount(Account account) throws Exception {
 		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
-			contextUser.getUserId(), _getParentAccountId(account),
+			account.getExternalReferenceCode(), contextUser.getUserId(),
+			_getParentAccountId(
+				account, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
 			account.getName(), account.getDescription(), _getDomains(account),
 			null, _getLogoBytes(account, null, false), account.getTaxId(),
 			_getType(account), _getStatus(account),
 			_createServiceContext(account));
 
-		if (_isValidId(account.getDefaultBillingAddressId())) {
-			_accountEntryLocalService.updateDefaultBillingAddressId(
-				accountEntry.getAccountEntryId(),
-				account.getDefaultBillingAddressId());
-		}
-
-		if (_isValidId(account.getDefaultShippingAddressId())) {
-			_accountEntryLocalService.updateDefaultShippingAddressId(
-				accountEntry.getAccountEntryId(),
-				account.getDefaultShippingAddressId());
-		}
-
-		accountEntry = _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			account.getExternalReferenceCode());
-
-		_accountEntryOrganizationRelLocalService.
-			setAccountEntryOrganizationRels(
-				accountEntry.getAccountEntryId(), _getOrganizationIds(account));
-
-		_accountEntryUserRelLocalService.setAccountEntryUserRels(
-			accountEntry.getAccountEntryId(),
-			_getAccountUserAccountIds(account));
-
-		_addAddresses(accountEntry.getAccountEntryId(), account);
-
-		AccountContactInformation accountContactInformation =
-			account.getAccountContactInformation();
-
-		if (accountContactInformation != null) {
-			UsersAdminUtil.updateAddresses(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getContactAddresses(account, null));
-			UsersAdminUtil.updateEmailAddresses(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getEmailAddresses(account, null));
-			UsersAdminUtil.updatePhones(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getPhones(account, null));
-			UsersAdminUtil.updateWebsites(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getWebsites(account, null));
-
-			_addOrUpdateContact(
-				0, contextUser.getUserId(), AccountEntry.class.getName(),
-				accountEntry.getAccountEntryId(), null, null, null, null, 0, 0,
-				true, 0, 1, 1970,
-				GetterUtil.getString(accountContactInformation.getSms()),
-				GetterUtil.getString(accountContactInformation.getFacebook()),
-				GetterUtil.getString(accountContactInformation.getJabber()),
-				GetterUtil.getString(accountContactInformation.getSkype()),
-				GetterUtil.getString(accountContactInformation.getTwitter()),
-				null);
-		}
-
-		return _toAccount(accountEntry);
+		return _toAccount(
+			_updateNestedResources(
+				account, accountEntry, accountEntry.getAccountEntryId()));
 	}
 
 	@Override
@@ -529,72 +528,58 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	@Override
+	public void postOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] accountIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		postOrganizationAccounts(organization.getOrganizationId(), accountIds);
+	}
+
+	@Override
+	public void
+			postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode,
+				String[] externalReferenceCodes)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		postOrganizationAccountsByExternalReferenceCode(
+			organization.getOrganizationId(), externalReferenceCodes);
+	}
+
+	@Override
 	public Account putAccount(Long accountId, Account account)
 		throws Exception {
 
-		AccountEntry accountEntry =
-			_accountEntryService.updateExternalReferenceCode(
-				accountId, account.getExternalReferenceCode());
+		AccountEntry accountEntry = _accountEntryService.fetchAccountEntry(
+			accountId);
 
-		_accountEntryOrganizationRelLocalService.
-			setAccountEntryOrganizationRels(
-				accountId, _getOrganizationIds(account));
-
-		_accountEntryUserRelLocalService.setAccountEntryUserRels(
-			accountId, _getAccountUserAccountIds(account));
+		if (accountEntry == null) {
+			return postAccount(account);
+		}
 
 		accountEntry = _accountEntryService.updateAccountEntry(
-			accountId, _getParentAccountId(account), account.getName(),
-			account.getDescription(), _isDeleteLogo(account, null),
-			_getDomains(account), accountEntry.getEmailAddress(),
+			account.getExternalReferenceCode(), accountId,
+			_getParentAccountId(
+				account,
+				GetterUtil.getLong(
+					accountEntry.getParentAccountEntryId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT)),
+			account.getName(), account.getDescription(),
+			_isDeleteLogo(account, null), _getDomains(account),
+			accountEntry.getEmailAddress(),
 			_getLogoBytes(account, accountEntry, false), account.getTaxId(),
 			_getStatus(account), _createServiceContext(account));
 
-		UsersAdminUtil.updateAddresses(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getContactAddresses(account, null));
-		UsersAdminUtil.updateEmailAddresses(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getEmailAddresses(account, null));
-		UsersAdminUtil.updatePhones(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getPhones(account, null));
-		UsersAdminUtil.updateWebsites(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getWebsites(account, null));
-
-		long contactId = 0;
-
-		Contact contact = accountEntry.fetchContact();
-
-		if (contact != null) {
-			contactId = contact.getContactId();
-		}
-
-		AccountContactInformation accountContactInformation =
-			account.getAccountContactInformation();
-
-		if (accountContactInformation != null) {
-			_addOrUpdateContact(
-				contactId, contextUser.getUserId(),
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				null, null, null, null, 0, 0, true, 0, 1, 1970,
-				GetterUtil.getString(accountContactInformation.getSms()),
-				GetterUtil.getString(accountContactInformation.getFacebook()),
-				GetterUtil.getString(accountContactInformation.getJabber()),
-				GetterUtil.getString(accountContactInformation.getSkype()),
-				GetterUtil.getString(accountContactInformation.getTwitter()),
-				null);
-		}
-		else {
-			_addOrUpdateContact(
-				contactId, contextUser.getUserId(),
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				null, null, null, null, 0, 0, true, 0, 1, 1970, null, null,
-				null, null, null, null);
-		}
-
-		_addAddresses(accountId, account);
+		accountEntry = _updateNestedResources(account, accountEntry, accountId);
 
 		return _toAccount(accountEntry);
 	}
@@ -605,64 +590,63 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.addOrUpdateAccountEntry(
-				externalReferenceCode, contextUser.getUserId(),
-				_getParentAccountId(account), account.getName(),
-				account.getDescription(), _getDomains(account), null,
-				_getLogoBytes(
-					account,
-					_accountEntryService.
-						fetchAccountEntryByExternalReferenceCode(
-							contextUser.getCompanyId(), externalReferenceCode),
-					false),
-				null, _getType(account), _getStatus(account),
-				_createServiceContext(account));
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
-		UsersAdminUtil.updateAddresses(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getContactAddresses(account, null));
-		UsersAdminUtil.updateEmailAddresses(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getEmailAddresses(account, null));
-		UsersAdminUtil.updatePhones(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getPhones(account, null));
-		UsersAdminUtil.updateWebsites(
-			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-			_getWebsites(account, null));
-
-		long contactId = 0;
-
-		Contact contact = accountEntry.fetchContact();
-
-		if (contact != null) {
-			contactId = contact.getContactId();
+		if (accountEntry == null) {
+			return putAccount(0L, account);
 		}
 
-		AccountContactInformation accountContactInformation =
-			account.getAccountContactInformation();
+		return putAccount(accountEntry.getAccountEntryId(), account);
+	}
 
-		if (accountContactInformation != null) {
-			_addOrUpdateContact(
-				contactId, contextUser.getUserId(),
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				null, null, null, null, 0, 0, true, 0, 1, 1970,
-				GetterUtil.getString(accountContactInformation.getSms()),
-				GetterUtil.getString(accountContactInformation.getFacebook()),
-				GetterUtil.getString(accountContactInformation.getJabber()),
-				GetterUtil.getString(accountContactInformation.getSkype()),
-				GetterUtil.getString(accountContactInformation.getTwitter()),
-				null);
-		}
-		else {
-			_addOrUpdateContact(
-				contactId, contextUser.getUserId(),
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				null, null, null, null, 0, 0, true, 0, 1, 1970, null, null,
-				null, null, null, null);
+	private AccountEntry _addAccountGroupRel(
+			AccountEntry accountEntry, AccountGroupBrief accountGroupBrief)
+		throws Exception {
+
+		String externalReferenceCode =
+			accountGroupBrief.getExternalReferenceCode();
+
+		if (Validator.isNull(externalReferenceCode)) {
+			return accountEntry;
 		}
 
-		return _toAccount(accountEntry);
+		try {
+			AccountGroup accountGroup =
+				_accountGroupService.getOrAddEmptyAccountGroup(
+					externalReferenceCode, accountGroupBrief.getName());
+
+			_accountGroupRelService.addAccountGroupRel(
+				accountGroup.getAccountGroupId(), AccountEntry.class.getName(),
+				accountEntry.getAccountEntryId());
+		}
+		catch (DuplicateAccountGroupRelException
+					duplicateAccountGroupRelException) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(duplicateAccountGroupRelException);
+			}
+		}
+
+		return accountEntry;
+	}
+
+	private AccountEntry _addAccountRole(
+			AccountEntry accountEntry, AccountRole accountRole)
+		throws Exception {
+
+		String externalReferenceCode = accountRole.getExternalReferenceCode();
+
+		if (Validator.isNull(externalReferenceCode)) {
+			return accountEntry;
+		}
+
+		_accountRoleLocalService.getOrAddEmptyAccountRole(
+			externalReferenceCode, contextCompany.getCompanyId(),
+			contextUser.getUserId(), accountEntry.getAccountEntryId(),
+			accountRole.getName());
+
+		return accountEntry;
 	}
 
 	private void _addAddresses(Long accountId, Account account)
@@ -684,13 +668,13 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 			_addressLocalService.addAddress(
 				address.getExternalReferenceCode(), contextUser.getUserId(),
-				AccountEntry.class.getName(), accountId, address.getName(),
-				address.getDescription(), address.getStreet1(),
-				address.getStreet2(), address.getStreet3(), address.getCity(),
-				address.getZip(), address.getRegionId(), address.getCountryId(),
-				address.getListTypeId(), address.isMailing(),
-				address.isPrimary(), postalAddress.getPhoneNumber(),
-				_createServiceContext(account));
+				AccountEntry.class.getName(), accountId, address.getCountryId(),
+				address.getListTypeId(), address.getRegionId(),
+				address.getCity(), address.getDescription(),
+				address.isMailing(), address.getName(), address.isPrimary(),
+				address.getStreet1(), address.getStreet2(),
+				address.getStreet3(), address.getSubtype(), address.getZip(),
+				postalAddress.getPhoneNumber(), _createServiceContext(account));
 		}
 	}
 
@@ -724,6 +708,10 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		ServiceContext serviceContext = ServiceContextBuilder.create(
 			contextCompany.getGroupId(), contextHttpServletRequest, null
+		).assetCategoryIds(
+			_getAssetCategoryIds(account)
+		).assetTagNames(
+			account.getKeywords()
 		).expandoBridgeAttributes(
 			CustomFieldsUtil.toMap(
 				AccountEntry.class.getName(), contextCompany.getCompanyId(),
@@ -737,17 +725,48 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		return serviceContext;
 	}
 
-	private long[] _getAccountUserAccountIds(Account account) {
-		UserAccount[] userAccounts = account.getAccountUserAccounts();
-
-		if (userAccounts == null) {
-			return new long[0];
+	private Long[] _getAssetCategoryIds(Account account) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
+			return null;
 		}
 
-		Long[] userAccountIds = transform(
-			userAccounts, userAccount -> userAccount.getId(), Long.class);
+		TaxonomyCategoryBrief[] taxonomyCategoryBriefs =
+			account.getTaxonomyCategoryBriefs();
 
-		return ArrayUtil.toArray(userAccountIds);
+		if (ArrayUtil.isEmpty(taxonomyCategoryBriefs)) {
+			return null;
+		}
+
+		return transform(
+			taxonomyCategoryBriefs,
+			taxonomyCategoryBrief -> {
+				TaxonomyCategoryReference taxonomyCategoryReference =
+					taxonomyCategoryBrief.getTaxonomyCategoryReference();
+
+				String externalReferenceCode =
+					taxonomyCategoryReference.getExternalReferenceCode();
+
+				if (Validator.isNull(externalReferenceCode) ||
+					Validator.isNull(taxonomyCategoryReference.getSiteKey())) {
+
+					return null;
+				}
+
+				Group group = _groupLocalService.fetchGroup(
+					contextCompany.getCompanyId(),
+					taxonomyCategoryReference.getSiteKey());
+
+				if (group == null) {
+					return null;
+				}
+
+				AssetCategory assetCategory =
+					_assetCategoryService.getOrAddEmptyCategory(
+						externalReferenceCode, group.getGroupId());
+
+				return assetCategory.getCategoryId();
+			},
+			Long.class);
 	}
 
 	private List<Address> _getContactAddresses(
@@ -778,6 +797,76 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 						AccountListTypeConstants.
 							ACCOUNT_ENTRY_CONTACT_ADDRESS)),
 			Objects::nonNull);
+	}
+
+	private long _getDefaultBillingAddressId(
+			Account account, long accountEntryId, long defaultBillingAddressId)
+		throws Exception {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35914") &&
+			Validator.isNotNull(
+				account.getDefaultBillingAddressExternalReferenceCode())) {
+
+			Address address = _addressLocalService.getOrAddEmptyAddress(
+				account.getDefaultBillingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId(), contextUser.getUserId(),
+				AccountEntry.class.getName(), accountEntryId);
+
+			return address.getAddressId();
+		}
+
+		long billingAddressId = GetterUtil.getLong(
+			account.getDefaultBillingAddressId());
+
+		if (billingAddressId != 0) {
+			return billingAddressId;
+		}
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				account.getDefaultBillingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (address != null) {
+			return address.getAddressId();
+		}
+
+		return defaultBillingAddressId;
+	}
+
+	private long _getDefaultShippingAddressId(
+			Account account, long accountEntryId, long defaultShippingAddressId)
+		throws Exception {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35914") &&
+			Validator.isNotNull(
+				account.getDefaultShippingAddressExternalReferenceCode())) {
+
+			Address address = _addressLocalService.getOrAddEmptyAddress(
+				account.getDefaultShippingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId(), contextUser.getUserId(),
+				AccountEntry.class.getName(), accountEntryId);
+
+			return address.getAddressId();
+		}
+
+		long shippingAddressId = GetterUtil.getLong(
+			account.getDefaultShippingAddressId());
+
+		if (shippingAddressId != 0) {
+			return shippingAddressId;
+		}
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				account.getDefaultShippingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (address != null) {
+			return address.getAddressId();
+		}
+
+		return defaultShippingAddressId;
 	}
 
 	private String[] _getDomains(Account account) {
@@ -879,8 +968,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			contextUser);
 	}
 
-	private List<com.liferay.portal.kernel.model.EmailAddress>
-			_getEmailAddresses(Account account, AccountEntry accountEntry)
+	private List<EmailAddress> _getEmailAddresses(
+			Account account, AccountEntry accountEntry)
 		throws Exception {
 
 		AccountContactInformation accountContactInformation =
@@ -911,23 +1000,39 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			boolean useAccountEntryDefault)
 		throws Exception {
 
-		Long logoId = account.getLogoId();
+		String logoBase64 = account.getLogoBase64();
 
-		if ((accountEntry != null) && (logoId == null) &&
-			useAccountEntryDefault) {
-
-			logoId = accountEntry.getLogoId();
+		if (Validator.isNotNull(logoBase64)) {
+			return Base64.decode(logoBase64);
 		}
 
-		if ((logoId != null) && (logoId != 0) &&
-			((accountEntry == null) || (accountEntry.getLogoId() != logoId))) {
+		Long logoId = GetterUtil.getLong(account.getLogoId());
 
-			FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
+		if (logoId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					account.getLogoExternalReferenceCode());
 
-			return _file.getBytes(fileEntry.getContentStream());
+			if (fileEntry != null) {
+				logoId = fileEntry.getFileEntryId();
+			}
+			else if ((fileEntry == null) && (accountEntry != null) &&
+					 useAccountEntryDefault) {
+
+				logoId = accountEntry.getLogoId();
+			}
 		}
 
-		return null;
+		if ((logoId <= 0) ||
+			((accountEntry != null) && (accountEntry.getLogoId() == logoId))) {
+
+			return null;
+		}
+
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
+
+		return _file.getBytes(fileEntry.getContentStream());
 	}
 
 	private Page<Account> _getOrganizationAccountsPage(
@@ -950,27 +1055,89 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	private long[] _getOrganizationIds(Account account) {
+		String[] organizationExternalReferenceCodes =
+			account.getOrganizationExternalReferenceCodes();
 		Long[] organizationIds = account.getOrganizationIds();
 
-		if (organizationIds == null) {
-			return new long[0];
+		if ((organizationExternalReferenceCodes == null) &&
+			(organizationIds == null)) {
+
+			return null;
 		}
 
-		return ArrayUtil.toArray(organizationIds);
-	}
+		if (ArrayUtil.isNotEmpty(organizationExternalReferenceCodes)) {
+			organizationIds = transformToArray(
+				Arrays.asList(organizationExternalReferenceCodes),
+				externalReferenceCode -> {
+					if (FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
+						com.liferay.portal.kernel.model.Organization
+							organization =
+								_organizationService.getOrAddEmptyOrganization(
+									externalReferenceCode, StringPool.BLANK);
 
-	private long _getParentAccountId(Account account) {
-		Long parentAccountId = account.getParentAccountId();
+						return organization.getOrganizationId();
+					}
 
-		if (parentAccountId == null) {
-			return AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT;
+					com.liferay.portal.kernel.model.Organization organization =
+						_organizationService.
+							fetchOrganizationByExternalReferenceCode(
+								externalReferenceCode,
+								contextCompany.getCompanyId());
+
+					if (organization == null) {
+						return null;
+					}
+
+					return organization.getOrganizationId();
+				},
+				Long.class);
+
+			return ArrayUtil.toArray(organizationIds);
 		}
 
-		return parentAccountId;
+		if (ArrayUtil.isNotEmpty(organizationIds)) {
+			return ArrayUtil.toArray(organizationIds);
+		}
+
+		return new long[0];
 	}
 
-	private List<com.liferay.portal.kernel.model.Phone> _getPhones(
-			Account account, AccountEntry accountEntry)
+	private long _getParentAccountId(
+			Account account, long defaultParentAccountId)
+		throws Exception {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-35914") &&
+			Validator.isNotNull(
+				account.getParentAccountExternalReferenceCode())) {
+
+			AccountEntry accountEntry =
+				_accountEntryService.getOrAddEmptyAccountEntry(
+					account.getParentAccountExternalReferenceCode(),
+					account.getParentAccountExternalReferenceCode(),
+					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
+
+			return accountEntry.getAccountEntryId();
+		}
+
+		Long parentAccountId = GetterUtil.getLong(account.getParentAccountId());
+
+		if (parentAccountId != 0) {
+			return parentAccountId;
+		}
+
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+				account.getParentAccountExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (accountEntry != null) {
+			return accountEntry.getAccountEntryId();
+		}
+
+		return defaultParentAccountId;
+	}
+
+	private List<Phone> _getPhones(Account account, AccountEntry accountEntry)
 		throws Exception {
 
 		AccountContactInformation accountContactInformation =
@@ -1041,11 +1208,23 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			Objects::nonNull);
 	}
 
-	private boolean _isDeleteLogo(Account account, AccountEntry accountEntry) {
-		Long logoId = account.getLogoId();
+	private boolean _isDeleteLogo(Account account, AccountEntry accountEntry)
+		throws Exception {
 
-		if ((accountEntry != null) && (logoId == null)) {
-			logoId = accountEntry.getLogoId();
+		Long logoId = GetterUtil.getLong(account.getLogoId());
+
+		if (logoId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					account.getLogoExternalReferenceCode());
+
+			if (fileEntry != null) {
+				logoId = fileEntry.getFileEntryId();
+			}
+			else if ((fileEntry == null) && (accountEntry != null)) {
+				logoId = accountEntry.getLogoId();
+			}
 		}
 
 		if ((logoId == null) || (logoId == 0)) {
@@ -1053,14 +1232,6 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		}
 
 		return false;
-	}
-
-	private boolean _isValidId(Long value) {
-		if ((value == null) || (value <= 0)) {
-			return false;
-		}
-
-		return true;
 	}
 
 	private Account _toAccount(AccountEntry accountEntry) throws Exception {
@@ -1091,6 +1262,131 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				contextUser));
 	}
 
+	private AccountEntry _updateNestedResources(
+			Account account, AccountEntry accountEntry, Long accountId)
+		throws Exception {
+
+		_addAddresses(accountId, account);
+
+		accountEntry = _accountEntryLocalService.updateDefaultBillingAddressId(
+			accountId,
+			_getDefaultBillingAddressId(
+				account, accountEntry.getAccountEntryId(),
+				accountEntry.getDefaultBillingAddressId()));
+
+		accountEntry = _accountEntryLocalService.updateDefaultShippingAddressId(
+			accountId,
+			_getDefaultShippingAddressId(
+				account, accountEntry.getAccountEntryId(),
+				accountEntry.getDefaultShippingAddressId()));
+
+		long[] organizationIds = _getOrganizationIds(account);
+
+		if (organizationIds != null) {
+			_accountEntryOrganizationRelLocalService.
+				setAccountEntryOrganizationRels(accountId, organizationIds);
+		}
+
+		UserAccount[] userAccounts = account.getAccountUserAccounts();
+
+		if (userAccounts != null) {
+			_accountEntryUserRelLocalService.setAccountEntryUserRels(
+				accountId,
+				transformToLongArray(
+					Arrays.asList(userAccounts), UserAccount::getId));
+		}
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if (accountContactInformation != null) {
+			UsersAdminUtil.updateAddresses(
+				AccountEntry.class.getName(), accountId,
+				_getContactAddresses(account, accountEntry),
+				AccountListTypeConstants.ACCOUNT_ENTRY_CONTACT_ADDRESS);
+			UsersAdminUtil.updateEmailAddresses(
+				AccountEntry.class.getName(), accountId,
+				_getEmailAddresses(account, accountEntry));
+			UsersAdminUtil.updatePhones(
+				AccountEntry.class.getName(), accountId,
+				_getPhones(account, accountEntry));
+			UsersAdminUtil.updateWebsites(
+				AccountEntry.class.getName(), accountId,
+				_getWebsites(account, accountEntry));
+
+			Contact contact = accountEntry.fetchContact();
+
+			if (contact == null) {
+				_addOrUpdateContact(
+					0, contextUser.getUserId(), AccountEntry.class.getName(),
+					accountEntry.getAccountEntryId(), null, null, null, null, 0,
+					0, true, 0, 1, 1970,
+					GetterUtil.getString(accountContactInformation.getSms()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook()),
+					GetterUtil.getString(accountContactInformation.getJabber()),
+					GetterUtil.getString(accountContactInformation.getSkype()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter()),
+					null);
+			}
+			else {
+				_addOrUpdateContact(
+					contact.getContactId(), contact.getUserId(),
+					contact.getClassName(), contact.getClassPK(),
+					contact.getEmailAddress(), contact.getFirstName(),
+					contact.getMiddleName(), contact.getLastName(),
+					contact.getPrefixListTypeId(),
+					contact.getSuffixListTypeId(), contact.isMale(), 0, 1, 1970,
+					GetterUtil.getString(
+						accountContactInformation.getSms(), contact.getSmsSn()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook(),
+						contact.getFacebookSn()),
+					GetterUtil.getString(
+						accountContactInformation.getJabber(),
+						contact.getJabberSn()),
+					GetterUtil.getString(
+						accountContactInformation.getSkype(),
+						contact.getSkypeSn()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter(),
+						contact.getTwitterSn()),
+					contact.getJobTitle());
+			}
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-35914")) {
+			return accountEntry;
+		}
+
+		AccountGroupBrief[] accountGroupBriefs =
+			account.getAccountGroupBriefs();
+
+		if (ArrayUtil.isNotEmpty(accountGroupBriefs)) {
+			for (AccountGroupBrief accountGroupBrief : accountGroupBriefs) {
+				accountEntry = _addAccountGroupRel(
+					accountEntry, accountGroupBrief);
+			}
+		}
+
+		AccountRole[] accountRoles = account.getAccountRoles();
+
+		if (ArrayUtil.isNotEmpty(accountRoles)) {
+			for (AccountRole accountRole : accountRoles) {
+				accountEntry = _addAccountRole(accountEntry, accountRole);
+			}
+		}
+
+		return ResourcePermissionUtil.setResourcePermissions(
+			accountEntry, accountEntry.getCompanyId(), account.getPermissions(),
+			_resourcePermissionLocalService, _roleService,
+			_roleTypeContributorProvider);
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountResourceImpl.class);
+
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
 
@@ -1113,13 +1409,22 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Reference
+	private AccountGroupRelService _accountGroupRelService;
+
+	@Reference
 	private AccountGroupService _accountGroupService;
 
 	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
 	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
 
 	@Reference
+	private AccountRoleLocalService _accountRoleLocalService;
+
+	@Reference
 	private AddressLocalService _addressLocalService;
+
+	@Reference
+	private AssetCategoryService _assetCategoryService;
 
 	@Reference
 	private ContactService _contactService;
@@ -1130,10 +1435,17 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
 
-	private final EntityModel _entityModel = new AccountEntityModel();
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
 
 	@Reference
 	private File _file;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ListTypeLocalService _listTypeLocalService;
@@ -1144,5 +1456,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	private DTOConverter
 		<com.liferay.portal.kernel.model.Organization, Organization>
 			_organizationResourceDTOConverter;
+
+	@Reference
+	private OrganizationService _organizationService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleService _roleService;
+
+	@Reference
+	private RoleTypeContributorProvider _roleTypeContributorProvider;
 
 }

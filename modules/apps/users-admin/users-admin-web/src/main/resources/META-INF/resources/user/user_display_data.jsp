@@ -57,6 +57,16 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 <liferay-ui:error exception="<%= UserScreenNameException.MustNotBeReserved.class %>" focusField="screenName" message="the-screen-name-you-requested-is-reserved" />
 <liferay-ui:error exception="<%= UserScreenNameException.MustNotBeReservedForAnonymous.class %>" focusField="screenName" message="the-screen-name-you-requested-is-reserved-for-the-anonymous-user" />
 <liferay-ui:error exception="<%= UserScreenNameException.MustNotBeUsedByGroup.class %>" focusField="screenName" message="the-screen-name-you-requested-is-already-taken-by-a-site" />
+
+<liferay-ui:error exception="<%= UserScreenNameException.MustNotExceedMaximumLength.class %>" focusField="screenName">
+
+	<%
+	int screenNameMaxLength = ModelHintsUtil.getMaxLength(User.class.getName(), "screenName");
+	%>
+
+	<liferay-ui:message arguments="<%= String.valueOf(screenNameMaxLength) %>" key="please-enter-a-screen-name-with-fewer-than-x-characters" />
+</liferay-ui:error>
+
 <liferay-ui:error exception="<%= UserScreenNameException.MustProduceValidFriendlyURL.class %>" focusField="screenName" message="the-screen-name-you-requested-must-produce-a-valid-friendly-url" />
 
 <liferay-ui:error exception="<%= UserScreenNameException.MustValidate.class %>" focusField="screenName">
@@ -78,6 +88,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 					defaultLogoURL="<%= UserConstants.getPortraitURL(themeDisplay.getPathImage(), selUser.isMale(), 0, null) %>"
 					label='<%= LanguageUtil.get(request, "image") %>'
 					preserveRatio="<%= true %>"
+					type="user_portrait"
 				/>
 			</c:when>
 			<c:otherwise>
@@ -92,6 +103,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 			defaultLogoURL='<%= themeDisplay.getPathImage() + "/user_portrait?img_id=0" %>'
 			label='<%= LanguageUtil.get(request, "image") %>'
 			preserveRatio="<%= true %>"
+			type="user_portrait"
 		/>
 	</c:otherwise>
 </c:choose>
@@ -155,7 +167,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 	<liferay-ui:error exception="<%= UserIdException.MustNotBeNull.class %>" message="please-enter-a-user-id" />
 	<liferay-ui:error exception="<%= UserIdException.MustNotBeReserved.class %>" message="the-user-id-you-requested-is-reserved" />
 
-	<aui:input cssClass="disabled" name="userId" readonly="true" type="text" value="<%= String.valueOf(selUser.getUserId()) %>" />
+	<aui:input name="userId" readonly="true" type="text" value="<%= String.valueOf(selUser.getUserId()) %>" />
 </c:if>
 
 <portlet:renderURL var="verifyPasswordURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -178,9 +190,10 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 				);
 
 				if (
-					emailAddressInput.value !=
-						'<%= HtmlUtil.escapeJS(selUser.getEmailAddress()) %>' ||
-					screenNameInput.value !=
+					(emailAddressInput.value &&
+						emailAddressInput.value !==
+							'<%= HtmlUtil.escapeJS(selUser.getEmailAddress()) %>') ||
+					screenNameInput.value !==
 						'<%= HtmlUtil.escapeJS(selUser.getScreenName()) %>'
 				) {
 					Liferay.Util.openModal({

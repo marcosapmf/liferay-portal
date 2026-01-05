@@ -12,6 +12,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectValidationRule;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.validation.rule.ObjectValidationRuleEngineRegistry;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -25,12 +26,12 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.security.script.management.configuration.helper.ScriptManagementConfigurationHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Selton Guedes
@@ -42,11 +43,14 @@ public class ObjectDefinitionsValidationsDisplayContext
 		HttpServletRequest httpServletRequest,
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
+		ObjectFolderLocalService objectFolderLocalService,
 		ObjectValidationRuleEngineRegistry objectValidationRuleEngineRegistry,
 		ScriptManagementConfigurationHelper
 			scriptManagementConfigurationHelper) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_objectValidationRuleEngineRegistry =
 			objectValidationRuleEngineRegistry;
@@ -170,7 +174,8 @@ public class ObjectDefinitionsValidationsDisplayContext
 	}
 
 	private List<Map<String, Object>> _createObjectValidationRuleElements(
-		String engine) {
+			String engine)
+		throws PortalException {
 
 		boolean includeDDMExpressionBuilderElements = false;
 
@@ -179,7 +184,7 @@ public class ObjectDefinitionsValidationsDisplayContext
 		}
 
 		return ObjectCodeEditorUtil.getCodeEditorElements(
-			includeDDMExpressionBuilderElements, true,
+			includeDDMExpressionBuilderElements, true, true,
 			objectRequestHelper.getLocale(), getObjectDefinitionId(),
 			objectField -> !objectField.compareBusinessType(
 				ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION));

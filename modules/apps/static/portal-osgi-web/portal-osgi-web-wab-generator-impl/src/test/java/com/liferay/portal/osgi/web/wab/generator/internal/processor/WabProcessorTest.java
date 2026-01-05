@@ -5,8 +5,10 @@
 
 package com.liferay.portal.osgi.web.wab.generator.internal.processor;
 
+import aQute.bnd.component.DSAnnotations;
 import aQute.bnd.header.Attrs;
 import aQute.bnd.header.Parameters;
+import aQute.bnd.make.component.ServiceComponent;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.osgi.Domain;
 import aQute.bnd.osgi.Jar;
@@ -16,8 +18,13 @@ import aQute.bnd.version.Version;
 
 import aQute.lib.filter.Filter;
 
+import com.liferay.ant.bnd.jsp.JspAnalyzerPlugin;
+import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.deploy.auto.context.AutoDeploymentContext;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Node;
@@ -25,11 +32,14 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.xml.SAXReaderImpl;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -48,11 +58,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Raymond Augé
@@ -65,6 +83,12 @@ public class WabProcessorTest {
 
 	@BeforeClass
 	public static void setUpClass() {
+		FastDateFormatFactoryUtil fastDateFormatFactoryUtil =
+			new FastDateFormatFactoryUtil();
+
+		fastDateFormatFactoryUtil.setFastDateFormatFactory(
+			new FastDateFormatFactoryImpl());
+
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 
 		SAXReaderImpl secureSAXReaderImpl = new SAXReaderImpl();
@@ -197,6 +221,76 @@ public class WabProcessorTest {
 	}
 
 	@Test
+	public void testCustomizedPlugins() throws Exception {
+		File file = FileUtil.createTempFile("war");
+
+		try (JarOutputStream jarOutputStream = new JarOutputStream(
+				new FileOutputStream(file))) {
+
+			Manifest manifest = new Manifest();
+
+			Attributes attributes = manifest.getMainAttributes();
+
+			attributes.putValue("Manifest-Version", "1.0");
+
+			jarOutputStream.putNextEntry(new ZipEntry(JarFile.MANIFEST_NAME));
+
+			manifest.write(jarOutputStream);
+
+			jarOutputStream.closeEntry();
+
+			jarOutputStream.putNextEntry(new ZipEntry("WEB-INF/beans.xml"));
+			jarOutputStream.write(
+				"<?xml version=\"1.0\" ?><beans/>".getBytes());
+
+			jarOutputStream.closeEntry();
+
+			jarOutputStream.finish();
+		}
+
+		WabProcessor wabProcessor = new TestWabProcessor(
+			file,
+			Collections.singletonMap(
+				"Web-ContextPath", new String[] {"/test-plugins"}));
+
+		Logger logger = LoggerFactory.getLogger("aQute.bnd.osgi.Processor");
+
+		int originalCurrentLogLevel = ReflectionTestUtil.getAndSetFieldValue(
+			logger, "currentLogLevel", 10);
+
+		PrintStream originalErr = System.err;
+
+		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
+			new UnsyncByteArrayOutputStream();
+
+		System.setErr(new PrintStream(unsyncByteArrayOutputStream));
+
+		try {
+			wabProcessor.getProcessedFile();
+
+			String message = unsyncByteArrayOutputStream.toString();
+
+			Assert.assertFalse(
+				message, message.contains(DSAnnotations.class.getSimpleName()));
+			Assert.assertFalse(
+				message,
+				message.contains(ServiceComponent.class.getSimpleName()));
+			Assert.assertTrue(
+				message,
+				message.contains(JspAnalyzerPlugin.class.getSimpleName()));
+			Assert.assertTrue(
+				message,
+				message.contains(WabProcessor.class.getSimpleName() + "$2"));
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				logger, "currentLogLevel", originalCurrentLogLevel);
+
+			System.setErr(originalErr);
+		}
+	}
+
+	@Test
 	public void testFatCDIWabOptsOutOfOSGiCDIIntegration() throws Exception {
 		WabProcessor wabProcessor = new TestWabProcessor(
 			getFile("dependencies/jsf.cdi.applicant.portlet.war"),
@@ -278,6 +372,33 @@ public class WabProcessorTest {
 
 				Assert.assertFalse(filter.matchMap(arguments));
 			}
+
+			// Make sure other CDI requirements were not added
+
+			// The EL extension
+
+			Assert.assertNull(
+				_findRequirement(
+					requirements, "osgi.cdi.extension",
+					Collections.singletonMap(
+						"osgi.cdi.extension", "aries.cdi.el.jsp")));
+
+			// The HTTP extension
+
+			Assert.assertNull(
+				_findRequirement(
+					requirements, "osgi.cdi.extension",
+					Collections.singletonMap(
+						"osgi.cdi.extension", "aries.cdi.http")));
+
+			// The Liferay bean portlet extension
+
+			Assert.assertNull(
+				_findRequirement(
+					requirements, "osgi.cdi.extension",
+					Collections.singletonMap(
+						"osgi.cdi.extension",
+						"com.liferay.bean.portlet.cdi.extension")));
 		}
 	}
 
@@ -322,8 +443,8 @@ public class WabProcessorTest {
 
 			// Now that we've established CDI discovery would kick
 			// in, check to see if the WAB opted-out of integration by
-			// having the "-cdiannotations" instruction set to the empty
-			// value in liferay-plugin-package.properties.
+			// not having the "-cdiannotations" instruction set in
+			// liferay-plugin-package.properties.
 
 			Resource packageProperties = jar.getResource(
 				"WEB-INF/liferay-plugin-package.properties");

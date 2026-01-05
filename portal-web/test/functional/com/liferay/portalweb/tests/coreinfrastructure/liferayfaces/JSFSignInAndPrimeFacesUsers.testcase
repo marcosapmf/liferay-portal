@@ -1,4 +1,4 @@
-@component-name = "core-infrastructure"
+@component-name = "portal-core-infra"
 definition {
 
 	property liferay.faces = "true";
@@ -71,6 +71,7 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = 5
 	test PrimeFacesUsersSmoke {
 

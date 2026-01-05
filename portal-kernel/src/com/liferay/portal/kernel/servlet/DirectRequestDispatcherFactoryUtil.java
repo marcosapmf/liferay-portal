@@ -13,16 +13,16 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
 
 /**
  * @author Raymond Augé
@@ -100,8 +100,8 @@ public class DirectRequestDispatcherFactoryUtil {
 	}
 
 	private static final String _EQUINOX_REQUEST_CLASS_NAME =
-		"org.eclipse.equinox.http.servlet.internal.servlet." +
-			"HttpServletRequestWrapperImpl";
+		"com.liferay.portal.osgi.web.http.servlet.internal.servlet." +
+			"LiferayHttpServletRequestWrapper";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DirectRequestDispatcherFactoryUtil.class);

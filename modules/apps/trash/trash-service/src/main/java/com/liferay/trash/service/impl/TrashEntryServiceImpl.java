@@ -5,6 +5,7 @@
 
 package com.liferay.trash.service.impl;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -22,9 +23,9 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.adapter.ModelAdapterUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.constants.TrashActionKeys;
 import com.liferay.trash.constants.TrashEntryConstants;
@@ -34,7 +35,6 @@ import com.liferay.trash.model.TrashEntryList;
 import com.liferay.trash.model.impl.TrashEntryImpl;
 import com.liferay.trash.service.base.TrashEntryServiceBaseImpl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -229,7 +229,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 	public List<TrashEntry> getEntries(long groupId, String className)
 		throws PrincipalException {
 
-		List<TrashEntry> entries = trashEntryPersistence.findByG_C(
+		List<TrashEntry> entries = trashEntryPersistence.findByG_CN(
 			groupId, _classNameLocalService.getClassNameId(className));
 
 		return _filterEntries(entries);
@@ -269,7 +269,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 		List<TrashEntry> entries = null;
 
 		if (Validator.isNotNull(className)) {
-			entries = trashEntryPersistence.findByG_C(
+			entries = trashEntryPersistence.findByG_CN(
 				groupId, _classNameLocalService.getClassNameId(className), 0,
 				end + PropsValues.TRASH_SEARCH_LIMIT, orderByComparator);
 		}
@@ -501,7 +501,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 			String className, long classPK, long overrideClassPK, String name)
 		throws PortalException {
 
-		TrashEntry trashEntry = trashEntryPersistence.fetchByC_C(
+		TrashEntry trashEntry = trashEntryPersistence.fetchByCN_CPK(
 			_classNameLocalService.getClassNameId(className), classPK);
 
 		if (trashEntry != null) {
@@ -529,30 +529,30 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 	private List<TrashEntry> _filterEntries(List<TrashEntry> entries)
 		throws PrincipalException {
 
-		List<TrashEntry> filteredEntries = new ArrayList<>();
-
 		PermissionChecker permissionChecker = getPermissionChecker();
 
-		for (TrashEntry entry : entries) {
-			String className = entry.getClassName();
-			long classPK = entry.getClassPK();
+		return TransformUtil.transform(
+			entries,
+			entry -> {
+				String className = entry.getClassName();
+				long classPK = entry.getClassPK();
 
-			try {
-				TrashHandler trashHandler =
-					TrashHandlerRegistryUtil.getTrashHandler(className);
+				try {
+					TrashHandler trashHandler =
+						TrashHandlerRegistryUtil.getTrashHandler(className);
 
-				if (trashHandler.hasTrashPermission(
-						permissionChecker, 0, classPK, ActionKeys.VIEW)) {
+					if (trashHandler.hasTrashPermission(
+							permissionChecker, 0, classPK, ActionKeys.VIEW)) {
 
-					filteredEntries.add(entry);
+						return entry;
+					}
 				}
-			}
-			catch (Exception exception) {
-				_log.error(exception);
-			}
-		}
+				catch (Exception exception) {
+					_log.error(exception);
+				}
 
-		return filteredEntries;
+				return null;
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

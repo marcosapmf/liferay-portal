@@ -17,8 +17,11 @@ import {NotificationSectionPage} from '../pages/portal-workflow-kaleo-designer-w
 import {ProcessBuilderPage} from '../pages/portal-workflow-kaleo-designer-web/ProcessBuilderPage';
 import {SourceViewPage} from '../pages/portal-workflow-kaleo-designer-web/SourceViewPage';
 import {TimerPage} from '../pages/portal-workflow-kaleo-designer-web/TimerPage';
+import {TransitionInfoPage} from '../pages/portal-workflow-kaleo-designer-web/TransitionInfoPage';
 import {AllItemsPage} from '../pages/portal-workflow-metrics-web/AllItemsPage';
 import {MetricsPage} from '../pages/portal-workflow-metrics-web/MetricsPage';
+import {PerformanceByAssigneePage} from '../pages/portal-workflow-metrics-web/PerformanceByAssigneePage';
+import {PerformanceByStepPage} from '../pages/portal-workflow-metrics-web/PerformanceByStepPage';
 import {ProcessMetricsPage} from '../pages/portal-workflow-metrics-web/ProcessMetricsPage';
 import {WorkflowTaskDetailsPage} from '../pages/portal-workflow-task-web/WorkflowTaskDetailsPage';
 import {WorkflowTasksPage} from '../pages/portal-workflow-task-web/WorkflowTasksPage';
@@ -35,11 +38,14 @@ const workflowPagesTest = test.extend<{
 	metricsPage: MetricsPage;
 	nodePropertiesSidebarPage: NodePropertiesSidebarPage;
 	notificationSectionPage: NotificationSectionPage;
+	performanceByAssigneePage: PerformanceByAssigneePage;
+	performanceByStepPage: PerformanceByStepPage;
 	processBuilderPage: ProcessBuilderPage;
 	processMetricsPage: ProcessMetricsPage;
 	scriptManagementPage: ScriptManagementPage;
 	sourceViewPage: SourceViewPage;
 	timerPage: TimerPage;
+	transitionInfoPage: TransitionInfoPage;
 	workflowPage: WorkflowPage;
 	workflowTaskDetailsPage: WorkflowTaskDetailsPage;
 	workflowTasksPage: WorkflowTasksPage;
@@ -74,6 +80,12 @@ const workflowPagesTest = test.extend<{
 	notificationSectionPage: async ({page}, use) => {
 		await use(new NotificationSectionPage(page));
 	},
+	performanceByAssigneePage: async ({page}, use) => {
+		await use(new PerformanceByAssigneePage(page));
+	},
+	performanceByStepPage: async ({page}, use) => {
+		await use(new PerformanceByStepPage(page));
+	},
 	processBuilderPage: async ({page}, use) => {
 		await use(new ProcessBuilderPage(page));
 	},
@@ -88,6 +100,9 @@ const workflowPagesTest = test.extend<{
 	},
 	timerPage: async ({page}, use) => {
 		await use(new TimerPage(page));
+	},
+	transitionInfoPage: async ({page}, use) => {
+		await use(new TransitionInfoPage(page));
 	},
 	workflowPage: async ({page}, use) => {
 		await use(new WorkflowPage(page));

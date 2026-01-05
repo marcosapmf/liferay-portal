@@ -8,12 +8,12 @@ package com.liferay.object.admin.rest.client.dto.v1_0;
 import com.liferay.object.admin.rest.client.function.UnsafeSupplier;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectLayoutBoxSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -190,7 +190,7 @@ public class ObjectLayoutBox implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		CATEGORIZATION("categorization"), REGULAR("regular");
+		CATEGORIZATION("categorization"), REGULAR("regular"), SEO("seo");
 
 		public static Type create(String value) {
 			for (Type type : values()) {

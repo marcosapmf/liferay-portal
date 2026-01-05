@@ -1,0 +1,20 @@
+{
+	"description": "",
+	"friendlyURL": "/account-management",
+	"hidden": false,
+	"name": "account-management",
+	"name_i18n": {
+		"en_US": "Account Management"
+	},
+	"permissions": [
+		{
+			"actionIds": [
+			],
+			"roleName": "Guest",
+			"scope": 4
+		}
+	],
+	"private": false,
+	"system": false,
+	"type": "content"
+}

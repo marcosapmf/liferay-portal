@@ -49,7 +49,7 @@ public class DDMFormFieldTypesJSONSerializer
 			ddmFormFieldTypesSerializerSerializeRequest) {
 
 		List<DDMFormFieldType> ddmFormFieldTypes =
-			ddmFormFieldTypesSerializerSerializeRequest.getDdmFormFieldTypes();
+			ddmFormFieldTypesSerializerSerializeRequest.getDDMFormFieldTypes();
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
@@ -99,6 +99,11 @@ public class DDMFormFieldTypesJSONSerializer
 			MapUtil.getString(
 				ddmFormFieldTypeProperties, "ddm.form.field.type.js.module",
 				"liferay-ddm-form-renderer-field")
+		).put(
+			"scope",
+			MapUtil.getString(
+				ddmFormFieldTypeProperties, "ddm.form.field.type.scope",
+				"forms")
 		);
 
 		String description = MapUtil.getString(

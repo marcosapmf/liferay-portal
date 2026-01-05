@@ -9,6 +9,8 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
+import com.liferay.commerce.exception.CommerceOrderItemPriceException;
+import com.liferay.commerce.exception.CommerceOrderItemQuantityException;
 import com.liferay.commerce.exception.CommerceOrderItemRequestedDeliveryDateException;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
 import com.liferay.commerce.model.CommerceOrder;
@@ -29,12 +31,12 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.math.BigDecimal;
 
 import java.util.concurrent.Callable;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
+		"jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
 		"mvc.command.name=/commerce_order/edit_commerce_order_item"
 	},
 	service = MVCActionCommand.class
@@ -79,7 +81,11 @@ public class EditCommerceOrderItemMVCActionCommand
 			}
 		}
 		catch (Throwable throwable) {
-			if (throwable instanceof CommerceOrderValidatorException) {
+			if (throwable instanceof CommerceOrderItemPriceException ||
+				throwable instanceof CommerceOrderItemQuantityException ||
+				throwable instanceof
+					CommerceOrderItemRequestedDeliveryDateException) {
+
 				SessionErrors.add(
 					actionRequest, throwable.getClass(), throwable);
 
@@ -88,9 +94,7 @@ public class EditCommerceOrderItemMVCActionCommand
 
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
-			else if (throwable instanceof
-						CommerceOrderItemRequestedDeliveryDateException) {
-
+			else if (throwable instanceof CommerceOrderValidatorException) {
 				SessionErrors.add(
 					actionRequest, throwable.getClass(), throwable);
 
@@ -191,7 +195,8 @@ public class EditCommerceOrderItemMVCActionCommand
 			actionRequest, "cpMeasurementUnitId");
 
 		BigDecimal decimalQuantity = _commerceOrderItemQuantityFormatter.parse(
-			actionRequest, "decimalQuantity");
+			actionRequest, CommerceOrderItem.class.getName(),
+			"decimalQuantity");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CommerceOrderItem.class.getName(), actionRequest);
@@ -206,24 +211,29 @@ public class EditCommerceOrderItemMVCActionCommand
 			commerceOrderItem =
 				_commerceOrderItemService.updateCommerceOrderItemUnitPrice(
 					commerceOrderItemId, decimalQuantity,
-					_commercePriceFormatter.parse(actionRequest, "price"));
+					_commercePriceFormatter.parse(
+						actionRequest, false, CommerceOrderItem.class.getName(),
+						"price"));
 
 			commerceOrderItem =
 				_commerceOrderItemService.updateCommerceOrderItemPrices(
 					commerceOrderItemId,
 					_commercePriceFormatter.parse(
-						actionRequest, "discountAmount"),
+						actionRequest, false, CommerceOrderItem.class.getName(),
+						"discountAmount"),
 					commerceOrderItem.getDiscountPercentageLevel1(),
 					commerceOrderItem.getDiscountPercentageLevel2(),
 					commerceOrderItem.getDiscountPercentageLevel3(),
 					commerceOrderItem.getDiscountPercentageLevel4(),
-					_commercePriceFormatter.parse(actionRequest, "finalPrice"),
+					_commercePriceFormatter.parse(
+						actionRequest, false, CommerceOrderItem.class.getName(),
+						"finalPrice"),
 					commerceOrderItem.getPromoPrice(),
 					commerceOrderItem.getUnitPrice());
 		}
 
-		String deliveryGroup = ParamUtil.getString(
-			actionRequest, "deliveryGroup");
+		String deliveryGroupName = ParamUtil.getString(
+			actionRequest, "deliveryGroupName");
 		int requestedDeliveryDateMonth = ParamUtil.getInteger(
 			actionRequest, "requestedDeliveryDateMonth");
 		int requestedDeliveryDateDay = ParamUtil.getInteger(
@@ -233,7 +243,7 @@ public class EditCommerceOrderItemMVCActionCommand
 
 		_commerceOrderItemService.updateCommerceOrderItemInfo(
 			commerceOrderItem.getCommerceOrderItemId(),
-			commerceOrderItem.getShippingAddressId(), deliveryGroup,
+			commerceOrderItem.getShippingAddressId(), deliveryGroupName,
 			commerceOrderItem.getPrintedNote(), requestedDeliveryDateMonth,
 			requestedDeliveryDateDay, requestedDeliveryDateYear);
 	}

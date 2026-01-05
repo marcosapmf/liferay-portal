@@ -6,6 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -155,9 +156,9 @@ public class LayoutSetBranchLocalServiceImpl
 		if (layoutSetBranch.isMaster() ||
 			(copyLayoutSetBranchId == LayoutSetBranchConstants.ALL_BRANCHES)) {
 
-			List<Layout> layouts = _layoutPersistence.findByG_P(
-				layoutSetBranch.getGroupId(),
-				layoutSetBranch.isPrivateLayout());
+			List<Layout> layouts = _layoutPersistence.findByG_P_S(
+				layoutSetBranch.getGroupId(), layoutSetBranch.isPrivateLayout(),
+				false);
 
 			for (Layout layout : layouts) {
 				LayoutBranch layoutBranch =
@@ -655,17 +656,10 @@ public class LayoutSetBranchLocalServiceImpl
 	}
 
 	private List<Long> _getRelatedPlids(long layoutSetBranchId) {
-		List<Long> relatedPlids = new ArrayList<>();
-
-		List<LayoutBranch> layoutBranches =
+		return TransformUtil.transform(
 			_layoutBranchLocalService.getLayoutSetBranchLayoutBranches(
-				layoutSetBranchId);
-
-		for (LayoutBranch layoutBranch : layoutBranches) {
-			relatedPlids.add(layoutBranch.getPlid());
-		}
-
-		return relatedPlids;
+				layoutSetBranchId),
+			layoutBranch -> layoutBranch.getPlid());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

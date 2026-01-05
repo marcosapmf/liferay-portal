@@ -8,11 +8,11 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.SitePageFormSubmissionResultSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -46,6 +46,53 @@ public class SitePageFormSubmissionResult implements Cloneable, Serializable {
 	}
 
 	protected ClassFieldsReference itemReference;
+
+	public FragmentInlineValue getNotificationTextFragmentInlineValue() {
+		return notificationTextFragmentInlineValue;
+	}
+
+	public void setNotificationTextFragmentInlineValue(
+		FragmentInlineValue notificationTextFragmentInlineValue) {
+
+		this.notificationTextFragmentInlineValue =
+			notificationTextFragmentInlineValue;
+	}
+
+	public void setNotificationTextFragmentInlineValue(
+		UnsafeSupplier<FragmentInlineValue, Exception>
+			notificationTextFragmentInlineValueUnsafeSupplier) {
+
+		try {
+			notificationTextFragmentInlineValue =
+				notificationTextFragmentInlineValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentInlineValue notificationTextFragmentInlineValue;
+
+	public Boolean getShowNotification() {
+		return showNotification;
+	}
+
+	public void setShowNotification(Boolean showNotification) {
+		this.showNotification = showNotification;
+	}
+
+	public void setShowNotification(
+		UnsafeSupplier<Boolean, Exception> showNotificationUnsafeSupplier) {
+
+		try {
+			showNotification = showNotificationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean showNotification;
 
 	@Override
 	public SitePageFormSubmissionResult clone()

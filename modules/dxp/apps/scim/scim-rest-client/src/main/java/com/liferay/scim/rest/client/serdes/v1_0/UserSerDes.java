@@ -5,17 +5,18 @@
 
 package com.liferay.scim.rest.client.serdes.v1_0;
 
+import com.liferay.scim.rest.client.dto.v1_0.Address;
 import com.liferay.scim.rest.client.dto.v1_0.MultiValuedAttribute;
 import com.liferay.scim.rest.client.dto.v1_0.User;
 import com.liferay.scim.rest.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Olivér Kecskeméty
@@ -65,7 +66,7 @@ public class UserSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < user.getAddresses().length; i++) {
-				sb.append(_toJSON(user.getAddresses()[i]));
+				sb.append(String.valueOf(user.getAddresses()[i]));
 
 				if ((i + 1) < user.getAddresses().length) {
 					sb.append(", ");
@@ -395,6 +396,22 @@ public class UserSerDes {
 			sb.append("\"");
 		}
 
+		if (user.getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"urn:ietf:params:scim:schemas:extension:liferay:2.0:User\": ");
+
+			sb.append(
+				String.valueOf(
+					user.
+						getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User()));
+		}
+
 		if (user.getUserName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -617,6 +634,21 @@ public class UserSerDes {
 			map.put("title", String.valueOf(user.getTitle()));
 		}
 
+		if (user.getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User() ==
+				null) {
+
+			map.put(
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User",
+				null);
+		}
+		else {
+			map.put(
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User",
+				String.valueOf(
+					user.
+						getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User()));
+		}
+
 		if (user.getUserName() == null) {
 			map.put("userName", null);
 		}
@@ -660,7 +692,7 @@ public class UserSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "addresses")) {
-				return true;
+				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "displayName")) {
 				return false;
@@ -722,6 +754,12 @@ public class UserSerDes {
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"urn:ietf:params:scim:schemas:extension:liferay:2.0:User")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "userName")) {
 				return false;
 			}
@@ -747,7 +785,18 @@ public class UserSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "addresses")) {
 				if (jsonParserFieldValue != null) {
-					user.setAddresses((Object[])jsonParserFieldValue);
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Address[] addressesArray =
+						new Address[jsonParserFieldValues.length];
+
+					for (int i = 0; i < addressesArray.length; i++) {
+						addressesArray[i] = AddressSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					user.setAddresses(addressesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "displayName")) {
@@ -929,6 +978,17 @@ public class UserSerDes {
 					user.setTitle((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"urn:ietf:params:scim:schemas:extension:liferay:2.0:User")) {
+
+				if (jsonParserFieldValue != null) {
+					user.
+						setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+							UserSchemaExtensionSerDes.toDTO(
+								(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "userName")) {
 				if (jsonParserFieldValue != null) {
 					user.setUserName((String)jsonParserFieldValue);
@@ -1001,6 +1061,10 @@ public class UserSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

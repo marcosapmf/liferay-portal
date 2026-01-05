@@ -9,6 +9,7 @@ import com.liferay.osb.faro.web.internal.constants.FaroConstants;
 import com.liferay.osb.faro.web.internal.controller.main.BlockedKeywordsController;
 import com.liferay.osb.faro.web.internal.controller.main.ChannelController;
 import com.liferay.osb.faro.web.internal.controller.main.DefinitionsController;
+import com.liferay.osb.faro.web.internal.controller.main.GlobalPreferencesController;
 import com.liferay.osb.faro.web.internal.controller.main.IssueController;
 import com.liferay.osb.faro.web.internal.controller.main.MainController;
 import com.liferay.osb.faro.web.internal.controller.main.NotificationController;
@@ -18,11 +19,11 @@ import com.liferay.osb.faro.web.internal.controller.main.ProjectController;
 import com.liferay.osb.faro.web.internal.controller.main.ReportController;
 import com.liferay.osb.faro.web.internal.controller.main.UserController;
 
+import jakarta.ws.rs.ApplicationPath;
+import jakarta.ws.rs.core.Application;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,6 +49,7 @@ public class MainApplication extends BaseApplication {
 		controllers.add(_blockedKeywordsController);
 		controllers.add(_channelController);
 		controllers.add(_definitionsController);
+		controllers.add(_globalPreferencesController);
 		controllers.add(_issueController);
 		controllers.add(_mainController);
 		controllers.add(_notificationController);
@@ -68,6 +70,9 @@ public class MainApplication extends BaseApplication {
 
 	@Reference
 	private DefinitionsController _definitionsController;
+
+	@Reference
+	private GlobalPreferencesController _globalPreferencesController;
 
 	@Reference
 	private IssueController _issueController;

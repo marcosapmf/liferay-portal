@@ -21,9 +21,9 @@
 
 		<!-- Other fields -->
 
+		<column name="classExternalReferenceCode" type="String" />
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
-		<column db-name="cmExternalReferenceCode" name="classedModelExternalReferenceCode" type="String" />
 		<column name="containerKey" type="String" />
 		<column name="containerType" type="long" />
 		<column name="plid" type="long" />
@@ -35,14 +35,18 @@
 		<finder name="Plid" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="plid" />
 		</finder>
+		<finder name="C_CN" return-type="Collection" where="containerKey IS NOT NULL">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="CN_CPK" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="C_CN_CMERC" return-type="Collection" where="containerKey IS NOT NULL">
+		<finder name="C_CERC_CN" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="companyId" />
+			<finder-column name="classExternalReferenceCode" />
 			<finder-column name="classNameId" />
-			<finder-column name="classedModelExternalReferenceCode" />
 		</finder>
 		<finder name="C_CN_CT" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="companyId" />
@@ -59,17 +63,17 @@
 			<finder-column name="containerType" />
 			<finder-column name="plid" />
 		</finder>
-		<finder name="C_CN_CMERC_T" return-type="Collection" where="containerKey IS NOT NULL">
+		<finder name="C_CERC_CN_T" return-type="Collection" where="containerKey IS NOT NULL">
 			<finder-column name="companyId" />
+			<finder-column name="classExternalReferenceCode" />
 			<finder-column name="classNameId" />
-			<finder-column name="classedModelExternalReferenceCode" />
 			<finder-column name="type" />
 		</finder>
-		<finder name="G_CN_CPK_CMERC_CK_CT_P" return-type="LayoutClassedModelUsage" unique="true">
+		<finder name="G_CERC_CN_CPK_CK_CT_P" return-type="LayoutClassedModelUsage" unique="true">
 			<finder-column name="groupId" />
+			<finder-column name="classExternalReferenceCode" />
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
-			<finder-column name="classedModelExternalReferenceCode" />
 			<finder-column name="containerKey" />
 			<finder-column name="containerType" />
 			<finder-column name="plid" />
@@ -93,7 +97,7 @@
 
 		<!-- Other fields -->
 
-		<column change-tracking-resolution-type="merge" name="content" type="String" />
+		<column name="content" type="String" />
 		<column name="languageId" type="String" />
 		<column name="plid" type="long" />
 		<column name="lastPublishDate" type="Date" />

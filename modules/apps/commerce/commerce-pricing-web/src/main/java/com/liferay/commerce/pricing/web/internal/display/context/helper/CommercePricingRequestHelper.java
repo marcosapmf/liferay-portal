@@ -8,10 +8,10 @@ package com.liferay.commerce.pricing.web.internal.display.context.helper;
 import com.liferay.portal.kernel.display.context.helper.BaseRequestHelper;
 import com.liferay.portal.kernel.util.JavaConstants;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Riccardo Alberti
@@ -22,10 +22,10 @@ public class CommercePricingRequestHelper extends BaseRequestHelper {
 		super(httpServletRequest);
 
 		Object portletRequest = httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		Object portletResponse = httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if (!(portletRequest instanceof RenderRequest) ||
 			!(portletResponse instanceof RenderResponse)) {

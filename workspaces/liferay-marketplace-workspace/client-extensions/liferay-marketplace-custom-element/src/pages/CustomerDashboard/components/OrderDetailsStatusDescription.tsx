@@ -4,15 +4,11 @@
  */
 
 import ClayLabel from '@clayui/label';
+import classNames from 'classnames';
 
 import purchasedAppIcon from '../../../assets/icons/purchased_app_icon.svg';
 import OrderStatus from '../../../components/OrderStatus';
-import {OrderType} from '../../../enums/OrderType';
-
-enum OrderAppTypeEnum {
-	DXPAPP = 'DXP APP',
-	CLOUDAPP = 'CLOUD APP',
-}
+import {OrderTypes} from '../../../enums/Order';
 
 type OrderDetailsStatusDescriptionProps = {
 	order?: Cart;
@@ -20,12 +16,12 @@ type OrderDetailsStatusDescriptionProps = {
 };
 
 const getOrderDetailsType = (orderTypeExternalReferenceCode: string) => {
-	if (orderTypeExternalReferenceCode === OrderType.DXP) {
-		return OrderAppTypeEnum.DXPAPP;
+	if (orderTypeExternalReferenceCode === OrderTypes.DXP_APP) {
+		return 'DXP APP';
 	}
 
-	if (orderTypeExternalReferenceCode === OrderType.CLOUD) {
-		return OrderAppTypeEnum.CLOUDAPP;
+	if (orderTypeExternalReferenceCode === OrderTypes.CLOUD_APP) {
+		return 'CLOUD APP';
 	}
 };
 
@@ -39,13 +35,21 @@ const OrderDetailsStatusDescription = ({
 
 	return (
 		<div className="align-items-center d-flex">
-			<div className="order-details-publisher">{productOwner}</div>
-
-			<div className="align-items-center app-details-status d-flex mx-3">
-				<OrderStatus orderStatus={order?.orderStatusInfo.label}>
-					{order?.orderStatusInfo.label}
-				</OrderStatus>
+			<div
+				className={classNames(classNames, {
+					'order-details-publisher mr-3': productOwner,
+				})}
+			>
+				{productOwner}
 			</div>
+
+			{order && (
+				<div className="align-items-center app-details-status d-flex mr-3">
+					<OrderStatus orderStatus={order?.orderStatusInfo.label}>
+						{order?.orderStatusInfo.label}
+					</OrderStatus>
+				</div>
+			)}
 
 			{orderType && (
 				<ClayLabel className="rounded" displayType="info" large>

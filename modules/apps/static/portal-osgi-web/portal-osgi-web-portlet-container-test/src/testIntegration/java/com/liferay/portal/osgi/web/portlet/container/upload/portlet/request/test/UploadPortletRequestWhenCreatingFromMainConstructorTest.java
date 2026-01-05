@@ -16,10 +16,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upload.LiferayServletRequest;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,12 +51,12 @@ public class UploadPortletRequestWhenCreatingFromMainConstructorTest {
 			PortletContainerTestUtil.getMultipartRequest(
 				_portletNamespace, _BYTES);
 
-		HttpServletRequest mockHttpServletRequest =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)liferayServletRequest.getRequest();
 
 		UploadPortletRequest uploadPortletRequest =
 			UploadTestUtil.createUploadPortletRequest(
-				_portal.getUploadServletRequest(mockHttpServletRequest), null,
+				_portal.getUploadServletRequest(httpServletRequest), null,
 				_portletNamespace);
 
 		Map<String, FileItem[]> multipartParameterMap =

@@ -20,14 +20,18 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.render.PortletRenderParts;
 import com.liferay.portal.kernel.portlet.render.PortletRenderUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -49,11 +53,14 @@ import com.liferay.portal.servlet.NamespaceServletRequest;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.util.LayoutClone;
 import com.liferay.portal.util.LayoutCloneFactory;
+import com.liferay.portal.util.WebAppPool;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -95,6 +102,8 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 			if (portletId == null) {
 				throw new IllegalArgumentException("Portlet ID is null");
 			}
+
+			_checkPortletPermission(layout.getPlid(), portletId, themeDisplay);
 
 			String columnId = ParamUtil.getString(
 				httpServletRequest, "p_p_col_id", null);
@@ -234,7 +243,7 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 			layoutTypePortlet.resetModes();
 			layoutTypePortlet.resetStates();
 
-			layout = _layoutService.updateLayout(
+			layout = _layoutService.updateTypeSettings(
 				layout.getGroupId(), layout.isPrivateLayout(),
 				layout.getLayoutId(), layout.getTypeSettings());
 		}
@@ -385,6 +394,76 @@ public class UpdateLayoutStrutsAction implements StrutsAction {
 		}
 
 		portletPreferences.store();
+	}
+
+	private void _checkPortletPermission(
+			long plid, String portletId, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		PortletPermissionUtil.check(
+			themeDisplay.getPermissionChecker(), plid, portletId,
+			ActionKeys.ADD_TO_PAGE);
+
+		LayoutTypePortlet layoutTypePortlet =
+			themeDisplay.getLayoutTypePortlet();
+		Portlet portlet = _portletLocalService.getPortletById(
+			themeDisplay.getCompanyId(), portletId);
+
+		if (!portlet.isActive() || !portlet.isInclude() ||
+			(!portlet.isInstanceable() &&
+			 layoutTypePortlet.hasPortletId(portlet.getPortletId())) ||
+			portlet.isSystem() || portlet.isUndeployedPortlet()) {
+
+			throw new PrincipalException.MustHavePermission(
+				themeDisplay.getPermissionChecker(),
+				StringBundler.concat(
+					Portlet.class.getName(), StringPool.UNDERLINE, portletId),
+				0, ActionKeys.ADD_TO_PAGE);
+		}
+
+		Set<String> categoryNames = portlet.getCategoryNames();
+
+		PortletCategory portletCategory = (PortletCategory)WebAppPool.get(
+			themeDisplay.getCompanyId(), WebKeys.PORTLET_CATEGORY);
+
+		for (PortletCategory curPortletCategory :
+				portletCategory.getCategories()) {
+
+			if (_containsPortletCategoryPermission(
+					categoryNames, curPortletCategory)) {
+
+				return;
+			}
+		}
+
+		throw new PrincipalException.MustHavePermission(
+			themeDisplay.getPermissionChecker(),
+			StringBundler.concat(
+				Portlet.class.getName(), StringPool.UNDERLINE, portletId),
+			0, ActionKeys.ADD_TO_PAGE);
+	}
+
+	private boolean _containsPortletCategoryPermission(
+		Set<String> categoryNames, PortletCategory portletCategory) {
+
+		if (!portletCategory.isHidden() &&
+			(categoryNames.contains(portletCategory.getName()) ||
+			 categoryNames.contains(portletCategory.getPath()))) {
+
+			return true;
+		}
+
+		for (PortletCategory childPortletCategory :
+				portletCategory.getCategories()) {
+
+			if (_containsPortletCategoryPermission(
+					categoryNames, childPortletCategory)) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Reference

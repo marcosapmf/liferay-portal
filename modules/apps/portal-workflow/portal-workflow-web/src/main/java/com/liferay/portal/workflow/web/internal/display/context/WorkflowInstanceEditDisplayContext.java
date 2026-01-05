@@ -38,14 +38,14 @@ import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.manager.WorkflowLogManager;
 import com.liferay.portal.workflow.util.WorkflowDefinitionManagerUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Leonardo Barros
@@ -405,8 +405,9 @@ public class WorkflowInstanceEditDisplayContext
 	}
 
 	private static final List<Integer> _logTypes = Arrays.asList(
-		WorkflowLog.TASK_ASSIGN, WorkflowLog.TASK_COMPLETION,
-		WorkflowLog.TASK_UPDATE, WorkflowLog.TRANSITION);
+		WorkflowLog.INSTANCE_FAIL, WorkflowLog.TASK_ASSIGN,
+		WorkflowLog.TASK_COMPLETION, WorkflowLog.TASK_UPDATE,
+		WorkflowLog.TRANSITION);
 
 	private final Map<Long, Role> _roles = new HashMap<>();
 	private final Map<Long, User> _users = new HashMap<>();

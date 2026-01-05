@@ -14,10 +14,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.configuration.kernel.util.PortletConfigurationUtil;
 
-import java.util.Collection;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
 
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
+import java.util.Collection;
 
 /**
  * @author Brian Wing Shun Chan
@@ -73,7 +73,7 @@ public class RenderResponseImpl
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		String localizedCustomTitle = PortletConfigurationUtil.getPortletTitle(
-			portletDisplay.getPortletPreferences(),
+			portletDisplay.getId(), portletDisplay.getPortletPreferences(),
 			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(localizedCustomTitle)) {
@@ -81,7 +81,8 @@ public class RenderResponseImpl
 				themeDisplay.getSiteDefaultLocale());
 
 			localizedCustomTitle = PortletConfigurationUtil.getPortletTitle(
-				portletDisplay.getPortletPreferences(), siteDefaultLanguageId);
+				portletDisplay.getId(), portletDisplay.getPortletPreferences(),
+				siteDefaultLanguageId);
 		}
 
 		if (portletDisplay.isActive() &&

@@ -203,7 +203,7 @@ public class DLFileEntryRepeatableFieldsInfoCollectionProviderTest {
 			new LiferayFileVersion(dlFileVersion), serviceContext);
 
 		return _dlAppLocalService.getFileEntryByExternalReferenceCode(
-			_group.getGroupId(), dlFileEntry.getExternalReferenceCode());
+			dlFileEntry.getExternalReferenceCode(), _group.getGroupId());
 	}
 
 	private void _assertInfoItemFieldValue(
@@ -244,7 +244,6 @@ public class DLFileEntryRepeatableFieldsInfoCollectionProviderTest {
 		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
 		ddmFormFieldValue.setName(name);
-		ddmFormFieldValue.setInstanceId(StringUtil.randomString());
 
 		Value value = new LocalizedValue(locale);
 

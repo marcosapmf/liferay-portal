@@ -7,9 +7,10 @@ package com.liferay.portal.vulcan.fields;
 
 import com.liferay.portal.kernel.util.ListUtil;
 
-import java.util.List;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.List;
 
 import org.apache.cxf.message.Message;
 
@@ -18,25 +19,34 @@ import org.apache.cxf.message.Message;
  */
 public class NestedFieldsContext implements Cloneable {
 
-	public NestedFieldsContext(int depth, List<String> fieldNames) {
-		this(depth, fieldNames, null, null, null, null);
+	public NestedFieldsContext(int depth, List<String> nestedFields) {
+		this(depth, null, nestedFields, null, null, null);
 	}
 
 	public NestedFieldsContext(
-		int depth, List<String> fieldNames, Message message,
-		MultivaluedMap<String, String> pathParameters, String resourceVersion,
-		MultivaluedMap<String, String> queryParameters) {
+		int depth, List<String> nestedFields, String resourceVersion) {
 
-		_depth = depth;
-		_fieldNames = ListUtil.copy(fieldNames);
-		_message = message;
-		_pathParameters = pathParameters;
-		_resourceVersion = resourceVersion;
-		_queryParameters = queryParameters;
+		this(
+			depth, null, nestedFields, null, new MultivaluedHashMap<>(),
+			resourceVersion);
 	}
 
-	public void addFieldName(String fieldName) {
-		_fieldNames.add(fieldName);
+	public NestedFieldsContext(
+		int depth, Message message, List<String> nestedFields,
+		MultivaluedMap<String, String> pathParameters,
+		MultivaluedMap<String, String> queryParameters,
+		String resourceVersion) {
+
+		_depth = depth;
+		_message = message;
+		_nestedFields = ListUtil.copy(nestedFields);
+		_pathParameters = pathParameters;
+		_queryParameters = queryParameters;
+		_resourceVersion = resourceVersion;
+	}
+
+	public void addNestedField(String nestedField) {
+		_nestedFields.add(nestedField);
 	}
 
 	@Override
@@ -56,12 +66,12 @@ public class NestedFieldsContext implements Cloneable {
 		return _depth;
 	}
 
-	public List<String> getFieldNames() {
-		return _fieldNames;
-	}
-
 	public Message getMessage() {
 		return _message;
+	}
+
+	public List<String> getNestedFields() {
+		return _nestedFields;
 	}
 
 	public MultivaluedMap<String, String> getPathParameters() {
@@ -82,8 +92,8 @@ public class NestedFieldsContext implements Cloneable {
 
 	private int _currentDepth;
 	private final int _depth;
-	private final List<String> _fieldNames;
 	private final Message _message;
+	private final List<String> _nestedFields;
 	private final MultivaluedMap<String, String> _pathParameters;
 	private final MultivaluedMap<String, String> _queryParameters;
 	private final String _resourceVersion;

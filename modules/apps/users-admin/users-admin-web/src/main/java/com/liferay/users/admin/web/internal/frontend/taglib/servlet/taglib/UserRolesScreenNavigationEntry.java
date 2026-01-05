@@ -16,10 +16,10 @@ import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.users.admin.constants.UserScreenNavigationEntryConstants;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -65,16 +65,11 @@ public class UserRolesScreenNavigationEntry
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		if (Objects.equals(
-				portletDisplay.getPortletName(),
-				PortletProviderUtil.getPortletId(
-					PortalMyAccountApplicationType.MyAccount.CLASS_NAME,
-					PortletProvider.Action.VIEW))) {
-
-			return false;
-		}
-
-		return true;
+		return !Objects.equals(
+			portletDisplay.getPortletName(),
+			PortletProviderUtil.getPortletId(
+				PortalMyAccountApplicationType.MyAccount.CLASS_NAME,
+				PortletProvider.Action.VIEW));
 	}
 
 	@Override

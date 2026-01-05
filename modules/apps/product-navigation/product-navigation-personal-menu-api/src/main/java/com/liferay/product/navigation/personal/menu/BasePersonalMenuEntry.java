@@ -24,13 +24,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.personal.menu.util.PersonalApplicationURLUtil;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Provides a skeletal implementation of the {@link PersonalMenuEntry} to
@@ -46,7 +46,7 @@ public abstract class BasePersonalMenuEntry implements PersonalMenuEntry {
 	public String getLabel(Locale locale) {
 		return LanguageUtil.get(
 			getResourceBundle(locale),
-			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+			JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 				getPortletId());
 	}
 
@@ -85,11 +85,7 @@ public abstract class BasePersonalMenuEntry implements PersonalMenuEntry {
 			return false;
 		}
 
-		if (portletId.equals(getPortletId())) {
-			return true;
-		}
-
-		return false;
+		return portletId.equals(getPortletId());
 	}
 
 	@Override

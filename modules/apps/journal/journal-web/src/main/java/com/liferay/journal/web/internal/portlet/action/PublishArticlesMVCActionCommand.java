@@ -13,6 +13,7 @@ import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.web.internal.util.JournalUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -25,12 +26,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/publish_articles"
 	},
 	service = MVCActionCommand.class
@@ -132,8 +133,6 @@ public class PublishArticlesMVCActionCommand extends BaseMVCActionCommand {
 			return Collections.emptyList();
 		}
 
-		List<StagedModel> stagedModels = new ArrayList<>();
-
 		StagedModelDataHandler<JournalArticle> stagedModelDataHandler =
 			_getStagedModelDataHandler();
 
@@ -143,16 +142,18 @@ public class PublishArticlesMVCActionCommand extends BaseMVCActionCommand {
 			_journalArticleLocalService.getArticles(
 				journalArticle.getGroupId(), journalArticle.getArticleId()));
 
-		for (JournalArticle curJournalArticle : journalArticles) {
-			if (ArrayUtil.contains(
-					stagedModelDataHandler.getExportableStatuses(),
-					curJournalArticle.getStatus())) {
+		return TransformUtil.transform(
+			journalArticles,
+			curJournalArticle -> {
+				if (ArrayUtil.contains(
+						stagedModelDataHandler.getExportableStatuses(),
+						curJournalArticle.getStatus())) {
 
-				stagedModels.add(curJournalArticle);
-			}
-		}
+					return curJournalArticle;
+				}
 
-		return stagedModels;
+				return null;
+			});
 	}
 
 	private StagedModelDataHandler<JournalArticle>

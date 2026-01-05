@@ -8,19 +8,19 @@ jest.unmock('react-dom');
 describe('SegmentSticker', () => {
 	it('should render', () => {
 		const {container} = render(
-			<SegmentSticker segmentType={SegmentTypes.Static} />
+			<SegmentSticker segmentType={SegmentTypes.Batch} />
 		);
 		expect(container).toMatchSnapshot();
 	});
 
 	it('should render with a dynamic segment icon', () => {
 		const {container} = render(
-			<SegmentSticker segmentType={SegmentTypes.Dynamic} />
+			<SegmentSticker segmentType={SegmentTypes.Batch} />
 		);
 
 		expect(container.querySelector('use')).toHaveAttribute(
 			'href',
-			'#individual-dynamic-segment'
+			'#individual_dynamic_segment'
 		);
 	});
 

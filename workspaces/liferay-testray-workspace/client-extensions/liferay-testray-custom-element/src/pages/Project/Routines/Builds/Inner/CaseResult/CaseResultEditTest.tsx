@@ -22,6 +22,7 @@ import {Liferay} from '~/services/liferay';
 import {
 	MessageBoardMessage,
 	TestrayCaseResult,
+	testrayBuildImpl,
 	testrayCaseResultImpl,
 } from '~/services/rest';
 import {CaseResultStatuses} from '~/util/statuses';
@@ -39,6 +40,7 @@ const CaseResultEditTest = () => {
 		form: {onClose, onError, onSave, onSubmit, submitting},
 	} = useFormActions();
 
+	const {buildId} = useParams();
 	const {caseResultId} = useParams();
 
 	const {caseResult, mbMessage, mutateCaseResult}: OutletContext =
@@ -72,8 +74,7 @@ const CaseResultEditTest = () => {
 		const _issues = issues
 			.split(',')
 			.map((name) => name.trim().toUpperCase())
-			.filter(Boolean)
-			.join(', ');
+			.filter(Boolean);
 
 		try {
 			const response = await onSubmit(
@@ -81,7 +82,7 @@ const CaseResultEditTest = () => {
 					comment,
 					dueStatus,
 					id: caseResultId,
-					issues: _issues,
+					issues: _issues.join(', '),
 					mbMessageId: caseResult.mbMessageId,
 					mbThreadId: caseResult.mbThreadId,
 					userId: Liferay.ThemeDisplay.getUserId(),
@@ -92,6 +93,25 @@ const CaseResultEditTest = () => {
 						testrayCaseResultImpl.update(id, data),
 				}
 			);
+
+			if (buildId !== undefined) {
+				testrayBuildImpl.updateBuildSummary(buildId);
+			}
+
+			if (_issues.length) {
+				_issues.map((issue) => {
+					Liferay.OAuth2Client.FromUserAgentApplication(
+						'liferay-testray-etc-spring-boot-oaua'
+					).fetch(`/jira/issues/${issue}`, {
+						body: JSON.stringify({
+							testrayCaseNames: [
+								caseResult.r_caseToCaseResult_c_case?.name,
+							],
+						}),
+						method: 'PUT',
+					});
+				});
+			}
 
 			mutateCaseResult({
 				...response,

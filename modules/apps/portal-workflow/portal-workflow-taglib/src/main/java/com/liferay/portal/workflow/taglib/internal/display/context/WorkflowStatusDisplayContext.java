@@ -20,11 +20,11 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.taglib.internal.constants.WorkflowStatusConstants;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Feliphe Marinho
@@ -116,26 +116,27 @@ public class WorkflowStatusDisplayContext {
 		Object bean = _getBean(httpServletRequest);
 		Class<?> modelClass = _getModelClass(httpServletRequest);
 
-		if ((bean != null) && (modelClass != null)) {
-			try {
-				WorkflowInstanceLink workflowInstanceLink =
-					WorkflowInstanceLinkLocalServiceUtil.
-						getWorkflowInstanceLink(
-							BeanPropertiesUtil.getLong(bean, "companyId"),
-							BeanPropertiesUtil.getLong(bean, "groupId"),
-							modelClass.getName(),
-							BeanPropertiesUtil.getLong(bean, "primaryKey"));
-
-				return workflowInstanceLink.getWorkflowInstanceId();
-			}
-			catch (PortalException portalException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(portalException);
-				}
-			}
+		if ((bean == null) || (modelClass == null)) {
+			return null;
 		}
 
-		return null;
+		try {
+			WorkflowInstanceLink workflowInstanceLink =
+				WorkflowInstanceLinkLocalServiceUtil.getWorkflowInstanceLink(
+					BeanPropertiesUtil.getLong(bean, "companyId"),
+					BeanPropertiesUtil.getLong(bean, "groupId"),
+					modelClass.getName(),
+					BeanPropertiesUtil.getLong(bean, "primaryKey"));
+
+			return workflowInstanceLink.getWorkflowInstanceId();
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return null;
+		}
 	}
 
 	private Class<?> _getModelClass(HttpServletRequest httpServletRequest) {

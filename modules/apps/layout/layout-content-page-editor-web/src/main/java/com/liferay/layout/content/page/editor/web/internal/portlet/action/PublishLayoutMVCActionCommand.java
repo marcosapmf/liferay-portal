@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.search.IndexStatusManagerThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -32,12 +33,12 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+		"jakarta.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 		"mvc.command.name=/layout_content_page_editor/publish_layout"
 	},
 	service = MVCActionCommand.class
@@ -136,12 +137,22 @@ public class PublishLayoutMVCActionCommand
 			UnicodeProperties originalTypeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			_layoutLocalService.copyLayoutContent(draftLayout, layout);
+			boolean indexReadOnly =
+				IndexStatusManagerThreadLocal.isIndexReadOnly();
+
+			IndexStatusManagerThreadLocal.setIndexReadOnly(true);
+
+			try {
+				_layoutLocalService.copyLayoutContent(draftLayout, layout);
+			}
+			finally {
+				IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+			}
 
 			layout = _layoutLocalService.getLayout(layout.getPlid());
 
 			LayoutStructureUtil.deleteMarkedForDeletionItems(
-				draftLayout.getGroupId(), draftLayout.getPlid());
+				draftLayout.getGroupId(), draftLayout.getPlid(), userId);
 
 			draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
 

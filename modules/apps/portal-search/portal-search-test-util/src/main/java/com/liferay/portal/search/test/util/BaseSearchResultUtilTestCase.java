@@ -16,12 +16,10 @@ import com.liferay.portal.kernel.search.SearchResult;
 import com.liferay.portal.kernel.search.result.SearchResultTranslator;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceWrapper;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
@@ -38,7 +36,6 @@ public abstract class BaseSearchResultUtilTestCase {
 	public void setUp() throws Exception {
 		setUpClassNameLocalService();
 		setUpFastDateFormatFactoryUtil();
-		setUpPropsUtil();
 		setUpSearchResultTranslator();
 	}
 
@@ -86,20 +83,20 @@ public abstract class BaseSearchResultUtilTestCase {
 
 			@Override
 			public ClassName getClassName(long classNameId) {
-				if (classNameId ==
+				if (classNameId !=
 						SearchTestUtil.ATTACHMENT_OWNER_CLASS_NAME_ID) {
 
-					return new ClassNameWrapper(null) {
-
-						@Override
-						public String getClassName() {
-							return SearchTestUtil.ATTACHMENT_OWNER_CLASS_NAME;
-						}
-
-					};
+					return null;
 				}
 
-				return null;
+				return new ClassNameWrapper(null) {
+
+					@Override
+					public String getClassName() {
+						return SearchTestUtil.ATTACHMENT_OWNER_CLASS_NAME;
+					}
+
+				};
 			}
 
 		};
@@ -111,10 +108,6 @@ public abstract class BaseSearchResultUtilTestCase {
 
 		fastDateFormatFactoryUtil.setFastDateFormatFactory(
 			ProxyFactory.newDummyInstance(FastDateFormatFactory.class));
-	}
-
-	protected void setUpPropsUtil() {
-		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	protected void setUpSearchResultTranslator() {

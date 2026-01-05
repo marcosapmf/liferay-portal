@@ -1,138 +1,49 @@
 [#assign
-	readOnly = input.attributes.readOnly?? && input.attributes.readOnly
-	showLabel = input.showLabel && input.label?has_content && (layoutMode == "edit" || readOnly)
+	showLabel = input.showLabel && input.label?has_content && (layoutMode == "edit" || input.readOnly)
+	inputLabel = htmlUtil.escape(input.label)
+	readonlyLabel = inputLabel + " (" + languageUtil.get(locale, "read-only") + ")"
 ]
 
+[#if input.readOnly]
+	[#assign inputLabel = readonlyLabel]
+[/#if]
+
+[@liferay_aui.style]
+	.cke-height {
+		height: 200px
+	}
+[/@]
+
 <div class="rich-text-input [#if !input.showLabel || !input.label?has_content]rich-text-input--hidden-label[/#if]">
-	<div class="form-group [#if input.errorMessage?has_content]has-error[/#if] mb-0">
-		<label class="[#if !showLabel]sr-only[/#if]" id="${fragmentEntryLinkNamespace}-rich-text-input-label">
-			${htmlUtil.escape(input.label)} [#if readOnly](${languageUtil.get(locale, "read-only")})[#elseif input.required][@clay["icon"] className="reference-mark" symbol="asterisk" /][/#if]
-		</label>
-
-		[#if readOnly]
-			<div aria-labelledby="${fragmentEntryLinkNamespace}-rich-text-input-label" aria-multiline="true" aria-readonly="true" [#if input.required]aria-required="true"[/#if] class="form-control" contenteditable="false" id="${fragmentEntryLinkNamespace}-rich-text-input" role="textbox" tabindex="0"></div>
-		[#elseif layoutMode == "edit"]
-			[@liferay_editor["resources"]editorName="ckeditor" /]
-
-			<link href="/o/frontend-editor-ckeditor-web/ckeditor/skins/moono-lexicon/editor_gecko.css" rel="stylesheet" />
-
-			<div role="presentation">
-				<div class="cke cke_chrome cke_reset cke_ltr">
-					<div class="cke_inner">
-						<div class="cke_top cke_reset_all">
-							<div class="cke_toolbox">
-								<div class="cke_toolbar">
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__undo_icon"></div>
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__redo_icon" />
-										</a>
-									</div>
-								</div>
-
-								<div class="cke_toolbar">
-									<a class="cke_button cke_button_disabled">
-										<div class="cke_button_label cke_button__source_label text-muted">
-											Styles
-										</div>
-									</a>
-
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__bold_icon"></div>
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__italic_icon" />
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__underline_icon" />
-										</a>
-									</div>
-								</div>
-
-								<div class="cke_toolbar">
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__bulletedlist_icon" />
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__numberedlist_icon" />
-										</a>
-									</div>
-								</div>
-
-								<div class="cke_toolbar">
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__link_icon" />
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__unlink_icon" />
-										</a>
-									</div>
-								</div>
-
-								<div class="cke_toolbar">
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__table_icon" />
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__image_icon" />
-										</a>
-
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__videoselector_icon" />
-										</a>
-									</div>
-								</div>
-
-								<div class="cke_toolbar">
-									<div class="cke_toolgroup mb-0">
-										<a class="cke_button cke_button_disabled">
-										<div class="cke_button_icon cke_button__source_icon" />
-
-											<div class="cke_button_label cke_button__source_label text-muted">
-												Source
-											</div>
-										</a>
-									</div>
-								</div>
-							</div>
-						</div>
-
-					<div class="cke_contents cke_editable" style="height: 200px"></div>
-					</div>
-				</div>
+	<div class="form-group [#if input.errorMessage?has_content]has-error[/#if] mb-0" data-readonly-label="${readonlyLabel}" id="${fragmentElementId}-rich-text-input">
+		<div class="d-flex">
+			<div class="flex-grow-1" id="${fragmentElementId + '-wrapper'}">
+				[@liferay_layout["render-editor"] content=input.value name=fragmentElementId + "-" + input.name label=inputLabel layoutMode=layoutMode required=input.required /]
 			</div>
-		[#else]
-			[@liferay_editor["editor"] contents=input.value editorName="ckeditor" name=input.name placeholder=input.label required=input.required /]
-		[/#if]
 
-		[#if input.errorMessage?has_content]
-			<p class="font-weight-semi-bold mt-1 text-danger">
-				<svg class="lexicon-icon lexicon-icon-info-circle" focusable="false" role="presentation">
-					<use xlink:href="${siteSpritemap}#info-circle" />
-				</svg>
+			[#if !input.localizable && input.attributes.unlocalizedFieldsMessage??]
+				<div aria-label="${input.attributes.unlocalizedFieldsMessage}" class="d-none lfr-portal-tooltip mt-3 pt-3" data-title="${input.attributes.unlocalizedFieldsMessage}" id="${fragmentElementId}-unlocalized-info" role="tooltip" tabindex="0">
+					[@clay["icon"] className="ml-2 mt-0 text-secondary" symbol="question-circle-full" /]
+				</div>
+			[/#if]
+		</div>
 
-				<span>
-					${input.errorMessage}
-				</span>
-			</p>
-		[/#if]
+		<p class="font-weight-semi-bold mt-1 text-danger[#if !input.errorMessage?has_content] d-none[/#if]" id="${fragmentElementId}-error-message">
+			[@clay["icon"] symbol="info-circle" /]
+
+			<span data-required-error="${languageUtil.get(locale, 'this-field-is-required')}" id="${fragmentElementId}-error-message-text" role="status">
+				${input.errorMessage}
+			</span>
+		</p>
 
 		[#if input.showHelpText && input.helpText?has_content]
-			<p class="mb-0 mt-1 text-secondary" id="${fragmentEntryLinkNamespace}-rich-text-input-help-text">
+			<p class="mb-0 mt-1 text-secondary" id="${fragmentElementId}-rich-text-input-help-text">
 				${htmlUtil.escape(input.helpText)}
 			</p>
+		[/#if]
+
+		[#if input.required]
+			<input aria-hidden="true" class="d-none" id="${fragmentElementId}-ckeditor-required" required [#if input.value?has_content]value="required"[/#if] />
 		[/#if]
 	</div>
 </div>

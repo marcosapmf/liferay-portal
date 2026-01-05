@@ -16,10 +16,10 @@ import com.liferay.headless.admin.content.resource.v1_0.StructuredContentResourc
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -94,26 +94,26 @@ public class ServletDataImpl implements ServletData {
 							PageDefinitionResourceImpl.class,
 							"postSitePageDefinitionPreview"));
 					put(
-						"mutation#createSiteStructuredContentDraft",
-						new ObjectValuePair<>(
-							StructuredContentResourceImpl.class,
-							"postSiteStructuredContentDraft"));
-					put(
 						"mutation#deleteStructuredContentByVersion",
 						new ObjectValuePair<>(
 							StructuredContentResourceImpl.class,
 							"deleteStructuredContentByVersion"));
-
 					put(
-						"query#displayPageTemplates",
+						"mutation#createSiteStructuredContentDraft",
 						new ObjectValuePair<>(
-							DisplayPageTemplateResourceImpl.class,
-							"getSiteDisplayPageTemplatesPage"));
+							StructuredContentResourceImpl.class,
+							"postSiteStructuredContentDraft"));
+
 					put(
 						"query#displayPageTemplate",
 						new ObjectValuePair<>(
 							DisplayPageTemplateResourceImpl.class,
 							"getSiteDisplayPageTemplate"));
+					put(
+						"query#displayPageTemplates",
+						new ObjectValuePair<>(
+							DisplayPageTemplateResourceImpl.class,
+							"getSiteDisplayPageTemplatesPage"));
 					put(
 						"query#structuredContents",
 						new ObjectValuePair<>(

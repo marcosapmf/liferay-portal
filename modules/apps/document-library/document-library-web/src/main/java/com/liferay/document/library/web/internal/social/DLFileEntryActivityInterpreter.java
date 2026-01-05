@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntry"
 	},
 	service = SocialActivityInterpreter.class
@@ -65,14 +65,22 @@ public class DLFileEntryActivityInterpreter
 			}
 		}
 
-		StringBundler sb = new StringBundler(3);
-
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				DLFileEntry.class.getName());
 
+		if (assetRendererFactory == null) {
+			return StringPool.BLANK;
+		}
+
 		AssetRenderer<?> assetRenderer = assetRendererFactory.getAssetRenderer(
 			fileEntry.getFileEntryId());
+
+		if (assetRenderer == null) {
+			return StringPool.BLANK;
+		}
+
+		StringBundler sb = new StringBundler(3);
 
 		String fileEntryLink = assetRenderer.getURLDownload(
 			serviceContext.getThemeDisplay());

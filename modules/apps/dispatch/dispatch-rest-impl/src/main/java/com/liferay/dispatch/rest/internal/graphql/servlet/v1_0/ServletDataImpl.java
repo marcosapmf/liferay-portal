@@ -12,10 +12,10 @@ import com.liferay.dispatch.rest.resource.v1_0.DispatchTriggerResource;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -76,11 +76,6 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#createDispatchTriggersPageExportBatch",
-						new ObjectValuePair<>(
-							DispatchTriggerResourceImpl.class,
-							"postDispatchTriggersPageExportBatch"));
-					put(
 						"mutation#createDispatchTrigger",
 						new ObjectValuePair<>(
 							DispatchTriggerResourceImpl.class,
@@ -95,6 +90,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							DispatchTriggerResourceImpl.class,
 							"postDispatchTriggerRun"));
+					put(
+						"mutation#createDispatchTriggersPageExportBatch",
+						new ObjectValuePair<>(
+							DispatchTriggerResourceImpl.class,
+							"postDispatchTriggersPageExportBatch"));
 
 					put(
 						"query#dispatchTriggers",

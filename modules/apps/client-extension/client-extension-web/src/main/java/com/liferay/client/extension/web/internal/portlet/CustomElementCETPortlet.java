@@ -19,9 +19,13 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -30,19 +34,17 @@ import java.util.Dictionary;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
 /**
  * @author Iván Zaera Avellón
  */
 public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 
 	public CustomElementCETPortlet(
-		CustomElementCET customElementCET, String portletId) {
+		CustomElementCET customElementCET, Portal portal, String portletId) {
 
 		super(customElementCET);
 
+		_portal = portal;
 		_portletId = portletId;
 	}
 
@@ -62,13 +64,13 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 			).put(
 				"com.liferay.portlet.instanceable", cet.isInstanceable()
 			).put(
-				"javax.portlet.display-name", cet.getName(LocaleUtil.US)
+				"jakarta.portlet.display-name", cet.getName(LocaleUtil.US)
 			).put(
-				"javax.portlet.name", _portletId
+				"jakarta.portlet.name", _portletId
 			).put(
-				"javax.portlet.security-role-ref", "power-user,user"
+				"jakarta.portlet.security-role-ref", "power-user,user"
 			).put(
-				"javax.portlet.version", "3.0"
+				"jakarta.portlet.version", "3.0"
 			).build();
 
 		long lastModified = System.currentTimeMillis();
@@ -150,6 +152,8 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 	}
 
 	private String[] _prepareURLs(long lastModified, String[] urls) {
+		String contextPath = _portal.getPathContext();
+
 		for (int i = 0; i < urls.length; i++) {
 			if (!FeatureFlagManagerUtil.isEnabled(
 					cet.getCompanyId(), "LPS-202104") &&
@@ -157,6 +161,10 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 
 				urls[i] = HttpComponentsUtil.addParameter(
 					urls[i], "t", lastModified);
+			}
+
+			if (urls[i].contains(contextPath + "/o/")) {
+				urls[i] = urls[i].replace(contextPath + "/o/", "/o/");
 			}
 
 			if (!urls[i].startsWith("module:")) {
@@ -170,6 +178,7 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CustomElementCETPortlet.class);
 
+	private final Portal _portal;
 	private final String _portletId;
 
 }

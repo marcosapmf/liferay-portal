@@ -1,16 +1,16 @@
-@component-name = "portal-search-ee"
+@component-name = "portal-search"
 definition {
 
 	property elasticsearch.ccr.enabled = "true";
 	property elasticsearch.multiple.connections = "true";
 	property minimum.slave.ram = "24";
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property remote.elasticsearch.enabled = "true";
 	property search.environment.suite.exclude = "true";
 	property test.run.environment = "EE";
-	property testray.main.component.name = "Elasticsearch Impl";
+	property testray.main.component.name = "Search Infrastructure > Elasticsearch Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -419,25 +419,21 @@ definition {
 
 	@priority = 3
 	test CreateBlogsEntryWithNewWorkflow {
-		property portal.upstream = "false";
+		property browser.chrome.version = "139.0";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		CrossClusterReplication.setupCrossClusterReplication();
 
-		Workflow.openWorkflowListView();
+		Navigator.openURL();
 
-		Workflow.duplicateSingleApproverWorkflow(workflowName = "Copy of Single Approver");
-
-		Workflow.openWorkflowListView();
-
-		Navigator.gotoNavItem(navItem = "Configuration");
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			portlet = "Workflow");
 
 		Workflow.configureWorkflow(
-			workflowDefinition = "Copy of Single Approver",
+			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
-
-		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
@@ -453,23 +449,17 @@ definition {
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
 
-		// Workaround for LPS-180801
-
-		var workflowTask = Workflow._matchTaskCase(
-			workflowAssetTitle = "Blogs Entry Title",
-			workflowDefinitionTask = "approve",
-			workflowTask = "review");
-
 		Workflow.assignToMeTaskByActions(
 			workflowAssetTitle = "Blogs Entry Title",
 			workflowAssetType = "Blogs Entry",
-			workflowTask = ${workflowTask});
+			workflowTask = "Review");
 
 		Workflow.approveTaskByActions(
 			workflowAssetTitle = "Blogs Entry Title",
 			workflowAssetType = "Blogs Entry",
-			workflowDefinitionTask = ${workflowDefinitionTask},
-			workflowTask = ${workflowTask});
+			workflowTask = "Review");
+
+		SearchAdministration.executeReindex();
 
 		Navigator.openURL();
 
@@ -530,6 +520,7 @@ definition {
 
 	@priority = 3
 	test SearchWithVirtualInstance {
+		property browser.chrome.version = "139.0";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

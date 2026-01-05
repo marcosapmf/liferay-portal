@@ -12,6 +12,7 @@ import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseLocalService;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
@@ -37,12 +38,12 @@ import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,10 +87,13 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 			PermissionThreadLocal.getPermissionChecker(),
 			commerceChannel.getCommerceChannelId(), ActionKeys.VIEW);
 
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
 		List<CommerceInventoryWarehouse> commerceInventoryWarehouses =
 			_commerceInventoryWarehouseLocalService.
 				getCommerceInventoryWarehouses(
-					companyId, commerceOrderItem.getGroupId(), true);
+					companyId, commerceOrder.getCommerceAccountId(),
+					commerceOrderItem.getGroupId(), true);
 
 		for (CommerceInventoryWarehouse commerceInventoryWarehouse :
 				commerceInventoryWarehouses) {
@@ -224,9 +228,12 @@ public class CommerceInventoryWarehouseItemFDSDataProvider
 			PermissionThreadLocal.getPermissionChecker(),
 			commerceChannel.getCommerceChannelId(), ActionKeys.VIEW);
 
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsCount(
 				_portal.getCompanyId(httpServletRequest),
+				commerceOrder.getCommerceAccountId(),
 				commerceOrderItem.getGroupId(), commerceOrderItem.getSku(),
 				commerceOrderItem.getUnitOfMeasureKey());
 	}

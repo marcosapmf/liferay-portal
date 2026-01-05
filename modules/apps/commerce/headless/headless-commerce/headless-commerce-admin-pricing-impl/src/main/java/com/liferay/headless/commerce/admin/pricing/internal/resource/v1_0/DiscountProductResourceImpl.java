@@ -15,16 +15,15 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountProduct;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.DiscountProductUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.DiscountProductResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,8 +55,9 @@ public class DiscountProductResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -71,13 +71,13 @@ public class DiscountProductResourceImpl
 				CPDefinition.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCommerceDiscountRelsCount(
 				commerceDiscount.getCommerceDiscountId(),
 				CPDefinition.class.getName());
 
 		return Page.of(
-			_toDiscountProducts(commerceDiscountRels), pagination, totalItems);
+			_toDiscountProducts(commerceDiscountRels), pagination, totalCount);
 	}
 
 	@Override
@@ -90,12 +90,12 @@ public class DiscountProductResourceImpl
 				id, CPDefinition.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCommerceDiscountRelsCount(
 				id, CPDefinition.class.getName());
 
 		return Page.of(
-			_toDiscountProducts(commerceDiscountRels), pagination, totalItems);
+			_toDiscountProducts(commerceDiscountRels), pagination, totalCount);
 	}
 
 	@Override
@@ -104,8 +104,9 @@ public class DiscountProductResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -152,15 +153,10 @@ public class DiscountProductResourceImpl
 			List<CommerceDiscountRel> commerceDiscountRels)
 		throws Exception {
 
-		List<DiscountProduct> discountProducts = new ArrayList<>();
-
-		for (CommerceDiscountRel commerceDiscountRel : commerceDiscountRels) {
-			discountProducts.add(
-				_toDiscountProduct(
-					commerceDiscountRel.getCommerceDiscountRelId()));
-		}
-
-		return discountProducts;
+		return transform(
+			commerceDiscountRels,
+			commerceDiscountRel -> _toDiscountProduct(
+				commerceDiscountRel.getCommerceDiscountRelId()));
 	}
 
 	@Reference

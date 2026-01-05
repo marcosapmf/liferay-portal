@@ -22,11 +22,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Máté Thurzó
  */
 @Component(
-	property = "javax.portlet.name=" + RecentBloggersPortletKeys.RECENT_BLOGGERS,
+	property = "jakarta.portlet.name=" + RecentBloggersPortletKeys.RECENT_BLOGGERS,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class RecentBloggersExportImportPortletPreferencesProcessor
@@ -106,17 +106,16 @@ public class RecentBloggersExportImportPortletPreferencesProcessor
 						_organizationLocalService.fetchOrganization(
 							primaryKeyLong);
 
-					if (organization != null) {
-						portletDataContext.addReferenceElement(
-							portlet,
-							portletDataContext.getExportDataRootElement(),
-							organization,
-							PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
-
-						return organization.getUuid();
+					if (organization == null) {
+						return null;
 					}
 
-					return null;
+					portletDataContext.addReferenceElement(
+						portlet, portletDataContext.getExportDataRootElement(),
+						organization,
+						PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+
+					return organization.getUuid();
 				};
 
 			_exportImportPortletPreferencesProcessorHelper.

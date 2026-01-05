@@ -10,6 +10,7 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBCategoryLocalService;
 import com.liferay.message.boards.service.MBThreadLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ContainerModel;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -33,11 +34,11 @@ import com.liferay.trash.BaseTrashHandler;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.constants.TrashActionKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,19 +87,13 @@ public class MBCategoryTrashHandler extends BaseTrashHandler {
 			long classPK, long parentContainerModelId, int start, int end)
 		throws PortalException {
 
-		List<ContainerModel> containerModels = new ArrayList<>();
-
 		MBCategory category = _mbCategoryLocalService.getCategory(classPK);
 
-		List<MBCategory> categories = _mbCategoryLocalService.getCategories(
-			category.getGroupId(), parentContainerModelId,
-			WorkflowConstants.STATUS_APPROVED, start, end);
-
-		for (MBCategory curCategory : categories) {
-			containerModels.add(curCategory);
-		}
-
-		return containerModels;
+		return TransformUtil.transform(
+			_mbCategoryLocalService.getCategories(
+				category.getGroupId(), parentContainerModelId,
+				WorkflowConstants.STATUS_APPROVED, start, end),
+			curCategory -> curCategory);
 	}
 
 	@Override
@@ -239,33 +234,23 @@ public class MBCategoryTrashHandler extends BaseTrashHandler {
 
 		MBCategory category = _mbCategoryLocalService.getCategory(classPK);
 
-		List<Object> categoriesAndThreads =
+		return TransformUtil.transform(
 			_mbCategoryLocalService.getCategoriesAndThreads(
 				category.getGroupId(), classPK,
-				WorkflowConstants.STATUS_IN_TRASH, start, end);
+				WorkflowConstants.STATUS_IN_TRASH, start, end),
+			categoryOrThread -> {
+				if (categoryOrThread instanceof MBThread) {
+					return (MBThread)categoryOrThread;
+				}
 
-		List<TrashedModel> trashedModels = new ArrayList<>(
-			categoriesAndThreads.size());
+				if (categoryOrThread instanceof MBCategory) {
+					return (MBCategory)categoryOrThread;
+				}
 
-		for (Object categoryOrThread : categoriesAndThreads) {
-			if (categoryOrThread instanceof MBThread) {
-				MBThread mbThread = (MBThread)categoryOrThread;
-
-				trashedModels.add(mbThread);
-			}
-			else if (categoryOrThread instanceof MBCategory) {
-				MBCategory mbCategory = (MBCategory)categoryOrThread;
-
-				trashedModels.add(mbCategory);
-			}
-			else {
 				throw new IllegalStateException(
 					"Expected MBThread or MBCategory, received " +
 						categoryOrThread.getClass());
-			}
-		}
-
-		return trashedModels;
+			});
 	}
 
 	@Override

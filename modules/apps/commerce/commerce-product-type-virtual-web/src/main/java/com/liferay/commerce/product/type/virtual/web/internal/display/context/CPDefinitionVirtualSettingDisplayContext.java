@@ -48,9 +48,9 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Collections;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 /**
  * @author Marco Leo
@@ -276,31 +276,34 @@ public class CPDefinitionVirtualSettingDisplayContext
 		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
 			getCPDefinitionVirtualSetting();
 
-		if (cpDefinitionVirtualSetting != null) {
-			long journalArticleResourcePK =
-				cpDefinitionVirtualSetting.
-					getTermsOfUseJournalArticleResourcePrimKey();
-
-			if (journalArticleResourcePK > 0) {
-				return _journalArticleService.getLatestArticle(
-					journalArticleResourcePK);
-			}
+		if (cpDefinitionVirtualSetting == null) {
+			return null;
 		}
 
-		return null;
+		long journalArticleResourcePK =
+			cpDefinitionVirtualSetting.
+				getTermsOfUseJournalArticleResourcePrimKey();
+
+		if (journalArticleResourcePK <= 0) {
+			return null;
+		}
+
+		return _journalArticleService.getLatestArticle(
+			journalArticleResourcePK);
 	}
 
 	public FileEntry getSampleFileEntry() throws PortalException {
 		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
 			getCPDefinitionVirtualSetting();
 
-		if (cpDefinitionVirtualSetting != null) {
-			long fileEntryId =
-				cpDefinitionVirtualSetting.getSampleFileEntryId();
+		if (cpDefinitionVirtualSetting == null) {
+			return null;
+		}
 
-			if (fileEntryId > 0) {
-				return _dlAppService.getFileEntry(fileEntryId);
-			}
+		long fileEntryId = cpDefinitionVirtualSetting.getSampleFileEntryId();
+
+		if (fileEntryId > 0) {
+			return _dlAppService.getFileEntry(fileEntryId);
 		}
 
 		return null;

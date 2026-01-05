@@ -19,7 +19,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -28,12 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -58,7 +56,9 @@ public class SitePageNavigationMenuSettings implements Serializable {
 			SitePageNavigationMenuSettings.class, json);
 	}
 
-	@Schema(description = "The default parameter for a page.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The default parameter for a page."
+	)
 	public String getQueryString() {
 		if (_queryStringSupplier != null) {
 			queryString = _queryStringSupplier.get();
@@ -99,7 +99,7 @@ public class SitePageNavigationMenuSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _queryStringSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page's description to be used as summary for search engines."
 	)
 	public String getTarget() {
@@ -144,8 +144,10 @@ public class SitePageNavigationMenuSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _targetSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The target's type (specific frame or new tab)."
+	)
 	@JsonGetter("targetType")
-	@Schema(description = "The target's type (specific frame or new tab).")
 	@Valid
 	public TargetType getTargetType() {
 		if (_targetTypeSupplier != null) {
@@ -271,9 +273,7 @@ public class SitePageNavigationMenuSettings implements Serializable {
 			sb.append("\"targetType\": ");
 
 			sb.append("\"");
-
 			sb.append(targetType);
-
 			sb.append("\"");
 		}
 
@@ -282,8 +282,8 @@ public class SitePageNavigationMenuSettings implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.SitePageNavigationMenuSettings",
 		name = "x-class-name"
 	)

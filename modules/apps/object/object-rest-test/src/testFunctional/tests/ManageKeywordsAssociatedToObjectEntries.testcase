@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
 	property testray.main.component.name = "Object Entries REST APIs";
 
 	setUp {
@@ -69,8 +68,6 @@ definition {
 
 	@priority = 3
 	test CanCreateSiteScopedKeywordWhileUpdatingSiteScopedObjectEntry {
-		property portal.acceptance = "true";
-
 		task ("And Given object definition 'Student' with name field and Scope: Site created") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "student",

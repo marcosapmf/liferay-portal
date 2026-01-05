@@ -10,20 +10,32 @@ import addFragmentEntryLinks, {
 	FragmentEntryLinkMap,
 } from '../actions/addFragmentEntryLinks';
 import addItem from '../actions/addItem';
+import addStepper from '../actions/addStepper';
 import changeMasterLayout from '../actions/changeMasterLayout';
 import deleteFragmentEntryLinkComment from '../actions/deleteFragmentEntryLinkComment';
 import deleteItem from '../actions/deleteItem';
 import duplicateItem from '../actions/duplicateItem';
 import editFragmentEntryLinkComment from '../actions/editFragmentEntryLinkComment';
+import moveItems from '../actions/moveItems';
+import moveStepper from '../actions/moveStepper';
+import pasteItems from '../actions/pasteItems';
+import removeFormStep from '../actions/removeFormStep';
+import swapFragment from '../actions/swapFragment';
 import {
 	ADD_FRAGMENT_ENTRY_LINKS,
 	ADD_FRAGMENT_ENTRY_LINK_COMMENT,
 	ADD_ITEM,
+	ADD_STEPPER,
 	CHANGE_MASTER_LAYOUT,
 	DELETE_FRAGMENT_ENTRY_LINK_COMMENT,
 	DELETE_ITEM,
 	DUPLICATE_ITEM,
 	EDIT_FRAGMENT_ENTRY_LINK_COMMENT,
+	MOVE_ITEM,
+	MOVE_STEPPER,
+	PASTE_ITEM,
+	REMOVE_FORM_STEP,
+	SWAP_FRAGMENT,
 	UPDATE_COLLECTION_DISPLAY_COLLECTION,
 	UPDATE_EDITABLE_VALUES,
 	UPDATE_FORM_ITEM_CONFIG,
@@ -48,11 +60,17 @@ export default function fragmentEntryLinksReducer(
 		| typeof addItem
 		| typeof addFragmentEntryLinks
 		| typeof addFragmentEntryLinkComment
+		| typeof addStepper
 		| typeof changeMasterLayout
 		| typeof deleteItem
 		| typeof deleteFragmentEntryLinkComment
 		| typeof duplicateItem
+		| typeof pasteItems
 		| typeof editFragmentEntryLinkComment
+		| typeof moveItems
+		| typeof moveStepper
+		| typeof removeFormStep
+		| typeof swapFragment
 		| typeof updateCollectionDisplayCollection
 		| typeof updateEditableValues
 		| typeof updateFormItemConfig
@@ -83,7 +101,8 @@ export default function fragmentEntryLinksReducer(
 			return fragmentEntryLinks;
 		}
 
-		case ADD_FRAGMENT_ENTRY_LINKS: {
+		case ADD_FRAGMENT_ENTRY_LINKS:
+		case MOVE_ITEM: {
 			const newFragmentEntryLinks: FragmentEntryLinkMap = {};
 
 			action.fragmentEntryLinks.forEach((fragmentEntryLink) => {
@@ -94,6 +113,13 @@ export default function fragmentEntryLinksReducer(
 			return {
 				...fragmentEntryLinks,
 				...newFragmentEntryLinks,
+			};
+		}
+
+		case ADD_STEPPER: {
+			return {
+				...fragmentEntryLinks,
+				...action.fragmentEntryLinks,
 			};
 		}
 
@@ -205,7 +231,8 @@ export default function fragmentEntryLinksReducer(
 			};
 		}
 
-		case DUPLICATE_ITEM: {
+		case DUPLICATE_ITEM:
+		case PASTE_ITEM: {
 			const nextFragmentEntryLinks: FragmentEntryLinkMap = {
 				...fragmentEntryLinks,
 			};
@@ -261,6 +288,14 @@ export default function fragmentEntryLinksReducer(
 			};
 		}
 
+		case SWAP_FRAGMENT: {
+			return {
+				...fragmentEntryLinks,
+				[action.fragmentEntryLink.fragmentEntryLinkId]:
+					action.fragmentEntryLink,
+			};
+		}
+
 		case UPDATE_COLLECTION_DISPLAY_COLLECTION:
 			return {
 				...fragmentEntryLinks,
@@ -289,17 +324,19 @@ export default function fragmentEntryLinksReducer(
 
 		case UPDATE_FORM_ITEM_CONFIG: {
 			const newFragmentEntryLinks: FragmentEntryLinkMap =
-				action.addedFragmentEntryLinks
-					? {...action.addedFragmentEntryLinks}
-					: {};
+				action.fragmentEntryLinks
+					? {...fragmentEntryLinks, ...action.fragmentEntryLinks}
+					: {...fragmentEntryLinks};
 
 			if (action.removedFragmentEntryLinkIds) {
 				action.removedFragmentEntryLinkIds.forEach(
 					(fragmentEntryLinkId) => {
-						newFragmentEntryLinks[fragmentEntryLinkId] = {
-							...fragmentEntryLinks[fragmentEntryLinkId],
-							removed: true,
-						};
+						if (newFragmentEntryLinks[fragmentEntryLinkId]) {
+							newFragmentEntryLinks[fragmentEntryLinkId] = {
+								...newFragmentEntryLinks[fragmentEntryLinkId],
+								removed: true,
+							};
+						}
 					}
 				);
 			}
@@ -307,16 +344,24 @@ export default function fragmentEntryLinksReducer(
 			if (action.restoredFragmentEntryLinkIds) {
 				action.restoredFragmentEntryLinkIds.forEach(
 					(fragmentEntryLinkId) => {
-						newFragmentEntryLinks[fragmentEntryLinkId] = {
-							...fragmentEntryLinks[fragmentEntryLinkId],
-							removed: false,
-						};
+						if (newFragmentEntryLinks[fragmentEntryLinkId]) {
+							newFragmentEntryLinks[fragmentEntryLinkId] = {
+								...newFragmentEntryLinks[fragmentEntryLinkId],
+								removed: false,
+							};
+						}
 					}
 				);
 			}
 
+			if (action.fragmentEntryLinks) {
+				return {
+					...newFragmentEntryLinks,
+					...action.fragmentEntryLinks,
+				};
+			}
+
 			return {
-				...fragmentEntryLinks,
 				...newFragmentEntryLinks,
 			};
 		}
@@ -339,10 +384,10 @@ export default function fragmentEntryLinksReducer(
 
 			let collectionContent = fragmentEntryLink.collectionContent || {};
 
-			if (!isNullOrUndefined(action.collectionContentId)) {
+			if (!isNullOrUndefined(action.collectionItemId)) {
 				collectionContent = {
 					...collectionContent,
-					[action.collectionContentId]: action.content,
+					[action.collectionItemId]: action.content,
 				};
 			}
 
@@ -426,6 +471,18 @@ export default function fragmentEntryLinksReducer(
 				...fragmentEntryLinks,
 				...Object.fromEntries(newFragmentEntryLinks),
 			};
+		}
+
+		case MOVE_STEPPER:
+		case REMOVE_FORM_STEP: {
+			if (action.fragmentEntryLinks) {
+				return {
+					...fragmentEntryLinks,
+					...action.fragmentEntryLinks,
+				};
+			}
+
+			return fragmentEntryLinks;
 		}
 
 		default:

@@ -75,7 +75,12 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="SchemaVersionId" return-type="Collection">
+		<finder name="C_U" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="userId" />
+		</finder>
+		<finder name="C_SVI" return-type="Collection">
+			<finder-column name="companyId" />
 			<finder-column name="schemaVersionId" />
 		</finder>
 		<finder name="C_S" return-type="Collection">
@@ -333,6 +338,27 @@
 
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="CTScore" remote-service="false" trash-enabled="false" uuid="false">
+
+		<!-- PK fields -->
+
+		<column name="ctScoreId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="ctCollectionId" type="long" />
+		<column name="score" type="int" />
+
+		<!-- Finder methods -->
+
+		<finder name="CtCollectionId" return-type="CTScore" unique="true">
+			<finder-column name="ctCollectionId" />
 		</finder>
 	</entity>
 	<exceptions>

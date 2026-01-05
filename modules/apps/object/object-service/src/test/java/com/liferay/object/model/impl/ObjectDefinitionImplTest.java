@@ -5,22 +5,27 @@
 
 package com.liferay.object.model.impl;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFolderConstants;
+import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
-import com.liferay.portal.kernel.module.service.Snapshot;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.object.model.ObjectFolder;
+import com.liferay.object.service.ObjectFolderLocalServiceUtil;
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 /**
@@ -33,18 +38,38 @@ public class ObjectDefinitionImplTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@AfterClass
+	public static void tearDownClass() {
+		_objectFolderLocalServiceUtilMockedStatic.close();
+	}
+
+	@Test
+	public void testGetPortletId() {
+		ObjectDefinition objectDefinition = new ObjectDefinitionImpl();
+
+		String classNameSuffix = RandomTestUtil.randomString();
+
+		objectDefinition.setClassName(
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION + classNameSuffix);
+
+		Assert.assertEquals(
+			ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE +
+				classNameSuffix,
+			objectDefinition.getPortletId());
+	}
+
 	@Test
 	public void testGetRESTContextPath() {
 
 		// Modifiable custom object definition
 
-		_testGetRESTContextPath(
-			"/c/customobjects", true, "CustomObject", null, false);
+		_testGetRESTContextPath("/c/customobjects", "CustomObject", false);
 
 		// Modifiable system object definition
 
 		_testGetRESTContextPath(
-			"/headless-builder/endpoints", true, "APIEndpoint", null, true);
+			"/headless-builder/endpoints", "APIEndpoint", true);
 
 		// Unmodifiable system object definition
 
@@ -61,24 +86,25 @@ public class ObjectDefinitionImplTest {
 		}
 	}
 
-	@FeatureFlags("LPS-187142")
 	@Test
-	public void testGetRESTContextPathRootDescendantNode() {
-
-		// Modifiable custom object definition
-
-		_testGetRESTContextPath(
-			"/c/rootobjects/customobjects", true, "CustomObject", "RootObject",
-			false);
-
-		// Modifiable system object definition
-
-		_testGetRESTContextPath(
-			"/headless-builder/applications/endpoints", true, "APIEndpoint",
-			"APIApplication", true);
-		_testGetRESTContextPath(
-			"/commerce-returns/commerce-return-items", true,
-			"CommerceReturnItem", "CommerceReturn", true);
+	public void testIsCMS() throws Exception {
+		_testIsCMS(
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
+			"false",
+			objectDefinition -> Assert.assertFalse(objectDefinition.isCMS()));
+		_testIsCMS(
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
+			"true",
+			objectDefinition -> Assert.assertTrue(objectDefinition.isCMS()));
+		_testIsCMS(
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES, "false",
+			objectDefinition -> Assert.assertFalse(objectDefinition.isCMS()));
+		_testIsCMS(
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES, "true",
+			objectDefinition -> Assert.assertTrue(objectDefinition.isCMS()));
+		_testIsCMS(
+			RandomTestUtil.randomString(), "true",
+			objectDefinition -> Assert.assertFalse(objectDefinition.isCMS()));
 	}
 
 	private ObjectDefinition _createObjectDefinition(
@@ -96,54 +122,56 @@ public class ObjectDefinitionImplTest {
 	}
 
 	private void _testGetRESTContextPath(
-		String expectedRESTContextPath, boolean modifiable, String name,
-		String rootName, boolean system) {
+		String expectedRESTContextPath, String name, boolean system) {
 
-		ObjectDefinition objectDefinition = _createObjectDefinition(
-			modifiable, name, system);
-
-		if (rootName != null) {
-			ObjectDefinition rootObjectDefinition = _createObjectDefinition(
-				modifiable, rootName, system);
-
-			long rootObjectDefinitionId = RandomTestUtil.randomLong();
-
-			objectDefinition.setRootObjectDefinitionId(rootObjectDefinitionId);
-
-			ObjectDefinitionLocalService objectDefinitionLocalService =
-				Mockito.mock(ObjectDefinitionLocalService.class);
-
-			ReflectionTestUtil.setFieldValue(
-				ObjectDefinitionLocalServiceUtil.class, "_serviceSnapshot",
-				new Snapshot<ObjectDefinitionLocalService>(
-					ObjectDefinitionLocalServiceUtil.class,
-					ObjectDefinitionLocalService.class) {
-
-					@Override
-					public ObjectDefinitionLocalService get() {
-						return objectDefinitionLocalService;
-					}
-
-				});
-
-			Mockito.when(
-				objectDefinitionLocalService.fetchObjectDefinition(
-					rootObjectDefinitionId)
-			).thenReturn(
-				rootObjectDefinition
-			);
-
-			objectDefinition = Mockito.spy(objectDefinition);
-
-			Mockito.doReturn(
-				true
-			).when(
-				objectDefinition
-			).isRootDescendantNode();
-		}
+		ObjectDefinition objectDefinition = Mockito.spy(
+			_createObjectDefinition(true, name, system));
 
 		Assert.assertEquals(
 			expectedRESTContextPath, objectDefinition.getRESTContextPath());
 	}
+
+	private void _testIsCMS(
+			String externalReferenceCode, String featureFlagEnabled,
+			UnsafeConsumer<ObjectDefinition, Exception> unsafeConsumer)
+		throws Exception {
+
+		ObjectFolder objectFolder = Mockito.mock(ObjectFolder.class);
+
+		Mockito.when(
+			objectFolder.getExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		long objectFolderId = RandomTestUtil.randomLong();
+
+		_objectFolderLocalServiceUtilMockedStatic.when(
+			() -> ObjectFolderLocalServiceUtil.fetchObjectFolder(objectFolderId)
+		).thenReturn(
+			objectFolder
+		);
+
+		ObjectDefinition objectDefinition = new ObjectDefinitionImpl();
+
+		objectDefinition.setObjectFolderId(objectFolderId);
+
+		String featureFlagKey = "feature.flag.LPD-17564";
+
+		String originalValue = PropsUtil.get(featureFlagKey);
+
+		try {
+			PropsUtil.set(featureFlagKey, featureFlagEnabled);
+
+			unsafeConsumer.accept(objectDefinition);
+		}
+		finally {
+			PropsUtil.set(featureFlagKey, originalValue);
+		}
+	}
+
+	private static final MockedStatic<ObjectFolderLocalServiceUtil>
+		_objectFolderLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			ObjectFolderLocalServiceUtil.class);
 
 }

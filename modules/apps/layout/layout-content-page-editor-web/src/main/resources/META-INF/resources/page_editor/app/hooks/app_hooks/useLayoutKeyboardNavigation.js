@@ -4,39 +4,79 @@
  */
 
 import {useEventListener} from '@liferay/frontend-js-react-web';
-import {useContext, useEffect, useRef} from 'react';
+import {useContext, useEffect, useRef, useState} from 'react';
 
 import {ITEM_ACTIVATION_ORIGINS} from '../../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../../config/constants/itemTypes';
-import {useHoverItem, useSelectItem} from '../../contexts/ControlsContext';
+import {MULTI_SELECT_TYPES} from '../../config/constants/multiSelectTypes';
+import {
+	useHoverItem,
+	useMultiSelectTypeRef,
+	useSelectItem,
+} from '../../contexts/ControlsContext';
 import {LayoutKeyboardContext} from '../../contexts/LayoutKeyboardContext';
 
 export function useLayoutKeyboardNavigation(item) {
 	const elementRef = useRef(null);
 
 	const hoverItem = useHoverItem();
+	const multiSelectTypeRef = useMultiSelectTypeRef();
 	const selectItem = useSelectItem();
 
 	const {itemList, setTargetId, targetId} = useContext(LayoutKeyboardContext);
 
-	// Focus and hover when changing target
+	const [isTab, setIsTab] = useState(false);
+
+	// Focus when changing target, and if the multiselection in range is
+	// activated in range the element is selected, if not it is hovered.
 
 	useEffect(() => {
 		if (targetId === item.itemId) {
 			elementRef.current.focus();
-			hoverItem(item.itemId);
-		}
-	}, [hoverItem, item, targetId]);
 
-	// Hover and set target when focusing first item
+			if (multiSelectTypeRef.current === MULTI_SELECT_TYPES.range) {
+				selectItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.keyboard,
+				});
+			}
+			else {
+				hoverItem(item.itemId);
+			}
+		}
+	}, [hoverItem, item, multiSelectTypeRef, selectItem, targetId]);
+
+	// Listeners to know whether we are focusing with keyboard or not
+
+	useEventListener('mousedown', () => setIsTab(false), false, window);
+
+	useEventListener(
+		'keydown',
+		(event) => {
+			if (event.key === 'Tab') {
+				setIsTab(true);
+			}
+			else {
+				setIsTab(false);
+			}
+		},
+		false,
+		window
+	);
+
+	// Hover and set target when focusing first item with keyboard
 
 	useEventListener(
 		'focus',
 		() => {
-			setTargetId(item.itemId);
-			hoverItem(item.itemId);
+			if (isTab) {
+				setTargetId(item.itemId);
+				hoverItem(item.itemId);
+			}
 		},
 		false,
+
+		// False positive - react-compiler/react-compiler
+		// eslint-disable-next-line react-compiler/react-compiler
 		elementRef.current
 	);
 
@@ -46,6 +86,9 @@ export function useLayoutKeyboardNavigation(item) {
 		'focusout',
 		() => hoverItem(null),
 		false,
+
+		// False positive - react-compiler/react-compiler
+		// eslint-disable-next-line react-compiler/react-compiler
 		elementRef.current
 	);
 
@@ -94,6 +137,9 @@ export function useLayoutKeyboardNavigation(item) {
 			}
 		},
 		false,
+
+		// False positive - react-compiler/react-compiler
+		// eslint-disable-next-line react-compiler/react-compiler
 		elementRef.current
 	);
 

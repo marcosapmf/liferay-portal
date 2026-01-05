@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {faroConfig} from '../../tests/osb-faro-web/faro.config';
+import {faroConfig} from '../../tests/osb-faro-web/main/faro.config';
 import {ApiHelpers} from '../ApiHelpers';
 
 type Channel = {
@@ -14,6 +14,17 @@ type Project = {
 	groupId: string;
 	name: string;
 };
+
+type ApiToken = {
+	createDate: string;
+	expirationDate: string;
+	lastAccessDate: string;
+	token: string;
+};
+
+const _authorization = `Basic ${btoa(
+	`${faroConfig.user.login}:${faroConfig.user.password}`
+)}`;
 
 export class JSONWebServicesOSBFaroApiHelper {
 	readonly apiHelpers: ApiHelpers;
@@ -39,13 +50,32 @@ export class JSONWebServicesOSBFaroApiHelper {
 
 		const header = new Headers();
 
-		header.append(
-			'Authorization',
-			this.apiHelpers.getAuthorizationHeader()
-		);
+		header.append('Authorization', _authorization);
 
 		return fetch(
 			`${faroConfig.environment.baseUrl}${this.basePath}/main/${groupId}/channel`,
+			{
+				body: formdata,
+				headers: header,
+				method: 'POST',
+			}
+		).then((response) => response.json());
+	}
+
+	async createProject(name: string): Promise<Project> {
+		const formdata = new FormData();
+
+		formdata.append('emailAddressDomains', '[]');
+		formdata.append('incidentReportEmailAddresses', '["test@liferay.com"]');
+		formdata.append('name', name);
+		formdata.append('serverLocation', 'us-west1-ac4-c1');
+
+		const header = new Headers();
+
+		header.append('Authorization', _authorization);
+
+		return fetch(
+			`${faroConfig.environment.baseUrl}${this.basePath}/main/project/trial`,
 			{
 				body: formdata,
 				headers: header,
@@ -61,10 +91,7 @@ export class JSONWebServicesOSBFaroApiHelper {
 
 		const header = new Headers();
 
-		header.append(
-			'Authorization',
-			this.apiHelpers.getAuthorizationHeader()
-		);
+		header.append('Authorization', _authorization);
 
 		return fetch(
 			`${faroConfig.environment.baseUrl}${this.basePath}/main/${groupId}/channel`,
@@ -74,5 +101,30 @@ export class JSONWebServicesOSBFaroApiHelper {
 				method: 'DELETE',
 			}
 		).then((response) => response);
+	}
+
+	async deleteProject(groupId: number): Promise<Project> {
+		const header = new Headers();
+
+		header.append('Authorization', _authorization);
+
+		return fetch(
+			`${faroConfig.environment.baseUrl}${this.basePath}/main/project/${groupId}`,
+			{
+				headers: header,
+				method: 'DELETE',
+			}
+		).then((response) => {
+			return response.json();
+		});
+	}
+
+	async fetchApiToken(groupId: string, expiresIn: number): Promise<ApiToken> {
+		return this.apiHelpers.post(
+			`${faroConfig.environment.baseUrl}${this.basePath}/main/${groupId}/oauth2/tokens/new?expiresIn=${expiresIn}`,
+			{
+				headers: await this.apiHelpers.getJSONWebServicesHeaders(),
+			}
+		);
 	}
 }

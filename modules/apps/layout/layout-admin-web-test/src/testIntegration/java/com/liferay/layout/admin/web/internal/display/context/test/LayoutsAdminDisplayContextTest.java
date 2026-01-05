@@ -41,9 +41,9 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.test.MockLiferayPortletContext;
 
-import java.util.List;
+import jakarta.portlet.Portlet;
 
-import javax.portlet.Portlet;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -224,7 +224,7 @@ public class LayoutsAdminDisplayContextTest {
 			new MockLiferayPortletContext(path));
 
 		mockLiferayPortletRenderRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 		mockLiferayPortletRenderRequest.setAttribute(
 			WebKeys.COMPANY_ID, group.getCompanyId());
 

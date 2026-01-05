@@ -6,21 +6,24 @@
 package com.liferay.portal.settings.web.internal.configuration.admin.display;
 
 import com.liferay.configuration.admin.display.ConfigurationScreen;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.settings.configuration.admin.display.PortalSettingsConfigurationScreenContributor;
 import com.liferay.portal.settings.web.internal.constants.PortalSettingsWebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
+import java.io.Serializable;
 
+import java.util.Dictionary;
 import java.util.Locale;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Drew Brokke
@@ -35,6 +38,14 @@ public class PortalSettingsConfigurationScreen implements ConfigurationScreen {
 		_portalSettingsConfigurationScreenContributor =
 			portalSettingsConfigurationScreenContributor;
 		_servletContext = servletContext;
+	}
+
+	@Override
+	public Dictionary<String, Object> exportProperties(Serializable scopePK)
+		throws Exception {
+
+		return _portalSettingsConfigurationScreenContributor.exportProperties(
+			scopePK);
 	}
 
 	@Override
@@ -56,7 +67,21 @@ public class PortalSettingsConfigurationScreen implements ConfigurationScreen {
 
 	@Override
 	public String getScope() {
-		return "company";
+		return ExtendedObjectClassDefinition.Scope.COMPANY.getValue();
+	}
+
+	@Override
+	public void importProperties(
+			Dictionary<String, Object> properties, Serializable scopePK)
+		throws Exception {
+
+		_portalSettingsConfigurationScreenContributor.importProperties(
+			properties, scopePK);
+	}
+
+	@Override
+	public boolean isDeprecated() {
+		return _portalSettingsConfigurationScreenContributor.isDeprecated();
 	}
 
 	@Override

@@ -113,28 +113,6 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="update-websphere-java-opts">
-		<sequential>
-			<replace
-				file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
-			>
-				<replacefilter
-					token="maximumHeapSize=&quot;1024&quot;"
-					value="initialHeapSize=&quot;6144&quot; maximumHeapSize=&quot;6144&quot;"
-				/>
-			</replace>
-
-			<replace
-				file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
-			>
-				<replacefilter
-					token="-Xquickstart -Dfile.encoding=UTF-8 -Duser.timezone=GMT"
-					value="${app.server.websphere.jdk.java.options} ${app.server.websphere.jvm.args} -Xquickstart ${app.server.websphere.jvm.mem}"
-				/>
-			</replace>
-		</sequential>
-	</macrodef>
-
 	<target name="build-dist-jboss">
 		<app-server-properties-update>
 			app.server.type=jboss
@@ -251,20 +229,6 @@
 		/>
 	</target>
 
-	<target name="build-dist-tcserver">
-		<app-server-properties-update>
-			app.server.type=tcserver
-		</app-server-properties-update>
-
-		<antcall target="unzip-tcserver" />
-
-		<delete dir="${project.dir}/portal-web/classes" />
-
-		<antcall inheritAll="false" target="all" />
-
-		<app-server-properties-reset />
-	</target>
-
 	<target name="build-dist-tomcat">
 		<build-dist-tomcat-bare />
 
@@ -289,32 +253,7 @@
 			app.server.type=weblogic
 		</app-server-properties-update>
 
-		<if>
-			<or>
-				<equals arg1="${app.server.weblogic.version}" arg2="12.2.1" />
-				<equals arg1="${app.server.weblogic.version}" arg2="14.1.1" />
-			</or>
-			<then>
-				<antcall target="unzip-weblogic-custom" />
-			</then>
-			<else>
-				<antcall target="unzip-weblogic" />
-			</else>
-		</if>
-
-		<delete dir="${project.dir}/portal-web/classes" />
-
-		<ant inheritAll="false" target="deploy" />
-
-		<app-server-properties-reset />
-	</target>
-
-	<target name="build-dist-websphere">
-		<app-server-properties-update>
-			app.server.type=websphere
-		</app-server-properties-update>
-
-		<antcall inheritAll="false" target="unzip-websphere" />
+		<antcall target="unzip-weblogic-custom" />
 
 		<delete dir="${project.dir}/portal-web/classes" />
 
@@ -378,12 +317,12 @@ closeTemplate()
 			<![CDATA[
 				#!/bin/sh
 
-				export JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.weblogic.jdk.java.options}"
+				export JDK_JAVA_OPTIONS="${JDK_JAVA_OPTIONS} ${app.server.weblogic.jdk.java.options}"
 				export MW_HOME="${app.server.weblogic.dir}"
 				export USER_MEM_ARGS="${app.server.weblogic.jvm.mem}"
 				export WL_HOME="${app.server.weblogic.wlserver.dir}"
 
-				${source.command} ${MW_HOME}/oracle/oracle_common/common/bin/commEnv.sh
+				${source.command} ${MW_HOME}/oracle_common/common/bin/commEnv.sh
 
 				export CLASSPATH=${FMWCONFIG_CLASSPATH}
 
@@ -511,7 +450,7 @@ release was successful.</echo>
 	<target name="generate-tomcat-setenv">
 		<echo file="tools/servers/tomcat/bin/setenv.sh">CATALINA_OPTS="$CATALINA_OPTS ${app.server.tomcat.jvm.args} ${app.server.tomcat.jvm.mem}"
 
-JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.tomcat.jdk.java.options}"</echo>
+JDK_JAVA_OPTIONS="${JDK_JAVA_OPTIONS} ${app.server.tomcat.jdk.java.options}"</echo>
 
 		<chmod
 			file="tools/servers/tomcat/bin/setenv.sh"
@@ -523,13 +462,17 @@ JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.tomcat.jdk.java.options}"</echo
 set "JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.tomcat.jdk.java.options}"</echo>
 	</target>
 
-	<target name="install-weblogic14-setup-files">
-		<echo file="${app.server.weblogic.dir}/oraInst.loc">
-inventory_loc=${app.server.weblogic.dir}/oraInventory
-inst_group=appserver
+	<target name="install-weblogic-setup-files">
+		<echo file="${app.server.weblogic.dir}-temp/responseFile.rsp">
+[ENGINE]
+Response File Version=1.0.0.0.0
+[GENERIC]
+ORACLE_HOME=${app.server.weblogic.dir}
+INSTALL_TYPE=WebLogic Server
+DECLINE_SECURITY_UPDATES=true
 		</echo>
 
-		<echo file="${app.server.weblogic.dir}/create_swap.sh">
+		<echo file="${app.server.weblogic.dir}-temp/create_swap.sh">
 			<![CDATA[
 #!/bin/sh
 
@@ -554,10 +497,10 @@ fi
 
 cat /proc/swaps
 cat /proc/meminfo | grep Swap
-]]>
+			]]>
 		</echo>
 
-		<echo file="${app.server.weblogic.dir}/create_user.sh">
+		<echo file="${app.server.weblogic.dir}-temp/create_user.sh">
 			<![CDATA[
 #!/bin/bash
 
@@ -572,40 +515,74 @@ fi
 			]]>
 		</echo>
 
-		<echo file="${app.server.weblogic.dir}/install_weblogic.sh">
+		<property name="weblogic.java.jdk.home" value="${env.JAVA_HOME}" />
+
+		<echo file="${app.server.weblogic.dir}-temp/install_weblogic.sh">
 			<![CDATA[
 #!/bin/bash
 
-export JAVA_HOME=/opt/java/jdk8-x64
+export JAVA_HOME=${weblogic.java.jdk.home}
 export PATH=$JAVA_HOME/bin:$PATH
 
-java -jar ${app.server.weblogic.dir}/${app.server.weblogic.jar.name} -ignoreSysPrereqs -silent ORACLE_BASE=${app.server.weblogic.dir} ORACLE_HOME=${app.server.weblogic.dir}/oracle JAVA_HOME=/opt/java/jdk8-x64 INVENTORY_LOCATION=${app.server.weblogic.dir}/oraInventory INSTALL_TYPE='Complete with Examples' -invPtrLoc ${app.server.weblogic.dir}/oraInst.loc
+java -jar ${app.server.weblogic.dir}-temp/${app.server.weblogic.jar.name} -ignoreSysPrereqs -invPtrLoc ${app.server.weblogic.dir}-temp/oraInst.loc -responseFile ${app.server.weblogic.dir}-temp/responseFile.rsp -silent
 			]]>
 		</echo>
 
-		<exec executable="/bin/bash">
-			<arg value="${app.server.weblogic.dir}/create_swap.sh" />
-		</exec>
-
-		<exec executable="/bin/bash">
-			<arg value="${app.server.weblogic.dir}/create_user.sh" />
-		</exec>
-
-		<execute dir="${app.server.weblogic.dir}">
+		<execute dir="${app.server.parent.dir}">
 			<![CDATA[
-				rm -fr ${app.server.weblogic.dir}/oraInventory
+				rm -fr oraInventory
 
-				mkdir ${app.server.weblogic.dir}/oraInventory
+				mkdir oraInventory
 
-				rm -fr ${app.server.weblogic.dir}/oracle
+				rm -fr ${app.server.weblogic.dir}
 
-				mkdir ${app.server.weblogic.dir}/oracle
-
-				sudo chown -R appserver: ${app.server.weblogic.dir}
-
-				su appserver -c "/bin/sh install_weblogic.sh"
+				mkdir ${app.server.weblogic.dir}
 			]]>
 		</execute>
+
+		<if>
+			<isset property="env.JENKINS_HOME" />
+			<then>
+				<exec executable="/bin/bash">
+					<arg value="${app.server.weblogic.dir}-temp/create_swap.sh" />
+				</exec>
+
+				<exec executable="/bin/bash">
+					<arg value="${app.server.weblogic.dir}-temp/create_user.sh" />
+				</exec>
+
+				<echo file="${app.server.weblogic.dir}-temp/oraInst.loc">
+inventory_loc=${app.server.parent.dir}/oraInventory
+inst_group=appserver
+				</echo>
+
+				<execute dir="${app.server.weblogic.dir}-temp">
+					<![CDATA[
+						sudo chown -R appserver: ${app.server.parent.dir}/oraInventory
+						sudo chown -R appserver: ${app.server.weblogic.dir}
+						sudo chown -R appserver: ${app.server.weblogic.dir}-temp
+
+						su appserver -c "/bin/sh install_weblogic.sh"
+					]]>
+				</execute>
+			</then>
+			<else>
+				<exec executable="id" outputproperty="user.group">
+					<arg value="-gn" />
+				</exec>
+
+				<echo file="${app.server.weblogic.dir}-temp/oraInst.loc">
+inventory_loc=${app.server.parent.dir}/oraInventory
+inst_group=${user.group}
+				</echo>
+
+				<execute dir="${app.server.weblogic.dir}-temp">
+					<![CDATA[
+						/bin/sh install_weblogic.sh
+					]]>
+				</execute>
+			</else>
+		</if>
 	</target>
 
 	<target name="prepare-generated-files">
@@ -901,28 +878,6 @@ this task.
 		</replace-multilines>
 
 		<replace
-			file="${app.server.jboss.bin.dir}/standalone.conf"
-		>
-			<replacetoken><![CDATA[JAVA_OPTS="-Xms1303m -Xmx1303m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m ]]></replacetoken>
-			<replacevalue><![CDATA[JAVA_OPTS="]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.jboss.instance.dir}/configuration/standalone.xml"
-		>
-			<replacetoken><![CDATA[<subsystem xmlns="urn:jboss:domain:security:2.0">
-            <security-domains>]]></replacetoken>
-			<replacevalue><![CDATA[<subsystem xmlns="urn:jboss:domain:security:2.0">
-            <security-domains>
-				<security-domain name="PortalRealm">
-					<authentication>
-						<login-module code="com.liferay.portal.security.jaas.PortalLoginModule" flag="required" />
-					</authentication>
-				</security-domain>]]>
-			</replacevalue>
-		</replace>
-
-		<replace
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
 			<replacetoken><![CDATA[<location name="/" handler="welcome-content"/>]]></replacetoken>
@@ -939,25 +894,16 @@ this task.
 		<replace
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
-			<replacevalue>
-				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
-			</replacevalue>
+			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacevalue><![CDATA[<!--<jsp-config/>-->]]></replacevalue>
 		</replace>
 
 		<echo append="true" file="${app.server.jboss.bin.dir}/standalone.conf">
 			<![CDATA[${line.separator}JAVA_OPTS="$JAVA_OPTS ${app.server.jboss.jvm.args} ${app.server.jboss.jvm.mem}"
 
-JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.jboss.jdk.java.options}"
+JDK_JAVA_OPTIONS="${JDK_JAVA_OPTIONS} ${app.server.jboss.jdk.java.options}"
 export JDK_JAVA_OPTIONS]]>
 		</echo>
-
-		<replace
-			file="${app.server.jboss.bin.dir}/standalone.conf.bat"
-		>
-			<replacetoken><![CDATA[set "JAVA_OPTS=-Xms1G -Xmx1G -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m"]]></replacetoken>
-			<replacevalue></replacevalue>
-		</replace>
 
 		<replace
 			file="${app.server.jboss.bin.dir}/standalone.conf.bat"
@@ -975,144 +921,6 @@ export JDK_JAVA_OPTIONS]]>
 				<include name="*.sh" />
 			</fileset>
 		</chmod>
-	</target>
-
-	<target name="unzip-tcserver">
-		<delete dir="${app.server.tcserver.dir}" />
-
-		<if>
-			<not>
-				<available file="${app.server.parent.dir}/${app.server.tcserver.zip.name}" />
-			</not>
-			<then>
-				<mkdir dir="${app.server.parent.dir}" />
-
-				<mirrors-get
-					dest="${app.server.parent.dir}/${app.server.tcserver.zip.name}"
-					src="${app.server.tcserver.zip.url}"
-					verbose="true"
-				/>
-			</then>
-		</if>
-
-		<unzip
-			dest="${app.server.parent.dir}"
-			src="${app.server.parent.dir}/${app.server.tcserver.zip.name}"
-		>
-			<mapper
-				from="pivotal-tc-server/*"
-				to="tc-server-${app.server.tcserver.version}/*"
-				type="glob"
-			/>
-		</unzip>
-
-		<move
-			file="${app.server.tcserver.developer.dir}/tcserver"
-			tofile="${app.server.tcserver.developer.dir}/tcserver.sh"
-		/>
-
-		<chmod
-			perm="a+x"
-		>
-			<fileset
-				dir="${app.server.tcserver.dir}"
-			>
-				<include name="**/*.sh" />
-			</fileset>
-		</chmod>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<exec dir="${app.server.tcserver.developer.dir}" executable="cmd">
-					<arg line="/c set JAVA_OPTS= &amp; tcserver.bat create liferay -v ${app.server.tcserver.tomcat.version}" />
-				</exec>
-			</then>
-			<else>
-				<exec dir="${app.server.tcserver.developer.dir}" executable="${app.server.tcserver.developer.dir}/tcserver.sh">
-					<arg line="create liferay -v ${app.server.tcserver.tomcat.version}" />
-				</exec>
-			</else>
-		</if>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<replace
-					file="${app.server.tcserver.bin.dir}/setenv.bat"
-				>
-					<replacetoken><![CDATA[set JVM_OPTS=-Xmx512M -Xss256K]]></replacetoken>
-					<replacevalue expandProperties="true"><![CDATA[set JVM_OPTS=${app.server.tcserver.jvm.args} ${app.server.tcserver.jvm.mem}
-
-set JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.tcserver.jdk.java.options}]]></replacevalue>
-				</replace>
-			</then>
-			<else>
-				<replace
-					file="${app.server.tcserver.bin.dir}/setenv.sh"
-				>
-					<replacetoken><![CDATA[JVM_OPTS="-Xmx512M -Xss256K"]]></replacetoken>
-					<replacevalue expandProperties="true"><![CDATA[JVM_OPTS="${app.server.tcserver.jvm.args} ${app.server.tcserver.jvm.mem}"
-
-JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.tcserver.jdk.java.options}"
-export JDK_JAVA_OPTIONS]]></replacevalue>
-				</replace>
-			</else>
-		</if>
-
-		<replace
-			file="${app.server.tcserver.conf.dir}/catalina.properties"
-		>
-			<replacetoken><![CDATA[common.loader=${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar]]></replacetoken>
-			<replacevalue><![CDATA[common.loader=${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar,${catalina.home}/webapps/ROOT/WEB-INF/lib/support-tomcat.jar]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.tcserver.conf.dir}/server.xml"
-		>
-			<replacetoken><![CDATA[redirectPort="${nio.https.port}"/>]]></replacetoken>
-			<replacevalue><![CDATA[redirectPort="${nio.https.port}" URIEncoding="UTF-8"/>]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.tcserver.conf.dir}/web.xml"
-		>
-			<replacetoken><![CDATA[<load-on-startup>3</load-on-startup>]]></replacetoken>
-			<replacevalue>
-				<![CDATA[
-					<init-param>
-						<param-name>compilerSourceVM</param-name>
-						<param-value>1.8</param-value>
-					</init-param>
-					<init-param>
-						<param-name>compilerTargetVM</param-name>
-						<param-value>1.8</param-value>
-					</init-param>
-					<load-on-startup>3</load-on-startup>
-				]]>
-			</replacevalue>
-		</replace>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<replace
-					file="${app.server.tcserver.conf.dir}/wrapper.conf"
-				>
-					<replacetoken><![CDATA[wrapper.java.additional.8=-Xmx512M]]></replacetoken>
-					<replacevalue><![CDATA[wrapper.java.additional.8="-Xmx1024M"]]></replacevalue>
-				</replace>
-
-				<replace
-					file="${app.server.tcserver.conf.dir}/wrapper.conf"
-				>
-					<replacetoken><![CDATA[wrapper.java.additional.9=-Xss256K]]></replacetoken>
-					<replacevalue><![CDATA[wrapper.java.additional.9="-Xss512K"
-wrapper.java.additional.10="-XX:MaxMetaspaceSize=256M"
-wrapper.java.additional.11="-Dfile.encoding=UTF-8"]]></replacevalue>
-				</replace>
-			</then>
-		</if>
 	</target>
 
 	<target name="unzip-tomcat">
@@ -1164,6 +972,20 @@ tomcat.util.scan.StandardJarScanFilter.jarsToSkip=*
 tomcat.util.scan.StandardJarScanFilter.jarsToScan=]]>
 		</echo>
 
+		<fixcrlf eof="asis" eol="lf" file="${app.server.tomcat.dir}/conf/context.xml" />
+
+		<replace
+			file="${app.server.tomcat.dir}/conf/context.xml"
+		>
+			<replacetoken><![CDATA[    <!-- Uncomment this to enable session persistence across Tomcat restarts -->
+    <!--
+    <Manager pathname="SESSIONS.ser" />
+    -->]]></replacetoken>
+			<replacevalue><![CDATA[    <Manager pathname="SESSIONS.ser" />]]></replacevalue>
+		</replace>
+
+		<fixcrlf eof="asis" eol="crlf" file="${app.server.tomcat.dir}/conf/context.xml" />
+
 		<echo append="true" file="${app.server.tomcat.dir}/conf/logging.properties">
 			<![CDATA[
 org.apache.catalina.startup.Catalina.level=INFO
@@ -1171,20 +993,6 @@ org.apache.catalina.startup.ClassLoaderFactory.level=SEVERE
 org.apache.catalina.startup.VersionLoggerListener.level=WARNING
 org.apache.level=WARNING]]>
 		</echo>
-
-		<replace
-			file="${app.server.tomcat.dir}/conf/server.xml"
-		>
-			<replacetoken><![CDATA[redirectPort="8443" />]]></replacetoken>
-			<replacevalue><![CDATA[redirectPort="8443" URIEncoding="UTF-8" />]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.tomcat.dir}/conf/server.xml"
-		>
-			<replacetoken><![CDATA[<Connector port="8009" protocol="AJP/1.3" redirectPort="8443" URIEncoding="UTF-8" />]]></replacetoken>
-			<replacevalue><![CDATA[<!-- <Connector port="8009" protocol="AJP/1.3" redirectPort="8443" URIEncoding="UTF-8" /> -->]]></replacevalue>
-		</replace>
 
 		<replace
 			file="${app.server.tomcat.dir}/conf/server.xml"
@@ -1256,563 +1064,17 @@ org.apache.level=WARNING]]>
 	</target>
 
 	<target name="unzip-weblogic">
-		<if>
-			<not>
-				<available file="${app.server.parent.dir}/${app.server.weblogic.zip.name}" />
-			</not>
-			<then>
-				<mkdir dir="${app.server.parent.dir}" />
-
-				<mirrors-get
-					dest="${app.server.parent.dir}"
-					src="${app.server.weblogic.zip.url}"
-				/>
-			</then>
-		</if>
-
-		<if>
-			<not>
-				<available file="${app.server.parent.dir}/${app.server.weblogic.zip.name}" />
-			</not>
-			<then>
-				<mkdir dir="${app.server.parent.dir}" />
-
-				<fail>
-.
-
-Please download the WebLogic zip file from ${app.server.weblogic.zip.url} and
-place it here: ${app.server.parent.dir}/${app.server.weblogic.zip.name}. Then
-rerun this task.
-				</fail>
-			</then>
-		</if>
-
-		<delete dir="${app.server.weblogic.dir}" />
-
-		<if>
-			<or>
-				<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-				<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-			</or>
-			<then>
-				<unzip
-					dest="${app.server.weblogic.dir}-temp"
-					src="${app.server.parent.dir}/${app.server.weblogic.zip.name}"
-				/>
-			</then>
-			<else>
-				<unzip
-					dest="${app.server.weblogic.dir}"
-					src="${app.server.parent.dir}/${app.server.weblogic.zip.name}"
-				/>
-			</else>
-		</if>
-
-		<if>
-			<or>
-				<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-				<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-			</or>
-			<then>
-				<java
-					fork="true"
-					jar="${app.server.weblogic.dir}-temp/${app.server.weblogic.jar.name}"
-				>
-					<arg line="ORACLE_HOME=${app.server.weblogic.dir}" />
-				</java>
-
-				<delete dir="${app.server.weblogic.dir}-temp" />
-
-				<property name="app.server.weblogic.configure.silent" value="-silent" />
-				<property name="app.server.weblogic.template.dir" value="${app.server.weblogic.wlserver.dir}/common/templates/wls" />
-			</then>
-			<elseif>
-				<equals arg1="${app.server.weblogic.version.build}" arg2="1213" />
-				<then>
-					<move
-						todir="${app.server.weblogic.dir}"
-					>
-						<fileset
-							dir="${app.server.weblogic.dir}/wls${app.server.weblogic.version.build}0"
-						/>
-					</move>
-
-					<property name="app.server.weblogic.configure.silent" value="-silent" />
-					<property name="app.server.weblogic.template.dir" value="${app.server.weblogic.wlserver.dir}/common/templates/wls" />
-				</then>
-			</elseif>
-			<else>
-				<property name="app.server.weblogic.configure.silent" value="" />
-				<property name="app.server.weblogic.template.dir" value="${app.server.weblogic.wlserver.dir}/common/templates/domains" />
-			</else>
-		</if>
-
-		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-		</tstamp>
-
-		<mkdir dir="${tstamp.value}" />
-
-		<echo file="${tstamp.value}/create-weblogic-domain.py">
-readTemplate('${app.server.weblogic.template.dir}/wls.jar')
-
-set('Name', '${app.server.weblogic.instance.name}')
-
-cd('/Security/%s/User/%s' % ('${app.server.weblogic.instance.name}', 'weblogic'))
-
-set('UserPassword', 'testing123')
-
-cd('/Servers/AdminServer')
-
-set('ListenAddress', '')
-set('ListenPort', 8080)
-
-writeDomain('${app.server.weblogic.instance.dir}')
-
-closeTemplate()
-		</echo>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<pathconvert property="app.server.weblogic.dir.windows" targetos="windows">
-					<path location="${app.server.weblogic.dir}" />
-				</pathconvert>
-
-				<pathconvert property="app.server.weblogic.wlserver.dir.windows" targetos="windows">
-					<path location="${app.server.weblogic.wlserver.dir}" />
-				</pathconvert>
-
-				<if>
-					<or>
-						<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-						<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-					</or>
-					<then>
-						<exec dir="${app.server.weblogic.dir}/wlserver/server/bin" executable="cmd">
-							<env key="MW_HOME" value="${app.server.weblogic.dir.windows}" />
-							<arg value="/c" />
-							<arg value="setWLSEnv.cmd" />
-							<arg value="${app.server.weblogic.configure.silent}" />
-						</exec>
-
-						<echo file="${tstamp.value}/create-weblogic-domain.bat">
-							@echo off
-
-							set "JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.weblogic.jdk.java.options}"
-							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=${app.server.weblogic.jvm.mem}"
-							set "WL_HOME=${app.server.weblogic.wlserver.dir.windows}"
-
-							call %MW_HOME%/oracle_common/common/bin/commEnv.cmd
-
-							set "CLASSPATH=%FMWCONFIG_CLASSPATH%"
-
-							"${env.JAVA_HOME}/bin/java" weblogic.WLST create-weblogic-domain.py
-						</echo>
-					</then>
-					<else>
-						<exec dir="${app.server.weblogic.dir}" executable="cmd">
-							<env key="MW_HOME" value="${app.server.weblogic.dir.windows}" />
-							<arg value="/c" />
-							<arg value="configure.cmd" />
-							<arg value="${app.server.weblogic.configure.silent}" />
-						</exec>
-
-						<echo file="${tstamp.value}/create-weblogic-domain.bat">
-							@echo off
-
-							set "JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.weblogic.jdk.java.options}"
-							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=${app.server.weblogic.jvm.mem}"
-							set "WL_HOME=${app.server.weblogic.wlserver.dir.windows}"
-
-							call %WL_HOME%/common/bin/commEnv.cmd
-
-							set "CLASSPATH=%FMWCONFIG_CLASSPATH%"
-
-							"${env.JAVA_HOME}/bin/java" weblogic.WLST create-weblogic-domain.py
-						</echo>
-					</else>
-				</if>
-
-				<exec dir="${tstamp.value}" executable="cmd">
-					<arg value="/c" />
-					<arg value="create-weblogic-domain.bat" />
-				</exec>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/startWebLogic.cmd"
-				>
-					<replacetoken><![CDATA[SETLOCAL]]></replacetoken>
-					<replacevalue expandProperties="true">
-						<![CDATA[
-							SETLOCAL
-
-							set DERBY_FLAG="false"
-							set "JAVA_OPTIONS=%JAVA_OPTIONS% ${app.server.weblogic.jvm.args} -da:org.apache.lucene... -da:org.aspectj..."
-							set "JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.weblogic.jdk.java.options}"
-							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=${app.server.weblogic.jvm.mem}"
-						]]>
-					</replacevalue>
-				</replace>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/startWebLogic.cmd"
-				>
-					<replacefilter
-						token="$${app.server.weblogic.dir.windows}"
-						value="${app.server.weblogic.dir.windows}"
-					/>
-				</replace>
-
-				<copy
-					file="${app.server.weblogic.instance.dir}/startWebLogic.cmd"
-					tofile="${app.server.weblogic.instance.dir}/stopWebLogic.cmd"
-				/>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/stopWebLogic.cmd"
-				>
-					<replacefilter
-						token="startWebLogic"
-						value="stopWebLogic"
-					/>
-				</replace>
-			</then>
-			<else>
-				<var name="source.command" value="source" />
-
-				<if>
-					<os family="unix" />
-					<then>
-						<if>
-							<or>
-								<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-								<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-							</or>
-							<then>
-								<replace
-									file="${app.server.weblogic.dir}/wlserver/server/bin/setWLSEnv.sh"
-								>
-									<replacefilter
-										token="#!/bin/sh"
-										value="#!/bin/bash"
-									/>
-								</replace>
-
-								<var name="source.command" value="." />
-							</then>
-							<else>
-								<replace
-									file="${app.server.weblogic.dir}/configure.sh"
-								>
-									<replacefilter
-										token="#!/bin/sh"
-										value="#!/bin/bash"
-									/>
-								</replace>
-
-								<var name="source.command" value="." />
-							</else>
-						</if>
-					</then>
-				</if>
-
-				<if>
-					<or>
-						<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-						<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-					</or>
-					<then>
-						<chmod
-							dir="${app.server.weblogic.dir}/wlserver/server/bin"
-							includes="setWLSEnv.sh"
-							perm="744"
-						/>
-					</then>
-					<else>
-						<chmod
-							dir="${app.server.weblogic.dir}"
-							includes="configure.sh"
-							perm="744"
-						/>
-					</else>
-				</if>
-
-				<if>
-					<os family="unix" />
-					<then>
-						<if>
-							<or>
-								<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-								<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-							</or>
-							<then>
-								<exec dir="${app.server.weblogic.dir}/wlserver/server/bin" executable="./setWLSEnv.sh">
-									<env file="${app.server.weblogic.dir}" key="MW_HOME" />
-									<arg value="${app.server.weblogic.configure.silent}" />
-								</exec>
-							</then>
-							<else>
-								<exec dir="${app.server.weblogic.dir}" executable="./configure.sh">
-									<env file="${app.server.weblogic.dir}" key="MW_HOME" />
-									<arg value="${app.server.weblogic.configure.silent}" />
-								</exec>
-							</else>
-						</if>
-					</then>
-					<else>
-						<if>
-							<or>
-								<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-								<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-							</or>
-							<then>
-								<exec dir="${app.server.weblogic.dir}/wlserver/server/bin" executable="sh">
-									<env file="${app.server.weblogic.dir}" key="MW_HOME" />
-									<arg value="setWLSEnv.sh" />
-								</exec>
-							</then>
-							<else>
-								<exec dir="${app.server.weblogic.dir}" executable="sh">
-									<env file="${app.server.weblogic.dir}" key="MW_HOME" />
-									<arg value="configure.sh" />
-								</exec>
-							</else>
-						</if>
-					</else>
-				</if>
-
-				<if>
-					<or>
-						<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-						<equals arg1="${app.server.weblogic.version.build}" arg2="14110" />
-					</or>
-					<then>
-						<echo file="${tstamp.value}/create-weblogic-domain.sh">
-							#!/bin/sh
-
-							export JDK_JAVA_OPTIONS="%JDK_JAVA_OPTIONS ${app.server.weblogic.jdk.java.options}"
-							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="${app.server.weblogic.jvm.mem}"
-							export WL_HOME="${app.server.weblogic.wlserver.dir}"
-
-							${source.command} ${MW_HOME}/oracle_common/common/bin/commEnv.sh
-
-							export CLASSPATH=${FMWCONFIG_CLASSPATH}
-
-							${env.JAVA_HOME}/bin/java weblogic.WLST create-weblogic-domain.py
-						</echo>
-					</then>
-					<else>
-						<echo file="${tstamp.value}/create-weblogic-domain.sh">
-							#!/bin/sh
-
-							export JDK_JAVA_OPTIONS="%JDK_JAVA_OPTIONS ${app.server.weblogic.jdk.java.options}"
-							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="${app.server.weblogic.jvm.mem}"
-							export WL_HOME="${app.server.weblogic.wlserver.dir}"
-
-							${source.command} ${WL_HOME}/common/bin/commEnv.sh
-
-							export CLASSPATH=${FMWCONFIG_CLASSPATH}
-
-							${env.JAVA_HOME}/bin/java weblogic.WLST create-weblogic-domain.py
-						</echo>
-					</else>
-				</if>
-
-				<chmod
-					file="${tstamp.value}/create-weblogic-domain.sh"
-					perm="744"
-				/>
-
-				<exec dir="${tstamp.value}" executable="sh">
-					<arg value="create-weblogic-domain.sh" />
-				</exec>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/startWebLogic.sh"
-				>
-					<replacetoken><![CDATA[# Any changes to this script may be lost when adding extensions to this configuration.]]></replacetoken>
-					<replacevalue expandProperties="true">
-						<![CDATA[
-							# Any changes to this script may be lost when adding extensions to this configuration.
-
-							export DERBY_FLAG="false"
-							export JDK_JAVA_OPTIONS="%JDK_JAVA_OPTIONS ${app.server.weblogic.jdk.java.options}"
-							export JAVA_OPTIONS="${JAVA_OPTIONS} ${app.server.weblogic.jvm.args} -da:org.apache.lucene... -da:org.aspectj... "
-							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="${app.server.weblogic.jvm.mem}"
-						]]>
-					</replacevalue>
-				</replace>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/startWebLogic.sh"
-				>
-					<replacefilter
-						token="$${app.server.weblogic.dir}"
-						value="${app.server.weblogic.dir}"
-					/>
-				</replace>
-
-				<copy
-					file="${app.server.weblogic.instance.dir}/startWebLogic.sh"
-					tofile="${app.server.weblogic.instance.dir}/stopWebLogic.sh"
-				/>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/stopWebLogic.sh"
-				>
-					<replacefilter
-						token="startWebLogic"
-						value="stopWebLogic"
-					/>
-				</replace>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/bin/setDomainEnv.sh"
-				>
-					<replacetoken><![CDATA[JAVA_PROPERTIES="${JAVA_PROPERTIES} ${CLUSTER_PROPERTIES}"]]></replacetoken>
-					<replacevalue><![CDATA[JAVA_PROPERTIES="-Dfile.encoding=utf8 ${JAVA_PROPERTIES} ${CLUSTER_PROPERTIES}"]]></replacevalue>
-				</replace>
-
-				<chmod
-					dir="${app.server.weblogic.instance.dir}"
-					includes="**/*.sh"
-					perm="744"
-				/>
-			</else>
-		</if>
-
-		<set-weblogic-log-levels />
-
-		<delete dir="${tstamp.value}" />
+		<antcall target="unzip-weblogic-custom" />
 	</target>
 
 	<target name="unzip-weblogic-custom">
 		<antcall target="unzip-weblogic-custom-${app.server.weblogic.version.build}" />
 	</target>
 
-	<target name="unzip-weblogic-custom-12213">
+	<target name="unzip-weblogic-custom-15110">
 		<antcall target="unzip-weblogic-zip-files" />
 
-		<if>
-			<os family="unix" />
-			<then>
-				<replace
-					dir="${app.server.weblogic.dir}"
-					includes="**/*.cmd,**/*.domains,**/*.properties,**/*.sh,**/*.xml"
-				>
-					<replacefilter
-						token="@env.JAVA_HOME@"
-						value="${env.JAVA_HOME}"
-					/>
-				</replace>
-
-				<replace
-					dir="${app.server.weblogic.dir}"
-					includes="**/*.cmd,**/*.domains,**/*.py,**/*.properties,**/*.sh,**/*.txt,**/*.xml"
-				>
-					<replacefilter
-						token="/opt/dev/projects/github/liferay-portal/bundles"
-						value="${app.server.parent.dir}"
-					/>
-				</replace>
-
-				<chmod
-					perm="a+x"
-				>
-					<fileset
-						dir="${app.server.weblogic.bin.dir}"
-					>
-						<include name="**/*.sh" />
-					</fileset>
-				</chmod>
-
-				<local name="app.server.weblogic.java.options" />
-
-				<condition else="${app.server.weblogic.jdk.java.options} ${app.server.weblogic.jvm.args} ${app.server.weblogic.jvm.mem}" property="app.server.weblogic.java.options" value="${app.server.weblogic.jvm.args} ${app.server.weblogic.jvm.mem}">
-					<isset property="env.JENKINS_HOME" />
-				</condition>
-
-				<replace
-					file="${app.server.weblogic.instance.dir}/startWebLogic.sh"
-				>
-					<replacetoken><![CDATA[-Xmx1024m]]></replacetoken>
-					<replacevalue expandProperties="true"><![CDATA[${app.server.weblogic.java.options}]]></replacevalue>
-				</replace>
-
-				<chmod
-					perm="a+x"
-				>
-					<fileset
-						dir="${app.server.weblogic.instance.dir}"
-					>
-						<include name="**/*.sh" />
-					</fileset>
-				</chmod>
-			</then>
-			<elseif>
-				<os family="windows" />
-				<then>
-					<propertyregex
-						input="${app.server.weblogic.dir.windows}"
-						property="app.server.weblogic.dir.windows.double.slash"
-						regexp="\\"
-						replace="\\\\\\\\"
-					/>
-
-					<propertyregex
-						input="${app.server.weblogic.dir.windows.double.slash}"
-						property="app.server.weblogic.dir.windows.escaped"
-						regexp=":"
-						replace="\\\\:"
-					/>
-
-					<replace
-						dir="${app.server.weblogic.dir}"
-						includes="**/*.cmd,**/*.domains,**/*.properties,**/*.sh,**/*.xml"
-					>
-						<replacefilter
-							token="@app.server.weblogic.dir@"
-							value="${app.server.weblogic.dir}"
-						/>
-						<replacefilter
-							token="@app.server.weblogic.dir.windows@"
-							value="${app.server.weblogic.dir.windows}"
-						/>
-						<replacefilter
-							token="@app.server.weblogic.dir.windows.double.slash@"
-							value="${app.server.weblogic.dir.windows.double.slash}"
-						/>
-						<replacefilter
-							token="@app.server.weblogic.dir.windows.escaped@"
-							value="${app.server.weblogic.dir.windows.escaped}"
-						/>
-						<replacefilter
-							token="@env.COMPUTERNAME@"
-							value="${env.COMPUTERNAME}"
-						/>
-						<replacefilter
-							token="@env.JAVA_HOME@"
-							value="${env.JAVA_HOME}"
-						/>
-					</replace>
-				</then>
-			</elseif>
-		</if>
-
-		<set-weblogic-log-levels />
-	</target>
-
-	<target name="unzip-weblogic-custom-14110">
-		<antcall target="unzip-weblogic-zip-files" />
-
-		<antcall target="install-weblogic14-setup-files" />
+		<antcall target="install-weblogic-setup-files" />
 
 		<antcall target="create-weblogic-domain" />
 
@@ -1830,7 +1092,7 @@ closeTemplate()
 				<![CDATA[
 					# Any changes to this script may be lost when adding extensions to this configuration.
 					export DERBY_FLAG="false"
-					export JDK_JAVA_OPTIONS="%JDK_JAVA_OPTIONS ${app.server.weblogic.jdk.java.options}"
+					export JDK_JAVA_OPTIONS="${JDK_JAVA_OPTIONS} ${app.server.weblogic.jdk.java.options}"
 					export JAVA_OPTIONS="${JAVA_OPTIONS} ${app.server.weblogic.jvm.args} -da:org.apache.lucene... -da:org.aspectj... "
 					export MW_HOME="${app.server.weblogic.dir}"
 					export USER_MEM_ARGS="${app.server.weblogic.jvm.mem}"
@@ -1889,652 +1151,51 @@ closeTemplate()
 
 	<target name="unzip-weblogic-zip-files">
 		<if>
-			<equals arg1="${app.server.weblogic.version.build}" arg2="12213" />
-			<then>
-				<property name="app.server.zip" value="${app.server.weblogic.custom.zip.name}" />
-			</then>
-			<else>
-				<property name="app.server.zip" value="${app.server.weblogic.zip.name}" />
-			</else>
-		</if>
-
-		<if>
 			<not>
 				<available file="${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}" />
 			</not>
 			<then>
-				<trycatch>
-					<try>
-						<mkdir dir="${app.server.parent.dir}" />
+				<if>
+					<isset property="env.JENKINS_HOME" />
+					<then>
+						<trycatch>
+							<try>
+								<mkdir dir="${app.server.parent.dir}" />
 
-						<mirrors-get
-							dest="${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}"
-							src="http://files.liferay.com/private/apps/oracle/weblogicas/${app.server.weblogic.version.number}/${app.server.zip}"
-							verbose="true"
-						/>
-					</try>
-					<catch>
-						<fail>
+								<mirrors-get
+									dest="${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}"
+									src="http://files.liferay.com/private/apps/oracle/weblogicas/${app.server.weblogic.version.number}/${app.server.weblogic.zip.name}"
+									verbose="true"
+								/>
+							</try>
+							<catch>
+								<fail>
 Please download the Weblogic custom zip file from
 http://mirrors/files.liferay.com/private/apps/oracle/weblogicas/${app.server.weblogic.version.number} and
 place it here: ${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}. Then rerun
 this task.
-						</fail>
-					</catch>
-				</trycatch>
-			</then>
-		</if>
-
-		<delete dir="${app.server.weblogic.dir}" />
-
-		<unzip
-			dest="${app.server.weblogic.dir}"
-			src="${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}"
-		/>
-	</target>
-
-	<target name="unzip-websphere">
-		<if>
-			<and>
-				<not>
-					<available file="${app.server.parent.dir}/${app.server.websphere.installation.manager.zip.name.linux}" />
-				</not>
-				<os family="unix" />
-			</and>
-			<then>
-				<mkdir dir="${app.server.parent.dir}" />
-
-				<fail>
-.
-
-Please download ${app.server.websphere.installation.manager.zip.name.linux} from ${app.server.websphere.installation.manager.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
-				</fail>
-			</then>
-			<elseif>
-				<and>
-					<not>
-						<available file="${app.server.parent.dir}/${app.server.websphere.installation.manager.zip.name.windows}" />
-					</not>
-					<os family="windows" />
-				</and>
-				<then>
-					<mkdir dir="${app.server.parent.dir}" />
-
-					<fail>
-.
-
-Please download ${app.server.websphere.installation.manager.zip.name.windows} from ${app.server.websphere.installation.manager.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
-					</fail>
-				</then>
-			</elseif>
-		</if>
-
-		<for list="${app.server.websphere.repo.zip.names}" param="app.server.websphere.repo.zip.name">
-			<sequential>
-				<if>
-					<not>
-						<available file="${app.server.parent.dir}/@{app.server.websphere.repo.zip.name}" />
-					</not>
-					<then>
-						<mkdir dir="${app.server.parent.dir}" />
-
-						<fail>
-.
-
-Please download @{app.server.websphere.repo.zip.name} from ${app.server.websphere.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
-						</fail>
-					</then>
-				</if>
-			</sequential>
-		</for>
-
-		<if>
-			<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-			<then>
-				<for list="${app.server.websphere.fix.pack.jdk.zip.names}" param="app.server.websphere.fix.pack.jdk.zip.name">
-					<sequential>
-						<if>
-							<not>
-								<available file="${app.server.parent.dir}/@{app.server.websphere.fix.pack.jdk.zip.name}" />
-							</not>
-							<then>
-								<mkdir dir="${app.server.parent.dir}" />
-
-								<fail>
-.
-
-Please download @{app.server.websphere.fix.pack.jdk.zip.name} from ${app.server.websphere.fix.pack.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
 								</fail>
-							</then>
-						</if>
-					</sequential>
-				</for>
-			</then>
-			<else>
-				<for list="${app.server.websphere.jdk.zip.names}" param="app.server.websphere.jdk.zip.name">
-					<sequential>
-						<if>
-							<not>
-								<available file="${app.server.parent.dir}/@{app.server.websphere.jdk.zip.name}" />
-							</not>
-							<then>
-								<mkdir dir="${app.server.parent.dir}" />
-
-								<fail>
-.
-
-Please download @{app.server.websphere.jdk.zip.name} from ${app.server.websphere.jdk.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
-								</fail>
-							</then>
-						</if>
-					</sequential>
-				</for>
-			</else>
-		</if>
-
-		<for list="${app.server.websphere.fix.pack.was.zip.names}" param="app.server.websphere.fix.pack.was.zip.name">
-			<sequential>
-				<if>
-					<not>
-						<available file="${app.server.parent.dir}/@{app.server.websphere.fix.pack.was.zip.name}" />
-					</not>
-					<then>
-						<mkdir dir="${app.server.parent.dir}" />
-
+							</catch>
+						</trycatch>
+					</then>
+					<else>
 						<fail>
-.
-
-Please download @{app.server.websphere.fix.pack.was.zip.name} from ${app.server.websphere.fix.pack.zip.url}
-and put it in ${app.server.parent.dir}. Then rerun this task.
-						</fail>
-					</then>
-				</if>
-			</sequential>
-		</for>
-
-		<delete dir="${app.server.websphere.dir}" />
-
-		<echo>Installing installation manager. This may take a few minutes.</echo>
-
-		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-		</tstamp>
-
-		<if>
-			<os family="unix" />
-			<then>
-				<unzip
-					dest="${tstamp.value}/was_im"
-					src="${app.server.parent.dir}/${app.server.websphere.installation.manager.zip.name.linux}"
-				/>
-
-				<chmod
-					perm="a+x"
-				>
-					<fileset
-						dir="${tstamp.value}/was_im"
-					>
-						<include name="installc" />
-						<include name="**/jre/bin/java" />
-					</fileset>
-				</chmod>
-
-				<exec dir="${tstamp.value}/was_im" executable="sh">
-					<arg value="-c" />
-					<arg value="./installc -acceptLicense" />
-				</exec>
-			</then>
-			<elseif>
-				<os family="windows" />
-				<then>
-					<unzip
-						dest="${tstamp.value}/was_im"
-						src="${app.server.parent.dir}/${app.server.websphere.installation.manager.zip.name.windows}"
-					/>
-
-					<exec dir="${tstamp.value}/was_im" executable="cmd.exe">
-						<arg value="/c" />
-						<arg value="installc.exe -acceptLicense" />
-					</exec>
-				</then>
-			</elseif>
-		</if>
-
-		<delete dir="${tstamp.value}" />
-
-		<echo>Installing application server. This may take a few minutes.</echo>
-
-		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-		</tstamp>
-
-		<for list="${app.server.websphere.repo.zip.names}" param="app.server.websphere.repo.zip.name">
-			<sequential>
-				<unzip
-					dest="${tstamp.value}/was"
-					src="${app.server.parent.dir}/@{app.server.websphere.repo.zip.name}"
-				/>
-			</sequential>
-		</for>
-
-		<if>
-			<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-			<then>
-				<echoxml file="${tstamp.value}/was/liferay-responseFile.xml">
-					<agent-input clean="true" temporary="false">
-						<install modify="false">
-							<offering
-								id="com.ibm.websphere.DEVELOPERSILAN.v85"
-								profile="IBM Websphere 8.5.5.0"
-							>
-							</offering>
-						</install>
-
-						<profile
-							id="IBM Websphere 8.5.5.0"
-							installLocation="${app.server.websphere.dir}"
-						>
-						</profile>
-
-						<server>
-							<repository location="${project.dir}/${tstamp.value}/was/repository.config" />
-						</server>
-					</agent-input>
-				</echoxml>
-			</then>
-			<else>
-				<for list="${app.server.websphere.jdk.zip.names}" param="app.server.websphere.jdk.zip.name">
-					<sequential>
-						<unzip
-							dest="${tstamp.value}/was_jdk"
-							src="${app.server.parent.dir}/@{app.server.websphere.jdk.zip.name}"
-						/>
-					</sequential>
-				</for>
-
-				<echoxml file="${tstamp.value}/was/liferay-responseFile.xml">
-					<agent-input clean="true" temporary="false">
-						<install modify="false">
-							<offering
-								id="com.ibm.websphere.BASE.v90"
-								profile="IBM Websphere 9.0.0.0"
-							>
-							</offering>
-
-							<offering
-								id="com.ibm.java.jdk.v8"
-								profile="IBM Websphere 9.0.0.0"
-							>
-							</offering>
-						</install>
-
-						<profile
-							id="IBM Websphere 9.0.0.0"
-							installLocation="${app.server.websphere.dir}"
-						>
-						</profile>
-
-						<server>
-							<repository location="${project.dir}/${tstamp.value}/was/repository.config" />
-							<repository location="${project.dir}/${tstamp.value}/was_jdk/repository.config" />
-						</server>
-					</agent-input>
-				</echoxml>
-			</else>
-		</if>
-
-		<if>
-			<os family="unix" />
-			<then>
-				<chmod
-					file="/opt/IBM/InstallationManager/eclipse/tools/imcl"
-					perm="a+x"
-				/>
-
-				<exec dir="/opt/IBM/InstallationManager/eclipse/tools" executable="sh">
-					<arg value="-c" />
-					<arg value="./imcl input ${project.dir}/${tstamp.value}/was/liferay-responseFile.xml -acceptLicense" />
-				</exec>
-			</then>
-			<elseif>
-				<os family="windows" />
-				<then>
-					<exec dir="C:/Program Files/IBM/Installation Manager/eclipse/tools" executable="cmd.exe">
-						<arg value="/c" />
-						<arg value="imcl input ${project.dir}/${tstamp.value}/was/liferay-responseFile.xml -acceptLicense" />
-					</exec>
-				</then>
-			</elseif>
-		</if>
-
-		<delete dir="${tstamp.value}" />
-
-		<echo file="${app.server.websphere.dir}/liferay-portdef.props">
-			WC_defaulthost=8080
-		</echo>
-
-		<echo file="${app.server.websphere.dir}/liferay-responsefile.txt">
-			create
-			cellName=liferay-cell
-			enableAdminSecurity=false
-			enableService=false
-			isDefault=true
-			isDeveloperServer=true
-			nodeName=liferay-node
-			omitAction=deployAdminConsole,defaultAppDeployAndConfig,samplesInstallAndConfig
-			portsFile=${app.server.websphere.dir}/liferay-portdef.props
-			profileName=liferay
-			profilePath=${app.server.websphere.dir}/profiles/liferay
-			templatePath=${app.server.websphere.dir}/profileTemplates/default
-			winserviceCheck=false
-		</echo>
-
-		<echo>Creating profile. This may take a few minutes.</echo>
-
-		<if>
-			<os family="unix" />
-			<then>
-				<chmod
-					file="${app.server.websphere.dir}/bin/manageprofiles.sh"
-					perm="a+x"
-				/>
-
-				<exec dir="${app.server.websphere.dir}/bin" executable="sh">
-					<arg value="-c" />
-					<arg value="./manageprofiles.sh -response ${app.server.websphere.dir}/liferay-responsefile.txt" />
-				</exec>
-			</then>
-			<elseif>
-				<os family="windows" />
-				<then>
-					<exec dir="${app.server.websphere.dir}/bin" executable="cmd.exe">
-						<arg value="/c" />
-						<arg value="manageprofiles.bat -response ${app.server.websphere.dir}/liferay-responsefile.txt" />
-					</exec>
-				</then>
-			</elseif>
-		</if>
-
-		<delete failonerror="false" file="${app.server.websphere.dir}/liferay-portdef.props" />
-		<delete failonerror="false" file="${app.server.websphere.dir}/liferay-responsefile.txt" />
-
-		<replace
-			file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
-		>
-			<replacetoken><![CDATA[disableJIT="false">]]></replacetoken>
-			<replacevalue><![CDATA[disableJIT="false" maximumHeapSize="6144">]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
-		>
-			<replacetoken><![CDATA[genericJvmArguments="-Xquickstart"]]></replacetoken>
-			<replacevalue expandProperties="true"><![CDATA[genericJvmArguments="-Xquickstart ${app.server.websphere.jvm.args}"]]></replacevalue>
-		</replace>
-
-		<echo>Installing fix pack. This may take a few minutes.</echo>
-
-		<tstamp>
-			<format pattern="yyyyMMddkkmmssSSS" property="tstamp.value" />
-		</tstamp>
-
-		<for list="${app.server.websphere.fix.pack.was.zip.names}" param="app.server.websphere.fix.pack.was.zip.name">
-			<sequential>
-				<unzip
-					dest="${tstamp.value}/was_fixpack"
-					src="${app.server.parent.dir}/@{app.server.websphere.fix.pack.was.zip.name}"
-				/>
-			</sequential>
-		</for>
-
-		<if>
-			<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-			<then>
-				<for list="${app.server.websphere.fix.pack.jdk.zip.names}" param="app.server.websphere.fix.pack.jdk.zip.name">
-					<sequential>
-						<unzip
-							dest="${tstamp.value}/was_fixpack_jdk"
-							src="${app.server.parent.dir}/@{app.server.websphere.fix.pack.jdk.zip.name}"
-						/>
-					</sequential>
-				</for>
-
-				<echoxml file="${tstamp.value}/was_fixpack/liferay-responseFile.xml">
-					<agent-input clean="true" temporary="false">
-						<install modify="false">
-							<offering
-								id="com.ibm.websphere.DEVELOPERSILAN.v85"
-								profile="IBM Websphere 8.5.5.0"
-							>
-							</offering>
-
-							<offering
-								id="com.ibm.websphere.IBMJAVA.v80"
-								profile="IBM Websphere 8.5.5.0"
-							>
-							</offering>
-						</install>
-
-						<profile
-							id="IBM Websphere 8.5.5.0"
-							installLocation="${app.server.websphere.dir}"
-						>
-						</profile>
-
-						<server>
-							<repository location="${project.dir}/${tstamp.value}/was_fixpack/repository.config" />
-							<repository location="${project.dir}/${tstamp.value}/was_fixpack_jdk/repository.config" />
-						</server>
-					</agent-input>
-				</echoxml>
-			</then>
-			<else>
-				<echoxml file="${tstamp.value}/was_fixpack/liferay-responseFile.xml">
-					<agent-input clean="true" temporary="false">
-						<install modify="false">
-							<offering
-								id="com.ibm.websphere.BASE.v90"
-								profile="IBM Websphere 9.0.0.0"
-							>
-							</offering>
-						</install>
-
-						<profile
-							id="IBM Websphere 9.0.0.0"
-							installLocation="${app.server.websphere.dir}"
-						>
-						</profile>
-
-						<server>
-							<repository location="${project.dir}/${tstamp.value}/was_fixpack/repository.config" />
-						</server>
-					</agent-input>
-				</echoxml>
-			</else>
-		</if>
-
-		<if>
-			<os family="unix" />
-			<then>
-				<chmod
-					file="/opt/IBM/InstallationManager/eclipse/tools/imcl"
-					perm="a+x"
-				/>
-
-				<exec dir="/opt/IBM/InstallationManager/eclipse/tools" executable="sh">
-					<arg value="-c" />
-					<arg value="./imcl input ${project.dir}/${tstamp.value}/was_fixpack/liferay-responseFile.xml -acceptLicense" />
-				</exec>
-
-				<if>
-					<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-					<then>
-						<chmod
-							file="${app.server.websphere.dir}/bin/managesdk.sh"
-							perm="a+x"
-						/>
-
-						<exec dir="${app.server.websphere.dir}/bin" executable="sh">
-							<arg value="-c" />
-							<arg value="./managesdk.sh -enableProfileAll -sdkName 1.8_64 -enableServers" />
-						</exec>
-					</then>
-				</if>
-			</then>
-			<elseif>
-				<os family="windows" />
-				<then>
-					<exec dir="C:/Program Files/IBM/Installation Manager/eclipse/tools" executable="cmd.exe">
-						<arg value="/c" />
-						<arg value="imcl input ${project.dir}/${tstamp.value}/was_fixpack/liferay-responseFile.xml -acceptLicense" />
-					</exec>
-
-					<if>
-						<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-						<then>
-							<exec dir="${app.server.websphere.dir}/bin" executable="cmd.exe">
-								<arg value="/c" />
-								<arg value="managesdk.bat -enableProfileAll -sdkName 1.8_64 -enableServers" />
-							</exec>
-						</then>
-					</if>
-				</then>
-			</elseif>
-		</if>
-
-		<delete dir="${tstamp.value}" />
-
-		<if>
-			<not>
-				<equals arg1="${app.server.websphere.version}" arg2="8.5.5.0" />
-			</not>
-			<then>
-				<echo>Enabling JDK. This may take a few minutes.</echo>
-
-				<if>
-					<os family="unix" />
-					<then>
-						<chmod
-							file="${app.server.websphere.dir}/bin/managesdk.sh"
-							perm="a+x"
-						/>
-
-						<exec dir="${app.server.websphere.dir}/bin" executable="sh">
-							<arg value="-c" />
-							<arg value="./managesdk.sh -enableProfileAll -sdkName 8.0_64 -enableServers" />
-						</exec>
-					</then>
-					<elseif>
-						<os family="windows" />
-						<then>
-							<exec dir="${app.server.websphere.dir}/bin" executable="cmd.exe">
-								<arg value="/c" />
-								<arg value="managesdk.bat -enableProfileAll -sdkName 8.0_64 -enableServers" />
-							</exec>
-						</then>
-					</elseif>
-				</if>
-			</then>
-		</if>
-
-		<replace
-			file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/cell.xml"
-		>
-			<replacetoken><![CDATA[<secureSessionCookie xmi:id="SecureSessionCookie_1" cookieDomain="*" cookieName="JSESSIONID" cookiePath="/"/>]]></replacetoken>
-			<replacevalue><![CDATA[]]></replacevalue>
-		</replace>
-
-		<update-websphere-java-opts />
-	</target>
-
-	<target name="unzip-websphere-custom">
-		<if>
-			<not>
-				<available file="${app.server.parent.dir}/${app.server.websphere.custom.zip.name}" />
-			</not>
-			<then>
-				<trycatch>
-					<try>
-						<mkdir dir="${app.server.parent.dir}" />
-
-						<propertyregex
-							input="${app.server.websphere.version}"
-							override="true"
-							property="app.server.websphere.major.version"
-							regexp="(.*)\.\d+"
-							replace="\1"
-						/>
-
-						<mirrors-get
-							dest="${app.server.parent.dir}/${app.server.websphere.custom.zip.name}"
-							src="http://files.liferay.com/private/apps/ibm/websphere/${app.server.websphere.major.version}/${app.server.websphere.custom.zip.name}"
-							verbose="true"
-						/>
-					</try>
-					<catch>
-						<fail>
-.
-
-Please download the Websphere custom zip file from
-http://mirrors/files.liferay.com/private/apps/ibm/websphere/${app.server.websphere.major.version} and
-place it here: ${app.server.parent.dir}/${app.server.websphere.custom.zip.name}. Then rerun
+Please download the Weblogic zip file from
+${app.server.weblogic.zip.url} and
+place it here: ${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}. Then rerun
 this task.
 						</fail>
-					</catch>
-				</trycatch>
+					</else>
+				</if>
 			</then>
 		</if>
 
-		<delete dir="${app.server.websphere.dir}" />
+		<delete dir="${app.server.weblogic.dir}-temp" />
 
 		<unzip
-			dest="${app.server.websphere.dir}"
-			src="${app.server.parent.dir}/${app.server.websphere.custom.zip.name}"
+			dest="${app.server.weblogic.dir}-temp"
+			src="${app.server.parent.dir}/${app.server.weblogic.custom.zip.name}"
 		/>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<propertyregex
-					input="${app.server.websphere.dir.windows}"
-					property="app.server.websphere.dir.windows.double.slash"
-					regexp="\\"
-					replace="\\\\\\\\"
-				/>
-
-				<propertyregex
-					input="${app.server.websphere.dir.windows.double.slash}"
-					property="app.server.websphere.dir.windows.escaped"
-					regexp=":"
-					replace="\\\\:"
-				/>
-
-				<replace
-					dir="${app.server.websphere.dir}"
-					includes="**/*.bat,**/*.js,**/*.metadata,**/*.properties,**/*.props,**/*.txt,**/*.xml"
-				>
-					<replacefilter
-						token="@app.server.websphere.dir@"
-						value="${app.server.websphere.dir}"
-					/>
-					<replacefilter
-						token="@app.server.websphere.dir.windows@"
-						value="${app.server.websphere.dir.windows}"
-					/>
-					<replacefilter
-						token="@app.server.websphere.dir.windows.escaped@"
-						value="${app.server.websphere.dir.windows.escaped}"
-					/>
-				</replace>
-			</then>
-		</if>
-
-		<update-websphere-java-opts />
 	</target>
 
 	<target name="unzip-wildfly">
@@ -2648,25 +1309,18 @@ this task.
 		</replace-multilines>
 
 		<replace
-			file="${app.server.wildfly.bin.dir}/standalone.conf"
+			file="${app.server.wildfly.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[JAVA_OPTS="-Xms64m -Xmx512m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m ]]></replacetoken>
-			<replacevalue><![CDATA[JAVA_OPTS="]]></replacevalue>
+			<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+			<replacevalue><![CDATA[<!--<jsp-config/>-->]]></replacevalue>
 		</replace>
 
 		<echo append="true" file="${app.server.wildfly.bin.dir}/standalone.conf">
 			<![CDATA[${line.separator}JAVA_OPTS="$JAVA_OPTS ${app.server.wildfly.jvm.args} ${app.server.wildfly.jvm.mem}"
 
-JDK_JAVA_OPTIONS="$JDK_JAVA_OPTIONS ${app.server.wildfly.jdk.java.options}"
+JDK_JAVA_OPTIONS="${JDK_JAVA_OPTIONS} ${app.server.wildfly.jdk.java.options}"
 export JDK_JAVA_OPTIONS]]>
 		</echo>
-
-		<replace
-			file="${app.server.wildfly.bin.dir}/standalone.conf.bat"
-		>
-			<replacetoken><![CDATA[set "JAVA_OPTS=-Xms64M ]]></replacetoken>
-			<replacevalue><![CDATA[rem set "JAVA_OPTS=-Xms64M ]]></replacevalue>
-		</replace>
 
 		<replace
 			file="${app.server.wildfly.bin.dir}/standalone.conf.bat"
@@ -2676,15 +1330,6 @@ export JDK_JAVA_OPTIONS]]>
 				<![CDATA[set "JAVA_OPTS=%JAVA_OPTS% ${app.server.wildfly.jvm.args} ${app.server.wildfly.jvm.mem}"
 
 set "JDK_JAVA_OPTIONS=%JDK_JAVA_OPTIONS% ${app.server.wildfly.jdk.java.options}":JAVA_OPTS_SET]]>
-			</replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.wildfly.instance.dir}/configuration/standalone.xml"
-		>
-			<replacetoken><![CDATA[<jsp-config />]]></replacetoken>
-			<replacevalue>
-				<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
 			</replacevalue>
 		</replace>
 
@@ -2722,6 +1367,65 @@ plugins.includes=</echo>
 				</actions>
 			</call>
 		</xmltask>
+	</target>
+
+	<target name="update-tomcat-version">
+		<fail message="Please set the property ${new.version}." unless="new.version" />
+
+		<if>
+			<not>
+				<isset property="old.version" />
+			</not>
+			<then>
+				<property name="old.version" value="${app.server.tomcat.version}" />
+			</then>
+		</if>
+
+		<propertyregex
+			input="${new.version}"
+			property="new.major.version"
+			regexp="(\d+)\.."
+			select="\1"
+		/>
+		<propertyregex
+			input="${old.version}"
+			property="old.major.version"
+			regexp="(\d+)\.."
+			select="\1"
+		/>
+
+		<echo>Updating Tomcat version ${old.version} to ${new.version}</echo>
+
+		<replace
+			dir="${project.dir}"
+			summary="yes"
+		>
+			<exclude name="**/*.class" />
+			<exclude name="**/*.classpath" />
+			<exclude name="**/*.jar" />
+			<exclude name="**/*.war" />
+			<exclude name="**/.github/" />
+			<exclude name="**/.gradle/" />
+			<exclude name="**/.idea" />
+			<exclude name="**/.m2/" />
+			<exclude name="**/.m2-tmp/" />
+			<exclude name="**/.releng/" />
+			<exclude name="**/CHANGELOG.*" />
+			<exclude name="**/node_modules/" />
+			<exclude name="**/node_modules_cache/" />
+			<exclude name="lib/versions.html" />
+			<exclude name="lib/versions-complete.xml" />
+			<replacefilter
+				token="${old.version}"
+				value="${new.version}"
+			/>
+			<replacefilter
+				token="tomcat-${old.major.version}"
+				value="tomcat-${new.major.version}"
+			/>
+		</replace>
+
+		<ant dir="portal-impl" inheritAll="false" target="build-lib-versions" />
 	</target>
 
 	<target name="zip-executable">
@@ -2782,7 +1486,7 @@ plugins.includes=</echo>
 					todir="tools/zip_tmpl/license"
 				/>
 				<copy
-					file="README.markdown"
+					file="README.md"
 					todir="tools/zip_tmpl"
 				/>
 
@@ -3348,64 +2052,6 @@ plugins.includes=</echo>
 		>
 			<zipfileset
 				dir="${app.server.weblogic.dir}"
-			/>
-		</zip>
-	</target>
-
-	<target name="zip-websphere-custom">
-		<delete>
-			<fileset
-				dir="${app.server.websphere.dir}"
-				includes="logs/**"
-			/>
-		</delete>
-
-		<if>
-			<os family="windows" />
-			<then>
-				<pathconvert property="app.server.websphere.dir.windows" targetos="windows">
-					<path location="${app.server.websphere.dir}" />
-				</pathconvert>
-
-				<propertyregex
-					input="${app.server.websphere.dir.windows}"
-					property="app.server.websphere.dir.windows.double.slash"
-					regexp="\\"
-					replace="\\\\\\\\"
-				/>
-
-				<propertyregex
-					input="${app.server.websphere.dir.windows.double.slash}"
-					property="app.server.websphere.dir.windows.escaped"
-					regexp=":"
-					replace="\\\\:"
-				/>
-
-				<replace
-					dir="${app.server.websphere.dir}"
-					includes="**/*.bat,**/*.js,**/*.metadata,**/*.properties,**/*.props,**/*.txt,**/*.xml"
-				>
-					<replacefilter
-						token="${app.server.websphere.dir}"
-						value="@app.server.websphere.dir@"
-					/>
-					<replacefilter
-						token="${app.server.websphere.dir.windows}"
-						value="@app.server.websphere.dir.windows@"
-					/>
-					<replacefilter
-						token="${app.server.websphere.dir.windows.escaped}"
-						value="@app.server.websphere.dir.windows.escaped@"
-					/>
-				</replace>
-			</then>
-		</if>
-
-		<zip
-			destfile="${app.server.parent.dir}/${app.server.websphere.custom.zip.name}"
-		>
-			<zipfileset
-				dir="${app.server.websphere.dir}"
 			/>
 		</zip>
 	</target>

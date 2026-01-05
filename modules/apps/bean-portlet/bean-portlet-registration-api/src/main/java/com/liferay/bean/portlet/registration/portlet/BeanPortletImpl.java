@@ -8,6 +8,7 @@ package com.liferay.bean.portlet.registration.portlet;
 import com.liferay.bean.portlet.extension.BeanPortletMethod;
 import com.liferay.bean.portlet.extension.BeanPortletMethodType;
 import com.liferay.bean.portlet.registration.portlet.app.BeanApp;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.LiferayPortletMode;
@@ -15,6 +16,9 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.annotations.ServeResourceMethod;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -30,9 +34,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletMode;
-import javax.portlet.annotations.ServeResourceMethod;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -272,11 +273,11 @@ public class BeanPortletImpl implements BeanPortlet {
 			}
 		}
 
-		// javax.portlet.async-supported
+		// jakarta.portlet.async-supported
 
-		dictionary.put("javax.portlet.async-supported", isAsyncSupported());
+		dictionary.put("jakarta.portlet.async-supported", isAsyncSupported());
 
-		// javax.portlet.container-runtime-options
+		// jakarta.portlet.container-runtime-options
 
 		Map<String, List<String>> containerRuntimeOptions =
 			HashMapBuilder.create(
@@ -289,35 +290,33 @@ public class BeanPortletImpl implements BeanPortlet {
 				containerRuntimeOptions.entrySet()) {
 
 			dictionary.put(
-				"javax.portlet.container-runtime-option.".concat(
+				"jakarta.portlet.container-runtime-option.".concat(
 					entry.getKey()),
 				entry.getValue());
 		}
 
-		// javax.portlet.default-namespace
+		// jakarta.portlet.default-namespace
 
 		String defaultNamespace = beanApp.getDefaultNamespace();
 
 		if (defaultNamespace != null) {
-			dictionary.put("javax.portlet.default-namespace", defaultNamespace);
+			dictionary.put(
+				"jakarta.portlet.default-namespace", defaultNamespace);
 		}
 
-		// javax.portlet.dependency
+		// jakarta.portlet.dependency
 
 		Set<PortletDependency> portletDependencies = getPortletDependencies();
 
 		if (!portletDependencies.isEmpty()) {
-			List<String> tokenizedPortletDependencies = new ArrayList<>();
-
-			for (PortletDependency portletDependency : portletDependencies) {
-				tokenizedPortletDependencies.add(portletDependency.toString());
-			}
-
 			dictionary.put(
-				"javax.portlet.dependency", tokenizedPortletDependencies);
+				"jakarta.portlet.dependency",
+				TransformUtil.transform(
+					portletDependencies,
+					portletDependency -> portletDependency.toString()));
 		}
 
-		// javax.portlet.event-definition
+		// jakarta.portlet.event-definition
 
 		List<Event> events = beanApp.getEvents();
 
@@ -349,14 +348,16 @@ public class BeanPortletImpl implements BeanPortlet {
 		}
 
 		if (!eventDefinitions.isEmpty()) {
-			dictionary.put("javax.portlet.event-definition", eventDefinitions);
+			dictionary.put(
+				"jakarta.portlet.event-definition", eventDefinitions);
 		}
 
-		// javax.portlet.expiration-cache
+		// jakarta.portlet.expiration-cache
 
-		dictionary.put("javax.portlet.expiration-cache", getExpirationCache());
+		dictionary.put(
+			"jakarta.portlet.expiration-cache", getExpirationCache());
 
-		// javax.portlet.init-param
+		// jakarta.portlet.init-param
 
 		Map<String, String> initParams = getInitParams();
 
@@ -365,72 +366,72 @@ public class BeanPortletImpl implements BeanPortlet {
 
 			if (value != null) {
 				dictionary.put(
-					"javax.portlet.init-param." + entry.getKey(), value);
+					"jakarta.portlet.init-param." + entry.getKey(), value);
 			}
 		}
 
-		// javax.portlet.description
+		// jakarta.portlet.description
 
 		_putEnglishText(
-			getDescriptions(), dictionary, "javax.portlet.description");
+			getDescriptions(), dictionary, "jakarta.portlet.description");
 
-		// javax.portlet.display-name
-
-		_putEnglishText(
-			getDisplayNames(), dictionary, "javax.portlet.display-name");
-
-		// javax.portlet.info.keywords
+		// jakarta.portlet.display-name
 
 		_putEnglishText(
-			getKeywords(), dictionary, "javax.portlet.info.keywords");
+			getDisplayNames(), dictionary, "jakarta.portlet.display-name");
 
-		// javax.portlet.info.short-title
+		// jakarta.portlet.info.keywords
 
 		_putEnglishText(
-			getShortTitles(), dictionary, "javax.portlet.info.short-title");
+			getKeywords(), dictionary, "jakarta.portlet.info.keywords");
 
-		// javax.portlet.info.title
+		// jakarta.portlet.info.short-title
+
+		_putEnglishText(
+			getShortTitles(), dictionary, "jakarta.portlet.info.short-title");
+
+		// jakarta.portlet.info.title
 
 		Map<String, String> titles = getTitles();
 
 		if (titles.isEmpty()) {
-			dictionary.put("javax.portlet.info.title", getPortletName());
+			dictionary.put("jakarta.portlet.info.title", getPortletName());
 		}
 		else {
 			_putEnglishText(
 				titles, getPortletName(), dictionary,
-				"javax.portlet.info.title");
+				"jakarta.portlet.info.title");
 		}
 
-		// javax.portlet.multipart
+		// jakarta.portlet.multipart
 
 		if (_multipartConfig.isSupported()) {
 			dictionary.put(
-				"javax.portlet.multipart.file-size-threshold",
+				"jakarta.portlet.multipart.file-size-threshold",
 				_multipartConfig.getFileSizeThreshold());
 
 			dictionary.put(
-				"javax.portlet.multipart.location",
+				"jakarta.portlet.multipart.location",
 				_multipartConfig.getLocation());
 
 			dictionary.put(
-				"javax.portlet.multipart.max-file-size",
+				"jakarta.portlet.multipart.max-file-size",
 				_multipartConfig.getMaxFileSize());
 
 			dictionary.put(
-				"javax.portlet.multipart.max-request-size",
+				"jakarta.portlet.multipart.max-request-size",
 				_multipartConfig.getMaxRequestSize());
 		}
 
-		// javax.portlet.portlet-class
+		// jakarta.portlet.portlet-class
 
 		String portletClassName = getPortletClassName();
 
 		if (portletClassName != null) {
-			dictionary.put("javax.portlet.portlet-class", portletClassName);
+			dictionary.put("jakarta.portlet.portlet-class", portletClassName);
 		}
 
-		// javax.portlet.portlet-mode
+		// jakarta.portlet.portlet-mode
 
 		Set<String> allPortletModes = new HashSet<>(liferayPortletModes);
 
@@ -466,10 +467,11 @@ public class BeanPortletImpl implements BeanPortlet {
 		}
 
 		if (!supportedPortletModes.isEmpty()) {
-			dictionary.put("javax.portlet.portlet-mode", supportedPortletModes);
+			dictionary.put(
+				"jakarta.portlet.portlet-mode", supportedPortletModes);
 		}
 
-		// javax.portlet.preferences
+		// jakarta.portlet.preferences
 
 		StringBundler portletPreferencesSB = new StringBundler();
 
@@ -502,25 +504,25 @@ public class BeanPortletImpl implements BeanPortlet {
 		portletPreferencesSB.append("</portlet-preferences>");
 
 		dictionary.put(
-			"javax.portlet.preferences", portletPreferencesSB.toString());
+			"jakarta.portlet.preferences", portletPreferencesSB.toString());
 
-		// javax.portlet.preferences-validator
+		// jakarta.portlet.preferences-validator
 
 		String preferencesValidator = getPreferencesValidator();
 
 		if (preferencesValidator != null) {
 			dictionary.put(
-				"javax.portlet.preferences-validator", preferencesValidator);
+				"jakarta.portlet.preferences-validator", preferencesValidator);
 		}
 
-		// javax.portlet.resource-bundle
+		// jakarta.portlet.resource-bundle
 
 		if (Validator.isNotNull(getResourceBundle())) {
 			dictionary.put(
-				"javax.portlet.resource-bundle", getResourceBundle());
+				"jakarta.portlet.resource-bundle", getResourceBundle());
 		}
 
-		// javax.portlet.security-role-ref
+		// jakarta.portlet.security-role-ref
 
 		StringBundler roleNamesSB = new StringBundler();
 
@@ -535,31 +537,26 @@ public class BeanPortletImpl implements BeanPortlet {
 			roleNamesSB.setIndex(roleNamesSB.index() - 1);
 
 			dictionary.put(
-				"javax.portlet.security-role-ref", roleNamesSB.toString());
+				"jakarta.portlet.security-role-ref", roleNamesSB.toString());
 		}
 
-		// javax.portlet.supported-locale
+		// jakarta.portlet.supported-locale
 
 		if (!getSupportedLocales().isEmpty()) {
 			dictionary.put(
-				"javax.portlet.supported-locale", getSupportedLocales());
+				"jakarta.portlet.supported-locale", getSupportedLocales());
 		}
 
-		List<String> supportedPublicRenderParameters = new ArrayList<>();
-
-		for (String identifier : getSupportedPublicRenderParameters()) {
-			supportedPublicRenderParameters.add(
-				_toNameValuePair(
-					identifier,
-					_getPublicRenderParameterNamespaceURI(
-						beanApp, identifier)));
-		}
-
-		// javax.portlet.supported-public-render-parameter
+		// jakarta.portlet.supported-public-render-parameter
 
 		dictionary.put(
-			"javax.portlet.supported-public-render-parameter",
-			supportedPublicRenderParameters);
+			"jakarta.portlet.supported-public-render-parameter",
+			TransformUtil.transform(
+				getSupportedPublicRenderParameters(),
+				identifier -> _toNameValuePair(
+					identifier,
+					_getPublicRenderParameterNamespaceURI(
+						beanApp, identifier))));
 
 		List<String> supportedWindowStates = new ArrayList<>();
 
@@ -588,13 +585,14 @@ public class BeanPortletImpl implements BeanPortlet {
 			supportedWindowStates.add(windowStatesSB.toString());
 		}
 
-		// javax.portlet.window-state
+		// jakarta.portlet.window-state
 
 		if (!supportedWindowStatesMap.isEmpty()) {
-			dictionary.put("javax.portlet.window-state", supportedWindowStates);
+			dictionary.put(
+				"jakarta.portlet.window-state", supportedWindowStates);
 		}
 
-		// javax.portlet.supported-processing-event
+		// jakarta.portlet.supported-processing-event
 
 		Set<String> supportedProcessingEvents = new HashSet<>();
 
@@ -605,10 +603,10 @@ public class BeanPortletImpl implements BeanPortlet {
 		}
 
 		dictionary.put(
-			"javax.portlet.supported-processing-event",
+			"jakarta.portlet.supported-processing-event",
 			supportedProcessingEvents);
 
-		// javax.portlet.supported-publishing-event
+		// jakarta.portlet.supported-publishing-event
 
 		Set<String> supportedPublishingEvents = new HashSet<>();
 
@@ -620,36 +618,30 @@ public class BeanPortletImpl implements BeanPortlet {
 
 		if (!supportedPublishingEvents.isEmpty()) {
 			dictionary.put(
-				"javax.portlet.supported-publishing-event",
+				"jakarta.portlet.supported-publishing-event",
 				supportedPublishingEvents);
 		}
 
 		if (!supportedProcessingEvents.isEmpty()) {
 			dictionary.put(
-				"javax.portlet.supported-processing-event",
+				"jakarta.portlet.supported-processing-event",
 				supportedProcessingEvents);
 		}
 
-		// javax.portlet.listener
+		// jakarta.portlet.listener
 
-		List<String> portletListeners = new ArrayList<>();
-
-		for (Map.Entry<Integer, String> entry : beanApp.getPortletListeners()) {
-			String listenerClassName = entry.getValue();
-
-			String listener = StringBundler.concat(
-				listenerClassName, StringPool.SEMICOLON, entry.getKey());
-
-			portletListeners.add(listener);
-		}
+		List<String> portletListeners = TransformUtil.transform(
+			beanApp.getPortletListeners(),
+			entry -> StringBundler.concat(
+				entry.getValue(), StringPool.SEMICOLON, entry.getKey()));
 
 		if (!portletListeners.isEmpty()) {
-			dictionary.put("javax.portlet.listener", portletListeners);
+			dictionary.put("jakarta.portlet.listener", portletListeners);
 		}
 
-		// javax.portlet.version
+		// jakarta.portlet.version
 
-		dictionary.put("javax.portlet.version", beanApp.getSpecVersion());
+		dictionary.put("jakarta.portlet.version", beanApp.getSpecVersion());
 
 		return dictionary;
 	}

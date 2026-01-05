@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -31,13 +32,11 @@ import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.client.ClientInformation;
 import com.nimbusds.oauth2.sdk.client.ClientMetadata;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 
+import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 
 import java.util.List;
 
@@ -60,7 +59,8 @@ public class OAuthClientEntryLocalServiceImpl
 	@Override
 	public OAuthClientEntry addOAuthClientEntry(
 			long userId, String authRequestParametersJSON,
-			String authServerWellKnownURI, String infoJSON,
+			String authServerWellKnownURI, String customClaimsJSON,
+			String infoJSON, long metadataCacheTime,
 			String oidcUserInfoMapperJSON, String tokenRequestParametersJSON)
 		throws PortalException {
 
@@ -85,6 +85,10 @@ public class OAuthClientEntryLocalServiceImpl
 		}
 		else {
 			_validateAuthRequestParametersJSON(authRequestParametersJSON);
+		}
+
+		if (customClaimsJSON == null) {
+			customClaimsJSON = "{}";
 		}
 
 		if (Validator.isNull(tokenRequestParametersJSON)) {
@@ -114,7 +118,9 @@ public class OAuthClientEntryLocalServiceImpl
 			authRequestParametersJSON);
 		oAuthClientEntry.setAuthServerWellKnownURI(authServerWellKnownURI);
 		oAuthClientEntry.setClientId(clientId);
+		oAuthClientEntry.setCustomClaimsJSON(customClaimsJSON);
 		oAuthClientEntry.setInfoJSON(clientInformationJSONObject.toString());
+		oAuthClientEntry.setMetadataCacheTime(metadataCacheTime);
 		oAuthClientEntry.setOIDCUserInfoMapperJSON(oidcUserInfoMapperJSON);
 		oAuthClientEntry.setTokenRequestParametersJSON(
 			tokenRequestParametersJSON);
@@ -217,7 +223,8 @@ public class OAuthClientEntryLocalServiceImpl
 	@Override
 	public OAuthClientEntry updateOAuthClientEntry(
 			long oAuthClientEntryId, String authRequestParametersJSON,
-			String authServerWellKnownURI, String infoJSON,
+			String authServerWellKnownURI, String customClaimsJSON,
+			String infoJSON, long metadataCacheTime,
 			String oidcUserInfoMapperJSON, String tokenRequestParametersJSON)
 		throws PortalException {
 
@@ -247,6 +254,10 @@ public class OAuthClientEntryLocalServiceImpl
 			_validateAuthRequestParametersJSON(authRequestParametersJSON);
 		}
 
+		if (customClaimsJSON != null) {
+			oAuthClientEntry.setCustomClaimsJSON(customClaimsJSON);
+		}
+
 		if (Validator.isNull(tokenRequestParametersJSON)) {
 			tokenRequestParametersJSON = "{}";
 		}
@@ -269,6 +280,7 @@ public class OAuthClientEntryLocalServiceImpl
 		oAuthClientEntry.setAuthServerWellKnownURI(authServerWellKnownURI);
 		oAuthClientEntry.setClientId(clientId);
 		oAuthClientEntry.setInfoJSON(clientInformationJSONObject.toString());
+		oAuthClientEntry.setMetadataCacheTime(metadataCacheTime);
 		oAuthClientEntry.setOIDCUserInfoMapperJSON(oidcUserInfoMapperJSON);
 		oAuthClientEntry.setTokenRequestParametersJSON(
 			tokenRequestParametersJSON);
@@ -318,14 +330,17 @@ public class OAuthClientEntryLocalServiceImpl
 				return;
 			}
 
-			HTTPRequest httpRequest = new HTTPRequest(
-				HTTPRequest.Method.GET, new URL(authServerWellKnownURI));
+			Http.Options httpOptions = new Http.Options();
 
-			HTTPResponse httpResponse = httpRequest.send();
+			httpOptions.setLocation(authServerWellKnownURI);
 
-			if (httpResponse.getStatusCode() != HTTPResponse.SC_OK) {
+			_http.URLtoString(httpOptions);
+
+			Http.Response httpResponse = httpOptions.getResponse();
+
+			if (httpResponse.getResponseCode() != HttpURLConnection.HTTP_OK) {
 				throw new OAuthClientEntryAuthServerWellKnownURIException(
-					httpResponse.getStatusMessage());
+					"Response code: " + httpResponse.getResponseCode());
 			}
 		}
 		catch (Exception exception) {
@@ -503,6 +518,9 @@ public class OAuthClientEntryLocalServiceImpl
 				exception.getMessage(), exception);
 		}
 	}
+
+	@Reference
+	private Http _http;
 
 	@Reference
 	private OAuthClientASLocalMetadataLocalService

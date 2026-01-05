@@ -10,6 +10,8 @@ import com.liferay.captcha.rest.client.http.HttpInvoker;
 import com.liferay.captcha.rest.client.problem.Problem;
 import com.liferay.captcha.rest.client.serdes.v1_0.CaptchaSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.net.URL;
 
 import java.util.LinkedHashMap;
@@ -18,8 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Generated;
 
 /**
  * @author Loc Pham
@@ -141,8 +141,8 @@ public interface CaptchaResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -243,8 +243,10 @@ public interface CaptchaResource {
 					_builder._port + _builder._contextPath +
 						"/o/captcha/v1.0/captcha/challenge");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}
@@ -344,8 +346,10 @@ public interface CaptchaResource {
 					_builder._port + _builder._contextPath +
 						"/o/captcha/v1.0/captcha/response");
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

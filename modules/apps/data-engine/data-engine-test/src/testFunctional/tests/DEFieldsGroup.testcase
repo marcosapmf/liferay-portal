@@ -1,4 +1,4 @@
-@component-name = "data-engine"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -24,150 +24,6 @@ definition {
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
-	}
-
-	@description = "This is a test for LRQA-71711. This test verifies that is possible to Collapse a Fields Group"
-	@priority = 3
-	test CanBeCollapsed {
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "WC Structure Title");
-
-		DEBuilder.addField(
-			fieldLabel = "Text",
-			fieldName = "Text");
-
-		DEBuilder.addFieldNested(
-			fieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
-
-		DEBuilder.collapsibleFieldsGroup(fieldsGroup = "Fields Group");
-
-		WebContentStructures.saveCP();
-
-		NavItem.gotoWebContent();
-
-		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Title");
-
-		PortletEntry.inputTitle(title = "Web Content Title");
-
-		Form.viewExpandedCollapseButton();
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Text");
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Numeric");
-
-		DERenderer.clickCollapseFieldsGroup();
-
-		Form.viewCollapsedCollapseButton();
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Text");
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Numeric");
-	}
-
-	@description = "Verify that is possible to Collapse a Fields Group"
-	@priority = 3
-	test CanBeCollapsedAndTranslated {
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "WC Structure Title");
-
-		DEBuilder.addField(
-			fieldLabel = "Text",
-			fieldName = "Text");
-
-		DEBuilder.addFieldNested(
-			fieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
-
-		WebContentStructures.addTranslations(localeList = "pt-BR");
-
-		PortletEntry.changeLocale(locale = "pt-BR");
-
-		DataEngine.editFieldLabel(
-			fieldFieldLabel = "Text",
-			fieldFieldLabelEdit = "Text pt-BR");
-
-		DataEngine.editFieldLabel(
-			fieldFieldLabel = "Numeric",
-			fieldFieldLabelEdit = "Numeric pt-BR");
-
-		DEBuilder.collapsibleFieldsGroup(fieldsGroup = "Fields Group");
-
-		WebContentStructures.saveCP();
-
-		NavItem.gotoWebContent();
-
-		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Title");
-
-		PortletEntry.inputTitle(title = "Web Content Title");
-
-		Form.viewExpandedCollapseButton();
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Text");
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Numeric");
-
-		DERenderer.clickCollapseFieldsGroup();
-
-		Form.viewCollapsedCollapseButton();
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Text");
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Numeric");
-
-		DERenderer.clickCollapseFieldsGroup();
-
-		DataEngine.waitForAutoSave();
-
-		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
-
-		PortletEntry.changeLocale(locale = "pt-BR");
-
-		Form.viewExpandedCollapseButton();
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Text pt-BR");
-
-		Form.viewFieldsGroupNotCollapsedField(fieldLabel = "Numeric pt-BR");
-
-		DERenderer.clickCollapseFieldsGroup();
-
-		Form.viewCollapsedCollapseButton();
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Text pt-BR");
-
-		Form.viewFieldsGroupCollapsedField(fieldLabel = "Numeric pt-BR");
-
-		DERenderer.clickCollapseFieldsGroup();
-	}
-
-	@description = "This is a test for LRQA-68747. This test verifies that is possible to create Fields Group by adding a field from the sidebar into a field that is on the builder."
-	@priority = 5
-	test CanBeCreated {
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "WC Structure Title");
-
-		DEBuilder.addField(
-			fieldLabel = "Text",
-			fieldName = "Text");
-
-		DataEngine.addFieldNested(
-			fieldFieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
-
-		WebContentStructures.saveCP();
-
-		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Title");
-
-		DEBuilder.assertFieldsGroup(
-			fieldGroupDepth = 1,
-			fieldGroupLabel = "Fields Group",
-			fieldsLabelList = "Text,Numeric");
 	}
 
 	@description = "This is a test for LRQA-68747. This test verifies that is possible to create Fields Group by dragging a field already on the builder into another field on the builder."
@@ -270,6 +126,8 @@ definition {
 	@description = "This is a test for LRQA-71711. This test verifies that the Web Content data persists upon editing the related Structure by creating a Fields Group"
 	@priority = 4
 	test CanDataBeEditedInNewFieldsGroup {
+		property custom.properties = "feature.flag.LPD-11228=true";
+
 		NavItem.gotoStructures();
 
 		WebContentStructures.addCP(structureName = "WC Structure Title");
@@ -298,7 +156,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		NavItem.gotoStructures();
 
@@ -328,6 +186,8 @@ definition {
 	@description = "Verify that the Web Content data persists upon editing the related Structure by creating a Fields Group	"
 	@priority = 4
 	test CanDataBeEditedInNewFieldsGroupTranslated {
+		property custom.properties = "feature.flag.LPD-11228=true";
+
 		NavItem.gotoStructures();
 
 		WebContentStructures.addCP(structureName = "WC Structure Title");
@@ -356,7 +216,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -367,6 +229,20 @@ definition {
 			value = 123456);
 
 		Button.clickPublish();
+
+		AssertClick(
+			buttonName = "Publish With Permissions",
+			locator1 = "WCEditWebContent#PUBLISH_WITH_PERMISSIONS_BUTTON",
+			value1 = "Publish With Permissions");
+
+		WaitForElementPresent(
+			locator1 = "Modal#SELECT_WITH_LABEL",
+			selectLabel = "Viewable by");
+
+		AssertClick(
+			buttonName = "Publish",
+			locator1 = "Modal#PRIMARY_BUTTON",
+			value1 = "Publish");
 
 		NavItem.gotoStructures();
 
@@ -390,7 +266,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -612,7 +490,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -622,7 +502,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 456);
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -634,7 +514,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -644,7 +526,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 456);
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -654,7 +538,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 321);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -664,7 +550,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 678);
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -676,7 +562,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 321);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -946,7 +834,7 @@ definition {
 			fieldLabel = "Date",
 			value = "08/06/2021");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1026,7 +914,7 @@ definition {
 			index = 2,
 			value = "09/06/2021");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1064,6 +952,8 @@ definition {
 	@description = "Verify that data inputted on a repeatable Fields Group duplicated persists on the Web Content"
 	@priority = 4
 	test CanInputDataOnDuplicatedFieldTranslated {
+		property custom.properties = "feature.flag.LPD-11228=true";
+
 		NavItem.gotoStructures();
 
 		WebContentStructures.addCP(structureName = "WC Structure Title");
@@ -1109,7 +999,9 @@ definition {
 			index = 2,
 			value = 456);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -1131,7 +1023,7 @@ definition {
 			index = 2,
 			value = 123456);
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1155,7 +1047,9 @@ definition {
 			index = 2,
 			value = 456);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -1219,7 +1113,7 @@ definition {
 			fieldLabel = "Date",
 			value = "08/06/2021");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1235,7 +1129,7 @@ definition {
 			fieldLabel = "Date",
 			value = "09/06/2021");
 
-		Button.clickPublish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1293,7 +1187,7 @@ definition {
 			fieldLabel = "Date",
 			value = "08/06/2021");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1309,7 +1203,7 @@ definition {
 			fieldLabel = "Date",
 			value = "");
 
-		Button.clickPublish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1367,7 +1261,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -1377,7 +1273,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 456);
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1389,7 +1285,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -1399,7 +1297,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 456);
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1411,7 +1309,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = "");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -1421,7 +1321,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = "");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1433,7 +1333,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = "");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -1477,13 +1379,13 @@ definition {
 
 		DataEngine.addRepeatableField(fieldLabel = "Date");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 		DERenderer.removeRepeatableField(fieldLabel = "Text");
 
-		Button.clickPublish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1495,6 +1397,8 @@ definition {
 	@description = "Verify that is possible to remove duplicated repeatable Fields Group"
 	@priority = 4
 	test CanRemoveDuplicatedRepeatableFieldsGroupTranslated {
+		property custom.properties = "feature.flag.LPD-11228=true";
+
 		NavItem.gotoStructures();
 
 		WebContentStructures.addCP(structureName = "WC Structure Title");
@@ -1540,7 +1444,9 @@ definition {
 			index = 2,
 			value = 456);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -1562,7 +1468,7 @@ definition {
 			index = 2,
 			value = 123456);
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1586,7 +1492,9 @@ definition {
 			index = 2,
 			value = 456);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -1608,7 +1516,12 @@ definition {
 			index = 2,
 			value = 123456);
 
-		Button.clickPublish();
+		WebContent.publishExistingWCArticleWithPermissions();
+
+		AssertClick(
+			buttonName = "Publish",
+			locator1 = "WCEditWebContent#PUBLISH_BUTTON",
+			value1 = "Publish");
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1616,7 +1529,12 @@ definition {
 			fieldLabel = "Text",
 			index = 2);
 
-		Button.clickPublish();
+		WebContent.publishExistingWCArticleWithPermissions();
+
+		AssertClick(
+			buttonName = "Publish",
+			locator1 = "WCEditWebContent#PUBLISH_BUTTON",
+			value1 = "Publish");
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1630,7 +1548,9 @@ definition {
 			index = 1,
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",
@@ -1757,7 +1677,7 @@ definition {
 				row = ${index});
 		}
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1810,7 +1730,9 @@ definition {
 				row = ${index});
 		}
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		for (var index : list "3,4") {
 			DERenderer.inputDataInGridField(
@@ -1819,7 +1741,7 @@ definition {
 				row = ${index});
 		}
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1830,7 +1752,9 @@ definition {
 				row = ${index});
 		}
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		for (var index : list "3,4") {
 			DERenderer.assertDataInGridField(
@@ -1872,7 +1796,7 @@ definition {
 			fieldLabel = "Multiple Selection",
 			optionValue = "Option 1");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1913,13 +1837,15 @@ definition {
 			fieldLabel = "Multiple Selection",
 			optionValue = "Option 1");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInMultipleSelectionField(
 			fieldLabel = "Multiple Selection",
 			optionValue = "Option 3");
 
-		Button.clickPublish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1927,7 +1853,9 @@ definition {
 			fieldLabel = "Multiple Selection",
 			optionValue = "Option 1");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInMultipleSelectionField(
 			fieldLabel = "Multiple Selection",
@@ -1975,7 +1903,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.inputDataInTextField(
 			fieldLabel = "Text",
@@ -1985,7 +1915,7 @@ definition {
 			fieldLabel = "Numeric",
 			value = 456);
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1997,7 +1927,9 @@ definition {
 			fieldLabel = "Numeric",
 			value = 123);
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		DERenderer.assertDataInTextField(
 			fieldLabel = "Text",

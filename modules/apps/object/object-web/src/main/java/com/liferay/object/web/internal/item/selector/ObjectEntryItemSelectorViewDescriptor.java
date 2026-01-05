@@ -19,13 +19,13 @@ import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -34,17 +34,18 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Guilherme Camacho
@@ -53,6 +54,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 	implements ItemSelectorViewDescriptor<ObjectEntry> {
 
 	public ObjectEntryItemSelectorViewDescriptor(
+		GroupLocalService groupLocalService,
 		HttpServletRequest httpServletRequest,
 		InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
 		ObjectDefinition objectDefinition,
@@ -61,6 +63,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 		ObjectScopeProviderRegistry objectScopeProviderRegistry, Portal portal,
 		PortletURL portletURL) {
 
+		_groupLocalService = groupLocalService;
 		_httpServletRequest = httpServletRequest;
 		_infoItemItemSelectorCriterion = infoItemItemSelectorCriterion;
 		_objectDefinition = objectDefinition;
@@ -71,8 +74,9 @@ public class ObjectEntryItemSelectorViewDescriptor
 		_portal = portal;
 		_portletURL = portletURL;
 
+		_keywords = ParamUtil.getString(httpServletRequest, "keywords");
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -85,7 +89,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 	@Override
 	public ItemDescriptor getItemDescriptor(ObjectEntry objectEntry) {
 		return new ObjectEntryItemDescriptor(
-			_httpServletRequest, _objectDefinition, objectEntry, _portal);
+			_groupLocalService, _httpServletRequest, _objectDefinition,
+			objectEntry, _portal);
 	}
 
 	@Override
@@ -149,7 +154,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 							ParamUtil.getLong(_portletRequest, "objectEntryId"),
 							ParamUtil.getLong(
 								_portletRequest, "objectRelationshipId"),
-							searchContainer.getStart(),
+							_keywords, searchContainer.getStart(),
 							searchContainer.getEnd());
 					},
 					objectRelatedModelsProvider.getUnrelatedModelsCount(
@@ -157,7 +162,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 						_objectDefinition,
 						ParamUtil.getLong(_portletRequest, "objectEntryId"),
 						ParamUtil.getLong(
-							_portletRequest, "objectRelationshipId")));
+							_portletRequest, "objectRelationshipId"),
+						_keywords));
 			}
 			else {
 				Group scopeGroup = _themeDisplay.getScopeGroup();
@@ -166,7 +172,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 					_objectEntryManager.getObjectEntries(
 						_themeDisplay.getCompanyId(), _objectDefinition,
 						scopeGroup.getGroupKey(), null,
-						_getDTOConverterContext(), StringPool.BLANK,
+						_getDTOConverterContext(),
+						"status eq " + WorkflowConstants.STATUS_APPROVED,
 						Pagination.of(
 							searchContainer.getCur(),
 							searchContainer.getDelta()),
@@ -176,8 +183,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 					() -> TransformUtil.transform(
 						page.getItems(),
 						objectEntry -> ObjectEntryUtil.toObjectEntry(
-							_objectDefinition.getObjectDefinitionId(),
-							objectEntry)),
+							_objectDefinition, objectEntry)),
 					GetterUtil.getInteger(page.getTotalCount()));
 			}
 		}
@@ -197,14 +203,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 
 	@Override
 	public boolean isShowBreadcrumb() {
-		if (StringUtil.equals(
-				_objectDefinition.getScope(),
-				ObjectDefinitionConstants.SCOPE_SITE)) {
-
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(
+			_objectDefinition.getScope(), ObjectDefinitionConstants.SCOPE_SITE);
 	}
 
 	@Override
@@ -221,8 +221,10 @@ public class ObjectEntryItemSelectorViewDescriptor
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryItemSelectorViewDescriptor.class);
 
+	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoItemItemSelectorCriterion _infoItemItemSelectorCriterion;
+	private final String _keywords;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectRelatedModelsProviderRegistry

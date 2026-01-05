@@ -23,6 +23,14 @@ import org.json.JSONObject;
  */
 public interface Job {
 
+	public Set<String> getAnalyticsCloudBatchNames();
+
+	public Set<String> getAnalyticsCloudSegmentNames();
+
+	public Set<String> getAppServerTypes();
+
+	public Set<String> getAppServerTypesExcludingTomcat();
+
 	public int getAxisCount();
 
 	public AxisTestClassGroup getAxisTestClassGroup(String axisName);
@@ -53,11 +61,11 @@ public interface Job {
 
 	public List<String> getDistNodes(String networkName);
 
+	public Set<String> getDistRequiredBatchNames();
+
+	public Set<String> getDistRequiredSegmentNames();
+
 	public DistType getDistType();
-
-	public Set<String> getDistTypes();
-
-	public Set<String> getDistTypesExcludingTomcat();
 
 	public Set<JenkinsCohort> getJenkinsCohorts();
 
@@ -79,9 +87,15 @@ public interface Job {
 
 	public List<SegmentTestClassGroup> getSegmentTestClassGroups();
 
+	public Set<String> getStandaloneBatchNames();
+
+	public Set<String> getStandaloneSegmentNames();
+
 	public String getTestPropertiesContent();
 
 	public int getTimeoutMinutes(JenkinsMaster jenkinsMaster);
+
+	public boolean isBuildCachingEnabled();
 
 	public boolean isDownstreamEnabled();
 
@@ -89,19 +103,21 @@ public interface Job {
 
 	public boolean isSegmentEnabled();
 
+	public boolean isStandaloneBatchEnabled();
+
+	public boolean isTestAnalyticsCloud();
+
+	public boolean isTestHotfixChanges();
+
+	public boolean isTestJaCoCoCodeCoverage();
+
+	public boolean isTestReleaseBundle();
+
+	public boolean isTestRelevantChanges();
+
+	public boolean isTestRelevantChangesInStable();
+
 	public boolean isValidationRequired();
-
-	public boolean testAnalyticsCloud();
-
-	public boolean testHotfixChanges();
-
-	public boolean testJaCoCoCodeCoverage();
-
-	public boolean testReleaseBundle();
-
-	public boolean testRelevantChanges();
-
-	public boolean testRelevantChangesInStable();
 
 	public static enum BuildProfile {
 

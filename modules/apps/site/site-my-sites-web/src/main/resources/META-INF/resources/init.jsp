@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -28,10 +28,10 @@ page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.liveusers.LiveUsers" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.site.my.sites.web.internal.display.context.SiteMySitesDisplayContext" %><%@
 page import="com.liferay.site.my.sites.web.internal.display.context.SiteMySitesManagementToolbarDisplayContext" %><%@
 page import="com.liferay.site.my.sites.web.internal.frontend.taglib.clay.servlet.taglib.SiteVerticalCard" %>

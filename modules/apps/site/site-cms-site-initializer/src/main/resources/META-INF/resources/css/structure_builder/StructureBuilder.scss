@@ -1,0 +1,34 @@
+@import 'cadmin-variables';
+
+$structureFieldsWidth: 448px;
+
+.structure-builder {
+	&__sidebar {
+		background-color: $cadmin-light-l1;
+		width: $structureFieldsWidth;
+	}
+
+	&__title-input {
+		font-size: 1.75rem;
+	}
+
+	&__tree {
+		&-node {
+			&--field-icon {
+				color: $cadmin-blue-l1;
+			}
+
+			&--group-icon {
+				color: $cadmin-teal-l1;
+			}
+
+			&--structure-icon {
+				color: $cadmin-orange-l1;
+			}
+		}
+	}
+
+	&__wrapper {
+		min-height: calc(100vh - (var(--control-menu-container-height)));
+	}
+}

@@ -5,29 +5,58 @@
 
 import React from 'react';
 
-import {IInlineEditingSettings, IItemsActions} from '.';
+import {
+	EConfigInURLKeys,
+	IConfigInURLUpdaterThunk,
+	IDataSetData,
+	IInlineEditingSettings,
+	IItemsActions,
+	TRenderer,
+} from './utils/types';
 
 export interface IFrontendDataSetContext {
 	actionParameterName?: string | null;
+	allItemsSelectedActive: boolean;
 	apiURL?: string;
 	appURL?: string;
 	applyItemInlineUpdates: Function;
 	createInlineItem: Function;
 	customDataRenderers?: Array<any>;
-	customRenderers?: {tableCell?: Array<TRenderer>};
-	executeAsyncItemAction: Function;
+	customRenderers?: {
+		tableCell?: Array<TRenderer>;
+		views?: Array<TRenderer>;
+	};
+	executeAsyncItemAction: ({
+		errorMessage,
+		method,
+		requestBody,
+		setActionItemLoading,
+		successMessage,
+		url,
+	}: {
+		errorMessage?: string;
+		method?: string;
+		requestBody?: string;
+		setActionItemLoading?: (loading: boolean) => void;
+		successMessage?: string;
+		url: string;
+	}) => Promise<void>;
 	formId?: string;
 	formName?: string;
+	handleSnapshotChange: Function;
+	hideManagementBarInEmptyState?: boolean;
 	highlightItems: Function;
-	highlightedItemsValue?: string;
-	id?: string;
+	highlightedItemsValue?: Array<string>;
+	id: string;
+	infoPanelId?: string;
+	infoPanelOpen?: boolean;
 	inlineAddingSettings?: {
 		apiURL?: string;
 		defaultBodyContent?: object;
 	};
 	inlineEditingSettings?: IInlineEditingSettings;
-	itemsActions?: IItemsActions[];
-	itemsChanges?: Array<any>;
+	itemsActions?: Array<IItemsActions>;
+	itemsChanges?: {[key: string]: any};
 	loadData: Function;
 	modalId?: string;
 	namespace?: string;
@@ -35,66 +64,66 @@ export interface IFrontendDataSetContext {
 	nestedItemsReferenceKey?: string;
 	onActionDropdownItemClick: Function;
 	onBulkActionItemClick: Function;
-	onSelect: Function;
+	onInfoPanelToggleButtonClick: Function;
+	onItemsChange: ({itemKey, items}: {itemKey: string; items: any}) => void;
+	onSearch: ({query}: {query: string}) => void;
 	openModal: Function;
 	openSidePanel: Function;
 	portletId?: string;
 	searchParam?: string;
-	selectItems: Function;
+	searching: boolean;
 	selectable?: boolean;
-	selectedItemsKey?: string;
+	selectedItems?: Array<any>;
+	selectedItemsKey: string;
 	selectedItemsValue?: Array<any>;
-	selectionType?: string;
+	selectionType?: 'single' | 'multiple';
+	setSearching: (value: boolean) => void;
+	showBulkActionsManagementBar: boolean;
+	showBulkActionsManagementBarActions: boolean;
+	showInfoPanel: boolean;
 	sidePanelId?: string;
 	sorts?: Array<TRenderer>;
 	style?: string;
 	toggleItemInlineEdit: Function;
 	uniformActionsDisplay?: boolean;
-	updateDataSetItems: Function;
+	updateActiveSorts: IConfigInURLUpdaterThunk<EConfigInURLKeys.ACTIVE_SORTS>;
+	updateDataSetItems: ({
+		items,
+		lastPage,
+		page,
+		pageSize,
+		totalCount,
+	}: IDataSetData) => void;
+	updateFilters: IConfigInURLUpdaterThunk<EConfigInURLKeys.ACTIVE_FILTERS>;
 	updateItem: Function;
-	updateSearchParam: Function;
+	updateView: IConfigInURLUpdaterThunk<EConfigInURLKeys.VIEW_NAME>;
+	updateVisibleFields: IConfigInURLUpdaterThunk<EConfigInURLKeys.VISIBLE_FIELDS>;
 }
-
-export interface IHTMLElementBuilder {
-	(args: any): HTMLElement;
-}
-
-export interface IClientExtensionRenderer {
-	externalReferenceCode?: string;
-	htmlElementBuilder?: IHTMLElementBuilder;
-	name?: string;
-	type: 'clientExtension';
-	url?: string;
-}
-
-export interface IInternalRenderer {
-	component: React.ComponentType<any>;
-	label?: string;
-	name?: string;
-	type: 'internal';
-	url?: string;
-}
-
-export type TRenderer = IClientExtensionRenderer | IInternalRenderer;
 
 const FrontendDataSetContext = React.createContext({
+	allItemsSelectedActive: false,
 	applyItemInlineUpdates: () => {},
 	createInlineItem: () => {},
 	executeAsyncItemAction: () => {},
+	handleSnapshotChange: () => {},
+	hideManagementBarInEmptyState: false,
 	highlightItems: () => {},
+	id: '',
 	loadData: () => {},
 	onActionDropdownItemClick: () => {},
 	onBulkActionItemClick: () => {},
-	onSelect: () => {},
+	onInfoPanelToggleButtonClick: () => {},
+	onItemsChange: () => {},
+	onSearch: () => {},
 	openModal: () => {},
 	openSidePanel: () => {},
-	selectItems: () => {},
 	selectable: false,
+	selectedItems: [],
 	selectedItemsValue: [],
+	setSearching: () => {},
 	toggleItemInlineEdit: () => {},
 	updateDataSetItems: () => {},
 	updateItem: () => {},
-	updateSearchParam: () => {},
-} as IFrontendDataSetContext);
+} as unknown as IFrontendDataSetContext);
 
 export default FrontendDataSetContext;

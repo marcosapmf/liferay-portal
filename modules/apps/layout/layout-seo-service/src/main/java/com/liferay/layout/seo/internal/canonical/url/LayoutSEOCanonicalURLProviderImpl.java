@@ -25,11 +25,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -138,6 +139,13 @@ public class LayoutSEOCanonicalURLProviderImpl
 			return alternateURLMapper.getAlternateURL(
 				canonicalURL, themeDisplay, LocaleUtil.getSiteDefault(),
 				layout);
+		}
+
+		Set<Locale> availableLocales = _language.getAvailableLocales(
+			layout.getGroupId());
+
+		if (!availableLocales.contains(locale)) {
+			locale = LocaleUtil.getSiteDefault();
 		}
 
 		return alternateURLMapper.getAlternateURL(

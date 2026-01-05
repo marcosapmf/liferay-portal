@@ -4,19 +4,19 @@
  */
 
 import {CustomVerticalBar} from '@liferay/object-js-components-web';
-import React, {ReactNode, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
-import './RightSidebarRoot.scss';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
 import {getRightSidebarWidth} from './rightSidebarUtil';
 
 interface IRightSidebarRoot {
-	children: ReactNode;
+	children: React.ReactNode;
 }
 
 export function RightSideBarRoot({children}: IRightSidebarRoot) {
 	const [
 		{
+			rightSidebarType,
 			selectedObjectDefinitionNode,
 			selectedObjectField,
 			selectedObjectRelationship,
@@ -35,10 +35,15 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 	};
 
 	useEffect(() => {
-		const newRightSidebarWidth = getRightSidebarWidth(selectedObjectField);
+		const newRightSidebarWidth = getRightSidebarWidth(
+			rightSidebarType,
+			selectedObjectField,
+			selectedObjectRelationship
+		);
 
 		setNewVerticalBarWidthValue(newRightSidebarWidth);
 	}, [
+		rightSidebarType,
 		selectedObjectDefinitionNode,
 		selectedObjectField,
 		selectedObjectRelationship,

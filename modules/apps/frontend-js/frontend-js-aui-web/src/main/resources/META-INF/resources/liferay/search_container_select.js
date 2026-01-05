@@ -8,6 +8,8 @@ AUI.add(
 	(A) => {
 		const AArray = A.Array;
 		const Lang = A.Lang;
+		const {SessionStorage: sessionStorage} = Liferay.Util;
+		const {TYPES: COOKIE_TYPES} = sessionStorage;
 
 		const REGEX_MATCH_EVERYTHING = /.*/;
 
@@ -33,12 +35,12 @@ AUI.add(
 		const STR_ROW_SELECTOR = 'rowSelector';
 
 		const TPL_HIDDEN_INPUT_CHECKED =
-			'<input class="hide" name="{name}" value="{value}" type="checkbox" ' +
+			'<input class="hide" data-id="{dataId}" data-name="{dataName}" name="{name}" type="checkbox" value="{value}"  ' +
 			STR_CHECKED +
 			' />';
 
 		const TPL_HIDDEN_INPUT_UNCHECKED =
-			'<input class="hide" name="{name}" value="{value}" type="checkbox"/>';
+			'<input class="hide" data-id="{dataId}" data-name="{dataName}" name="{name}" type="checkbox" value="{value}"/>';
 
 		const TPL_INPUT_SELECTOR = 'input[type="checkbox"][value="{value}"]';
 
@@ -123,11 +125,29 @@ AUI.add(
 					const allElements = instance._getAllElements(false);
 
 					allElements.each((item) => {
-						elements.push({
+						let dataset;
+
+						const element = {
 							checked: item.attr('checked'),
 							name: item.attr('name'),
 							value: item.val(),
-						});
+						};
+
+						const row = item.ancestor('tr');
+
+						if (row) {
+							dataset = row.getDOM().dataset;
+						}
+						else {
+							dataset = item.getDOM().dataset;
+						}
+
+						if (Object.keys(dataset).length) {
+							element['dataId'] = dataset.id;
+							element['dataName'] = dataset.name;
+						}
+
+						elements.push(element);
 					});
 
 					Liferay.DOMTaskRunner.addTaskState({
@@ -272,7 +292,12 @@ AUI.add(
 						'sessionStorageItemKey'
 					);
 
-					if (sessionStorage.getItem(sessionStorageItemKey)) {
+					if (
+						sessionStorage.getItem(
+							sessionStorageItemKey,
+							COOKIE_TYPES.FUNCTIONAL
+						)
+					) {
 						const container = A.one(host._getNodeToParse());
 
 						const selections = sessionStorage
@@ -324,11 +349,17 @@ AUI.add(
 						selectedItems = instance.getAllSelectedElements().val();
 					}
 
-					if (sessionStorage.getItem(sessionStorageItemKey)) {
+					if (
+						sessionStorage.getItem(
+							sessionStorageItemKey,
+							COOKIE_TYPES.FUNCTIONAL
+						)
+					) {
 						if (selectedItems.length) {
 							sessionStorage.setItem(
 								sessionStorageItemKey,
-								selectedItems
+								selectedItems,
+								COOKIE_TYPES.FUNCTIONAL
 							);
 						}
 						else {
@@ -338,7 +369,8 @@ AUI.add(
 					else if (selectedItems.length) {
 						sessionStorage.setItem(
 							sessionStorageItemKey,
-							selectedItems
+							selectedItems,
+							COOKIE_TYPES.FUNCTIONAL
 						);
 					}
 				},

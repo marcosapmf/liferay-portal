@@ -68,7 +68,6 @@ public class DynamicDataMappingUpgradeProcessTest extends BaseDDMTestCase {
 		setUpJSONFactoryUtil();
 		setUpLanguageUtil();
 		setUpLocalizationUtil();
-		setUpPropsUtil();
 		setUpSAXReaderUtil();
 		_setUpSecureXMLFactoryProviderUtil();
 
@@ -83,26 +82,25 @@ public class DynamicDataMappingUpgradeProcessTest extends BaseDDMTestCase {
 					(proxy, method, args) -> {
 						String methodName = method.getName();
 
-						if (methodName.equals("getCompositeModelName")) {
-							if (ArrayUtil.isEmpty(args)) {
-								return StringPool.BLANK;
-							}
-
-							Arrays.sort(args);
-
-							StringBundler sb = new StringBundler(
-								args.length * 2);
-
-							for (Object className : args) {
-								sb.append(className);
-							}
-
-							sb.setIndex(sb.index() - 1);
-
-							return sb.toString();
+						if (!methodName.equals("getCompositeModelName")) {
+							return null;
 						}
 
-						return null;
+						if (ArrayUtil.isEmpty(args)) {
+							return StringPool.BLANK;
+						}
+
+						Arrays.sort(args);
+
+						StringBundler sb = new StringBundler(args.length * 2);
+
+						for (Object className : args) {
+							sb.append(className);
+						}
+
+						sb.setIndex(sb.index() - 1);
+
+						return sb.toString();
 					}),
 				null, null, null, null);
 	}

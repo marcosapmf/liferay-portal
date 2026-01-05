@@ -56,15 +56,16 @@ public class FragmentEntryLocalServiceUtil {
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFragmentEntry(
 			externalReferenceCode, userId, groupId, fragmentCollectionId,
 			fragmentEntryKey, name, css, html, js, cacheable, configuration,
-			icon, previewFileEntryId, readOnly, type, typeOptions, status,
-			serviceContext);
+			icon, previewFileEntryId, marketplace, readOnly, type, typeOptions,
+			status, serviceContext);
 	}
 
 	public static FragmentEntry checkout(
@@ -282,6 +283,20 @@ public class FragmentEntryLocalServiceUtil {
 		return getService().fetchFragmentEntry(groupId, fragmentEntryKey);
 	}
 
+	public static FragmentEntry fetchFragmentEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchFragmentEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	public static FragmentEntry fetchFragmentEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId, boolean head) {
+
+		return getService().fetchFragmentEntryByExternalReferenceCode(
+			externalReferenceCode, groupId, head);
+	}
+
 	public static FragmentEntry fetchFragmentEntryByUuidAndGroupId(
 		String uuid, long groupId) {
 
@@ -441,6 +456,22 @@ public class FragmentEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getFragmentEntry(fragmentEntryId);
+	}
+
+	public static FragmentEntry getFragmentEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFragmentEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	public static FragmentEntry getFragmentEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId, boolean head)
+		throws PortalException {
+
+		return getService().getFragmentEntryByExternalReferenceCode(
+			externalReferenceCode, groupId, head);
 	}
 
 	public static FragmentEntry getFragmentEntryByUuidAndGroupId(

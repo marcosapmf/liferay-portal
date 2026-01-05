@@ -20,11 +20,14 @@ import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.AssumeTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
@@ -32,7 +35,11 @@ import com.liferay.portal.osgi.web.servlet.jsp.compiler.test.servlet.PrecompileT
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+
+import jakarta.portlet.Portlet;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,25 +50,26 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-import javax.portlet.Portlet;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -82,6 +90,16 @@ import org.osgi.framework.FrameworkUtil;
  */
 @RunWith(Arquillian.class)
 public class JspPrecompileTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new AssumeTestRule("assume"), new LiferayIntegrationTestRule());
+
+	public static void assume() {
+		Assume.assumeFalse(PropsValues.DATABASE_PARTITION_ENABLED);
+	}
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -127,7 +145,7 @@ public class JspPrecompileTest {
 			TestPropsValues.getUserId(), JspPrecompilePortlet.PORTLET_NAME,
 			columnId, -1, false);
 
-		LayoutLocalServiceUtil.updateLayout(
+		LayoutLocalServiceUtil.updateTypeSettings(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
 			layout.getTypeSettings());
 	}
@@ -181,6 +199,8 @@ public class JspPrecompileTest {
 
 			outputStream.write(classWriter.toByteArray());
 		}
+
+		Files.setLastModifiedTime(jspClassPath, _fileTime);
 
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 				_CLASS_NAME_JSP_COMPILER, LoggerTestUtil.DEBUG)) {
@@ -291,10 +311,15 @@ public class JspPrecompileTest {
 
 				jarOutputStream.closeEntry();
 
-				jarOutputStream.putNextEntry(
-					new ZipEntry(
-						"META-INF/resources/".concat(
-							_PRECOMPILE_JSP_FILE_NAME)));
+				ZipEntry zipEntry = new ZipEntry(
+					"META-INF/resources/".concat(_PRECOMPILE_JSP_FILE_NAME));
+
+				_fileTime = FileTime.from(
+					System.currentTimeMillis() / 1000, TimeUnit.SECONDS);
+
+				zipEntry.setLastModifiedTime(_fileTime);
+
+				jarOutputStream.putNextEntry(zipEntry);
 
 				jarOutputStream.closeEntry();
 			}
@@ -372,7 +397,8 @@ public class JspPrecompileTest {
 	}
 
 	private static final String _CLASS_NAME_JSP_COMPILER =
-		"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal.JspCompiler";
+		"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal." +
+			"CompilerWrapper";
 
 	private static final String _JSP_PACKAGE_NAME = "org.apache.jsp.";
 
@@ -382,6 +408,7 @@ public class JspPrecompileTest {
 	private static final String _RUNTIME_COMPILE_JSP_FILE_NAME = "runtime.jsp";
 
 	private static Bundle _bundle;
+	private static FileTime _fileTime;
 	private static Path _workDirPath;
 
 	private Group _group;

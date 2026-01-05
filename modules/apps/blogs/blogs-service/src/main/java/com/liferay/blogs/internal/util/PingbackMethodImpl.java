@@ -7,6 +7,7 @@ package com.liferay.blogs.internal.util;
 
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
@@ -29,12 +30,12 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xmlrpc.Method;
 import com.liferay.portal.kernel.xmlrpc.Response;
 import com.liferay.portal.kernel.xmlrpc.XmlRpcConstants;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.xmlrpc.XmlRpcUtil;
 
 import java.net.InetAddress;
@@ -261,9 +262,6 @@ public class PingbackMethodImpl implements Method {
 
 		Map<String, String[]> params = new HashMap<>();
 
-		FriendlyURLMapperThreadLocal.setPRPIdentifiers(
-			new HashMap<String, String>());
-
 		Portlet portlet = _portletLocalService.getPortletById(
 			_getPortletId(
 				BlogsEntry.class.getName(), PortletProvider.Action.VIEW));
@@ -282,7 +280,13 @@ public class PingbackMethodImpl implements Method {
 
 		Map<String, Object> requestContext = new HashMap<>();
 
-		friendlyURLMapper.populateParams(friendlyURL, params, requestContext);
+		try (SafeCloseable safeCloseable =
+				FriendlyURLMapperThreadLocal.setPRPIdentifiersWithSafeCloseable(
+					new HashMap<>())) {
+
+			friendlyURLMapper.populateParams(
+				friendlyURL, params, requestContext);
+		}
 
 		String param = _getParam(params, "entryId");
 

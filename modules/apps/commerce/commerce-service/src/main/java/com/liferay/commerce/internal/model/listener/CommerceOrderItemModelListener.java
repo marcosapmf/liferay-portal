@@ -8,10 +8,10 @@ package com.liferay.commerce.internal.model.listener;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
-import com.liferay.commerce.order.CommerceOrderThreadLocal;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.util.CommerceOrderThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -36,30 +36,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = ModelListener.class)
 public class CommerceOrderItemModelListener
 	extends BaseModelListener<CommerceOrderItem> {
-
-	@Override
-	public void onAfterCreate(CommerceOrderItem commerceOrderItem) {
-		try {
-			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
-
-			if (commerceOrder.isManuallyAdjusted() && commerceOrder.isOpen()) {
-				commerceOrder.setManuallyAdjusted(false);
-			}
-
-			if (!commerceOrder.isShippable() &&
-				commerceOrderItem.isShippable()) {
-
-				commerceOrder.setShippable(true);
-			}
-
-			_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(portalException);
-			}
-		}
-	}
 
 	@Override
 	public void onAfterRemove(CommerceOrderItem commerceOrderItem) {

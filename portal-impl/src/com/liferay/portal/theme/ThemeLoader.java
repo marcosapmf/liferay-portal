@@ -10,18 +10,18 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.ServletContext;
 
 import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 /**
  * @author Brian Wing Shun Chan

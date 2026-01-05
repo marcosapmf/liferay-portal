@@ -33,6 +33,7 @@ import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -76,6 +77,7 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.trash.helper.TrashHelper;
 import com.liferay.portal.kernel.tree.TreeModelTasksAdapter;
 import com.liferay.portal.kernel.tree.TreePathUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -874,65 +876,9 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 			// Workflow definitions
 
-			List<ObjectValuePair<Long, String>> workflowDefinitionOVPs =
-				new ArrayList<>();
-
-			if (restrictionType ==
-					DLFolderConstants.
-						RESTRICTION_TYPE_FILE_ENTRY_TYPES_AND_WORKFLOW) {
-
-				workflowDefinitionOVPs.add(
-					new ObjectValuePair<Long, String>(
-						DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL,
-						StringPool.BLANK));
-
-				for (long fileEntryTypeId : fileEntryTypeIds) {
-					String workflowDefinition = ParamUtil.getString(
-						serviceContext, "workflowDefinition" + fileEntryTypeId);
-
-					workflowDefinitionOVPs.add(
-						new ObjectValuePair<Long, String>(
-							fileEntryTypeId, workflowDefinition));
-				}
-			}
-			else if (restrictionType ==
-						DLFolderConstants.RESTRICTION_TYPE_INHERIT) {
-
-				if (originalFileEntryTypeIds.isEmpty()) {
-					originalFileEntryTypeIds.add(
-						DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
-				}
-
-				for (long originalFileEntryTypeId : originalFileEntryTypeIds) {
-					workflowDefinitionOVPs.add(
-						new ObjectValuePair<Long, String>(
-							originalFileEntryTypeId, StringPool.BLANK));
-				}
-			}
-			else if (restrictionType ==
-						DLFolderConstants.RESTRICTION_TYPE_WORKFLOW) {
-
-				String workflowDefinition = ParamUtil.getString(
-					serviceContext,
-					"workflowDefinition" +
-						DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
-
-				workflowDefinitionOVPs.add(
-					new ObjectValuePair<Long, String>(
-						DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL,
-						workflowDefinition));
-
-				for (long originalFileEntryTypeId : originalFileEntryTypeIds) {
-					workflowDefinitionOVPs.add(
-						new ObjectValuePair<Long, String>(
-							originalFileEntryTypeId, StringPool.BLANK));
-				}
-			}
-
-			_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLinks(
-				serviceContext.getUserId(), serviceContext.getCompanyId(),
-				serviceContext.getScopeGroupId(), DLFolder.class.getName(),
-				folderId, workflowDefinitionOVPs);
+			_updateWorkflowDefinitionLinks(
+				folderId, fileEntryTypeIds, restrictionType, serviceContext,
+				originalFileEntryTypeIds);
 
 			return dlFolder;
 		}
@@ -1071,7 +1017,9 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 		DLFolder dlFolder = dlFolderPersistence.fetchByPrimaryKey(folderId);
 
 		if ((dlFolder == null) ||
-			lastPostDate.before(dlFolder.getLastPostDate())) {
+			lastPostDate.before(dlFolder.getLastPostDate()) ||
+			(!CTCollectionThreadLocal.isProductionMode() &&
+			 dlFolder.isInHiddenFolder())) {
 
 			return;
 		}
@@ -1461,6 +1409,79 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 					"Folder name ", folderName,
 					" is invalid because it contains a /"));
 		}
+	}
+
+	private void _updateWorkflowDefinitionLinks(
+			long folderId, List<Long> fileEntryTypeIds, int restrictionType,
+			ServiceContext serviceContext, Set<Long> originalFileEntryTypeIds)
+		throws PortalException {
+
+		if (!GetterUtil.getBoolean(
+				serviceContext.getAttribute("updateWorkflowDefinitionLinks"),
+				true)) {
+
+			return;
+		}
+
+		List<ObjectValuePair<Long, String>> workflowDefinitionOVPs =
+			new ArrayList<>();
+
+		if (restrictionType ==
+				DLFolderConstants.
+					RESTRICTION_TYPE_FILE_ENTRY_TYPES_AND_WORKFLOW) {
+
+			workflowDefinitionOVPs.add(
+				new ObjectValuePair<Long, String>(
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL,
+					StringPool.BLANK));
+
+			for (long fileEntryTypeId : fileEntryTypeIds) {
+				String workflowDefinition = ParamUtil.getString(
+					serviceContext, "workflowDefinition" + fileEntryTypeId);
+
+				workflowDefinitionOVPs.add(
+					new ObjectValuePair<Long, String>(
+						fileEntryTypeId, workflowDefinition));
+			}
+		}
+		else if (restrictionType ==
+					DLFolderConstants.RESTRICTION_TYPE_INHERIT) {
+
+			if (originalFileEntryTypeIds.isEmpty()) {
+				originalFileEntryTypeIds.add(
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
+			}
+
+			for (long originalFileEntryTypeId : originalFileEntryTypeIds) {
+				workflowDefinitionOVPs.add(
+					new ObjectValuePair<Long, String>(
+						originalFileEntryTypeId, StringPool.BLANK));
+			}
+		}
+		else if (restrictionType ==
+					DLFolderConstants.RESTRICTION_TYPE_WORKFLOW) {
+
+			String workflowDefinition = ParamUtil.getString(
+				serviceContext,
+				"workflowDefinition" +
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL);
+
+			workflowDefinitionOVPs.add(
+				new ObjectValuePair<Long, String>(
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL,
+					workflowDefinition));
+
+			for (long originalFileEntryTypeId : originalFileEntryTypeIds) {
+				workflowDefinitionOVPs.add(
+					new ObjectValuePair<Long, String>(
+						originalFileEntryTypeId, StringPool.BLANK));
+			}
+		}
+
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLinks(
+			serviceContext.getUserId(), serviceContext.getCompanyId(),
+			serviceContext.getScopeGroupId(), DLFolder.class.getName(),
+			folderId, workflowDefinitionOVPs);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

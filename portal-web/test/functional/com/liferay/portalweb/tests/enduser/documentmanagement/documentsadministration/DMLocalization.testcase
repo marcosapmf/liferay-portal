@@ -4,7 +4,7 @@ definition {
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Document Management";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -162,6 +162,8 @@ definition {
 	@description = "This test ensures that multiple Japanese files can be downloaded simultaneously."
 	@priority = 3
 	test CanSimultaneouslyDownloadMultipleJapaneseFiles {
+		property portal.acceptance = "false";
+
 		HeadlessSite.addSite(siteName = "Site_1");
 
 		JSONDocument.addFileWithUploadedFile(

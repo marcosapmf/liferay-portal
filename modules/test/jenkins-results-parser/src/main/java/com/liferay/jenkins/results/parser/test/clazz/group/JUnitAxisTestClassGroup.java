@@ -5,12 +5,101 @@
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
+import com.liferay.jenkins.results.parser.DownstreamBuildReport;
+import com.liferay.jenkins.results.parser.TestClassReport;
+import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public class JUnitAxisTestClassGroup extends AxisTestClassGroup {
+
+	@Override
+	public long getAverageTotalTestTaskDuration() {
+		if (_averageTotalTestTaskDuration != null) {
+			return _averageTotalTestTaskDuration;
+		}
+
+		_averageTotalTestTaskDuration = 0L;
+
+		Set<String> testTaskNames = new HashSet<>();
+
+		for (TestClass testClass : getTestClasses()) {
+			String testTaskName = testClass.getTestTaskName();
+
+			if (testTaskNames.contains(testTaskName)) {
+				continue;
+			}
+
+			testTaskNames.add(testTaskName);
+
+			_averageTotalTestTaskDuration +=
+				testClass.getAverageTestTaskDuration();
+		}
+
+		return _averageTotalTestTaskDuration;
+	}
+
+	@Override
+	public List<DownstreamBuildReport> getCachedDownstreamBuildReports() {
+		if (!isBuildCachingEnabled() || !isResultsCached()) {
+			return null;
+		}
+
+		Set<DownstreamBuildReport> cachedDownstreamBuildReports =
+			new HashSet<>();
+
+		for (JUnitTestClass jUnitTestClass : getJUnitTestClasses()) {
+			DownstreamBuildReport downstreamBuildReport =
+				jUnitTestClass.getCachedDownstreamBuildReport();
+
+			cachedDownstreamBuildReports.add(downstreamBuildReport);
+		}
+
+		return new ArrayList<>(cachedDownstreamBuildReports);
+	}
+
+	public List<JUnitTestClass> getJUnitTestClasses() {
+		List<JUnitTestClass> jUnitTestClasses = new ArrayList<>();
+
+		for (TestClass testClass : getTestClasses()) {
+			if (!(testClass instanceof JUnitTestClass)) {
+				continue;
+			}
+
+			jUnitTestClasses.add((JUnitTestClass)testClass);
+		}
+
+		return jUnitTestClasses;
+	}
+
+	@Override
+	public boolean isResultsCached() {
+		if (!isBuildCachingEnabled()) {
+			return false;
+		}
+
+		for (JUnitTestClass jUnitTestClass : getJUnitTestClasses()) {
+			List<TestClassReport> cachedTestClassReports =
+				jUnitTestClass.getCachedTestClassReports();
+
+			if ((cachedTestClassReports == null) ||
+				cachedTestClassReports.isEmpty()) {
+
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	protected JUnitAxisTestClassGroup(
 		JSONObject jsonObject, SegmentTestClassGroup segmentTestClassGroup) {
@@ -23,5 +112,7 @@ public class JUnitAxisTestClassGroup extends AxisTestClassGroup {
 
 		super(jUnitBatchTestClassGroup);
 	}
+
+	private Long _averageTotalTestTaskDuration;
 
 }

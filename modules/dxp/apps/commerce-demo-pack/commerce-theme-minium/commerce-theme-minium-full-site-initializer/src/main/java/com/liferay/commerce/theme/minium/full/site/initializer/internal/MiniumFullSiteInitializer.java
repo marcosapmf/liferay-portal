@@ -6,9 +6,9 @@
 package com.liferay.commerce.theme.minium.full.site.initializer.internal;
 
 import com.liferay.commerce.theme.minium.SiteInitializerDependencyResolver;
-import com.liferay.commerce.theme.minium.SiteInitializerDependencyResolverThreadLocal;
 import com.liferay.commerce.theme.minium.full.site.initializer.internal.importer.CommerceMLForecastImporter;
 import com.liferay.commerce.theme.minium.full.site.initializer.internal.importer.CommerceMLRecommendationImporter;
+import com.liferay.commerce.theme.minium.util.SiteInitializerDependencyResolverThreadLocal;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
@@ -31,10 +31,10 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.site.exception.InitializationException;
 import com.liferay.site.initializer.SiteInitializer;
 
+import jakarta.servlet.ServletContext;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;

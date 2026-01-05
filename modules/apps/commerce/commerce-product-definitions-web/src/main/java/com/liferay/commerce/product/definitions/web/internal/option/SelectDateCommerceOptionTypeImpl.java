@@ -8,8 +8,8 @@ package com.liferay.commerce.product.definitions.web.internal.option;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -25,9 +25,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
@@ -35,14 +37,15 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.PrintWriter;
 
 import java.math.BigDecimal;
 
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -72,6 +75,27 @@ public class SelectDateCommerceOptionTypeImpl implements CommerceOptionType {
 	@Override
 	public boolean hasValues() {
 		return true;
+	}
+
+	@Override
+	public boolean isValid(
+		CPDefinitionOptionRel cpDefinitionOptionRel, String[] values) {
+
+		if (ArrayUtil.isEmpty(values) || Validator.isBlank(values[0])) {
+			return true;
+		}
+
+		for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
+				cpDefinitionOptionRel.getCPDefinitionOptionValueRels()) {
+
+			if (Objects.equals(
+					cpDefinitionOptionValueRel.getKey(), values[0])) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -122,7 +146,7 @@ public class SelectDateCommerceOptionTypeImpl implements CommerceOptionType {
 		else {
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(
-					cpDefinition.getCPDefinitionId());
+					cpDefinition.getCPDefinitionId(), commerceContext);
 
 			minQuantity = productSettingsModel.getMinQuantity();
 

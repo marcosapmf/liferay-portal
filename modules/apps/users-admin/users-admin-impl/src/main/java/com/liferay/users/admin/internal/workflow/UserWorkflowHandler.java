@@ -16,13 +16,13 @@ import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.Serializable;
 
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,8 +37,17 @@ import org.osgi.service.component.annotations.Reference;
 public class UserWorkflowHandler extends BaseWorkflowHandler<User> {
 
 	@Override
-	public void contributeServiceContext(ServiceContext serviceContext) {
+	public void contributeWorkflowContext(
+		Map<String, Serializable> workflowContext) {
+
+		ServiceContext serviceContext = (ServiceContext)workflowContext.get(
+			WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
+
 		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		if (httpServletRequest == null) {
+			return;
+		}
 
 		serviceContext.setAttribute(
 			"serverName", httpServletRequest.getServerName());
@@ -88,6 +97,8 @@ public class UserWorkflowHandler extends BaseWorkflowHandler<User> {
 			_userLocalService.completeUserRegistration(user, serviceContext);
 
 			_updateAuditRequestThreadLocal(workflowContext);
+
+			user = _userLocalService.getUser(userId);
 		}
 
 		return _userLocalService.updateStatus(user, status, serviceContext);

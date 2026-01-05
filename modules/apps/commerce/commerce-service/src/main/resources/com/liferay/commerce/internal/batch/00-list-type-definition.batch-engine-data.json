@@ -19,95 +19,70 @@
 					"externalReferenceCode": "AUTHORIZED",
 					"key": "authorized",
 					"name": "Authorized",
-					"name_i18n": {
-						"en-US": "Authorized"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "AWAITING_AUTHORIZATION",
 					"key": "awaitingAuthorization",
 					"name": "Awaiting Authorization",
-					"name_i18n": {
-						"en-US": "Awaiting Authorization"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "AWAITING_RECEIPT",
 					"key": "awaitingReceipt",
 					"name": "Awaiting Receipt",
-					"name_i18n": {
-						"en-US": "Awaiting Receipt"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "COMPLETED",
 					"key": "completed",
 					"name": "Completed",
-					"name_i18n": {
-						"en-US": "Completed"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "NOT_AUTHORIZED",
 					"key": "notAuthorized",
 					"name": "Not Authorized",
-					"name_i18n": {
-						"en-US": "Not Authorized"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PARTIALLY_AUTHORIZED",
 					"key": "partiallyAuthorized",
 					"name": "Partially Authorized",
-					"name_i18n": {
-						"en-US": "Partially Authorized"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PARTIALLY_RECEIVED",
 					"key": "partiallyReceived",
 					"name": "Partially Received",
-					"name_i18n": {
-						"en-US": "Partially Received"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PROCESSED",
 					"key": "processed",
 					"name": "Processed",
-					"name_i18n": {
-						"en-US": "Processed"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "RECEIPT_REJECTED",
 					"key": "receiptRejected",
 					"name": "Receipt Rejected",
-					"name_i18n": {
-						"en-US": "Receipt Rejected"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "RECEIVED",
 					"key": "received",
 					"name": "Received",
-					"name_i18n": {
-						"en-US": "Received"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "TO_BE_PROCESSED",
 					"key": "toBeProcessed",
 					"name": "To Be Processed",
-					"name_i18n": {
-						"en-US": "To Be Processed"
-					}
+					"system": true
 				}
 			],
 			"name": "Commerce Return Item Statuses",
-			"name_i18n": {
-				"en-US": "Commerce Return Item Statuses"
-			},
 			"system": true
 		},
 		{
@@ -117,23 +92,16 @@
 					"externalReferenceCode": "CHANGE_OF_MIND",
 					"key": "changeOfMind",
 					"name": "Change Of Mind",
-					"name_i18n": {
-						"en-US": "Change Of Mind"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PRODUCT_DEFECT",
 					"key": "productDefect",
 					"name": "Product Defect",
-					"name_i18n": {
-						"en-US": "Product Defect"
-					}
+					"system": true
 				}
 			],
 			"name": "Commerce Return Reasons",
-			"name_i18n": {
-				"en-US": "Commerce Return Reasons"
-			},
 			"system": true
 		},
 		{
@@ -143,15 +111,10 @@
 					"externalReferenceCode": "REFUND",
 					"key": "refund",
 					"name": "Refund",
-					"name_i18n": {
-						"en-US": "Refund"
-					}
+					"system": true
 				}
 			],
 			"name": "Commerce Return Resolution Methods",
-			"name_i18n": {
-				"en-US": "Commerce Return Resolution Methods"
-			},
 			"system": true
 		},
 		{
@@ -161,63 +124,46 @@
 					"externalReferenceCode": "AUTHORIZED",
 					"key": "authorized",
 					"name": "Authorized",
-					"name_i18n": {
-						"en-US": "Authorized"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "CANCELLED",
 					"key": "cancelled",
 					"name": "Cancelled",
-					"name_i18n": {
-						"en-US": "Cancelled"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "COMPLETED",
 					"key": "completed",
 					"name": "Completed",
-					"name_i18n": {
-						"en-US": "Completed"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "DRAFT",
 					"key": "draft",
 					"name": "Draft",
-					"name_i18n": {
-						"en-US": "Draft"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PENDING",
 					"key": "pending",
 					"name": "Pending",
-					"name_i18n": {
-						"en-US": "Pending"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "PROCESSING",
 					"key": "processing",
 					"name": "Processing",
-					"name_i18n": {
-						"en-US": "Processing"
-					}
+					"system": true
 				},
 				{
 					"externalReferenceCode": "REJECTED",
 					"key": "rejected",
 					"name": "Rejected",
-					"name_i18n": {
-						"en-US": "Rejected"
-					}
+					"system": true
 				}
 			],
 			"name": "Commerce Return Statuses",
-			"name_i18n": {
-				"en-US": "Commerce Return Statuses"
-			},
 			"system": true
 		}
 	]

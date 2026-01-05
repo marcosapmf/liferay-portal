@@ -5,20 +5,22 @@
 
 package com.liferay.portal.events;
 
+import com.liferay.portal.action.UpdatePasswordActionUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auto.login.AutoLogin;
 import com.liferay.portal.kernel.security.auto.login.AutoLoginException;
 import com.liferay.portal.kernel.security.auto.login.BaseAutoLogin;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.DefaultAdminUtil;
-import com.liferay.portal.util.PropsValues;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * @author Alvaro Saugar
@@ -63,6 +65,11 @@ public class SetupAdminAutoLogin extends BaseAutoLogin {
 			Validator.isNull(user.getReminderQueryQuestion()) &&
 			Validator.isNull(user.getLastFailedLoginDate()) &&
 			Validator.isNull(user.getLockoutDate())) {
+
+			httpServletRequest.setAttribute(
+				AutoLogin.AUTO_LOGIN_REDIRECT_AND_CONTINUE,
+				UpdatePasswordActionUtil.generateUpdatePasswordURL(
+					httpServletRequest, user));
 
 			String[] credentials = new String[3];
 

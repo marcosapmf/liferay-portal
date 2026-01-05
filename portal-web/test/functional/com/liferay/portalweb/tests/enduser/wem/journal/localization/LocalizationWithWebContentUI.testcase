@@ -4,8 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Web Content Administration";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -40,7 +39,6 @@ definition {
 	@priority = 5
 	test AddLocalizedWebContentViaSourceEditor {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training,Web Content Administration";
 
 		task ("Given a site designer has a page with a Web Content Display and Language Selector widgets") {
 			JSONLayout.addWidgetToPublicLayout(
@@ -69,7 +67,7 @@ definition {
 <p class="text-center">Dare to Dream out of this world</p>
 ''');
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("Then the site designer could view web content in Web Content Display") {
@@ -87,7 +85,9 @@ definition {
 				menuItem = "Edit Web Content",
 				webContentTitle = "Basic S.P.A.C.E. Banner");
 
-			PortletEntry.changeLocale(locale = "ja-JP");
+			PortletEntry.changeLocale(
+				locale = "ja-JP",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Basic S.P.A.C.E. Banner (Japanese Translation)");
 
@@ -101,7 +101,7 @@ definition {
 <p class="text-center">地球から、宇宙の果てへ</p>
 ''');
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then the site designer could view the translation after changing the user language to Chinese") {
@@ -136,7 +136,6 @@ definition {
 	@priority = 5
 	test AddWebContentWithSpanishTranslation {
 		property portal.acceptance = "true";
-		property testray.component.names = "Localization,Web Content Administration,WYSIWYG";
 
 		task ("Given the site designer has a page where a Web Content Display widget displays a translated web content") {
 			JSONLayout.addWidgetToPublicLayout(
@@ -152,13 +151,15 @@ definition {
 				webContentContent = "Web Content Content",
 				webContentTitle = "Web Content Title");
 
-			PortletEntry.changeLocale(locale = "es-ES");
+			PortletEntry.changeLocale(
+				locale = "es-ES",
+				translated = "true");
 
 			WebContent.addCP(
 				webContentContent = "Web Contenido Contenido",
 				webContentTitle = "Web Contenido Titulo");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
@@ -184,7 +185,9 @@ definition {
 				menuItem = "Editar contenido web",
 				webContentTitle = "Web Contenido Titulo");
 
-			PortletEntry.changeLocale(locale = "es-ES");
+			PortletEntry.changeLocale(
+				locale = "es-ES",
+				translated = "true");
 		}
 
 		task ("The the site designer could view the web content in Spanish") {
@@ -197,8 +200,6 @@ definition {
 	@description = "Validate translations in web content admin."
 	@priority = 4
 	test WebContentAdministrationLocalization {
-		property testray.component.names = "Localization,Web Content Administration";
-
 		task ("Given the site designer has a page where a Web Content Display widget displays a web content based on translated structure and template") {
 			task ("Add a Web Content Display and Language Selector widget to page") {
 				JSONLayout.addWidgetToPublicLayout(
@@ -262,13 +263,15 @@ definition {
 					webContentText = "Web Content Text",
 					webContentTitle = "Web Content Title");
 
-				PortletEntry.changeLocale(locale = "fr-FR");
+				PortletEntry.changeLocale(
+					locale = "fr-FR",
+					translated = "true");
 
 				WebContent.addWithStructureCP(
 					webContentText = "Contenu de Contenu Web",
 					webContentTitle = "Titre du contenu Web");
 
-				PortletEntry.publish();
+				WebContent.publishWithPermissions();
 			}
 
 			task ("Select the web content in Web Content Display") {
@@ -305,7 +308,9 @@ definition {
 				menuItem = "Modifier le contenu de Web",
 				webContentTitle = "Titre du contenu Web");
 
-			PortletEntry.changeLocale(locale = "fr-FR");
+			PortletEntry.changeLocale(
+				locale = "fr-FR",
+				translated = "true");
 		}
 
 		task ("Then the site designer could view the French translations") {

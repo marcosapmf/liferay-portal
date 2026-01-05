@@ -11,8 +11,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * @author Luis Miguel Barcos
@@ -30,23 +30,24 @@ public class CreatorStatisticsUtil {
 				setJoinDate(user::getCreateDate);
 				setLastPostDate(
 					() -> {
-						if (uriInfo != null) {
-							MultivaluedMap<String, String> parameters =
-								uriInfo.getQueryParameters();
-
-							String nestedFields = parameters.getFirst(
-								"nestedFields");
-
-							if ((nestedFields != null) &&
-								nestedFields.contains("lastPostDate")) {
-
-								return mbStatsUserLocalService.
-									getLastPostDateByUserId(
-										user.getGroupId(), user.getUserId());
-							}
+						if (uriInfo == null) {
+							return null;
 						}
 
-						return null;
+						MultivaluedMap<String, String> parameters =
+							uriInfo.getQueryParameters();
+
+						String nestedFields = parameters.getFirst(
+							"nestedFields");
+
+						if ((nestedFields == null) ||
+							!nestedFields.contains("lastPostDate")) {
+
+							return null;
+						}
+
+						return mbStatsUserLocalService.getLastPostDateByUserId(
+							user.getGroupId(), user.getUserId());
 					});
 				setPostsNumber(
 					() -> Math.toIntExact(

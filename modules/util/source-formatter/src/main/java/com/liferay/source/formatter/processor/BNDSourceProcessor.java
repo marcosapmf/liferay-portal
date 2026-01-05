@@ -44,7 +44,7 @@ public class BNDSourceProcessor extends BaseSourceProcessor {
 		if (!oldContent.equals(newContent)) {
 			FileUtil.write(modulesPropertiesFile, newContent);
 
-			System.out.println("Updated 'modules.properties'");
+			System.out.println("Updated \"modules.properties\"");
 		}
 	}
 
@@ -57,11 +57,7 @@ public class BNDSourceProcessor extends BaseSourceProcessor {
 
 		List<String> fileExtensions = sourceFormatterArgs.getFileExtensions();
 
-		if (!fileExtensions.contains("bnd")) {
-			return false;
-		}
-
-		return true;
+		return fileExtensions.contains("bnd");
 	}
 
 	private static final String[] _INCLUDES = {"**/*.bnd"};

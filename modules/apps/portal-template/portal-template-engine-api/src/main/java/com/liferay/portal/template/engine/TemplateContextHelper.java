@@ -5,10 +5,6 @@
 
 package com.liferay.portal.template.engine;
 
-import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
-import com.liferay.expando.kernel.service.ExpandoRowLocalService;
-import com.liferay.expando.kernel.service.ExpandoTableLocalService;
-import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
@@ -64,12 +60,12 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListMergeable;
-import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocaleUtil_IW;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ParamUtil_IW;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsUtil_IW;
 import com.liferay.portal.kernel.util.SessionClicks_IW;
 import com.liferay.portal.kernel.util.StaticFieldGetter;
 import com.liferay.portal.kernel.util.StringUtil_IW;
@@ -88,6 +84,15 @@ import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
 import com.liferay.portal.template.ServiceLocator;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -99,15 +104,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 
@@ -218,7 +214,7 @@ public class TemplateContextHelper {
 
 		PortletConfig portletConfig =
 			(PortletConfig)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_CONFIG);
+				JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		if (portletConfig != null) {
 			contextObjects.put("portletConfig", portletConfig);
@@ -228,7 +224,7 @@ public class TemplateContextHelper {
 
 		final PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		if ((portletRequest != null) &&
 			(portletRequest instanceof RenderRequest)) {
@@ -240,7 +236,7 @@ public class TemplateContextHelper {
 
 		final PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		if ((portletResponse != null) &&
 			(portletResponse instanceof RenderResponse)) {
@@ -434,65 +430,6 @@ public class TemplateContextHelper {
 
 		variables.put("dateUtil", DateUtil_IW.getInstance());
 
-		// Expando column service
-
-		try {
-			ServiceLocator serviceLocator = ServiceLocator.getInstance();
-
-			// Service locator
-
-			variables.put("serviceLocator", serviceLocator);
-
-			try {
-				variables.put(
-					"expandoColumnLocalService",
-					serviceLocator.findService(
-						ExpandoColumnLocalService.class.getName()));
-			}
-			catch (SecurityException securityException) {
-				_log.error(securityException);
-			}
-
-			// Expando row service
-
-			try {
-				variables.put(
-					"expandoRowLocalService",
-					serviceLocator.findService(
-						ExpandoRowLocalService.class.getName()));
-			}
-			catch (SecurityException securityException) {
-				_log.error(securityException);
-			}
-
-			// Expando table service
-
-			try {
-				variables.put(
-					"expandoTableLocalService",
-					serviceLocator.findService(
-						ExpandoTableLocalService.class.getName()));
-			}
-			catch (SecurityException securityException) {
-				_log.error(securityException);
-			}
-
-			// Expando value service
-
-			try {
-				variables.put(
-					"expandoValueLocalService",
-					serviceLocator.findService(
-						ExpandoValueLocalService.class.getName()));
-			}
-			catch (SecurityException securityException) {
-				_log.error(securityException);
-			}
-		}
-		catch (SecurityException securityException) {
-			_log.error(securityException);
-		}
-
 		// Getter util
 
 		variables.put("getterUtil", GetterUtil_IW.getInstance());
@@ -561,11 +498,15 @@ public class TemplateContextHelper {
 		// Locale util
 
 		try {
-			variables.put("localeUtil", LocaleUtil.getInstance());
+			variables.put("localeUtil", LocaleUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
 		}
+
+		// Content security policy nonce
+
+		variables.put("nonceAttribute", StringPool.BLANK);
 
 		// Param util
 
@@ -599,7 +540,7 @@ public class TemplateContextHelper {
 		// Props util
 
 		try {
-			variables.put("propsUtil", PropsUtil.getProps());
+			variables.put("propsUtil", PropsUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -624,6 +565,15 @@ public class TemplateContextHelper {
 		// SAX reader util
 
 		variables.put("saxReaderUtil", SAXReaderUtil.getSAXReader());
+
+		// Service locator
+
+		try {
+			variables.put("serviceLocator", ServiceLocator.getInstance());
+		}
+		catch (SecurityException securityException) {
+			_log.error(securityException);
+		}
 
 		// Session clicks
 
@@ -904,37 +854,30 @@ public class TemplateContextHelper {
 						"local network."));
 			}
 
+			options.setFollowRedirects(false);
+
 			return _http.URLtoByteArray(options);
 		}
 
 		@Override
 		public byte[] URLtoByteArray(String location) throws IOException {
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoByteArray(location);
+			options.setLocation(location);
+
+			return URLtoByteArray(options);
 		}
 
 		@Override
 		public byte[] URLtoByteArray(String location, boolean post)
 			throws IOException {
 
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoByteArray(location, post);
+			options.setLocation(location);
+			options.setPost(post);
+
+			return URLtoByteArray(options);
 		}
 
 		@Override
@@ -950,6 +893,8 @@ public class TemplateContextHelper {
 						"local network."));
 			}
 
+			options.setFollowRedirects(false);
+
 			return _http.URLtoInputStream(options);
 		}
 
@@ -957,32 +902,23 @@ public class TemplateContextHelper {
 		public InputStream URLtoInputStream(String location)
 			throws IOException {
 
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoInputStream(location);
+			options.setLocation(location);
+
+			return URLtoInputStream(options);
 		}
 
 		@Override
 		public InputStream URLtoInputStream(String location, boolean post)
 			throws IOException {
 
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoInputStream(location, post);
+			options.setLocation(location);
+			options.setPost(post);
+
+			return URLtoInputStream(options);
 		}
 
 		@Override
@@ -996,37 +932,30 @@ public class TemplateContextHelper {
 						"local network."));
 			}
 
+			options.setFollowRedirects(false);
+
 			return _http.URLtoString(options);
 		}
 
 		@Override
 		public String URLtoString(String location) throws IOException {
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoString(location);
+			options.setLocation(location);
+
+			return URLtoString(options);
 		}
 
 		@Override
 		public String URLtoString(String location, boolean post)
 			throws IOException {
 
-			if (isLocationAccessDenied(location)) {
-				throw new IOException(
-					StringBundler.concat(
-						"Denied access to resource ", location,
-						" using $httpUtil variable from a template. Please ",
-						"use restricted variable $httpUtilUnsafe to access ",
-						"local network."));
-			}
+			Options options = new Options();
 
-			return _http.URLtoString(location, post);
+			options.setLocation(location);
+			options.setPost(post);
+
+			return URLtoString(options);
 		}
 
 		@Override
@@ -1050,7 +979,12 @@ public class TemplateContextHelper {
 						"local network."));
 			}
 
-			return _http.URLtoString(url);
+			Options options = new Options();
+
+			options.setFollowRedirects(false);
+			options.setLocation(url.toString());
+
+			return URLtoString(options);
 		}
 
 		protected boolean isLocationAccessDenied(String location)

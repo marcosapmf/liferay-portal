@@ -74,12 +74,12 @@ public class MembershipPolicyTestUtil {
 			StringPool.SLASH + FriendlyURLNormalizerUtil.normalize(name);
 
 		return GroupServiceUtil.addGroup(
-			GroupConstants.DEFAULT_PARENT_GROUP_ID,
+			StringPool.BLANK, GroupConstants.DEFAULT_PARENT_GROUP_ID,
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap,
 			RandomTestUtil.randomLocaleStringMap(),
-			GroupConstants.TYPE_SITE_OPEN, true,
+			GroupConstants.TYPE_SITE_OPEN, null, true,
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, friendlyURL, true,
-			true, populateServiceContext(Group.class, true));
+			false, true, populateServiceContext(Group.class, true));
 	}
 
 	public static Organization addOrganization() throws Exception {
@@ -146,10 +146,11 @@ public class MembershipPolicyTestUtil {
 		String description = RandomTestUtil.randomString(50);
 
 		return UserGroupServiceUtil.addUserGroup(
-			name, description, populateServiceContext(UserGroup.class, false));
+			StringPool.BLANK, name, description,
+			populateServiceContext(UserGroup.class, false));
 	}
 
-	public static void updateUser(
+	public static User updateUser(
 			User user, long[] organizationIds, long[] roleIds, long[] siteIds,
 			long[] userGroupIds, List<UserGroupRole> userGroupRoles)
 		throws Exception {
@@ -196,7 +197,7 @@ public class MembershipPolicyTestUtil {
 		List<Website> websites = new ArrayList<>();
 		List<AnnouncementsDelivery> announcementsDelivers = new ArrayList<>();
 
-		UserServiceUtil.updateUser(
+		return UserServiceUtil.updateUser(
 			userId, oldPassword, newPassword1, newPassword2, passwordReset,
 			reminderQueryQuestion, reminderQueryAnswer, screenName,
 			emailAddress, false, null, languageId, timeZoneId, greeting,
@@ -242,7 +243,7 @@ public class MembershipPolicyTestUtil {
 
 		if (includeCategorization) {
 			AssetTag tag = AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+				null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 				RandomTestUtil.randomString(), new ServiceContext());
 
 			serviceContext.setAssetTagNames(new String[] {tag.getName()});

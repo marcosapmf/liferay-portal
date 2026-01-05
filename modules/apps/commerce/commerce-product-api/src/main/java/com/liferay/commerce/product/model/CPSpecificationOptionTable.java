@@ -59,10 +59,6 @@ public class CPSpecificationOptionTable
 		createColumn(
 			"CPOptionCategoryId", Long.class, Types.BIGINT,
 			Column.FLAG_DEFAULT);
-	public final Column<CPSpecificationOptionTable, Long> listTypeDefinitionId =
-		createColumn(
-			"listTypeDefinitionId", Long.class, Types.BIGINT,
-			Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, String> title =
 		createColumn("title", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, String> description =
@@ -76,6 +72,9 @@ public class CPSpecificationOptionTable
 	public final Column<CPSpecificationOptionTable, Double> priority =
 		createColumn(
 			"priority", Double.class, Types.DOUBLE, Column.FLAG_DEFAULT);
+	public final Column<CPSpecificationOptionTable, Boolean> visible =
+		createColumn(
+			"visible", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, Date> lastPublishDate =
 		createColumn(
 			"lastPublishDate", Date.class, Types.TIMESTAMP,

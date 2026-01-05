@@ -7,18 +7,19 @@ package com.liferay.notification.web.internal.portlet.action;
 
 import com.liferay.notification.constants.NotificationPortletKeys;
 import com.liferay.object.model.ObjectField;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -27,7 +28,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + NotificationPortletKeys.NOTIFICATION_TEMPLATES,
+		"jakarta.portlet.name=" + NotificationPortletKeys.NOTIFICATION_TEMPLATES,
 		"mvc.command.name=/notification_templates/get_general_notification_template_terms"
 	},
 	service = MVCResourceCommand.class
@@ -52,6 +53,23 @@ public class GetGeneralNotificationTemplateTermsMVCResourceCommand
 	protected Set<Map.Entry<String, String>> getTermNamesEntries(
 		List<ObjectField> objectFields, String partialTermName,
 		ThemeDisplay themeDisplay) {
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-17564")) {
+			_termNames.putAll(
+				HashMapBuilder.put(
+					"email-recipient-address", "[%EMAIL_RECIPIENT_ADDRESS%]"
+				).put(
+					"email-recipient-name", "[%EMAIL_RECIPIENT_NAME%]"
+				).put(
+					"object-definition-name", "[%OBJECT_DEFINITION_NAME%]"
+				).put(
+					"object-entry-folder-name", "[%OBJECT_ENTRY_FOLDER_NAME%]"
+				).put(
+					"object-entry-title-field", "[%OBJECT_ENTRY_TITLE_FIELD%]"
+				).put(
+					"object-entry-version", "[%OBJECT_ENTRY_VERSION%]"
+				).build());
+		}
 
 		return _termNames.entrySet();
 	}

@@ -651,6 +651,8 @@ definition {
 				locator1 = "TextInput#GENERIC_NUMBER_INPUT_N",
 				value1 = ${actionPriority});
 		}
+
+		Click(locator1 = "ProcessBuilderKaleoDesignerReact#SINGLE_SIDEBAR_HEADER");
 	}
 
 	@summary = "Default summary"
@@ -1711,33 +1713,33 @@ definition {
 
 		if (isSet(labelValue)) {
 			AssertElementPresent(
-				key_infoOption = "nodeLabel",
+				key_infoOption = "workflowDefinitionBaseNodeLabel",
 				key_infoValue = ${labelValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
 
 		if (isSet(defaultNameValue)) {
 			AssertElementPresent(
-				key_infoOption = "nodeName",
+				key_infoOption = "workflowDefinitionBaseNodeName",
 				key_infoValue = ${nodeNameValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 
 			AssertElementNotPresent(
-				key_infoOption = "nodeName",
+				key_infoOption = "workflowDefinitionBaseNodeName",
 				key_infoValue = "",
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
 
 		if (isSet(nameValue)) {
 			AssertElementPresent(
-				key_infoOption = "nodeName",
+				key_infoOption = "workflowDefinitionBaseNodeName",
 				key_infoValue = ${nameValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
 
 		if (isSet(descriptionValue)) {
 			AssertElementPresent(
-				key_infoOption = "nodeDescription",
+				key_infoOption = "workflowDefinitionBaseNodeDescription",
 				key_infoValue = ${descriptionValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
@@ -1756,21 +1758,21 @@ definition {
 
 		if (isSet(labelValue)) {
 			AssertNotVisible(
-				key_infoOption = "nodeLabel",
+				key_infoOption = "workflowDefinitionBaseNodeLabel",
 				key_infoValue = ${labelValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
 
 		if (isSet(nameValue)) {
 			AssertNotVisible(
-				key_infoOption = "nodeName",
+				key_infoOption = "workflowDefinitionBaseNodeName",
 				key_infoValue = ${nameValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
 
 		if (isSet(descriptionValue)) {
 			AssertNotVisible(
-				key_infoOption = "nodeDescription",
+				key_infoOption = "workflowDefinitionBaseNodeDescription",
 				key_infoValue = ${descriptionValue},
 				locator1 = "ProcessBuilderKaleoDesignerReact#NODE_INFO");
 		}
@@ -1940,13 +1942,6 @@ definition {
 
 			Alert.viewErrorMessage(errorMessage = "Some fields need to be filled:Please fill out the fields before saving or publishing.");
 		}
-	}
-
-	@summary = "Default summary"
-	macro viewRevisionHistoryFieldsPresent() {
-		AssertVisible(
-			key_fieldOption = "Current Version",
-			locator1 = "ProcessBuilderKaleoDesignerReact#DETAILS_FIELDS");
 	}
 
 	@summary = "Default summary"

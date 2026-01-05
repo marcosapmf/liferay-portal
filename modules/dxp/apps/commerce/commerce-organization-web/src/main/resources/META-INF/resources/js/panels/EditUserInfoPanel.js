@@ -8,16 +8,10 @@ import ClayDatePicker from '@clayui/date-picker';
 import ClayForm, {ClayInput, ClaySelectWithOption} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import classnames from 'classnames';
-import {openToast} from 'frontend-js-web';
-import moment from 'moment';
+import {openToast} from 'frontend-js-components-web';
+import {dateUtils} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {
-	useCallback,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import ChartContext from '../ChartContext';
 import {getUser, getUserFullNameDefinition, updateUser} from '../data/users';
@@ -47,15 +41,11 @@ function EditUserInfoPanel({
 		errors: {},
 		isValid: true,
 	});
+
 	const [isLoading, setIsLoading] = useState(false);
 	const [userObjectDefinition, setUserObjectDefinition] = useState([]);
 	const {chartInstanceRef} = useContext(ChartContext);
-	const momentLocaleFormatRef = useRef(
-		moment()
-			.locale(Liferay.ThemeDisplay.getLanguageId())
-			.localeData()
-			.longDateFormat('L')
-	);
+
 	const [userLanguageId, setUserLanguageId] = useState(data.languageId);
 	const [fullNameDefinition, setFullNameDefinition] = useState([]);
 
@@ -155,7 +145,7 @@ function EditUserInfoPanel({
 		}
 
 		if (['birthDate'].indexOf(targetName) >= 0) {
-			if (moment(target.value).isAfter(moment())) {
+			if (new Date(target.value) > new Date()) {
 				errors[targetName] = Liferay.Language.get(
 					'please-enter-a-valid-date'
 				);
@@ -216,9 +206,7 @@ function EditUserInfoPanel({
 			accountBriefs: userData.accountBriefs,
 			additionalName: userData.additionalName,
 			alternateName: userData.alternateName,
-			birthDate: moment
-				.utc(userData.birthDate, momentLocaleFormatRef.current)
-				.toISOString(true),
+			birthDate: new Date(Date.parse(userData.birthDate)).toISOString(),
 			emailAddress: userData.emailAddress,
 			familyName: userData.familyName,
 			givenName: userData.givenName,
@@ -275,7 +263,6 @@ function EditUserInfoPanel({
 	}, [
 		userData,
 		chartInstanceRef,
-		momentLocaleFormatRef,
 		type,
 		updatePanelViewHandler,
 		userObjectDefinition,
@@ -656,12 +643,42 @@ function EditUserInfoPanel({
 						</label>
 
 						<ClayDatePicker
-							dateFormat={momentLocaleFormatRef.current
-								.toLowerCase()
-								.replace(/m/gi, 'M')}
+							ariaLabels={{
+								buttonChooseDate: `${Liferay.Language.get(
+									'select-date'
+								)}`,
+								buttonDot: `${Liferay.Language.get(
+									'select-current-date'
+								)}`,
+								buttonNextMonth: `${Liferay.Language.get(
+									'select-next-month'
+								)}`,
+								buttonPreviousMonth: `${Liferay.Language.get(
+									'select-previous-month'
+								)}`,
+								dialog: `${Liferay.Language.get('select-date')}`,
+								selectMonth: `${Liferay.Language.get('select-a-month')}`,
+								selectYear: `${Liferay.Language.get('select-a-year')}`,
+							}}
+							dateFormat="P"
 							disabled={isLoading}
+							firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 							id={`${namespace}birthDate`}
 							inputName={`${namespace}birthDate`}
+							months={[
+								`${Liferay.Language.get('january')}`,
+								`${Liferay.Language.get('february')}`,
+								`${Liferay.Language.get('march')}`,
+								`${Liferay.Language.get('april')}`,
+								`${Liferay.Language.get('may')}`,
+								`${Liferay.Language.get('june')}`,
+								`${Liferay.Language.get('july')}`,
+								`${Liferay.Language.get('august')}`,
+								`${Liferay.Language.get('september')}`,
+								`${Liferay.Language.get('october')}`,
+								`${Liferay.Language.get('november')}`,
+								`${Liferay.Language.get('december')}`,
+							]}
 							onChange={(value) => {
 								onChangeHandler({
 									target: {
@@ -671,12 +688,14 @@ function EditUserInfoPanel({
 								});
 							}}
 							spritemap={spritemap}
-							value={moment(userData.birthDate).format(
-								momentLocaleFormatRef.current
+							value={dateUtils.format(
+								new Date(userData.birthDate),
+								'P'
 							)}
+							weekdaysShort={dateUtils.getWeekdaysShort()}
 							years={{
-								end: moment().year(),
-								start: moment().year() - 100,
+								end: new Date().getFullYear(),
+								start: new Date().getFullYear() - 100,
 							}}
 						/>
 

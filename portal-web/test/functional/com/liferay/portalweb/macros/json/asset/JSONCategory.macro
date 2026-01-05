@@ -141,6 +141,17 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro getCategoryFieldValueById(categoryId = null, fieldName = null) {
+		Variables.assertDefined(parameterList = "${categoryId},${fieldName}");
+
+		var fieldValue = JSONCategoryAPI._getCategoryFieldValueById(
+			categoryId = ${categoryId},
+			fieldName = ${fieldName});
+
+		return ${fieldValue};
+	}
+
+	@summary = "Default summary"
 	macro getCategoryId(groupName = null, site = null, vocabularyName = null, categoryName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${categoryName},${vocabularyName}");
 
@@ -192,6 +203,10 @@ definition {
 			groupId = ${groupId},
 			vocabularyName = ${vocabularyName});
 
+		var externalReferenceCode = JSONCategorySetter.setExternalReferenceCode(
+			categoryName = ${categoryName},
+			groupId = ${groupId},
+			vocabularyId = ${vocabularyId});
 		var categoryId = JSONCategorySetter.setCategoryId(
 			categoryName = ${categoryName},
 			groupId = ${groupId},
@@ -209,6 +224,7 @@ definition {
 		JSONCategoryAPI._updateCategory(
 			categoryId = ${categoryId},
 			descriptionMap = ${descriptionMap},
+			externalReferenceCode = ${externalReferenceCode},
 			parentCategoryId = ${parentCategoryId},
 			titleMap = ${titleMap},
 			vocabularyId = ${vocabularyId});

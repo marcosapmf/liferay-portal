@@ -21,12 +21,12 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Albert Lee
@@ -52,17 +52,10 @@ public class AccountUserActionDropdownItemsProvider {
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
 		return DropdownItemListBuilder.add(
-			() -> {
-				if (AccountUserPermission.hasEditUserPermission(
-						_permissionChecker,
-						PortalUtil.getPortletId(_httpServletRequest),
-						_accountEntryDisplay, _accountUserDisplay.getUser())) {
-
-					return true;
-				}
-
-				return false;
-			},
+			() -> AccountUserPermission.hasEditUserPermission(
+				_permissionChecker,
+				PortalUtil.getPortletId(_httpServletRequest),
+				_accountEntryDisplay, _accountUserDisplay.getUser()),
 			dropdownItem -> {
 				dropdownItem.setHref(getEditAccountUserURL());
 				dropdownItem.setLabel(

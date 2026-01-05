@@ -5,7 +5,11 @@
 
 package com.liferay.portal.search.web.internal.search.bar.portlet.display.context;
 
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.search.web.internal.search.bar.portlet.configuration.SearchBarPortletInstanceConfiguration;
+
+import java.util.Map;
 
 /**
  * @author André de Oliveira
@@ -44,6 +48,49 @@ public class SearchBarPortletDisplayContext {
 		return _paginationStartParameterName;
 	}
 
+	public Map<String, Object> getReactData() {
+		return HashMapBuilder.<String, Object>put(
+			"destinationFriendlyURL", getDestinationFriendlyURL()
+		).put(
+			"emptySearchEnabled", isEmptySearchEnabled()
+		).put(
+			"initialKeywords", getKeywords()
+		).put(
+			"inputPlaceholder", getInputPlaceholder()
+		).put(
+			"isDXP", ReleaseInfo.isDXP()
+		).put(
+			"isSearchExperiencesSupported", isSearchExperiencesSupported()
+		).put(
+			"keywordsParameterName", getKeywordsParameterName()
+		).put(
+			"letUserChooseScope", isLetTheUserChooseTheSearchScope()
+		).put(
+			"paginationStartParameterName", getPaginationStartParameterName()
+		).put(
+			"retainFacetSelections", isRetainFacetSelections()
+		).put(
+			"scopeParameterName", getScopeParameterName()
+		).put(
+			"scopeParameterStringCurrentSite",
+			getCurrentSiteSearchScopeParameterString()
+		).put(
+			"scopeParameterStringEverything",
+			getEverythingSearchScopeParameterString()
+		).put(
+			"searchURL", getSearchURL()
+		).put(
+			"selectedEverythingSearchScope", isSelectedEverythingSearchScope()
+		).put(
+			"suggestionsContributorConfiguration",
+			getSuggestionsContributorConfiguration()
+		).put(
+			"suggestionsDisplayThreshold", getSuggestionsDisplayThreshold()
+		).put(
+			"suggestionsURL", getSuggestionsURL()
+		).build();
+	}
+
 	public String getScopeParameterName() {
 		return _scopeParameterName;
 	}
@@ -80,6 +127,10 @@ public class SearchBarPortletDisplayContext {
 
 	public boolean isDestinationUnreachable() {
 		return _destinationUnreachable;
+	}
+
+	public boolean isDisplayIncludeAttachments() {
+		return _displayIncludeAttachments;
 	}
 
 	public boolean isDisplayWarningIgnoredConfiguration() {
@@ -141,6 +192,12 @@ public class SearchBarPortletDisplayContext {
 
 	public void setDestinationUnreachable(boolean destinationUnreachable) {
 		_destinationUnreachable = destinationUnreachable;
+	}
+
+	public void setDisplayIncludeAttachments(
+		boolean displayIncludeAttachments) {
+
+		_displayIncludeAttachments = displayIncludeAttachments;
 	}
 
 	public void setDisplayStyleGroupId(long displayStyleGroupId) {
@@ -266,6 +323,7 @@ public class SearchBarPortletDisplayContext {
 	private String _currentSiteSearchScopeParameterString;
 	private String _destinationFriendlyURL;
 	private boolean _destinationUnreachable;
+	private boolean _displayIncludeAttachments;
 	private long _displayStyleGroupId;
 	private boolean _displayWarningIgnoredConfiguration;
 	private boolean _emptySearchEnabled;

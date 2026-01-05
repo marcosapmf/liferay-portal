@@ -273,16 +273,6 @@ public class CommerceInventoryWarehouseLocalServiceWrapper
 				externalReferenceCode, companyId);
 	}
 
-	@Override
-	public com.liferay.commerce.inventory.model.CommerceInventoryWarehouse
-		fetchCommerceInventoryWarehouseByReferenceCode(
-			String externalReferenceCode, long companyId) {
-
-		return _commerceInventoryWarehouseLocalService.
-			fetchCommerceInventoryWarehouseByReferenceCode(
-				externalReferenceCode, companyId);
-	}
-
 	/**
 	 * Returns the commerce inventory warehouse with the matching UUID and company.
 	 *
@@ -441,19 +431,22 @@ public class CommerceInventoryWarehouseLocalServiceWrapper
 	public java.util.List
 		<com.liferay.commerce.inventory.model.CommerceInventoryWarehouse>
 			getCommerceInventoryWarehouses(
-				long companyId, long groupId, boolean active) {
+				long companyId, long accountEntryId, long groupId,
+				boolean active) {
 
 		return _commerceInventoryWarehouseLocalService.
-			getCommerceInventoryWarehouses(companyId, groupId, active);
+			getCommerceInventoryWarehouses(
+				companyId, accountEntryId, groupId, active);
 	}
 
 	@Override
 	public java.util.List
 		<com.liferay.commerce.inventory.model.CommerceInventoryWarehouse>
-			getCommerceInventoryWarehouses(long groupId, String sku) {
+			getCommerceInventoryWarehouses(
+				long accountEntryId, long groupId, String sku) {
 
 		return _commerceInventoryWarehouseLocalService.
-			getCommerceInventoryWarehouses(groupId, sku);
+			getCommerceInventoryWarehouses(accountEntryId, groupId, sku);
 	}
 
 	/**

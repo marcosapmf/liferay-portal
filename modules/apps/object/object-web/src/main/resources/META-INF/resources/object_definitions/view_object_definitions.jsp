@@ -31,7 +31,7 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 			).put(
 				"importObjectFolderURL", viewObjectDefinitionsDisplayContext.getImportObjectFolderURL()
 			).put(
-				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("frontend-js-components-web")
+				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("object-web")
 			).put(
 				"modelBuilderURL", viewObjectDefinitionsDisplayContext.getModelBuilderURL()
 			).put(

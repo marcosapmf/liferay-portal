@@ -12,7 +12,7 @@ import com.liferay.commerce.pricing.model.CommercePricingClass;
 import com.liferay.commerce.pricing.service.CommercePriceModifierRelService;
 import com.liferay.commerce.pricing.service.CommercePricingClassService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierProductGroup;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.Validator;
@@ -45,10 +45,11 @@ public class PriceModifierProductGroupUtil {
 		}
 		else {
 			commercePricingClass =
-				commercePricingClassService.fetchByExternalReferenceCode(
-					priceModifierProductGroup.
-						getProductGroupExternalReferenceCode(),
-					serviceContext.getCompanyId());
+				commercePricingClassService.
+					fetchCommercePricingClassByExternalReferenceCode(
+						priceModifierProductGroup.
+							getProductGroupExternalReferenceCode(),
+						serviceContext.getCompanyId());
 
 			if (commercePricingClass == null) {
 				String productGroupExternalReferenceCode =

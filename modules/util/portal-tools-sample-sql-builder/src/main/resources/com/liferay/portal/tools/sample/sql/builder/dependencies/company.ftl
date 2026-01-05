@@ -9,9 +9,7 @@
 
 	${dataFactory.toInsertSQL(virtualHostModel)}
 
-	<#list dataFactory.newPortalPreferencesModels() as portalPreferencesModel>
-		${dataFactory.toInsertSQL(portalPreferencesModel)}
-	</#list>
+	${dataFactory.toInsertSQL(dataFactory.newPortalPreferencesModel(companyModel.companyId))}
 
 	${csvFileWriter.write("company", virtualHostModel.hostname + "," + companyModel.companyId + "\n")}
 
@@ -21,5 +19,11 @@
 
 	<#include "default_groups.ftl">
 
+	<#include "notification_templates.ftl">
+
+	<#include "system_object_definitions.ftl">
+
 	<#include "groups.ftl">
+
+	${csvFileWriter.write("portalPreferenceValue", companyModel.companyId + "," + dataFactory.recentGroupIds + "\n")}
 </#list>

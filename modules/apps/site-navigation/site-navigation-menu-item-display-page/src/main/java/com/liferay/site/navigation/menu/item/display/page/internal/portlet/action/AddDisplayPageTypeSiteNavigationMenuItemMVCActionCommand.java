@@ -31,10 +31,10 @@ import com.liferay.site.navigation.exception.SiteNavigationMenuItemNameException
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
 
-import java.util.Arrays;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.Arrays;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
+		"jakarta.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
 		"mvc.command.name=/navigation_menu/add_display_page_type_site_navigation_menu_item"
 	},
 	service = MVCActionCommand.class
@@ -59,14 +59,15 @@ public class AddDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
-		long classNameId = ParamUtil.getLong(actionRequest, "classNameId");
-		long classPK = ParamUtil.getLong(actionRequest, "classPK");
+		String externalReferenceCode = ParamUtil.getString(
+			actionRequest, "externalReferenceCode");
 		long siteNavigationMenuId = ParamUtil.getLong(
 			actionRequest, "siteNavigationMenuId");
 		String siteNavigationMenuItemType = ParamUtil.getString(
 			actionRequest, "siteNavigationMenuItemType");
 
-		if ((classNameId > 0) && (classPK > 0) && (siteNavigationMenuId > 0) &&
+		if (Validator.isNotNull(externalReferenceCode) &&
+			(siteNavigationMenuId > 0) &&
 			Validator.isNotNull(siteNavigationMenuItemType)) {
 
 			ThemeDisplay themeDisplay =
@@ -89,13 +90,11 @@ public class AddDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 						).put(
 							"className", siteNavigationMenuItemType
 						).put(
-							"classNameId", String.valueOf(classNameId)
+							"externalReferenceCode", externalReferenceCode
 						).put(
-							"classPK", String.valueOf(classPK)
-						).put(
-							"classTypeId",
-							String.valueOf(
-								ParamUtil.getLong(actionRequest, "classTypeId"))
+							"scopeExternalReferenceCode",
+							ParamUtil.getString(
+								actionRequest, "scopeExternalReferenceCode")
 						).put(
 							"title", ParamUtil.getString(actionRequest, "title")
 						).put(
@@ -114,7 +113,7 @@ public class AddDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 				InfoItemDetailsProvider<?> infoItemDetailsProvider =
 					_infoItemServiceRegistry.getFirstInfoItemService(
 						InfoItemDetailsProvider.class,
-						_portal.getClassName(classNameId));
+						siteNavigationMenuItemType);
 
 				InfoItemClassDetails infoItemClassDetails =
 					infoItemDetailsProvider.getInfoItemClassDetails();
@@ -146,9 +145,9 @@ public class AddDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					StringBundler.concat(
-						"Unable to add SiteNavigationMenuItem for classNameId ",
-						classNameId, ", classPK ", classPK,
-						" siteNavigationMenuId ", siteNavigationMenuId,
+						"Unable to add site navigation menu item for external ",
+						"reference code ", externalReferenceCode,
+						" site navigation menu ID ", siteNavigationMenuId,
 						" and type ", siteNavigationMenuItemType));
 			}
 

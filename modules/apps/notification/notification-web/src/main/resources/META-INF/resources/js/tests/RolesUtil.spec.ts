@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {MultiSelectItem} from '@liferay/object-js-components-web';
 
 import {
 	getCheckedChildren,
-	getUserNotificationRoles,
-	handleMultiSelectRoleItemsChange,
+	handleMultiSelectItemsChange,
 	uncheckMultiSelectItemChildrens,
-} from '../components/SettingsContainer/rolesUtil';
+} from '../components/SettingsContainer/multiSelectUtil';
+import {getUserNotificationRoles} from '../components/SettingsContainer/rolesUtil';
 
 it('Assert role names checked items', () => {
 	const children = [
@@ -42,7 +42,7 @@ it('Assert role names checked items', () => {
 		},
 	];
 
-	const rolesNamesList = [
+	const roleNames = [
 		{roleName: 'Account Administrator'},
 		{roleName: 'Account Manager'},
 		{roleName: 'Account Member'},
@@ -53,7 +53,7 @@ it('Assert role names checked items', () => {
 		{roleName: 'Owner'},
 	];
 
-	const checkedChildren = getCheckedChildren(rolesNamesList, children);
+	const checkedChildren = getCheckedChildren(children, roleNames, 'roleName');
 
 	expect(checkedChildren).toStrictEqual([
 		{
@@ -109,29 +109,24 @@ it('Assert roles in User Notification', () => {
 		},
 	];
 
-	const itemsNamesList = {
-		recipients: [
-			{
-				roleName: 'Label1',
-			},
-		],
-	};
+	const recipients = [
+		{
+			roleName: 'Name1',
+		},
+	];
 
-	const userNotificationRoles = getUserNotificationRoles(
-		items,
-		itemsNamesList.recipients
-	);
+	const userNotificationRoles = getUserNotificationRoles(items, recipients);
 
 	expect(userNotificationRoles.children).toStrictEqual([
 		{
 			checked: true,
 			label: 'Name1',
-			value: 'Label1',
+			value: 'Name1',
 		},
 		{
 			checked: false,
 			label: 'Name2',
-			value: 'Label2',
+			value: 'Name2',
 		},
 		{
 			checked: false,
@@ -197,7 +192,10 @@ it('verify that handleMultiSelectRoleItemsChange generates new recipients in the
 		},
 	] as MultiSelectItem[];
 
-	const newRecipients = handleMultiSelectRoleItemsChange(itemsGroupMock);
+	const newRecipients = handleMultiSelectItemsChange(
+		itemsGroupMock,
+		'roleName'
+	);
 
 	expect(newRecipients).toStrictEqual([
 		{

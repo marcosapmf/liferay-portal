@@ -25,6 +25,23 @@ import com.liferay.portal.vulcan.openapi.OpenAPIContext;
 import com.liferay.portal.vulcan.resource.OpenAPIResource;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -37,23 +54,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -435,12 +435,14 @@ public class HeadlessDiscoveryOpenAPIResourceImpl {
 
 		String version = StringUtil.extractFirst(subpath, StringPool.SLASH);
 
-		if (version != null) {
-			Matcher versionMatcher = _versionPattern.matcher(version);
+		if (version == null) {
+			return null;
+		}
 
-			if (versionMatcher.matches()) {
-				return version;
-			}
+		Matcher versionMatcher = _versionPattern.matcher(version);
+
+		if (versionMatcher.matches()) {
+			return version;
 		}
 
 		return null;
@@ -464,6 +466,8 @@ public class HeadlessDiscoveryOpenAPIResourceImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		HeadlessDiscoveryOpenAPIResourceImpl.class);
 
+	private static final Map<String, List<String>> _companyIds =
+		new HashMap<>();
 	private static final Snapshot<JaxrsServiceRuntime>
 		_jaxrsServiceRuntimeSnapshot = new Snapshot<>(
 			HeadlessDiscoveryOpenAPIResourceImpl.class,
@@ -475,8 +479,6 @@ public class HeadlessDiscoveryOpenAPIResourceImpl {
 
 	@Context
 	private Company _company;
-
-	private final Map<String, List<String>> _companyIds = new HashMap<>();
 
 	@Context
 	private HttpServletRequest _httpServletRequest;

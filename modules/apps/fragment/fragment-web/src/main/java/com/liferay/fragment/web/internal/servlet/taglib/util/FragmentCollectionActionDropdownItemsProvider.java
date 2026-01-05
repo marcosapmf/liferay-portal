@@ -5,18 +5,19 @@
 
 package com.liferay.fragment.web.internal.servlet.taglib.util;
 
+import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.web.internal.display.context.FragmentDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Víctor Galán
@@ -62,6 +63,12 @@ public class FragmentCollectionActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
+						() -> {
+							FragmentCollection fragmentCollection =
+								_fragmentDisplayContext.getFragmentCollection();
+
+							return !fragmentCollection.isMarketplace();
+						},
 						dropdownItem -> {
 							ResourceURL
 								exportFragmentCompositionsAndFragmentEntriesURL =

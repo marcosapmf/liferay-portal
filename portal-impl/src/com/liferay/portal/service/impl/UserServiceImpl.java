@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Role;
@@ -65,6 +66,7 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.UserIdComparator;
@@ -76,7 +78,6 @@ import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyUti
 import com.liferay.portal.service.base.UserServiceBaseImpl;
 import com.liferay.portal.service.permission.PasswordPolicyPermissionUtil;
 import com.liferay.portal.service.permission.UserGroupPermissionUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.admin.util.OmniadminUtil;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
@@ -247,7 +248,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 			if (addresses != null) {
 				UsersAdminUtil.updateAddresses(
-					Contact.class.getName(), user.getContactId(), addresses);
+					Contact.class.getName(), user.getContactId(), addresses,
+					ListTypeConstants.CONTACT_ADDRESS);
 			}
 
 			if (emailAddresses != null) {
@@ -866,7 +868,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 				serviceContext);
 
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 
 			UsersAdminUtil.updateEmailAddresses(
 				Contact.class.getName(), user.getContactId(), emailAddresses);
@@ -1087,7 +1090,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 				serviceContext);
 
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 
 			UsersAdminUtil.updateEmailAddresses(
 				Contact.class.getName(), user.getContactId(), emailAddresses);
@@ -1165,7 +1169,7 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 	@Override
 	public User fetchUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		User user = userLocalService.fetchUserByExternalReferenceCode(
@@ -1500,7 +1504,7 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 	@Override
 	public long[] getRoleUserIds(long roleId) throws PortalException {
 		RolePermissionUtil.check(
-			getPermissionChecker(), roleId, ActionKeys.VIEW);
+			getPermissionChecker(), roleId, ActionKeys.ASSIGN_MEMBERS);
 
 		return userLocalService.getRoleUserIds(roleId);
 	}
@@ -1525,16 +1529,9 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 		return user;
 	}
 
-	/**
-	 * Returns the user with the external reference code.
-	 *
-	 * @param  companyId the primary key of the user's company
-	 * @param  externalReferenceCode the user's external reference code
-	 * @return the user with the external reference code
-	 */
 	@Override
 	public User getUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		User user = userLocalService.getUserByExternalReferenceCode(
@@ -2337,25 +2334,6 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 	}
 
 	/**
-	 * Updates the user's OpenID.
-	 *
-	 * @param      userId the primary key of the user
-	 * @param      openId the new OpenID
-	 * @return     the user
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public User updateOpenId(long userId, String openId)
-		throws PortalException {
-
-		UserPermissionUtil.check(
-			getPermissionChecker(), userId, ActionKeys.UPDATE);
-
-		return userLocalService.updateOpenId(userId, openId);
-	}
-
-	/**
 	 * Sets the organizations that the user is in, removing and adding
 	 * organizations as necessary.
 	 *
@@ -2599,7 +2577,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 		}
 
 		if (emailAddresses != null) {
@@ -2967,7 +2946,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
-				Contact.class.getName(), user.getContactId(), addresses);
+				Contact.class.getName(), user.getContactId(), addresses,
+				ListTypeConstants.CONTACT_ADDRESS);
 		}
 
 		if (emailAddresses != null) {
@@ -3554,6 +3534,14 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
 
+		boolean strictAssignment = false;
+
+		if (PropsValues.ORGANIZATIONS_ASSIGNMENT_STRICT ||
+			!permissionChecker.isCompanyAdmin()) {
+
+			strictAssignment = true;
+		}
+
 		if (userId != CompanyConstants.SYSTEM) {
 
 			// Add back any mandatory organizations or organizations that the
@@ -3573,6 +3561,10 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 					(!OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
 						ActionKeys.ASSIGN_MEMBERS) ||
+					 (strictAssignment &&
+					  !OrganizationPermissionUtil.contains(
+						  permissionChecker, organization,
+						  ActionKeys.MANAGE_USERS)) ||
 					 OrganizationMembershipPolicyUtil.isMembershipProtected(
 						 permissionChecker, userId,
 						 organization.getOrganizationId()) ||
@@ -3602,6 +3594,11 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 			OrganizationPermissionUtil.check(
 				permissionChecker, organization, ActionKeys.ASSIGN_MEMBERS);
+
+			if (strictAssignment) {
+				OrganizationPermissionUtil.check(
+					permissionChecker, organization, ActionKeys.MANAGE_USERS);
+			}
 		}
 
 		return organizationIds;

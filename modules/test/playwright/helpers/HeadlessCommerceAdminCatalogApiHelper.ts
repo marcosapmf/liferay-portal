@@ -5,7 +5,15 @@
 
 import {getRandomDouble} from '../utils/getRandomDouble';
 import {getRandomInt} from '../utils/getRandomInt';
+import getRandomString from '../utils/getRandomString';
 import {ApiHelpers, DataApiHelpers} from './ApiHelpers';
+
+export type TAttachmentBase64 = {
+	attachment: string;
+	title: {
+		[key: string]: string;
+	};
+};
 
 type TCatalog = {
 	accountId?: number;
@@ -13,6 +21,16 @@ type TCatalog = {
 	defaultLanguageId?: string;
 	id?: number;
 	name?: string;
+};
+
+type TCategory = {
+	checked?: boolean;
+	externalReferenceCode?: string;
+	id: number;
+	label?: string;
+	name: string;
+	value?: string;
+	vocabulary?: string;
 };
 
 type TChannel = {
@@ -24,14 +42,12 @@ type TChannel = {
 	type: string;
 };
 
-type TCategory = {
-	checked?: boolean;
-	externalReferenceCode?: string;
-	id: number;
-	label?: string;
-	name: string;
-	value?: string;
-	vocabulary?: string;
+type TCurrency = {
+	active?: boolean;
+};
+
+export type TDiagram = {
+	attachmentBase64: TAttachmentBase64;
 };
 
 export type TPin = {
@@ -53,14 +69,18 @@ export type TProduct = {
 	active?: boolean;
 	catalogId: number;
 	categories?: TCategory[];
+	createDate?: string;
 	description?: {
 		[key: string]: string;
 	};
+	diagram?: TDiagram;
+	expirationDate?: string;
 	externalReferenceCode?: string;
 	id?: number;
 	name?: {
 		[key: string]: string;
 	};
+	neverExpire?: boolean;
 	productAccountGroupFilter?: boolean;
 	productAccountGroups?: {
 		accountGroupId: number;
@@ -68,23 +88,76 @@ export type TProduct = {
 	}[];
 	productChannelFilter?: boolean;
 	productChannels?: TChannel[];
-	productConfiguration?: {
-		allowBackOrder?: boolean;
-		minOrderQuantity?: number;
-		multipleOrderQuantity?: number;
-	};
+	productConfiguration?: TProductConfiguration;
 	productId?: number;
 	productOptions?: any[];
-	productSpecifications?: any[];
+	productSpecifications?: TProductSpecifications[];
 	productStatus?: number;
 	productType?: string;
 	productVirtualSettings?: TProductVirtualSettings;
+	shippingConfiguration?: {
+		freeShipping?: boolean;
+		shippable?: boolean;
+		shippingSeparately?: boolean;
+	};
 	shortDescription?: {
 		[key: string]: string;
 	};
 	skus?: TSku[];
 	tags?: [string];
 	version?: number;
+};
+
+export type TProductConfiguration = {
+	allowBackOrder?: boolean;
+	allowedOrderQuantities?: Array<number>;
+	availabilityEstimateId?: number;
+	availabilityEstimateName?: any;
+	displayAvailability?: boolean;
+	displayStockQuantity?: boolean;
+	entityExternalReferenceCode?: string;
+	entityId?: number;
+	entityName?: string;
+	entityType?: string;
+	externalReferenceCode?: string;
+	id?: number;
+	inventoryEngine?: string;
+	lowStockAction?: string;
+	maxOrderQuantity?: number;
+	minOrderQuantity?: number;
+	minStockQuantity?: number;
+	multipleOrderQuantity?: number;
+	productShippingConfiguration?: any;
+	productTaxConfiguration?: TProductTaxConfiguration;
+	purchasable?: boolean;
+	visible?: boolean;
+};
+
+export type TProductConfigurationList = {
+	catalogExternalReferenceCode?: string;
+	catalogId: number;
+	externalReferenceCode?: string;
+	id?: number;
+	masterProductConfigurationList?: boolean;
+	name?: string;
+	neverExpire?: boolean;
+	parentProductConfigurationListId?: number;
+	priority?: number;
+	productConfigurations?: TProductConfiguration[];
+};
+
+type TProductSpecifications = {
+	id?: number;
+	key?: string;
+	label?: Record<string, string>;
+	specificationKey?: string;
+	value?: Record<string, string>;
+	visible?: boolean;
+};
+
+export type TProductTaxConfiguration = {
+	id: number;
+	taxable: boolean;
 };
 
 type TProductVirtualSettings = {
@@ -115,12 +188,14 @@ type TRelatedProduct = {
 
 type TSku = {
 	cost: number;
+	discontinued?: boolean;
 	gtin?: string;
 	id?: number;
 	manufacturerPartNumber?: string;
 	price: number;
 	published: boolean;
 	purchasable: boolean;
+	replacementSkuId?: number;
 	sku: string;
 };
 
@@ -133,6 +208,7 @@ type TSkuUnitOfMeasure = {
 		[key: string]: string;
 	};
 	precision?: number;
+	pricingQuantity?: number;
 	primary?: boolean;
 	priority?: number;
 	rate?: number;
@@ -153,15 +229,15 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async deleteProductAccountGroup(id: number) {
-		return this.apiHelpers.delete(
-			`${this.apiHelpers.baseUrl}${this.basePath}/product-account-groups/${id}`
-		);
-	}
-
 	async deleteCatalog(catalogId: number | string) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/catalog/${catalogId}`
+		);
+	}
+
+	async deleteCurrency(currencyId: number | string) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/currencies/${currencyId}`
 		);
 	}
 
@@ -189,9 +265,27 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async deleteProductAccountGroup(id: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-account-groups/${id}`
+		);
+	}
+
 	async deleteProductByVersion(productId: number, version: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
+	async deleteProductConfiguration(productConfigurationId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configurations/${productConfigurationId}`
+		);
+	}
+
+	async deleteProductConfigurationList(productConfigurationListId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}`
 		);
 	}
 
@@ -225,6 +319,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async getCurrenciesPage(search = '') {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/currencies?search=${search}`
+		);
+	}
+
 	async getOptionCategory(optionCategoryId: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/optionCategories/${optionCategoryId}`
@@ -249,14 +349,6 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async getProducts(searchParams = new URLSearchParams()) {
-		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${
-				this.basePath
-			}/products?${searchParams.toString()}`
-		);
-	}
-
 	async getProductAccountGroups(productId: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/product-account-groups`
@@ -266,6 +358,24 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async getProductByVersion(productId: number, version: number) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
+	async getProductConfigurationListsPage(search: string = '') {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists?search=${search}`
+		);
+	}
+
+	async getProducts(searchParams = new URLSearchParams()) {
+		if (!searchParams.has('nestedFields')) {
+			searchParams.append('nestedFields', 'skus');
+		}
+
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${
+				this.basePath
+			}/products?${searchParams.toString()}`
 		);
 	}
 
@@ -281,6 +391,14 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async getSkuByName(name: string) {
+		const skus = await this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/skus?search=${name}`
+		);
+
+		return skus.items[0];
+	}
+
 	async getSpecification(specificationId: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/specifications/${specificationId}`
@@ -290,6 +408,15 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async getSpecifications() {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/specifications`
+		);
+	}
+
+	async patchCurrency(currencyId: string, currency?: TCurrency) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/currencies/${currencyId}`,
+			{
+				...(currency || {}),
+			}
 		);
 	}
 
@@ -320,14 +447,36 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async patchProductSpecification(
+		id: number,
+		productSpecifications: TProductSpecifications
+	) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/productSpecifications/${id}`,
+			productSpecifications
+		);
+	}
+
+	async patchProductTaxConfiguration(
+		productId: number,
+		productTaxConfiguration: TProductTaxConfiguration
+	) {
+		return this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/taxConfiguration`,
+			{
+				...(productTaxConfiguration || {}),
+			}
+		);
+	}
+
 	async patchSpecification(
 		specificationId: string,
-		listTypeDefinitionId: number
+		listTypeDefinitionIds: number[]
 	) {
 		return this.apiHelpers.patch(
 			`${this.apiHelpers.baseUrl}${this.basePath}/specifications/${specificationId}`,
 			{
-				listTypeDefinitionId,
+				listTypeDefinitionIds,
 			}
 		);
 	}
@@ -376,6 +525,24 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		}
 
 		return catalog;
+	}
+
+	async postImage(
+		productId: number,
+		fileEntryId: number,
+		title: string = 'Image' + getRandomInt()
+	) {
+		const postImage = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/images`,
+			{
+				data: {
+					fileEntryId,
+					title: {en_US: title},
+				},
+			}
+		);
+
+		return postImage;
 	}
 
 	async postOption(
@@ -492,6 +659,120 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		return product;
 	}
 
+	async postProductBatch(products: TProduct[]): Promise<TProduct[]> {
+		products = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/batch`,
+			{data: products}
+		);
+
+		return products;
+	}
+
+	async postProductConfiguration(
+		productConfigurationListId: number,
+		productConfiguration: TProductConfiguration
+	): Promise<TProductConfiguration> {
+		productConfiguration = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}/product-configurations`,
+			{
+				data: {
+					allowBackOrder: true,
+					entityType: 'product',
+					maxOrderQuantity: 10000,
+					minOrderQuantity: 1,
+					multipleOrderQuantity: 1,
+					purchasable: true,
+					visible: true,
+					...productConfiguration,
+				},
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: productConfiguration.id,
+				type: 'productConfiguration',
+			});
+		}
+
+		return productConfiguration;
+	}
+
+	async postProductConfigurationList(
+		productConfigurationList: TProductConfigurationList
+	): Promise<TProductConfigurationList> {
+		productConfigurationList = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists?nestedFields=productConfigurations`,
+			{
+				data: {
+					catalogId: getRandomInt(),
+					name: getRandomString(),
+					...productConfigurationList,
+				},
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: productConfigurationList.id,
+				type: 'productConfigurationList',
+			});
+		}
+
+		return productConfigurationList;
+	}
+
+	async postProductConfigurationListAccountGroup(
+		accountGroupId: number,
+		productConfigurationListId: number
+	): Promise<TProductConfigurationList> {
+		const productConfigurationList = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}/product-configuration-list-account-groups`,
+			{
+				data: {
+					accountGroupId,
+					productConfigurationListId,
+				},
+			}
+		);
+
+		return productConfigurationList;
+	}
+
+	async postProductConfigurationListChannel(
+		channelId: number,
+		productConfigurationListId: number
+	): Promise<TProductConfigurationList> {
+		const productConfigurationList = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}/product-configuration-list-channels`,
+			{
+				data: {
+					channelId,
+					productConfigurationListId,
+				},
+			}
+		);
+
+		return productConfigurationList;
+	}
+
+	async postProductConfigurationListOrderType(
+		orderTypeId: number,
+		productConfigurationListId: number
+	): Promise<TProductConfigurationList> {
+		const productConfigurationList = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-configuration-lists/${productConfigurationListId}/product-configuration-list-order-types`,
+			{
+				data: {
+					orderTypeId,
+					productConfigurationListId,
+				},
+			}
+		);
+
+		return productConfigurationList;
+	}
+
 	async postProductRelatedProduct(
 		productId: number,
 		relatedProduct: TRelatedProduct
@@ -537,6 +818,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 					rate: getRandomInt(),
 					...skuUnitOfMeasure,
 				},
+				failOnStatusCode: true,
 			}
 		);
 
@@ -554,7 +836,9 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		facetable: boolean = true,
 		priority: number = 0,
 		specificationTitle: string = 'Specification' + getRandomInt(),
-		optionCategory?: DataObject
+		optionCategory?: DataObject,
+		visible?: boolean,
+		listTypeDefinitionIds?: number[]
 	) {
 		let postSpecification;
 
@@ -565,11 +849,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 					data: {
 						facetable,
 						key: specificationTitle,
+						listTypeDefinitionIds,
 						optionCategory,
 						priority,
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);
@@ -585,6 +871,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);

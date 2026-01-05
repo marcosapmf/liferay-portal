@@ -142,7 +142,7 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
 			GetterUtil.getLong(
 				values.get(
-					"r_commerceReturnToCommerceReturnItems_c_" +
+					"r_commerceReturnToCommerceReturnItems_l_" +
 						"commerceReturnId")));
 
 		if (objectEntry == null) {
@@ -152,7 +152,8 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 		try {
 			_objectEntryLocalService.updateObjectEntry(
 				objectEntry.getUserId(), objectEntry.getObjectEntryId(),
-				objectEntry.getValues(), new ServiceContext());
+				objectEntry.getObjectEntryFolderId(), objectEntry.getValues(),
+				new ServiceContext());
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {

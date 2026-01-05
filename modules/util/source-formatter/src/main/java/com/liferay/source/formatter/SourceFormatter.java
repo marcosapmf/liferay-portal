@@ -31,7 +31,9 @@ import com.liferay.source.formatter.exception.SourceMismatchException;
 import com.liferay.source.formatter.processor.BNDRunSourceProcessor;
 import com.liferay.source.formatter.processor.BNDSourceProcessor;
 import com.liferay.source.formatter.processor.CETSourceProcessor;
+import com.liferay.source.formatter.processor.CIMergeAndGitRepoSourceProcessor;
 import com.liferay.source.formatter.processor.CQLSourceProcessor;
+import com.liferay.source.formatter.processor.CSPSourceProcessor;
 import com.liferay.source.formatter.processor.CSSSourceProcessor;
 import com.liferay.source.formatter.processor.CodeownersSourceProcessor;
 import com.liferay.source.formatter.processor.ConfigSourceProcessor;
@@ -44,6 +46,7 @@ import com.liferay.source.formatter.processor.HTMLSourceProcessor;
 import com.liferay.source.formatter.processor.JSONSourceProcessor;
 import com.liferay.source.formatter.processor.JSPSourceProcessor;
 import com.liferay.source.formatter.processor.JSSourceProcessor;
+import com.liferay.source.formatter.processor.JakartaTransformSourceProcessor;
 import com.liferay.source.formatter.processor.JavaSourceProcessor;
 import com.liferay.source.formatter.processor.LDIFSourceProcessor;
 import com.liferay.source.formatter.processor.LFRBuildSourceProcessor;
@@ -179,6 +182,14 @@ public class SourceFormatter {
 						baseDirName,
 						sourceFormatterArgs.getGitWorkingBranchName(), false),
 					baseDirName);
+				sourceFormatterArgs.setCurrentBranchAddedFileNames(
+					GitUtil.getCurrentBranchAddedFileNames(
+						sourceFormatterArgs.getBaseDirName(),
+						sourceFormatterArgs.getGitWorkingBranchName()));
+				sourceFormatterArgs.setCurrentBranchRenamedFileNames(
+					GitUtil.getCurrentBranchRenamedFileNames(
+						sourceFormatterArgs.getBaseDirName(),
+						sourceFormatterArgs.getGitWorkingBranchName()));
 			}
 			else if (sourceFormatterArgs.isFormatLatestAuthor()) {
 				sourceFormatterArgs.addRecentChangesFileNames(
@@ -190,15 +201,6 @@ public class SourceFormatter {
 					GitUtil.getLocalChangesFileNames(baseDirName, false),
 					baseDirName);
 			}
-
-			sourceFormatterArgs.setCurrentBranchAddedFileNames(
-				GitUtil.getCurrentBranchAddedFileNames(
-					sourceFormatterArgs.getBaseDirName(),
-					sourceFormatterArgs.getGitWorkingBranchName()));
-			sourceFormatterArgs.setCurrentBranchRenamedFileNames(
-				GitUtil.getCurrentBranchRenamedFileNames(
-					sourceFormatterArgs.getBaseDirName(),
-					sourceFormatterArgs.getGitWorkingBranchName()));
 
 			String[] fileNames = StringUtil.split(
 				ArgumentsUtil.getString(
@@ -337,19 +339,23 @@ public class SourceFormatter {
 			_validateCommitMessages();
 		}
 
+		_validatePullModeChanges();
+
 		if (!_sourceFormatterArgs.isJavaParserEnabled()) {
 			System.out.println(
 				StringBundler.concat(
-					"WARNING: Setting property 'java.parser.enabled' to ",
-					"'false' may prevent certain Java/JSP checks from working ",
-					"properly."));
+					"WARNING: Setting property \"java.parser.enabled\" to ",
+					"\"false\" may prevent certain Java/JSP checks from ",
+					"working properly."));
 		}
 
 		_sourceProcessors.add(new BNDRunSourceProcessor());
 		_sourceProcessors.add(new BNDSourceProcessor());
+		_sourceProcessors.add(new CIMergeAndGitRepoSourceProcessor());
 		_sourceProcessors.add(new CodeownersSourceProcessor());
 		_sourceProcessors.add(new ConfigSourceProcessor());
 		_sourceProcessors.add(new CQLSourceProcessor());
+		_sourceProcessors.add(new CSPSourceProcessor());
 		_sourceProcessors.add(new CSSSourceProcessor());
 		_sourceProcessors.add(new DockerfileSourceProcessor());
 		_sourceProcessors.add(new DTDSourceProcessor());
@@ -357,6 +363,7 @@ public class SourceFormatter {
 		_sourceProcessors.add(new GradleSourceProcessor());
 		_sourceProcessors.add(new GroovySourceProcessor());
 		_sourceProcessors.add(new HTMLSourceProcessor());
+		_sourceProcessors.add(new JakartaTransformSourceProcessor());
 		_sourceProcessors.add(new JavaSourceProcessor());
 		_sourceProcessors.add(new JSONSourceProcessor());
 		_sourceProcessors.add(new JSPSourceProcessor());
@@ -633,6 +640,13 @@ public class SourceFormatter {
 						new String[] {"**/package.json"},
 						_sourceFormatterExcludes, false));
 			}
+			else if (_isRootTestPropertiesChanges(recentChangesFileName)) {
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {"**/test.properties"},
+						_sourceFormatterExcludes, false));
+			}
 		}
 
 		if (_sourceFormatterArgs.isFormatCurrentBranch()) {
@@ -777,7 +791,7 @@ public class SourceFormatter {
 
 				String message = sourceMismatchException.getMessage();
 
-				if (!Objects.isNull(message)) {
+				if (Objects.nonNull(message)) {
 					sb.append(index);
 					sb.append(": ");
 					sb.append(message);
@@ -805,7 +819,7 @@ public class SourceFormatter {
 				new ExcludeSyntaxPattern(ExcludeSyntax.GLOB, exclude));
 		}
 
-		// See the source-format-jdk8 task in built-test-batch.xml for more
+		// See the source-format task in built-test-batch.xml for more
 		// information
 
 		String systemExcludes = System.getProperty("source.formatter.excludes");
@@ -1079,7 +1093,8 @@ public class SourceFormatter {
 		_allFileNames = SourceFormatterUtil.scanForFileNames(
 			_sourceFormatterArgs.getBaseDirName(), new String[0],
 			new String[] {
-				"**/*.*", "**/CODEOWNERS", "**/Dockerfile", "**/packageinfo"
+				"**/*.*", "**/CODEOWNERS", "**/Dockerfile", "**/ci-merge",
+				"**/packageinfo"
 			},
 			_sourceFormatterExcludes,
 			_sourceFormatterArgs.isIncludeSubrepositories());
@@ -1186,6 +1201,18 @@ public class SourceFormatter {
 		}
 
 		return false;
+	}
+
+	private boolean _isRootTestPropertiesChanges(String recentChangesFileName) {
+		File portalDir = SourceFormatterUtil.getPortalDir(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getMaxLineLength());
+
+		if (portalDir == null) {
+			return false;
+		}
+
+		return recentChangesFileName.endsWith(portalDir + "/test.properties");
 	}
 
 	private boolean _isSubrepository() throws Exception {
@@ -1319,6 +1346,16 @@ public class SourceFormatter {
 		for (String commitMessage : commitMessages) {
 			String[] parts = commitMessage.split(":", 2);
 
+			if ((parts[1].contains("This reverts commit") &&
+				 parts[1].startsWith("Reapply \"")) ||
+				parts[1].startsWith("Revert \"Revert")) {
+
+				throw new Exception(
+					StringBundler.concat(
+						"Found formatting issue in SHA ", parts[0], ":\n",
+						"Illegal nested revert, i.e. revert of a revert."));
+			}
+
 			for (String keyword :
 					_getPropertyValues("git.commit.vulnerability.keywords")) {
 
@@ -1331,11 +1368,75 @@ public class SourceFormatter {
 					throw new Exception(
 						StringBundler.concat(
 							"Found formatting issue in SHA ", parts[0], ":\n",
-							"The commit message contains the word '", keyword,
-							"', which could reveal potential security ",
-							"vulnerablities. Please see the vulnerability ",
+							"The commit message contains the word \"", keyword,
+							"\", which could reveal potential security ",
+							"vulnerabilities. Please see the vulnerability ",
 							"keywords that are specified in source-formatter.",
 							"properties in the liferay-portal repository."));
+				}
+			}
+		}
+	}
+
+	private void _validatePullModeChanges() throws Exception {
+		if (!_sourceFormatterArgs.isFormatCurrentBranch()) {
+			return;
+		}
+
+		File portalDir = SourceFormatterUtil.getPortalDir(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getMaxLineLength());
+
+		if (portalDir == null) {
+			return;
+		}
+
+		List<String> pullModeGitRepoDirLocations = new ArrayList<>();
+
+		List<String> gitRepoFileNames = SourceFormatterUtil.scanForFileNames(
+			portalDir.getCanonicalPath(), new String[] {"**/*.gitrepo"});
+
+		for (String gitRepoFileName : gitRepoFileNames) {
+			int x = gitRepoFileName.indexOf("/modules/");
+
+			if (x == -1) {
+				continue;
+			}
+
+			String content = FileUtil.read(new File(gitRepoFileName));
+
+			if (content.contains("mode = pull")) {
+				int y = gitRepoFileName.lastIndexOf("/");
+
+				pullModeGitRepoDirLocations.add(
+					gitRepoFileName.substring(x + 1, y));
+			}
+		}
+
+		if (pullModeGitRepoDirLocations.isEmpty()) {
+			return;
+		}
+
+		List<String> fileNames = GitUtil.getCurrentBranchFileNames(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getGitWorkingBranchName(), true);
+
+		for (String fileName : fileNames) {
+			if (fileName.endsWith("/.gitrepo") ||
+				fileName.endsWith("/ci-merge")) {
+
+				continue;
+			}
+
+			for (String pullModeGitRepoDirLocation :
+					pullModeGitRepoDirLocations) {
+
+				if (fileName.startsWith(pullModeGitRepoDirLocation + "/")) {
+					throw new Exception(
+						StringBundler.concat(
+							"Found formatting issue:\n",
+							"Illegal change to a pull-only subdirectory ",
+							pullModeGitRepoDirLocation));
 				}
 			}
 		}

@@ -9,7 +9,9 @@ import React from 'react';
 
 import ExportFormModalBody from './ExportFormModalBody';
 
-const ExportFormModal: React.FC<IProps> = ({
+const ExportFormModal: React.FC<
+	{children?: React.ReactNode | undefined} & IProps
+> = ({
 	csvExport,
 	exportFormURL,
 	fileExtensions,
@@ -19,7 +21,9 @@ const ExportFormModal: React.FC<IProps> = ({
 }) => {
 	return (
 		<ClayModal observer={observer}>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('export')}
 			</ClayModal.Header>
 

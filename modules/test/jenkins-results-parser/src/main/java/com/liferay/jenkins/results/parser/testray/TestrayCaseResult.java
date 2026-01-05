@@ -5,7 +5,7 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 
 import java.io.IOException;
 
@@ -18,9 +18,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
+
+import org.dom4j.Element;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,17 +90,13 @@ public class TestrayCaseResult {
 		}
 
 		for (TestrayCaseResult previousTestrayCaseResult :
-				getTestrayCaseResultHistory(5)) {
+				getTestrayCaseResultHistory(5, 5)) {
 
 			if (Objects.equals(getID(), previousTestrayCaseResult.getID())) {
 				continue;
 			}
 
-			if (_isSimilarError(previousTestrayCaseResult) &&
-				!Objects.equals(
-					getPullRequestSenderUsername(),
-					previousTestrayCaseResult.getPullRequestSenderUsername())) {
-
+			if (_isSimilarError(previousTestrayCaseResult)) {
 				_errorType = ErrorType.COMMON;
 
 				return _errorType;
@@ -120,6 +119,10 @@ public class TestrayCaseResult {
 
 	public long getID() {
 		return _jsonObject.optLong("id");
+	}
+
+	public String getIssues() {
+		return null;
 	}
 
 	public JSONObject getJSONObject() {
@@ -212,7 +215,9 @@ public class TestrayCaseResult {
 		return _testrayCase;
 	}
 
-	public List<TestrayCaseResult> getTestrayCaseResultHistory(int maxCount) {
+	public List<TestrayCaseResult> getTestrayCaseResultHistory(
+		int maxCount, int pageSize) {
+
 		List<TestrayCaseResult> testrayCaseResults = new ArrayList<>();
 
 		StringBuilder sb = new StringBuilder();
@@ -226,14 +231,21 @@ public class TestrayCaseResult {
 		TestrayServer testrayServer = getTestrayServer();
 
 		try {
-			List<JSONObject> entityJSONObjects = testrayServer.requestGraphQL(
+			Set<JSONObject> entityJSONObjects = testrayServer.requestGraphQL(
 				"caseResults", TestrayCaseResult.FIELD_NAMES, sb.toString(),
-				"dateCreated:desc", maxCount, 5);
+				"dateCreated:desc", maxCount, pageSize);
 
 			for (JSONObject entityJSONObject : entityJSONObjects) {
-				testrayCaseResults.add(
-					TestrayFactory.newTestrayCaseResult(
-						testrayServer, entityJSONObject));
+				TestrayCaseResult testrayCaseResult =
+					TestrayFactory.newJSONObjectTestrayCaseResult(
+						testrayServer, entityJSONObject);
+
+				if (!Objects.equals(
+						testrayCaseResult.getPullRequestSenderUsername(),
+						getPullRequestSenderUsername())) {
+
+					testrayCaseResults.add(testrayCaseResult);
+				}
 			}
 		}
 		catch (IOException ioException) {
@@ -271,10 +283,6 @@ public class TestrayCaseResult {
 
 	public TestrayServer getTestrayServer() {
 		return _testrayServer;
-	}
-
-	public TopLevelBuild getTopLevelBuild() {
-		return _topLevelBuild;
 	}
 
 	public String getType() {
@@ -322,8 +330,8 @@ public class TestrayCaseResult {
 	public static enum Status {
 
 		BLOCKED(4, "blocked"), DIDNOTRUN(6, "dnr"), FAILED(3, "failed"),
-		INPROGRESS(1, "in-progress"), PASSED(2, "passed"),
-		TESTFIX(7, "test-fix"), UNTESTED(1, "untested");
+		INCOMPLETE(1, "incomplete"), INPROGRESS(1, "in-progress"),
+		PASSED(2, "passed"), TESTFIX(7, "test-fix"), UNTESTED(1, "untested");
 
 		public static Status get(Integer id) {
 			return _statuses.get(id);
@@ -370,21 +378,32 @@ public class TestrayCaseResult {
 	}
 
 	protected TestrayCaseResult(
-		TestrayBuild testrayBuild, TopLevelBuild topLevelBuild) {
-
-		_testrayBuild = testrayBuild;
-		_topLevelBuild = topLevelBuild;
-
-		_testrayServer = testrayBuild.getTestrayServer();
-
-		_jsonObject = new JSONObject();
-	}
-
-	protected TestrayCaseResult(
 		TestrayServer testrayServer, JSONObject jsonObject) {
 
 		_testrayServer = testrayServer;
 		_jsonObject = jsonObject;
+	}
+
+	protected void addPropertyElements(
+		Element propertiesElement, Map<String, String> propertiesMap) {
+
+		for (Map.Entry<String, String> propertyEntry :
+				propertiesMap.entrySet()) {
+
+			Element propertyElement = propertiesElement.addElement("property");
+
+			String propertyName = propertyEntry.getKey();
+			String propertyValue = propertyEntry.getValue();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(propertyName) ||
+				JenkinsResultsParserUtil.isNullOrEmpty(propertyValue)) {
+
+				continue;
+			}
+
+			propertyElement.addAttribute("name", propertyName);
+			propertyElement.addAttribute("value", propertyValue);
+		}
 	}
 
 	protected synchronized void initTestrayAttachments() {
@@ -395,6 +414,10 @@ public class TestrayCaseResult {
 		testrayAttachments = new TreeMap<>();
 
 		String attachments = _jsonObject.getString("attachments");
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(attachments)) {
+			return;
+		}
 
 		JSONArray attachmentsJSONArray;
 
@@ -448,11 +471,7 @@ public class TestrayCaseResult {
 			return false;
 		}
 		catch (IllegalArgumentException illegalArgumentException) {
-			if (Objects.equals(thisErrors, previousErrors)) {
-				return true;
-			}
-
-			return false;
+			return Objects.equals(thisErrors, previousErrors);
 		}
 	}
 
@@ -461,7 +480,7 @@ public class TestrayCaseResult {
 		"Failed for unknown reason", "timed out after 2 hours"
 	};
 
-	private static final double _MAX_JARO_WINKLER_DISTANCE = 0.8;
+	private static final double _MAX_JARO_WINKLER_DISTANCE = 0.93;
 
 	private ErrorType _errorType;
 	private final JSONObject _jsonObject;
@@ -469,6 +488,5 @@ public class TestrayCaseResult {
 	private TestrayCase _testrayCase;
 	private TestrayComponent _testrayComponent;
 	private final TestrayServer _testrayServer;
-	private TopLevelBuild _topLevelBuild;
 
 }

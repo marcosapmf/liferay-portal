@@ -22,6 +22,33 @@ import org.json.JSONObject;
 public class PlaywrightJUnitTestClass extends JUnitTestClass {
 
 	@Override
+	public long getAverageDuration() {
+		if (_averageDuration != null) {
+			return _averageDuration;
+		}
+
+		for (TestClassMethod testClassMethod : getTestClassMethods()) {
+			PlaywrightTestClassMethod playwrightTestClassMethod =
+				(PlaywrightTestClassMethod)testClassMethod;
+
+			BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+			long averageDuration = batchTestClassGroup.getAverageTestDuration(
+				JenkinsResultsParserUtil.combine(
+					getName(), ".", playwrightTestClassMethod.getTestName()));
+
+			if (_averageDuration == null) {
+				_averageDuration = averageDuration;
+			}
+			else {
+				_averageDuration += averageDuration;
+			}
+		}
+
+		return _averageDuration;
+	}
+
+	@Override
 	public JSONObject getJSONObject() {
 		JSONObject jsonObject = super.getJSONObject();
 
@@ -58,6 +85,10 @@ public class PlaywrightJUnitTestClass extends JUnitTestClass {
 		return matcher.group("specFilePath");
 	}
 
+	public boolean isAnalyticsCloudEnabled() {
+		return _analyticsCloudEnabled;
+	}
+
 	protected PlaywrightJUnitTestClass(
 		BatchTestClassGroup batchTestClassGroup, File testClassFile) {
 
@@ -73,6 +104,16 @@ public class PlaywrightJUnitTestClass extends JUnitTestClass {
 			Properties testProperties = JenkinsResultsParserUtil.getProperties(
 				testPropertiesFile);
 
+			String analyticsCloudEnabled = JenkinsResultsParserUtil.getProperty(
+				testProperties, "analytics.cloud.enabled");
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(
+					analyticsCloudEnabled) &&
+				analyticsCloudEnabled.equals("true")) {
+
+				_analyticsCloudEnabled = true;
+			}
+
 			String minimumSlaveRAM = JenkinsResultsParserUtil.getProperty(
 				testProperties, "test.batch.minimum.slave.ram");
 
@@ -86,7 +127,7 @@ public class PlaywrightJUnitTestClass extends JUnitTestClass {
 				testProperties, "test.batch.slave.label");
 
 			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
-				slaveLabel = _SLAVE_LABEL_DEFAULT;
+				slaveLabel = getSlaveLabel();
 			}
 
 			_slaveLabel = slaveLabel;
@@ -108,11 +149,11 @@ public class PlaywrightJUnitTestClass extends JUnitTestClass {
 
 	private static final String _MINIMUM_SLAVE_RAM_DEFAULT = "12";
 
-	private static final String _SLAVE_LABEL_DEFAULT = "!master";
-
 	private static final Pattern _testFilePathPattern = Pattern.compile(
-		".+/playwright/tests/(?<specFilePath>.+)");
+		".+/playwright/(setup|tests)/(?<specFilePath>.+)");
 
+	private boolean _analyticsCloudEnabled;
+	private Long _averageDuration;
 	private final Integer _minimumSlaveRAM;
 	private final String _slaveLabel;
 

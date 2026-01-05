@@ -20,10 +20,11 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.style.book.constants.StyleBookConstants;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.service.StyleBookEntryLocalService;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.util.List;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -33,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pavel Savinov
  */
 @Component(
-	property = "javax.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
+	property = "jakarta.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
 	service = PortletDataHandler.class
 )
 public class StyleBookPortletDataHandler extends BasePortletDataHandler {
@@ -54,12 +55,31 @@ public class StyleBookPortletDataHandler extends BasePortletDataHandler {
 	protected void activate() {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(StyleBookEntry.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "entries", true, false, null,
 				StyleBookEntry.class.getName()));
 		setPublishToLiveByDefault(true);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
+	}
+
+	@Override
+	protected PortletPreferences doDeleteData(
+			PortletDataContext portletDataContext, String portletId,
+			PortletPreferences portletPreferences)
+		throws Exception {
+
+		if (portletDataContext.addPrimaryKey(
+				StyleBookPortletDataHandler.class, "deleteData")) {
+
+			return portletPreferences;
+		}
+
+		_styleBookEntryLocalService.deleteStyleBookEntries(
+			portletDataContext.getScopeGroupId());
+
+		return portletPreferences;
 	}
 
 	@Override
@@ -152,5 +172,8 @@ public class StyleBookPortletDataHandler extends BasePortletDataHandler {
 
 	@Reference
 	private Staging _staging;
+
+	@Reference
+	private StyleBookEntryLocalService _styleBookEntryLocalService;
 
 }

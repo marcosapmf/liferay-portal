@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -21,12 +22,12 @@ import com.liferay.portal.search.web.internal.facet.display.context.builder.Asse
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,14 +49,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.restore-current-view=false",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Category Facet",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/category/facet/view.jsp",
-		"javax.portlet.name=" + CategoryFacetPortletKeys.CATEGORY_FACET,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Category Facet",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/category/facet/view.jsp",
+		"jakarta.portlet.name=" + CategoryFacetPortletKeys.CATEGORY_FACET,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=guest,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -92,6 +93,9 @@ public class CategoryFacetPortlet extends MVCPortlet {
 	protected AssetVocabularyLocalService assetVocabularyLocalService;
 
 	@Reference
+	protected GroupLocalService groupLocalService;
+
+	@Reference
 	protected Portal portal;
 
 	@Reference
@@ -104,7 +108,7 @@ public class CategoryFacetPortlet extends MVCPortlet {
 		AssetCategoriesSearchFacetDisplayContextBuilder
 			assetCategoriesSearchFacetDisplayContextBuilder =
 				new AssetCategoriesSearchFacetDisplayContextBuilder(
-					renderRequest);
+					groupLocalService, renderRequest);
 
 		assetCategoriesSearchFacetDisplayContextBuilder.
 			setAssetCategoryLocalService(assetCategoryLocalService);
@@ -122,6 +126,7 @@ public class CategoryFacetPortlet extends MVCPortlet {
 
 		CategoryFacetPortletPreferences categoryFacetPortletPreferences =
 			new CategoryFacetPortletPreferencesImpl(
+				_assetVocabularyLocalService, _groupLocalService,
 				portletSharedSearchResponse.getPortletPreferences(
 					renderRequest));
 
@@ -182,5 +187,11 @@ public class CategoryFacetPortlet extends MVCPortlet {
 
 		return searchRequest.getPaginationStartParameterName();
 	}
+
+	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

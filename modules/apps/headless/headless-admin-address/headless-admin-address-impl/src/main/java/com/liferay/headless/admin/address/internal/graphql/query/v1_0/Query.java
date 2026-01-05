@@ -11,9 +11,9 @@ import com.liferay.headless.admin.address.resource.v1_0.CountryResource;
 import com.liferay.headless.admin.address.resource.v1_0.RegionResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -22,15 +22,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -78,6 +78,21 @@ public class Query {
 				countryResource.getCountriesPage(
 					active, search, Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(countryResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {country(countryId: ___){a2, a3, active, billingAllowed, groupFilterEnabled, id, idd, name, number, position, regions, shippingAllowed, subjectToVAT, title_i18n, zipRequired}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Country country(@GraphQLName("countryId") Long countryId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_countryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			countryResource -> countryResource.getCountry(countryId));
 	}
 
 	/**
@@ -139,16 +154,19 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {country(countryId: ___){a2, a3, active, billingAllowed, groupFilterEnabled, id, idd, name, number, position, regions, shippingAllowed, subjectToVAT, title_i18n, zipRequired}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {countryRegionByRegionCode(countryId: ___, regionCode: ___){active, countryId, id, name, position, regionCode, title_i18n}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public Country country(@GraphQLName("countryId") Long countryId)
+	public Region countryRegionByRegionCode(
+			@GraphQLName("countryId") Long countryId,
+			@GraphQLName("regionCode") String regionCode)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_countryResourceComponentServiceObjects,
+			_regionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			countryResource -> countryResource.getCountry(countryId));
+			regionResource -> regionResource.getCountryRegionByRegionCode(
+				countryId, regionCode));
 	}
 
 	/**
@@ -178,19 +196,16 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {countryRegionByRegionCode(countryId: ___, regionCode: ___){active, countryId, id, name, position, regionCode, title_i18n}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {region(regionId: ___){active, countryId, id, name, position, regionCode, title_i18n}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public Region countryRegionByRegionCode(
-			@GraphQLName("countryId") Long countryId,
-			@GraphQLName("regionCode") String regionCode)
+	public Region region(@GraphQLName("regionId") Long regionId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_regionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			regionResource -> regionResource.getCountryRegionByRegionCode(
-				countryId, regionCode));
+			regionResource -> regionResource.getRegion(regionId));
 	}
 
 	/**
@@ -214,21 +229,6 @@ public class Query {
 				regionResource.getRegionsPage(
 					active, search, Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(regionResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {region(regionId: ___){active, countryId, id, name, position, regionCode, title_i18n}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Region region(@GraphQLName("regionId") Long regionId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_regionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			regionResource -> regionResource.getRegion(regionId));
 	}
 
 	@GraphQLTypeExtension(Region.class)
@@ -369,6 +369,10 @@ public class Query {
 		countryResource.setContextUriInfo(_uriInfo);
 		countryResource.setContextUser(_user);
 		countryResource.setGroupLocalService(_groupLocalService);
+		countryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		countryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		countryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -382,6 +386,10 @@ public class Query {
 		regionResource.setContextUriInfo(_uriInfo);
 		regionResource.setContextUser(_user);
 		regionResource.setGroupLocalService(_groupLocalService);
+		regionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		regionResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		regionResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -392,12 +400,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

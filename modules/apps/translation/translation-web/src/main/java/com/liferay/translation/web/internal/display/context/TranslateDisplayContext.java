@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -40,6 +41,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.segments.model.SegmentsExperience;
@@ -49,6 +51,11 @@ import com.liferay.translation.info.field.TranslationInfoFieldChecker;
 import com.liferay.translation.model.TranslationEntry;
 import com.liferay.translation.service.TranslationEntryLocalServiceUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,11 +64,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alejandro Tardín
@@ -222,7 +224,7 @@ public class TranslateDisplayContext {
 		return HashMapBuilder.<String, Object>put(
 			"additionalFields",
 			HashMapBuilder.<String, Object>put(
-				"redirect", ParamUtil.getString(_httpServletRequest, "redirect")
+				"redirect", _getRedirect()
 			).put(
 				"sourceLanguageId", getSourceLanguageId()
 			).put(
@@ -235,7 +237,7 @@ public class TranslateDisplayContext {
 			() -> {
 				PortletRequest portletRequest =
 					(PortletRequest)_httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST);
+						JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 				return SessionErrors.contains(
 					portletRequest, "duplicateChanges");
@@ -254,7 +256,7 @@ public class TranslateDisplayContext {
 			"publishButtonLabel",
 			LanguageUtil.get(_httpServletRequest, getPublishButtonLabel())
 		).put(
-			"redirectURL", ParamUtil.getString(_httpServletRequest, "redirect")
+			"redirectURL", _getRedirect()
 		).put(
 			"saveButtonDisabled", isSaveButtonDisabled()
 		).put(
@@ -419,11 +421,7 @@ public class TranslateDisplayContext {
 	}
 
 	public boolean hasTranslationPermission() {
-		if (_isAvailableTargetLanguageIdsEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !_isAvailableTargetLanguageIdsEmpty();
 	}
 
 	public boolean isAutoTranslateEnabled() throws PortalException {
@@ -518,10 +516,18 @@ public class TranslateDisplayContext {
 	}
 
 	private Map<String, Object> _getInfoFieldEditorConfig(String infoFieldId) {
+		String editorName = "ckeditor";
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-11235")) {
+
+			editorName = "ckeditor5_classic";
+		}
+
 		EditorConfiguration editorConfiguration =
 			EditorConfigurationFactoryUtil.getEditorConfiguration(
 				TranslationPortletKeys.TRANSLATION, _getEditorConfigKey(),
-				"ckeditor",
+				editorName,
 				HashMapBuilder.<String, Object>put(
 					"liferay-ui:input-editor:allowBrowseDocuments", true
 				).put(
@@ -540,6 +546,17 @@ public class TranslateDisplayContext {
 		return editorConfiguration.getData();
 	}
 
+	private String _getRedirect() {
+		if (Validator.isNotNull(_redirect)) {
+			return _redirect;
+		}
+
+		_redirect = PortalUtil.escapeRedirect(
+			ParamUtil.getString(_httpServletRequest, "redirect"));
+
+		return _redirect;
+	}
+
 	private TranslationEntry _getTranslationEntry() {
 		if (_translationEntry != null) {
 			return _translationEntry;
@@ -553,11 +570,7 @@ public class TranslateDisplayContext {
 	}
 
 	private boolean _isAvailableTargetLanguageIdsEmpty() {
-		if (_availableTargetLanguageIds.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return _availableTargetLanguageIds.isEmpty();
 	}
 
 	private final List<String> _availableSourceLanguageIds;
@@ -571,6 +584,7 @@ public class TranslateDisplayContext {
 	private final InfoForm _infoForm;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final Object _object;
+	private String _redirect;
 	private final long _segmentsExperienceId;
 	private final InfoItemFieldValues _sourceInfoItemFieldValues;
 	private final String _sourceLanguageId;

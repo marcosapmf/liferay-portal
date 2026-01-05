@@ -18,6 +18,8 @@ import com.liferay.portal.search.legacy.stats.StatsRequestBuilderFactory;
 import com.liferay.portal.search.opensearch2.internal.groupby.GroupByTranslator;
 import com.liferay.portal.search.opensearch2.internal.highlight.HighlightTranslator;
 import com.liferay.portal.search.opensearch2.internal.legacy.sort.SortTranslator;
+import com.liferay.portal.search.opensearch2.internal.query.OpenSearchQueryTranslator;
+import com.liferay.portal.search.opensearch2.internal.sort.OpenSearchSortFieldTranslator;
 import com.liferay.portal.search.opensearch2.internal.stats.StatsTranslator;
 import com.liferay.portal.search.opensearch2.internal.util.SetterUtil;
 import com.liferay.portal.search.query.QueryTranslator;
@@ -26,6 +28,7 @@ import com.liferay.portal.search.sort.SortFieldTranslator;
 import com.liferay.portal.search.stats.StatsRequest;
 import com.liferay.portal.search.stats.StatsRequestBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ import java.util.Map;
 import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.Time;
 import org.opensearch.client.opensearch._types.TimeUnit;
+import org.opensearch.client.opensearch._types.query_dsl.FieldAndFormat;
 import org.opensearch.client.opensearch._types.query_dsl.QueryVariant;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.search.SourceConfig;
@@ -57,6 +61,7 @@ public class SearchSearchRequestAssemblerImpl
 			searchSearchRequest, searchRequestBuilder);
 
 		_setFetchSource(searchRequestBuilder, searchSearchRequest);
+		_setFields(searchRequestBuilder, searchSearchRequest);
 		_setGroupBy(searchRequestBuilder, searchSearchRequest);
 		_setGroupByRequests(searchRequestBuilder, searchSearchRequest);
 		_setHighlighter(searchRequestBuilder, searchSearchRequest);
@@ -90,6 +95,9 @@ public class SearchSearchRequestAssemblerImpl
 			(searchSearchRequest.getFetchSourceExcludes() == null) &&
 			(searchSearchRequest.getFetchSourceIncludes() == null)) {
 
+			searchRequestBuilder.source(
+				SourceConfig.of(sourceConfig -> sourceConfig.fetch(false)));
+
 			return;
 		}
 
@@ -106,6 +114,22 @@ public class SearchSearchRequestAssemblerImpl
 			));
 
 		searchRequestBuilder.source(sourceConfigBuilder.build());
+	}
+
+	private void _setFields(
+		SearchRequest.Builder searchRequestBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		String[] selectedFieldNames =
+			searchSearchRequest.getSelectedFieldNames();
+
+		if (ArrayUtil.isNotEmpty(selectedFieldNames)) {
+			searchRequestBuilder.fields(_toFieldAndFormats(selectedFieldNames));
+		}
+		else {
+			searchRequestBuilder.fields(
+				_toFieldAndFormats(new String[] {StringPool.STAR}));
+		}
 	}
 
 	private void _setGroupBy(
@@ -160,7 +184,6 @@ public class SearchSearchRequestAssemblerImpl
 					searchSearchRequest.getHighlightFieldNames(),
 					searchSearchRequest.getHighlightFragmentSize(),
 					searchSearchRequest.isHighlightRequireFieldMatch(),
-					searchSearchRequest.isLuceneSyntax(),
 					searchSearchRequest.getHighlightSnippetSize()));
 		}
 	}
@@ -241,16 +264,13 @@ public class SearchSearchRequestAssemblerImpl
 		SearchRequest.Builder searchRequestBuilder,
 		SearchSearchRequest searchSearchRequest) {
 
-		String[] selectedFieldNames =
-			searchSearchRequest.getSelectedFieldNames();
+		String[] storedFields = searchSearchRequest.getStoredFields();
 
-		if (!ArrayUtil.isEmpty(selectedFieldNames)) {
-			searchRequestBuilder.storedFields(
-				ListUtil.fromArray(selectedFieldNames));
+		if (ArrayUtil.isEmpty(storedFields)) {
+			return;
 		}
-		else {
-			searchRequestBuilder.storedFields(StringPool.STAR);
-		}
+
+		searchRequestBuilder.storedFields(ListUtil.fromArray(storedFields));
 	}
 
 	private void _setTrackScores(
@@ -270,6 +290,18 @@ public class SearchSearchRequestAssemblerImpl
 			searchRequestBuilder::version, searchSearchRequest.getVersion());
 	}
 
+	private List<FieldAndFormat> _toFieldAndFormats(String[] fieldNames) {
+		List<FieldAndFormat> fieldAndFormats = new ArrayList<>();
+
+		for (String fieldName : fieldNames) {
+			fieldAndFormats.add(
+				FieldAndFormat.of(
+					fieldAndFormat -> fieldAndFormat.field(fieldName)));
+		}
+
+		return fieldAndFormats;
+	}
+
 	@Reference
 	private CommonSearchRequestBuilderAssembler
 		_commonSearchRequestBuilderAssembler;
@@ -277,20 +309,15 @@ public class SearchSearchRequestAssemblerImpl
 	@Reference
 	private GroupByRequestFactory _groupByRequestFactory;
 
-	@Reference
-	private GroupByTranslator _groupByTranslator;
-
+	private final GroupByTranslator _groupByTranslator =
+		new GroupByTranslator();
 	private final HighlightTranslator _highlightTranslator =
 		new HighlightTranslator();
-
-	@Reference(target = "(search.engine.impl=OpenSearch)")
-	private QueryTranslator<QueryVariant> _queryTranslator;
-
-	@Reference
-	private SortFieldTranslator<SortOptions> _sortFieldTranslator;
-
-	@Reference
-	private SortTranslator _sortTranslator;
+	private final QueryTranslator<QueryVariant> _queryTranslator =
+		new OpenSearchQueryTranslator();
+	private final SortFieldTranslator<SortOptions> _sortFieldTranslator =
+		new OpenSearchSortFieldTranslator();
+	private final SortTranslator _sortTranslator = new SortTranslator();
 
 	@Reference
 	private StatsRequestBuilderFactory _statsRequestBuilderFactory;

@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -38,7 +38,9 @@ page import="com.liferay.asset.kernel.NoSuchClassTypeException" %><%@
 page import="com.liferay.asset.kernel.exception.AssetCategoryLimitException" %><%@
 page import="com.liferay.asset.kernel.exception.AssetCategoryNameException" %><%@
 page import="com.liferay.asset.kernel.exception.DuplicateCategoryException" %><%@
+page import="com.liferay.asset.kernel.exception.DuplicateCategoryExternalReferenceCodeException" %><%@
 page import="com.liferay.asset.kernel.exception.DuplicateVocabularyException" %><%@
+page import="com.liferay.asset.kernel.exception.DuplicateVocabularyExternalReferenceCodeException" %><%@
 page import="com.liferay.asset.kernel.exception.NoSuchCategoryException" %><%@
 page import="com.liferay.asset.kernel.exception.NoSuchVocabularyException" %><%@
 page import="com.liferay.asset.kernel.exception.VocabularyNameException" %><%@
@@ -48,6 +50,7 @@ page import="com.liferay.asset.kernel.model.AssetVocabulary" %><%@
 page import="com.liferay.asset.kernel.model.AssetVocabularyConstants" %><%@
 page import="com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil" %><%@
 page import="com.liferay.asset.kernel.service.AssetVocabularyServiceUtil" %><%@
+page import="com.liferay.change.tracking.spi.history.util.CTTimelineUtil" %><%@
 page import="com.liferay.frontend.taglib.servlet.taglib.util.EmptyResultMessageKeys" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
@@ -69,13 +72,13 @@ page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %>
 
+<%@ page import="jakarta.portlet.PortletURL" %>
+
 <%@ page import="java.util.ArrayList" %><%@
 page import="java.util.Collections" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

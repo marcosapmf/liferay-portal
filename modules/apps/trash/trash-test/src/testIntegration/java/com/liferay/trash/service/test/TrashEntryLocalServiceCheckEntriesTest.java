@@ -12,6 +12,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLTrashLocalServiceUtil;
 import com.liferay.exportimport.kernel.service.StagingLocalServiceUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -19,7 +20,7 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -88,26 +89,26 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 
 	@Test
 	public void testCompanies() throws Exception {
-		Long companyId = CompanyThreadLocal.getCompanyId();
+		long[] companyIds = new long[_COMPANIES_COUNT];
 
 		for (int i = 0; i < _COMPANIES_COUNT; i++) {
-			long newCompanyId = createCompany();
-
-			CompanyThreadLocal.setCompanyId(newCompanyId);
-
-			Group group = updateTrashEntriesMaxAge(
-				createGroup(newCompanyId), _MAX_AGE);
-
-			createTrashEntries(group);
+			companyIds[i] = createCompany();
 		}
+
+		CompanyLocalServiceUtil.forEachCompanyId(
+			companyId -> {
+				Group group = updateTrashEntriesMaxAge(
+					createGroup(companyId), _MAX_AGE);
+
+				createTrashEntries(group);
+			},
+			companyIds);
 
 		TrashEntryLocalServiceUtil.checkEntries();
 
 		Assert.assertEquals(
 			_COMPANIES_COUNT * _NOT_EXPIRED_TRASH_ENTRIES_COUNT,
 			TrashEntryLocalServiceUtil.getTrashEntriesCount());
-
-		CompanyThreadLocal.setCompanyId(companyId);
 	}
 
 	@Test
@@ -270,15 +271,15 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 		Layout layout = LayoutTestUtil.addTypePortletLayout(group);
 
 		return GroupLocalServiceUtil.addGroup(
-			user.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID,
-			Layout.class.getName(), layout.getPlid(),
-			GroupConstants.DEFAULT_LIVE_GROUP_ID,
+			StringPool.BLANK, user.getUserId(),
+			GroupConstants.DEFAULT_PARENT_GROUP_ID, Layout.class.getName(),
+			layout.getPlid(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), String.valueOf(layout.getPlid())
 			).build(),
-			(Map<Locale, String>)null, 0, true,
-			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, true,
-			null);
+			(Map<Locale, String>)null, 0, null, true,
+			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, false,
+			true, null);
 	}
 
 	protected void createTrashEntries(Group group) throws Exception {

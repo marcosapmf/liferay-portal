@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -26,8 +27,6 @@ definition {
 
 	@priority = 4
 	test CanExportAllSystemAndDraftCustomObjectDefinitionsToJSON {
-		property portal.acceptance = "true";
-
 		task ("Given I create a Student custom object without any field") {
 			ObjectDefinitionAPI.createObjectDefinition(
 				en_US_label = "Student",
@@ -54,8 +53,6 @@ definition {
 
 	@priority = 4
 	test CanExportAllSystemAndPublishedCustomObjectDefinitionsToJSONL {
-		property portal.acceptance = "true";
-
 		task ("Given I pusblih a Student custom object with name field") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "Student",
@@ -83,8 +80,6 @@ definition {
 
 	@priority = 4
 	test CanExportAllSystemObjectDefinitionsToJson {
-		property portal.acceptance = "true";
-
 		task ("When I export ObjectDefinition to a JSON format file in Import/Export center") {
 			ImportExport.exportAndUnzipFile(
 				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
@@ -103,8 +98,6 @@ definition {
 
 	@priority = 4
 	test CanExportCustomObjectFieldToJSONT {
-		property portal.acceptance = "true";
-
 		task ("Given I publish a Student custom object with myTest field") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "Student",

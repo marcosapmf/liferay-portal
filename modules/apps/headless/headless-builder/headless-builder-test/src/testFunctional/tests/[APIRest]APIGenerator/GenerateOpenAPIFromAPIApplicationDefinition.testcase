@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -24,7 +25,6 @@ definition {
 
 	@priority = 5
 	test CanGenerateOpenAPIFromAPIApplicationDefinition {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -82,7 +82,6 @@ definition {
 
 	@priority = 4
 	test CanHideAPIApplicationOnRestApplicationsListByUnbublishing {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -119,7 +118,6 @@ definition {
 
 	@priority = 4
 	test CannotSeeUnpublishedAPIApplicationListedAsRestApplication {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -157,7 +155,6 @@ definition {
 
 	@priority = 4
 	test CanSeePublishedAPIApplicationListedAsRestApplication {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

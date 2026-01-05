@@ -45,13 +45,34 @@ public class ObjectEntryTable extends BaseTable<ObjectEntryTable> {
 		"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<ObjectEntryTable, Date> modifiedDate = createColumn(
 		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Long> headObjectEntryId =
+		createColumn(
+			"headObjectEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<ObjectEntryTable, Long> objectDefinitionId =
 		createColumn(
 			"objectDefinitionId", Long.class, Types.BIGINT,
 			Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Long> objectEntryFolderId =
+		createColumn(
+			"objectEntryFolderId", Long.class, Types.BIGINT,
+			Column.FLAG_DEFAULT);
 	public final Column<ObjectEntryTable, Long> rootObjectEntryId =
 		createColumn(
 			"rootObjectEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, String> defaultLanguageId =
+		createColumn(
+			"defaultLanguageId", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Date> displayDate = createColumn(
+		"displayDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Date> expirationDate = createColumn(
+		"expirationDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Date> reviewDate = createColumn(
+		"reviewDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, String> treePath = createColumn(
+		"treePath", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ObjectEntryTable, Integer> version = createColumn(
+		"version", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<ObjectEntryTable, Date> lastPublishDate = createColumn(
 		"lastPublishDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<ObjectEntryTable, Integer> status = createColumn(

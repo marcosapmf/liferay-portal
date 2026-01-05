@@ -1,6 +1,6 @@
 import * as API from 'shared/api';
 import Alerts, {AlertTypes} from 'shared/components/Alert';
-import BasePage from 'settings/components/BasePage';
+import BasePage from 'settings/components/base-page/BasePage';
 import Card from 'shared/components/Card';
 import ClayButton from '@clayui/button';
 import ClayLink from '@clayui/link';
@@ -67,8 +67,6 @@ const TokenList: React.FC<
 	const [loading, setLoading] = useState(false);
 	const [onCloseAlert, setOnCloseAlert] = useState(false);
 
-	const tokenExpired = !!tokens.length && isExpired(tokens[0].expirationDate);
-
 	const handleError = () => {
 		setLoading(false);
 
@@ -90,9 +88,13 @@ const TokenList: React.FC<
 		refetch();
 	};
 
+	const hasActiveToken = tokens.find(
+		token => !isExpired(token.expirationDate)
+	);
+
 	return (
 		<div className='col-xl-8 pl-0'>
-			{tokenExpired && !onCloseAlert && (
+			{!!tokens.length && !hasActiveToken && !onCloseAlert && (
 				<Alerts
 					iconSymbol='warning-full'
 					onClose={() => setOnCloseAlert(true)}
@@ -103,7 +105,7 @@ const TokenList: React.FC<
 				</Alerts>
 			)}
 
-			{(tokenExpired || !tokens.length) && (
+			{(!tokens.length || !hasActiveToken) && (
 				<GenerateTokenCard
 					groupId={groupId}
 					onError={handleError}
@@ -191,8 +193,10 @@ const TokenList: React.FC<
 							].filter(Boolean) as Column[]
 						}
 						items={tokens}
-						renderInlineRowActions={({data: {token}}) => {
-							if (tokenExpired) return null;
+						renderInlineRowActions={({
+							data: {expirationDate, token}
+						}) => {
+							if (isExpired(expirationDate)) return null;
 
 							return (
 								<>
@@ -292,7 +296,6 @@ interface IAccessTokenListProps {
 export const AccessTokenList: React.FC<IAccessTokenListProps> = ({groupId}) => (
 	<BasePage
 		className='access-token-list-root'
-		groupId={groupId}
 		pageDescription={sub(
 			Liferay.Language.get(
 				'access-this-workspaces-data-via-api-using-an-access-token.-a-full-list-of-endpoints-is-available-in-the-x'

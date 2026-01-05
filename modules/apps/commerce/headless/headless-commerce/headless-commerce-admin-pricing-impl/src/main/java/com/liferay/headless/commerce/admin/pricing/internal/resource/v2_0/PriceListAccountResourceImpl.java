@@ -15,7 +15,7 @@ import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListAccountResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -27,7 +27,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,9 @@ public class PriceListAccountResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -74,14 +74,14 @@ public class PriceListAccountResourceImpl
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListAccountRelService.
 				getCommercePriceListAccountRelsCount(
 					commercePriceList.getCommercePriceListId());
 
 		return Page.of(
 			_toPriceListAccounts(commercePriceListAccountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(parentClass = PriceList.class, value = "priceListAccounts")
@@ -96,13 +96,13 @@ public class PriceListAccountResourceImpl
 				id, search, pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListAccountRelService.
 				getCommercePriceListAccountRelsCount(id, search);
 
 		return Page.of(
 			_toPriceListAccounts(commercePriceListAccountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -112,8 +112,9 @@ public class PriceListAccountResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -181,18 +182,11 @@ public class PriceListAccountResourceImpl
 			List<CommercePriceListAccountRel> commercePriceListAccountRels)
 		throws Exception {
 
-		List<PriceListAccount> priceListAccounts = new ArrayList<>();
-
-		for (CommercePriceListAccountRel commercePriceListAccountRel :
-				commercePriceListAccountRels) {
-
-			priceListAccounts.add(
-				_toPriceListAccount(
-					commercePriceListAccountRel.
-						getCommercePriceListAccountRelId()));
-		}
-
-		return priceListAccounts;
+		return transform(
+			commercePriceListAccountRels,
+			commercePriceListAccountRel -> _toPriceListAccount(
+				commercePriceListAccountRel.
+					getCommercePriceListAccountRelId()));
 	}
 
 	@Reference

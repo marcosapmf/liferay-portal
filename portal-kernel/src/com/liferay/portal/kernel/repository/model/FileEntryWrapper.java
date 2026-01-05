@@ -55,11 +55,7 @@ public class FileEntryWrapper implements FileEntry, ModelWrapper<FileEntry> {
 
 		FileEntryWrapper fileEntryWrapper = (FileEntryWrapper)object;
 
-		if (Objects.equals(_fileEntry, fileEntryWrapper._fileEntry)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_fileEntry, fileEntryWrapper._fileEntry);
 	}
 
 	@Override
@@ -383,6 +379,11 @@ public class FileEntryWrapper implements FileEntry, ModelWrapper<FileEntry> {
 	@Override
 	public void setCreateDate(Date createDate) {
 		_fileEntry.setCreateDate(createDate);
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		_fileEntry.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	@Override

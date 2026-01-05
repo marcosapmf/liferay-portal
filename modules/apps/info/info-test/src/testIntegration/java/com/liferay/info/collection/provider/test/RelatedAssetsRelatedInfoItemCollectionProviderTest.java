@@ -42,16 +42,17 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -81,7 +82,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -127,15 +127,17 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPS-112360,LPS-127023")
+	@TestInfo({"LPS-112360", "LPS-127023"})
 	public void testCollectionDisplayWithInfoListRenderer() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(FileEntry.class.getName()),
 			_dlFileEntry.getFileEntryTypeId());
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapCollectionDisplayWithInfoListRenderer(
 			layout, "FileEntry_title", segmentsExperienceId);
@@ -148,14 +150,16 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPS-112360,LPS-127023")
+	@TestInfo({"LPS-112360", "LPS-127023"})
 	public void testMapContentDisplayInCollectionDisplay() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(BlogsEntry.class.getName()), 0);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapContentDisplayInCollectionDisplay(
 			layout, "BlogsEntry_title", segmentsExperienceId);
@@ -168,15 +172,17 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 	}
 
 	@Test
-	@TestInfo("LPD-32486,LPS-112360,LPS-127023")
+	@TestInfo({"LPD-32486", "LPS-112360", "LPS-127023"})
 	public void testMapInfoFieldInCollectionDisplay() throws Exception {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(JournalArticle.class.getName()),
 			_journalArticle.getDDMStructureId());
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplay(
 			layout, "JournalArticle_title", segmentsExperienceId);
@@ -203,10 +209,7 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 					_journalArticle.getResourcePrimKey(), _journalArticle),
 				layout, segmentsExperienceId);
 
-			Assert.assertTrue(
-				html,
-				StringUtil.contains(
-					html, journalArticle.getTitle(), StringPool.BLANK));
+			Assert.assertTrue(html, html.contains(journalArticle.getTitle()));
 		}
 		finally {
 			_journalArticleLocalService.deleteArticle(journalArticle);
@@ -221,9 +224,11 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 		Layout layout = _addDefaultDisplayPageTemplateLayout(
 			_portal.getClassNameId(AssetCategory.class.getName()), 0);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplayNestedInCollectionDisplay(
 			"com.liferay.asset.categories.admin.web.internal.info.collection." +
@@ -239,10 +244,7 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 				assetCategory),
 			2, layout, segmentsExperienceId);
 
-		Assert.assertTrue(
-			html,
-			StringUtil.contains(
-				html, assetCategory.getName(), StringPool.BLANK));
+		Assert.assertTrue(html, html.contains(assetCategory.getName()));
 	}
 
 	@Test
@@ -252,9 +254,11 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		_mapInfoFieldInCollectionDisplayNestedInCollectionDisplay(
 			"com.liferay.asset.internal.info.collection.provider." +
@@ -351,11 +355,9 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				classNameId, classTypeId, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, WorkflowConstants.STATUS_DRAFT, _serviceContext);
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId, classTypeId, true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
 	}
@@ -385,7 +387,7 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 			StringPool.BLANK,
 			"<h1 data-lfr-editable-id=\"element-text\" " +
 				"data-lfr-editable-type=\"text\">Heading Example</h1>",
-			StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+			StringPool.BLANK, false, StringPool.BLANK, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
@@ -396,10 +398,10 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
-				segmentsExperienceId, layout.getPlid(), _fragmentEntry.getCss(),
-				_fragmentEntry.getHtml(), _fragmentEntry.getJs(),
-				_fragmentEntry.getConfiguration(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				null, null, segmentsExperienceId, layout.getPlid(),
+				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
+				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),
 				JSONUtil.put(
 					FragmentEntryProcessorConstants.
 						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
@@ -429,10 +431,10 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 			layout, _layoutStructureProvider, null, parentItemId, 0,
 			segmentsExperienceId,
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
-				segmentsExperienceId, layout.getPlid(), _fragmentEntry.getCss(),
-				_fragmentEntry.getHtml(), _fragmentEntry.getJs(),
-				_fragmentEntry.getConfiguration(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				null, null, segmentsExperienceId, layout.getPlid(),
+				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
+				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),
 				JSONUtil.put(
 					FragmentEntryProcessorConstants.
 						KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
@@ -455,16 +457,26 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 			long segmentsExperienceId)
 		throws Exception {
 
-		String html = ContentLayoutTestUtil.getRenderLayoutHTML(
-			attributes, layout, _layoutServiceContextHelper,
-			_layoutStructureProvider, segmentsExperienceId);
+		String html = StringUtil.removeChars(
+			ContentLayoutTestUtil.getRenderLayoutHTML(
+				attributes, layout, _layoutServiceContextHelper,
+				_layoutStructureProvider, segmentsExperienceId),
+			CharPool.NEW_LINE, CharPool.SPACE, CharPool.TAB);
 
 		Assert.assertEquals(
-			html, count, StringUtil.count(html, _blogsEntry.getTitle()));
+			html, count,
+			StringUtil.count(
+				html, StringPool.GREATER_THAN + _blogsEntry.getTitle() + "</"));
 		Assert.assertEquals(
-			html, count, StringUtil.count(html, _dlFileEntry.getTitle()));
+			html, count,
+			StringUtil.count(
+				html,
+				StringPool.GREATER_THAN + _dlFileEntry.getTitle() + "</"));
 		Assert.assertEquals(
-			html, count, StringUtil.count(html, _journalArticle.getTitle()));
+			html, count,
+			StringUtil.count(
+				html,
+				StringPool.GREATER_THAN + _journalArticle.getTitle() + "</"));
 
 		return html;
 	}
@@ -563,11 +575,12 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 			draftLayout, _layoutStructureProvider, null, null, 0,
 			segmentsExperienceId,
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), draftLayout.getGroupId(), 0,
-				0, segmentsExperienceId, draftLayout.getPlid(),
+				null, TestPropsValues.getUserId(), draftLayout.getGroupId(),
+				null, null, null, segmentsExperienceId, draftLayout.getPlid(),
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-				fragmentRenderer.getConfiguration(
-					defaultFragmentRendererContext),
+				JSONFactoryUtil.toString(
+					fragmentRenderer.getConfigurationJSONObject(
+						defaultFragmentRendererContext)),
 				"{}", StringPool.BLANK, 0, fragmentRenderer.getKey(),
 				fragmentRenderer.getType(), _serviceContext));
 
@@ -621,11 +634,10 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 				(CollectionStyledLayoutStructureItem)
 					layoutStructure.getLayoutStructureItem(itemId);
 
-		List<String> childrenItemIds =
-			collectionStyledLayoutStructureItem.getChildrenItemIds();
-
 		_addInfoFieldInCollectionDisplayToLayout(
-			draftLayout, childrenItemIds.get(0), segmentsExperienceId);
+			draftLayout,
+			collectionStyledLayoutStructureItem.getChildrenItemId(0),
+			segmentsExperienceId);
 
 		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 	}
@@ -691,10 +703,6 @@ public class RelatedAssetsRelatedInfoItemCollectionProviderTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Inject
 	private LayoutServiceContextHelper _layoutServiceContextHelper;

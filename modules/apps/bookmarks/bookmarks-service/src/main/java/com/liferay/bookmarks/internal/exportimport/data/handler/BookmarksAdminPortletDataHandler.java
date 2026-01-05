@@ -24,9 +24,9 @@ import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.List;
+import jakarta.portlet.PortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
+	property = "jakarta.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
 	service = PortletDataHandler.class
 )
 public class BookmarksAdminPortletDataHandler extends BasePortletDataHandler {
@@ -91,14 +91,15 @@ public class BookmarksAdminPortletDataHandler extends BasePortletDataHandler {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(BookmarksEntry.class),
 			new StagedModelType(BookmarksFolder.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "folders", true, false, null,
 				BookmarksFolder.class.getName()),
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "entries", true, false, null,
 				BookmarksEntry.class.getName()));
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override

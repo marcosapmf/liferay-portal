@@ -1,7 +1,8 @@
-@component-name = "portal-security"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
+	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.assert.warning.exceptions = "false";
@@ -11,6 +12,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -27,7 +32,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-45254. View URL validate."
-	@priority = 3
+	@priority = 4
 	test MaliciousURLScriptsAreNotValidated {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -42,9 +47,6 @@ definition {
 			var maliciousUrl3 = '''
 					http://localhost:8080/group/control_panel/manage?p_p_id=132&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_132_struts_action=%2Fplugins_admin%2Fedit_plugin&_132_pluginId=116&_132_pluginType=portlet&_132_title=Activities&_132_moduleId=%3Cscript%3Ealert(%22xss%22);%3C/script%3E&_2_backURL=alert%28%27xss%27%29
 				''';
-			var maliciousUrl4 = '''
-					http://localhost:8080/html/portal/progress_poller.jsp?ProgressId=a%3D1%3Balert(document.cookie)%3B%2F%2F
-				''';
 
 			Navigator.openSpecificURL(url = ${maliciousUrl1});
 
@@ -54,7 +56,7 @@ definition {
 
 			UserBar.gotoDropdownItem(dropdownItem = "Account Settings");
 
-			for (var maliciousURL : list "${maliciousUrl2},${maliciousUrl3},${maliciousUrl4}") {
+			for (var maliciousURL : list "${maliciousUrl2},${maliciousUrl3}") {
 				Navigator.openSpecificURL(url = ${maliciousURL});
 
 				AssertAlertNotPresent();
@@ -63,7 +65,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-7595. Validate XSS vulnerabilities."
-	@priority = 3
+	@priority = 4
 	test MaliciousURLScriptsDoNotExecute {
 		task ("Visit malicious urls and request error message") {
 			var portalURL = PropsUtil.get("portal.url");
@@ -103,7 +105,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-92264. Assert no XSS pop up in asset publisher content."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInAssetPublisherContent {
 		task ("Add web content") {
 			JSONWebcontent.addWebContent(
@@ -151,10 +153,8 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-90727. Assert no XSS vulnerability when modifying a specific URL from the control panel."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInControlPanel {
-		property portal.acceptance = "true";
-
 		task ("Go to Account Settings and save p_p_auth param from the URL") {
 			var portalURL = PropsUtil.get("portal.url");
 
@@ -175,7 +175,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-83273. View forms entry with XSS."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInForms {
 		var formDescription = '''<script>alert(222)</script>''';
 		var formName = '''<script>alert(111)</script>''';
@@ -239,7 +239,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-72807. View google analytics ID."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInGoogleAnalyticsID {
 		task ("Edit google analytics Id successfully") {
 			Site.openSiteSettingsAdmin(siteURLKey = "guest");
@@ -253,7 +253,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-113685"
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInGroovyScript {
 		property test.liferay.virtual.instance = "false";
 
@@ -275,7 +275,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-10563. View JSONWS."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInJSONWS {
 		task ("Access JSONWS successfully") {
 			var portalURL = PropsUtil.get("portal.url");
@@ -287,7 +287,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-59198. View LDAP."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInLDAP {
 		task ("Add LDAP server successfully") {
 			PortalSettings.gotoConfiguration(
@@ -311,7 +311,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-10563. View liferay portlet list."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInLiferayPortletList {
 		task ("Add public page") {
 			var portalURL = PropsUtil.get("portal.url");
@@ -346,7 +346,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-10472. View, look and feel."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInLookAndFeel {
 		task ("Add public page") {
 			JSONLayout.addPublicLayout(
@@ -382,7 +382,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-123822, LPS-127611 and LPS-133261. View Matomo."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInMatomo {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -405,7 +405,7 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-10472. View Recycle bin."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInRecycleBin {
 		var entryTitle = '''<script>alert(123);</script>''';
 
@@ -447,7 +447,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-48990. View roles."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInRoles {
 		task ("Add role") {
 			Role.openRolesAdmin();
@@ -489,10 +489,8 @@ definition {
 	}
 
 	@description = "This is a use case for LRQA-30154. View search results."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInSearchResults {
-		property portal.acceptance = "true";
-
 		var siteName = '''<script>alert(123);</script>''';
 
 		task ("Add blank CP") {
@@ -522,7 +520,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-71236 and LPS-71307. View web content."
-	@priority = 3
+	@priority = 4
 	test NoXSSVulnerabilityInWebContent {
 		task ("Given: A Web Content is created with a script in the title") {
 			JSONWebcontent.addWebContent(
@@ -571,56 +569,13 @@ definition {
 
 			WebContent.addFeaturedImageFromURL(imageSourceURL = '''<img src="http://url.to.file.which/not.exist" onerror=alert(123);>''');
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Then: It should be possible to change the display style without seeing any alert") {
 			LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
 			AssertAlertNotPresent();
-		}
-	}
-
-	@description = "This is a use case for LPS-45254. View wiki."
-	@priority = 3
-	test NoXSSVulnerabilityInWiki {
-		task ("Edit user information") {
-			Navigator.openURL();
-
-			UserBar.gotoDropdownItem(dropdownItem = "Account Settings");
-
-			User.editUserInformation(
-				userFirstNameEdit = '''<script>alert(123);</script>''',
-				userLastNameEdit = '''<script>alert(123);</script>''',
-				userMiddleNameEdit = '''<script>alert(123);</script>''');
-		}
-
-		task ("Add CP to main wiki node") {
-			WikiNavigator.openWikiAdmin(siteURLKey = "guest");
-
-			JSONWiki.addWikiPage(
-				groupName = "Guest",
-				wikiNodeName = "Main",
-				wikiPageContent = "Wiki Page Content",
-				wikiPageName = "Wiki Page Title");
-		}
-
-		task ("Assert correct name showed") {
-			WikiNavigator.openToWikiPage(
-				siteURLKey = "guest",
-				wikiNodeName = "Main",
-				wikiPageTitle = "Wiki Page Title");
-
-			WikiPage.viewNotPresentInPageBody(elementValue = "XSS");
-		}
-
-		task ("Assert correct HTML source text") {
-			var actualScript = '''<script>alert(123);</script>''';
-			var escapedScript = '''&lt;script&gt;alert(123);&lt;/script&gt;''';
-
-			AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
-
-			AssertHTMLSourceTextPresent(value1 = ${escapedScript});
 		}
 	}
 

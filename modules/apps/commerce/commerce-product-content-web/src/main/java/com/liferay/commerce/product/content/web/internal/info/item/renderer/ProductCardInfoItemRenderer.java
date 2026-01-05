@@ -6,25 +6,25 @@
 package com.liferay.commerce.product.content.web.internal.info.item.renderer;
 
 import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.content.constants.CPContentWebKeys;
 import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.info.item.renderer.CPContentInfoItemRendererRegistry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Locale;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -67,7 +67,7 @@ public class ProductCardInfoItemRenderer
 				_cpDefinitionHelper.getCPCatalogEntry(
 					_getAccountEntryId(groupId, httpServletRequest), groupId,
 					cpDefinition.getCPDefinitionId(),
-					_portal.getLocale(httpServletRequest)));
+					_portal.getLocale(httpServletRequest), false));
 
 			httpServletRequest.setAttribute(
 				CPContentWebKeys.CP_CONTENT_HELPER, _cpContentHelper);

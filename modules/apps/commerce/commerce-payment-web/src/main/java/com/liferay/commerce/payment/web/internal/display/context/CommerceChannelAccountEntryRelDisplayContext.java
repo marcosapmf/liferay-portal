@@ -22,10 +22,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Crescenzo Rega
@@ -97,16 +97,16 @@ public class CommerceChannelAccountEntryRelDisplayContext {
 					_commerceChannel.getCommerceChannelId(),
 					CommerceChannelAccountEntryRelConstants.TYPE_PAYMENT);
 
-		if (commerceChannelAccountEntryRel != null) {
-			_commercePaymentMethodGroupRel =
-				_commercePaymentMethodGroupRelService.
-					fetchCommercePaymentMethodGroupRel(
-						commerceChannelAccountEntryRel.getClassPK());
-
-			return _commercePaymentMethodGroupRel;
+		if (commerceChannelAccountEntryRel == null) {
+			return null;
 		}
 
-		return null;
+		_commercePaymentMethodGroupRel =
+			_commercePaymentMethodGroupRelService.
+				fetchCommercePaymentMethodGroupRel(
+					commerceChannelAccountEntryRel.getClassPK());
+
+		return _commercePaymentMethodGroupRel;
 	}
 
 	public List<CommercePaymentMethodGroupRel>

@@ -19,12 +19,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
+		"jakarta.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"mvc.command.name=/site_admin/edit_site_url"
 	},
 	service = MVCActionCommand.class
@@ -65,7 +65,8 @@ public class EditSiteURLMVCActionCommand
 			redirect = true;
 		}
 
-		_groupService.updateFriendlyURL(liveGroup.getGroupId(), friendlyURL);
+		liveGroup = _groupService.updateFriendlyURL(
+			liveGroup.getGroupId(), friendlyURL);
 
 		Set<Locale> availableLocales = _language.getAvailableLocales(
 			liveGroup.getGroupId());
@@ -128,9 +129,9 @@ public class EditSiteURLMVCActionCommand
 			group = group.getStagingGroup();
 		}
 
-		String siteAdministrationURL = _portal.getControlPanelFullURL(
-			group.getGroupId(), ConfigurationAdminPortletKeys.SITE_SETTINGS,
-			null);
+		String siteAdministrationURL = _portal.getSiteAdminURL(
+			themeDisplay.getPortalURL(), group,
+			ConfigurationAdminPortletKeys.SITE_SETTINGS, null);
 
 		String namespace = _portal.getPortletNamespace(
 			ConfigurationAdminPortletKeys.SITE_SETTINGS);

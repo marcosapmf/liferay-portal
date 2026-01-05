@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
 export class CommerceMiniCartPage {
 	readonly cartItemActionsButton: Locator;
@@ -13,9 +13,12 @@ export class CommerceMiniCartPage {
 	readonly editUnitOfMeasureLabel: Locator;
 	readonly miniCartButton: Locator;
 	readonly miniCartButtonClose: Locator;
+	readonly miniCartInvalidQuantityMessage: Locator;
+	readonly miniCartItem: (productName: string) => Locator;
 	readonly miniCartItemsContainer: Locator;
 	readonly miniCartItemPrice: (text: RegExp) => Locator;
 	readonly miniCartSaveButton: Locator;
+	readonly miniCartTotalPrice: Locator;
 	readonly miniCartUnitOfMeasureSelector: Locator;
 	readonly page: Page;
 	readonly editQuantitySelector: Locator;
@@ -23,15 +26,19 @@ export class CommerceMiniCartPage {
 		price: string,
 		container?: Locator | Page
 	) => Promise<Locator>;
+	readonly proceedAsGuest: Locator;
 	readonly quickAddToCartButton: Locator;
 	readonly quickAddToCartSku: (sku: string) => Locator;
+	readonly requestAQuoteButton: Locator;
 	readonly reviewOrderButton: Locator;
+	readonly resubmitButton: Locator;
 	readonly searchProductsInput: Locator;
 	readonly selectOption: (
 		optionLabel: string,
 		optionName: string
 	) => Promise<string[]>;
 	readonly showOptionsButton: Locator;
+	readonly signInToCheckoutButton: Locator;
 	readonly submitButton: Locator;
 	readonly unitOfMeasureTableLabel: Locator;
 	readonly viewDetailsButton: Locator;
@@ -50,7 +57,13 @@ export class CommerceMiniCartPage {
 		});
 		this.miniCartButton = page.getByTestId('miniCartButton');
 		this.miniCartButtonClose = page.locator('.mini-cart-close');
+		this.miniCartInvalidQuantityMessage = page.getByText(
+			'The product quantity is not valid.',
+			{exact: true}
+		);
 		this.miniCartItemsContainer = page.locator('div.mini-cart-cart-items');
+		this.miniCartItem = (productName: string) =>
+			page.locator('div.mini-cart-item').filter({hasText: productName});
 		this.miniCartItemPrice = (text: RegExp) =>
 			page.locator('div').filter({hasText: text}).first();
 		this.miniCartSaveButton = page
@@ -59,12 +72,27 @@ export class CommerceMiniCartPage {
 				exact: true,
 				name: 'Save',
 			});
+		this.miniCartTotalPrice = page.locator(
+			`xpath=//div[text()='Total']/../following-sibling::div/div`
+		);
 		this.miniCartUnitOfMeasureSelector = page.locator(
 			'select[name="minicart-uom-selector"]'
 		);
 		this.priceField = async (price: string, container = this.page) => {
 			return container.getByText(price);
 		};
+		this.proceedAsGuest = page.getByRole('button', {
+			name: 'Proceed as Guest',
+		});
+		this.requestAQuoteButton = page
+			.locator('.mini-cart-wrapper')
+			.getByRole('button', {
+				name: 'Request A Quote',
+			});
+		this.resubmitButton = page.getByRole('button', {
+			exact: true,
+			name: 'Resubmit',
+		});
 		this.reviewOrderButton = page.getByRole('button', {
 			exact: true,
 			name: 'Review Order',
@@ -79,6 +107,9 @@ export class CommerceMiniCartPage {
 			exact: true,
 			name: 'Show Options',
 		});
+		this.signInToCheckoutButton = page.getByRole('button', {
+			name: 'Sign In to Checkout',
+		});
 		this.submitButton = page.getByRole('button', {name: 'Submit'});
 		this.unitOfMeasureTableLabel = page.getByText('Unit of Measure Table', {
 			exact: true,
@@ -90,16 +121,18 @@ export class CommerceMiniCartPage {
 	}
 
 	async quickAddToCart(sku: string) {
-		await this.miniCartButton.click();
-		await this.searchProductsInput.fill(sku);
-		await this.quickAddToCartSku(sku).waitFor({state: 'visible'});
+		if (await this.searchProductsInput.isHidden()) {
+			await this.miniCartButton.click();
+		}
+
+		await expect(this.miniCartButtonClose).toBeVisible();
+
+		await expect(async () => {
+			await this.searchProductsInput.fill(sku);
+			await expect(this.quickAddToCartSku(sku)).toBeVisible();
+		}).toPass();
+
 		await this.quickAddToCartSku(sku).click();
 		await this.quickAddToCartButton.click();
-	}
-
-	async submitCart() {
-		this.miniCartButton.waitFor();
-		this.miniCartButton.click();
-		this.submitButton.click();
 	}
 }

@@ -3,12 +3,12 @@
 		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectRelationship",
 		"parameters": {
 			"containsHeaders": "true",
-			"createStrategy": "INSERT",
+			"createStrategy": "UPSERT",
 			"externalReferenceCode": "L_USER",
 			"onErrorFail": "false",
+			"taskItemDelegateName": "DEFAULT",
 			"updateStrategy": "UPDATE"
-		},
-		"taskItemDelegateName": "DEFAULT"
+		}
 	},
 	"items": [
 		{

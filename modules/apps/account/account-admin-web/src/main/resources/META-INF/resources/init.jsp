@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -29,6 +29,7 @@ page import="com.liferay.account.admin.web.internal.constants.AccountWebKeys" %>
 page import="com.liferay.account.admin.web.internal.dao.search.AccountEntryAccountGroupSearchContainerFactory" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AccountEntryAddressDisplaySearchContainerFactory" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AccountEntryDisplaySearchContainerFactory" %><%@
+page import="com.liferay.account.admin.web.internal.dao.search.AccountEntryUserAccountRoleRowChecker" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AccountGroupAccountEntryRowChecker" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AccountGroupDisplaySearchContainerFactory" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AccountOrganizationSearchContainerFactory" %><%@
@@ -36,7 +37,7 @@ page import="com.liferay.account.admin.web.internal.dao.search.AccountRoleDispla
 page import="com.liferay.account.admin.web.internal.dao.search.AccountUserDisplaySearchContainerFactory" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AssignableAccountOrganizationSearchContainerFactory" %><%@
 page import="com.liferay.account.admin.web.internal.dao.search.AssignableAccountUserDisplaySearchContainerFactory" %><%@
-page import="com.liferay.account.admin.web.internal.dao.search.SelectAccountUserAccountRoleRowChecker" %><%@
+page import="com.liferay.account.admin.web.internal.dao.search.UserAccountEntryRowChecker" %><%@
 page import="com.liferay.account.admin.web.internal.display.AccountEntryDisplay" %><%@
 page import="com.liferay.account.admin.web.internal.display.AccountEntryDisplayFactoryUtil" %><%@
 page import="com.liferay.account.admin.web.internal.display.AccountGroupDisplay" %><%@
@@ -44,6 +45,7 @@ page import="com.liferay.account.admin.web.internal.display.AccountRoleDisplay" 
 page import="com.liferay.account.admin.web.internal.display.AccountUserDisplay" %><%@
 page import="com.liferay.account.admin.web.internal.display.AddressDisplay" %><%@
 page import="com.liferay.account.admin.web.internal.display.context.AccountEntryAccountGroupManagementToolbarDisplayContext" %><%@
+page import="com.liferay.account.admin.web.internal.display.context.AccountEntryAddressDisplayContext" %><%@
 page import="com.liferay.account.admin.web.internal.display.context.AccountUsersAdminManagementToolbarDisplayContext" %><%@
 page import="com.liferay.account.admin.web.internal.display.context.EditAccountEntryAccountUserDisplayContext" %><%@
 page import="com.liferay.account.admin.web.internal.display.context.EditContactInformationDisplayContext" %><%@
@@ -107,6 +109,7 @@ page import="com.liferay.portal.kernel.exception.RoleNameException" %><%@
 page import="com.liferay.portal.kernel.exception.UserEmailAddressException" %><%@
 page import="com.liferay.portal.kernel.exception.UserScreenNameException" %><%@
 page import="com.liferay.portal.kernel.exception.WebsiteURLException" %><%@
+page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Address" %><%@
 page import="com.liferay.portal.kernel.model.Contact" %><%@
@@ -142,7 +145,6 @@ page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.HttpComponentsUtil" %><%@
-page import="com.liferay.portal.kernel.util.LinkedHashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
@@ -150,26 +152,27 @@ page import="com.liferay.portal.kernel.util.PortletKeys" %><%@
 page import="com.liferay.portal.kernel.util.PrefsParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PrefsPropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropsKeys" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeFormatter" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.security.auth.ScreenNameValidatorFactory" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %><%@
 page import="com.liferay.users.admin.constants.UsersAdminPortletKeys" %>
 
+<%@ page import="jakarta.portlet.ActionRequest" %><%@
+page import="jakarta.portlet.PortletMode" %><%@
+page import="jakarta.portlet.PortletURL" %><%@
+page import="jakarta.portlet.WindowState" %>
+
 <%@ page import="java.util.Collections" %><%@
+page import="java.util.LinkedHashMap" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.ActionRequest" %><%@
-page import="javax.portlet.PortletMode" %><%@
-page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
 
 <liferay-frontend:defineObjects />
 

@@ -5,6 +5,8 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -31,7 +33,8 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			JenkinsCohort jenkinsCohort = build.getJenkinsCohort();
 
 			jenkinsMaster = jenkinsCohort.getMostAvailableJenkinsMaster(
-				build.getInvokedBatchSize(), build.getMinimumSlaveRAM(),
+				build.getInvokedBatchSize(), build.getJobName(),
+				_getLabelExpression(), build.getMinimumSlaveRAM(),
 				build.getMaximumSlavesPerHost());
 
 			build.setJenkinsMaster(jenkinsMaster);
@@ -42,18 +45,28 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 
 	@Override
 	public void reinvoke() {
+		reinvoke(null);
+	}
+
+	public void reinvoke(Map<String, String> reinvokeBuildParameters) {
 		Build build = getBuild();
 
 		JenkinsCohort jenkinsCohort = build.getJenkinsCohort();
 
 		JenkinsMaster jenkinsMaster =
 			jenkinsCohort.getMostAvailableJenkinsMaster(
-				build.getInvokedBatchSize(), 24,
-				build.getMaximumSlavesPerHost());
+				build.getInvokedBatchSize(), build.getJobName(),
+				_getLabelExpression(), 24, build.getMaximumSlavesPerHost());
 
 		build.setJenkinsMaster(jenkinsMaster);
 
-		build.addInvocation(_invoke(jenkinsMaster));
+		if (reinvokeBuildParameters == null) {
+			build.addInvocation(_invoke(jenkinsMaster, null));
+		}
+		else {
+			build.addInvocation(
+				_invoke(jenkinsMaster, reinvokeBuildParameters));
+		}
 
 		build.reset();
 
@@ -283,6 +296,31 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 		return buildParameters;
 	}
 
+	private String _getLabelExpression() {
+		Build build = getBuild();
+
+		Map<String, String> buildParameters = build.getParameters();
+
+		String slaveLabel = buildParameters.get("SLAVE_LABEL");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
+		}
+
+		if (build instanceof DownstreamBuild) {
+			DownstreamBuild downstreamBuild = (DownstreamBuild)build;
+
+			AxisTestClassGroup axisTestClassGroup =
+				downstreamBuild.getAxisTestClassGroup();
+
+			if (axisTestClassGroup != null) {
+				return axisTestClassGroup.getSlaveLabel();
+			}
+		}
+
+		return null;
+	}
+
 	private JSONObject _getQueueItemJSONObject() {
 		try {
 			Build build = getBuild();
@@ -338,6 +376,13 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 	}
 
 	private Build.Invocation _invoke(JenkinsMaster jenkinsMaster) {
+		return _invoke(jenkinsMaster, null);
+	}
+
+	private Build.Invocation _invoke(
+		JenkinsMaster jenkinsMaster,
+		Map<String, String> reinvokeBuildParameters) {
+
 		Build build = getBuild();
 
 		try {
@@ -353,6 +398,19 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 
 			Map<String, String> buildParameters = new HashMap<>(
 				build.getParameters());
+
+			if (reinvokeBuildParameters != null) {
+				for (Map.Entry<String, String> reinvokeBuildParameter :
+						reinvokeBuildParameters.entrySet()) {
+
+					String key = reinvokeBuildParameter.getKey();
+
+					if (buildParameters.containsKey(key)) {
+						buildParameters.put(
+							key, reinvokeBuildParameter.getValue());
+					}
+				}
+			}
 
 			for (Map.Entry<String, String> buildParameter :
 					buildParameters.entrySet()) {

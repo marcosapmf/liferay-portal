@@ -7,46 +7,40 @@ package com.liferay.osb.faro.web.internal.controller.contacts;
 
 import com.liferay.osb.faro.contacts.model.constants.JSONConstants;
 import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
-import com.liferay.osb.faro.engine.client.exception.DuplicateEntryException;
 import com.liferay.osb.faro.engine.client.model.Field;
 import com.liferay.osb.faro.engine.client.model.FieldMapping;
 import com.liferay.osb.faro.engine.client.model.Individual;
-import com.liferay.osb.faro.engine.client.model.IndividualSegment;
 import com.liferay.osb.faro.engine.client.model.Results;
 import com.liferay.osb.faro.engine.client.util.OrderByField;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.web.internal.constants.FaroConstants;
 import com.liferay.osb.faro.web.internal.controller.BaseFaroController;
 import com.liferay.osb.faro.web.internal.controller.FaroController;
-import com.liferay.osb.faro.web.internal.exception.FaroException;
 import com.liferay.osb.faro.web.internal.model.display.FaroResultsDisplay;
 import com.liferay.osb.faro.web.internal.model.display.contacts.IndividualDisplay;
 import com.liferay.osb.faro.web.internal.param.FaroParam;
 import com.liferay.osb.faro.web.internal.search.FaroSearchContext;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+
+import jakarta.annotation.security.RolesAllowed;
+
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.annotation.security.RolesAllowed;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -57,41 +51,6 @@ import org.osgi.service.component.annotations.Component;
 @Path("/{groupId}/individual")
 @Produces(MediaType.APPLICATION_JSON)
 public class IndividualController extends BaseFaroController {
-
-	@Path("/{id}/memberships")
-	@PUT
-	@RolesAllowed(RoleConstants.SITE_MEMBER)
-	public IndividualDisplay addMemberships(
-			@PathParam("groupId") long groupId, @PathParam("id") String id,
-			@FormParam("individualSegmentIds") FaroParam<List<String>>
-				individualSegmentIdsFaroParam)
-		throws Exception {
-
-		FaroProject faroProject =
-			faroProjectLocalService.getFaroProjectByGroupId(groupId);
-
-		validateAddMemberships(
-			faroProject, individualSegmentIdsFaroParam.getValue());
-
-		for (String individualSegmentId :
-				individualSegmentIdsFaroParam.getValue()) {
-
-			try {
-				contactsEngineClient.addMembership(
-					faroProject, individualSegmentId, id);
-			}
-			catch (DuplicateEntryException duplicateEntryException) {
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						"The individual already belongs to the segment: " +
-							individualSegmentId,
-						duplicateEntryException);
-				}
-			}
-		}
-
-		return getIndividualDisplay(groupId, id, null);
-	}
 
 	@GET
 	@Path("/{id}/details")
@@ -305,24 +264,6 @@ public class IndividualController extends BaseFaroController {
 		return new FaroResultsDisplay(results, function);
 	}
 
-	protected void validateAddMemberships(
-		FaroProject faroProject, List<String> individualSegmentIds) {
-
-		for (String individualSegmentId : individualSegmentIds) {
-			IndividualSegment individualSegment =
-				contactsEngineClient.getIndividualSegment(
-					faroProject, individualSegmentId, false);
-
-			String segmentType = individualSegment.getSegmentType();
-
-			if (!segmentType.equals(IndividualSegment.Type.STATIC.name())) {
-				throw new FaroException(
-					"You cannot modify memberships of: " +
-						individualSegment.getName());
-			}
-		}
-	}
-
 	private void _setFieldMappingDisplayName(
 		Map<String, List<Field>> fieldsMap, Results<FieldMapping> results) {
 
@@ -350,8 +291,5 @@ public class IndividualController extends BaseFaroController {
 	}
 
 	private static final int[] _ENTITY_TYPES = {FaroConstants.TYPE_INDIVIDUAL};
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		IndividualController.class);
 
 }

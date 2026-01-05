@@ -19,11 +19,11 @@ import com.liferay.portal.vulcan.batch.engine.Field;
 import com.liferay.portal.vulcan.util.OpenAPIUtil;
 import com.liferay.portal.vulcan.yaml.openapi.OpenAPIYAML;
 
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Matija Petanjek
@@ -42,11 +42,7 @@ public class FieldProviderUtil {
 
 				String name = dtoEntityField.getName();
 
-				if (name.startsWith("x-")) {
-					return false;
-				}
-
-				return true;
+				return !name.startsWith("x-");
 			});
 	}
 

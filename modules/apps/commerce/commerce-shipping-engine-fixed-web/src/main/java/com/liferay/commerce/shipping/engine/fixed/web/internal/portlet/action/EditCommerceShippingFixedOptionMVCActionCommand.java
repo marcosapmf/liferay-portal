@@ -9,6 +9,7 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.service.CommerceShippingMethodService;
+import com.liferay.commerce.shipping.engine.fixed.exception.CommerceShippingFixedOptionAmountException;
 import com.liferay.commerce.shipping.engine.fixed.exception.CommerceShippingFixedOptionKeyException;
 import com.liferay.commerce.shipping.engine.fixed.exception.NoSuchShippingFixedOptionException;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOption;
@@ -26,15 +27,15 @@ import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
+		"jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
 		"mvc.command.name=/commerce_shipping_methods/edit_commerce_shipping_fixed_option"
 	},
 	service = MVCActionCommand.class
@@ -72,7 +73,10 @@ public class EditCommerceShippingFixedOptionMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof CommerceShippingFixedOptionKeyException) {
+			if (exception instanceof
+					CommerceShippingFixedOptionAmountException ||
+				exception instanceof CommerceShippingFixedOptionKeyException) {
+
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				hideDefaultErrorMessage(actionRequest);
@@ -127,7 +131,7 @@ public class EditCommerceShippingFixedOptionMVCActionCommand
 		throws Exception {
 
 		PortletConfig portletConfig = (PortletConfig)actionRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		LiferayPortletURL portletURL = PortletURLFactoryUtil.create(
 			actionRequest, portletConfig.getPortletName(),
@@ -158,7 +162,8 @@ public class EditCommerceShippingFixedOptionMVCActionCommand
 			actionRequest, "commerceShippingFixedOptionId");
 
 		BigDecimal amount = _commercePriceFormatter.parse(
-			actionRequest, "amount");
+			actionRequest, false, CommerceShippingFixedOption.class.getName(),
+			"amount");
 		Map<Locale, String> descriptionMap = _localization.getLocalizationMap(
 			actionRequest, "description");
 		String key = ParamUtil.getString(actionRequest, "key");

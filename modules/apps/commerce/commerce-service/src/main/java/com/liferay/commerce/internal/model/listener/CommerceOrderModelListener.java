@@ -36,8 +36,10 @@ public class CommerceOrderModelListener
 		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder) {
 
 		try {
-			if (commerceOrder.getOrderStatus() ==
-					CommerceOrderConstants.ORDER_STATUS_SHIPPED) {
+			if ((originalCommerceOrder.getOrderStatus() !=
+					commerceOrder.getOrderStatus()) &&
+				(commerceOrder.getOrderStatus() ==
+					CommerceOrderConstants.ORDER_STATUS_SHIPPED)) {
 
 				_commerceOrderEngine.checkCommerceOrderShipmentStatus(
 					commerceOrder, true);
@@ -52,30 +54,40 @@ public class CommerceOrderModelListener
 								customerCommerceOrderId);
 
 						_updateOrderStatus(
-							originalCommerceOrder, commerceOrder,
-							customerCommerceOrder);
+							customerCommerceOrder,
+							commerceOrder.getOrderStatus(),
+							originalCommerceOrder.getOrderStatus());
 
 						if (_updateShippingAmount(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder,
+								commerceOrder.getShippingAmount(),
+								originalCommerceOrder.getShippingAmount()) ||
 							_updateShippingDiscountAmount(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder,
+								commerceOrder.getShippingDiscountAmount(),
+								originalCommerceOrder.
+									getShippingDiscountAmount()) ||
 							_updateSubtotal(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder,
+								commerceOrder.getSubtotal(),
+								originalCommerceOrder.getSubtotal()) ||
 							_updateSubtotalDiscountAmount(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder,
+								commerceOrder.getSubtotalDiscountAmount(),
+								originalCommerceOrder.
+									getSubtotalDiscountAmount()) ||
 							_updateTaxAmount(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder,
+								commerceOrder.getTaxAmount(),
+								originalCommerceOrder.getTaxAmount()) ||
 							_updateTotal(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder) ||
+								customerCommerceOrder, commerceOrder.getTotal(),
+								originalCommerceOrder.getTotal()) ||
 							_updateTotalDiscountAmount(
-								originalCommerceOrder, commerceOrder,
-								customerCommerceOrder)) {
+								customerCommerceOrder,
+								commerceOrder.getTotalDiscountAmount(),
+								originalCommerceOrder.
+									getTotalDiscountAmount())) {
 
 							_commerceOrderLocalService.updateCommerceOrder(
 								customerCommerceOrder);
@@ -105,11 +117,9 @@ public class CommerceOrderModelListener
 			return false;
 		}
 
-		Long firstSupplierCommerceOrderId = supplierCommerceOrderIds.get(0);
-
 		CommerceOrder firstSupplierCommerceOrder =
 			_commerceOrderLocalService.getCommerceOrder(
-				firstSupplierCommerceOrderId);
+				supplierCommerceOrderIds.get(0));
 
 		int orderStatus = firstSupplierCommerceOrder.getOrderStatus();
 
@@ -119,10 +129,10 @@ public class CommerceOrderModelListener
 			return true;
 		}
 
-		for (int i = 1; i < supplierCommerceOrderIds.size(); i++) {
+		for (Long supplierCommerceOrderId : supplierCommerceOrderIds) {
 			CommerceOrder supplierCommerceOrder =
 				_commerceOrderLocalService.getCommerceOrder(
-					supplierCommerceOrderIds.get(i));
+					supplierCommerceOrderId);
 
 			if (orderStatus != supplierCommerceOrder.getOrderStatus()) {
 				return false;
@@ -133,211 +143,181 @@ public class CommerceOrderModelListener
 	}
 
 	private void _updateOrderStatus(
-			CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-			CommerceOrder customerCommerceOrder)
+			CommerceOrder customerCommerceOrder, int newOrderStatus,
+			int originalOrderStatus)
 		throws PortalException {
 
-		int newOrderStatus = commerceOrder.getOrderStatus();
-		int originalOrderStatus = originalCommerceOrder.getOrderStatus();
+		if (originalOrderStatus == newOrderStatus) {
+			return;
+		}
 
-		if (originalOrderStatus != newOrderStatus) {
-			_commerceOrderEngine.checkCommerceOrderShipmentStatus(
-				customerCommerceOrder, false);
+		_commerceOrderEngine.checkCommerceOrderShipmentStatus(
+			customerCommerceOrder, false);
 
-			if ((newOrderStatus ==
-					CommerceOrderConstants.ORDER_STATUS_COMPLETED) &&
-				_transitionOrderStatusCompleted(customerCommerceOrder)) {
+		if ((newOrderStatus == CommerceOrderConstants.ORDER_STATUS_COMPLETED) &&
+			_transitionOrderStatusCompleted(customerCommerceOrder)) {
 
-				_commerceOrderEngine.transitionCommerceOrder(
-					customerCommerceOrder, newOrderStatus, 0, false);
-			}
+			_commerceOrderEngine.transitionCommerceOrder(
+				customerCommerceOrder, newOrderStatus, 0, false);
 		}
 	}
 
 	private boolean _updateShippingAmount(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalShippingAmount =
-			originalCommerceOrder.getShippingAmount();
-		BigDecimal newShippingAmount = commerceOrder.getShippingAmount();
+		CommerceOrder customerCommerceOrder, BigDecimal newShippingAmount,
+		BigDecimal originalShippingAmount) {
 
 		int compareShippingAmount = originalShippingAmount.compareTo(
 			newShippingAmount);
 
-		if (compareShippingAmount != 0) {
-			BigDecimal customerShippingAmount =
-				customerCommerceOrder.getShippingAmount();
-
-			BigDecimal subtractOriginalValue = customerShippingAmount.subtract(
-				originalShippingAmount);
-
-			customerCommerceOrder.setShippingAmount(
-				subtractOriginalValue.add(newShippingAmount));
-
-			return true;
+		if (compareShippingAmount == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerShippingAmount =
+			customerCommerceOrder.getShippingAmount();
+
+		BigDecimal subtractOriginalValue = customerShippingAmount.subtract(
+			originalShippingAmount);
+
+		customerCommerceOrder.setShippingAmount(
+			subtractOriginalValue.add(newShippingAmount));
+
+		return true;
 	}
 
 	private boolean _updateShippingDiscountAmount(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalShippingDiscountAmount =
-			originalCommerceOrder.getShippingDiscountAmount();
-		BigDecimal newShippingDiscountAmount =
-			commerceOrder.getShippingDiscountAmount();
+		CommerceOrder customerCommerceOrder,
+		BigDecimal newShippingDiscountAmount,
+		BigDecimal originalShippingDiscountAmount) {
 
 		int compareShippingDiscountAmount =
 			originalShippingDiscountAmount.compareTo(newShippingDiscountAmount);
 
-		if (compareShippingDiscountAmount != 0) {
-			BigDecimal customerShippingDiscountAmount =
-				customerCommerceOrder.getShippingDiscountAmount();
-
-			BigDecimal subtractOriginalValue =
-				customerShippingDiscountAmount.subtract(
-					originalShippingDiscountAmount);
-
-			customerCommerceOrder.setShippingDiscountAmount(
-				subtractOriginalValue.add(newShippingDiscountAmount));
-
-			return true;
+		if (compareShippingDiscountAmount == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerShippingDiscountAmount =
+			customerCommerceOrder.getShippingDiscountAmount();
+
+		BigDecimal subtractOriginalValue =
+			customerShippingDiscountAmount.subtract(
+				originalShippingDiscountAmount);
+
+		customerCommerceOrder.setShippingDiscountAmount(
+			subtractOriginalValue.add(newShippingDiscountAmount));
+
+		return true;
 	}
 
 	private boolean _updateSubtotal(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalSubtotal = originalCommerceOrder.getSubtotal();
-		BigDecimal newSubtotal = commerceOrder.getSubtotal();
+		CommerceOrder customerCommerceOrder, BigDecimal newSubtotal,
+		BigDecimal originalSubtotal) {
 
 		int compareSubtotal = originalSubtotal.compareTo(newSubtotal);
 
-		if (compareSubtotal != 0) {
-			BigDecimal customerSubtotal = customerCommerceOrder.getSubtotal();
-
-			BigDecimal subtractOriginalValue = customerSubtotal.subtract(
-				originalSubtotal);
-
-			customerCommerceOrder.setSubtotal(
-				subtractOriginalValue.add(newSubtotal));
-
-			return true;
+		if (compareSubtotal == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerSubtotal = customerCommerceOrder.getSubtotal();
+
+		BigDecimal subtractOriginalValue = customerSubtotal.subtract(
+			originalSubtotal);
+
+		customerCommerceOrder.setSubtotal(
+			subtractOriginalValue.add(newSubtotal));
+
+		return true;
 	}
 
 	private boolean _updateSubtotalDiscountAmount(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalSubtotalDiscountAmount =
-			originalCommerceOrder.getSubtotalDiscountAmount();
-
-		BigDecimal newSubtotalDiscountAmount =
-			commerceOrder.getSubtotalDiscountAmount();
+		CommerceOrder customerCommerceOrder,
+		BigDecimal newSubtotalDiscountAmount,
+		BigDecimal originalSubtotalDiscountAmount) {
 
 		int compareSubtotalDiscountAmount =
 			originalSubtotalDiscountAmount.compareTo(newSubtotalDiscountAmount);
 
-		if (compareSubtotalDiscountAmount != 0) {
-			BigDecimal customerSubtotalDiscountAmount =
-				customerCommerceOrder.getSubtotalDiscountAmount();
-
-			BigDecimal subtractOriginalValue =
-				customerSubtotalDiscountAmount.subtract(
-					originalSubtotalDiscountAmount);
-
-			customerCommerceOrder.setSubtotalDiscountAmount(
-				subtractOriginalValue.add(newSubtotalDiscountAmount));
-
-			return true;
+		if (compareSubtotalDiscountAmount == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerSubtotalDiscountAmount =
+			customerCommerceOrder.getSubtotalDiscountAmount();
+
+		BigDecimal subtractOriginalValue =
+			customerSubtotalDiscountAmount.subtract(
+				originalSubtotalDiscountAmount);
+
+		customerCommerceOrder.setSubtotalDiscountAmount(
+			subtractOriginalValue.add(newSubtotalDiscountAmount));
+
+		return true;
 	}
 
 	private boolean _updateTaxAmount(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalTaxAmount = originalCommerceOrder.getTaxAmount();
-		BigDecimal newTaxAmount = commerceOrder.getTaxAmount();
+		CommerceOrder customerCommerceOrder, BigDecimal newTaxAmount,
+		BigDecimal originalTaxAmount) {
 
 		int compareTaxAmount = originalTaxAmount.compareTo(newTaxAmount);
 
-		if (compareTaxAmount != 0) {
-			BigDecimal customerTaxAmount = customerCommerceOrder.getTaxAmount();
-
-			BigDecimal subtractOriginalValue = customerTaxAmount.subtract(
-				originalTaxAmount);
-
-			customerCommerceOrder.setTaxAmount(
-				subtractOriginalValue.add(newTaxAmount));
-
-			return true;
+		if (compareTaxAmount == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerTaxAmount = customerCommerceOrder.getTaxAmount();
+
+		BigDecimal subtractOriginalValue = customerTaxAmount.subtract(
+			originalTaxAmount);
+
+		customerCommerceOrder.setTaxAmount(
+			subtractOriginalValue.add(newTaxAmount));
+
+		return true;
 	}
 
 	private boolean _updateTotal(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalTotal = originalCommerceOrder.getTotal();
-		BigDecimal newTotal = commerceOrder.getTotal();
+		CommerceOrder customerCommerceOrder, BigDecimal newTotal,
+		BigDecimal originalTotal) {
 
 		int compareTotal = originalTotal.compareTo(newTotal);
 
-		if (compareTotal != 0) {
-			BigDecimal customerTotal = customerCommerceOrder.getTotal();
-
-			BigDecimal subtractOriginalValue = customerTotal.subtract(
-				originalTotal);
-
-			customerCommerceOrder.setTotal(subtractOriginalValue.add(newTotal));
-
-			return true;
+		if (compareTotal == 0) {
+			return false;
 		}
 
-		return false;
+		BigDecimal customerTotal = customerCommerceOrder.getTotal();
+
+		BigDecimal subtractOriginalValue = customerTotal.subtract(
+			originalTotal);
+
+		customerCommerceOrder.setTotal(subtractOriginalValue.add(newTotal));
+
+		return true;
 	}
 
 	private boolean _updateTotalDiscountAmount(
-		CommerceOrder originalCommerceOrder, CommerceOrder commerceOrder,
-		CommerceOrder customerCommerceOrder) {
-
-		BigDecimal originalTotalDiscountAmount =
-			originalCommerceOrder.getTotalDiscountAmount();
-		BigDecimal newTotalDiscountAmount =
-			commerceOrder.getTotalDiscountAmount();
+		CommerceOrder customerCommerceOrder, BigDecimal newTotalDiscountAmount,
+		BigDecimal originalTotalDiscountAmount) {
 
 		int compareTotalDiscountAmount = originalTotalDiscountAmount.compareTo(
 			newTotalDiscountAmount);
 
 		if (compareTotalDiscountAmount != 0) {
-			BigDecimal customerTotalDiscountAmount =
-				customerCommerceOrder.getTotalDiscountAmount();
-
-			BigDecimal subtractOriginalValue =
-				customerTotalDiscountAmount.subtract(
-					originalTotalDiscountAmount);
-
-			customerCommerceOrder.setTotalDiscountAmount(
-				subtractOriginalValue.add(newTotalDiscountAmount));
-
-			return true;
+			return false;
 		}
 
-		return false;
+		BigDecimal customerTotalDiscountAmount =
+			customerCommerceOrder.getTotalDiscountAmount();
+
+		BigDecimal subtractOriginalValue = customerTotalDiscountAmount.subtract(
+			originalTotalDiscountAmount);
+
+		customerCommerceOrder.setTotalDiscountAmount(
+			subtractOriginalValue.add(newTotalDiscountAmount));
+
+		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

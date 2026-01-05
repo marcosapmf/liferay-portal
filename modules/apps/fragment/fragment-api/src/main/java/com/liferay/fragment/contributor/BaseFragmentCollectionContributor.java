@@ -31,6 +31,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.InputStream;
 
 import java.net.URL;
@@ -45,8 +47,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -219,11 +219,11 @@ public abstract class BaseFragmentCollectionContributor
 
 					FragmentEntry fragmentEntry = _getFragmentEntry(url);
 
-					List<FragmentEntry> fragmentEntryList =
+					List<FragmentEntry> fragmentEntries =
 						_fragmentEntries.computeIfAbsent(
 							fragmentEntry.getType(), type -> new ArrayList<>());
 
-					fragmentEntryList.add(fragmentEntry);
+					fragmentEntries.add(fragmentEntry);
 				}
 			}
 

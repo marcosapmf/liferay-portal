@@ -67,26 +67,34 @@ interface ObjectField {
 	listTypeDefinitionId: number;
 	localized: boolean;
 	name: string;
+	objectDefinitionExternalReferenceCode1?: string;
 	objectFieldSettings?: ObjectFieldSetting[];
+	objectRelationshipExternalReferenceCode: string;
 	relationshipType?: unknown;
 	required: boolean;
 	state: boolean;
 	system?: boolean;
 }
 
-type ObjectFieldBusinessType =
-	| 'Attachment'
-	| 'LongText'
-	| 'Picklist'
-	| 'Relationship'
-	| 'Text'
+type ObjectFieldBusinessTypeName =
 	| 'Aggregation'
-	| 'LongInteger'
-	| 'Integer'
+	| 'Attachment'
+	| 'AutoIncrement'
+	| 'Boolean'
+	| 'Date'
+	| 'DateTime'
 	| 'Decimal'
+	| 'Encrypted'
+	| 'Formula'
+	| 'Integer'
+	| 'LongInteger'
+	| 'LongText'
+	| 'MultiselectPicklist'
+	| 'Picklist'
 	| 'PrecisionDecimal'
-	| 'Workflow Status'
-	| 'Date';
+	| 'Relationship'
+	| 'RichText'
+	| 'Text';
 
 interface ObjectFieldSetting {
 	name: ObjectFieldSettingName;

@@ -13,6 +13,7 @@ import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.CommerceDiscountValue;
@@ -96,18 +97,25 @@ public class CommerceDiscountTargetGrossV2Test {
 		_accountEntry = CommerceAccountTestUtil.getPersonAccountEntry(
 			_user.getUserId());
 
-		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_group.getCompanyId());
+		_commerceCurrency =
+			CommerceCurrencyLocalServiceUtil.fetchPrimaryCommerceCurrency(
+				_group.getCompanyId());
+
+		if (_commerceCurrency == null) {
+			_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+				_group.getCompanyId());
+		}
 
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
 
+		_commerceChannel.setPriceDisplayType("tax-included");
 		_commerceChannel.setDiscountsTargetNetPrice(false);
 
 		_commerceChannel = _commerceChannelLocalService.updateCommerceChannel(
 			_commerceChannel);
 
-		_commerceTaxMethod = CommerceTaxTestUtil.addCommerceByAddressTaxMethod(
+		_commerceTaxMethod = CommerceTaxTestUtil.addByAddressCommerceTaxMethod(
 			_user.getUserId(), _commerceChannel.getGroupId(), true);
 	}
 
@@ -1028,8 +1036,7 @@ public class CommerceDiscountTargetGrossV2Test {
 			_user.getUserId(), _commerceChannel.getGroupId(),
 			_commerceCurrency);
 
-		commerceOrder.setCommerceCurrencyId(
-			_commerceCurrency.getCommerceCurrencyId());
+		commerceOrder.setCommerceCurrencyCode(_commerceCurrency.getCode());
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
 			commerceOrder);
@@ -1077,7 +1084,7 @@ public class CommerceDiscountTargetGrossV2Test {
 		String couponCode = StringUtil.randomString();
 
 		CommerceDiscount commerceDiscount =
-			CommerceDiscountTestUtil.addCouponDiscount(
+			CommerceDiscountTestUtil.addCouponCommerceDiscount(
 				_group.getGroupId(), 10, couponCode,
 				CommerceDiscountConstants.TARGET_PRODUCTS,
 				cpDefinition.getCPDefinitionId());

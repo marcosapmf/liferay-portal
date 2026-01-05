@@ -5,14 +5,13 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.util.v2_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountAccountRel;
 import com.liferay.commerce.discount.service.CommerceDiscountAccountRelService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountAccount;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.Validator;
@@ -42,15 +41,9 @@ public class DiscountAccountUtil {
 		}
 		else {
 			accountEntry =
-				accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					serviceContext.getCompanyId(),
-					discountAccount.getAccountExternalReferenceCode());
-
-			if (accountEntry == null) {
-				throw new NoSuchEntryException(
-					"Unable to find account with external reference code " +
-						discountAccount.getAccountExternalReferenceCode());
-			}
+				accountEntryService.getAccountEntryByExternalReferenceCode(
+					discountAccount.getAccountExternalReferenceCode(),
+					serviceContext.getCompanyId());
 		}
 
 		return commerceDiscountAccountRelService.addCommerceDiscountAccountRel(

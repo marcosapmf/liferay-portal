@@ -50,11 +50,12 @@ public class ListTypeEntryLocalServiceWrapper
 	public com.liferay.list.type.model.ListTypeEntry addListTypeEntry(
 			String externalReferenceCode, long userId,
 			long listTypeDefinitionId, String key,
-			java.util.Map<java.util.Locale, String> nameMap)
+			java.util.Map<java.util.Locale, String> nameMap, boolean system)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _listTypeEntryLocalService.addListTypeEntry(
-			externalReferenceCode, userId, listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, userId, listTypeDefinitionId, key, nameMap,
+			system);
 	}
 
 	/**
@@ -352,6 +353,14 @@ public class ListTypeEntryLocalServiceWrapper
 			listTypeDefinitionId, start, end, orderByComparator);
 	}
 
+	@Override
+	public java.util.List<com.liferay.list.type.model.ListTypeEntry>
+		getListTypeEntries(long[] listTypeDefinitionIds) {
+
+		return _listTypeEntryLocalService.getListTypeEntries(
+			listTypeDefinitionIds);
+	}
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -421,6 +430,15 @@ public class ListTypeEntryLocalServiceWrapper
 			uuid, companyId);
 	}
 
+	@Override
+	public com.liferay.list.type.model.ListTypeEntry getOrAddEmptyListTypeEntry(
+			long userId, long listTypeDefinitionId, String key)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _listTypeEntryLocalService.getOrAddEmptyListTypeEntry(
+			userId, listTypeDefinitionId, key);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -467,6 +485,14 @@ public class ListTypeEntryLocalServiceWrapper
 
 		return _listTypeEntryLocalService.updateListTypeEntry(
 			externalReferenceCode, listTypeEntryId, nameMap);
+	}
+
+	@Override
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_listTypeEntryLocalService.updateUserId(
+			companyId, oldUserId, newUserId);
 	}
 
 	@Override

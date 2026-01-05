@@ -9,13 +9,13 @@ import com.liferay.headless.delivery.client.dto.v1_0.ContentStructureField;
 import com.liferay.headless.delivery.client.dto.v1_0.Option;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -57,6 +57,20 @@ public class ContentStructureFieldSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(contentStructureField.getDataType()));
+
+			sb.append("\"");
+		}
+
+		if (contentStructureField.getFieldReference() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fieldReference\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentStructureField.getFieldReference()));
 
 			sb.append("\"");
 		}
@@ -269,6 +283,15 @@ public class ContentStructureFieldSerDes {
 				String.valueOf(contentStructureField.getDataType()));
 		}
 
+		if (contentStructureField.getFieldReference() == null) {
+			map.put("fieldReference", null);
+		}
+		else {
+			map.put(
+				"fieldReference",
+				String.valueOf(contentStructureField.getFieldReference()));
+		}
+
 		if (contentStructureField.getInputControl() == null) {
 			map.put("inputControl", null);
 		}
@@ -404,6 +427,9 @@ public class ContentStructureFieldSerDes {
 			if (Objects.equals(jsonParserFieldName, "dataType")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "fieldReference")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "inputControl")) {
 				return false;
 			}
@@ -459,6 +485,12 @@ public class ContentStructureFieldSerDes {
 			if (Objects.equals(jsonParserFieldName, "dataType")) {
 				if (jsonParserFieldValue != null) {
 					contentStructureField.setDataType(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fieldReference")) {
+				if (jsonParserFieldValue != null) {
+					contentStructureField.setFieldReference(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -612,6 +644,10 @@ public class ContentStructureFieldSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

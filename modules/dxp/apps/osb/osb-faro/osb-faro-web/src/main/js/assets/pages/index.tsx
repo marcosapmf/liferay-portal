@@ -21,10 +21,6 @@ const BlogsList = lazy(
 	() => import(/* webpackChunkName: "BlogsList" */ './BlogsList')
 );
 
-const CustomList = lazy(
-	() => import(/* webpackChunkName: "CustomList" */ './CustomAssetsList')
-);
-
 const DocumentsAndMediaList = lazy(
 	() =>
 		import(
@@ -60,11 +56,6 @@ const NAV_ITEMS = [
 		exact: true,
 		label: Liferay.Language.get('web-content'),
 		route: Routes.ASSETS_WEB_CONTENT
-	},
-	{
-		exact: true,
-		label: Liferay.Language.get('custom'),
-		route: Routes.ASSETS_CUSTOM
 	}
 ];
 
@@ -164,9 +155,13 @@ const Assets: React.FC<IAssetsProps> = ({className, router}) => {
 							<StatesRenderer.Empty
 								description={
 									<>
-										{Liferay.Language.get(
-											'connect-a-data-source-with-sites-data'
-										)}
+										{authorized
+											? Liferay.Language.get(
+													'connect-a-data-source-with-sites-data'
+											  )
+											: Liferay.Language.get(
+													'please-contact-your-workspace-administrator-to-add-data-sources'
+											  )}
 
 										<ClayLink
 											className='d-block mb-3'
@@ -213,13 +208,6 @@ const Assets: React.FC<IAssetsProps> = ({className, router}) => {
 										destructured={false}
 										exact
 										path={Routes.ASSETS_BLOGS}
-									/>
-
-									<BundleRouter
-										data={CustomList}
-										destructured={false}
-										exact
-										path={Routes.ASSETS_CUSTOM}
 									/>
 
 									<BundleRouter

@@ -39,6 +39,8 @@ import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.ServletContext;
+
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -50,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -322,11 +322,11 @@ public class NPMRegistryImpl implements NPMRegistry {
 			_bundleContext, Bundle.ACTIVE,
 			new NPMRegistryBundleTrackerCustomizer());
 
-		_activationThreadLocal.set(Boolean.TRUE);
+		_activation.set(Boolean.TRUE);
 
 		_bundleTracker.open();
 
-		_activationThreadLocal.set(Boolean.FALSE);
+		_activation.set(Boolean.FALSE);
 
 		Map<Bundle, JSBundle> tracked = _bundleTracker.getTracked();
 
@@ -348,11 +348,11 @@ public class NPMRegistryImpl implements NPMRegistry {
 
 		_serviceTracker.close();
 
-		_activationThreadLocal.set(Boolean.TRUE);
+		_activation.set(Boolean.TRUE);
 
 		_bundleTracker.close();
 
-		_activationThreadLocal.set(Boolean.FALSE);
+		_activation.set(Boolean.FALSE);
 	}
 
 	@Modified
@@ -560,9 +560,9 @@ public class NPMRegistryImpl implements NPMRegistry {
 	private static final Log _log = LogFactoryUtil.getLog(
 		NPMRegistryImpl.class);
 
-	private static final ThreadLocal<Boolean> _activationThreadLocal =
+	private static final ThreadLocal<Boolean> _activation =
 		new CentralizedThreadLocal<>(
-			NPMRegistryImpl.class.getName() + "._activationThreadLocal",
+			NPMRegistryImpl.class.getName() + "._activation",
 			() -> Boolean.FALSE);
 
 	private volatile Boolean _applyVersioning;
@@ -644,7 +644,7 @@ public class NPMRegistryImpl implements NPMRegistry {
 
 			_processLegacyBridges(bundle);
 
-			if (!_activationThreadLocal.get()) {
+			if (!_activation.get()) {
 				Map<Bundle, JSBundle> tracked = _bundleTracker.getTracked();
 
 				Collection<JSBundle> jsBundles = new ArrayList<>(
@@ -672,7 +672,7 @@ public class NPMRegistryImpl implements NPMRegistry {
 		public void removedBundle(
 			Bundle bundle, BundleEvent bundleEvent, JSBundle jsBundle) {
 
-			if (!_activationThreadLocal.get()) {
+			if (!_activation.get()) {
 				_setDataBagSupplier(() -> _createDataBag(null));
 
 				_notifyNPMRegistryUpdatesListeners();

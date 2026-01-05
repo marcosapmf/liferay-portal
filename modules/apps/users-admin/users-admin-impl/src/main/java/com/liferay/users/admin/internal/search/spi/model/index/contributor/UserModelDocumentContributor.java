@@ -10,6 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 
@@ -71,6 +74,9 @@ public class UserModelDocumentContributor
 			document.addKeyword(Field.TYPE, user.getType());
 			document.addKeyword(Field.USER_ID, user.getUserId());
 			document.addKeyword(Field.USER_NAME, user.getFullName(), true);
+			document.addText(
+				Field.getSortableFieldName(Field.USER_NAME),
+				StringUtil.toLowerCase(user.getFullName()));
 			document.addKeyword(
 				"ancestorOrganizationIds",
 				_getAncestorOrganizationIds(user.getOrganizationIds()));
@@ -84,12 +90,25 @@ public class UserModelDocumentContributor
 			document.addText("fullName", user.getFullName());
 			document.addKeyword("groupIds", user.getGroupIds());
 			document.addText("jobTitle", user.getJobTitle());
-			document.addDate("lastLoginDate", user.getLastLoginDate());
+
+			if (FeatureFlagManagerUtil.isEnabled("LPD-36010")) {
+				boolean hasLoginDate = false;
+
+				if (user.getLastLoginDate() != null) {
+					hasLoginDate = true;
+				}
+
+				document.addKeyword("hasLoginDate", hasLoginDate);
+			}
+			else {
+				document.addDate("lastLoginDate", user.getLastLoginDate());
+			}
+
 			document.addText("lastName", user.getLastName());
 			document.addText("middleName", user.getMiddleName());
-			document.addKeyword("organizationIds", organizationIds);
 			document.addKeyword(
 				"organizationCount", String.valueOf(organizationIds.length));
+			document.addKeyword("organizationIds", organizationIds);
 
 			long[] roleIds = user.getRoleIds();
 
@@ -113,6 +132,25 @@ public class UserModelDocumentContributor
 					Role.NAME_ACCESSOR));
 
 			_populateAddresses(document, user.getAddresses(), 0, 0);
+
+			for (Locale locale :
+					_language.getAvailableLocales(user.getGroupId())) {
+
+				String languageId = LocaleUtil.toLanguageId(locale);
+
+				document.addText(
+					_localization.getLocalizedName("firstName", languageId),
+					user.getFirstName());
+				document.addText(
+					_localization.getLocalizedName("fullName", languageId),
+					user.getFullName());
+				document.addText(
+					_localization.getLocalizedName("lastName", languageId),
+					user.getLastName());
+				document.addText(
+					_localization.getLocalizedName("middleName", languageId),
+					user.getMiddleName());
+			}
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -289,6 +327,9 @@ public class UserModelDocumentContributor
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Localization _localization;
 
 	@Reference
 	private RoleLocalService _roleLocalService;

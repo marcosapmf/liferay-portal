@@ -11,14 +11,14 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Javier Gamarra
@@ -39,7 +39,7 @@ public class VulcanBatchEngineImportTaskResourceImpl
 
 		ImportTaskResource importTaskResource = _getImportTaskResource();
 
-		return importTaskResource.deleteImportTask(
+		return importTaskResource.deleteImportTaskObject(
 			name, callbackURL, _getExternalReferenceCode(),
 			_getImportStrategy(), _getTaskItemDelegateName(), object);
 	}
@@ -51,8 +51,9 @@ public class VulcanBatchEngineImportTaskResourceImpl
 
 		ImportTaskResource importTaskResource = _getImportTaskResource();
 
-		return importTaskResource.postImportTask(
-			name, callbackURL, _getQueryParameterValue("createStrategy"),
+		return importTaskResource.postImportTaskObject(
+			name, null, null, callbackURL,
+			_getQueryParameterValue("createStrategy"),
 			_getExternalReferenceCode(), fields, _getImportStrategy(),
 			_getTaskItemDelegateName(), _getItemsArray(object));
 	}
@@ -63,7 +64,7 @@ public class VulcanBatchEngineImportTaskResourceImpl
 
 		ImportTaskResource importTaskResource = _getImportTaskResource();
 
-		return importTaskResource.putImportTask(
+		return importTaskResource.putImportTaskObject(
 			name, callbackURL, _getExternalReferenceCode(),
 			_getImportStrategy(), _getTaskItemDelegateName(),
 			_getQueryParameterValue("updateStrategy"), object);

@@ -6,6 +6,10 @@
 package com.liferay.jenkins.results.parser.test.clazz;
 
 import com.liferay.jenkins.results.parser.TestHistory;
+import com.liferay.jenkins.results.parser.WeightedItem;
+import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.SegmentTestClassGroup;
 
 import java.io.File;
 
@@ -16,7 +20,7 @@ import org.json.JSONObject;
 /**
  * @author Michael Hashimoto
  */
-public interface TestClass extends Comparable<TestClass> {
+public interface TestClass extends Comparable<TestClass>, WeightedItem {
 
 	public void addTestClassMethod(TestClassMethod testClassMethod);
 
@@ -24,18 +28,39 @@ public interface TestClass extends Comparable<TestClass> {
 
 	public long getAverageOverheadDuration();
 
+	public long getAverageTestTaskDuration();
+
+	public AxisTestClassGroup getAxisTestClassGroup();
+
+	public BatchTestClassGroup getBatchTestClassGroup();
+
 	public JSONObject getJSONObject();
 
 	public String getName();
+
+	public SegmentTestClassGroup getSegmentTestClassGroup();
 
 	public File getTestClassFile();
 
 	public List<TestClassMethod> getTestClassMethods();
 
+	public String getTestClassName();
+
 	public TestHistory getTestHistory();
+
+	public String getTestTaskName();
 
 	public boolean hasTestClassMethods();
 
+	public boolean isBuildCachingEnabled();
+
 	public boolean isIgnored();
+
+	public void setAxisTestClassGroup(AxisTestClassGroup axisTestClassGroup);
+
+	public void setBatchTestClassGroup(BatchTestClassGroup batchTestClassGroup);
+
+	public void setSegmentTestClassGroup(
+		SegmentTestClassGroup axisTestClassGroup);
 
 }

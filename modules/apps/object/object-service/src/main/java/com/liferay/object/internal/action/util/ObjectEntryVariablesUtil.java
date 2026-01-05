@@ -8,15 +8,16 @@ package com.liferay.object.internal.action.util;
 import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpression;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.internal.dynamic.data.mapping.expression.ObjectEntryDDMExpressionParameterAccessor;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
-import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -46,6 +47,7 @@ public class ObjectEntryVariablesUtil {
 
 	public static Map<String, Object> getValues(
 			DDMExpressionFactory ddmExpressionFactory,
+			ObjectDefinition objectDefinition,
 			UnicodeProperties parametersUnicodeProperties,
 			Map<String, Object> variables)
 		throws Exception {
@@ -64,137 +66,42 @@ public class ObjectEntryVariablesUtil {
 				continue;
 			}
 
-			if (!jsonObject.getBoolean("inputAsValue")) {
-				DDMExpression<Serializable> ddmExpression =
-					ddmExpressionFactory.createExpression(
-						CreateExpressionRequest.Builder.newBuilder(
-							value.toString()
-						).withDDMExpressionParameterAccessor(
-							new ObjectEntryDDMExpressionParameterAccessor(
-								(Map<String, Object>)variables.get(
-									"originalBaseModel"))
-						).build());
+			ObjectField objectField =
+				ObjectFieldLocalServiceUtil.fetchObjectField(
+					objectDefinition.getObjectDefinitionId(),
+					jsonObject.getString("name"));
 
-				ddmExpression.setVariables(
-					(Map<String, Object>)variables.get("baseModel"));
+			if ((objectField != null) &&
+				objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_ASSIGNEE)) {
 
-				value = ddmExpression.evaluate();
+				JSONObject valueJSONObject = JSONFactoryUtil.createJSONObject(
+					value.toString());
+
+				values.put(
+					jsonObject.getString("name"),
+					HashMapBuilder.put(
+						"externalReferenceCode",
+						_evaluate(
+							ddmExpressionFactory, jsonObject,
+							valueJSONObject.getString("externalReferenceCode"),
+							variables)
+					).put(
+						"type", valueJSONObject.getString("type")
+					).build());
 			}
-
-			values.put(jsonObject.getString("name"), value);
+			else {
+				values.put(
+					jsonObject.getString("name"),
+					_evaluate(
+						ddmExpressionFactory, jsonObject, value, variables));
+			}
 		}
 
 		return values;
 	}
 
 	public static Map<String, Object> getVariables(
-		DTOConverterRegistry dtoConverterRegistry,
-		ObjectDefinition objectDefinition, JSONObject payloadJSONObject,
-		SystemObjectDefinitionManagerRegistry
-			systemObjectDefinitionManagerRegistry) {
-
-		Map<String, Object> currentVariables = _getVariables(
-			dtoConverterRegistry, objectDefinition, false, payloadJSONObject,
-			systemObjectDefinitionManagerRegistry);
-
-		return HashMapBuilder.<String, Object>put(
-			"baseModel", currentVariables
-		).put(
-			"entryDTO", currentVariables.get("entryDTO")
-		).put(
-			"originalBaseModel",
-			() -> {
-				String suffix = _getSuffix(
-					objectDefinition, systemObjectDefinitionManagerRegistry);
-
-				if (payloadJSONObject.has("original" + suffix)) {
-					return _getVariables(
-						dtoConverterRegistry, objectDefinition, true,
-						payloadJSONObject,
-						systemObjectDefinitionManagerRegistry);
-				}
-
-				return _getDefaultVariables(
-					objectDefinition,
-					Collections.unmodifiableSet(currentVariables.keySet()));
-			}
-		).put(
-			"originalEntryDTO",
-			payloadJSONObject.get(
-				"originalObjectEntryDTO" + objectDefinition.getShortName())
-		).build();
-	}
-
-	private static String _getContentType(
-		DTOConverterRegistry dtoConverterRegistry,
-		ObjectDefinition objectDefinition,
-		SystemObjectDefinitionManagerRegistry
-			systemObjectDefinitionManagerRegistry) {
-
-		SystemObjectDefinitionManager systemObjectDefinitionManager =
-			systemObjectDefinitionManagerRegistry.
-				getSystemObjectDefinitionManager(objectDefinition.getName());
-
-		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
-			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
-
-		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
-			jaxRsApplicationDescriptor.getApplicationName(),
-			objectDefinition.getClassName(),
-			jaxRsApplicationDescriptor.getVersion());
-
-		if (dtoConverter == null) {
-			Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
-
-			return modelClass.getSimpleName();
-		}
-
-		return dtoConverter.getContentType();
-	}
-
-	private static Map<String, Object> _getDefaultVariables(
-		ObjectDefinition objectDefinition, Set<String> keys) {
-
-		Map<String, Object> defaultVariables = new HashMap<>();
-
-		for (ObjectField objectField :
-				ObjectFieldLocalServiceUtil.getObjectFields(
-					objectDefinition.getObjectDefinitionId())) {
-
-			String defaultValue =
-				ObjectFieldSettingUtil.getDefaultValueAsString(
-					null, objectField.getObjectFieldId(),
-					ObjectFieldSettingLocalServiceUtil.getService(), null);
-
-			if (Validator.isNotNull(defaultValue) &&
-				keys.contains(objectField.getName())) {
-
-				defaultVariables.put(objectField.getName(), defaultValue);
-			}
-		}
-
-		return defaultVariables;
-	}
-
-	private static String _getSuffix(
-		ObjectDefinition objectDefinition,
-		SystemObjectDefinitionManagerRegistry
-			systemObjectDefinitionManagerRegistry) {
-
-		if (!objectDefinition.isUnmodifiableSystemObject()) {
-			return "ObjectEntry";
-		}
-
-		SystemObjectDefinitionManager systemObjectDefinitionManager =
-			systemObjectDefinitionManagerRegistry.
-				getSystemObjectDefinitionManager(objectDefinition.getName());
-
-		Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
-
-		return modelClass.getSimpleName();
-	}
-
-	private static Map<String, Object> _getVariables(
 		DTOConverterRegistry dtoConverterRegistry,
 		ObjectDefinition objectDefinition, boolean oldValues,
 		JSONObject payloadJSONObject,
@@ -231,6 +138,9 @@ public class ObjectEntryVariablesUtil {
 
 					return dateFormat.format(new Date());
 				}
+			).put(
+				"currentUserExternalReferenceCode",
+				payloadJSONObject.getString("userExternalReferenceCode")
 			).put(
 				"currentUserId", payloadJSONObject.getLong("userId")
 			).put(
@@ -298,6 +208,16 @@ public class ObjectEntryVariablesUtil {
 			if (objectEntryId != null) {
 				allowedVariables.put("id", objectEntryId);
 			}
+
+			Object objectEntryFolderId = variables.get("objectEntryFolderId");
+
+			if (FeatureFlagManagerUtil.isEnabled(
+					objectDefinition.getCompanyId(), "LPD-17564") &&
+				(objectEntryFolderId != null)) {
+
+				allowedVariables.put(
+					"objectEntryFolderId", objectEntryFolderId);
+			}
 		}
 
 		variables.remove("creator");
@@ -315,6 +235,135 @@ public class ObjectEntryVariablesUtil {
 		}
 
 		return allowedVariables;
+	}
+
+	public static Map<String, Object> getVariables(
+		DTOConverterRegistry dtoConverterRegistry,
+		ObjectDefinition objectDefinition, JSONObject payloadJSONObject,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
+
+		Map<String, Object> currentVariables = getVariables(
+			dtoConverterRegistry, objectDefinition, false, payloadJSONObject,
+			systemObjectDefinitionManagerRegistry);
+
+		return HashMapBuilder.<String, Object>put(
+			"baseModel", currentVariables
+		).put(
+			"entryDTO", currentVariables.get("entryDTO")
+		).put(
+			"originalBaseModel",
+			() -> {
+				String suffix = _getSuffix(
+					objectDefinition, systemObjectDefinitionManagerRegistry);
+
+				if (payloadJSONObject.has("original" + suffix)) {
+					return getVariables(
+						dtoConverterRegistry, objectDefinition, true,
+						payloadJSONObject,
+						systemObjectDefinitionManagerRegistry);
+				}
+
+				return _getDefaultVariables(
+					objectDefinition,
+					Collections.unmodifiableSet(currentVariables.keySet()));
+			}
+		).put(
+			"originalEntryDTO",
+			payloadJSONObject.get(
+				"originalObjectEntryDTO" + objectDefinition.getShortName())
+		).build();
+	}
+
+	private static Object _evaluate(
+			DDMExpressionFactory ddmExpressionFactory, JSONObject jsonObject,
+			Object value, Map<String, Object> variables)
+		throws Exception {
+
+		if (jsonObject.getBoolean("inputAsValue")) {
+			return value;
+		}
+
+		DDMExpression<Serializable> ddmExpression =
+			ddmExpressionFactory.createExpression(
+				CreateExpressionRequest.Builder.newBuilder(
+					value.toString()
+				).withDDMExpressionParameterAccessor(
+					new ObjectEntryDDMExpressionParameterAccessor(
+						(Map<String, Object>)variables.get("originalBaseModel"))
+				).build());
+
+		ddmExpression.setVariables(
+			(Map<String, Object>)variables.get("baseModel"));
+
+		return ddmExpression.evaluate();
+	}
+
+	private static String _getContentType(
+		DTOConverterRegistry dtoConverterRegistry,
+		ObjectDefinition objectDefinition,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
+
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
+
+		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
+			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();
+
+		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
+			jaxRsApplicationDescriptor.getApplicationName(),
+			objectDefinition.getClassName(),
+			jaxRsApplicationDescriptor.getVersion());
+
+		if (dtoConverter == null) {
+			Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
+
+			return modelClass.getSimpleName();
+		}
+
+		return dtoConverter.getContentType();
+	}
+
+	private static Map<String, Object> _getDefaultVariables(
+		ObjectDefinition objectDefinition, Set<String> keys) {
+
+		Map<String, Object> defaultVariables = new HashMap<>();
+
+		for (ObjectField objectField :
+				ObjectFieldLocalServiceUtil.getObjectFields(
+					objectDefinition.getObjectDefinitionId())) {
+
+			Object defaultValue = ObjectFieldSettingUtil.getDefaultValue(
+				null, objectField, null);
+
+			if (Validator.isNotNull(defaultValue) &&
+				keys.contains(objectField.getName())) {
+
+				defaultVariables.put(objectField.getName(), defaultValue);
+			}
+		}
+
+		return defaultVariables;
+	}
+
+	private static String _getSuffix(
+		ObjectDefinition objectDefinition,
+		SystemObjectDefinitionManagerRegistry
+			systemObjectDefinitionManagerRegistry) {
+
+		if (!objectDefinition.isUnmodifiableSystemObject()) {
+			return "ObjectEntry";
+		}
+
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
+
+		Class<?> modelClass = systemObjectDefinitionManager.getModelClass();
+
+		return modelClass.getSimpleName();
 	}
 
 }

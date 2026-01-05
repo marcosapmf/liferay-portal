@@ -22,16 +22,16 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -75,8 +75,7 @@ public class FindLayoutsStrutsAction implements StrutsAction {
 		int layoutsCount = _layoutLocalService.searchCount(
 			group, privateLayout, keywords, searchOnlyByTitle,
 			new String[] {
-				LayoutConstants.TYPE_COLLECTION, LayoutConstants.TYPE_CONTENT,
-				LayoutConstants.TYPE_EMBEDDED,
+				LayoutConstants.TYPE_CONTENT, LayoutConstants.TYPE_EMBEDDED,
 				LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
 				LayoutConstants.TYPE_LINK_TO_LAYOUT, LayoutConstants.TYPE_PANEL,
 				LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
@@ -114,7 +113,6 @@ public class FindLayoutsStrutsAction implements StrutsAction {
 			List<Layout> layouts = _layoutLocalService.search(
 				groupId, privateLayout, keywords, searchOnlyByTitle,
 				new String[] {
-					LayoutConstants.TYPE_COLLECTION,
 					LayoutConstants.TYPE_CONTENT, LayoutConstants.TYPE_EMBEDDED,
 					LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
 					LayoutConstants.TYPE_LINK_TO_LAYOUT,

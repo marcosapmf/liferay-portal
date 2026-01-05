@@ -8,7 +8,7 @@ package com.liferay.sharing.display.context.util;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Alejandro Tardín
@@ -52,7 +52,7 @@ public interface SharingJavaScriptFactory {
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public default void requestSharingJavascript() {
+	public default void requestSharingJavaScript() {
 	}
 
 }

@@ -102,7 +102,8 @@ public class SearchSolrQueryAssemblerImpl implements SearchSolrQueryAssembler {
 
 		String sortFieldName = sort.getFieldName();
 
-		if (Objects.equals(sortFieldName, Field.PRIORITY) ||
+		if (Objects.equals(sortFieldName, Field.ENTRY_CLASS_NAME) ||
+			Objects.equals(sortFieldName, Field.PRIORITY) ||
 			Objects.equals(sortFieldName, "score")) {
 
 			return sortFieldName;
@@ -269,9 +270,8 @@ public class SearchSolrQueryAssemblerImpl implements SearchSolrQueryAssembler {
 	@Reference
 	private GroupByRequestFactory _groupByRequestFactory;
 
-	@Reference
-	private GroupByTranslator _groupByTranslator;
-
+	private final GroupByTranslator _groupByTranslator =
+		new GroupByTranslator();
 	private final SolrSortFieldTranslator _sortFieldTranslator =
 		new SolrSortFieldTranslator();
 

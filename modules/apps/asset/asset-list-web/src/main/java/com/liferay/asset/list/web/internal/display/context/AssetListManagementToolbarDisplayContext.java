@@ -26,9 +26,9 @@ import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -171,15 +171,10 @@ public class AssetListManagementToolbarDisplayContext
 			return false;
 		}
 
-		if (AssetListPermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				_themeDisplay.getScopeGroupId(),
-				AssetListActionKeys.ADD_ASSET_LIST_ENTRY)) {
-
-			return true;
-		}
-
-		return false;
+		return AssetListPermission.contains(
+			_themeDisplay.getPermissionChecker(),
+			_themeDisplay.getScopeGroupId(),
+			AssetListActionKeys.ADD_ASSET_LIST_ENTRY);
 	}
 
 	@Override

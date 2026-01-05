@@ -52,6 +52,10 @@ public class AddressDisplay {
 		return _listTypeId;
 	}
 
+	public String getListTypeName() {
+		return _listTypeName;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -60,8 +64,16 @@ public class AddressDisplay {
 		return HtmlUtil.escape(_region.getName());
 	}
 
+	public int getStatus() {
+		return _status;
+	}
+
 	public String getStreet() {
 		return _street;
+	}
+
+	public String getSubtype() {
+		return _subtype;
 	}
 
 	public String getType(Locale locale) {
@@ -87,7 +99,9 @@ public class AddressDisplay {
 		_listTypeName = StringPool.BLANK;
 		_name = StringPool.BLANK;
 		_region = null;
+		_status = 0;
 		_street = StringPool.BLANK;
+		_subtype = StringPool.BLANK;
 		_zip = StringPool.BLANK;
 	}
 
@@ -98,7 +112,9 @@ public class AddressDisplay {
 		_listTypeName = _getListTypeName(address);
 		_name = HtmlUtil.escape(address.getName());
 		_region = address.getRegion();
+		_status = address.getStatus();
 		_street = HtmlUtil.escape(address.getStreet1());
+		_subtype = address.getSubtype();
 		_zip = HtmlUtil.escape(address.getZip());
 	}
 
@@ -116,7 +132,9 @@ public class AddressDisplay {
 	private final String _listTypeName;
 	private final String _name;
 	private final Region _region;
+	private final int _status;
 	private final String _street;
+	private final String _subtype;
 	private final String _zip;
 
 }

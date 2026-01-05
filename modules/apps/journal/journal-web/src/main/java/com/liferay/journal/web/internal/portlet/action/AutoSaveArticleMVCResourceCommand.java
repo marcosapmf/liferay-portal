@@ -5,7 +5,6 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
-import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
@@ -59,14 +58,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,7 +75,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/auto_save_article"
 	},
 	service = MVCResourceCommand.class
@@ -88,7 +87,7 @@ public class AutoSaveArticleMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		JSONObject jsonObject;
+		JSONObject jsonObject = null;
 
 		try {
 			UploadPortletRequest uploadPortletRequest =
@@ -109,11 +108,10 @@ public class AutoSaveArticleMVCResourceCommand extends BaseMVCResourceCommand {
 			}
 
 			JournalArticle article = JournalArticleUtil.addOrUpdateArticle(
-				actionName, _assetDisplayPageEntryFormProcessor,
-				_ddmFormValuesFactory, _ddmFormValuesToFieldsConverter,
-				_ddmStructureLocalService, _journalArticleService,
-				_journalConverter, _journalHelper, _localization, _portal,
-				resourceRequest);
+				actionName, _ddmFormValuesFactory,
+				_ddmFormValuesToFieldsConverter, _ddmStructureLocalService,
+				_journalArticleService, _journalConverter, _journalHelper,
+				_localization, _portal, resourceRequest);
 
 			jsonObject = JSONUtil.put(
 				"articleId", article.getArticleId()
@@ -237,8 +235,8 @@ public class AutoSaveArticleMVCResourceCommand extends BaseMVCResourceCommand {
 					new String[] {
 						MapUtil.toString(
 							exportImportContentValidationException.
-								getDlReferenceParameters()),
-						exportImportContentValidationException.getDlReference()
+								getDLReferenceParameters()),
+						exportImportContentValidationException.getDLReference()
 					});
 			}
 			else if (exportImportContentValidationException.getType() ==
@@ -375,10 +373,6 @@ public class AutoSaveArticleMVCResourceCommand extends BaseMVCResourceCommand {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AutoSaveArticleMVCResourceCommand.class);
-
-	@Reference
-	private AssetDisplayPageEntryFormProcessor
-		_assetDisplayPageEntryFormProcessor;
 
 	@Reference
 	private DDMFormValuesFactory _ddmFormValuesFactory;

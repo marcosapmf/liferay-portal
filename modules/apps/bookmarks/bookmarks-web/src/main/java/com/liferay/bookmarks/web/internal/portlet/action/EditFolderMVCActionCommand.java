@@ -10,6 +10,7 @@ import com.liferay.bookmarks.exception.FolderNameException;
 import com.liferay.bookmarks.exception.NoSuchFolderException;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksFolderService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -27,11 +28,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.service.TrashEntryService;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,8 +41,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS,
-		"javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
+		"jakarta.portlet.name=" + BookmarksPortletKeys.BOOKMARKS,
+		"jakarta.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN,
 		"mvc.command.name=/bookmarks/edit_folder"
 	},
 	service = MVCActionCommand.class
@@ -116,8 +116,7 @@ public class EditFolderMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private void _deleteFolders(
-			ActionRequest actionRequest, boolean moveToTrash)
-		throws Exception {
+		ActionRequest actionRequest, boolean moveToTrash) {
 
 		long[] deleteFolderIds = null;
 
@@ -131,19 +130,18 @@ public class EditFolderMVCActionCommand extends BaseMVCActionCommand {
 				ParamUtil.getString(actionRequest, "folderIds"), 0L);
 		}
 
-		List<TrashedModel> trashedModels = new ArrayList<>();
+		List<TrashedModel> trashedModels = TransformUtil.transformToList(
+			deleteFolderIds,
+			deleteFolderId -> {
+				if (moveToTrash) {
+					return _bookmarksFolderService.moveFolderToTrash(
+						deleteFolderId);
+				}
 
-		for (long deleteFolderId : deleteFolderIds) {
-			if (moveToTrash) {
-				BookmarksFolder folder =
-					_bookmarksFolderService.moveFolderToTrash(deleteFolderId);
-
-				trashedModels.add(folder);
-			}
-			else {
 				_bookmarksFolderService.deleteFolder(deleteFolderId);
-			}
-		}
+
+				return null;
+			});
 
 		if (moveToTrash && !trashedModels.isEmpty()) {
 			addDeleteSuccessData(

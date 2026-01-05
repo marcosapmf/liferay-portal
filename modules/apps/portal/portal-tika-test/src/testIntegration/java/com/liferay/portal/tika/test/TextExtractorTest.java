@@ -23,6 +23,8 @@ import com.liferay.portal.kernel.util.TextExtractor;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,8 +35,6 @@ import java.nio.charset.Charset;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -64,24 +64,25 @@ public class TextExtractorTest {
 		Class<?> tesseractOCRParserClass = classLoader.loadClass(
 			"org.apache.tika.parser.ocr.TesseractOCRParser");
 
-		Map<String, Boolean> map = ReflectionTestUtil.getAndSetFieldValue(
-			tesseractOCRParserClass, "TESSERACT_PRESENT",
-			new HashMap<String, Boolean>() {
+		Map<String, Boolean> tesseractPresent =
+			ReflectionTestUtil.getAndSetFieldValue(
+				tesseractOCRParserClass, "TESSERACT_PRESENT",
+				new HashMap<String, Boolean>() {
 
-				@Override
-				public boolean containsKey(Object key) {
-					return true;
-				}
+					@Override
+					public boolean containsKey(Object key) {
+						return true;
+					}
 
-				@Override
-				public Boolean get(Object key) {
-					return Boolean.FALSE;
-				}
+					@Override
+					public Boolean get(Object key) {
+						return Boolean.FALSE;
+					}
 
-			});
+				});
 
 		_resetTikaConfigCloseable = () -> ReflectionTestUtil.setFieldValue(
-			tesseractOCRParserClass, "TESSERACT_PRESENT", map);
+			tesseractOCRParserClass, "TESSERACT_PRESENT", tesseractPresent);
 	}
 
 	@AfterClass
@@ -241,6 +242,13 @@ public class TextExtractorTest {
 
 		Assert.assertEquals(
 			expectedText.trim(), extractText("test-encoding-Shift_JIS.txt"));
+	}
+
+	@Test
+	public void testVsdx() {
+		String text = extractText("test.vsdx");
+
+		Assert.assertEquals("test\n\nThis is a test.\nNothing fancy.", text);
 	}
 
 	@Test

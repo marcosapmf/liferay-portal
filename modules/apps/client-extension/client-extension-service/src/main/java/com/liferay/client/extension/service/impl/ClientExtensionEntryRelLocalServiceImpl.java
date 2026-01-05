@@ -118,6 +118,13 @@ public class ClientExtensionEntryRelLocalServiceImpl
 	}
 
 	@Override
+	public List<ClientExtensionEntryRel> getClientExtensionEntryRels(
+		String type) {
+
+		return clientExtensionEntryRelPersistence.findByType(type);
+	}
+
+	@Override
 	public int getClientExtensionEntryRelsCount(
 		long classNameId, long classPK, String type) {
 

@@ -36,13 +36,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -83,9 +83,8 @@ public class CommerceSubscriptionOrderItemFDSDataProvider
 				commerceSubscriptionEntry.getCommerceOrderItemId());
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			_portal.getCompanyId(httpServletRequest),
-			commerceSubscriptionEntry.getGroupId(),
-			_portal.getUserId(httpServletRequest), 0, 0);
+			0, commerceSubscriptionEntry.getGroupId(), null, 0,
+			_portal.getCompanyId(httpServletRequest));
 
 		BigDecimal quantity = commerceOrderItem.getQuantity();
 

@@ -12,7 +12,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -38,6 +38,9 @@ public interface CookiesConfigurationProvider {
 			getCookiesPreferenceHandlingConfiguration(ThemeDisplay themeDisplay)
 		throws Exception;
 
+	public int getCookiesPreferenceHandlingConsentRenewalPeriod(
+		ExtendedObjectClassDefinition.Scope scope, long scopePK);
+
 	public String getGroupConfigurationURL(
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
@@ -61,7 +64,8 @@ public interface CookiesConfigurationProvider {
 		throws ConfigurationException;
 
 	public void updateCookiesPreferenceHandlingConfiguration(
-			boolean enabled, boolean explicitConsentMode,
+			int consentRenewalPeriod, boolean enabled,
+			boolean explicitConsentMode,
 			ExtendedObjectClassDefinition.Scope scope, long scopePK)
 		throws Exception;
 

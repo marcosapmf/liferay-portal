@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -52,7 +50,7 @@ public class FormPage implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(FormPage.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public FormField[] getFormFields() {
 		if (_formFieldsSupplier != null) {
@@ -94,7 +92,7 @@ public class FormPage implements Serializable {
 	@JsonIgnore
 	private Supplier<FormField[]> _formFieldsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getHeadline() {
 		if (_headlineSupplier != null) {
 			headline = _headlineSupplier.get();
@@ -135,7 +133,7 @@ public class FormPage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _headlineSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, String> getHeadline_i18n() {
 		if (_headline_i18nSupplier != null) {
@@ -178,7 +176,7 @@ public class FormPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _headline_i18nSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -217,7 +215,7 @@ public class FormPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getText() {
 		if (_textSupplier != null) {
 			text = _textSupplier.get();
@@ -256,7 +254,7 @@ public class FormPage implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _textSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, String> getText_i18n() {
 		if (_text_i18nSupplier != null) {
@@ -421,8 +419,8 @@ public class FormPage implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.form.dto.v1_0.FormPage",
 		name = "x-class-name"
 	)

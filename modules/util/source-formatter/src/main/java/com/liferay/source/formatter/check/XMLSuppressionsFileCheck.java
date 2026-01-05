@@ -83,10 +83,10 @@ public class XMLSuppressionsFileCheck extends BaseFileCheck {
 		addMessage(
 			fileName,
 			StringBundler.concat(
-				"Incorrect value '", value, "'. Relative path to file (from ",
+				"Incorrect value \"", value, "\". Relative path to file (from ",
 				"location of suppressions file) expected for value of ",
-				"property 'files'. ", type, " '", expectedName,
-				"' does not exist."),
+				"property \"files\". ", type, " \"", expectedName,
+				"\" does not exist."),
 			x);
 	}
 
@@ -165,24 +165,24 @@ public class XMLSuppressionsFileCheck extends BaseFileCheck {
 	}
 
 	private String _getRelativeValue(
-		String originalvalue, String fileLocation) {
+		String originalValue, String fileLocation) {
 
 		int x = -1;
 
 		while (true) {
-			x = originalvalue.indexOf(CharPool.SLASH, x + 1);
+			x = originalValue.indexOf(CharPool.SLASH, x + 1);
 
 			if (x == -1) {
 				return null;
 			}
 
-			String s = originalvalue.substring(0, x + 1);
+			String s = originalValue.substring(0, x + 1);
 
 			if (!fileLocation.endsWith(s)) {
 				continue;
 			}
 
-			String relativeValue = originalvalue.substring(x + 1);
+			String relativeValue = originalValue.substring(x + 1);
 
 			File file = new File(
 				fileLocation + StringUtil.replace(relativeValue, "\\.", "."));

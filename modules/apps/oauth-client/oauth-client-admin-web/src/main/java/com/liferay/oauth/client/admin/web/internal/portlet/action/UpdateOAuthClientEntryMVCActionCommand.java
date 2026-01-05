@@ -16,8 +16,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + OAuthClientAdminPortletKeys.OAUTH_CLIENT_ADMIN,
+		"jakarta.portlet.name=" + OAuthClientAdminPortletKeys.OAUTH_CLIENT_ADMIN,
 		"mvc.command.name=/oauth_client_admin/update_oauth_client_entry"
 	},
 	service = MVCActionCommand.class
@@ -48,6 +48,8 @@ public class UpdateOAuthClientEntryMVCActionCommand
 			String authServerWellKnownURI = ParamUtil.getString(
 				actionRequest, "authServerWellKnownURI");
 			String infoJSON = ParamUtil.getString(actionRequest, "infoJSON");
+			long metadataCacheTime = ParamUtil.getLong(
+				actionRequest, "metadataCacheTime");
 			String oidcUserInfoMapperJSON = ParamUtil.getString(
 				actionRequest, "OIDCUserInfoMapperJSON");
 			String tokenRequestParametersJSON = ParamUtil.getString(
@@ -56,8 +58,8 @@ public class UpdateOAuthClientEntryMVCActionCommand
 			if (oAuthClientEntryId > 0) {
 				_oAuthClientEntryService.updateOAuthClientEntry(
 					oAuthClientEntryId, authRequestParametersJSON,
-					authServerWellKnownURI, infoJSON, oidcUserInfoMapperJSON,
-					tokenRequestParametersJSON);
+					authServerWellKnownURI, null, infoJSON, metadataCacheTime,
+					oidcUserInfoMapperJSON, tokenRequestParametersJSON);
 			}
 			else {
 				ThemeDisplay themeDisplay =
@@ -66,8 +68,8 @@ public class UpdateOAuthClientEntryMVCActionCommand
 
 				_oAuthClientEntryService.addOAuthClientEntry(
 					themeDisplay.getUserId(), authRequestParametersJSON,
-					authServerWellKnownURI, infoJSON, oidcUserInfoMapperJSON,
-					tokenRequestParametersJSON);
+					authServerWellKnownURI, null, infoJSON, metadataCacheTime,
+					oidcUserInfoMapperJSON, tokenRequestParametersJSON);
 			}
 
 			return true;

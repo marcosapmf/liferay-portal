@@ -270,6 +270,15 @@ public class DataRecordCollectionResourceTest
 
 	@Override
 	protected Long
+			testGetDataDefinitionDataRecordCollection_getDataDefinitionId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return dataRecordCollection.getDataDefinitionId();
+	}
+
+	@Override
+	protected Long
 			testGetDataDefinitionDataRecordCollectionsPage_getDataDefinitionId()
 		throws Exception {
 
@@ -313,6 +322,15 @@ public class DataRecordCollectionResourceTest
 		return dataRecordCollectionResource.
 			postDataDefinitionDataRecordCollection(
 				_ddmStructure.getStructureId(), randomDataRecordCollection());
+	}
+
+	@Override
+	protected Long
+			testGraphQLPostDataDefinitionDataRecordCollection_getDataDefinitionId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return _ddmStructure.getStructureId();
 	}
 
 	@Override

@@ -14,8 +14,8 @@ import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,7 @@ public class OpenOfficeConversionPreviewBackgroundTaskExecutor
 	private static class MimeTypesHolder {
 
 		public static String[] getMimeTypes() {
-			return _mimeTypeList.toArray(new String[0]);
+			return _mimeTypes.toArray(new String[0]);
 		}
 
 		private static void _populateMimeTypeList(String documentFamily) {
@@ -64,13 +64,15 @@ public class OpenOfficeConversionPreviewBackgroundTaskExecutor
 				String contentType = MimeTypesUtil.getExtensionContentType(
 					sourceExtension);
 
-				if (Validator.isNotNull(contentType)) {
-					_mimeTypeList.add(contentType);
+				if (Validator.isNull(contentType)) {
+					continue;
 				}
+
+				_mimeTypes.add(contentType);
 			}
 		}
 
-		private static final List<String> _mimeTypeList = new ArrayList<>();
+		private static final List<String> _mimeTypes = new ArrayList<>();
 
 		static {
 			_populateMimeTypeList("drawing");

@@ -152,11 +152,12 @@ export function ModalAddFilter({
 
 	const filterByItems = useMemo(() => {
 		return objectFields.map(({id, label, name}) => ({
-			label: stringUtils.getLocalizableLabel(
-				creationLanguageId as Liferay.Language.Locale,
-				label,
-				name
-			),
+			label: stringUtils.getLocalizableLabel({
+				fallbackLabel: name,
+				fallbackLanguageId:
+					creationLanguageId as Liferay.Language.Locale,
+				labels: label,
+			}),
 			value: id,
 		})) as LabelValueObject<number>[];
 	}, [creationLanguageId, objectFields]);
@@ -264,9 +265,9 @@ export function ModalAddFilter({
 							system,
 							titleObjectFieldName,
 						},
-					] = await API.getObjectDefinitions(
-						`filter=name eq '${value}'`
-					);
+					] = await API.getObjectDefinitions({
+						filter: `name eq '${value}'`,
+					});
 
 					const titleObjectField = objectFields.find(
 						(objectField) =>
@@ -496,7 +497,11 @@ export function ModalAddFilter({
 			disableAutoClose={disableAutoClose}
 			observer={observer}
 		>
-			<ClayModal.Header>{header}</ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
+				{header}
+			</ClayModal.Header>
 
 			<ClayModal.Body>
 				{!editingFilter && (

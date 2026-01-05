@@ -5,7 +5,6 @@ import client from 'shared/apollo/client';
 import ErrorPage from 'shared/pages/ErrorPage';
 import Loading from 'shared/components/Loading';
 import ModalRenderer from 'shared/components/ModalRenderer';
-import pathToRegexp from 'path-to-regexp';
 import React, {lazy, Suspense, useEffect, useState} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import store from 'shared/store';
@@ -26,10 +25,11 @@ import {
 	useLocation
 } from 'react-router-dom';
 import {OnboardingContext} from 'shared/context/onboarding';
-import {Provider} from 'react-redux';
+import {Pendo} from 'shared/util/pendo';
+import {Project} from 'shared/util/records';
+import {Provider, useSelector} from 'react-redux';
 import {Routes} from 'shared/util/router';
 import {saveState} from 'shared/store/local-storage';
-import {setBackURL} from 'shared/actions/settings';
 import {throttle} from 'lodash';
 import {useFetchCurrentUser} from 'shared/hooks/useCurrentUser';
 
@@ -69,8 +69,6 @@ const OAuthReceive = lazy(
 		)
 );
 
-const SETTINGS_PATH_REGEX = pathToRegexp(Routes.SETTINGS, null, {end: false});
-
 const RoutesContainer = ({children}) => {
 	const location = useLocation();
 
@@ -80,17 +78,19 @@ const RoutesContainer = ({children}) => {
 
 	const groupId = matchingPath?.params.groupId ?? '0';
 
-	const {loading} = useFetchCurrentUser(groupId);
+	const project: Project = useSelector<any, any>(state =>
+		state.getIn(['projects', groupId, 'data'])
+	);
+
+	const {data: currentUser, loading} = useFetchCurrentUser(groupId);
 
 	useEffect(() => {
-		const {
-			location: {pathname, search}
-		} = window;
+		if (currentUser?.id && project?.corpProjectName) {
+			const pendo = new Pendo();
 
-		if (!SETTINGS_PATH_REGEX.test(pathname)) {
-			store.dispatch(setBackURL(`${pathname}${search}`));
+			pendo.initialize({currentUser, project});
 		}
-	}, [location]);
+	}, [currentUser?.id, project?.corpProjectName]);
 
 	if (loading) {
 		return <Loading />;

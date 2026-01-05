@@ -50,7 +50,7 @@ definition {
 	@description = "This test asserts that a newly created site will have default account type settings even after changing settings on original site."
 	@priority = 4
 	test AllowedAccountTypeIsSiteWide {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 
@@ -301,6 +301,8 @@ definition {
 	@description = "This test asserts the correct search results when searching via Account Management widget"
 	@priority = 4
 	test CanSearchForAccount {
+		property browser.chrome.version = "139.0";
+
 		task ("Given business accounts exist") {
 			for (var accountName : list "Acme Inc,Liferay,South Bay Auto Parts") {
 				JSONAccountEntry.addAccountEntry(

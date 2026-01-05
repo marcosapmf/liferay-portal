@@ -23,9 +23,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.configuration.sharing.web.internal.constants.PortletConfigurationSharingPortletKeys;
 
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,15 +81,9 @@ public class NetvibesPortletConfigurationIcon
 		PortletPreferences portletPreferences =
 			portletDisplay.getPortletPreferences();
 
-		boolean lfrNetvibesShowAddAppLink = GetterUtil.getBoolean(
+		return GetterUtil.getBoolean(
 			portletPreferences.getValue(
 				"lfrNetvibesShowAddAppLink", StringPool.BLANK));
-
-		if (lfrNetvibesShowAddAppLink) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Override

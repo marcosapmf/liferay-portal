@@ -14,10 +14,10 @@ import com.liferay.digital.signature.rest.resource.v1_0.DSRecipientViewDefinitio
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -80,11 +80,6 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#createSiteDSEnvelopesPageExportBatch",
-						new ObjectValuePair<>(
-							DSEnvelopeResourceImpl.class,
-							"postSiteDSEnvelopesPageExportBatch"));
-					put(
 						"mutation#createSiteDSEnvelope",
 						new ObjectValuePair<>(
 							DSEnvelopeResourceImpl.class,
@@ -95,20 +90,30 @@ public class ServletDataImpl implements ServletData {
 							DSEnvelopeResourceImpl.class,
 							"postSiteDSEnvelopeBatch"));
 					put(
+						"mutation#createSiteDSEnvelopesPageExportBatch",
+						new ObjectValuePair<>(
+							DSEnvelopeResourceImpl.class,
+							"postSiteDSEnvelopesPageExportBatch"));
+					put(
 						"mutation#createSiteDSRecipientViewDefinition",
 						new ObjectValuePair<>(
 							DSRecipientViewDefinitionResourceImpl.class,
 							"postSiteDSRecipientViewDefinition"));
+					put(
+						"mutation#createSiteDSRecipientViewDefinitionBatch",
+						new ObjectValuePair<>(
+							DSRecipientViewDefinitionResourceImpl.class,
+							"postSiteDSRecipientViewDefinitionBatch"));
 
+					put(
+						"query#dSEnvelope",
+						new ObjectValuePair<>(
+							DSEnvelopeResourceImpl.class, "getSiteDSEnvelope"));
 					put(
 						"query#dSEnvelopes",
 						new ObjectValuePair<>(
 							DSEnvelopeResourceImpl.class,
 							"getSiteDSEnvelopesPage"));
-					put(
-						"query#dSEnvelope",
-						new ObjectValuePair<>(
-							DSEnvelopeResourceImpl.class, "getSiteDSEnvelope"));
 				}
 			};
 

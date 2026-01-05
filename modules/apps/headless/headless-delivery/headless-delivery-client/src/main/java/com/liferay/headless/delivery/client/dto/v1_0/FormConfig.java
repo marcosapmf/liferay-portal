@@ -8,11 +8,11 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.FormConfigSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -99,6 +99,28 @@ public class FormConfig implements Cloneable, Serializable {
 	}
 
 	protected FormType formType;
+
+	public LocalizationConfig getLocalizationConfig() {
+		return localizationConfig;
+	}
+
+	public void setLocalizationConfig(LocalizationConfig localizationConfig) {
+		this.localizationConfig = localizationConfig;
+	}
+
+	public void setLocalizationConfig(
+		UnsafeSupplier<LocalizationConfig, Exception>
+			localizationConfigUnsafeSupplier) {
+
+		try {
+			localizationConfig = localizationConfigUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected LocalizationConfig localizationConfig;
 
 	public Integer getNumberOfSteps() {
 		return numberOfSteps;

@@ -6,48 +6,51 @@
 import ClayIcon from '@clayui/icon';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useCallback, useContext, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect} from 'react';
 
-import {OPEN_MINICART_FOR_EDITING} from '../../utilities/eventsDefinitions';
+import ServiceProvider from '../../ServiceProvider';
+import {
+	OPEN_MINICART_FOR_EDITING,
+	OPEN_MINI_CART,
+} from '../../utilities/eventsDefinitions';
 import MiniCartContext from './MiniCartContext';
 import {hasOptions} from './util/index';
 
-function Opener() {
+const CartItemResource = ServiceProvider.DeliveryCartAPI('v1');
+
+function Opener({disabled = false}) {
 	const {cartState, displayTotalItemsQuantity, openCart, setEditedItem} =
 		useContext(MiniCartContext);
 
 	const {cartItems = [], summary = {}} = cartState;
-	const {itemsQuantity: initialItemsQuantity} = summary;
+	const {itemsCount = 0, itemsQuantity = 0} = summary;
 
-	const [numberOfItems, setNumberOfItems] = useState(0);
-
-	useEffect(() => {
-		setNumberOfItems(initialItemsQuantity);
-	}, [initialItemsQuantity, setNumberOfItems]);
-
-	useEffect(() => {
-		setNumberOfItems(
-			displayTotalItemsQuantity && 'itemsQuantity' in summary
-				? summary.itemsQuantity
-				: cartItems.length
-		);
-	}, [cartItems, displayTotalItemsQuantity, summary, setNumberOfItems]);
+	const numberOfItems = displayTotalItemsQuantity
+		? itemsQuantity
+		: itemsCount;
 
 	const openMiniCartForEditing = useCallback(
-		({dataSetId, orderItemId}) => {
-			const cartItem = cartItems.find(
+		async ({dataSetId, orderItemId}) => {
+			let cartItem = cartItems.find(
 				(cartItem) => cartItem.id === orderItemId
 			);
+
+			if (!cartItem) {
+				try {
+					cartItem = await CartItemResource.getItemById(orderItemId);
+				}
+				catch (error) {
+					console.error('Unable to fetch cart item.', error);
+				}
+			}
 
 			if (
 				cartItem &&
 				(hasOptions(cartItem.options) || cartItem.skuUnitOfMeasure)
 			) {
 				setEditedItem({
-					cartItemId: orderItemId,
+					...cartItem,
 					dataSetId,
-					name: cartItem.name,
-					productId: cartItem.productId,
 				});
 
 				openCart();
@@ -58,11 +61,13 @@ function Opener() {
 
 	useEffect(() => {
 		Liferay.on(OPEN_MINICART_FOR_EDITING, openMiniCartForEditing);
+		Liferay.on(OPEN_MINI_CART, openCart);
 
 		return () => {
 			Liferay.detach(OPEN_MINICART_FOR_EDITING, openMiniCartForEditing);
+			Liferay.detach(OPEN_MINI_CART, openCart);
 		};
-	}, [openMiniCartForEditing]);
+	}, [openCart, openMiniCartForEditing]);
 
 	return (
 		<button
@@ -72,6 +77,7 @@ function Opener() {
 			})}
 			data-badge-count={numberOfItems}
 			data-qa-id="miniCartButton"
+			disabled={disabled}
 			onClick={openCart}
 		>
 			<ClayIcon symbol="shopping-cart" />

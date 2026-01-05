@@ -8,6 +8,8 @@ package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Currency;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.math.BigDecimal;
 
 import java.util.Iterator;
@@ -15,8 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -66,6 +66,20 @@ public class CurrencySerDes {
 			sb.append("\"");
 
 			sb.append(_escape(currency.getCode()));
+
+			sb.append("\"");
+		}
+
+		if (currency.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(currency.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -158,9 +172,7 @@ public class CurrencySerDes {
 			sb.append("\"roundingMode\": ");
 
 			sb.append("\"");
-
 			sb.append(currency.getRoundingMode());
-
 			sb.append("\"");
 		}
 
@@ -208,6 +220,15 @@ public class CurrencySerDes {
 		}
 		else {
 			map.put("code", String.valueOf(currency.getCode()));
+		}
+
+		if (currency.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(currency.getExternalReferenceCode()));
 		}
 
 		if (currency.getFormatPattern() == null) {
@@ -308,6 +329,11 @@ public class CurrencySerDes {
 			else if (Objects.equals(jsonParserFieldName, "code")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "formatPattern")) {
 				return true;
 			}
@@ -355,6 +381,14 @@ public class CurrencySerDes {
 			else if (Objects.equals(jsonParserFieldName, "code")) {
 				if (jsonParserFieldValue != null) {
 					currency.setCode((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					currency.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "formatPattern")) {
@@ -459,6 +493,10 @@ public class CurrencySerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

@@ -238,6 +238,13 @@ public class DLFileEntryLocalServiceUtil {
 			groupId, folderId, includeTrashedEntries);
 	}
 
+	public static void deleteFileEntries(
+			long companyId, long classNameId, long classPK)
+		throws PortalException {
+
+		getService().deleteFileEntries(companyId, classNameId, classPK);
+	}
+
 	public static DLFileEntry deleteFileEntry(DLFileEntry dlFileEntry)
 		throws PortalException {
 
@@ -254,6 +261,14 @@ public class DLFileEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteFileEntry(userId, fileEntryId);
+	}
+
+	public static DLFileEntry deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static DLFileEntry deleteFileVersion(
@@ -712,11 +727,11 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static DLFileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	public static DLFileEntry getFileEntryByFileName(

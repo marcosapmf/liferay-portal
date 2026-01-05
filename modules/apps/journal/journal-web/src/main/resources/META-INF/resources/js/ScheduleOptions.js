@@ -8,9 +8,11 @@ import ClayDatePicker from '@clayui/date-picker';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import {sub} from 'frontend-js-web';
-import moment from 'moment/min/moment-with-locales';
+import {dateUtils, sub} from 'frontend-js-web';
 import React, {useEffect} from 'react';
+
+const FUTURE_YEARS_RANGE = 25;
+const PAST_YEARS_RANGE = 50;
 
 export default function ScheduleOptions({
 	displayDate,
@@ -21,28 +23,21 @@ export default function ScheduleOptions({
 	setError,
 	timeZone,
 }) {
+	const currentYear = new Date().getFullYear();
 	const {day, hour, minutes, month, year} = getDate(displayDate);
 
 	useEffect(() => {
 		if (displayDate) {
-			if (!moment(displayDate, 'yyyy-MM-DD HH:mm', true).isValid()) {
+			if (displayDate.length !== 16 || !dateUtils.isValid(displayDate)) {
 				setError(Liferay.Language.get('please-enter-a-valid-date'));
 
 				return;
-			}
-
-			const date = new Date(displayDate);
-
-			if (date.valueOf() <= new Date().valueOf()) {
-				setError(
-					Liferay.Language.get('the-date-entered-is-in-the-past')
-				);
 			}
 			else {
 				setError('');
 			}
 		}
-	}, [setError, displayDate]);
+	}, [displayDate, setError, timeZone]);
 
 	return (
 		<>
@@ -61,16 +56,49 @@ export default function ScheduleOptions({
 				</label>
 
 				<ClayDatePicker
+					ariaLabels={{
+						buttonChooseDate: `${Liferay.Language.get(
+							'select-date'
+						)}`,
+						buttonDot: `${Liferay.Language.get(
+							'select-current-date'
+						)}`,
+						buttonNextMonth: `${Liferay.Language.get(
+							'select-next-month'
+						)}`,
+						buttonPreviousMonth: `${Liferay.Language.get(
+							'select-previous-month'
+						)}`,
+						dialog: `${Liferay.Language.get('select-date')}`,
+						selectMonth: `${Liferay.Language.get('select-a-month')}`,
+						selectYear: `${Liferay.Language.get('select-a-year')}`,
+					}}
+					firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 					id={`${portletNamespace}displayDatePicker`}
+					months={[
+						`${Liferay.Language.get('january')}`,
+						`${Liferay.Language.get('february')}`,
+						`${Liferay.Language.get('march')}`,
+						`${Liferay.Language.get('april')}`,
+						`${Liferay.Language.get('may')}`,
+						`${Liferay.Language.get('june')}`,
+						`${Liferay.Language.get('july')}`,
+						`${Liferay.Language.get('august')}`,
+						`${Liferay.Language.get('september')}`,
+						`${Liferay.Language.get('october')}`,
+						`${Liferay.Language.get('november')}`,
+						`${Liferay.Language.get('december')}`,
+					]}
 					onChange={setDisplayDate}
-					placeholder="YYYY-MM-DD HH:mm"
+					placeholder={Liferay.Language.get('yyyy-mm-dd-hh-mm')}
 					required
 					time
-					timezone={timeZone}
+					timezone={timeZone.name}
 					value={displayDate || ''}
+					weekdaysShort={dateUtils.getWeekdaysShort()}
 					years={{
-						end: 9999,
-						start: new Date().getFullYear(),
+						end: currentYear + FUTURE_YEARS_RANGE,
+						start: currentYear - PAST_YEARS_RANGE,
 					}}
 				/>
 
@@ -89,7 +117,7 @@ export default function ScheduleOptions({
 			</ClayForm.Group>
 
 			<p className="mt-1 text-3 text-secondary">
-				{sub(Liferay.Language.get('time-zone-x'), timeZone)}
+				{sub(Liferay.Language.get('time-zone-x'), timeZone.name)}
 			</p>
 
 			<ClayInput
@@ -108,7 +136,7 @@ export default function ScheduleOptions({
 
 			<ClayInput
 				form={formId}
-				name={`${portletNamespace}displayDateMinutes`}
+				name={`${portletNamespace}displayDateMinute`}
 				type="hidden"
 				value={minutes}
 			/>
@@ -133,9 +161,7 @@ export default function ScheduleOptions({
 function getDate(value) {
 	const date = new Date(value);
 
-	if (moment(date).isValid()) {
-		const date = new Date(value);
-
+	if (dateUtils.isValid(date)) {
 		return {
 			day: date.getDate(),
 			hour: date.getHours(),

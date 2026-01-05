@@ -6,13 +6,16 @@
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.BatchHistory;
+import com.liferay.jenkins.results.parser.DownstreamBuildReport;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
 
 import java.io.File;
+import java.io.IOException;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -29,7 +32,8 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		}
 
 		_averageDuration =
-			getAverageOverheadDuration() + getAverageTotalTestDuration();
+			getAverageOverheadDuration() + getAverageTotalTestDuration() +
+				getAverageTotalTestTaskDuration();
 
 		if (_averageDuration <= 0L) {
 			BatchHistory batchHistory = getBatchHistory();
@@ -80,6 +84,10 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _averageTotalTestDuration;
 	}
 
+	public long getAverageTotalTestTaskDuration() {
+		return 0L;
+	}
+
 	public String getAxisName() {
 		if (_segmentTestClassGroup != null) {
 			List<AxisTestClassGroup> axisTestClassGroups =
@@ -112,6 +120,35 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 
 	public BatchTestClassGroup getBatchTestClassGroup() {
 		return _batchTestClassGroup;
+	}
+
+	public List<DownstreamBuildReport> getCachedDownstreamBuildReports() {
+		if (!isBuildCachingEnabled() || !isResultsCached()) {
+			return null;
+		}
+
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		List<DownstreamBuildReport> cachedDownstreamBuildReports =
+			batchTestClassGroup.getCachedDownstreamBuildReports(getAxisName());
+
+		if ((cachedDownstreamBuildReports == null) ||
+			cachedDownstreamBuildReports.isEmpty()) {
+
+			return null;
+		}
+
+		for (DownstreamBuildReport cachedDownstreamBuildReport :
+				cachedDownstreamBuildReports) {
+
+			if ((cachedDownstreamBuildReport != null) &&
+				!cachedDownstreamBuildReport.isFailing()) {
+
+				return Collections.singletonList(cachedDownstreamBuildReport);
+			}
+		}
+
+		return null;
 	}
 
 	public String getDownstreamJobName() {
@@ -156,6 +193,15 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _batchTestClassGroup.getMinimumSlaveRAM();
 	}
 
+	@Override
+	public String getOSArchitecture() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getOSArchitecture();
+		}
+
+		return _batchTestClassGroup.getOSArchitecture();
+	}
+
 	public String getSegmentName() {
 		if (_segmentTestClassGroup != null) {
 			return _segmentTestClassGroup.getSegmentName();
@@ -168,16 +214,31 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _segmentTestClassGroup;
 	}
 
-	public String getSlaveLabel() {
-		if (_segmentTestClassGroup != null) {
-			return _segmentTestClassGroup.getSlaveLabel();
-		}
-
-		return _batchTestClassGroup.getSlaveLabel();
-	}
-
 	public File getTestBaseDir() {
 		return null;
+	}
+
+	public boolean isBuildCachingEnabled() {
+		return _batchTestClassGroup.isBuildCachingEnabled();
+	}
+
+	public boolean isResultsCached() {
+		if (!isBuildCachingEnabled()) {
+			return false;
+		}
+
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		List<DownstreamBuildReport> cachedDownstreamBuildReports =
+			batchTestClassGroup.getCachedDownstreamBuildReports(getAxisName());
+
+		if ((cachedDownstreamBuildReports != null) &&
+			!cachedDownstreamBuildReports.isEmpty()) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected AxisTestClassGroup(BatchTestClassGroup batchTestClassGroup) {
@@ -209,10 +270,41 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 				continue;
 			}
 
-			testClasses.add(
+			addTestClass(
 				TestClassFactory.newTestClass(
 					batchTestClassGroup, testClassJSONObject));
 		}
+	}
+
+	@Override
+	protected void addTestClass(TestClass testClass) {
+		super.addTestClass(testClass);
+
+		testClass.setAxisTestClassGroup(this);
+	}
+
+	@Override
+	protected String getBaseSlaveLabel() {
+		if (!JenkinsResultsParserUtil.isCloudCINode()) {
+			return _getBaseSlaveLabel();
+		}
+
+		String slaveLabel = null;
+
+		try {
+			slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label.minimum.ram",
+				String.valueOf(getMinimumSlaveRAM()));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
+		}
+
+		return _getBaseSlaveLabel();
 	}
 
 	protected void setBatchTestClassGroup(
@@ -225,6 +317,14 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		SegmentTestClassGroup segmentTestClassGroup) {
 
 		_segmentTestClassGroup = segmentTestClassGroup;
+	}
+
+	private String _getBaseSlaveLabel() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getBaseSlaveLabel();
+		}
+
+		return _batchTestClassGroup.getBaseSlaveLabel();
 	}
 
 	private Long _averageDuration;

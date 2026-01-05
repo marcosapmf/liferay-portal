@@ -8,12 +8,12 @@ package com.liferay.object.admin.rest.client.dto.v1_0;
 import com.liferay.object.admin.rest.client.function.UnsafeSupplier;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectRelationshipSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -315,6 +315,28 @@ public class ObjectRelationship implements Cloneable, Serializable {
 	}
 
 	protected String objectDefinitionName2;
+
+	public String getObjectDefinitionScope2() {
+		return objectDefinitionScope2;
+	}
+
+	public void setObjectDefinitionScope2(String objectDefinitionScope2) {
+		this.objectDefinitionScope2 = objectDefinitionScope2;
+	}
+
+	public void setObjectDefinitionScope2(
+		UnsafeSupplier<String, Exception>
+			objectDefinitionScope2UnsafeSupplier) {
+
+		try {
+			objectDefinitionScope2 = objectDefinitionScope2UnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String objectDefinitionScope2;
 
 	public Boolean getObjectDefinitionSystem2() {
 		return objectDefinitionSystem2;

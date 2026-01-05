@@ -7,9 +7,9 @@ package com.liferay.object.web.internal.object.definitions.portlet.action;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectFolder;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectFolderItem;
+import com.liferay.object.admin.rest.dto.v1_0.util.ObjectDefinitionUtil;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFolderResource;
 import com.liferay.object.constants.ObjectPortletKeys;
-import com.liferay.object.web.internal.object.definitions.portlet.action.util.ExportImportObjectDefinitionUtil;
 import com.liferay.object.web.internal.util.JSONObjectSanitizerUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -25,8 +25,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ObjectPortletKeys.OBJECT_DEFINITIONS,
+		"jakarta.portlet.name=" + ObjectPortletKeys.OBJECT_DEFINITIONS,
 		"mvc.command.name=/object_definitions/export_object_folder"
 	},
 	service = MVCResourceCommand.class
@@ -68,7 +68,7 @@ public class ExportObjectFolderMVCResourceCommand
 		for (ObjectFolderItem objectFolderItem :
 				objectFolder.getObjectFolderItems()) {
 
-			ExportImportObjectDefinitionUtil.prepareObjectDefinitionForExport(
+			ObjectDefinitionUtil.prepareObjectDefinitionForExport(
 				_jsonFactory, objectFolderItem.getObjectDefinition());
 		}
 

@@ -9,7 +9,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.segments.configuration.SegmentsCompanyConfiguration;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -18,6 +18,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface SegmentsConfigurationProvider {
+
+	public void clearSegmentsCompanyConfigurations();
 
 	public String getCompanyConfigurationURL(
 			HttpServletRequest httpServletRequest)

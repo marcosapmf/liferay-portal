@@ -13,7 +13,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletWrapper;
 import com.liferay.portal.kernel.portlet.PortletContainerUtil;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -33,7 +32,6 @@ import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -45,24 +43,17 @@ import com.liferay.taglib.servlet.PipingServletResponseFactory;
 import com.liferay.taglib.util.PortalIncludeUtil;
 import com.liferay.taglib.util.ThreadLocalUtil;
 
-import java.lang.reflect.Method;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
-
-import javax.portlet.GenericPortlet;
-import javax.portlet.HeaderRequest;
-import javax.portlet.HeaderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.TagSupport;
 
 /**
  * @author Brian Wing Shun Chan
@@ -361,7 +352,7 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 					themeDisplay.setLifecycleRender(true);
 				}
 
-				if (_isHeaderPortlet(portlet)) {
+				if (portlet.isHeaderPortlet()) {
 					PortletContainerUtil.renderHeaders(
 						httpServletRequest, httpServletResponse, portlet);
 				}
@@ -503,65 +494,6 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 		portlet.setStatic(true);
 
 		return portlet;
-	}
-
-	private static boolean _isHeaderPortlet(Portlet portlet) {
-		PortletApp portletApp = portlet.getPortletApp();
-
-		if (portletApp.getSpecMajorVersion() < 3) {
-			return false;
-		}
-
-		String portletClassName = portlet.getPortletClass();
-
-		if (Objects.equals(
-				portletClassName, "javax.portlet.faces.GenericFacesPortlet")) {
-
-			return true;
-		}
-
-		ServletContext servletContext = portletApp.getServletContext();
-
-		if (servletContext == null) {
-			return false;
-		}
-
-		ClassLoader classLoader = servletContext.getClassLoader();
-
-		if (classLoader == null) {
-			return false;
-		}
-
-		try {
-			Class<?> portletClass = classLoader.loadClass(portletClassName);
-
-			if (ClassUtil.isSubclass(
-					portletClass, "javax.portlet.faces.GenericFacesPortlet")) {
-
-				return true;
-			}
-
-			Method renderHeadersMethod = portletClass.getMethod(
-				"renderHeaders", HeaderRequest.class, HeaderResponse.class);
-
-			if (GenericPortlet.class !=
-					renderHeadersMethod.getDeclaringClass()) {
-
-				return true;
-			}
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to load portlet class " + portletClassName,
-					classNotFoundException);
-			}
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			_log.error(noSuchMethodException);
-		}
-
-		return false;
 	}
 
 	private static final String _ERROR_PAGE =

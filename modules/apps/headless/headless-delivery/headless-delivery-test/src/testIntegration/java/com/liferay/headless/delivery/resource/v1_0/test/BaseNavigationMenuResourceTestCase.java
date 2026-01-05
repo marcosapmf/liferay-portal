@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
@@ -21,6 +24,8 @@ import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.NavigationMenuResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.NavigationMenuSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
+import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -32,25 +37,50 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,13 +89,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -74,6 +102,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -84,12 +115,14 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -103,11 +136,25 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		_navigationMenuResource.setContextCompany(testCompany);
 
-		NavigationMenuResource.Builder builder =
-			NavigationMenuResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		navigationMenuResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		navigationMenuResource = NavigationMenuResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -121,7 +168,32 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		NavigationMenu navigationMenu1 = randomNavigationMenu();
+
+		String json = objectMapper.writeValueAsString(navigationMenu1);
+
+		NavigationMenu navigationMenu2 = NavigationMenuSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(navigationMenu1, navigationMenu2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		NavigationMenu navigationMenu = randomNavigationMenu();
+
+		String json1 = objectMapper.writeValueAsString(navigationMenu);
+		String json2 = NavigationMenuSerDes.toJSON(navigationMenu);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -136,40 +208,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		NavigationMenu navigationMenu1 = randomNavigationMenu();
-
-		String json = objectMapper.writeValueAsString(navigationMenu1);
-
-		NavigationMenu navigationMenu2 = NavigationMenuSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(navigationMenu1, navigationMenu2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		NavigationMenu navigationMenu = randomNavigationMenu();
-
-		String json1 = objectMapper.writeValueAsString(navigationMenu);
-		String json2 = NavigationMenuSerDes.toJSON(navigationMenu);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -178,6 +216,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		NavigationMenu navigationMenu = randomNavigationMenu();
 
+		navigationMenu.setExternalReferenceCode(regex);
 		navigationMenu.setName(regex);
 
 		String json = NavigationMenuSerDes.toJSON(navigationMenu);
@@ -186,6 +225,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		navigationMenu = NavigationMenuSerDes.toDTO(json);
 
+		Assert.assertEquals(regex, navigationMenu.getExternalReferenceCode());
 		Assert.assertEquals(regex, navigationMenu.getName());
 	}
 
@@ -204,7 +244,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			404,
 			navigationMenuResource.getNavigationMenuHttpResponse(
 				navigationMenu.getId()));
-
 		assertHttpResponseStatusCode(
 			404, navigationMenuResource.getNavigationMenuHttpResponse(0L));
 	}
@@ -247,7 +286,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 							put("navigationMenuId", navigationMenu1.getId());
 						}
 					},
-					new GraphQLField("id"))),
+					getGraphQLFields())),
 			"JSONArray/errors");
 
 		Assert.assertTrue(errorsJSONArray1.length() > 0);
@@ -287,7 +326,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 									navigationMenu2.getId());
 							}
 						},
-						new GraphQLField("id")))),
+						getGraphQLFields()))),
 			"JSONArray/errors");
 
 		Assert.assertTrue(errorsJSONArray2.length() > 0);
@@ -297,6 +336,193 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		throws Exception {
 
 		return testGraphQLNavigationMenu_addNavigationMenu();
+	}
+
+	@Test
+	public void testDeleteNavigationMenuBatch() throws Exception {
+		NavigationMenu navigationMenu1 =
+			testDeleteNavigationMenuBatch_addNavigationMenu();
+
+		testDeleteNavigationMenuBatch_deleteNavigationMenu(
+			202, null, navigationMenu1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.getNavigationMenuHttpResponse(
+				navigationMenu1.getId()));
+	}
+
+	protected NavigationMenu testDeleteNavigationMenuBatch_addNavigationMenu()
+		throws Exception {
+
+		return testDeleteNavigationMenu_addNavigationMenu();
+	}
+
+	protected void testDeleteNavigationMenuBatch_deleteNavigationMenu(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			navigationMenuResource.deleteNavigationMenuBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteSiteNavigationMenuByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu navigationMenu =
+			testDeleteSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
+
+		assertHttpResponseStatusCode(
+			204,
+			navigationMenuResource.
+				deleteSiteNavigationMenuByExternalReferenceCodeHttpResponse(
+					navigationMenu.getSiteId(),
+					navigationMenu.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.
+				getSiteNavigationMenuByExternalReferenceCodeHttpResponse(
+					navigationMenu.getSiteId(),
+					navigationMenu.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.
+				getSiteNavigationMenuByExternalReferenceCodeHttpResponse(
+					navigationMenu.getSiteId(), "-"));
+	}
+
+	protected NavigationMenu
+			testDeleteSiteNavigationMenuByExternalReferenceCode_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	@Test
+	public void testGraphQLDeleteSiteNavigationMenuByExternalReferenceCode()
+		throws Exception {
+
+		// No namespace
+
+		NavigationMenu navigationMenu1 =
+			testGraphQLDeleteSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteSiteNavigationMenuByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + navigationMenu1.getSiteId() + "\"");
+								put(
+									"externalReferenceCode",
+									"\"" +
+										navigationMenu1.
+											getExternalReferenceCode() + "\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteSiteNavigationMenuByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"navigationMenuByExternalReferenceCode",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"siteKey",
+								"\"" + navigationMenu1.getSiteId() + "\"");
+							put(
+								"externalReferenceCode",
+								"\"" +
+									navigationMenu1.getExternalReferenceCode() +
+										"\"");
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		NavigationMenu navigationMenu2 =
+			testGraphQLDeleteSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteSiteNavigationMenuByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + navigationMenu2.getSiteId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										"\"" +
+											navigationMenu2.
+												getExternalReferenceCode() +
+													"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteSiteNavigationMenuByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"navigationMenuByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + navigationMenu2.getSiteId() + "\"");
+								put(
+									"externalReferenceCode",
+									"\"" +
+										navigationMenu2.
+											getExternalReferenceCode() + "\"");
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected NavigationMenu
+			testGraphQLDeleteSiteNavigationMenuByExternalReferenceCode_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLSiteNavigationMenu_addNavigationMenu();
 	}
 
 	@Test
@@ -310,6 +536,198 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		assertEquals(postNavigationMenu, getNavigationMenu);
 		assertValid(getNavigationMenu);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		NavigationMenu postNavigationMenu =
+			testGetNavigationMenu_addNavigationMenu();
+
+		NavigationMenu getNavigationMenu =
+			navigationMenuResource.getNavigationMenu(
+				postNavigationMenu.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.delivery.dto.v1_0.NavigationMenu"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postNavigationMenu.getId());
+
+		assertEquals(
+			getNavigationMenu, NavigationMenuSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
 	}
 
 	protected NavigationMenu testGetNavigationMenu_addNavigationMenu()
@@ -420,6 +838,810 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	}
 
 	@Test
+	public void testGetNavigationMenuPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu postNavigationMenu =
+			testGetNavigationMenuPermissionsPage_addNavigationMenu();
+
+		Page<Permission> page =
+			navigationMenuResource.getNavigationMenuPermissionsPage(
+				postNavigationMenu.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected NavigationMenu
+			testGetNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	@Test
+	public void testGraphQLGetNavigationMenuPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu postNavigationMenu =
+			testGraphQLGetNavigationMenuPermissionsPage_addNavigationMenu();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"navigationMenuPermissions",
+			new HashMap<String, Object>() {
+				{
+					put("navigationMenuId", postNavigationMenu.getId());
+				}
+			},
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		JSONObject navigationMenuPermissionsJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/navigationMenuPermissions");
+
+		Assert.assertNotNull(navigationMenuPermissionsJSONObject);
+	}
+
+	protected NavigationMenu
+			testGraphQLGetNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLNavigationMenu_addNavigationMenu();
+	}
+
+	@Test
+	public void testGetSiteNavigationMenuByExternalReferenceCode()
+		throws Exception {
+
+		NavigationMenu postNavigationMenu =
+			testGetSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
+
+		NavigationMenu getNavigationMenu =
+			navigationMenuResource.getSiteNavigationMenuByExternalReferenceCode(
+				postNavigationMenu.getSiteId(),
+				postNavigationMenu.getExternalReferenceCode());
+
+		assertEquals(postNavigationMenu, getNavigationMenu);
+		assertValid(getNavigationMenu);
+	}
+
+	protected NavigationMenu
+			testGetSiteNavigationMenuByExternalReferenceCode_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	@Test
+	public void testGraphQLGetSiteNavigationMenuByExternalReferenceCode()
+		throws Exception {
+
+		NavigationMenu navigationMenu =
+			testGraphQLGetSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				navigationMenu,
+				NavigationMenuSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"navigationMenuByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" + navigationMenu.getSiteId() +
+												"\"");
+										put(
+											"externalReferenceCode",
+											"\"" +
+												navigationMenu.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/navigationMenuByExternalReferenceCode"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				navigationMenu,
+				NavigationMenuSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"navigationMenuByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													navigationMenu.getSiteId() +
+														"\"");
+											put(
+												"externalReferenceCode",
+												"\"" +
+													navigationMenu.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/navigationMenuByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteNavigationMenuByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"navigationMenuByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"navigationMenuByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected NavigationMenu
+			testGraphQLGetSiteNavigationMenuByExternalReferenceCode_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLSiteNavigationMenu_addNavigationMenu();
+	}
+
+	@Test
+	public void testGetSiteNavigationMenuPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu postNavigationMenu =
+			testGetSiteNavigationMenuPermissionsPage_addNavigationMenu();
+
+		Page<Permission> page =
+			navigationMenuResource.getSiteNavigationMenuPermissionsPage(
+				testGroup.getGroupId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected NavigationMenu
+			testGetSiteNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	@Test
+	public void testGraphQLGetSiteNavigationMenuPermissionsPage()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu postNavigationMenu =
+			testGraphQLGetSiteNavigationMenuPermissionsPage_addNavigationMenu();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"siteNavigationMenuPermissions",
+			new HashMap<String, Object>() {
+				{
+					put(
+						"siteKey",
+						"\"" + postNavigationMenu.getSiteId() + "\"");
+				}
+			},
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		JSONObject siteNavigationMenuPermissionsJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/siteNavigationMenuPermissions");
+
+		Assert.assertNotNull(siteNavigationMenuPermissionsJSONObject);
+	}
+
+	protected NavigationMenu
+			testGraphQLGetSiteNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLSiteNavigationMenu_addNavigationMenu();
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPage() throws Exception {
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+		Long irrelevantSiteId =
+			testGetSiteNavigationMenusPage_getIrrelevantSiteId();
+
+		Page<NavigationMenu> page =
+			navigationMenuResource.getSiteNavigationMenusPage(
+				siteId, null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantSiteId != null) {
+			NavigationMenu irrelevantNavigationMenu =
+				testGetSiteNavigationMenusPage_addNavigationMenu(
+					irrelevantSiteId, randomIrrelevantNavigationMenu());
+
+			page = navigationMenuResource.getSiteNavigationMenusPage(
+				irrelevantSiteId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantNavigationMenu,
+				(List<NavigationMenu>)page.getItems());
+			assertValid(
+				page,
+				testGetSiteNavigationMenusPage_getExpectedActions(
+					irrelevantSiteId));
+		}
+
+		NavigationMenu navigationMenu1 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		NavigationMenu navigationMenu2 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		page = navigationMenuResource.getSiteNavigationMenusPage(
+			siteId, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(navigationMenu1, (List<NavigationMenu>)page.getItems());
+		assertContains(navigationMenu2, (List<NavigationMenu>)page.getItems());
+		assertValid(
+			page, testGetSiteNavigationMenusPage_getExpectedActions(siteId));
+
+		navigationMenuResource.deleteNavigationMenu(navigationMenu1.getId());
+
+		navigationMenuResource.deleteNavigationMenu(navigationMenu2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteNavigationMenusPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/navigation-menus/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+
+		NavigationMenu navigationMenu1 = randomNavigationMenu();
+
+		navigationMenu1 = testGetSiteNavigationMenusPage_addNavigationMenu(
+			siteId, navigationMenu1);
+
+		for (EntityField entityField : entityFields) {
+			Page<NavigationMenu> page =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null,
+					getFilterString(entityField, "between", navigationMenu1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(navigationMenu1),
+				(List<NavigationMenu>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithFilterDoubleEquals()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithFilterStringContains()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithFilter(
+			"contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithFilterStringEquals()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithFilterStringStartsWith()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithFilter(
+			"startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSiteNavigationMenusPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+
+		NavigationMenu navigationMenu1 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu navigationMenu2 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		for (EntityField entityField : entityFields) {
+			Page<NavigationMenu> page =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null,
+					getFilterString(entityField, operator, navigationMenu1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(navigationMenu1),
+				(List<NavigationMenu>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithPagination()
+		throws Exception {
+
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+
+		Page<NavigationMenu> navigationMenusPage =
+			navigationMenuResource.getSiteNavigationMenusPage(
+				siteId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			navigationMenusPage.getTotalCount());
+
+		NavigationMenu navigationMenu1 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		NavigationMenu navigationMenu2 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		NavigationMenu navigationMenu3 =
+			testGetSiteNavigationMenusPage_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<NavigationMenu> page1 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				navigationMenu1, (List<NavigationMenu>)page1.getItems());
+
+			Page<NavigationMenu> page2 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(
+				navigationMenu2, (List<NavigationMenu>)page2.getItems());
+
+			Page<NavigationMenu> page3 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
+
+			assertContains(
+				navigationMenu3, (List<NavigationMenu>)page3.getItems());
+		}
+		else {
+			Page<NavigationMenu> page1 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<NavigationMenu> navigationMenus1 =
+				(List<NavigationMenu>)page1.getItems();
+
+			Assert.assertEquals(
+				navigationMenus1.toString(), totalCount + 2,
+				navigationMenus1.size());
+
+			Page<NavigationMenu> page2 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<NavigationMenu> navigationMenus2 =
+				(List<NavigationMenu>)page2.getItems();
+
+			Assert.assertEquals(
+				navigationMenus2.toString(), 1, navigationMenus2.size());
+
+			Page<NavigationMenu> page3 =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(
+				navigationMenu1, (List<NavigationMenu>)page3.getItems());
+			assertContains(
+				navigationMenu2, (List<NavigationMenu>)page3.getItems());
+			assertContains(
+				navigationMenu3, (List<NavigationMenu>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithSortDateTime()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, navigationMenu1, navigationMenu2) -> {
+				BeanTestUtil.setProperty(
+					navigationMenu1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithSortDouble()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, navigationMenu1, navigationMenu2) -> {
+				BeanTestUtil.setProperty(
+					navigationMenu1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					navigationMenu2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithSortInteger()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, navigationMenu1, navigationMenu2) -> {
+				BeanTestUtil.setProperty(
+					navigationMenu1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					navigationMenu2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetSiteNavigationMenusPageWithSortString()
+		throws Exception {
+
+		testGetSiteNavigationMenusPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, navigationMenu1, navigationMenu2) -> {
+				Class<?> clazz = navigationMenu1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						navigationMenu1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						navigationMenu2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						navigationMenu1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						navigationMenu2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						navigationMenu1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						navigationMenu2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetSiteNavigationMenusPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, NavigationMenu, NavigationMenu, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+
+		NavigationMenu navigationMenu1 = randomNavigationMenu();
+		NavigationMenu navigationMenu2 = randomNavigationMenu();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(
+				entityField, navigationMenu1, navigationMenu2);
+		}
+
+		navigationMenu1 = testGetSiteNavigationMenusPage_addNavigationMenu(
+			siteId, navigationMenu1);
+
+		navigationMenu2 = testGetSiteNavigationMenusPage_addNavigationMenu(
+			siteId, navigationMenu2);
+
+		Page<NavigationMenu> page =
+			navigationMenuResource.getSiteNavigationMenusPage(
+				siteId, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<NavigationMenu> ascPage =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":asc");
+
+			assertContains(
+				navigationMenu1, (List<NavigationMenu>)ascPage.getItems());
+			assertContains(
+				navigationMenu2, (List<NavigationMenu>)ascPage.getItems());
+
+			Page<NavigationMenu> descPage =
+				navigationMenuResource.getSiteNavigationMenusPage(
+					siteId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
+					entityField.getName() + ":desc");
+
+			assertContains(
+				navigationMenu2, (List<NavigationMenu>)descPage.getItems());
+			assertContains(
+				navigationMenu1, (List<NavigationMenu>)descPage.getItems());
+		}
+	}
+
+	protected NavigationMenu testGetSiteNavigationMenusPage_addNavigationMenu(
+			Long siteId, NavigationMenu navigationMenu)
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			siteId, navigationMenu);
+	}
+
+	protected Long testGetSiteNavigationMenusPage_getSiteId() throws Exception {
+		return testGroup.getGroupId();
+	}
+
+	protected Long testGetSiteNavigationMenusPage_getIrrelevantSiteId()
+		throws Exception {
+
+		return irrelevantGroup.getGroupId();
+	}
+
+	@Test
+	public void testGraphQLGetSiteNavigationMenusPage() throws Exception {
+		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"navigationMenus",
+			new HashMap<String, Object>() {
+				{
+					put("siteKey", "\"" + siteId + "\"");
+					put("search", null);
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/navigationMenus");
+
+		long totalCount = navigationMenusJSONObject.getLong("totalCount");
+
+		NavigationMenu navigationMenu1 =
+			testGraphQLSiteNavigationMenu_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		NavigationMenu navigationMenu2 =
+			testGraphQLSiteNavigationMenu_addNavigationMenu(
+				siteId, randomNavigationMenu());
+
+		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/navigationMenus");
+
+		Assert.assertEquals(
+			totalCount + 2, navigationMenusJSONObject.getLong("totalCount"));
+
+		assertContains(
+			navigationMenu1,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+		assertContains(
+			navigationMenu2,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+			"JSONObject/navigationMenus");
+
+		Assert.assertEquals(
+			totalCount + 2, navigationMenusJSONObject.getLong("totalCount"));
+
+		assertContains(
+			navigationMenu1,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+		assertContains(
+			navigationMenu2,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+	}
+
+	@Test
+	public void testPostSiteNavigationMenu() throws Exception {
+		NavigationMenu randomNavigationMenu = randomNavigationMenu();
+
+		NavigationMenu postNavigationMenu =
+			testPostSiteNavigationMenu_addNavigationMenu(randomNavigationMenu);
+
+		assertEquals(randomNavigationMenu, postNavigationMenu);
+		assertValid(postNavigationMenu);
+	}
+
+	protected NavigationMenu testPostSiteNavigationMenu_addNavigationMenu(
+			NavigationMenu navigationMenu)
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGetSiteNavigationMenusPage_getSiteId(), navigationMenu);
+	}
+
+	@Test
+	public void testGraphQLPostSiteNavigationMenu() throws Exception {
+		NavigationMenu randomNavigationMenu = randomNavigationMenu();
+
+		NavigationMenu navigationMenu =
+			testGraphQLSiteNavigationMenu_addNavigationMenu(
+				testGroup.getGroupId(), randomNavigationMenu);
+
+		Assert.assertTrue(equals(randomNavigationMenu, navigationMenu));
+	}
+
+	@Test
 	public void testPutNavigationMenu() throws Exception {
 		NavigationMenu postNavigationMenu =
 			testPutNavigationMenu_addNavigationMenu();
@@ -445,26 +1667,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		return navigationMenuResource.postSiteNavigationMenu(
 			testGroup.getGroupId(), randomNavigationMenu());
-	}
-
-	@Test
-	public void testGetNavigationMenuPermissionsPage() throws Exception {
-		NavigationMenu postNavigationMenu =
-			testGetNavigationMenuPermissionsPage_addNavigationMenu();
-
-		Page<Permission> page =
-			navigationMenuResource.getNavigationMenuPermissionsPage(
-				postNavigationMenu.getId(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected NavigationMenu
-			testGetNavigationMenuPermissionsPage_addNavigationMenu()
-		throws Exception {
-
-		return testPostSiteNavigationMenu_addNavigationMenu(
-			randomNavigationMenu());
 	}
 
 	@Test
@@ -513,315 +1715,68 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteNavigationMenusPage() throws Exception {
-		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
-		Long irrelevantSiteId =
-			testGetSiteNavigationMenusPage_getIrrelevantSiteId();
-
-		Page<NavigationMenu> page =
-			navigationMenuResource.getSiteNavigationMenusPage(
-				siteId, Pagination.of(1, 10));
-
-		long totalCount = page.getTotalCount();
-
-		if (irrelevantSiteId != null) {
-			NavigationMenu irrelevantNavigationMenu =
-				testGetSiteNavigationMenusPage_addNavigationMenu(
-					irrelevantSiteId, randomIrrelevantNavigationMenu());
-
-			page = navigationMenuResource.getSiteNavigationMenusPage(
-				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantNavigationMenu,
-				(List<NavigationMenu>)page.getItems());
-			assertValid(
-				page,
-				testGetSiteNavigationMenusPage_getExpectedActions(
-					irrelevantSiteId));
-		}
-
-		NavigationMenu navigationMenu1 =
-			testGetSiteNavigationMenusPage_addNavigationMenu(
-				siteId, randomNavigationMenu());
-
-		NavigationMenu navigationMenu2 =
-			testGetSiteNavigationMenusPage_addNavigationMenu(
-				siteId, randomNavigationMenu());
-
-		page = navigationMenuResource.getSiteNavigationMenusPage(
-			siteId, Pagination.of(1, 10));
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(navigationMenu1, (List<NavigationMenu>)page.getItems());
-		assertContains(navigationMenu2, (List<NavigationMenu>)page.getItems());
-		assertValid(
-			page, testGetSiteNavigationMenusPage_getExpectedActions(siteId));
-
-		navigationMenuResource.deleteNavigationMenu(navigationMenu1.getId());
-
-		navigationMenuResource.deleteNavigationMenu(navigationMenu2.getId());
-	}
-
-	protected Map<String, Map<String, String>>
-			testGetSiteNavigationMenusPage_getExpectedActions(Long siteId)
+	public void testPutSiteNavigationMenuByExternalReferenceCode()
 		throws Exception {
-
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		Map createBatchAction = new HashMap<>();
-		createBatchAction.put("method", "POST");
-		createBatchAction.put(
-			"href",
-			"http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/navigation-menus/batch".
-				replace("{siteId}", String.valueOf(siteId)));
-
-		expectedActions.put("createBatch", createBatchAction);
-
-		return expectedActions;
-	}
-
-	@Test
-	public void testGetSiteNavigationMenusPageWithPagination()
-		throws Exception {
-
-		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
-
-		Page<NavigationMenu> navigationMenuPage =
-			navigationMenuResource.getSiteNavigationMenusPage(siteId, null);
-
-		int totalCount = GetterUtil.getInteger(
-			navigationMenuPage.getTotalCount());
-
-		NavigationMenu navigationMenu1 =
-			testGetSiteNavigationMenusPage_addNavigationMenu(
-				siteId, randomNavigationMenu());
-
-		NavigationMenu navigationMenu2 =
-			testGetSiteNavigationMenusPage_addNavigationMenu(
-				siteId, randomNavigationMenu());
-
-		NavigationMenu navigationMenu3 =
-			testGetSiteNavigationMenusPage_addNavigationMenu(
-				siteId, randomNavigationMenu());
-
-		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
-
-		int pageSizeLimit = 500;
-
-		if (totalCount >= (pageSizeLimit - 2)) {
-			Page<NavigationMenu> page1 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
-
-			assertContains(
-				navigationMenu1, (List<NavigationMenu>)page1.getItems());
-
-			Page<NavigationMenu> page2 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(
-				navigationMenu2, (List<NavigationMenu>)page2.getItems());
-
-			Page<NavigationMenu> page3 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
-
-			assertContains(
-				navigationMenu3, (List<NavigationMenu>)page3.getItems());
-		}
-		else {
-			Page<NavigationMenu> page1 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId, Pagination.of(1, totalCount + 2));
-
-			List<NavigationMenu> navigationMenus1 =
-				(List<NavigationMenu>)page1.getItems();
-
-			Assert.assertEquals(
-				navigationMenus1.toString(), totalCount + 2,
-				navigationMenus1.size());
-
-			Page<NavigationMenu> page2 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId, Pagination.of(2, totalCount + 2));
-
-			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
-
-			List<NavigationMenu> navigationMenus2 =
-				(List<NavigationMenu>)page2.getItems();
-
-			Assert.assertEquals(
-				navigationMenus2.toString(), 1, navigationMenus2.size());
-
-			Page<NavigationMenu> page3 =
-				navigationMenuResource.getSiteNavigationMenusPage(
-					siteId, Pagination.of(1, (int)totalCount + 3));
-
-			assertContains(
-				navigationMenu1, (List<NavigationMenu>)page3.getItems());
-			assertContains(
-				navigationMenu2, (List<NavigationMenu>)page3.getItems());
-			assertContains(
-				navigationMenu3, (List<NavigationMenu>)page3.getItems());
-		}
-	}
-
-	protected NavigationMenu testGetSiteNavigationMenusPage_addNavigationMenu(
-			Long siteId, NavigationMenu navigationMenu)
-		throws Exception {
-
-		return navigationMenuResource.postSiteNavigationMenu(
-			siteId, navigationMenu);
-	}
-
-	protected Long testGetSiteNavigationMenusPage_getSiteId() throws Exception {
-		return testGroup.getGroupId();
-	}
-
-	protected Long testGetSiteNavigationMenusPage_getIrrelevantSiteId()
-		throws Exception {
-
-		return irrelevantGroup.getGroupId();
-	}
-
-	@Test
-	public void testGraphQLGetSiteNavigationMenusPage() throws Exception {
-		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
-
-		GraphQLField graphQLField = new GraphQLField(
-			"navigationMenus",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-
-					put("siteKey", "\"" + siteId + "\"");
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/navigationMenus");
-
-		long totalCount = navigationMenusJSONObject.getLong("totalCount");
-
-		NavigationMenu navigationMenu1 =
-			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu();
-		NavigationMenu navigationMenu2 =
-			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu();
-
-		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/navigationMenus");
-
-		Assert.assertEquals(
-			totalCount + 2, navigationMenusJSONObject.getLong("totalCount"));
-
-		assertContains(
-			navigationMenu1,
-			Arrays.asList(
-				NavigationMenuSerDes.toDTOs(
-					navigationMenusJSONObject.getString("items"))));
-		assertContains(
-			navigationMenu2,
-			Arrays.asList(
-				NavigationMenuSerDes.toDTOs(
-					navigationMenusJSONObject.getString("items"))));
-
-		// Using the namespace headlessDelivery_v1_0
-
-		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
-			"JSONObject/navigationMenus");
-
-		Assert.assertEquals(
-			totalCount + 2, navigationMenusJSONObject.getLong("totalCount"));
-
-		assertContains(
-			navigationMenu1,
-			Arrays.asList(
-				NavigationMenuSerDes.toDTOs(
-					navigationMenusJSONObject.getString("items"))));
-		assertContains(
-			navigationMenu2,
-			Arrays.asList(
-				NavigationMenuSerDes.toDTOs(
-					navigationMenusJSONObject.getString("items"))));
-	}
-
-	protected NavigationMenu
-			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu()
-		throws Exception {
-
-		return testGraphQLNavigationMenu_addNavigationMenu();
-	}
-
-	@Test
-	public void testPostSiteNavigationMenu() throws Exception {
-		NavigationMenu randomNavigationMenu = randomNavigationMenu();
 
 		NavigationMenu postNavigationMenu =
-			testPostSiteNavigationMenu_addNavigationMenu(randomNavigationMenu);
+			testPutSiteNavigationMenuByExternalReferenceCode_addNavigationMenu();
 
-		assertEquals(randomNavigationMenu, postNavigationMenu);
-		assertValid(postNavigationMenu);
-	}
-
-	protected NavigationMenu testPostSiteNavigationMenu_addNavigationMenu(
-			NavigationMenu navigationMenu)
-		throws Exception {
-
-		return navigationMenuResource.postSiteNavigationMenu(
-			testGetSiteNavigationMenusPage_getSiteId(), navigationMenu);
-	}
-
-	@Test
-	public void testGraphQLPostSiteNavigationMenu() throws Exception {
 		NavigationMenu randomNavigationMenu = randomNavigationMenu();
 
-		NavigationMenu navigationMenu =
-			testGraphQLNavigationMenu_addNavigationMenu(randomNavigationMenu);
+		NavigationMenu putNavigationMenu =
+			navigationMenuResource.putSiteNavigationMenuByExternalReferenceCode(
+				postNavigationMenu.getSiteId(),
+				postNavigationMenu.getExternalReferenceCode(),
+				randomNavigationMenu);
 
-		Assert.assertTrue(equals(randomNavigationMenu, navigationMenu));
-	}
+		assertEquals(randomNavigationMenu, putNavigationMenu);
+		assertValid(putNavigationMenu);
 
-	@Test
-	public void testGetSiteNavigationMenuPermissionsPage() throws Exception {
-		Page<Permission> page =
-			navigationMenuResource.getSiteNavigationMenuPermissionsPage(
-				testGroup.getGroupId(), RoleConstants.GUEST);
+		NavigationMenu getNavigationMenu =
+			navigationMenuResource.getSiteNavigationMenuByExternalReferenceCode(
+				putNavigationMenu.getSiteId(),
+				putNavigationMenu.getExternalReferenceCode());
 
-		Assert.assertNotNull(page);
+		assertEquals(randomNavigationMenu, getNavigationMenu);
+		assertValid(getNavigationMenu);
+
+		NavigationMenu newNavigationMenu =
+			testPutSiteNavigationMenuByExternalReferenceCode_createNavigationMenu();
+
+		putNavigationMenu =
+			navigationMenuResource.putSiteNavigationMenuByExternalReferenceCode(
+				newNavigationMenu.getSiteId(),
+				newNavigationMenu.getExternalReferenceCode(),
+				newNavigationMenu);
+
+		assertEquals(newNavigationMenu, putNavigationMenu);
+		assertValid(putNavigationMenu);
+
+		getNavigationMenu =
+			navigationMenuResource.getSiteNavigationMenuByExternalReferenceCode(
+				putNavigationMenu.getSiteId(),
+				putNavigationMenu.getExternalReferenceCode());
+
+		assertEquals(newNavigationMenu, getNavigationMenu);
+
+		Assert.assertEquals(
+			newNavigationMenu.getExternalReferenceCode(),
+			putNavigationMenu.getExternalReferenceCode());
 	}
 
 	protected NavigationMenu
-			testGetSiteNavigationMenuPermissionsPage_addNavigationMenu()
+			testPutSiteNavigationMenuByExternalReferenceCode_addNavigationMenu()
 		throws Exception {
 
-		return testPostSiteNavigationMenu_addNavigationMenu(
-			randomNavigationMenu());
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	protected NavigationMenu
+			testPutSiteNavigationMenuByExternalReferenceCode_createNavigationMenu()
+		throws Exception {
+
+		return randomNavigationMenu();
 	}
 
 	@Test
@@ -838,7 +1793,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			200,
 			navigationMenuResource.
 				putSiteNavigationMenuPermissionsPageHttpResponse(
-					navigationMenu.getSiteId(),
+					testGroup.getGroupId(),
 					new Permission[] {
 						new Permission() {
 							{
@@ -852,7 +1807,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			404,
 			navigationMenuResource.
 				putSiteNavigationMenuPermissionsPageHttpResponse(
-					navigationMenu.getSiteId(),
+					testGroup.getGroupId(),
 					new Permission[] {
 						new Permission() {
 							{
@@ -871,60 +1826,73 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			testGroup.getGroupId(), randomNavigationMenu());
 	}
 
-	protected void appendGraphQLFieldValue(StringBuilder sb, Object value)
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		NavigationMenu navigationMenu1 =
+			testBatchEngineDeleteImportTask_addNavigationMenu();
+
+		testBatchEngineDeleteImportTask_deleteNavigationMenu(
+			200, null, navigationMenu1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.getNavigationMenuHttpResponse(
+				navigationMenu1.getId()));
+	}
+
+	protected NavigationMenu testBatchEngineDeleteImportTask_addNavigationMenu()
 		throws Exception {
 
-		if (value instanceof Object[]) {
-			StringBuilder arraySB = new StringBuilder("[");
+		return testDeleteNavigationMenu_addNavigationMenu();
+	}
 
-			for (Object object : (Object[])value) {
-				if (arraySB.length() > 1) {
-					arraySB.append(", ");
-				}
+	protected void testBatchEngineDeleteImportTask_deleteNavigationMenu(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
 
-				arraySB.append("{");
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
 
-				Class<?> clazz = object.getClass();
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.delivery.dto.v1_0.NavigationMenu", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
 
-				for (java.lang.reflect.Field field :
-						getDeclaredFields(clazz.getSuperclass())) {
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
 
-					arraySB.append(field.getName());
-					arraySB.append(": ");
-
-					appendGraphQLFieldValue(arraySB, field.get(object));
-
-					arraySB.append(", ");
-				}
-
-				arraySB.setLength(arraySB.length() - 2);
-
-				arraySB.append("}");
-			}
-
-			arraySB.append("]");
-
-			sb.append(arraySB.toString());
-		}
-		else if (value instanceof String) {
-			sb.append("\"");
-			sb.append(value);
-			sb.append("\"");
-		}
-		else {
-			sb.append(value);
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 		}
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected NavigationMenu testGraphQLNavigationMenu_addNavigationMenu()
 		throws Exception {
 
 		return testGraphQLNavigationMenu_addNavigationMenu(
-			randomNavigationMenu());
+			testGroup.getGroupId(), randomNavigationMenu());
 	}
 
 	protected NavigationMenu testGraphQLNavigationMenu_addNavigationMenu(
-			NavigationMenu navigationMenu)
+			Long siteId, NavigationMenu navigationMenu)
 		throws Exception {
 
 		JSONDeserializer<NavigationMenu> jsonDeserializer =
@@ -935,27 +1903,20 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(NavigationMenu.class)) {
 
-			if (!ArrayUtil.contains(
-					getAdditionalAssertFieldNames(), field.getName())) {
+			if (getGraphQLValue(field.get(navigationMenu)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
 
-				continue;
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(navigationMenu)));
 			}
-
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append(field.getName());
-			sb.append(": ");
-
-			appendGraphQLFieldValue(sb, field.get(navigationMenu));
 		}
 
 		sb.append("}");
 
 		List<GraphQLField> graphQLFields = getGraphQLFields();
-
-		graphQLFields.add(new GraphQLField("id"));
 
 		return jsonDeserializer.deserialize(
 			JSONUtil.getValueAsString(
@@ -964,15 +1925,130 @@ public abstract class BaseNavigationMenuResourceTestCase {
 						"createSiteNavigationMenu",
 						new HashMap<String, Object>() {
 							{
-								put(
-									"siteKey",
-									"\"" + testGroup.getGroupId() + "\"");
+								put("siteKey", "\"" + siteId + "\"");
 								put("navigationMenu", sb.toString());
 							}
 						},
 						graphQLFields)),
 				"JSONObject/data", "JSONObject/createSiteNavigationMenu"),
 			NavigationMenu.class);
+	}
+
+	protected NavigationMenu testGraphQLSiteNavigationMenu_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLSiteNavigationMenu_addNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	protected NavigationMenu testGraphQLSiteNavigationMenu_addNavigationMenu(
+			Long siteId, NavigationMenu navigationMenu)
+		throws Exception {
+
+		JSONDeserializer<NavigationMenu> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(NavigationMenu.class)) {
+
+			if (getGraphQLValue(field.get(navigationMenu)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(navigationMenu)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createSiteNavigationMenu",
+						new HashMap<String, Object>() {
+							{
+								put("siteKey", "\"" + siteId + "\"");
+								put("navigationMenu", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createSiteNavigationMenu"),
+			NavigationMenu.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(
@@ -1085,6 +2161,16 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (navigationMenu.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (navigationMenu.getName() == null) {
 					valid = false;
@@ -1105,6 +2191,14 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 			if (Objects.equals("navigationType", additionalAssertFieldName)) {
 				if (navigationMenu.getNavigationType() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (navigationMenu.getPermissions() == null) {
 					valid = false;
 				}
 
@@ -1168,6 +2262,10 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
@@ -1282,6 +2380,19 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						navigationMenu1.getExternalReferenceCode(),
+						navigationMenu2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						navigationMenu1.getId(), navigationMenu2.getId())) {
@@ -1319,6 +2430,17 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				if (!Objects.deepEquals(
 						navigationMenu1.getNavigationType(),
 						navigationMenu2.getNavigationType())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("permissions", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						navigationMenu1.getPermissions(),
+						navigationMenu2.getPermissions())) {
 
 					return false;
 				}
@@ -1453,13 +2575,11 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1469,7 +2589,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(navigationMenu.getDateCreated()));
+				sb.append(_format.format(navigationMenu.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1484,13 +2604,11 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1500,7 +2618,53 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(navigationMenu.getDateModified()));
+				sb.append(_format.format(navigationMenu.getDateModified()));
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = navigationMenu.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
 			}
 
 			return sb.toString();
@@ -1567,6 +2731,11 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("permissions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("siteId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1619,6 +2788,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			{
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				siteId = testGroup.getGroupId();
@@ -1638,7 +2809,30 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		return randomNavigationMenu();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected NavigationMenuResource navigationMenuResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1648,12 +2842,12 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1662,11 +2856,16 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1698,6 +2897,24 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1719,16 +2936,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1826,10 +3033,34 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseNavigationMenuResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource
 		_navigationMenuResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

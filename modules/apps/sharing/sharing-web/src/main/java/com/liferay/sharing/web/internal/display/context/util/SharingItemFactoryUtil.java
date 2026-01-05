@@ -8,10 +8,10 @@ package com.liferay.sharing.web.internal.display.context.util;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  */
 public class SharingItemFactoryUtil {
 

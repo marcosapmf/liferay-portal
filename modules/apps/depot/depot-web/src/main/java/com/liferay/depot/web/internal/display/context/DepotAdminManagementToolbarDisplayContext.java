@@ -29,13 +29,13 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alejandro Tardín
@@ -193,14 +193,9 @@ public class DepotAdminManagementToolbarDisplayContext
 	private boolean _hasDeleteDepotEntryPermission(DepotEntry depotEntry)
 		throws PortalException {
 
-		if (!DepotEntryPermission.contains(
-				_themeDisplay.getPermissionChecker(),
-				depotEntry.getDepotEntryId(), ActionKeys.DELETE)) {
-
-			return false;
-		}
-
-		return true;
+		return DepotEntryPermission.contains(
+			_themeDisplay.getPermissionChecker(), depotEntry.getDepotEntryId(),
+			ActionKeys.DELETE);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

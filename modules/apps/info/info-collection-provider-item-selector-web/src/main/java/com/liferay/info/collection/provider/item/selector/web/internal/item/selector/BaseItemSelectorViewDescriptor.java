@@ -24,12 +24,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Dante Wang
@@ -90,6 +90,11 @@ public abstract class BaseItemSelectorViewDescriptor
 						themeDisplay.getLocale(), "filter-by-item-type"));
 			}
 		).build();
+	}
+
+	@Override
+	public boolean isShowBreadcrumb() {
+		return false;
 	}
 
 	@Override

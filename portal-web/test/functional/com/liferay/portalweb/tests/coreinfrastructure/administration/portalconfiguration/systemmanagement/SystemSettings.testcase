@@ -198,80 +198,6 @@ definition {
 
 	@description = "This test asserts that Site OSGi configurations can be used across different systems."
 	@priority = 3
-	test CanUseSiteConfigurationAcrossDifferentSitesInSameCompany {
-		property custom.properties = "feature.flag.LPS-155284=true";
-
-		task ("Given change the Site OSGi configurations to export") {
-			Site.openSiteSettingsAdmin(siteURLKey = "guest");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Accounts",
-				configurationName = "Accounts",
-				configurationScope = "Site Scope");
-
-			Click(locator1 = "Button#REMOVE_BUTTON");
-
-			Click(locator1 = "Button#SAVE");
-
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Export");
-		}
-
-		task ("And a new site is created") {
-			HeadlessSite.addSite(siteName = "Site Name");
-		}
-
-		task ("When change groupKey to new instance site and copy it to the configs folder") {
-			var exportConfigFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "com.liferay.account.internal.configuration.AccountEntryGroupConfiguration.scoped_*.config");
-			var exportFileDirectory = selenium.getOutputDirName();
-
-			OSGiConfig.editOSGiConfigFileFromTempFolder(
-				newValue = "liferay.com--site name",
-				oldValue = "liferay.com--Guest",
-				osgiConfigFileName = ${exportConfigFileName});
-
-			OSGiConfig.copyOSGiConfigFile(
-				osgiConfigFileBaseDir = ${exportFileDirectory},
-				osgiConfigFileName = ${exportConfigFileName});
-
-			OSGiConfig.waitForOSGiConfig();
-		}
-
-		task ("And go to Accounts in the new site settings") {
-			var portalURL = PropsUtil.get("portal.url");
-
-			Navigator.openSpecificURL(url = "${portalURL}/group/site-name/~/control_panel/manage/-/site/settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Accounts",
-				configurationName = "Accounts",
-				configurationScope = "Site Scope");
-		}
-
-		task ("Then new site config is changed and groupKey is changed to groupId in config file") {
-			Refresh.pauseRefresh();
-
-			AssertElementPresent(
-				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Person",
-				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
-
-			AssertElementNotPresent(
-				key_fieldName = "Allowed Account Types",
-				key_fieldValue = "Business",
-				locator1 = "FormFields#PREDEFINED_VALUE_AT_FORM_SELECT");
-
-			OSGiConfig.assertTextNotInOSGiConfig(
-				osgiConfigFileName = ${exportConfigFileName},
-				text = "groupKey");
-
-			OSGiConfig.assertTextInOSGiConfig(
-				osgiConfigFileName = ${exportConfigFileName},
-				text = "groupId");
-		}
-	}
-
-	@description = "This test asserts that Site OSGi configurations can be used across different systems."
-	@priority = 3
 	test CanUseSiteConfigurationAcrossDifferentSystems {
 		property custom.properties = "feature.flag.LPS-155284=true";
 		property test.liferay.virtual.instance = "false";
@@ -313,11 +239,11 @@ definition {
 		}
 
 		task ("When change groupKey to new instance site and copy it to the configs folder") {
-			var exportConfigFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "com.liferay.account.internal.configuration.AccountEntryGroupConfiguration.scoped_*.config");
+			var exportConfigFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "com.liferay.account.internal.configuration.AccountEntryGroupConfiguration.scoped*.config");
 			var exportFileDirectory = selenium.getOutputDirName();
 
 			OSGiConfig.editOSGiConfigFileFromTempFolder(
-				newValue = "www.able.com--site name",
+				newValue = "www.able.com--Site Name",
 				oldValue = "liferay.com--Guest",
 				osgiConfigFileName = ${exportConfigFileName});
 
@@ -375,13 +301,13 @@ definition {
 				portlet = "System Settings");
 		}
 
-		task ("Enable OpenSSO Configuration") {
+		task ("Enable Accessibility Menu Configuration") {
 			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "System Scope");
+				configurationCategory = "Accessibility",
+				configurationName = "Accessibility Menu",
+				configurationScope = "Site Scope");
 
-			FormFields.enableCheckbox(fieldName = "Enabled");
+			FormFields.enableCheckbox(fieldName = "Enable Accessibility Menu");
 
 			SystemSettings.saveConfiguration();
 		}
@@ -390,13 +316,13 @@ definition {
 			PortalSettings.openInstanceSettingsAdmin();
 		}
 
-		task ("Disable OpenSSO Configuration") {
+		task ("Disable Accessibility Menu Configuration") {
 			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "Virtual Instance Scope");
+				configurationCategory = "Accessibility",
+				configurationName = "Accessibility Menu",
+				configurationScope = "Site Scope");
 
-			FormFields.disableCheckbox(fieldName = "enabled");
+			FormFields.disableCheckbox(fieldName = "Enable Accessibility Menu");
 
 			SystemSettings.saveConfiguration();
 		}
@@ -408,11 +334,11 @@ definition {
 				portlet = "System Settings");
 
 			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "OpenSSO",
-				configurationScope = "System Scope");
+				configurationCategory = "Accessibility",
+				configurationName = "Accessibility Menu",
+				configurationScope = "Site Scope");
 
-			FormFields.viewCheckboxChecked(fieldName = "Enabled");
+			FormFields.viewCheckboxChecked(fieldName = "Enable Accessibility Menu");
 		}
 	}
 

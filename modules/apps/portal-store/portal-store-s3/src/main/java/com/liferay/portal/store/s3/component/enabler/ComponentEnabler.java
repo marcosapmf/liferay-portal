@@ -7,9 +7,9 @@ package com.liferay.portal.store.s3.component.enabler;
 
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.osgi.util.ComponentUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.store.s3.S3Store;
 import com.liferay.portal.store.s3.scheduler.AbortedMultipartUploadCleanerSchedulerJobConfiguration;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.Objects;
 

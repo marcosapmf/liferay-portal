@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://liferay.com/tld/adaptive-media-image" prefix="liferay-adaptive-media" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
@@ -19,8 +19,8 @@ page import="com.liferay.commerce.product.constants.CPWebKeys" %><%@
 page import="com.liferay.commerce.product.content.constants.CPContentWebKeys" %><%@
 page import="com.liferay.commerce.product.content.helper.CPContentHelper" %><%@
 page import="com.liferay.commerce.shop.by.diagram.constants.CSDiagramWebKeys" %><%@
-page import="com.liferay.commerce.shop.by.diagram.model.CSDiagramSetting" %><%@
-page import="com.liferay.commerce.shop.by.diagram.util.CSDiagramCPTypeHelper" %>
+page import="com.liferay.commerce.shop.by.diagram.helper.CSDiagramCPTypeHelper" %><%@
+page import="com.liferay.commerce.shop.by.diagram.model.CSDiagramSetting" %>
 
 <liferay-frontend:defineObjects />
 

@@ -226,6 +226,12 @@ public interface ElasticsearchConfiguration {
 	public boolean trackTotalHits();
 
 	@Meta.AD(
+		deflt = "2147483647", description = "track-total-hits-limit-help",
+		max = "2147483647", name = "track-total-hits-limit", required = false
+	)
+	public int trackTotalHitsLimit();
+
+	@Meta.AD(
 		deflt = "", description = "transport-tcp-port-help",
 		name = "transport-tcp-port", required = false
 	)
@@ -294,7 +300,14 @@ public interface ElasticsearchConfiguration {
 	public String sidecarHome();
 
 	@Meta.AD(
-		deflt = "-Xms1g|-Xmx1g|-XX:+AlwaysPreTouch",
+		deflt = "aggregations|analysis-common|blob-cache|data-streams|dot-prefix-validation|health-shards-availability|ingest-attachment|ingest-common|ingest-user-agent|lang-expression|lang-mustache|lang-painless|mapper-extras|parent-join|percolator|rank-eval|reindex|rest-root|runtime-fields-common|transport-netty4",
+		description = "sidecar-module-names-help",
+		name = "sidecar-module-names", required = false
+	)
+	public String[] sidecarModuleNames();
+
+	@Meta.AD(
+		deflt = "-XX:+AlwaysPreTouch|-Xms1g|-Xmx1g",
 		description = "sidecar-jvm-options-help", name = "sidecar-jvm-options",
 		required = false
 	)

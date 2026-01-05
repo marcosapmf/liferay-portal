@@ -7,7 +7,7 @@ package com.liferay.template.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -25,14 +25,14 @@ import com.liferay.template.constants.TemplatePortletKeys;
 import com.liferay.template.model.TemplateEntry;
 import com.liferay.template.service.TemplateEntryLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.io.File;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + TemplatePortletKeys.TEMPLATE,
+		"jakarta.portlet.name=" + TemplatePortletKeys.TEMPLATE,
 		"mvc.command.name=/template/update_template_entry"
 	},
 	service = MVCActionCommand.class
@@ -91,12 +91,11 @@ public class UpdateTemplateEntryMVCActionCommand
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMTemplate.class.getName(), actionRequest);
 
-		DDMTemplate ddmTemplate = _ddmTemplateLocalService.updateTemplate(
-			serviceContext.getUserId(), ddmTemplateId, classPK, nameMap,
-			descriptionMap, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
-			StringPool.BLANK, TemplateConstants.LANG_TYPE_FTL, script,
-			cacheable, smallImage, smallImageURL, smallImageFile,
-			serviceContext);
+		DDMTemplate ddmTemplate = _ddmTemplateService.updateTemplate(
+			ddmTemplateId, classPK, nameMap, descriptionMap,
+			DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, StringPool.BLANK,
+			TemplateConstants.LANG_TYPE_FTL, script, cacheable, smallImage,
+			smallImageURL, smallImageFile, serviceContext);
 
 		long templateEntryId = ParamUtil.getLong(
 			uploadPortletRequest, "templateEntryId");
@@ -128,7 +127,7 @@ public class UpdateTemplateEntryMVCActionCommand
 	}
 
 	@Reference
-	private DDMTemplateLocalService _ddmTemplateLocalService;
+	private DDMTemplateService _ddmTemplateService;
 
 	@Reference
 	private Localization _localization;

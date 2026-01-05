@@ -324,7 +324,8 @@ public class JournalArticleModelValidator
 		List<DDMStructure> folderDDMStructures =
 			_journalFolderLocalService.getDDMStructures(
 				_siteConnectedGroupGroupProvider.
-					getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true),
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						groupId, false, true),
 				folderId, restrictionType);
 
 		for (DDMStructure folderDDMStructure : folderDDMStructures) {
@@ -528,7 +529,7 @@ public class JournalArticleModelValidator
 			throw new DuplicateArticleExternalReferenceCodeException(
 				StringBundler.concat(
 					"Duplicate journal article external reference code ",
-					externalReferenceCode, "in group ", groupId));
+					externalReferenceCode, " in group ", groupId));
 		}
 	}
 

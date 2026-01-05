@@ -211,7 +211,8 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 
 		searchSearchResponse.setCount(hits.getLength());
 		searchSearchResponse.setHits(hits);
-		searchSearchResponse.setSearchHits(toSearchHits(documents));
+		searchSearchResponse.setSearchHits(
+			toSearchHits(documents, hits.getLength()));
 	}
 
 	protected Document processSolrDocument(
@@ -277,17 +278,19 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 			_documentBuilderFactory.builder(
 				document
 			).build()
+		).id(
+			document.get("uid")
 		).build();
 	}
 
-	protected SearchHits toSearchHits(List<Document> documents) {
+	protected SearchHits toSearchHits(List<Document> documents, int totalHits) {
 		SearchHitsBuilder searchHitsBuilder =
 			_searchHitsBuilderFactory.getSearchHitsBuilder();
 
 		return searchHitsBuilder.addSearchHits(
 			TransformUtil.transform(documents, this::toSearchHit)
 		).totalHits(
-			documents.size()
+			totalHits
 		).build();
 	}
 

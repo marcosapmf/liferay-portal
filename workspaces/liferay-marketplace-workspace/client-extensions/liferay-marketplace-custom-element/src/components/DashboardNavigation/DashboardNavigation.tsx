@@ -3,49 +3,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {DashboardNavigationList} from './DashboardNavigationList';
+import DashboardNavigationItem from './DashboardNavigationItem';
 
 import './DashboardNavigation.scss';
-import useAccounts from '../../hooks/data/useAccounts';
-import {AppProps} from '../DashboardTable/DashboardTable';
-import AccountSearchDropdown from './AccountSearchDropdown';
 
 export type DashboardListItems = {
+	active?: boolean;
 	itemTitle: string;
-	items?: AppProps[];
 	path: string;
 	symbol: string;
+	visible?: boolean;
 };
 
 export type DashboardNavigationProps = {
-	accountAppsNumber?: number;
-	accountIcon?: string;
-	accountsSearch?: ReturnType<typeof useAccounts>;
-	currentAccount?: Account;
 	dashboardNavigationItems: DashboardListItems[];
 };
 
 export function DashboardNavigation({
-	accountAppsNumber,
-	accountIcon,
-	accountsSearch,
-	currentAccount,
 	dashboardNavigationItems,
 }: DashboardNavigationProps) {
 	return (
 		<div className="dashboard-navigation-container">
-			{accountsSearch && (
-				<AccountSearchDropdown
-					accountAppsNumber={accountAppsNumber}
-					accountIcon={accountIcon}
-					accountsSearch={accountsSearch}
-					currentAccount={currentAccount}
-				/>
-			)}
-
-			<div className="dashboard-navigation-body">
+			<div className="dashboard-navigation-body dashboard-navigation-container-dropdown">
 				{dashboardNavigationItems.map((dashboardNavigation, index) => (
-					<DashboardNavigationList
+					<DashboardNavigationItem
 						dashboardNavigation={dashboardNavigation}
 						key={index}
 					/>

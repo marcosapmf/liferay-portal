@@ -113,7 +113,7 @@ public class ComponentAnnotationCheck extends BaseCheck {
 	private void _checkOSGiJaxrsName(
 		DetailAST annotationDetailAST, List<String> importNames) {
 
-		if (!importNames.contains("javax.ws.rs.ext.ExceptionMapper") ||
+		if (!importNames.contains("jakarta.ws.rs.ext.ExceptionMapper") ||
 			!_isExceptionMapperService(annotationDetailAST)) {
 
 			return;
@@ -149,10 +149,10 @@ public class ComponentAnnotationCheck extends BaseCheck {
 	}
 
 	private String _getOSGiJaxrsName(DetailAST annotationArrayInitDetailAST) {
-		List<DetailAST> expressionDetailASTList = getAllChildTokens(
+		List<DetailAST> expressionDetailASTs = getAllChildTokens(
 			annotationArrayInitDetailAST, false, TokenTypes.EXPR);
 
-		for (DetailAST expressionDetailAST : expressionDetailASTList) {
+		for (DetailAST expressionDetailAST : expressionDetailASTs) {
 			DetailAST firstChildDetailAST = expressionDetailAST.getFirstChild();
 
 			if (firstChildDetailAST.getType() != TokenTypes.STRING_LITERAL) {
@@ -196,13 +196,8 @@ public class ComponentAnnotationCheck extends BaseCheck {
 
 		FullIdent fullIdent = FullIdent.createFullIdent(firstChildDetailAST);
 
-		if (!Objects.equals(
-				fullIdent.getText(), _OSGI_SERVICE_NAME + ".class")) {
-
-			return false;
-		}
-
-		return true;
+		return Objects.equals(
+			fullIdent.getText(), _OSGI_SERVICE_NAME + ".class");
 	}
 
 	private static final String _MSG_INCORRECT_CONFIGURATION_POLICY =

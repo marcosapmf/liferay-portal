@@ -5,7 +5,7 @@
 
 import ClayButton from '@clayui/button';
 import ClayLink from '@clayui/link';
-import {openModal} from 'frontend-js-web';
+import {openModal} from 'frontend-js-components-web';
 import React from 'react';
 
 const CustomAuthorTableCell = ({
@@ -73,12 +73,14 @@ const CustomAuthorTableCell = ({
 	return (
 		<>
 			<ClayLink
-				onClick={() =>
+				onClick={(event) => {
+					event.stopPropagation();
+
 					openModal({
 						bodyComponent: ModalBody,
 						title: Liferay.Language.get('details'),
-					})
-				}
+					});
+				}}
 				style={{cursor: 'pointer'}}
 			>
 				{value}

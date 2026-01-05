@@ -8,6 +8,8 @@ package com.liferay.source.formatter.checkstyle.check;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
+import java.util.List;
+
 /**
  * @author Hugo Huijser
  */
@@ -20,6 +22,12 @@ public class LambdaCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
+		DetailAST parentDetailAST = detailAST.getParent();
+
+		if (parentDetailAST.getType() == TokenTypes.SWITCH_RULE) {
+			return;
+		}
+
 		DetailAST lastChildDetailAST = detailAST.getLastChild();
 
 		if (lastChildDetailAST.getType() != TokenTypes.SLIST) {
@@ -48,10 +56,10 @@ public class LambdaCheck extends BaseCheck {
 				return;
 			}
 
-			DetailAST parameterDetailAST = getParameterDetailAST(
-				firstChildDetailAST);
+			List<DetailAST> parameterExprDetailASTs =
+				getParameterExprDetailASTs(firstChildDetailAST);
 
-			if (parameterDetailAST != null) {
+			if (!parameterExprDetailASTs.isEmpty()) {
 				return;
 			}
 

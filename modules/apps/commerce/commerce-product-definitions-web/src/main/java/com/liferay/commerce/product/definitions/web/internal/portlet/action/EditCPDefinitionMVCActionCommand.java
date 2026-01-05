@@ -11,14 +11,18 @@ import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.commerce.exception.CPDefinitionInventoryAllowedOrderQuantitiesException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMaxOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMinOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMultipleOrderQuantityException;
+import com.liferay.commerce.exception.CPDefinitionInventoryQuantityException;
 import com.liferay.commerce.exception.NoSuchCPDefinitionInventoryException;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.CPConfigurationEntryAllowedOrderQuantitiesException;
+import com.liferay.commerce.product.exception.CPConfigurationEntryQuantityException;
 import com.liferay.commerce.product.exception.CPDefinitionExpirationDateException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaDescriptionException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
@@ -27,9 +31,14 @@ import com.liferay.commerce.product.exception.CPDefinitionNameDefaultLanguageExc
 import com.liferay.commerce.product.exception.CPDefinitionSubscriptionLengthException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.exception.NoSuchCatalogException;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.service.CPConfigurationEntryService;
 import com.liferay.commerce.product.service.CPDefinitionService;
+import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
@@ -48,13 +57,14 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -64,12 +74,16 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import java.math.BigDecimal;
 
@@ -84,9 +98,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -95,7 +106,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
 		"mvc.command.name=/cp_definitions/edit_cp_definition"
 	},
 	service = MVCActionCommand.class
@@ -222,13 +233,21 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			}
 			else if (throwable instanceof AssetCategoryException ||
 					 throwable instanceof AssetTagException ||
+					 throwable instanceof
+						 CPConfigurationEntryAllowedOrderQuantitiesException ||
+					 throwable instanceof
+						 CPConfigurationEntryQuantityException ||
 					 throwable instanceof CPDefinitionExpirationDateException ||
+					 throwable instanceof
+						 CPDefinitionInventoryAllowedOrderQuantitiesException ||
 					 throwable instanceof
 						 CPDefinitionInventoryMaxOrderQuantityException ||
 					 throwable instanceof
 						 CPDefinitionInventoryMinOrderQuantityException ||
 					 throwable instanceof
 						 CPDefinitionInventoryMultipleOrderQuantityException ||
+					 throwable instanceof
+						 CPDefinitionInventoryQuantityException ||
 					 throwable instanceof
 						 CPDefinitionMetaDescriptionException ||
 					 throwable instanceof CPDefinitionMetaKeywordsException ||
@@ -252,6 +271,30 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
 			else {
+				if (throwable instanceof RuntimeException) {
+					Throwable currentThrowable = throwable;
+
+					while (currentThrowable != null) {
+						currentThrowable = currentThrowable.getCause();
+
+						if (currentThrowable instanceof
+								SanitizerException sanitizerException) {
+
+							SessionErrors.add(
+								actionRequest, SanitizerException.class,
+								sanitizerException);
+
+							String redirect = ParamUtil.getString(
+								actionRequest, "redirect");
+
+							sendRedirect(
+								actionRequest, actionResponse, redirect);
+
+							return;
+						}
+					}
+				}
+
 				_log.error(throwable, throwable);
 
 				throw new Exception(throwable);
@@ -349,7 +392,8 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			CProductVersionConfiguration cProductVersionConfiguration =
 				_configurationProvider.getConfiguration(
 					CProductVersionConfiguration.class,
-					new SystemSettingsLocator(
+					new CompanyServiceSettingsLocator(
+						cpDefinition.getCompanyId(),
 						CProductVersionConfiguration.class.getName()));
 
 			if (cProductVersionConfiguration.enabled()) {
@@ -648,14 +692,18 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "displayStockQuantity");
 		boolean backOrders = ParamUtil.getBoolean(actionRequest, "backOrders");
 		BigDecimal minStockQuantity = _commerceOrderItemQuantityFormatter.parse(
-			actionRequest, "minStockQuantity");
+			actionRequest, CPDefinitionInventory.class.getName(),
+			"minStockQuantity");
 		BigDecimal minOrderQuantity = _commerceOrderItemQuantityFormatter.parse(
-			actionRequest, "minOrderQuantity");
+			actionRequest, CPDefinitionInventory.class.getName(),
+			"minOrderQuantity");
 		BigDecimal maxOrderQuantity = _commerceOrderItemQuantityFormatter.parse(
-			actionRequest, "maxOrderQuantity");
+			actionRequest, CPDefinitionInventory.class.getName(),
+			"maxOrderQuantity");
 		BigDecimal multipleOrderQuantity =
 			_commerceOrderItemQuantityFormatter.parse(
-				actionRequest, "multipleOrderQuantity");
+				actionRequest, CPDefinitionInventory.class.getName(),
+				"multipleOrderQuantity");
 
 		String allowedOrderQuantities = ParamUtil.getString(
 			actionRequest, "allowedOrderQuantities");
@@ -683,6 +731,98 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 		_cpdAvailabilityEstimateService.updateCPDAvailabilityEstimate(
 			cpdAvailabilityEstimateEntryId, cpDefinitionId,
 			commerceAvailabilityEstimateId);
+	}
+
+	private void _updateMasterConfiguration(
+			ActionRequest actionRequest, long cpDefinitionId)
+		throws Exception {
+
+		long cpTaxCategoryId = ParamUtil.getLong(
+			actionRequest, "cpTaxCategoryId");
+		String allowedOrderQuantities = ParamUtil.getString(
+			actionRequest, "allowedOrderQuantities");
+		boolean backOrders = ParamUtil.getBoolean(actionRequest, "backOrders");
+		long commerceAvailabilityEstimateId = ParamUtil.getLong(
+			actionRequest, "commerceAvailabilityEstimateId");
+		String cpDefinitionInventoryEngine = ParamUtil.getString(
+			actionRequest, "CPDefinitionInventoryEngine");
+		double depth = ParamUtil.getDouble(actionRequest, "depth");
+		boolean displayAvailability = ParamUtil.getBoolean(
+			actionRequest, "displayAvailability");
+		boolean displayStockQuantity = ParamUtil.getBoolean(
+			actionRequest, "displayStockQuantity");
+		boolean freeShipping = ParamUtil.getBoolean(
+			actionRequest, "freeShipping");
+		double height = ParamUtil.getDouble(actionRequest, "height");
+		String lowStockActivity = ParamUtil.getString(
+			actionRequest, "lowStockActivity");
+		BigDecimal maxOrderQuantity = _commerceOrderItemQuantityFormatter.parse(
+			actionRequest, CPConfigurationEntry.class.getName(),
+			"maxOrderQuantity");
+		BigDecimal minOrderQuantity = _commerceOrderItemQuantityFormatter.parse(
+			actionRequest, CPConfigurationEntry.class.getName(),
+			"minOrderQuantity");
+		BigDecimal minStockQuantity = _commerceOrderItemQuantityFormatter.parse(
+			actionRequest, CPConfigurationEntry.class.getName(),
+			"minStockQuantity");
+		BigDecimal multipleOrderQuantity =
+			_commerceOrderItemQuantityFormatter.parse(
+				actionRequest, CPConfigurationEntry.class.getName(),
+				"multipleOrderQuantity");
+		boolean purchasable = ParamUtil.getBoolean(
+			actionRequest, "purchasable", true);
+		boolean shippable = ParamUtil.getBoolean(actionRequest, "shippable");
+		double shippingExtraPrice = ParamUtil.getDouble(
+			actionRequest, "shippingExtraPrice");
+		boolean shipSeparately = ParamUtil.getBoolean(
+			actionRequest, "shipSeparately");
+		boolean taxExempt = ParamUtil.getBoolean(actionRequest, "taxExempt");
+		double weight = ParamUtil.getDouble(actionRequest, "weight");
+		double width = ParamUtil.getDouble(actionRequest, "width");
+
+		CPDefinition cpDefinition = _cpDefinitionService.getCPDefinition(
+			cpDefinitionId);
+
+		CPConfigurationEntry cpConfigurationEntry =
+			cpDefinition.fetchMasterCPConfigurationEntry();
+
+		if (cpConfigurationEntry == null) {
+			CPConfigurationList masterCPConfigurationList =
+				cpDefinition.getMasterCPConfigurationList();
+
+			_cpConfigurationEntryService.addCPConfigurationEntry(
+				null, cpDefinition.getGroupId(),
+				_portal.getClassNameId(CPDefinition.class), cpDefinitionId,
+				masterCPConfigurationList.getCPConfigurationListId(),
+				cpTaxCategoryId, allowedOrderQuantities, backOrders,
+				commerceAvailabilityEstimateId, cpDefinitionInventoryEngine,
+				depth, displayAvailability, displayStockQuantity, freeShipping,
+				height, lowStockActivity, maxOrderQuantity, minOrderQuantity,
+				minStockQuantity, multipleOrderQuantity, purchasable, shippable,
+				shippingExtraPrice, shipSeparately, taxExempt, weight, width);
+		}
+		else {
+			_cpConfigurationEntryService.updateCPConfigurationEntry(
+				cpConfigurationEntry.getExternalReferenceCode(),
+				cpConfigurationEntry.getCPConfigurationEntryId(),
+				cpTaxCategoryId, allowedOrderQuantities, backOrders,
+				commerceAvailabilityEstimateId, cpDefinitionInventoryEngine,
+				depth, displayAvailability, displayStockQuantity, freeShipping,
+				height, lowStockActivity, maxOrderQuantity, minOrderQuantity,
+				minStockQuantity, multipleOrderQuantity, purchasable, shippable,
+				shippingExtraPrice, shipSeparately, taxExempt, weight, width);
+		}
+
+		List<CPInstance> cpInstances =
+			_cpInstanceLocalService.getCPDefinitionInstances(
+				cpDefinitionId, WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, null);
+
+		for (CPInstance cpInstance : cpInstances) {
+			cpInstance.setPurchasable(purchasable);
+
+			_cpInstanceLocalService.updateCPInstance(cpInstance);
+		}
 	}
 
 	private void _updateShippingInfo(
@@ -851,6 +991,9 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
+	private CPConfigurationEntryService _cpConfigurationEntryService;
+
+	@Reference
 	private CPDAvailabilityEstimateService _cpdAvailabilityEstimateService;
 
 	@Reference
@@ -860,7 +1003,13 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 	private CPDefinitionService _cpDefinitionService;
 
 	@Reference
+	private CPInstanceLocalService _cpInstanceLocalService;
+
+	@Reference
 	private Localization _localization;
+
+	@Reference
+	private Portal _portal;
 
 	private class CPDefinitionCallable implements Callable<CPDefinition> {
 
@@ -893,6 +1042,7 @@ public class EditCPDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			long cpDefinitionId = _cpDefinition.getCPDefinitionId();
 
 			_updateCPDefinitionInventory(_actionRequest, cpDefinitionId);
+			_updateMasterConfiguration(_actionRequest, cpDefinitionId);
 			_updateShippingInfo(_actionRequest, cpDefinitionId);
 			_updateTaxCategoryInfo(_actionRequest, cpDefinitionId);
 

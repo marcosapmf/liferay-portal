@@ -27,7 +27,7 @@ interface ModalAddObjectField {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionName?: string;
 	onAfterSubmit: (value: ObjectField) => void;
-	setVisibility: (value: boolean) => void;
+	setVisible: (value: boolean) => void;
 }
 
 export function ModalAddObjectField({
@@ -35,7 +35,7 @@ export function ModalAddObjectField({
 	creationLanguageId,
 	objectDefinitionExternalReferenceCode,
 	onAfterSubmit,
-	setVisibility,
+	setVisible,
 }: ModalAddObjectField) {
 	const [error, setError] = useState<string>('');
 	const [objectDefinition, setObjectDefinition] =
@@ -43,7 +43,7 @@ export function ModalAddObjectField({
 	const [objectFieldBusinessTypes, setObjectFieldBusinessTypes] = useState<
 		ObjectFieldBusinessType[]
 	>([]);
-	const {observer, onClose} = useModal({onClose: () => setVisibility(false)});
+	const {observer, onClose} = useModal({onClose: () => setVisible(false)});
 	const formId = 'modalAddObjectField';
 	const initialValues: Partial<ObjectField> = {
 		indexed: true,
@@ -51,6 +51,7 @@ export function ModalAddObjectField({
 		indexedLanguageId: '',
 		listTypeDefinitionExternalReferenceCode: '',
 		listTypeDefinitionId: 0,
+		localized: false,
 		readOnly: 'false',
 		readOnlyConditionExpression: '',
 		required: false,
@@ -94,13 +95,24 @@ export function ModalAddObjectField({
 	const {errors, handleChange, handleSubmit, setValues, values} =
 		useObjectFieldForm({
 			initialValues,
+			objectFields: objectDefinition?.objectFields,
 			onSubmit,
 		});
 
 	const showEnableTranslationToggle =
 		values.businessType === 'LongText' ||
 		values.businessType === 'RichText' ||
-		values.businessType === 'Text';
+		values.businessType === 'Text' ||
+		values.businessType === 'Attachment' ||
+		values.businessType === 'Boolean' ||
+		values.businessType === 'Date' ||
+		values.businessType === 'DateTime' ||
+		values.businessType === 'Decimal' ||
+		values.businessType === 'Integer' ||
+		values.businessType === 'LongInteger' ||
+		values.businessType === 'MultiselectPicklist' ||
+		values.businessType === 'Picklist' ||
+		values.businessType === 'PrecisionDecimal';
 
 	useEffect(() => {
 		const makeFetch = async () => {
@@ -139,12 +151,6 @@ export function ModalAddObjectField({
 
 		makeFetch();
 
-		setValues({
-			localized:
-				objectDefinition?.enableLocalization &&
-				showEnableTranslationToggle,
-		});
-
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionExternalReferenceCode, values.businessType]);
 
@@ -152,7 +158,9 @@ export function ModalAddObjectField({
 		<ClayModalProvider>
 			<ClayTooltipProvider>
 				<ClayModal center observer={observer}>
-					<ClayModal.Header>
+					<ClayModal.Header
+						closeButtonAriaLabel={Liferay.Language.get('close')}
+					>
 						{Liferay.Language.get('new-field')}
 					</ClayModal.Header>
 
@@ -166,6 +174,7 @@ export function ModalAddObjectField({
 
 							<Input
 								error={errors.label}
+								id="modal-add-object-field__label-input"
 								label={Liferay.Language.get('label')}
 								name="label"
 								onChange={({target: {value}}) => {
@@ -200,12 +209,10 @@ export function ModalAddObjectField({
 											label={Liferay.Language.get(
 												'enable-entry-translations'
 											)}
+											name="enableEntryTranslations"
 											onToggle={(localized) =>
 												setValues({
 													localized,
-													required:
-														!localized &&
-														values.required,
 												})
 											}
 											toggled={values.localized}

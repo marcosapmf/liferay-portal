@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.UniqueUtil;
 import com.liferay.portal.kernel.xml.Element;
 
 import java.util.List;
@@ -52,6 +53,14 @@ public class AssetTagStagedModelDataHandler
 		if (assetTag != null) {
 			deleteStagedModel(assetTag);
 		}
+	}
+
+	@Override
+	public AssetTag fetchStagedModelByExternalReferenceCodeAndGroupId(
+		String externalReferenceCode, long groupId) {
+
+		return _assetTagLocalService.fetchAssetTagByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	@Override
@@ -128,14 +137,14 @@ public class AssetTagStagedModelDataHandler
 		ServiceContext serviceContext = _createServiceContext(
 			portletDataContext, assetTag);
 
-		AssetTag existingAssetTag = fetchStagedModelByUuidAndGroupId(
-			assetTag.getUuid(), portletDataContext.getScopeGroupId());
+		AssetTag existingAssetTag = fetchExistingStagedModel(
+			assetTag, portletDataContext.getScopeGroupId());
 
 		Map<String, String[]> parameterMap =
 			portletDataContext.getParameterMap();
 
 		boolean hasMergeParameter = parameterMap.containsKey(
-			PortletDataHandlerControl.getNamespacedControlName(
+			PortletDataHandlerControl.getNamespacedName(
 				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name"));
 
 		if (portletDataContext.getBooleanParameter(
@@ -157,25 +166,18 @@ public class AssetTagStagedModelDataHandler
 		if (existingAssetTag == null) {
 			serviceContext.setUuid(assetTag.getUuid());
 
-			try {
-				importedAssetTag = _assetTagLocalService.addTag(
-					userId, portletDataContext.getScopeGroupId(),
-					assetTag.getName(), serviceContext);
-			}
-			catch (DuplicateTagException duplicateTagException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(duplicateTagException);
-				}
-
-				importedAssetTag = _assetTagLocalService.addTag(
-					userId, portletDataContext.getScopeGroupId(),
-					assetTag.getName() + " (Duplicate)", serviceContext);
-			}
+			importedAssetTag = _assetTagLocalService.addTag(
+				assetTag.getExternalReferenceCode(), userId,
+				portletDataContext.getScopeGroupId(),
+				_getUniqueName(
+					portletDataContext.getScopeGroupId(), assetTag.getName()),
+				serviceContext);
 		}
 		else {
 			try {
 				importedAssetTag = _assetTagLocalService.updateTag(
-					userId, existingAssetTag.getTagId(), assetTag.getName(),
+					existingAssetTag.getExternalReferenceCode(), userId,
+					existingAssetTag.getTagId(), assetTag.getName(),
 					serviceContext);
 			}
 			catch (DuplicateTagException duplicateTagException) {
@@ -184,8 +186,12 @@ public class AssetTagStagedModelDataHandler
 				}
 
 				importedAssetTag = _assetTagLocalService.updateTag(
-					userId, existingAssetTag.getTagId(),
-					assetTag.getName() + " (Duplicate)", serviceContext);
+					existingAssetTag.getExternalReferenceCode(), userId,
+					existingAssetTag.getTagId(),
+					_getUniqueName(
+						portletDataContext.getScopeGroupId(),
+						assetTag.getName()),
+					serviceContext);
 			}
 		}
 
@@ -202,6 +208,29 @@ public class AssetTagStagedModelDataHandler
 		serviceContext.setScopeGroupId(portletDataContext.getScopeGroupId());
 
 		return serviceContext;
+	}
+
+	private String _getUniqueName(long groupId, String name)
+		throws PortalException {
+
+		AssetTag assetTag = _assetTagLocalService.fetchTag(groupId, name);
+
+		if (assetTag == null) {
+			return name;
+		}
+
+		return UniqueUtil.getUniqueValue(
+			"duplicate",
+			uniqueValue -> {
+				if (_assetTagLocalService.fetchTag(groupId, uniqueValue) ==
+						null) {
+
+					return true;
+				}
+
+				return false;
+			},
+			name);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

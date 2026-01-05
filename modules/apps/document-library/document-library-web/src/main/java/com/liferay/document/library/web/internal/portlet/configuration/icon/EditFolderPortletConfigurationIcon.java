@@ -29,9 +29,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,8 +41,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN, "path=-",
-		"path=/document_library/view", "path=/document_library/view_folder"
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+		"path=-", "path=/document_library/view",
+		"path=/document_library/view_folder"
 	},
 	service = PortletConfigurationIcon.class
 )
@@ -147,12 +148,33 @@ public class EditFolderPortletConfigurationIcon
 					(ThemeDisplay)portletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				return ModelResourcePermissionUtil.contains(
-					_folderModelResourcePermission,
-					themeDisplay.getPermissionChecker(),
-					themeDisplay.getScopeGroupId(), folderId,
-					ActionKeys.UPDATE);
+				boolean hasAdvancedUpdatePermission = _hasPermission(
+					ActionKeys.ADVANCED_UPDATE, folderId, themeDisplay);
+				boolean hasUpdatePermission = _hasPermission(
+					ActionKeys.UPDATE, folderId, themeDisplay);
+
+				if (hasAdvancedUpdatePermission || hasUpdatePermission) {
+					if ((folderId ==
+							DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) &&
+						!hasAdvancedUpdatePermission) {
+
+						return false;
+					}
+
+					return true;
+				}
+
+				return false;
 			});
+	}
+
+	private boolean _hasPermission(
+			String actionId, long folderId, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return ModelResourcePermissionUtil.contains(
+			_folderModelResourcePermission, themeDisplay.getPermissionChecker(),
+			themeDisplay.getScopeGroupId(), folderId, actionId);
 	}
 
 	private boolean _isDLWorkflowEnabled() {

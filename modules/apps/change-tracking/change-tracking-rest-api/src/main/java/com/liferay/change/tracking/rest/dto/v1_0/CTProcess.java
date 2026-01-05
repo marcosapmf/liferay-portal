@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,12 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author David Truong
@@ -57,7 +55,7 @@ public class CTProcess implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(CTProcess.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -100,7 +98,7 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getCtCollectionId() {
 		if (_ctCollectionIdSupplier != null) {
 			ctCollectionId = _ctCollectionIdSupplier.get();
@@ -141,7 +139,9 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _ctCollectionIdSupplier;
 
-	@Schema(description = "The publication's published date.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The publication's published date."
+	)
 	public Date getDatePublished() {
 		if (_datePublishedSupplier != null) {
 			datePublished = _datePublishedSupplier.get();
@@ -182,7 +182,7 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _datePublishedSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getDescription() {
 		if (_descriptionSupplier != null) {
 			description = _descriptionSupplier.get();
@@ -223,7 +223,7 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _descriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -262,7 +262,7 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -301,7 +301,9 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(description = "The publication's creator.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The publication's creator."
+	)
 	public String getOwnerName() {
 		if (_ownerNameSupplier != null) {
 			ownerName = _ownerNameSupplier.get();
@@ -342,7 +344,7 @@ public class CTProcess implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _ownerNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getStatus() {
 		if (_statusSupplier != null) {
@@ -531,8 +533,8 @@ public class CTProcess implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.change.tracking.rest.dto.v1_0.CTProcess",
 		name = "x-class-name"
 	)

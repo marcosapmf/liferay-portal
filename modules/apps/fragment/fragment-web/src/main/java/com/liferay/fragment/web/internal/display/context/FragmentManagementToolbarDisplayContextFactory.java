@@ -9,9 +9,9 @@ import com.liferay.fragment.web.internal.constants.FragmentTypeConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 /**
  * @author Jürgen Kappler
@@ -37,15 +37,15 @@ public class FragmentManagementToolbarDisplayContextFactory {
 				liferayPortletResponse, fragmentDisplayContext);
 		}
 
-		if (Objects.equals(
+		if (!Objects.equals(
 				type, FragmentTypeConstants.INHERITED_FRAGMENT_TYPE)) {
 
-			return new InheritedFragmentManagementToolbarDisplayContext(
-				httpServletRequest, liferayPortletRequest,
-				liferayPortletResponse, fragmentDisplayContext);
+			return null;
 		}
 
-		return null;
+		return new InheritedFragmentManagementToolbarDisplayContext(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
+			fragmentDisplayContext);
 	}
 
 	private FragmentManagementToolbarDisplayContextFactory() {

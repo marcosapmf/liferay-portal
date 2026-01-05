@@ -8,8 +8,8 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useSessionState} from 'frontend-js-components-web';
-import {openToast, sub} from 'frontend-js-web';
+import {openToast, useSessionState} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -164,7 +164,7 @@ export default function FragmentComment({
 					/>
 				)}
 
-				{Liferay.ThemeDisplay.getUserId() === author.userId && (
+				{String(Liferay.ThemeDisplay.getUserId()) === author.userId && (
 					<ClayDropDown
 						active={dropDownActive}
 						menuElementAttrs={{

@@ -17,7 +17,6 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.layout.admin.constants.LayoutScreenNavigationEntryConstants;
 import com.liferay.layout.admin.web.internal.item.selector.MasterLayoutPageTemplateEntryItemSelectorCriterion;
-import com.liferay.layout.admin.web.internal.item.selector.StyleBookEntryItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
@@ -38,20 +37,21 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.item.selector.StyleBookEntryItemSelectorCriterion;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Víctor Galán
@@ -167,13 +167,13 @@ public class LayoutLookAndFeelDisplayContext {
 		).put(
 			"masterLayoutName", getMasterLayoutName()
 		).put(
-			"masterLayoutPlid",
+			"masterLayoutPageTemplateEntryERC",
 			() -> {
 				if (hasMasterLayout()) {
 					Layout selLayout =
 						_layoutsAdminDisplayContext.getSelLayout();
 
-					return String.valueOf(selLayout.getMasterLayoutPlid());
+					return selLayout.getMasterLayoutPageTemplateEntryERC();
 				}
 
 				return StringPool.BLANK;
@@ -191,11 +191,12 @@ public class LayoutLookAndFeelDisplayContext {
 
 		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
-		if (selLayout.getMasterLayoutPlid() > 0) {
+		long masterLayoutPlid = selLayout.getMasterLayoutPlid();
+
+		if (masterLayoutPlid > 0) {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				LayoutPageTemplateEntryLocalServiceUtil.
-					fetchLayoutPageTemplateEntryByPlid(
-						selLayout.getMasterLayoutPlid());
+					fetchLayoutPageTemplateEntryByPlid(masterLayoutPlid);
 
 			if (layoutPageTemplateEntry != null) {
 				masterLayoutName = layoutPageTemplateEntry.getName();
@@ -235,11 +236,11 @@ public class LayoutLookAndFeelDisplayContext {
 		).put(
 			"isReadOnly", _layoutsAdminDisplayContext.isReadOnly()
 		).put(
-			"styleBookEntryId",
+			"styleBookEntryERC",
 			() -> {
 				Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
-				return String.valueOf(selLayout.getStyleBookEntryId());
+				return GetterUtil.getString(selLayout.getStyleBookEntryERC());
 			}
 		).put(
 			"styleBookEntryName", getStyleBookEntryName()
@@ -249,24 +250,9 @@ public class LayoutLookAndFeelDisplayContext {
 	public String getStyleBookEntryName() {
 		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
-		StyleBookEntry defaultStyleBookEntry =
-			DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(selLayout);
-
-		if (selLayout.getStyleBookEntryId() > 0) {
-			return defaultStyleBookEntry.getName();
-		}
-
-		if (defaultStyleBookEntry == null) {
-			return LanguageUtil.get(_httpServletRequest, "styles-from-theme");
-		}
-
-		if (hasEditableMasterLayout() &&
-			(selLayout.getMasterLayoutPlid() > 0)) {
-
-			return LanguageUtil.get(_httpServletRequest, "styles-from-master");
-		}
-
-		return LanguageUtil.get(_httpServletRequest, "styles-by-default");
+		return DefaultStyleBookEntryUtil.getStyleBookEntryName(
+			selLayout, _themeDisplay.getLocale(),
+			DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(selLayout));
 	}
 
 	public List<TabsItem> getTabsItems() {
@@ -363,14 +349,7 @@ public class LayoutLookAndFeelDisplayContext {
 		Layout selLayout = _layoutsAdminDisplayContext.getSelLayout();
 
 		if (selLayout.getMasterLayoutPlid() > 0) {
-			LayoutPageTemplateEntry layoutPageTemplateEntry =
-				LayoutPageTemplateEntryLocalServiceUtil.
-					fetchLayoutPageTemplateEntryByPlid(
-						selLayout.getMasterLayoutPlid());
-
-			if (layoutPageTemplateEntry != null) {
-				hasMasterLayout = true;
-			}
+			hasMasterLayout = true;
 		}
 
 		_hasMasterLayout = hasMasterLayout;

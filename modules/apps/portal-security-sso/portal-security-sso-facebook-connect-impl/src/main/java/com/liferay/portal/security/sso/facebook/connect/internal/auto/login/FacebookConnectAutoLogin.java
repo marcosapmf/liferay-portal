@@ -5,6 +5,8 @@
 
 package com.liferay.portal.security.sso.facebook.connect.internal.auto.login;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.facebook.FacebookConnect;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
@@ -16,9 +18,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.sso.facebook.connect.constants.FacebookConnectWebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -86,7 +88,15 @@ public class FacebookConnectAutoLogin extends BaseAutoLogin {
 				FacebookConnectWebKeys.FACEBOOK_USER_ID));
 
 		if (facebookId > 0) {
-			return _userLocalService.getUserByFacebookId(companyId, facebookId);
+			User user = _userLocalService.fetchUserByFacebookId(
+				companyId, facebookId);
+
+			if (user == null) {
+				throw new NoSuchUserException(
+					StringBundler.concat(
+						"No user exists with company ID ", companyId,
+						" and facebook ID ", facebookId));
+			}
 		}
 
 		return null;

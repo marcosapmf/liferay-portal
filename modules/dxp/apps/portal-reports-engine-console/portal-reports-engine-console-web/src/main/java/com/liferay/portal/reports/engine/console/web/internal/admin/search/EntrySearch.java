@@ -12,11 +12,11 @@ import com.liferay.portal.reports.engine.console.constants.ReportsEngineConsoleP
 import com.liferay.portal.reports.engine.console.model.Entry;
 import com.liferay.portal.reports.engine.console.util.comparator.EntryCreateDateComparator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 /**
  * @author Rafael Praxedes
@@ -88,7 +88,7 @@ public class EntrySearch extends SearchContainer<Entry> {
 			orderByAsc = true;
 		}
 
-		return new EntryCreateDateComparator(orderByAsc);
+		return EntryCreateDateComparator.getInstance(orderByAsc);
 	}
 
 }

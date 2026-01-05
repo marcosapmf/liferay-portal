@@ -9,6 +9,7 @@ import com.liferay.account.settings.AccountEntryGroupSettings;
 import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
+import com.liferay.commerce.helper.CommerceRoleHelper;
 import com.liferay.commerce.initializer.util.CPDefinitionsImporter;
 import com.liferay.commerce.initializer.util.CPOptionCategoriesImporter;
 import com.liferay.commerce.initializer.util.CPOptionsImporter;
@@ -39,7 +40,6 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
-import com.liferay.commerce.util.CommerceAccountRoleHelper;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AdminAccountGroup;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AdminAccountGroupResource;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Catalog;
@@ -89,6 +89,8 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.site.initializer.extender.CommerceSiteInitializer;
 import com.liferay.site.initializer.extender.SiteInitializerUtil;
 
+import jakarta.servlet.ServletContext;
+
 import java.math.BigDecimal;
 
 import java.net.URL;
@@ -97,8 +99,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
@@ -550,7 +550,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 			_addOrUpdateCommercePriceEntries(
 				cpDefinition,
-				_cpInstanceLocalService.fetchByExternalReferenceCode(
+				_cpInstanceLocalService.fetchCPInstanceByExternalReferenceCode(
 					subscriptionPropertiesJSONObject.getString(
 						"cpDefinitionExternalReferenceCode"),
 					serviceContext.getCompanyId()),
@@ -576,6 +576,20 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		_cpOptionsImporter.importCPOptions(
 			_jsonFactory.createJSONArray(json),
 			commerceCatalogGroup.getGroupId(), serviceContext.getUserId());
+	}
+
+	private void _addCPSpecificationOptions(
+			String resourcePath, ServiceContext serviceContext,
+			ServletContext servletContext)
+		throws Exception {
+
+		String json = SiteInitializerUtil.read(resourcePath, servletContext);
+
+		JSONArray jsonArray = _jsonFactory.createJSONArray(json);
+
+		_cpSpecificationOptionsImporter.importCPSpecificationOptions(
+			jsonArray, serviceContext.getScopeGroupId(),
+			serviceContext.getUserId());
 	}
 
 	private void _addDefaultCPDisplayLayout(
@@ -677,13 +691,15 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				resourcePath.endsWith(".products.specifications.json") ||
 				resourcePath.endsWith(
 					".products.subscriptions.properties.json") ||
+				resourcePath.endsWith("commerce-option-categories.json") ||
 				!resourcePath.endsWith(".json")) {
 
 				continue;
 			}
 
-			String json = SiteInitializerUtil.read(
-				resourcePath, servletContext);
+			String json = SiteInitializerUtil.replace(
+				SiteInitializerUtil.read(resourcePath, servletContext),
+				serviceContext);
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(json);
 
@@ -707,13 +723,19 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				catalog,
 				StringUtil.replaceLast(resourcePath, ".json", ".options.json"),
 				serviceContext, servletContext);
+
+			_addOrUpdateCPOptionCategories(serviceContext, servletContext);
+
+			_addCPSpecificationOptions(
+				StringUtil.replaceLast(
+					resourcePath, ".json", ".specification.options.json"),
+				serviceContext, servletContext);
+
 			_addCPDefinitions(
 				assetVocabularyName, bundle, catalog, channel,
 				commerceInventoryWarehouses,
 				StringUtil.replaceLast(resourcePath, ".json", ".products.json"),
 				serviceContext, servletContext, stringUtilReplaceValues);
-
-			_addOrUpdateCPOptionCategories(serviceContext, servletContext);
 
 			_addCommerceProductSpecifications(
 				StringUtil.replaceLast(
@@ -746,6 +768,8 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		ChannelResource channelResource = channelResourceBuilder.user(
 			serviceContext.fetchUser()
 		).build();
+
+		json = SiteInitializerUtil.replace(json, serviceContext);
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject(json);
 
@@ -792,7 +816,7 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				resourcePath, ".json", ".model-resource-permissions.json"),
 			serviceContext, servletContext);
 
-		_commerceAccountRoleHelper.checkCommerceAccountRoles(serviceContext);
+		_commerceRoleHelper.checkCommerceAccountRoles(serviceContext);
 
 		_commerceCurrencyLocalService.importDefaultValues(true, serviceContext);
 
@@ -1015,9 +1039,6 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 	private ChannelResource.Factory _channelResourceFactory;
 
 	@Reference
-	private CommerceAccountRoleHelper _commerceAccountRoleHelper;
-
-	@Reference
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	@Reference
@@ -1045,6 +1066,9 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 	@Reference
 	private CommercePriceListLocalService _commercePriceListLocalService;
+
+	@Reference
+	private CommerceRoleHelper _commerceRoleHelper;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

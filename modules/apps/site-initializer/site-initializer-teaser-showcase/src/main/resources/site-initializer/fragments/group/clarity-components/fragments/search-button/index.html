@@ -1,0 +1,13 @@
+[@liferay_aui.style]
+	.${fragmentEntryLinkNamespace}-search-button .icon {
+		font-size: ${configuration.iconSize};
+	}
+[/@]
+
+<div class="btn component-button text-break ${fragmentEntryLinkNamespace}-search-button">
+	<a data-lfr-editable-id="link" data-lfr-editable-type="link" href="" id="fragment-${fragmentEntryLinkNamespace}-link">
+		<span class="icon">
+			[@clay["icon"] symbol="${configuration.iconName}" /]
+		</span>
+	</a>
+</div>

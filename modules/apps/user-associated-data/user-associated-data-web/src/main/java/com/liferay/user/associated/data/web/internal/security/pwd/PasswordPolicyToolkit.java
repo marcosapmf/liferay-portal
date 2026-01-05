@@ -17,10 +17,10 @@ import com.liferay.portal.kernel.security.pwd.Toolkit;
 import com.liferay.portal.kernel.service.PasswordTrackerLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.words.WordsUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -161,8 +161,12 @@ public class PasswordPolicyToolkit extends BasicToolkit {
 			}
 		}
 
-		if (!passwordPolicy.isChangeable() && (userId != 0)) {
-			throw new UserPasswordException.MustNotBeChanged(userId);
+		if (userId != 0) {
+			User user = _userLocalService.getUserById(userId);
+
+			if (!passwordPolicy.isChangeable() && !user.isPasswordReset()) {
+				throw new UserPasswordException.MustNotBeChanged(userId);
+			}
 		}
 
 		if (userId == 0) {

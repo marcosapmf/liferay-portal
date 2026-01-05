@@ -66,18 +66,18 @@ public class CompanyServiceUtil {
 	 * @return the company
 	 */
 	public static Company addCompany(
-			String webId, String virtualHost, String mx, int maxUsers,
-			boolean active, String defaultAdminPassword,
+			Long companyId, String webId, String virtualHost, String mx,
+			int maxUsers, boolean active, String defaultAdminPassword,
 			String defaultAdminScreenName, String defaultAdminEmailAddress,
 			String defaultAdminFirstName, String defaultAdminMiddleName,
 			String defaultAdminLastName)
 		throws PortalException {
 
 		return getService().addCompany(
-			webId, virtualHost, mx, maxUsers, active, defaultAdminPassword,
-			defaultAdminScreenName, defaultAdminEmailAddress,
-			defaultAdminFirstName, defaultAdminMiddleName,
-			defaultAdminLastName);
+			companyId, webId, virtualHost, mx, maxUsers, active,
+			defaultAdminPassword, defaultAdminScreenName,
+			defaultAdminEmailAddress, defaultAdminFirstName,
+			defaultAdminMiddleName, defaultAdminLastName);
 	}
 
 	public static Company deleteCompany(long companyId) throws PortalException {
@@ -120,28 +120,6 @@ public class CompanyServiceUtil {
 		throws PortalException {
 
 		return getService().getCompanyById(companyId);
-	}
-
-	/**
-	 * Returns the company with the logo.
-	 *
-	 * @param logoId the ID of the company's logo
-	 * @return Returns the company with the logo
-	 */
-	public static Company getCompanyByLogoId(long logoId)
-		throws PortalException {
-
-		return getService().getCompanyByLogoId(logoId);
-	}
-
-	/**
-	 * Returns the company with the mail domian.
-	 *
-	 * @param mx the company's mail domain
-	 * @return Returns the company with the mail domain
-	 */
-	public static Company getCompanyByMx(String mx) throws PortalException {
-		return getService().getCompanyByMx(mx);
 	}
 
 	/**

@@ -8,7 +8,11 @@ package com.liferay.arquillian.extension.junit.bridge.client;
 import aQute.bnd.build.Project;
 import aQute.bnd.build.ProjectBuilder;
 import aQute.bnd.build.Workspace;
+import aQute.bnd.header.Parameters;
+import aQute.bnd.make.metatype.MetaTypeReader;
+import aQute.bnd.osgi.Clazz;
 import aQute.bnd.osgi.Jar;
+import aQute.bnd.service.AnalyzerPlugin;
 
 import com.liferay.arquillian.extension.junit.bridge.constants.Headers;
 import com.liferay.arquillian.extension.junit.bridge.server.TestBundleActivator;
@@ -28,6 +32,7 @@ import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +55,7 @@ public class BndBundleUtil {
 
 		File buildDir = new File(System.getProperty("user.dir"));
 
-		try (Workspace workspace = new Workspace(buildDir);
+		try (Workspace workspace = Workspace.createDefaultWorkspace();
 			Project project = new Project(workspace, buildDir);
 			ProjectBuilder projectBuilder = _createProjectBuilder(
 				project, filteredMethodNamesMap, hostAddress, port, passCode);
@@ -129,13 +134,17 @@ public class BndBundleUtil {
 			Headers.TEST_BRIDGE_REPORT_SERVER_PORT, String.valueOf(port));
 		project.setProperty(
 			Headers.TEST_BRIDGE_PASS_CODE, String.valueOf(passCode));
+		project.setProperty("-contract", "!JavaPortlet,!JavaServlet");
 		project.setProperty(
 			"Bundle-Activator", TestBundleActivator.class.getCanonicalName());
 
 		Set<String> importPackages = new LinkedHashSet<>();
 
 		importPackages.add("!aQute.bnd.build");
+		importPackages.add("!aQute.bnd.header");
+		importPackages.add("!aQute.bnd.make.metatype");
 		importPackages.add("!aQute.bnd.osgi");
+		importPackages.add("!aQute.bnd.service");
 
 		String importPackageString = project.getProperty("Import-Package");
 
@@ -174,6 +183,29 @@ public class BndBundleUtil {
 
 		ProjectBuilder projectBuilder = new ProjectBuilder(project);
 
+		projectBuilder.addBasicPlugin(
+			(AnalyzerPlugin)analyzer -> {
+				Jar jar = analyzer.getJar();
+
+				Parameters parameters = analyzer.parseHeader(
+					analyzer.getProperty("-metatype"));
+
+				for (String name : parameters.keySet()) {
+					Collection<Clazz> metatypeClasses = analyzer.getClasses(
+						"", Clazz.QUERY.ANNOTATED.toString(),
+						"aQute.bnd.annotation.metatype.Meta$OCD",
+						Clazz.QUERY.NAMED.toString(), name);
+
+					for (Clazz metatypeClass : metatypeClasses) {
+						jar.putResource(
+							"OSGI-INF/metatype/" + metatypeClass.getFQN() +
+								".xml",
+							new MetaTypeReader(metatypeClass, analyzer));
+					}
+				}
+
+				return false;
+			});
 		projectBuilder.addClasspath(_getClassPathFiles());
 
 		return projectBuilder;

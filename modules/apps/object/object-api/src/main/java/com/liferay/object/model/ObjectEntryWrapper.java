@@ -46,8 +46,16 @@ public class ObjectEntryWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("headObjectEntryId", getHeadObjectEntryId());
 		attributes.put("objectDefinitionId", getObjectDefinitionId());
+		attributes.put("objectEntryFolderId", getObjectEntryFolderId());
 		attributes.put("rootObjectEntryId", getRootObjectEntryId());
+		attributes.put("defaultLanguageId", getDefaultLanguageId());
+		attributes.put("displayDate", getDisplayDate());
+		attributes.put("expirationDate", getExpirationDate());
+		attributes.put("reviewDate", getReviewDate());
+		attributes.put("treePath", getTreePath());
+		attributes.put("version", getVersion());
 		attributes.put("lastPublishDate", getLastPublishDate());
 		attributes.put("status", getStatus());
 		attributes.put("statusByUserId", getStatusByUserId());
@@ -120,16 +128,64 @@ public class ObjectEntryWrapper
 			setModifiedDate(modifiedDate);
 		}
 
+		Long headObjectEntryId = (Long)attributes.get("headObjectEntryId");
+
+		if (headObjectEntryId != null) {
+			setHeadObjectEntryId(headObjectEntryId);
+		}
+
 		Long objectDefinitionId = (Long)attributes.get("objectDefinitionId");
 
 		if (objectDefinitionId != null) {
 			setObjectDefinitionId(objectDefinitionId);
 		}
 
+		Long objectEntryFolderId = (Long)attributes.get("objectEntryFolderId");
+
+		if (objectEntryFolderId != null) {
+			setObjectEntryFolderId(objectEntryFolderId);
+		}
+
 		Long rootObjectEntryId = (Long)attributes.get("rootObjectEntryId");
 
 		if (rootObjectEntryId != null) {
 			setRootObjectEntryId(rootObjectEntryId);
+		}
+
+		String defaultLanguageId = (String)attributes.get("defaultLanguageId");
+
+		if (defaultLanguageId != null) {
+			setDefaultLanguageId(defaultLanguageId);
+		}
+
+		Date displayDate = (Date)attributes.get("displayDate");
+
+		if (displayDate != null) {
+			setDisplayDate(displayDate);
+		}
+
+		Date expirationDate = (Date)attributes.get("expirationDate");
+
+		if (expirationDate != null) {
+			setExpirationDate(expirationDate);
+		}
+
+		Date reviewDate = (Date)attributes.get("reviewDate");
+
+		if (reviewDate != null) {
+			setReviewDate(reviewDate);
+		}
+
+		String treePath = (String)attributes.get("treePath");
+
+		if (treePath != null) {
+			setTreePath(treePath);
+		}
+
+		Integer version = (Integer)attributes.get("version");
+
+		if (version != null) {
+			setVersion(version);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -164,6 +220,13 @@ public class ObjectEntryWrapper
 	}
 
 	@Override
+	public String buildTreePath()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.buildTreePath();
+	}
+
+	@Override
 	public ObjectEntry cloneWithOriginalValues() {
 		return wrap(model.cloneWithOriginalValues());
 	}
@@ -189,6 +252,36 @@ public class ObjectEntryWrapper
 	}
 
 	/**
+	 * Returns the default language ID of this object entry.
+	 *
+	 * @return the default language ID of this object entry
+	 */
+	@Override
+	public String getDefaultLanguageId() {
+		return model.getDefaultLanguageId();
+	}
+
+	/**
+	 * Returns the display date of this object entry.
+	 *
+	 * @return the display date of this object entry
+	 */
+	@Override
+	public Date getDisplayDate() {
+		return model.getDisplayDate();
+	}
+
+	/**
+	 * Returns the expiration date of this object entry.
+	 *
+	 * @return the expiration date of this object entry
+	 */
+	@Override
+	public Date getExpirationDate() {
+		return model.getExpirationDate();
+	}
+
+	/**
 	 * Returns the external reference code of this object entry.
 	 *
 	 * @return the external reference code of this object entry
@@ -206,6 +299,21 @@ public class ObjectEntryWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the head object entry ID of this object entry.
+	 *
+	 * @return the head object entry ID of this object entry
+	 */
+	@Override
+	public long getHeadObjectEntryId() {
+		return model.getHeadObjectEntryId();
+	}
+
+	@Override
+	public Map<String, Serializable> getIndexedValues() {
+		return model.getIndexedValues();
 	}
 
 	/**
@@ -250,6 +358,11 @@ public class ObjectEntryWrapper
 		return model.getNonzeroGroupId();
 	}
 
+	@Override
+	public ObjectDefinition getObjectDefinition() {
+		return model.getObjectDefinition();
+	}
+
 	/**
 	 * Returns the object definition ID of this object entry.
 	 *
@@ -258,6 +371,16 @@ public class ObjectEntryWrapper
 	@Override
 	public long getObjectDefinitionId() {
 		return model.getObjectDefinitionId();
+	}
+
+	/**
+	 * Returns the object entry folder ID of this object entry.
+	 *
+	 * @return the object entry folder ID of this object entry
+	 */
+	@Override
+	public long getObjectEntryFolderId() {
+		return model.getObjectEntryFolderId();
 	}
 
 	/**
@@ -278,6 +401,16 @@ public class ObjectEntryWrapper
 	@Override
 	public long getPrimaryKey() {
 		return model.getPrimaryKey();
+	}
+
+	/**
+	 * Returns the review date of this object entry.
+	 *
+	 * @return the review date of this object entry
+	 */
+	@Override
+	public Date getReviewDate() {
+		return model.getReviewDate();
 	}
 
 	/**
@@ -341,10 +474,61 @@ public class ObjectEntryWrapper
 	}
 
 	@Override
+	public Map<java.util.Locale, String> getTitleMap()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getTitleMap();
+	}
+
+	@Override
 	public String getTitleValue()
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getTitleValue();
+	}
+
+	@Override
+	public String getTitleValue(String languageId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getTitleValue(languageId);
+	}
+
+	@Override
+	public String getTitleValue(String languageId, boolean useDefault)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getTitleValue(languageId, useDefault);
+	}
+
+	/**
+	 * Returns the class primary key of the trash entry for this object entry.
+	 *
+	 * @return the class primary key of the trash entry for this object entry
+	 */
+	@Override
+	public long getTrashEntryClassPK() {
+		return model.getTrashEntryClassPK();
+	}
+
+	/**
+	 * Returns the tree path of this object entry.
+	 *
+	 * @return the tree path of this object entry
+	 */
+	@Override
+	public String getTreePath() {
+		return model.getTreePath();
+	}
+
+	@Override
+	public String getURLTitle(java.util.Locale locale) {
+		return model.getURLTitle(locale);
+	}
+
+	@Override
+	public Map<String, String> getURLTitleMap() {
+		return model.getURLTitleMap();
 	}
 
 	/**
@@ -393,6 +577,16 @@ public class ObjectEntryWrapper
 	}
 
 	/**
+	 * Returns the version of this object entry.
+	 *
+	 * @return the version of this object entry
+	 */
+	@Override
+	public int getVersion() {
+		return model.getVersion();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object entry is approved.
 	 *
 	 * @return <code>true</code> if this object entry is approved; <code>false</code> otherwise
@@ -432,6 +626,11 @@ public class ObjectEntryWrapper
 		return model.isExpired();
 	}
 
+	@Override
+	public boolean isHead() {
+		return model.isHead();
+	}
+
 	/**
 	 * Returns <code>true</code> if this object entry is inactive.
 	 *
@@ -453,6 +652,16 @@ public class ObjectEntryWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object entry is in the Recycle Bin.
+	 *
+	 * @return <code>true</code> if this object entry is in the Recycle Bin; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isInTrash() {
+		return model.isInTrash();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object entry is pending.
 	 *
 	 * @return <code>true</code> if this object entry is pending; <code>false</code> otherwise
@@ -460,6 +669,11 @@ public class ObjectEntryWrapper
 	@Override
 	public boolean isPending() {
 		return model.isPending();
+	}
+
+	@Override
+	public boolean isRootDescendantNode() {
+		return model.isRootDescendantNode();
 	}
 
 	/**
@@ -498,6 +712,36 @@ public class ObjectEntryWrapper
 	}
 
 	/**
+	 * Sets the default language ID of this object entry.
+	 *
+	 * @param defaultLanguageId the default language ID of this object entry
+	 */
+	@Override
+	public void setDefaultLanguageId(String defaultLanguageId) {
+		model.setDefaultLanguageId(defaultLanguageId);
+	}
+
+	/**
+	 * Sets the display date of this object entry.
+	 *
+	 * @param displayDate the display date of this object entry
+	 */
+	@Override
+	public void setDisplayDate(Date displayDate) {
+		model.setDisplayDate(displayDate);
+	}
+
+	/**
+	 * Sets the expiration date of this object entry.
+	 *
+	 * @param expirationDate the expiration date of this object entry
+	 */
+	@Override
+	public void setExpirationDate(Date expirationDate) {
+		model.setExpirationDate(expirationDate);
+	}
+
+	/**
 	 * Sets the external reference code of this object entry.
 	 *
 	 * @param externalReferenceCode the external reference code of this object entry
@@ -515,6 +759,16 @@ public class ObjectEntryWrapper
 	@Override
 	public void setGroupId(long groupId) {
 		model.setGroupId(groupId);
+	}
+
+	/**
+	 * Sets the head object entry ID of this object entry.
+	 *
+	 * @param headObjectEntryId the head object entry ID of this object entry
+	 */
+	@Override
+	public void setHeadObjectEntryId(long headObjectEntryId) {
+		model.setHeadObjectEntryId(headObjectEntryId);
 	}
 
 	/**
@@ -547,6 +801,11 @@ public class ObjectEntryWrapper
 		model.setMvccVersion(mvccVersion);
 	}
 
+	@Override
+	public void setObjectDefinition(ObjectDefinition objectDefinition) {
+		model.setObjectDefinition(objectDefinition);
+	}
+
 	/**
 	 * Sets the object definition ID of this object entry.
 	 *
@@ -555,6 +814,16 @@ public class ObjectEntryWrapper
 	@Override
 	public void setObjectDefinitionId(long objectDefinitionId) {
 		model.setObjectDefinitionId(objectDefinitionId);
+	}
+
+	/**
+	 * Sets the object entry folder ID of this object entry.
+	 *
+	 * @param objectEntryFolderId the object entry folder ID of this object entry
+	 */
+	@Override
+	public void setObjectEntryFolderId(long objectEntryFolderId) {
+		model.setObjectEntryFolderId(objectEntryFolderId);
 	}
 
 	/**
@@ -575,6 +844,16 @@ public class ObjectEntryWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the review date of this object entry.
+	 *
+	 * @param reviewDate the review date of this object entry
+	 */
+	@Override
+	public void setReviewDate(Date reviewDate) {
+		model.setReviewDate(reviewDate);
 	}
 
 	/**
@@ -643,6 +922,16 @@ public class ObjectEntryWrapper
 	}
 
 	/**
+	 * Sets the tree path of this object entry.
+	 *
+	 * @param treePath the tree path of this object entry
+	 */
+	@Override
+	public void setTreePath(String treePath) {
+		model.setTreePath(treePath);
+	}
+
+	/**
 	 * Sets the user ID of this object entry.
 	 *
 	 * @param userId the user ID of this object entry
@@ -687,9 +976,24 @@ public class ObjectEntryWrapper
 		model.setValues(values);
 	}
 
+	/**
+	 * Sets the version of this object entry.
+	 *
+	 * @param version the version of this object entry
+	 */
+	@Override
+	public void setVersion(int version) {
+		model.setVersion(version);
+	}
+
 	@Override
 	public String toXmlString() {
 		return model.toXmlString();
+	}
+
+	@Override
+	public void updateTreePath(String treePath) {
+		model.updateTreePath(treePath);
 	}
 
 	@Override

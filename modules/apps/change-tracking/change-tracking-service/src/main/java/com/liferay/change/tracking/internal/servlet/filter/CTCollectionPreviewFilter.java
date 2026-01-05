@@ -7,9 +7,9 @@ package com.liferay.change.tracking.internal.servlet.filter;
 
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.exception.NoSuchCollectionException;
-import com.liferay.change.tracking.internal.CTCollectionPreviewThreadLocal;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.portal.kernel.change.tracking.CTCollectionPreviewThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -89,7 +89,13 @@ public class CTCollectionPreviewFilter extends BasePortalFilter {
 					WorkflowConstants.STATUS_APPROVED) &&
 				(ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
 				(ctCollection.getStatus() !=
-					WorkflowConstants.STATUS_EXPIRED)) {
+					WorkflowConstants.STATUS_EXPIRED) &&
+				(ctCollection.getStatus() !=
+					WorkflowConstants.STATUS_INCOMPLETE) &&
+				(ctCollection.getStatus() !=
+					WorkflowConstants.STATUS_PENDING) &&
+				(ctCollection.getStatus() !=
+					WorkflowConstants.STATUS_SCHEDULED)) {
 
 				_portal.sendError(
 					new PortalException("Collection is not available"),
@@ -120,6 +126,9 @@ public class CTCollectionPreviewFilter extends BasePortalFilter {
 		}
 
 		CTCollectionPreviewThreadLocal.setCTCollectionId(previewCTCollectionId);
+
+		CTCollectionPreviewThreadLocal.setIndicatorEnabled(
+			ParamUtil.getBoolean(httpServletRequest, "previewCTIndicator"));
 
 		processFilter(
 			CTCollectionPreviewFilter.class.getName(), httpServletRequest,

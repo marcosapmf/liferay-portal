@@ -37,6 +37,7 @@ apply plugin: "com.liferay.app.docker"
 apply plugin: "com.liferay.root.defaults.plugin"
 apply plugin: "com.liferay.yarn.defaults.plugin"
 
+task buildNexusCredentials(type: Exec)
 task checkDocker(type: DockerWaitHealthyContainer)
 task copyDatabaseConnector(type: Copy)
 task copyDockerResources(type: Copy)
@@ -53,7 +54,7 @@ ext.faroImageTag = project.hasProperty("docker.image.tag") ? project.getProperty
 appDocker {
 	imageName "liferay/com-liferay-osb-faro"
 	imageTags = [faroEnvironmentName.equals("prd") ? "prd-" + new Date().format("yyyyMMdd") : faroImageTag]
-	inputDir "osb-faro-docker/" + faroEnvironmentName
+	inputDir = faroEnvironmentName.equals("local") ? (System.getProperty("liferay.ci") != "true") ? "osb-faro-docker/local/dev" : "osb-faro-docker/local/test" : "osb-faro-docker/" + faroEnvironmentName
 
 	onlyIf {
 		false
@@ -62,6 +63,14 @@ appDocker {
 
 buildAppDockerImage {
 	mustRunAfter copyDockerResources
+}
+
+buildNexusCredentials {
+	commandLine("/bin/sh", "-c", "./set_nexus_credentials.sh")
+
+	onlyIf {
+		faroEnvironmentName.equals("local") && (System.getProperty("liferay.ci") != "true")
+	}
 }
 
 checkDocker {
@@ -80,7 +89,7 @@ copyDatabaseConnector {
 }
 
 copyDockerResources {
-	from "osb-faro-docker/common"
+	from "osb-faro-docker/" + faroEnvironmentName + "/common"
 	into "${buildDir}/docker/common"
 }
 
@@ -125,7 +134,7 @@ docker {
 }
 
 prepareAppDockerImageInputDir {
-	dependsOn copyDatabaseConnector
+	dependsOn buildNexusCredentials, copyDatabaseConnector
 	finalizedBy copyDockerResources
 
 	rename {

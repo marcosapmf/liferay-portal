@@ -11,7 +11,9 @@ import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.internal.helper.DispatchTriggerHelper;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
+import com.liferay.portal.kernel.cluster.BaseClusterMasterTokenTransitionListener;
 import com.liferay.portal.kernel.cluster.ClusterMasterExecutor;
+import com.liferay.portal.kernel.cluster.ClusterMasterTokenTransitionListener;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Destination;
@@ -19,8 +21,6 @@ import com.liferay.portal.kernel.messaging.DestinationConfiguration;
 import com.liferay.portal.kernel.messaging.DestinationFactory;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
-import java.util.Dictionary;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.osgi.framework.BundleContext;
@@ -38,14 +38,21 @@ public class DispatchConfigurator {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		if (_clusterMasterExecutor.isEnabled()) {
+			_dispatchClusterMasterTokenTransitionListener =
+				new DispatchClusterMasterTokenTransitionListener();
+
+			_clusterMasterExecutor.addClusterMasterTokenTransitionListener(
+				_dispatchClusterMasterTokenTransitionListener);
+		}
+
 		DestinationConfiguration destinationConfiguration =
 			new DestinationConfiguration(
 				DestinationConfiguration.DESTINATION_TYPE_PARALLEL,
 				DispatchConstants.EXECUTOR_DESTINATION_NAME);
 
 		destinationConfiguration.setMaximumQueueSize(_MAXIMUM_QUEUE_SIZE);
-
-		RejectedExecutionHandler rejectedExecutionHandler =
+		destinationConfiguration.setRejectedExecutionHandler(
 			new ThreadPoolExecutor.CallerRunsPolicy() {
 
 				@Override
@@ -62,22 +69,33 @@ public class DispatchConfigurator {
 					super.rejectedExecution(runnable, threadPoolExecutor);
 				}
 
-			};
-
-		destinationConfiguration.setRejectedExecutionHandler(
-			rejectedExecutionHandler);
+			});
 
 		Destination destination = _destinationFactory.createDestination(
 			destinationConfiguration);
 
-		Dictionary<String, Object> properties =
+		_serviceRegistration = bundleContext.registerService(
+			Destination.class, destination,
 			HashMapDictionaryBuilder.<String, Object>put(
 				"destination.name", destination.getName()
-			).build();
+			).build());
 
-		_serviceRegistration = bundleContext.registerService(
-			Destination.class, destination, properties);
+		_addScheduledJobs();
+	}
 
+	@Deactivate
+	protected void deactivate() {
+		_deleteScheduledJobs();
+
+		_serviceRegistration.unregister();
+
+		if (_clusterMasterExecutor.isEnabled()) {
+			_clusterMasterExecutor.removeClusterMasterTokenTransitionListener(
+				_dispatchClusterMasterTokenTransitionListener);
+		}
+	}
+
+	private void _addScheduledJobs() {
 		for (DispatchTrigger dispatchTrigger :
 				_dispatchTriggerLocalService.getDispatchTriggers(true)) {
 
@@ -102,8 +120,7 @@ public class DispatchConfigurator {
 		}
 	}
 
-	@Deactivate
-	protected void deactivate() {
+	private void _deleteScheduledJobs() {
 		for (DispatchTrigger dispatchTrigger :
 				_dispatchTriggerLocalService.getDispatchTriggers(true)) {
 
@@ -118,8 +135,6 @@ public class DispatchConfigurator {
 			_dispatchTriggerHelper.deleteSchedulerJob(
 				dispatchTrigger, dispatchTaskClusterMode.getStorageType());
 		}
-
-		_serviceRegistration.unregister();
 	}
 
 	private boolean _isSchedulable(
@@ -149,6 +164,9 @@ public class DispatchConfigurator {
 	@Reference
 	private DestinationFactory _destinationFactory;
 
+	private ClusterMasterTokenTransitionListener
+		_dispatchClusterMasterTokenTransitionListener;
+
 	@Reference
 	private DispatchTriggerHelper _dispatchTriggerHelper;
 
@@ -156,5 +174,20 @@ public class DispatchConfigurator {
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;
 
 	private ServiceRegistration<Destination> _serviceRegistration;
+
+	private class DispatchClusterMasterTokenTransitionListener
+		extends BaseClusterMasterTokenTransitionListener {
+
+		@Override
+		protected void doMasterTokenAcquired() throws Exception {
+			_addScheduledJobs();
+		}
+
+		@Override
+		protected void doMasterTokenReleased() throws Exception {
+			_addScheduledJobs();
+		}
+
+	}
 
 }

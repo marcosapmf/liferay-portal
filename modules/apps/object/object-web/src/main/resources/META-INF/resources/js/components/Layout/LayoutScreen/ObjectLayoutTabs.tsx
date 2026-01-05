@@ -31,6 +31,22 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 		onClose: () => setVisibleModal(false),
 	});
 
+	const handleAddLayoutBox = (
+		box: {name: string; type: 'categorization' | 'seo'},
+		tabIndex: number
+	) => {
+		dispatch({
+			payload: {
+				name: {
+					[defaultLanguageId]: box.name,
+				},
+				tabIndex,
+				type: box.type,
+			},
+			type: TYPES.ADD_OBJECT_LAYOUT_BOX,
+		});
+	};
+
 	return (
 		<>
 			{objectLayout?.objectLayoutTabs?.map(
@@ -81,21 +97,28 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 										)}
 
 										<HeaderDropdown
-											addCategorization={() => {
-												dispatch({
-													payload: {
-														name: {
-															[defaultLanguageId]:
-																Liferay.Language.get(
-																	'categorization'
-																),
-														},
-														tabIndex,
+											addCategorization={() =>
+												handleAddLayoutBox(
+													{
+														name: Liferay.Language.get(
+															'categorization'
+														),
 														type: 'categorization',
 													},
-													type: TYPES.ADD_OBJECT_LAYOUT_BOX,
-												});
-											}}
+													tabIndex
+												)
+											}
+											addSeo={() =>
+												handleAddLayoutBox(
+													{
+														name: Liferay.Language.get(
+															'seo'
+														),
+														type: 'seo',
+													},
+													tabIndex
+												)
+											}
 											deleteElement={() => {
 												dispatch({
 													payload: {
@@ -107,10 +130,10 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 										/>
 									</>
 								}
-								title={stringUtils.getLocalizableLabel(
-									creationLanguageId,
-									name
-								)}
+								title={stringUtils.getLocalizableLabel({
+									fallbackLanguageId: creationLanguageId,
+									labels: name,
+								})}
 								type="regular"
 							/>
 
@@ -132,8 +155,11 @@ const ObjectLayoutTabs: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 													collapsable={collapsable}
 													key={`box_${boxIndex}`}
 													label={stringUtils.getLocalizableLabel(
-														creationLanguageId,
-														name
+														{
+															fallbackLanguageId:
+																creationLanguageId,
+															labels: name,
+														}
 													)}
 													objectLayoutRows={
 														objectLayoutRows

@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rafael Praxedes
@@ -51,7 +49,7 @@ public class TaskBulkSelection implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(TaskBulkSelection.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long[] getAssigneeIds() {
 		if (_assigneeIdsSupplier != null) {
 			assigneeIds = _assigneeIdsSupplier.get();
@@ -92,7 +90,7 @@ public class TaskBulkSelection implements Serializable {
 	@JsonIgnore
 	private Supplier<Long[]> _assigneeIdsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long[] getInstanceIds() {
 		if (_instanceIdsSupplier != null) {
 			instanceIds = _instanceIdsSupplier.get();
@@ -133,7 +131,7 @@ public class TaskBulkSelection implements Serializable {
 	@JsonIgnore
 	private Supplier<Long[]> _instanceIdsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getProcessId() {
 		if (_processIdSupplier != null) {
 			processId = _processIdSupplier.get();
@@ -174,7 +172,7 @@ public class TaskBulkSelection implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _processIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getSlaStatuses() {
 		if (_slaStatusesSupplier != null) {
 			slaStatuses = _slaStatusesSupplier.get();
@@ -215,7 +213,7 @@ public class TaskBulkSelection implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _slaStatusesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getTaskNames() {
 		if (_taskNamesSupplier != null) {
 			taskNames = _taskNamesSupplier.get();
@@ -396,8 +394,8 @@ public class TaskBulkSelection implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.workflow.metrics.rest.dto.v1_0.TaskBulkSelection",
 		name = "x-class-name"
 	)

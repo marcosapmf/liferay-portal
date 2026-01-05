@@ -16,7 +16,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,11 +65,7 @@ public class PreviewFileEntryContentDashboardItemActionProvider
 				_dluRLHelper, fileEntry, httpServletRequest, _language,
 				_portal);
 
-		if (Validator.isNull(contentDashboardItemAction.getURL())) {
-			return false;
-		}
-
-		return true;
+		return Validator.isNotNull(contentDashboardItemAction.getURL());
 	}
 
 	@Reference

@@ -76,7 +76,7 @@ public interface BatchEngineExportTaskLocalService
 	public BatchEngineExportTask addBatchEngineExportTask(
 		String externalReferenceCode, long companyId, long userId,
 		String callbackURL, String className, String contentType,
-		String executeStatus, List<String> fieldNamesList,
+		String executeStatus, List<String> fieldNames,
 		Map<String, Serializable> parameters, String taskItemDelegateName);
 
 	/**
@@ -88,6 +88,12 @@ public interface BatchEngineExportTaskLocalService
 	@Transactional(enabled = false)
 	public BatchEngineExportTask createBatchEngineExportTask(
 		long batchEngineExportTaskId);
+
+	public BatchEngineExportTask createBatchEngineExportTask(
+		long batchEngineExportTaskId, String externalReferenceCode,
+		long companyId, long userId, String callbackURL, String className,
+		String contentType, String executeStatus, List<String> fieldNames,
+		Map<String, Serializable> parameters, String taskItemDelegateName);
 
 	/**
 	 * @throws PortalException

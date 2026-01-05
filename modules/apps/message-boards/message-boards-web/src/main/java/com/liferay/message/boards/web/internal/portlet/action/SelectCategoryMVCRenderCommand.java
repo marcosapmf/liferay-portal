@@ -10,11 +10,13 @@ import com.liferay.message.boards.constants.MBPortletKeys;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryLocalService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -24,8 +26,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
-		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN,
+		"jakarta.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
+		"jakarta.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN,
 		"mvc.command.name=/message_boards/select_category"
 	},
 	service = MVCRenderCommand.class
@@ -36,17 +38,35 @@ public class SelectCategoryMVCRenderCommand implements MVCRenderCommand {
 	public String render(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
-		long categoryId = ParamUtil.getLong(renderRequest, "mbCategoryId");
+		MBCategory mbCategory = _getMBCategory(renderRequest);
 
-		if (categoryId != MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID) {
-			MBCategory category = _mbCategoryLocalService.fetchMBCategory(
-				categoryId);
-
+		if (mbCategory != null) {
 			renderRequest.setAttribute(
-				WebKeys.MESSAGE_BOARDS_CATEGORY, category);
+				WebKeys.MESSAGE_BOARDS_CATEGORY, mbCategory);
 		}
 
 		return "/message_boards/select_category.jsp";
+	}
+
+	private MBCategory _getMBCategory(RenderRequest renderRequest) {
+		long mbCategoryId = ParamUtil.getLong(renderRequest, "mbCategoryId");
+
+		if (mbCategoryId != MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID) {
+			return _mbCategoryLocalService.fetchMBCategory(mbCategoryId);
+		}
+
+		String mbCategoryExternalReferenceCode = ParamUtil.getString(
+			renderRequest, "mbCategoryExternalReferenceCode");
+
+		if (Validator.isBlank(mbCategoryExternalReferenceCode)) {
+			return null;
+		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		return _mbCategoryLocalService.fetchMBCategoryByExternalReferenceCode(
+			mbCategoryExternalReferenceCode, themeDisplay.getScopeGroupId());
 	}
 
 	@Reference

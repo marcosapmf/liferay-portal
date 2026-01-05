@@ -5,14 +5,13 @@
 
 package com.liferay.portal.kernel.configuration;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
  * @author Brian Wing Shun Chan
  */
 public interface Configuration {
-
-	public void addProperties(Properties properties);
 
 	public void clearCache();
 
@@ -26,11 +25,11 @@ public interface Configuration {
 
 	public String[] getArray(String key, Filter filter);
 
+	public List<String> getLoadedSources();
+
 	public Properties getProperties();
 
 	public Properties getProperties(String prefix, boolean removePrefix);
-
-	public void removeProperties(Properties properties);
 
 	public void set(String key, String value);
 

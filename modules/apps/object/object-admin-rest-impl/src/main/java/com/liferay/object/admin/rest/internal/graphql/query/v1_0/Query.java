@@ -25,9 +25,9 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectValidationRuleResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectViewResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
@@ -38,16 +38,16 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -194,6 +194,43 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinition(objectDefinitionId: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, className, creator, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableFormContainer, enableFriendlyURLCustomization, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, enableObjectEntrySchedule, enableObjectEntrySubscription, enableObjectEntryVersioning, externalReferenceCode, friendlyURLSeparator, id, label, modifiable, name, objectActions, objectDefinitionSettings, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, permissions, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName, workflowDefinitionLinks}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ObjectDefinition objectDefinition(
+			@GraphQLName("objectDefinitionId") Long objectDefinitionId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_objectDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			objectDefinitionResource ->
+				objectDefinitionResource.getObjectDefinition(
+					objectDefinitionId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinitionByExternalReferenceCode(externalReferenceCode: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, className, creator, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableFormContainer, enableFriendlyURLCustomization, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, enableObjectEntrySchedule, enableObjectEntrySubscription, enableObjectEntryVersioning, externalReferenceCode, friendlyURLSeparator, id, label, modifiable, name, objectActions, objectDefinitionSettings, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, permissions, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName, workflowDefinitionLinks}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ObjectDefinition objectDefinitionByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_objectDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			objectDefinitionResource ->
+				objectDefinitionResource.
+					getObjectDefinitionByExternalReferenceCode(
+						externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinitions(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -219,43 +256,6 @@ public class Query {
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						objectDefinitionResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinitionByExternalReferenceCode(externalReferenceCode: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, externalReferenceCode, id, label, modifiable, name, objectActions, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public ObjectDefinition objectDefinitionByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_objectDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			objectDefinitionResource ->
-				objectDefinitionResource.
-					getObjectDefinitionByExternalReferenceCode(
-						externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectDefinition(objectDefinitionId: ___){accountEntryRestricted, accountEntryRestrictedObjectFieldName, actions, active, dateCreated, dateModified, defaultLanguageId, enableCategorization, enableComments, enableIndexSearch, enableLocalization, enableObjectEntryDraft, enableObjectEntryHistory, externalReferenceCode, id, label, modifiable, name, objectActions, objectFields, objectFolderExternalReferenceCode, objectLayouts, objectRelationships, objectValidationRules, objectViews, panelAppOrder, panelCategoryKey, parameterRequired, pluralLabel, portlet, restContextPath, rootObjectDefinitionExternalReferenceCode, scope, status, storageType, system, titleObjectFieldName}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public ObjectDefinition objectDefinition(
-			@GraphQLName("objectDefinitionId") Long objectDefinitionId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_objectDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			objectDefinitionResource ->
-				objectDefinitionResource.getObjectDefinition(
-					objectDefinitionId));
 	}
 
 	/**
@@ -333,21 +333,18 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectFolders(page: ___, pageSize: ___, search: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectFolder(objectFolderId: ___){actions, dateCreated, dateModified, externalReferenceCode, id, label, name, objectFolderItems}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ObjectFolderPage objectFolders(
-			@GraphQLName("search") String search,
-			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page)
+	public ObjectFolder objectFolder(
+			@GraphQLName("objectFolderId") Long objectFolderId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_objectFolderResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			objectFolderResource -> new ObjectFolderPage(
-				objectFolderResource.getObjectFoldersPage(
-					search, Pagination.of(page, pageSize))));
+			objectFolderResource -> objectFolderResource.getObjectFolder(
+				objectFolderId));
 	}
 
 	/**
@@ -371,18 +368,21 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectFolder(objectFolderId: ___){actions, dateCreated, dateModified, externalReferenceCode, id, label, name, objectFolderItems}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectFolders(page: ___, pageSize: ___, search: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ObjectFolder objectFolder(
-			@GraphQLName("objectFolderId") Long objectFolderId)
+	public ObjectFolderPage objectFolders(
+			@GraphQLName("search") String search,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_objectFolderResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			objectFolderResource -> objectFolderResource.getObjectFolder(
-				objectFolderId));
+			objectFolderResource -> new ObjectFolderPage(
+				objectFolderResource.getObjectFoldersPage(
+					search, Pagination.of(page, pageSize))));
 	}
 
 	/**
@@ -517,7 +517,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectRelationship(objectRelationshipId: ___){actions, deletionType, edge, externalReferenceCode, id, label, name, objectDefinitionExternalReferenceCode1, objectDefinitionExternalReferenceCode2, objectDefinitionId1, objectDefinitionId2, objectDefinitionModifiable2, objectDefinitionName2, objectDefinitionSystem2, objectField, parameterObjectFieldId, parameterObjectFieldName, reverse, system, type}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {objectRelationship(objectRelationshipId: ___){actions, deletionType, edge, externalReferenceCode, id, label, name, objectDefinitionExternalReferenceCode1, objectDefinitionExternalReferenceCode2, objectDefinitionId1, objectDefinitionId2, objectDefinitionModifiable2, objectDefinitionName2, objectDefinitionScope2, objectDefinitionSystem2, objectField, parameterObjectFieldId, parameterObjectFieldName, reverse, system, type}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ObjectRelationship objectRelationship(
@@ -1335,6 +1335,10 @@ public class Query {
 		objectActionResource.setContextUriInfo(_uriInfo);
 		objectActionResource.setContextUser(_user);
 		objectActionResource.setGroupLocalService(_groupLocalService);
+		objectActionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectActionResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectActionResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1351,6 +1355,10 @@ public class Query {
 		objectDefinitionResource.setContextUriInfo(_uriInfo);
 		objectDefinitionResource.setContextUser(_user);
 		objectDefinitionResource.setGroupLocalService(_groupLocalService);
+		objectDefinitionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectDefinitionResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectDefinitionResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1365,6 +1373,10 @@ public class Query {
 		objectFieldResource.setContextUriInfo(_uriInfo);
 		objectFieldResource.setContextUser(_user);
 		objectFieldResource.setGroupLocalService(_groupLocalService);
+		objectFieldResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectFieldResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectFieldResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1380,6 +1392,10 @@ public class Query {
 		objectFolderResource.setContextUriInfo(_uriInfo);
 		objectFolderResource.setContextUser(_user);
 		objectFolderResource.setGroupLocalService(_groupLocalService);
+		objectFolderResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectFolderResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectFolderResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1395,6 +1411,10 @@ public class Query {
 		objectLayoutResource.setContextUriInfo(_uriInfo);
 		objectLayoutResource.setContextUser(_user);
 		objectLayoutResource.setGroupLocalService(_groupLocalService);
+		objectLayoutResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectLayoutResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectLayoutResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1411,6 +1431,10 @@ public class Query {
 		objectRelationshipResource.setContextUriInfo(_uriInfo);
 		objectRelationshipResource.setContextUser(_user);
 		objectRelationshipResource.setGroupLocalService(_groupLocalService);
+		objectRelationshipResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectRelationshipResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectRelationshipResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1427,6 +1451,10 @@ public class Query {
 		objectValidationRuleResource.setContextUriInfo(_uriInfo);
 		objectValidationRuleResource.setContextUser(_user);
 		objectValidationRuleResource.setGroupLocalService(_groupLocalService);
+		objectValidationRuleResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectValidationRuleResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectValidationRuleResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1440,6 +1468,10 @@ public class Query {
 		objectViewResource.setContextUriInfo(_uriInfo);
 		objectViewResource.setContextUser(_user);
 		objectViewResource.setGroupLocalService(_groupLocalService);
+		objectViewResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		objectViewResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		objectViewResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1464,12 +1496,17 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

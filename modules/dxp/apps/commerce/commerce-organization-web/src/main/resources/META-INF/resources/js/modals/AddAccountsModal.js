@@ -9,7 +9,8 @@ import ClayForm, {ClayInput, ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayModal from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
 import classNames from 'classnames';
-import {fetch, openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, sub} from 'frontend-js-web';
 import React, {useContext, useMemo, useState} from 'react';
 
 import ChartContext from '../ChartContext';
@@ -204,7 +205,9 @@ export default function AddOrganizationModal({
 
 	return (
 		<ClayModal center observer={observer} size="md">
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('add-accounts')}
 			</ClayModal.Header>
 

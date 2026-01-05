@@ -82,14 +82,24 @@ else {
 			<liferay-ui:search-container-column-text>
 				<c:choose>
 					<c:when test='<%= pluginType.equals("portlets") %>'>
-						<liferay-util:include page="/icon.jsp" servletContext="<%= application %>">
-							<liferay-util:param name="iconURL" value='<%= themeDisplay.getPathThemeSpritemap() + "#portlets" %>' />
-						</liferay-util:include>
+						<clay:sticker
+							cssClass="search-container"
+							displaytype="secondary"
+						>
+							<svg class="lexicon-icon">
+								<use xlink:href="<%= themeDisplay.getPathThemeSpritemap() %>#document-compressed" />
+							</svg>
+						</clay:sticker>
 					</c:when>
 					<c:otherwise>
-						<liferay-util:include page="/icon.jsp" servletContext="<%= application %>">
-							<liferay-util:param name="iconURL" value='<%= themeDisplay.getPathThemeSpritemap() + "#components" %>' />
-						</liferay-util:include>
+						<clay:sticker
+							cssClass="search-container"
+							displaytype="secondary"
+						>
+							<svg class="lexicon-icon">
+								<use xlink:href="<%= themeDisplay.getPathThemeSpritemap() %>#order-form-cog" />
+							</svg>
+						</clay:sticker>
 					</c:otherwise>
 				</c:choose>
 			</liferay-ui:search-container-column-text>
@@ -103,10 +113,10 @@ else {
 				String name = StringPool.BLANK;
 
 				if (pluginType.equals("portlets")) {
-					name = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("javax.portlet.display-name"));
+					name = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("jakarta.portlet.display-name"));
 
-					String modulePortletDescription = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("javax.portlet.description"));
-					String modulePortletName = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("javax.portlet.name"));
+					String modulePortletDescription = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("jakarta.portlet.description"));
+					String modulePortletName = MarketplaceAppManagerUtil.getSearchContainerFieldText(serviceReference.getProperty("jakarta.portlet.name"));
 
 					if (Validator.isNotNull(modulePortletDescription)) {
 						description = modulePortletName + " - " + modulePortletDescription;

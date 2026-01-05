@@ -9,6 +9,7 @@ import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.util.internal.NPMResolverRef;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
@@ -18,6 +19,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
+
 import java.io.IOException;
 
 import java.net.URL;
@@ -25,11 +31,6 @@ import java.net.URL;
 import java.util.Dictionary;
 import java.util.EnumMap;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -57,7 +58,10 @@ public class TagResourceHandler {
 			StringBundler.concat(
 				"<link data-senna-track=\"temporary\" href=\"",
 				PortalUtil.getPathModule(), _webContextPath, StringPool.SLASH,
-				bundleCssPath, "\" rel=\"stylesheet\">"));
+				bundleCssPath, StringPool.QUOTE,
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+					_getHttpServletRequest()),
+				" rel=\"stylesheet\">"));
 	}
 
 	public void outputNPMResource(String npmResourcePath) {
@@ -89,7 +93,10 @@ public class TagResourceHandler {
 				StringBundler.concat(
 					"<link href=\"", PortalUtil.getPathModule(),
 					_webContextPath, "/node_modules/", cssPath,
-					"\" rel=\"stylesheet\">"));
+					StringPool.QUOTE,
+					ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+						_getHttpServletRequest()),
+					" rel=\"stylesheet\">"));
 		}
 		catch (Exception exception) {
 			_log.error(

@@ -76,6 +76,11 @@ public class FileEntryLayoutDisplayPageObjectProvider
 	}
 
 	@Override
+	public String getExternalReferenceCode() {
+		return _fileEntry.getExternalReferenceCode();
+	}
+
+	@Override
 	public long getGroupId() {
 		return _fileEntry.getGroupId();
 	}
@@ -109,6 +114,10 @@ public class FileEntryLayoutDisplayPageObjectProvider
 			AssetRenderer<?> assetRenderer =
 				assetRendererFactory.getAssetRenderer(
 					fileEntry.getFileEntryId());
+
+			if (assetRenderer == null) {
+				return null;
+			}
 
 			return assetRendererFactory.getAssetEntry(
 				DLFileEntryConstants.getClassName(),

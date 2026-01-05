@@ -14,6 +14,10 @@ import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -24,10 +28,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -312,8 +312,8 @@ public class FilterMappingTest {
 	}
 
 	private void _testWithLog(String[] expectedMessages, Runnable runnable) {
-		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
-				FilterMapping.class.getName(), Level.INFO)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				FilterMapping.class.getName(), LoggerTestUtil.INFO)) {
 
 			runnable.run();
 

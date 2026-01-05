@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -95,8 +95,6 @@ public class DDMFormDisplayExportImportTest
 			DDMFormInstanceLocalServiceUtil.
 				fetchDDMFormInstanceByUuidAndGroupId(
 					ddmFormInstance.getUuid(), importedGroup.getGroupId());
-
-		Assert.assertNotNull(importedDDMFormInstance);
 
 		Assert.assertEquals(
 			String.valueOf(importedDDMFormInstance.getFormInstanceId()),

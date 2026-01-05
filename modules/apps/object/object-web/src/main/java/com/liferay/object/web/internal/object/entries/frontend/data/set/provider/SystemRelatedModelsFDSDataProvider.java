@@ -8,6 +8,7 @@ package com.liferay.object.web.internal.object.entries.frontend.data.set.provide
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.object.entries.frontend.data.set.data.model.RelatedModel;
 import com.liferay.object.entry.util.ObjectEntryDTOConverterUtil;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -20,10 +21,11 @@ import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.web.internal.object.entries.constants.ObjectEntriesFDSNames;
-import com.liferay.object.web.internal.object.entries.frontend.data.set.data.model.RelatedModel;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -35,10 +37,10 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -85,9 +87,9 @@ public class SystemRelatedModelsFDSDataProvider
 		return TransformUtil.transform(
 			(List<BaseModel<?>>)objectRelatedModelsProvider.getRelatedModels(
 				objectScopeProvider.getGroupId(httpServletRequest),
-				objectRelationshipId, objectEntryId, fdsKeywords.getKeywords(),
-				fdsPagination.getStartPosition(),
-				fdsPagination.getEndPosition()),
+				objectRelationshipId, null, false, objectEntryId,
+				fdsKeywords.getKeywords(), fdsPagination.getStartPosition(),
+				fdsPagination.getEndPosition(), null),
 			relatedModel -> {
 				ObjectField titleObjectField =
 					_objectFieldLocalService.fetchObjectField(
@@ -108,19 +110,30 @@ public class SystemRelatedModelsFDSDataProvider
 						objectDefinition.getName(),
 						_systemObjectDefinitionManagerRegistry, user);
 
+				Map<String, Object> modelAttributes =
+					relatedModel.getModelAttributes();
+
 				Object titleFieldValue =
 					ObjectEntryValuesUtil.getTitleFieldValue(
-						titleObjectField.getBusinessType(),
-						relatedModel.getModelAttributes(), titleObjectField,
-						user, values);
+						titleObjectField.getBusinessType(), modelAttributes,
+						titleObjectField, user, values);
 
 				if (titleFieldValue == null) {
 					titleFieldValue = StringPool.BLANK;
 				}
 
+				SystemObjectDefinitionManager systemObjectDefinitionManager =
+					_systemObjectDefinitionManagerRegistry.
+						getSystemObjectDefinitionManager(
+							objectDefinition.getName());
+
+				Column<?, Long> primaryKeyColumn =
+					systemObjectDefinitionManager.getPrimaryKeyColumn();
+
 				return new RelatedModel(
 					objectDefinition.getClassName(),
-					GetterUtil.getLong(values.get("id")),
+					GetterUtil.getLong(
+						modelAttributes.get(primaryKeyColumn.getName())),
 					titleFieldValue.toString(), true);
 			});
 	}
@@ -155,7 +168,8 @@ public class SystemRelatedModelsFDSDataProvider
 
 		return objectRelatedModelsProvider.getRelatedModelsCount(
 			objectScopeProvider.getGroupId(httpServletRequest),
-			objectRelationshipId, objectEntryId, fdsKeywords.getKeywords());
+			objectRelationshipId, null, objectEntryId,
+			fdsKeywords.getKeywords());
 	}
 
 	@Reference

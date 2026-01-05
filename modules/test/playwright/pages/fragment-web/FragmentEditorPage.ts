@@ -5,7 +5,7 @@
 
 import {Page} from '@playwright/test';
 
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class FragmentEditorPage {
 	readonly page: Page;
@@ -25,7 +25,7 @@ export class FragmentEditorPage {
 
 		// Delete current configuration
 
-		const codeMirror = await this.page.locator('.CodeMirror-scroll').last();
+		const codeMirror = this.page.locator('.CodeMirror-scroll').last();
 		await codeMirror.click();
 
 		await this.page.keyboard.press('Control+KeyA');
@@ -39,39 +39,27 @@ export class FragmentEditorPage {
 		await this.page.getByText('Changes Saved').waitFor();
 	}
 
-	async addHTML(configuration: string) {
+	async addHTML(html: string) {
 
 		// Go to Code Tab
 
-		await this.page.getByRole('tab', {name: 'Code'}).waitFor();
-
 		await this.page.getByRole('tab', {name: 'Code'}).click();
 
-		// Enter HTML context
+		// Fill with new value
 
-		await this.page.getByText('HTML').waitFor();
+		await this.page
+			.locator('.html.source-editor .CodeMirror')
+			.evaluate(
+				(element: any, html) => element.CodeMirror.setValue(html),
+				html
+			);
 
-		// Delete current configuration
-
-		const codeMirror = await this.page
-			.locator('.CodeMirror-scroll')
-			.first();
-		await codeMirror.click();
-
-		await this.page.keyboard.press('Control+KeyA');
-		await this.page.keyboard.press('Backspace');
-
-		await this.page.getByText('Changes Saved').waitFor();
-
-		// Fill with new configuration
-
-		await this.page.keyboard.type(configuration);
 		await this.page.getByText('Changes Saved').waitFor();
 	}
 
 	async publish() {
 		await this.page.getByRole('button', {name: 'Publish'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 }

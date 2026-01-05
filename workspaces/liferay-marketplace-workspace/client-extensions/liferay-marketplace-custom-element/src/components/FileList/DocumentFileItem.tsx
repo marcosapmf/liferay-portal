@@ -15,6 +15,7 @@ import CircularProgress from '../CircularProgress';
 type DocumentFileItemProps = {
 	isProcessing: boolean;
 	onDelete: (id: string, versionName?: string) => void;
+	removable?: boolean;
 	uploadedFile: UploadedFile;
 	versionName?: string;
 };
@@ -22,10 +23,11 @@ type DocumentFileItemProps = {
 export function DocumentFileItem({
 	isProcessing,
 	onDelete,
+	removable,
 	uploadedFile,
 	versionName,
 }: DocumentFileItemProps) {
-	const uploadedError = (uploadedFile.error as AxiosError).message;
+	const uploadedError = (uploadedFile.error as AxiosError)?.message;
 
 	const showProgress =
 		isProcessing && !uploadedFile.uploaded && uploadedFile.progress > 0;
@@ -88,7 +90,7 @@ export function DocumentFileItem({
 				</div>
 			</div>
 
-			{!isProcessing && (
+			{!isProcessing && removable && (
 				<button
 					className="document-file-list-item-button"
 					onClick={() => onDelete(uploadedFile?.id, versionName)}

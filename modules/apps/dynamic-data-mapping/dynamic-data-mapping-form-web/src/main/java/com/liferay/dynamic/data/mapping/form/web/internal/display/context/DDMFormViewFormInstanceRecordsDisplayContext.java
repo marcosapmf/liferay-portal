@@ -52,6 +52,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,11 +65,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Leonardo Barros
@@ -498,11 +498,7 @@ public class DDMFormViewFormInstanceRecordsDisplayContext {
 	}
 
 	protected boolean isSearch() {
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(getKeywords());
 	}
 
 	private DDMFormValues _getDDMFormValues(
@@ -539,20 +535,18 @@ public class DDMFormViewFormInstanceRecordsDisplayContext {
 	}
 
 	private List<DDMFormField> _getNontransientFormFields(DDMForm ddmForm) {
-		List<DDMFormField> ddmFormFields = new ArrayList<>();
-
 		Map<String, DDMFormField> ddmFormFieldsMap =
 			ddmForm.getDDMFormFieldsMap(true);
 
-		for (DDMFormField ddmFormField : ddmFormFieldsMap.values()) {
-			if (ddmFormField.isTransient()) {
-				continue;
-			}
+		return TransformUtil.transform(
+			ddmFormFieldsMap.values(),
+			ddmFormField -> {
+				if (ddmFormField.isTransient()) {
+					return null;
+				}
 
-			ddmFormFields.add(ddmFormField);
-		}
-
-		return ddmFormFields;
+				return ddmFormField;
+			});
 	}
 
 	private List<String> _getOptionsRenderedFormFieldValues(

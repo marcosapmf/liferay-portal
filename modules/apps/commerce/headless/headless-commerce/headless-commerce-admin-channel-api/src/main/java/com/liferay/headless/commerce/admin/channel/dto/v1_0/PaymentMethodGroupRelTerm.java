@@ -16,7 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,22 +32,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Andrea Sbarra
  * @generated
  */
 @Generated("")
 @GraphQLName("PaymentMethodGroupRelTerm")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"paymentMethodGroupRelId", "termId"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"paymentMethodGroupRelId", "termId"})
 @XmlRootElement(name = "PaymentMethodGroupRelTerm")
 public class PaymentMethodGroupRelTerm implements Serializable {
 
@@ -55,7 +55,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 			PaymentMethodGroupRelTerm.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -99,7 +99,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30324")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30324")
 	public Long getPaymentMethodGroupRelId() {
 		if (_paymentMethodGroupRelIdSupplier != null) {
 			paymentMethodGroupRelId = _paymentMethodGroupRelIdSupplier.get();
@@ -142,7 +142,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 	private Supplier<Long> _paymentMethodGroupRelIdSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30643")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30643")
 	public Long getPaymentMethodGroupRelTermId() {
 		if (_paymentMethodGroupRelTermIdSupplier != null) {
 			paymentMethodGroupRelTermId =
@@ -187,7 +187,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _paymentMethodGroupRelTermIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Term getTerm() {
 		if (_termSupplier != null) {
@@ -227,7 +227,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 	@JsonIgnore
 	private Supplier<Term> _termSupplier;
 
-	@Schema(example = "PAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "PAB-34098-789-N")
 	public String getTermExternalReferenceCode() {
 		if (_termExternalReferenceCodeSupplier != null) {
 			termExternalReferenceCode =
@@ -271,7 +271,7 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 	private Supplier<String> _termExternalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getTermId() {
 		if (_termIdSupplier != null) {
 			termId = _termIdSupplier.get();
@@ -422,8 +422,8 @@ public class PaymentMethodGroupRelTerm implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.channel.dto.v1_0.PaymentMethodGroupRelTerm",
 		name = "x-class-name"
 	)

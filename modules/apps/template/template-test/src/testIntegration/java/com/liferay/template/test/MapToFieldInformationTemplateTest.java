@@ -110,7 +110,7 @@ public class MapToFieldInformationTemplateTest {
 
 		_segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid());
+				_draftLayout.getPlid());
 	}
 
 	@After
@@ -187,8 +187,8 @@ public class MapToFieldInformationTemplateTest {
 			_draftLayout, _layoutStructureProvider, null, null, 0,
 			_segmentsExperienceId,
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
-				_segmentsExperienceId, _draftLayout.getPlid(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(), null,
+				null, null, _segmentsExperienceId, _draftLayout.getPlid(),
 				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
 				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),
 				JSONUtil.put(
@@ -250,7 +250,7 @@ public class MapToFieldInformationTemplateTest {
 			StringPool.BLANK,
 			"<h1 data-lfr-editable-id=\"element-text\" " +
 				"data-lfr-editable-type=\"text\">Heading Example</h1>",
-			StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+			StringPool.BLANK, false, StringPool.BLANK, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
@@ -272,8 +272,7 @@ public class MapToFieldInformationTemplateTest {
 
 		for (String string : strings) {
 			Assert.assertTrue(
-				html + " not contains " + string,
-				StringUtil.contains(html, string, StringPool.BLANK));
+				html + " not contains " + string, html.contains(string));
 		}
 	}
 
@@ -368,7 +367,8 @@ public class MapToFieldInformationTemplateTest {
 					))
 			).toString(),
 			_fragmentEntry.getCss(), _fragmentEntry.getConfiguration(),
-			_fragmentEntry.getFragmentEntryId(), _fragmentEntry.getHtml(),
+			_fragmentEntry.getExternalReferenceCode(),
+			_fragmentEntry.getScopeERC(), _fragmentEntry.getHtml(),
 			_fragmentEntry.getJs(), _draftLayout,
 			_fragmentEntry.getFragmentEntryKey(), _fragmentEntry.getType(),
 			null, 0, _segmentsExperienceId);

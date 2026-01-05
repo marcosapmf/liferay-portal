@@ -6,6 +6,7 @@
 package com.liferay.click.to.chat.web.internal.events.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -19,7 +20,7 @@ import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -103,6 +104,7 @@ public class LogoutPreActionTest {
 
 		themeDisplay.setCompany(
 			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
+		themeDisplay.setUser(TestPropsValues.getUser());
 
 		_mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
@@ -111,6 +113,7 @@ public class LogoutPreActionTest {
 			new Cookie("intercom-id-test", RandomTestUtil.randomString()),
 			new Cookie("intercom-session-test", RandomTestUtil.randomString()),
 			new Cookie("test-cookie", RandomTestUtil.randomString()));
+		_mockHttpServletRequest.setPathInfo(StringPool.BLANK);
 	}
 
 	@Inject

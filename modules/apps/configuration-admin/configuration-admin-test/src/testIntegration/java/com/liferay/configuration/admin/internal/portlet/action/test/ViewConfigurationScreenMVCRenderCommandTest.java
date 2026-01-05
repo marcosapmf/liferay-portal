@@ -23,7 +23,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import javax.portlet.PortletException;
+import jakarta.portlet.PortletException;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -95,7 +95,7 @@ public class ViewConfigurationScreenMVCRenderCommandTest {
 			new MockLiferayPortletRenderRequest();
 
 		mockLiferayPortletRenderRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG,
+			JavaConstants.JAKARTA_PORTLET_CONFIG,
 			PortletConfigFactoryUtil.create(
 				_portletLocalService.getPortletById(
 					ConfigurationAdminPortletKeys.SYSTEM_SETTINGS),

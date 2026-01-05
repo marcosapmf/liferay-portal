@@ -8,10 +8,10 @@ package com.liferay.scim.rest.internal.container.request.filter;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -40,6 +40,14 @@ public class ScimContainerRequestFilter implements ContainerRequestFilter {
 			AbstractResourceManager.setEndpointURLMap(
 				HashMapBuilder.put(
 					SCIMConstants.GROUP_ENDPOINT, basePath + "v1.0/v2/Groups"
+				).put(
+					SCIMConstants.RESOURCE_TYPE_ENDPOINT,
+					basePath + "v1.0/v2/ResourceTypes"
+				).put(
+					SCIMConstants.SCHEMAS_ENDPOINT, basePath + "v1.0/v2/Schemas"
+				).put(
+					SCIMConstants.SERVICE_PROVIDER_CONFIG_ENDPOINT,
+					basePath + "v1.0/v2/ServiceProviderConfig"
 				).put(
 					SCIMConstants.USER_ENDPOINT, basePath + "v1.0/v2/Users"
 				).build());

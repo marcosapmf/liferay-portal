@@ -1,7 +1,8 @@
-@component-name = "portal-security"
+@component-name = "portal-application-security"
 definition {
 
 	property ci.retries.disabled = "true";
+	property custom.properties = "feature.flag.LPD-57332=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "OpenID Connect";
@@ -11,6 +12,16 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		JSONLayoututilitypage.unsetDefaultLayoutUtilityPage(
+			groupName = "Guest",
+			layoutUtilityPageName = "Sign In");
+	}
+
+	tearDown {
+		JSONLayoututilitypage.setDefaultLayoutUtilityPage(
+			groupName = "Guest",
+			layoutUtilityPageName = "Sign In");
 	}
 
 	@description = "This is a use case for LPS-139642 TC6-3: Assert error message when add invalid auth server local metadata."
@@ -377,6 +388,19 @@ definition {
 				domain = "www.able.com",
 				portalInstanceId = "www.able.com",
 				virtualHost = "www.able.com");
+
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Guest",
+				portalInstanceName = "www.able.com",
+				site = "true",
+				specificURL = "http://www.able.com:8080");
+
+			JSONLayoututilitypage.unsetDefaultLayoutUtilityPage(
+				groupId = ${groupId},
+				groupName = "Guest",
+				layoutUtilityPageName = "Sign In",
+				portalURL = "http://www.able.com:8080",
+				specificURL = "http://www.able.com:8080");
 		}
 
 		task ("Add OAuth Clients") {
@@ -416,7 +440,7 @@ definition {
 	@description = "This is a workaround usecase for LPS-139642 TC-11: Verify the OAuth client of System level should apply to OAuth client of virtual instance."
 	@priority = 5
 	test ConfigureOnSystemLevelShouldApplyToInstanceLevel {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -638,32 +662,46 @@ definition {
 	@description = "This is a use case for LPS-105151 and LPS-139642 TC-9: Users could login with instance-level configured OpenID Connect provider."
 	@priority = 5
 	test OpenIDConnectOnInstanceLevelSmoke {
-		property portal.acceptance = "quarantine";
-		property portal.ssl.enabled = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		var openIdConnectClientSecret = PropsUtil.get("openid.provider.google.client.secret.1");
-		var osgiConfigFileName = "googleClient1.json";
-		var userEmailAddress = PropsUtil.get("email.address.2");
-		var userPassword = PropsUtil.get("email.password.2");
+		var openIdConnectClientSecret = PropsUtil.get("openid.provider.default.client.password");
+		var userEmailAddress = "user1";
+		var osgiConfigFileName = "keycloak.json";
+
+		task ("Startup Keycloak for test") {
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
+		}
 
 		task ("Add CP") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
 				domain = "www.able.com",
 				portalInstanceId = "www.able.com",
 				virtualHost = "www.able.com");
+
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Guest",
+				portalInstanceName = "www.able.com",
+				site = "true",
+				specificURL = "http://www.able.com:8080");
+
+			JSONLayoututilitypage.unsetDefaultLayoutUtilityPage(
+				groupId = ${groupId},
+				groupName = "Guest",
+				layoutUtilityPageName = "Sign In",
+				portalURL = "http://www.able.com:8080",
+				specificURL = "http://www.able.com:8080");
 		}
 
 		task ("Login at able.com and enable OpenId connect CP") {
 			User.firstLoginUI(
 				domain = "www.able.com",
 				password = PropsUtil.get("default.admin.password"),
-				specificURL = "https://www.able.com:8443",
+				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			PortalSettings.gotoConfiguration(
-				baseURL = "https://www.able.com:8443",
+				baseURL = "http://www.able.com:8080",
 				configurationCategory = "SSO",
 				configurationName = "OpenID Connect",
 				configurationScope = "Virtual Instance Scope");
@@ -671,23 +709,35 @@ definition {
 			PortalSettings.enableOpenIDConnectCP();
 		}
 
+		task ("And: Add Auth Server Local Metadata") {
+			OAuthClient.openOAuthClientAdmin(
+				baseURL = "http://www.able.com:8080",
+				navbar = "Auth Server Local Metadata");
+
+			OAuthClient.addAuthServer(jsonFileName = "keycloak-local-metadata.json");
+
+			var wellknownURI = OAuthClient.getWellKnownURI();
+		}
+
 		task ("Add OAuth Client") {
 			OAuthClient.openOAuthClientAdmin(
-				baseURL = "https://www.able.com:8443",
+				baseURL = "http://www.able.com:8080",
 				navbar = "Clients");
 
 			AntCommands.runCommand("build-test-openid-connect.xml", "prepare-openid-connect-json-configuration -DopenIdConnectClientSecret=${openIdConnectClientSecret} -Dosgi.config.file.name=${osgiConfigFileName}");
 
-			OAuthClient.addClient(jsonFileName = "googleClient1.json");
+			OAuthClient.addClient(
+				jsonFileName = "keycloak.json",
+				wellknownURI = ${wellknownURI});
 		}
 
 		task ("Sign out and Login at able.com with OpenID Connect enabled") {
 			UserBar.signOut();
 
 			User.loginUserWithOpenIDConnectEnabledPG(
-				specificURL = "https://www.able.com:8443",
+				specificURL = "http://www.able.com:8080",
 				userEmailAddress = ${userEmailAddress},
-				userPassword = ${userPassword});
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Sign out and Login") {
@@ -695,7 +745,7 @@ definition {
 
 			User.firstLoginUI(
 				password = PropsUtil.get("default.admin.password"),
-				specificURL = "https://www.able.com:8443",
+				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
 	}
@@ -703,35 +753,22 @@ definition {
 	@description = "This is a use case for LRQA-40911. Users could login and logout using OpenID Connect provider."
 	@priority = 5
 	test OpenIDConnectSmoke {
-		property portal.acceptance = "quarantine";
+		property osgi.module.configuration.file.names = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration.config";
+		property osgi.module.configurations = "enabled=\"true\"";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		var openIdConnectClientId = PropsUtil.get("google.client.id.3");
-		var openIdConnectClientSecret = PropsUtil.get("google.client.secret.3");
-		var userEmailAddress = PropsUtil.get("email.address.2");
-		var userPassword = PropsUtil.get("email.password.2");
+		var openIdConnectClientId = PropsUtil.get("openid.provider.keycloak.client.id.1");
+		var openIdConnectClientSecret = PropsUtil.get("openid.provider.keycloak.client.password.1");
+		var userEmailAddress = "user2";
+		var osgiConfigFileName = "com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration~KeycloakLimitedSession.config";
 
-		task ("Add SSO OpenID Connect provider") {
-			PortalSettings.gotoConfiguration(
-				baseURL = "http://localhost:8080",
-				configurationCategory = "SSO",
-				configurationName = "OpenID Connect",
-				configurationScope = "Virtual Instance Scope");
+		task ("Startup Keycloak for test") {
+			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
+		}
 
-			PortalSettings.enableOpenIDConnectCP();
-
-			SystemSettings.openSystemSettingsAdmin();
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "OpenID Connect Provider Connection",
-				configurationScope = "Virtual Instance Scope");
-
-			OpenIDConnect.addProvider(
-				openIdConnectClientId = ${openIdConnectClientId},
-				openIdConnectClientSecret = ${openIdConnectClientSecret},
-				providerName = "Google");
+		task ("Add OIDC provider configuration") {
+			AntCommands.runCommand("build-test-openid-connect.xml", "prepare-openid-connect-osgi-configuration -DopenIdConnectClientId=${openIdConnectClientId} -DopenIdConnectClientSecret=${openIdConnectClientSecret} -Dosgi.config.file.name=${osgiConfigFileName}");
 		}
 
 		task ("Logout and login with OpenID Connect") {
@@ -739,7 +776,7 @@ definition {
 
 			User.loginUserWithOpenIDConnectEnabledPG(
 				userEmailAddress = ${userEmailAddress},
-				userPassword = ${userPassword});
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Logout and login") {
@@ -1063,6 +1100,19 @@ definition {
 				domain = "www.able.com",
 				portalInstanceId = "www.able.com",
 				virtualHost = "www.able.com");
+
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = "Guest",
+				portalInstanceName = "www.able.com",
+				site = "true",
+				specificURL = "http://www.able.com:8080");
+
+			JSONLayoututilitypage.unsetDefaultLayoutUtilityPage(
+				groupId = ${groupId},
+				groupName = "Guest",
+				layoutUtilityPageName = "Sign In",
+				portalURL = "http://www.able.com:8080",
+				specificURL = "http://www.able.com:8080");
 		}
 
 		task ("When: User adds OIDC connection on able.com") {

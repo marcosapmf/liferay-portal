@@ -5,9 +5,12 @@
 
 package com.liferay.knowledge.base.web.internal.portlet.action;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
+import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.web.internal.configuration.KBSearchPortletInstanceConfiguration;
 import com.liferay.knowledge.base.web.internal.configuration.KBSectionPortletInstanceConfiguration;
+import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
@@ -16,11 +19,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,11 +33,11 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ARTICLE,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_DISPLAY,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SEARCH,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SECTION,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ARTICLE,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_DISPLAY,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SEARCH,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SECTION,
 		"mvc.command.name=/knowledge_base/view_kb_article"
 	},
 	service = MVCRenderCommand.class
@@ -47,6 +50,14 @@ public class ViewKBArticleMVCRenderCommand implements MVCRenderCommand {
 		throws PortletException {
 
 		String rootPortletId = _getRootPortletId(renderRequest);
+
+		KBArticle kbArticle = (KBArticle)renderRequest.getAttribute(
+			KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE);
+
+		if (kbArticle != null) {
+			CTTimelineUtil.setCTTimelineKeys(
+				renderRequest, KBArticle.class, kbArticle.getKbArticleId());
+		}
 
 		if (rootPortletId.equals(KBPortletKeys.KNOWLEDGE_BASE_ADMIN)) {
 			return "/admin/view_kb_article.jsp";

@@ -481,24 +481,6 @@ public class JournalArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_NotL() throws Exception {
-		_persistence.countByG_NotL(RandomTestUtil.nextLong(), "");
-
-		_persistence.countByG_NotL(0L, "null");
-
-		_persistence.countByG_NotL(0L, (String)null);
-	}
-
-	@Test
-	public void testCountByG_NotLArrayable() throws Exception {
-		_persistence.countByG_NotL(
-			RandomTestUtil.nextLong(),
-			new String[] {
-				RandomTestUtil.randomString(), "", "null", null, null
-			});
-	}
-
-	@Test
 	public void testCountByG_ST() throws Exception {
 		_persistence.countByG_ST(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
@@ -574,6 +556,23 @@ public class JournalArticlePersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_ERC_ST() throws Exception {
+		_persistence.countByG_ERC_ST(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
+
+		_persistence.countByG_ERC_ST(0L, "null", 0);
+
+		_persistence.countByG_ERC_ST(0L, (String)null, 0);
+	}
+
+	@Test
+	public void testCountByG_ERC_STArrayable() throws Exception {
+		_persistence.countByG_ERC_ST(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomString(),
+			new int[] {RandomTestUtil.nextInt(), 0});
+	}
+
+	@Test
 	public void testCountByG_F_ST() throws Exception {
 		_persistence.countByG_F_ST(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -625,6 +624,25 @@ public class JournalArticlePersistenceTest {
 		_persistence.countByG_C_L(0L, 0L, "null");
 
 		_persistence.countByG_C_L(0L, 0L, (String)null);
+	}
+
+	@Test
+	public void testCountByG_C_NotL() throws Exception {
+		_persistence.countByG_C_NotL(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
+
+		_persistence.countByG_C_NotL(0L, 0L, "null");
+
+		_persistence.countByG_C_NotL(0L, 0L, (String)null);
+	}
+
+	@Test
+	public void testCountByG_C_NotLArrayable() throws Exception {
+		_persistence.countByG_C_NotL(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			});
 	}
 
 	@Test

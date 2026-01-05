@@ -63,21 +63,20 @@ public class ChainingCheck extends BaseCheck {
 	}
 
 	private void _checkChainingOnMethodCalls(DetailAST detailAST) {
-		List<DetailAST> methodCallDetailASTList = getAllChildTokens(
+		List<DetailAST> methodCallDetailASTs = getAllChildTokens(
 			detailAST, true, TokenTypes.METHOD_CALL);
 
-		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+		for (DetailAST methodCallDetailAST : methodCallDetailASTs) {
 			DetailAST dotDetailAST = methodCallDetailAST.findFirstToken(
 				TokenTypes.DOT);
 
 			if (dotDetailAST != null) {
-				List<DetailAST> childMethodCallDetailASTList =
-					getAllChildTokens(
-						dotDetailAST, false, TokenTypes.METHOD_CALL);
+				List<DetailAST> childMethodCallDetailASTs = getAllChildTokens(
+					dotDetailAST, false, TokenTypes.METHOD_CALL);
 
 				// Only check the method that is first in the chain
 
-				if (!childMethodCallDetailASTList.isEmpty()) {
+				if (!childMethodCallDetailASTs.isEmpty()) {
 					continue;
 				}
 			}
@@ -200,23 +199,8 @@ public class ChainingCheck extends BaseCheck {
 			return;
 		}
 
-		DetailAST topLevelMethodCallDetailAST = methodCallDetailAST;
-
-		while (true) {
-			DetailAST parentDetailAST = topLevelMethodCallDetailAST.getParent();
-
-			if (parentDetailAST.getType() != TokenTypes.DOT) {
-				break;
-			}
-
-			parentDetailAST = parentDetailAST.getParent();
-
-			if (parentDetailAST.getType() != TokenTypes.METHOD_CALL) {
-				break;
-			}
-
-			topLevelMethodCallDetailAST = parentDetailAST;
-		}
+		DetailAST topLevelMethodCallDetailAST = getTopLevelMethodCallDetailAST(
+			methodCallDetailAST);
 
 		DetailAST parentDetailAST = topLevelMethodCallDetailAST.getParent();
 

@@ -6,10 +6,9 @@
 import ClayBadge from '@clayui/badge';
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayLabel from '@clayui/label';
-import {format, sub as dateSub} from 'date-fns';
-import {createResourceURL, fetch, sub} from 'frontend-js-web';
+import {createResourceURL, dateUtils, fetch, sub} from 'frontend-js-web';
 import React, {useContext} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router';
 
 import {AppContext} from '../../AppContext';
 import ListView from '../../components/list-view/ListView';
@@ -44,29 +43,38 @@ const COLUMNS = [
 	},
 ];
 
+const intl = new Intl.DateTimeFormat(
+	Liferay.ThemeDisplay.getBCP47LanguageId(),
+	{
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric',
+	}
+);
+
 const FILTERS = [
 	{
 		defaultText: Liferay.Language.get('all'),
 		items: [
 			{
 				label: sub(Liferay.Language.get('last-x-months'), 12),
-				value: format(dateSub(new Date(), {months: 12}), 'yyyy-MM-dd'),
+				value: intl.format(dateUtils.subMonths(new Date(), 12)),
 			},
 			{
 				label: sub(Liferay.Language.get('last-x-months'), 6),
-				value: format(dateSub(new Date(), {months: 6}), 'yyyy-MM-dd'),
+				value: intl.format(dateUtils.subMonths(new Date(), 6)),
 			},
 			{
 				label: sub(Liferay.Language.get('last-x-days'), 30),
-				value: format(dateSub(new Date(), {months: 1}), 'yyyy-MM-dd'),
+				value: intl.format(dateUtils.subMonths(new Date(), 1)),
 			},
 			{
 				label: Liferay.Language.get('last-week'),
-				value: format(dateSub(new Date(), {days: 7}), 'yyyy-MM-dd'),
+				value: intl.format(dateUtils.subDays(new Date(), 7)),
 			},
 			{
 				label: sub(Liferay.Language.get('last-x-hours'), 24),
-				value: format(dateSub(new Date(), {days: 1}), 'yyyy-MM-dd'),
+				value: intl.format(dateUtils.subDays(new Date(), 1)),
 			},
 		],
 		key: 'from_date',
@@ -92,8 +100,11 @@ const FILTERS = [
 ];
 const getEnvelopeStatus = (status) =>
 	DOCUSIGN_STATUS[status] || {color: 'secondary', label: status};
-const EnvelopeList = ({history}) => {
+
+const EnvelopeList = () => {
 	const {baseResourceURL} = useContext(AppContext);
+
+	const navigate = useNavigate();
 
 	return (
 		<div className="envelope-list">
@@ -116,7 +127,7 @@ const EnvelopeList = ({history}) => {
 				addButton={() => (
 					<ClayButtonWithIcon
 						className="nav-btn nav-btn-monospaced"
-						onClick={() => history.push('/new-envelope')}
+						onClick={() => navigate('/new-envelope')}
 						symbol="plus"
 					/>
 				)}
@@ -134,7 +145,6 @@ const EnvelopeList = ({history}) => {
 				}}
 				defaultSort="desc"
 				filters={FILTERS}
-				history={history}
 			>
 				{({
 					envelopeId,

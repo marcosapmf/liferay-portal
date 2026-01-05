@@ -18,11 +18,11 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * @author Eudaldo Alonso
@@ -70,7 +70,9 @@ public class DefaultLayoutPrototypesUtil {
 		portletId = layoutTypePortlet.addPortletId(
 			0, portletId, columnId, -1, false);
 
-		updateLayout(layout);
+		LayoutLocalServiceUtil.updateTypeSettings(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			layout.getTypeSettings());
 
 		addResourcePermissions(layout, portletId);
 
@@ -103,12 +105,6 @@ public class DefaultLayoutPrototypesUtil {
 
 		PortalUtil.addPortletDefaultResource(
 			layout.getCompanyId(), layout, portlet);
-	}
-
-	protected static void updateLayout(Layout layout) throws Exception {
-		LayoutLocalServiceUtil.updateLayout(
-			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
-			layout.getTypeSettings());
 	}
 
 }

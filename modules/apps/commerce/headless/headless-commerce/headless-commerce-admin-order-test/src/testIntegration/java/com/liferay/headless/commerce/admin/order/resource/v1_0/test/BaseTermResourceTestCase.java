@@ -13,28 +13,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Term;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
 import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.TermResource;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.TermSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
@@ -42,12 +56,27 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,13 +85,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -71,6 +98,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Alessio Antonio Rendina
@@ -81,12 +111,14 @@ public abstract class BaseTermResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -100,10 +132,25 @@ public abstract class BaseTermResourceTestCase {
 
 		_termResource.setContextCompany(testCompany);
 
-		TermResource.Builder builder = TermResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		termResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		termResource = TermResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +164,32 @@ public abstract class BaseTermResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Term term1 = randomTerm();
+
+		String json = objectMapper.writeValueAsString(term1);
+
+		Term term2 = TermSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(term1, term2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Term term = randomTerm();
+
+		String json1 = objectMapper.writeValueAsString(term);
+		String json2 = TermSerDes.toJSON(term);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +204,6 @@ public abstract class BaseTermResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Term term1 = randomTerm();
-
-		String json = objectMapper.writeValueAsString(term1);
-
-		Term term2 = TermSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(term1, term2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Term term = randomTerm();
-
-		String json1 = objectMapper.writeValueAsString(term);
-		String json2 = TermSerDes.toJSON(term);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -191,6 +229,690 @@ public abstract class BaseTermResourceTestCase {
 		Assert.assertEquals(regex, term.getType());
 		Assert.assertEquals(regex, term.getTypeLocalized());
 		Assert.assertEquals(regex, term.getTypeSettings());
+	}
+
+	@Test
+	public void testDeleteTerm() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Term term = testDeleteTerm_addTerm();
+
+		assertHttpResponseStatusCode(
+			204, termResource.deleteTermHttpResponse(term.getId()));
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term.getId()));
+		assertHttpResponseStatusCode(404, termResource.getTermHttpResponse(0L));
+	}
+
+	protected Term testDeleteTerm_addTerm() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteTerm() throws Exception {
+
+		// No namespace
+
+		Term term1 = testGraphQLDeleteTerm_addTerm();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTerm",
+						new HashMap<String, Object>() {
+							{
+								put("id", term1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteTerm"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"term",
+					new HashMap<String, Object>() {
+						{
+							put("id", term1.getId());
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Term term2 = testGraphQLDeleteTerm_addTerm();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteTerm",
+							new HashMap<String, Object>() {
+								{
+									put("id", term2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteTerm"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0",
+					new GraphQLField(
+						"term",
+						new HashMap<String, Object>() {
+							{
+								put("id", term2.getId());
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Term testGraphQLDeleteTerm_addTerm() throws Exception {
+		return testGraphQLTerm_addTerm();
+	}
+
+	@Test
+	public void testDeleteTermBatch() throws Exception {
+		Term term1 = testDeleteTermBatch_addTerm();
+
+		testDeleteTermBatch_deleteTerm(
+			202, term1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
+
+		term1 = testDeleteTermBatch_addTerm();
+
+		testDeleteTermBatch_deleteTerm(202, null, term1.getId());
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
+
+		term1 = testDeleteTermBatch_addTerm();
+		Term term2 = testDeleteTermBatch_addTerm();
+
+		testDeleteTermBatch_deleteTerm(
+			202, term2.getExternalReferenceCode(), term1.getId());
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
+		assertHttpResponseStatusCode(
+			200, termResource.getTermHttpResponse(term2.getId()));
+
+		testDeleteTermBatch_deleteTerm(
+			202, term2.getExternalReferenceCode(), term1.getId());
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term2.getId()));
+	}
+
+	protected Term testDeleteTermBatch_addTerm() throws Exception {
+		return testDeleteTerm_addTerm();
+	}
+
+	protected void testDeleteTermBatch_deleteTerm(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			termResource.deleteTermBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteTermByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Term term = testDeleteTermByExternalReferenceCode_addTerm();
+
+		assertHttpResponseStatusCode(
+			204,
+			termResource.deleteTermByExternalReferenceCodeHttpResponse(
+				term.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			termResource.getTermByExternalReferenceCodeHttpResponse(
+				term.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404, termResource.getTermByExternalReferenceCodeHttpResponse("-"));
+	}
+
+	protected Term testDeleteTermByExternalReferenceCode_addTerm()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteTermByExternalReferenceCode()
+		throws Exception {
+
+		// No namespace
+
+		Term term1 = testGraphQLDeleteTermByExternalReferenceCode_addTerm();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteTermByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" + term1.getExternalReferenceCode() +
+										"\"");
+							}
+						})),
+				"JSONObject/data", "Object/deleteTermByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"termByExternalReferenceCode",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"externalReferenceCode",
+								"\"" + term1.getExternalReferenceCode() + "\"");
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Term term2 = testGraphQLDeleteTermByExternalReferenceCode_addTerm();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteTermByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										"\"" +
+											term2.getExternalReferenceCode() +
+												"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteTermByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0",
+					new GraphQLField(
+						"termByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" + term2.getExternalReferenceCode() +
+										"\"");
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Term testGraphQLDeleteTermByExternalReferenceCode_addTerm()
+		throws Exception {
+
+		return testGraphQLTerm_addTerm();
+	}
+
+	@Test
+	public void testGetTerm() throws Exception {
+		Term postTerm = testGetTerm_addTerm();
+
+		Term getTerm = termResource.getTerm(postTerm.getId());
+
+		assertEquals(postTerm, getTerm);
+		assertValid(getTerm);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		Term postTerm = testGetTerm_addTerm();
+
+		Term getTerm = termResource.getTerm(postTerm.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.Term"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postTerm.getId());
+
+		assertEquals(getTerm, TermSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected Term testGetTerm_addTerm() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetTerm() throws Exception {
+		Term term = testGraphQLGetTerm_addTerm();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				term,
+				TermSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"term",
+								new HashMap<String, Object>() {
+									{
+										put("id", term.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/term"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				term,
+				TermSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"term",
+									new HashMap<String, Object>() {
+										{
+											put("id", term.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/term"))));
+	}
+
+	@Test
+	public void testGraphQLGetTermNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"term",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"term",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Term testGraphQLGetTerm_addTerm() throws Exception {
+		return testGraphQLTerm_addTerm();
+	}
+
+	@Test
+	public void testGetTermByExternalReferenceCode() throws Exception {
+		Term postTerm = testGetTermByExternalReferenceCode_addTerm();
+
+		Term getTerm = termResource.getTermByExternalReferenceCode(
+			postTerm.getExternalReferenceCode());
+
+		assertEquals(postTerm, getTerm);
+		assertValid(getTerm);
+	}
+
+	protected Term testGetTermByExternalReferenceCode_addTerm()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetTermByExternalReferenceCode() throws Exception {
+		Term term = testGraphQLGetTermByExternalReferenceCode_addTerm();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				term,
+				TermSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"termByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												term.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/termByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				term,
+				TermSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"termByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													term.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/termByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetTermByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"termByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"termByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Term testGraphQLGetTermByExternalReferenceCode_addTerm()
+		throws Exception {
+
+		return testGraphQLTerm_addTerm();
 	}
 
 	@Test
@@ -297,9 +1019,10 @@ public abstract class BaseTermResourceTestCase {
 
 	@Test
 	public void testGetTermsPageWithPagination() throws Exception {
-		Page<Term> termPage = termResource.getTermsPage(null, null, null, null);
+		Page<Term> termsPage = termResource.getTermsPage(
+			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(termPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(termsPage.getTotalCount());
 
 		Term term1 = testGetTermsPage_addTerm(randomTerm());
 
@@ -503,6 +1226,7 @@ public abstract class BaseTermResourceTestCase {
 			"terms",
 			new HashMap<String, Object>() {
 				{
+					put("search", null);
 					put("page", 1);
 					put("pageSize", 10);
 				}
@@ -518,8 +1242,9 @@ public abstract class BaseTermResourceTestCase {
 
 		long totalCount = termsJSONObject.getLong("totalCount");
 
-		Term term1 = testGraphQLGetTermsPage_addTerm();
-		Term term2 = testGraphQLGetTermsPage_addTerm();
+		Term term1 = testGraphQLTerm_addTerm(randomTerm());
+
+		Term term2 = testGraphQLTerm_addTerm(randomTerm());
 
 		termsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -559,179 +1284,29 @@ public abstract class BaseTermResourceTestCase {
 				TermSerDes.toDTOs(termsJSONObject.getString("items"))));
 	}
 
-	protected Term testGraphQLGetTermsPage_addTerm() throws Exception {
-		return testGraphQLTerm_addTerm();
-	}
-
 	@Test
-	public void testPostTerm() throws Exception {
-		Term randomTerm = randomTerm();
+	public void testPatchTerm() throws Exception {
+		Term postTerm = testPatchTerm_addTerm();
 
-		Term postTerm = testPostTerm_addTerm(randomTerm);
+		Term randomPatchTerm = randomPatchTerm();
 
-		assertEquals(randomTerm, postTerm);
-		assertValid(postTerm);
-	}
-
-	protected Term testPostTerm_addTerm(Term term) throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteTermByExternalReferenceCode() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Term term = testDeleteTermByExternalReferenceCode_addTerm();
+		Term patchTerm = termResource.patchTerm(
+			postTerm.getId(), randomPatchTerm);
 
-		assertHttpResponseStatusCode(
-			204,
-			termResource.deleteTermByExternalReferenceCodeHttpResponse(
-				term.getExternalReferenceCode()));
+		Term expectedPatchTerm = postTerm.clone();
 
-		assertHttpResponseStatusCode(
-			404,
-			termResource.getTermByExternalReferenceCodeHttpResponse(
-				term.getExternalReferenceCode()));
+		BeanTestUtil.copyProperties(randomPatchTerm, expectedPatchTerm);
 
-		assertHttpResponseStatusCode(
-			404,
-			termResource.getTermByExternalReferenceCodeHttpResponse(
-				term.getExternalReferenceCode()));
-	}
+		Term getTerm = termResource.getTerm(patchTerm.getId());
 
-	protected Term testDeleteTermByExternalReferenceCode_addTerm()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetTermByExternalReferenceCode() throws Exception {
-		Term postTerm = testGetTermByExternalReferenceCode_addTerm();
-
-		Term getTerm = termResource.getTermByExternalReferenceCode(
-			postTerm.getExternalReferenceCode());
-
-		assertEquals(postTerm, getTerm);
+		assertEquals(expectedPatchTerm, getTerm);
 		assertValid(getTerm);
 	}
 
-	protected Term testGetTermByExternalReferenceCode_addTerm()
-		throws Exception {
-
+	protected Term testPatchTerm_addTerm() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetTermByExternalReferenceCode() throws Exception {
-		Term term = testGraphQLGetTermByExternalReferenceCode_addTerm();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				term,
-				TermSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"termByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												term.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/termByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				term,
-				TermSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminOrder_v1_0",
-								new GraphQLField(
-									"termByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													term.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminOrder_v1_0",
-						"Object/termByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetTermByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"termByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"termByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Term testGraphQLGetTermByExternalReferenceCode_addTerm()
-		throws Exception {
-
-		return testGraphQLTerm_addTerm();
 	}
 
 	@Test
@@ -763,234 +1338,261 @@ public abstract class BaseTermResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteTerm() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Term term = testDeleteTerm_addTerm();
+	public void testPostTerm() throws Exception {
+		Term randomTerm = randomTerm();
 
-		assertHttpResponseStatusCode(
-			204, termResource.deleteTermHttpResponse(term.getId()));
+		Term postTerm = testPostTerm_addTerm(randomTerm);
 
-		assertHttpResponseStatusCode(
-			404, termResource.getTermHttpResponse(term.getId()));
-
-		assertHttpResponseStatusCode(
-			404, termResource.getTermHttpResponse(term.getId()));
+		assertEquals(randomTerm, postTerm);
+		assertValid(postTerm);
 	}
 
-	protected Term testDeleteTerm_addTerm() throws Exception {
+	protected Term testPostTerm_addTerm(Term term) throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
 	@Test
-	public void testGraphQLDeleteTerm() throws Exception {
+	public void testGraphQLPostTerm() throws Exception {
+		Term randomTerm = randomTerm();
 
-		// No namespace
+		Term term = testGraphQLTerm_addTerm(randomTerm);
 
-		Term term1 = testGraphQLDeleteTerm_addTerm();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteTerm",
-						new HashMap<String, Object>() {
-							{
-								put("id", term1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteTerm"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"term",
-					new HashMap<String, Object>() {
-						{
-							put("id", term1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Term term2 = testGraphQLDeleteTerm_addTerm();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"deleteTerm",
-							new HashMap<String, Object>() {
-								{
-									put("id", term2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
-				"Object/deleteTerm"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminOrder_v1_0",
-					new GraphQLField(
-						"term",
-						new HashMap<String, Object>() {
-							{
-								put("id", term2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Term testGraphQLDeleteTerm_addTerm() throws Exception {
-		return testGraphQLTerm_addTerm();
+		Assert.assertTrue(equals(randomTerm, term));
 	}
 
 	@Test
-	public void testGetTerm() throws Exception {
-		Term postTerm = testGetTerm_addTerm();
+	public void testPutTermByExternalReferenceCode() throws Exception {
+		Term postTerm = testPutTermByExternalReferenceCode_addTerm();
 
-		Term getTerm = termResource.getTerm(postTerm.getId());
+		Term randomTerm = randomTerm();
 
-		assertEquals(postTerm, getTerm);
+		Term putTerm = termResource.putTermByExternalReferenceCode(
+			postTerm.getExternalReferenceCode(), randomTerm);
+
+		assertEquals(randomTerm, putTerm);
+		assertValid(putTerm);
+
+		Term getTerm = termResource.getTermByExternalReferenceCode(
+			putTerm.getExternalReferenceCode());
+
+		assertEquals(randomTerm, getTerm);
 		assertValid(getTerm);
-	}
 
-	protected Term testGetTerm_addTerm() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
+		Term newTerm = testPutTermByExternalReferenceCode_createTerm();
 
-	@Test
-	public void testGraphQLGetTerm() throws Exception {
-		Term term = testGraphQLGetTerm_addTerm();
+		putTerm = termResource.putTermByExternalReferenceCode(
+			newTerm.getExternalReferenceCode(), newTerm);
 
-		// No namespace
+		assertEquals(newTerm, putTerm);
+		assertValid(putTerm);
 
-		Assert.assertTrue(
-			equals(
-				term,
-				TermSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"term",
-								new HashMap<String, Object>() {
-									{
-										put("id", term.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/term"))));
+		getTerm = termResource.getTermByExternalReferenceCode(
+			putTerm.getExternalReferenceCode());
 
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				term,
-				TermSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminOrder_v1_0",
-								new GraphQLField(
-									"term",
-									new HashMap<String, Object>() {
-										{
-											put("id", term.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminOrder_v1_0",
-						"Object/term"))));
-	}
-
-	@Test
-	public void testGraphQLGetTermNotFound() throws Exception {
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
+		assertEquals(newTerm, getTerm);
 
 		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"term",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"term",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
+			newTerm.getExternalReferenceCode(),
+			putTerm.getExternalReferenceCode());
 	}
 
-	protected Term testGraphQLGetTerm_addTerm() throws Exception {
-		return testGraphQLTerm_addTerm();
+	protected Term testPutTermByExternalReferenceCode_addTerm()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Term testPutTermByExternalReferenceCode_createTerm()
+		throws Exception {
+
+		return randomTerm();
 	}
 
 	@Test
-	public void testPatchTerm() throws Exception {
-		Term postTerm = testPatchTerm_addTerm();
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Term term1 = testBatchEngineDeleteImportTask_addTerm();
 
-		Term randomPatchTerm = randomPatchTerm();
+		testBatchEngineDeleteImportTask_deleteTerm(
+			200, term1.getExternalReferenceCode(), null);
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Term patchTerm = termResource.patchTerm(
-			postTerm.getId(), randomPatchTerm);
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
 
-		Term expectedPatchTerm = postTerm.clone();
+		term1 = testBatchEngineDeleteImportTask_addTerm();
 
-		BeanTestUtil.copyProperties(randomPatchTerm, expectedPatchTerm);
+		testBatchEngineDeleteImportTask_deleteTerm(200, null, term1.getId());
 
-		Term getTerm = termResource.getTerm(patchTerm.getId());
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
 
-		assertEquals(expectedPatchTerm, getTerm);
-		assertValid(getTerm);
+		term1 = testBatchEngineDeleteImportTask_addTerm();
+		Term term2 = testBatchEngineDeleteImportTask_addTerm();
+
+		testBatchEngineDeleteImportTask_deleteTerm(
+			200, term2.getExternalReferenceCode(), term1.getId());
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term1.getId()));
+		assertHttpResponseStatusCode(
+			200, termResource.getTermHttpResponse(term2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteTerm(
+			200, term2.getExternalReferenceCode(), term1.getId());
+
+		assertHttpResponseStatusCode(
+			404, termResource.getTermHttpResponse(term2.getId()));
 	}
 
-	protected Term testPatchTerm_addTerm() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+	protected Term testBatchEngineDeleteImportTask_addTerm() throws Exception {
+		return testDeleteTerm_addTerm();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteTerm(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.Term", null,
+				null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected Term testGraphQLTerm_addTerm() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGraphQLTerm_addTerm(randomTerm());
+	}
+
+	protected Term testGraphQLTerm_addTerm(Term term) throws Exception {
+		JSONDeserializer<Term> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field : getDeclaredFields(Term.class)) {
+			if (getGraphQLValue(field.get(term)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(term)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createTerm",
+						new HashMap<String, Object>() {
+							{
+								put("term", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createTerm"),
+			Term.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(Term term, List<Term> terms) {
@@ -1249,6 +1851,10 @@ public abstract class BaseTermResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1600,13 +2206,11 @@ public abstract class BaseTermResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1616,7 +2220,7 @@ public abstract class BaseTermResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(term.getCreateDate()));
+				sb.append(_format.format(term.getCreateDate()));
 			}
 
 			return sb.toString();
@@ -1636,13 +2240,11 @@ public abstract class BaseTermResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1652,7 +2254,7 @@ public abstract class BaseTermResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(term.getDisplayDate()));
+				sb.append(_format.format(term.getDisplayDate()));
 			}
 
 			return sb.toString();
@@ -1667,13 +2269,11 @@ public abstract class BaseTermResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1683,7 +2283,7 @@ public abstract class BaseTermResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(term.getExpirationDate()));
+				sb.append(_format.format(term.getExpirationDate()));
 			}
 
 			return sb.toString();
@@ -2024,7 +2624,30 @@ public abstract class BaseTermResourceTestCase {
 		return randomTerm();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected TermResource termResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -2034,12 +2657,12 @@ public abstract class BaseTermResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2048,11 +2671,16 @@ public abstract class BaseTermResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2084,6 +2712,24 @@ public abstract class BaseTermResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2105,16 +2751,6 @@ public abstract class BaseTermResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2212,10 +2848,34 @@ public abstract class BaseTermResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseTermResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.order.resource.v1_0.TermResource
 		_termResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

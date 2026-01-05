@@ -33,14 +33,14 @@ import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
 import java.text.Format;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
 
 /**
  * @author guywandji
@@ -267,11 +267,7 @@ public class DispatchTriggerDisplayContext extends BaseDisplayContext {
 	}
 
 	public boolean isClusterModeSingle(String type) {
-		if (_dispatchTaskExecutorRegistry.isClusterModeSingle(type)) {
-			return true;
-		}
-
-		return false;
+		return _dispatchTaskExecutorRegistry.isClusterModeSingle(type);
 	}
 
 	private final DispatchTaskExecutorRegistry _dispatchTaskExecutorRegistry;

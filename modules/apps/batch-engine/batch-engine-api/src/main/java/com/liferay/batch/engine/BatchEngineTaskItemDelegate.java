@@ -7,12 +7,15 @@ package com.liferay.batch.engine;
 
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
-import com.liferay.batch.engine.strategy.BatchEngineImportStrategy;
+import com.liferay.petra.function.UnsafeBiConsumer;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.odata.entity.EntityModel;
+
+import jakarta.ws.rs.core.UriInfo;
 
 import java.io.Serializable;
 
@@ -20,8 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -50,6 +51,10 @@ public interface BatchEngineTaskItemDelegate<T> {
 		return null;
 	}
 
+	public default String getVersion() {
+		return null;
+	}
+
 	public boolean hasCreateStrategy(String createStrategy);
 
 	public boolean hasUpdateStrategy(String updateStrategy);
@@ -59,14 +64,15 @@ public interface BatchEngineTaskItemDelegate<T> {
 			Map<String, Serializable> parameters, String search)
 		throws Exception;
 
-	public void setBatchEngineImportStrategy(
-		BatchEngineImportStrategy batchEngineImportStrategy);
-
 	public void setContextCompany(Company contextCompany);
 
 	public void setContextUriInfo(UriInfo uriInfo);
 
 	public void setContextUser(User contextUser);
+
+	public void setImportItemUnsafeBiConsumer(
+		UnsafeBiConsumer<T, UnsafeFunction<T, T, Exception>, Exception>
+			unsafeBiConsumer);
 
 	public void setLanguageId(String languageId);
 

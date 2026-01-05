@@ -12,8 +12,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Guilherme Camacho
  */
@@ -41,58 +39,41 @@ public class ObjectActionThreadLocal {
 		objectEntryIdsMap.clear();
 	}
 
-	public static HttpServletRequest getHttpServletRequest() {
-		return _httpServletRequestThreadLocal.get();
-	}
-
 	public static Map<Long, Set<Long>> getObjectEntryIdsMap() {
-		return _objectEntryIdsMapThreadLocal.get();
+		return _objectEntryIdsMap.get();
 	}
 
 	public static boolean isClearObjectEntryIdsMap() {
-		return _clearObjectEntryIdsMapThreadLocal.get();
+		return _clearObjectEntryIdsMap.get();
 	}
 
 	public static boolean isSkipObjectActionExecution() {
-		return _skipObjectActionExecutionThreadLocal.get();
+		return _skipObjectActionExecution.get();
 	}
 
 	public static void setClearObjectEntryIdsMap(
 		boolean clearObjectEntryIdsMap) {
 
-		_clearObjectEntryIdsMapThreadLocal.set(clearObjectEntryIdsMap);
-	}
-
-	public static void setHttpServletRequest(
-		HttpServletRequest httpServletRequest) {
-
-		_httpServletRequestThreadLocal.set(httpServletRequest);
+		_clearObjectEntryIdsMap.set(clearObjectEntryIdsMap);
 	}
 
 	public static void setSkipObjectActionExecution(
 		boolean skipObjectActionExecution) {
 
-		_skipObjectActionExecutionThreadLocal.set(skipObjectActionExecution);
+		_skipObjectActionExecution.set(skipObjectActionExecution);
 	}
 
-	private static final ThreadLocal<Boolean>
-		_clearObjectEntryIdsMapThreadLocal = new CentralizedThreadLocal<>(
-			ObjectActionThreadLocal.class +
-				"._clearObjectEntryIdsMapThreadLocal",
+	private static final ThreadLocal<Boolean> _clearObjectEntryIdsMap =
+		new CentralizedThreadLocal<>(
+			ObjectActionThreadLocal.class + "._clearObjectEntryIdsMap",
 			() -> true);
-	private static final ThreadLocal<HttpServletRequest>
-		_httpServletRequestThreadLocal = new CentralizedThreadLocal<>(
-			ObjectActionThreadLocal.class + "._httpServletRequestThreadLocal",
-			() -> null);
-	private static final ThreadLocal<Map<Long, Set<Long>>>
-		_objectEntryIdsMapThreadLocal = new CentralizedThreadLocal<>(
-			ObjectActionThreadLocal.class.getName() +
-				"._objectEntryIdsMapThreadLocal",
+	private static final ThreadLocal<Map<Long, Set<Long>>> _objectEntryIdsMap =
+		new CentralizedThreadLocal<>(
+			ObjectActionThreadLocal.class.getName() + "._objectEntryIdsMap",
 			HashMap::new);
-	private static final ThreadLocal<Boolean>
-		_skipObjectActionExecutionThreadLocal = new CentralizedThreadLocal<>(
-			ObjectActionThreadLocal.class +
-				"._skipObjectActionExecutionThreadLocal",
+	private static final ThreadLocal<Boolean> _skipObjectActionExecution =
+		new CentralizedThreadLocal<>(
+			ObjectActionThreadLocal.class + "._skipObjectActionExecution",
 			() -> false);
 
 }

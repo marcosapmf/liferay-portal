@@ -30,6 +30,8 @@ import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
@@ -104,7 +106,10 @@ public class UserIndexerIndexedFieldsTest {
 		_populateAddressFieldValues(user2, map);
 
 		FieldValuesAssert.assertFieldValues(
-			document, map, name -> !name.equals("timestamp"), searchTerm);
+			document, map,
+			name ->
+				!name.contains(StringPool.PERIOD) && !name.equals("timestamp"),
+			searchTerm);
 	}
 
 	@Test
@@ -128,28 +133,10 @@ public class UserIndexerIndexedFieldsTest {
 			"jobTitle_sortable", StringUtil.toLowerCase(user2.getJobTitle()));
 
 		FieldValuesAssert.assertFieldValues(
-			document, map, name -> !name.equals("timestamp"), searchTerm);
-	}
-
-	@Test
-	public void testLastLoginDate() throws Exception {
-		User user1 = addUser();
-
-		User user2 = userLocalService.updateLastLogin(user1.getUserId(), null);
-
-		String searchTerm = user2.getFirstName();
-
-		Document document = indexerFixture.searchOnlyOne(searchTerm);
-
-		indexedFieldsFixture.postProcessDocument(document);
-
-		Map<String, String> map = _getExpectedFieldValues(user2);
-
-		indexedFieldsFixture.populateDate(
-			"lastLoginDate", user2.getLastLoginDate(), map);
-
-		FieldValuesAssert.assertFieldValues(
-			document, map, name -> !name.equals("timestamp"), searchTerm);
+			document, map,
+			name ->
+				!name.contains(StringPool.PERIOD) && !name.equals("timestamp"),
+			searchTerm);
 	}
 
 	@Test
@@ -172,7 +159,10 @@ public class UserIndexerIndexedFieldsTest {
 		map.put("organizationIds", _getStringValue(user.getOrganizationIds()));
 
 		FieldValuesAssert.assertFieldValues(
-			document, map, name -> !name.equals("timestamp"), searchTerm);
+			document, map,
+			name ->
+				!name.contains(StringPool.PERIOD) && !name.equals("timestamp"),
+			searchTerm);
 	}
 
 	@Test
@@ -197,7 +187,10 @@ public class UserIndexerIndexedFieldsTest {
 		map.put("userGroupIds", _getStringValue(user.getUserGroupIds()));
 
 		FieldValuesAssert.assertFieldValues(
-			document, map, name -> !name.equals("timestamp"), searchTerm);
+			document, map,
+			name ->
+				!name.contains(StringPool.PERIOD) && !name.equals("timestamp"),
+			searchTerm);
 	}
 
 	@Rule
@@ -316,6 +309,9 @@ public class UserIndexerIndexedFieldsTest {
 		).put(
 			Field.USER_NAME, StringUtil.toLowerCase(user.getFullName())
 		).put(
+			Field.getSortableFieldName(Field.USER_NAME),
+			StringUtil.toLowerCase(user.getFullName())
+		).put(
 			"defaultUser", String.valueOf(user.isDefaultUser())
 		).put(
 			"emailAddress", user.getEmailAddress()
@@ -331,6 +327,17 @@ public class UserIndexerIndexedFieldsTest {
 			"fullName", user.getFullName()
 		).put(
 			"groupIds", groupId
+		).put(
+			"hasLoginDate",
+			() -> {
+				boolean hasLoginDate = false;
+
+				if (user.getLastLoginDate() != null) {
+					hasLoginDate = true;
+				}
+
+				return String.valueOf(hasLoginDate);
+			}
 		).put(
 			"lastName", user.getLastName()
 		).put(
@@ -360,6 +367,8 @@ public class UserIndexerIndexedFieldsTest {
 		).put(
 			"screenName_sortable", StringUtil.toLowerCase(user.getScreenName())
 		).build();
+
+		_populateLocalizedNameFieldValues(map, user);
 
 		indexedFieldsFixture.populateUID(user, map);
 
@@ -447,6 +456,24 @@ public class UserIndexerIndexedFieldsTest {
 		map.put("region", _getStringValue(regions));
 		map.put("street", _getStringValue(streets));
 		map.put("zip", _getStringValue(zips));
+	}
+
+	private void _populateLocalizedNameFieldValues(
+		Map<String, String> map, User user) {
+
+		for (Locale locale : LanguageUtil.getAvailableLocales()) {
+			String languageId = LocaleUtil.toLanguageId(locale);
+
+			map.put(
+				LocalizationUtil.getLocalizedName("firstName", languageId),
+				user.getFirstName());
+			map.put(
+				LocalizationUtil.getLocalizedName("fullName", languageId),
+				user.getFullName());
+			map.put(
+				LocalizationUtil.getLocalizedName("lastName", languageId),
+				user.getLastName());
+		}
 	}
 
 	@DeleteAfterTestRun

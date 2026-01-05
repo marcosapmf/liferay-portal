@@ -13,9 +13,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.json.JSONUtil;
 
-import java.util.Locale;
+import jakarta.portlet.RenderRequest;
 
-import javax.portlet.RenderRequest;
+import java.util.Locale;
 
 /**
  * @author Eudaldo Alonso
@@ -42,6 +42,9 @@ public class MasterLayoutPageTemplateEntryItemDescriptor
 	@Override
 	public String getPayload() {
 		return JSONUtil.put(
+			"masterLayoutPageTemplateEntryERC",
+			_layoutPageTemplateEntry.getExternalReferenceCode()
+		).put(
 			"name", _layoutPageTemplateEntry.getName()
 		).put(
 			"plid", String.valueOf(_layoutPageTemplateEntry.getPlid())

@@ -19,13 +19,14 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.PropsValues;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.http.Cookie;
 
 import java.util.Date;
-
-import javax.servlet.http.Cookie;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,6 +62,9 @@ public class RememberMeAutoLoginTest {
 			new MockHttpServletRequest();
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, _user.getCompanyId());
 
 		_cookiesManager.addCookie(
 			CookiesConstants.CONSENT_TYPE_FUNCTIONAL,
@@ -115,6 +119,9 @@ public class RememberMeAutoLoginTest {
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
 
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, _user.getCompanyId());
+
 		_cookiesManager.addCookie(
 			CookiesConstants.CONSENT_TYPE_FUNCTIONAL,
 			_createCookie(
@@ -160,6 +167,9 @@ public class RememberMeAutoLoginTest {
 	public void testRemoveInvalidRememberMeCookie() throws AutoLoginException {
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			WebKeys.COMPANY_ID, _user.getCompanyId());
 
 		mockHttpServletRequest.setCookies(
 			new Cookie(

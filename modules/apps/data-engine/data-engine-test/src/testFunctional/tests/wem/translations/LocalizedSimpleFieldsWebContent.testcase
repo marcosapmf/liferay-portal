@@ -1,4 +1,4 @@
-@component-name = "data-engine"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -29,6 +29,7 @@ definition {
 	@description = "This is a test for LRQA-66585. This test validates the creation, edition and persistence of fields with Options on the Web Content Admin."
 	@priority = 5
 	test AddAndEditTranslatedFieldsWithOptions {
+		property custom.properties = "feature.flag.LPD-11228=true";
 		property portal.acceptance = "true";
 
 		NavItem.gotoStructures();
@@ -191,13 +192,17 @@ definition {
 			WebContent.assertFieldOnWebContent(fieldFieldLabel = "${fieldName} - edited");
 		}
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		for (var fieldName : list "Select from List,Single Selection,Multiple Selection") {
 			WebContent.assertFieldOnWebContent(fieldFieldLabel = "${fieldName} - pt-BR edited");
 		}
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentMultipleSelection = "Option 1 - edited",
@@ -208,7 +213,9 @@ definition {
 			webContentSingleSelectionFieldLabel = "Single Selection - edited",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentMultipleSelection = "Option 2 - pt-BR edited",
@@ -223,7 +230,7 @@ definition {
 			webContentMultipleSelection = "Option 1 - pt-BR edited",
 			webContentMultipleSelectionFieldLabel = "Multiple Selection - pt-BR edited");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentMultipleSelection = "Option 1 - edited",
@@ -236,6 +243,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			skipGotoEditCp = "true",
+			translated = "true",
 			webContentLocaleFieldLabel = "pt-BR",
 			webContentMultipleSelection = "Option 2 - pt-BR edited",
 			webContentMultipleSelectionFieldLabel = "Multiple Selection - pt-BR edited",
@@ -245,7 +253,9 @@ definition {
 			webContentSingleSelectionFieldLabel = "Single Selection - pt-BR edited",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentMultipleSelection = "Option 3 - edited",
@@ -259,7 +269,9 @@ definition {
 			webContentMultipleSelection = "Option 1 - edited",
 			webContentMultipleSelectionFieldLabel = "Multiple Selection - edited");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentMultipleSelection = "Option 1 - pt-BR edited",
@@ -273,7 +285,7 @@ definition {
 			webContentMultipleSelection = "Option 2 - pt-BR edited",
 			webContentMultipleSelectionFieldLabel = "Multiple Selection - pt-BR edited");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentMultipleSelection = "Option 3 - edited",
@@ -286,6 +298,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			skipGotoEditCp = "true",
+			translated = "true",
 			webContentLocaleFieldLabel = "pt-BR",
 			webContentMultipleSelection = "Option 1 - pt-BR edited",
 			webContentMultipleSelectionFieldLabel = "Multiple Selection - pt-BR edited",
@@ -317,11 +330,13 @@ definition {
 
 		WebContent.addWithStructureCP(webContentTitle = "WC Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(webContentTitle = "Titulo do WC");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		AssertElementPresent(
 			key_webContentTitle = "WC Title",
@@ -379,7 +394,9 @@ definition {
 			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
 			value1 = "This is a duplicated Text field");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(webContentTitle = "Título do conteúdo da web");
 
@@ -395,7 +412,7 @@ definition {
 			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
 			value1 = "Este é um campo de texto duplicado");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -423,7 +440,9 @@ definition {
 				value1 = "Text Field Help Text");
 		}
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -485,18 +504,22 @@ definition {
 			webContentText = "Content Text",
 			webContentTitle = "WC Title");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "测试",
 			webContentTextFieldLabel = "文本",
 			webContentTitle = "测试");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC Title");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -543,7 +566,7 @@ definition {
 			webContentText = "Este es un campo de texto",
 			webContentTitle = "Título de contenido web");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentText = "This is a Text field",
@@ -603,18 +626,22 @@ definition {
 			webContentText = "Test",
 			webContentTitle = "Test");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "测试",
 			webContentTextFieldLabel = "文本",
 			webContentTitle = "测试");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -629,6 +656,7 @@ definition {
 	@description = "This is a test for LRQA-66639. This test validates the creation, edition, deletion and persistence of fields into Web Contents."
 	@priority = 5
 	test CreateEditAndDeleteLocalizedWebContent {
+		property custom.properties = "feature.flag.LPD-11228=true";
 		property portal.acceptance = "true";
 
 		NavItem.gotoStructures();
@@ -649,7 +677,11 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
+
+		WaitForElementPresent(
+			locator1 = "Modal#SELECT_WITH_LABEL",
+			selectLabel = "Viewable by");
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/01/2021",
@@ -657,7 +689,9 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentDate = "12/04/2021",
@@ -665,7 +699,7 @@ definition {
 			webContentText = "This is a Text field - pt-BR",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/01/2021",
@@ -675,6 +709,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			skipGotoEditCp = "true",
+			translated = "true",
 			webContentDate = "12/04/2021",
 			webContentLocaleFieldLabel = "pt-BR",
 			webContentNumeric = 28,
@@ -711,6 +746,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			skipGotoEditCp = "true",
+			translated = "true",
 			webContentDate = "12/04/2021",
 			webContentDateFieldLabel = "Date - pt-BR",
 			webContentLocaleFieldLabel = "pt-BR",
@@ -720,7 +756,9 @@ definition {
 			webContentTextFieldLabel = "Text - pt-BR",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentDate = "04/20/2021",
@@ -728,7 +766,7 @@ definition {
 			webContentText = "This is a Text field - en-US",
 			webContentTitle = "Web Content Title - en-US");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/20/2021",
@@ -738,6 +776,7 @@ definition {
 
 		WebContent.viewWithStructureCP(
 			skipGotoEditCp = "true",
+			translated = "true",
 			webContentDate = "12/04/2021",
 			webContentDateFieldLabel = "Date - pt-BR",
 			webContentLocaleFieldLabel = "pt-BR",
@@ -791,11 +830,13 @@ definition {
 
 		WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		WebContent.addWithStructureCP(webContentTitle = "Web Content Title - ca_ES");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -803,13 +844,17 @@ definition {
 			key_webContentTitle = "Web Content Title",
 			locator1 = "TextInput#TITLE");
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		AssertElementPresent(
 			key_webContentTitle = "Web Content Title - ca_ES",
 			locator1 = "TextInput#TITLE");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		AssertElementPresent(
 			key_webContentTitle = "Web Content Title",
@@ -823,11 +868,13 @@ definition {
 
 		WebContent.addCP(webContentTitle = "Test");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addCP(webContentTitle = "测试");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
 
@@ -836,7 +883,9 @@ definition {
 			value1 = "value",
 			value2 = "Test");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertAttributeValue(
 			locator1 = "TextInput#TITLE",
@@ -877,14 +926,16 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "Este é um campo de texto",
 			webContentTextFieldLabel = "Texto",
 			webContentTitle = "Título do conteúdo da web");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -892,13 +943,17 @@ definition {
 			locator1 = "TextInput#TITLE",
 			value1 = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
 			value1 = "Título do conteúdo da web");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -913,6 +968,7 @@ definition {
 	@description = "This is a test for LRQA-66585. This test validates the creation, edition, duplication and persistence of Grid field on the Web Content Admin."
 	@priority = 5
 	test DuplicateAndEditTranslatedFieldsWithOptions {
+		property custom.properties = "feature.flag.LPD-11228=true";
 		property portal.acceptance = "true";
 
 		NavItem.gotoStructures();
@@ -1060,7 +1116,9 @@ definition {
 				webContentGrid = "true");
 		}
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		PortletEntry.inputTitle(title = "Web Content Title - ca-ES");
 
@@ -1072,7 +1130,7 @@ definition {
 				webContentGridFieldLabel = "Grid - ca-ES");
 		}
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1085,7 +1143,9 @@ definition {
 				webContentTitle = "Web Content Title");
 		}
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		for (var index : list "1,2,3") {
 			WebContent.viewWithStructureCP(
@@ -1097,7 +1157,9 @@ definition {
 				webContentTitle = "Web Content Title - ca-ES");
 		}
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		for (var index : list "1,2,3") {
 			WebContent.addWithStructureCP(
@@ -1106,7 +1168,7 @@ definition {
 				webContentGrid = "true");
 		}
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
@@ -1119,7 +1181,9 @@ definition {
 				webContentTitle = "Web Content Title");
 		}
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "true");
 
 		for (var index : list "1,2,3") {
 			WebContent.viewWithStructureCP(
@@ -1172,7 +1236,7 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/01/2021",
@@ -1180,7 +1244,9 @@ definition {
 			webContentText = "This is a Text field",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.changeLocale(locale = "ca-ES");
+		PortletEntry.changeLocale(
+			locale = "ca-ES",
+			translated = "false");
 
 		WebContent.addWithStructureCP(
 			webContentDate = "12/04/2021",
@@ -1188,7 +1254,7 @@ definition {
 			webContentText = "This is a Text field - ca-ES",
 			webContentTitle = "Web Content Title - ca-ES");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "04/01/2021",
@@ -1243,7 +1309,9 @@ definition {
 			webContentTextFieldLabel = "Text - ca-ES",
 			webContentTitle = "Web Content Title - ca-ES");
 
-		PortletEntry.changeLocale(locale = "pt-BR");
+		PortletEntry.changeLocale(
+			locale = "pt-BR",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentDate = "18/04/2021",
@@ -1251,7 +1319,7 @@ definition {
 			webContentText = "This is a Text field - pt-BR",
 			webContentTitle = "Web Content Title - pt-BR");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			webContentDate = "18/04/2021",
@@ -1473,7 +1541,9 @@ definition {
 			webContentUpload = "Document_1.jpg",
 			webContentWebContent = "Web Content Title 1");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			column = 2,
@@ -1508,7 +1578,7 @@ definition {
 			webContentWebContent = "Web Content Title 2",
 			webContentWebContentFieldLabel = "网页内容");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewWithStructureCP(
 			column = 1,
@@ -1532,7 +1602,9 @@ definition {
 			webContentUpload = "Document_1.jpg",
 			webContentWebContent = "Web Content Title 1");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -1607,18 +1679,22 @@ definition {
 			webContentText = "Text Content",
 			webContentTitle = "WC Title");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "测试",
 			webContentTextFieldLabel = "文本",
 			webContentTitle = "测试");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC Title");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -1629,7 +1705,9 @@ definition {
 			locator1 = "WCEditWebContent#TEXT_INPUT",
 			value1 = "测试");
 
-		PortletEntry.changeLocale(locale = "en-US");
+		PortletEntry.changeLocale(
+			locale = "en-US",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",
@@ -1644,14 +1722,16 @@ definition {
 			webContentText = "Test Content Edited",
 			webContentTitle = "WC Title Edited");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		WebContent.addWithStructureCP(
 			webContentText = "测试文本",
 			webContentTextFieldLabel = "文本",
 			webContentTitle = "测试标题");
 
-		PortletEntry.publish();
+		WebContent.publishExistingWCArticleWithPermissions();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC Title Edited");
 
@@ -1664,7 +1744,9 @@ definition {
 			locator1 = "WCEditWebContent#TEXT_INPUT",
 			value1 = "Test Content Edited");
 
-		PortletEntry.changeLocale(locale = "zh-CN");
+		PortletEntry.changeLocale(
+			locale = "zh-CN",
+			translated = "true");
 
 		AssertTextEquals(
 			locator1 = "TextInput#TITLE",

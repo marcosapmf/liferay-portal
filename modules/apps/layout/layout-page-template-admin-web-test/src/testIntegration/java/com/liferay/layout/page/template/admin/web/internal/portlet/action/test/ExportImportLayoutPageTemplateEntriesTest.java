@@ -17,7 +17,6 @@ import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
@@ -28,15 +27,16 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.importer.LayoutsImportStrategy;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.importer.LayoutsImporterResultEntry;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateExportImportConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectAction;
@@ -85,11 +85,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,8 +106,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -560,7 +559,20 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		_validateImportExport(expectedFile, inputFile);
 	}
 
-	@FeatureFlags("LPD-10727")
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormRelationship()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"form/relationship/expected", null, null);
+		File inputFile = _generateZipFile(
+			"form/relationship/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
 	@Test
 	public void testImportExportLayoutPageTemplateEntryFormSteps()
 		throws Exception {
@@ -779,6 +791,36 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			).build());
 		File inputFile = _generateZipFile(
 			"fragment/custom_css/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentDateField()
+		throws Exception {
+
+		_addDateFragmentEntry();
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_group1.getGroupId());
+
+				return String.valueOf(journalArticle.getResourcePrimKey());
+			}
+		).build();
+
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"SITE_KEY", _group1.getGroupKey()
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"fragment/date_field/mapped/expected", numberValuesMap,
+			stringValuesMap);
+		File inputFile = _generateZipFile(
+			"fragment/date_field/mapped/input", numberValuesMap,
+			stringValuesMap);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -1178,6 +1220,18 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 	}
 
 	@Test
+	public void testImportExportLayoutPageTemplateEntryLocalizationConfig()
+		throws Exception {
+
+		File expectedFile = _generateZipFile(
+			"form/localization_config/expected", null, null);
+		File inputFile = _generateZipFile(
+			"form/localization_config/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
 	public void testImportExportLayoutPageTemplateEntryRowContainer()
 		throws Exception {
 
@@ -1340,19 +1394,26 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
+	private void _addDateFragmentEntry() throws Exception {
+		String html =
+			"<div data-lfr-editable-id=\"element-date\" " +
+				"data-lfr-editable-type=\"date-time\">" +
+					"01/01/2025 00:00 AM</div>";
+
+		_addFragmentEntry(
+			_group1.getGroupId(), "test-date-fragment", "Test Date Fragment",
+			html);
+	}
+
 	private void _addDisplayPageTemplate(JournalArticle journalArticle)
 		throws Exception {
 
-		DDMStructure ddmStructure = journalArticle.getDDMStructure();
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, _group1.getCreatorUserId(), _group1.getGroupId(), 0,
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group1.getGroupId(),
 				_portal.getClassNameId(JournalArticle.class.getName()),
-				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, 0,
-				ServiceContextTestUtil.getServiceContext(_group1.getGroupId()));
+				journalArticle.getDDMStructureId(), true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
 			TestPropsValues.getUserId(), _group1.getGroupId(),
@@ -1382,7 +1443,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			null, TestPropsValues.getUserId(), groupId,
 			fragmentCollection.getFragmentCollectionId(), key, name,
 			StringPool.BLANK, html, StringPool.BLANK, false, StringPool.BLANK,
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1432,13 +1493,16 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 	private ObjectEntry _addObjectEntry() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false, false,
+				null, TestPropsValues.getUserId(), 0, null, false, true, false,
+				true, false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_SITE,
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, null);
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(), null, Collections.emptyList(),
+				new ServiceContext());
 
 		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
 			new TextObjectFieldBuilder(
@@ -1466,8 +1530,10 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 			objectDefinition.getObjectDefinitionId());
 
 		return _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), _group1.getGroupId(),
+			_group1.getGroupId(), TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"text", RandomTestUtil.randomString()
 			).build(),
@@ -1584,7 +1650,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		httpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(httpServletRequest));

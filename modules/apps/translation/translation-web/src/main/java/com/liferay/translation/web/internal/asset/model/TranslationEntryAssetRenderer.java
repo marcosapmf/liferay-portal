@@ -22,24 +22,24 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.translation.info.field.TranslationInfoFieldChecker;
+import com.liferay.translation.manager.TranslationManager;
 import com.liferay.translation.model.TranslationEntry;
 import com.liferay.translation.snapshot.TranslationSnapshot;
 import com.liferay.translation.snapshot.TranslationSnapshotProvider;
 import com.liferay.translation.web.internal.display.context.ViewTranslationDisplayContext;
-import com.liferay.translation.web.internal.helper.InfoItemHelper;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.ByteArrayInputStream;
 
 import java.nio.charset.StandardCharsets;
 
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Adolfo Pérez
@@ -50,11 +50,13 @@ public class TranslationEntryAssetRenderer
 	public TranslationEntryAssetRenderer(
 		InfoItemServiceRegistry infoItemServiceRegistry,
 		ServletContext servletContext, TranslationEntry translationEntry,
+		TranslationManager translationManager,
 		TranslationInfoFieldChecker translationInfoFieldChecker,
 		TranslationSnapshotProvider translationSnapshotProvider) {
 
 		_infoItemServiceRegistry = infoItemServiceRegistry;
 		_translationEntry = translationEntry;
+		_translationManager = translationManager;
 		_translationInfoFieldChecker = translationInfoFieldChecker;
 		_translationSnapshotProvider = translationSnapshotProvider;
 
@@ -97,11 +99,9 @@ public class TranslationEntryAssetRenderer
 
 	@Override
 	public String getTitle(Locale locale) {
-		InfoItemHelper infoItemHelper = new InfoItemHelper(
-			_translationEntry.getClassName(), _infoItemServiceRegistry);
-
-		String infoItemTitle = infoItemHelper.getInfoItemTitle(
-			_translationEntry.getClassPK(), locale);
+		String infoItemTitle = _translationManager.getTitle(
+			_translationEntry.getClassName(), _translationEntry.getClassPK(),
+			locale);
 
 		if (infoItemTitle == null) {
 			infoItemTitle = _getAssetRendererTitle(locale);
@@ -221,6 +221,7 @@ public class TranslationEntryAssetRenderer
 	private final InfoItemServiceRegistry _infoItemServiceRegistry;
 	private final TranslationEntry _translationEntry;
 	private final TranslationInfoFieldChecker _translationInfoFieldChecker;
+	private final TranslationManager _translationManager;
 	private final TranslationSnapshotProvider _translationSnapshotProvider;
 
 }

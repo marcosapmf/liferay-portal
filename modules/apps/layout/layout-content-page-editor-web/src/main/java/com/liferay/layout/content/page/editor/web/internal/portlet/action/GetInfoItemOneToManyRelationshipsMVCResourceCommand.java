@@ -11,6 +11,7 @@ import com.liferay.info.item.RelatedInfoItem;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.RelatedInfoItemProvider;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -23,8 +24,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+		"jakarta.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 		"mvc.command.name=/layout_content_page_editor/get_info_item_one_to_many_relationships"
 	},
 	service = MVCResourceCommand.class
@@ -52,7 +53,9 @@ public class GetInfoItemOneToManyRelationshipsMVCResourceCommand
 		ClassName className = _classNameLocalService.fetchClassName(
 			classNameId);
 
-		if (className == null) {
+		if ((className == null) ||
+			!FeatureFlagManagerUtil.isEnabled("LPD-60546")) {
+
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				_jsonFactory.createJSONArray());

@@ -12,12 +12,14 @@ import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.AssumeTestRule;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StreamUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.InputStream;
 
@@ -33,6 +35,7 @@ import java.util.zip.ZipEntry;
 import org.hsqldb.jdbc.JDBCDriver;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -45,6 +48,9 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.util.promise.Promise;
 
 /**
  * @author Preston Crary
@@ -55,7 +61,12 @@ public class ExternalDataSourceControllerTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new AssumeTestRule("assume"), new LiferayIntegrationTestRule());
+
+	public static void assume() {
+		Assume.assumeFalse(PropsValues.DATABASE_PARTITION_ENABLED);
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -83,6 +94,17 @@ public class ExternalDataSourceControllerTest {
 			PropsUtil.set(PropsKeys.UPGRADE_DATABASE_AUTO_RUN, "true");
 
 			_serviceBundle.start();
+
+			ComponentDescriptionDTO componentDescriptionDTO =
+				_serviceComponentRuntime.getComponentDescriptionDTO(
+					_serviceBundle,
+					"com.liferay.external.data.source.test.internal.upgrade." +
+						"registry.TestEntityUpgradeStepRegistrator");
+
+			Promise<Void> promise = _serviceComponentRuntime.enableComponent(
+				componentDescriptionDTO);
+
+			promise.getValue();
 		}
 		finally {
 			PropsUtil.set(
@@ -210,6 +232,9 @@ public class ExternalDataSourceControllerTest {
 	private Bundle _apiBundle;
 	private BundleContext _bundleContext;
 	private Bundle _serviceBundle;
+
+	@Inject
+	private ServiceComponentRuntime _serviceComponentRuntime;
 
 	/**
 	 * A carrier Throwable to overcome Arquillian Exception serialization

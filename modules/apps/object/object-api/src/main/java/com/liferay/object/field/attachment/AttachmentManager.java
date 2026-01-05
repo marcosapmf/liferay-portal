@@ -18,17 +18,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
  */
 public interface AttachmentManager {
 
-	public FileEntry addFileEntry(
-			long companyId, byte[] fileContent, String fileName, long groupId,
-			long objectFieldId, ServiceContext serviceContext)
-		throws Exception;
-
-	public FileEntry addFileEntry(
-			long companyId, byte[] fileContent, String fileName,
-			String folderExternalReferenceCode, long groupId,
-			long objectFieldId, ServiceContext serviceContext)
-		throws Exception;
-
 	public String[] getAcceptedFileExtensions(long objectFieldId);
 
 	public DLFolder getDLFolder(
@@ -36,7 +25,24 @@ public interface AttachmentManager {
 			ServiceContext serviceContext, long userId)
 		throws PortalException;
 
+	public DLFolder getDLFolder(
+			long companyId, long groupId, String portletId,
+			ServiceContext serviceContext, long userId)
+		throws PortalException;
+
 	public long getMaximumFileSize(long objectFieldId, boolean signedIn);
+
+	public FileEntry getOrAddFileEntry(
+			long companyId, String externalReferenceCode, byte[] fileContent,
+			String fileName, long groupId, long objectFieldId,
+			ServiceContext serviceContext)
+		throws Exception;
+
+	public FileEntry getOrAddFileEntry(
+			long companyId, String externalReferenceCode, byte[] fileContent,
+			String fileName, String folderExternalReferenceCode, long groupId,
+			long objectFieldId, ServiceContext serviceContext)
+		throws Exception;
 
 	public void validateFileExtension(String fileName, long objectFieldId)
 		throws FileExtensionException;

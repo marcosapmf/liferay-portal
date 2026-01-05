@@ -1,0 +1,71 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import Button from '@clayui/button';
+import ClayIcon from '@clayui/icon';
+import ClayPopover, {ALIGN_POSITIONS} from '@clayui/popover';
+
+type Writeable<T> = {-readonly [P in keyof T]: T[P]};
+
+type PopoverIconButtonProps = {
+	alignPosition?: Writeable<(typeof ALIGN_POSITIONS)[number]>;
+	formatedHTML?: string;
+	iconSize?: 'regular' | 'sm' | 'xs';
+	popoverLink?: {textLink: string; url: string};
+	popoverText?: string;
+	symbol?: string;
+};
+
+const PopoverIconButton: React.FC<PopoverIconButtonProps> = ({
+	alignPosition = 'bottom',
+	formatedHTML,
+	iconSize = 'sm',
+	popoverLink,
+	popoverText,
+	symbol = 'info-circle',
+}) => {
+	return (
+		<ClayPopover
+			alignPosition={alignPosition}
+			closeOnClickOutside
+			onClick={(event) => event.stopPropagation()}
+			size="lg"
+			trigger={
+				<Button
+					aria-labelledby="Info Icon"
+					className="btn-monospaced text-brand-primary-darken-2"
+					displayType={null}
+					onClick={(event) => event.stopPropagation()}
+					size={iconSize}
+				>
+					<ClayIcon symbol={symbol} />
+				</Button>
+			}
+		>
+			{formatedHTML ? (
+				<p
+					className="font-weight-bold m-0"
+					dangerouslySetInnerHTML={{
+						__html: formatedHTML,
+					}}
+				/>
+			) : (
+				<p className="font-weight-bold m-0">
+					{popoverText}
+					&nbsp;
+					<a
+						href={popoverLink?.url}
+						rel="noopener noreferrer"
+						target="_blank"
+					>
+						{popoverLink?.textLink}
+					</a>
+				</p>
+			)}
+		</ClayPopover>
+	);
+};
+
+export default PopoverIconButton;

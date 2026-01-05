@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFilterContributor;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
@@ -71,7 +70,7 @@ public class AccountEntrySearchPermissionFilterContributor
 			"organizationIds");
 
 		try {
-			Set<Organization> organizationsSet = new HashSet<>();
+			Set<Organization> organizations = new HashSet<>();
 
 			for (Organization organization :
 					_organizationLocalService.getUserOrganizations(userId)) {
@@ -86,29 +85,20 @@ public class AccountEntrySearchPermissionFilterContributor
 						permissionChecker, organization,
 						AccountActionKeys.MANAGE_ACCOUNTS)) {
 
-					organizationsSet.add(organization);
+					organizations.add(organization);
 				}
 
 				if (hasManageAvailableAccountsPermission ||
 					OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
-						AccountActionKeys.EDIT_SUBORGANIZATIONS_ACCOUNTS) ||
+						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS) ||
 					OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
-						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS)) {
+						AccountActionKeys.UPDATE_SUBORGANIZATIONS_ACCOUNTS)) {
 
-					List<Organization> suborganizations =
-						_organizationLocalService.getSuborganizations(
-							organization.getCompanyId(),
-							organization.getOrganizationId());
-
-					while (!suborganizations.isEmpty()) {
-						organizationsSet.addAll(suborganizations);
-
-						suborganizations =
-							_organizationLocalService.getSuborganizations(
-								suborganizations);
-					}
+					organizations.addAll(
+						_organizationLocalService.getOrganizations(
+							companyId, organization.getTreePath() + "%/"));
 				}
 			}
 
@@ -118,7 +108,7 @@ public class AccountEntrySearchPermissionFilterContributor
 					null,
 					LinkedHashMapBuilder.<String, Object>put(
 						"accountsOrgsTree",
-						ListUtil.fromCollection(organizationsSet)
+						ListUtil.fromCollection(organizations)
 					).build(),
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 

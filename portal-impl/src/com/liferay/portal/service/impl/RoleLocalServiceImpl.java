@@ -7,6 +7,7 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
@@ -61,6 +62,8 @@ import com.liferay.portal.kernel.model.Users_UserGroupsTable;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
@@ -73,6 +76,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
@@ -92,6 +96,8 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -100,8 +106,6 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.service.base.RoleLocalServiceBaseImpl;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.util.ArrayList;
@@ -109,6 +113,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -126,6 +131,7 @@ import java.util.Set;
  */
 public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Role addRole(
 			String externalReferenceCode, long userId, String className,
@@ -135,10 +141,6 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		throws PortalException {
 
 		// Role
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		User user = _userPersistence.findByPrimaryKey(userId);
 
@@ -172,6 +174,14 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		role.setDescriptionMap(descriptionMap);
 		role.setType(type);
 		role.setSubtype(subtype);
+
+		if (EmptyModelManagerUtil.isEmptyModel()) {
+			role.setStatus(WorkflowConstants.STATUS_EMPTY);
+		}
+		else {
+			role.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		role.setExpandoBridgeAttributes(serviceContext);
 
 		role = rolePersistence.update(role);
@@ -414,6 +424,65 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		reindex(userId);
 	}
 
+	@Override
+	public Role copyRole(
+			long userId, String name, long sourceRoleId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		Role sourceRole = getRole(sourceRoleId);
+
+		Role targetRole = roleLocalService.addRole(
+			null, userId, sourceRole.getClassName(), 0, name,
+			Collections.singletonMap(serviceContext.getLocale(), name),
+			sourceRole.getDescriptionMap(), sourceRole.getType(),
+			sourceRole.getSubtype(), serviceContext);
+
+		List<ResourcePermission> resourcePermissions =
+			_resourcePermissionLocalService.getRoleResourcePermissions(
+				sourceRole.getRoleId());
+
+		if (ListUtil.isEmpty(resourcePermissions)) {
+			return targetRole;
+		}
+
+		for (ResourcePermission resourcePermission : resourcePermissions) {
+			if (resourcePermission.getScope() ==
+					ResourceConstants.SCOPE_INDIVIDUAL) {
+
+				continue;
+			}
+
+			List<ResourceAction> resourceActions =
+				_resourceActionLocalService.getResourceActions(
+					resourcePermission.getName());
+
+			Set<String> actionIdsSet = new HashSet<>();
+
+			long actionIds = resourcePermission.getActionIds();
+
+			for (ResourceAction resourceAction : resourceActions) {
+				long bitwiseValue =
+					actionIds & resourceAction.getBitwiseValue();
+
+				if (bitwiseValue == resourceAction.getBitwiseValue()) {
+					actionIdsSet.add(resourceAction.getActionId());
+				}
+			}
+
+			for (String actionId : actionIdsSet) {
+				_resourcePermissionService.addResourcePermission(
+					serviceContext.getScopeGroupId(),
+					serviceContext.getCompanyId(), resourcePermission.getName(),
+					resourcePermission.getScope(),
+					resourcePermission.getPrimKey(), targetRole.getRoleId(),
+					actionId);
+			}
+		}
+
+		return targetRole;
+	}
+
 	/**
 	 * Deletes the role with the primary key and its associated permissions.
 	 *
@@ -433,6 +502,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 * @param  role the role
 	 * @return the deleted role
 	 */
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
@@ -775,6 +845,23 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		return roleFinder.countByGroupRoleAndTeamRole(
 			companyId, name, excludedNames, title, description, types,
 			excludedTeamRoleId, teamGroupId);
+	}
+
+	@Override
+	public Role getOrAddEmptyRole(
+			String externalReferenceCode, long companyId, long userId,
+			String className, long classPK, String name, int type)
+		throws PortalException {
+
+		return EmptyModelManagerUtil.getOrAddEmptyModel(
+			Role.class, companyId, externalReferenceCode,
+			this::fetchRoleByExternalReferenceCode,
+			this::getRoleByExternalReferenceCode,
+			() -> roleLocalService.addRole(
+				externalReferenceCode, userId, className, classPK,
+				(fetchRole(companyId, name) != null) ? externalReferenceCode :
+					name,
+				null, null, type, StringPool.BLANK, new ServiceContext()));
 	}
 
 	/**
@@ -1228,72 +1315,66 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 */
 	@Override
 	public List<Role> getUserRelatedRoles(long userId, long[] groupIds) {
-		Set<Role> roles = new LinkedHashSet<>();
-
-		List<Role> userRoles = dslQuery(
-			DSLQueryFactoryUtil.select(
-				RoleTable.INSTANCE
-			).from(
-				RoleTable.INSTANCE
-			).innerJoinON(
-				Users_RolesTable.INSTANCE,
-				Users_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
-			).where(
-				Users_RolesTable.INSTANCE.userId.eq(userId)
-			));
-
-		if (!userRoles.isEmpty()) {
-			roles.addAll(userRoles);
+		if (ArrayUtil.isEmpty(groupIds)) {
+			return userPersistence.getRoles(userId);
 		}
 
-		if (ArrayUtil.isNotEmpty(groupIds)) {
-			JoinStep joinStep = DSLQueryFactoryUtil.select(
-				RoleTable.INSTANCE
-			).from(
-				RoleTable.INSTANCE
-			).innerJoinON(
-				Groups_RolesTable.INSTANCE,
-				Groups_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
-			);
+		Set<Role> roles = new HashSet<>(userPersistence.getRoles(userId));
 
-			List<Role> groupRoles = new ArrayList<>();
-
-			int chunk = 2000;
-
-			for (int i = 0; i < groupIds.length; i += chunk) {
-
-				// We cannot use an "in" clause because more than 1000 items in
-				// a list causes a syntax error in Oracle. See LPS-173475 and
-				// ORA-01795.
-
-				/*groupRoles.addAll(
-					dslQuery(
-						joinStep.where(
-							Groups_RolesTable.INSTANCE.groupId.in(
-								ArrayUtil.toLongArray(
-									Arrays.copyOfRange(
-										groupIds, i, i + chunk))))));*/
-
-				Predicate predicate = null;
-
-				long[] curGroupIds = Arrays.copyOfRange(
-					groupIds, i, Math.min(groupIds.length, i + chunk));
-
-				for (long curGroupId : curGroupIds) {
-					predicate = Predicate.or(
-						predicate,
-						Groups_RolesTable.INSTANCE.groupId.eq(curGroupId));
-				}
-
-				if (predicate != null) {
-					groupRoles.addAll(
-						dslQuery(joinStep.where(predicate.withParentheses())));
-				}
+		if (groupIds.length <= _CACHEABLE_QUERY_LIMIT_LPD_38877) {
+			for (long groupId : groupIds) {
+				roles.addAll(groupPersistence.getRoles(groupId));
 			}
 
-			if (!groupRoles.isEmpty()) {
-				roles.addAll(groupRoles);
+			return new ArrayList<>(roles);
+		}
+
+		JoinStep joinStep = DSLQueryFactoryUtil.select(
+			RoleTable.INSTANCE
+		).from(
+			RoleTable.INSTANCE
+		).innerJoinON(
+			Groups_RolesTable.INSTANCE,
+			Groups_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
+		);
+
+		List<Role> groupRoles = new ArrayList<>();
+
+		int chunk = 2000;
+
+		for (int i = 0; i < groupIds.length; i += chunk) {
+
+			// We cannot use an "in" clause because more than 1000 items in
+			// a list causes a syntax error in Oracle. See LPS-173475 and
+			// ORA-01795.
+
+			/*groupRoles.addAll(
+				dslQuery(
+					joinStep.where(
+						Groups_RolesTable.INSTANCE.groupId.in(
+							ArrayUtil.toLongArray(
+								Arrays.copyOfRange(
+									groupIds, i, i + chunk))))));*/
+
+			Predicate predicate = null;
+
+			long[] curGroupIds = Arrays.copyOfRange(
+				groupIds, i, Math.min(groupIds.length, i + chunk));
+
+			for (long curGroupId : curGroupIds) {
+				predicate = Predicate.or(
+					predicate,
+					Groups_RolesTable.INSTANCE.groupId.eq(curGroupId));
 			}
+
+			if (predicate != null) {
+				groupRoles.addAll(
+					dslQuery(joinStep.where(predicate.withParentheses())));
+			}
+		}
+
+		if (!groupRoles.isEmpty()) {
+			roles.addAll(groupRoles);
 		}
 
 		return new ArrayList<>(roles);
@@ -1405,11 +1486,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
 		if (userId == guestUserId) {
-			if (name.equals(RoleConstants.GUEST)) {
-				return true;
-			}
-
-			return false;
+			return name.equals(RoleConstants.GUEST);
 		}
 
 		if (inherited) {
@@ -1900,11 +1977,12 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 *         role.
 	 * @return the role with the primary key
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Role updateRole(
-			long roleId, String name, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String subtype,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long roleId, String name,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String subtype, ServiceContext serviceContext)
 		throws PortalException {
 
 		Role role = rolePersistence.findByPrimaryKey(roleId);
@@ -1916,10 +1994,16 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			subtype = null;
 		}
 
+		role.setExternalReferenceCode(externalReferenceCode);
 		role.setName(name);
 		role.setTitleMap(titleMap);
 		role.setDescriptionMap(descriptionMap);
 		role.setSubtype(subtype);
+
+		if (role.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			role.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		role.setExpandoBridgeAttributes(serviceContext);
 
 		return rolePersistence.update(role);
@@ -2159,6 +2243,9 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		return propertyDescription;
 	}
 
+	private static final int _CACHEABLE_QUERY_LIMIT_LPD_38877 =
+		GetterUtil.getInteger(PropsUtil.get("cacheable.query.limit.LPD-38877"));
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		RoleLocalServiceImpl.class);
 
@@ -2191,6 +2278,9 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 
 	@BeanReference(type = ResourcePermissionPersistence.class)
 	private ResourcePermissionPersistence _resourcePermissionPersistence;
+
+	@BeanReference(type = ResourcePermissionService.class)
+	private ResourcePermissionService _resourcePermissionService;
 
 	@BeanReference(type = TeamPersistence.class)
 	private TeamPersistence _teamPersistence;

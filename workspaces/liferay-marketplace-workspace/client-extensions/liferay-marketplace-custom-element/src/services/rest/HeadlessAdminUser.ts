@@ -5,50 +5,110 @@
 
 import fetcher from '../fetcher';
 
-class HeadlessAdminUser {
-	async getAccount(accountId: string | number) {
-		return fetcher<UserAccount>(
+export default class HeadlessAdminUser {
+	static async deleteAccountUserAccountByEmailAddress(
+		accountExternalReferenceCode: string,
+		emailAddress: string
+	) {
+		return fetcher.delete(
+			`/o/headless-admin-user/v1.0/accounts/by-external-reference-code/${accountExternalReferenceCode}/user-accounts/by-email-address/${emailAddress}`
+		);
+	}
+
+	static async deleteRoleAccountUser(
+		accountId: number | string,
+		roleId: number,
+		userId: number
+	) {
+		return fetcher.delete(
+			`/o/headless-admin-user/v1.0/accounts/${accountId}/account-roles/${roleId}/user-accounts/${userId}`
+		);
+	}
+
+	static async getAccount(accountId: string | number) {
+		return fetcher<Account>(
 			`/o/headless-admin-user/v1.0/accounts/${accountId}`
 		);
 	}
 
-	async getAccounts(searchParams = new URLSearchParams()) {
-		return fetcher<APIResponse<UserAccount>>(
+	static async getAccountByExternalReferenceCode(
+		externalReferenceCode: string
+	) {
+		return fetcher<Account>(
+			`/o/headless-admin-user/v1.0/accounts/by-external-reference-code/${externalReferenceCode}`
+		);
+	}
+
+	static async getAccountPostalAddresses(accountId: string | number) {
+		return fetcher<APIResponse<AccountPostalAddresses>>(
+			`/o/headless-admin-user/v1.0/accounts/${accountId}/postal-addresses`
+		);
+	}
+
+	static async getAccountRoles(accountExternalReferenceCode: string) {
+		return fetcher<APIResponse<AccountRole>>(
+			`/o/headless-admin-user/v1.0/accounts/by-external-reference-code/${accountExternalReferenceCode}/account-roles`
+		);
+	}
+
+	static async getAccounts(searchParams = new URLSearchParams()) {
+		return fetcher<APIResponse<Account>>(
 			`/o/headless-admin-user/v1.0/accounts?${searchParams.toString()}`
 		);
 	}
 
-	async getMyUserAccount() {
+	static async getMyUserAccount() {
 		return fetcher<UserAccount>(
 			'/o/headless-admin-user/v1.0/my-user-account'
 		);
 	}
 
-	async getUserAccounts() {
-		return fetcher(`/o/headless-admin-user/v1.0/user-accounts`);
+	static async getRolesPage(searchParams = new URLSearchParams()) {
+		return fetcher<APIResponse<RoleBrief>>(
+			`/o/headless-admin-user/v1.0/roles?${searchParams}`
+		);
 	}
 
-	async getUserAccountById(accountId: string | number) {
-		return fetcher(
+	static async getUserAccountById(accountId: string | number) {
+		return fetcher<UserAccount>(
 			`/o/headless-admin-user/v1.0/user-accounts/${accountId}`
 		);
 	}
 
-	async getUserAccountsByAccountId(accountId: string | number) {
+	static async getUserEmailAddress(emailAddress: string) {
+		return fetcher<UserAccount>(
+			`/o/headless-admin-user/v1.0/user-accounts/by-email-address/${emailAddress}`
+		);
+	}
+
+	static async getUserAccounts() {
+		return fetcher(`/o/headless-admin-user/v1.0/user-accounts`);
+	}
+
+	static async getUserAccountsByAccountId(accountId: string | number) {
 		return fetcher(
 			`/o/headless-admin-user/v1.0/accounts/${accountId}/user-accounts`
 		);
 	}
 
-	async updateUserAccount(data: unknown, accountId: number) {
-		return fetcher.patch(
-			`/o/headless-admin-user/v1.0/user-accounts/${accountId}`,
-			data
+	static async postAccountUserAccountByEmailAddress(
+		accountExternalReferenceCode: string,
+		emailAddress: string
+	) {
+		return fetcher.post<UserAccount>(
+			`/o/headless-admin-user/v1.0/accounts/by-external-reference-code/${accountExternalReferenceCode}/user-accounts/by-email-address/${emailAddress}`
 		);
 	}
 
-	async sendRoleAccountUser(
-		accountId: number,
+	static async postAddress(accountId: number, body: any) {
+		return fetcher.post(
+			`/o/headless-admin-user/v1.0/accounts/${accountId}/postal-addresses`,
+			body
+		);
+	}
+
+	static async sendRoleAccountUser(
+		accountId: number | string,
 		roleId: number,
 		userId: number
 	) {
@@ -57,7 +117,24 @@ class HeadlessAdminUser {
 		);
 	}
 
-	async updateUserImage(userId: number, formData: FormData) {
+	static async updateAccount(
+		accountId: number | string,
+		data: Partial<Account>
+	) {
+		return fetcher.patch(
+			`/o/headless-admin-user/v1.0/accounts/${accountId}`,
+			data
+		);
+	}
+
+	static async updateUserAccount(data: unknown, accountId: number) {
+		return fetcher.patch(
+			`/o/headless-admin-user/v1.0/user-accounts/${accountId}`,
+			data
+		);
+	}
+
+	static async updateUserImage(userId: number, formData: FormData) {
 		return fetcher.post(
 			`/o/headless-admin-user/v1.0/user-accounts/${userId}/image`,
 			formData,
@@ -65,9 +142,3 @@ class HeadlessAdminUser {
 		);
 	}
 }
-
-const HeadlessAdminUserImpl = new HeadlessAdminUser();
-
-export {HeadlessAdminUser};
-
-export default HeadlessAdminUserImpl;

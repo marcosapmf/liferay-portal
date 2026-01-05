@@ -8,17 +8,16 @@ package com.liferay.jenkins.results.parser.testray;
 import com.liferay.jenkins.results.parser.AxisBuild;
 import com.liferay.jenkins.results.parser.Build;
 import com.liferay.jenkins.results.parser.BuildDatabase;
-import com.liferay.jenkins.results.parser.BuildReportFactory;
+import com.liferay.jenkins.results.parser.BuildDatabaseUtil;
 import com.liferay.jenkins.results.parser.Dom4JUtil;
 import com.liferay.jenkins.results.parser.DownstreamBuild;
-import com.liferay.jenkins.results.parser.GitWorkingDirectory;
-import com.liferay.jenkins.results.parser.GitWorkingDirectoryFactory;
+import com.liferay.jenkins.results.parser.GitRepositoryFactory;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
+import com.liferay.jenkins.results.parser.PortalWorkspaceGitRepository;
+import com.liferay.jenkins.results.parser.QAWebsitesWorkspaceGitRepository;
 import com.liferay.jenkins.results.parser.TestClassResult;
 import com.liferay.jenkins.results.parser.TestResult;
 import com.liferay.jenkins.results.parser.TopLevelBuild;
-import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,8 +37,6 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
-import org.json.JSONObject;
-
 /**
  * @author Michael Hashimoto
  */
@@ -53,10 +50,10 @@ public class TestrayAttachmentRecorder {
 		JenkinsResultsParserUtil.delete(getRecordedFilesBaseDir());
 
 		try {
-			_recordJenkinsConsole();
-
 			if (_build instanceof TopLevelBuild) {
-				_recordBuildReport();
+				recordJenkinsConsole();
+
+				_recordBuildDatabase();
 				_recordJobSummary();
 				_recordJenkinsReport();
 			}
@@ -81,6 +78,19 @@ public class TestrayAttachmentRecorder {
 		}
 
 		_recorded = true;
+	}
+
+	public void recordJenkinsConsole() {
+		File jenkinsConsoleFile = new File(
+			_getRecordedFilesBuildDir(), "jenkins-console.txt");
+
+		try {
+			JenkinsResultsParserUtil.write(
+				jenkinsConsoleFile, _build.getConsoleText());
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
 	protected TestrayAttachmentRecorder(Build build) {
@@ -132,9 +142,10 @@ public class TestrayAttachmentRecorder {
 		sb.append(_startProperties.getProperty("TOP_LEVEL_JOB_NAME"));
 		sb.append("/");
 		sb.append(_startProperties.getProperty("TOP_LEVEL_BUILD_NUMBER"));
-		sb.append("/");
 
 		if (!(_build instanceof TopLevelBuild)) {
+			sb.append("/");
+
 			sb.append(_build.getJobVariant());
 
 			if (_build instanceof AxisBuild) {
@@ -172,15 +183,15 @@ public class TestrayAttachmentRecorder {
 	private List<File> _getLiferayBundlesDirs() {
 		List<File> liferayBundlesDirs = new ArrayList<>();
 
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			_getPortalGitWorkingDirectory();
+		PortalWorkspaceGitRepository portalWorkspaceGitRepository =
+			_getPortalWorkspaceGitRepository();
 
-		if (portalGitWorkingDirectory == null) {
+		if (portalWorkspaceGitRepository == null) {
 			return liferayBundlesDirs;
 		}
 
 		Properties appServerProperties =
-			portalGitWorkingDirectory.getAppServerProperties();
+			portalWorkspaceGitRepository.getAppServerProperties();
 
 		File appServerParentDir = new File(
 			JenkinsResultsParserUtil.getProperty(
@@ -222,25 +233,6 @@ public class TestrayAttachmentRecorder {
 		return liferayLogMaxSizeInMB * 1024 * 1024;
 	}
 
-	private PortalGitWorkingDirectory _getPortalGitWorkingDirectory() {
-		if (_portalGitWorkingDirectory != null) {
-			return _portalGitWorkingDirectory;
-		}
-
-		String portalUpstreamBranchName = _startProperties.getProperty(
-			"PORTAL_UPSTREAM_BRANCH_NAME");
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(portalUpstreamBranchName)) {
-			return null;
-		}
-
-		_portalGitWorkingDirectory =
-			GitWorkingDirectoryFactory.newPortalGitWorkingDirectory(
-				portalUpstreamBranchName);
-
-		return _portalGitWorkingDirectory;
-	}
-
 	private List<String> _getPortalLogWarnings() {
 		List<String> portalLogWarnings = new ArrayList<>();
 
@@ -268,19 +260,53 @@ public class TestrayAttachmentRecorder {
 		return portalLogWarnings;
 	}
 
+	private PortalWorkspaceGitRepository _getPortalWorkspaceGitRepository() {
+		if (_portalWorkspaceGitRepository != null) {
+			return _portalWorkspaceGitRepository;
+		}
+
+		String portalUpstreamBranchName = _startProperties.getProperty(
+			"PORTAL_UPSTREAM_BRANCH_NAME");
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(portalUpstreamBranchName)) {
+			return null;
+		}
+
+		try {
+			String portalDirPath = JenkinsResultsParserUtil.getBuildProperty(
+				JenkinsResultsParserUtil.combine(
+					"portal.dir[", portalUpstreamBranchName, "]"));
+
+			File portalDir = new File(portalDirPath);
+
+			if (!portalDir.exists()) {
+				return null;
+			}
+
+			_portalWorkspaceGitRepository =
+				(PortalWorkspaceGitRepository)
+					GitRepositoryFactory.getWorkspaceGitRepository(
+						portalDir.getName());
+
+			return _portalWorkspaceGitRepository;
+		}
+		catch (IOException ioException) {
+			return null;
+		}
+	}
+
 	private List<String> _getPoshiWarnings() {
 		List<String> poshiWarnings = new ArrayList<>();
 
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			_getPortalGitWorkingDirectory();
+		PortalWorkspaceGitRepository portalWorkspaceGitRepository =
+			_getPortalWorkspaceGitRepository();
 
-		if (portalGitWorkingDirectory == null) {
+		if (portalWorkspaceGitRepository == null) {
 			return poshiWarnings;
 		}
 
 		File poshiWarningsFile = new File(
-			portalGitWorkingDirectory.getWorkingDirectory(),
-			"poshi-warnings.xml");
+			portalWorkspaceGitRepository.getDirectory(), "poshi-warnings.xml");
 
 		if (!poshiWarningsFile.exists()) {
 			return poshiWarnings;
@@ -323,9 +349,11 @@ public class TestrayAttachmentRecorder {
 		return poshiWarnings;
 	}
 
-	private GitWorkingDirectory _getQAWebsitesGitWorkingDirectory() {
-		if (_qaWebsitesGitWorkingDirectory != null) {
-			return _qaWebsitesGitWorkingDirectory;
+	private QAWebsitesWorkspaceGitRepository
+		_getQAWebsitesWorkspaceGitRepository() {
+
+		if (_qaWebsitesWorkspaceGitRepository != null) {
+			return _qaWebsitesWorkspaceGitRepository;
 		}
 
 		Properties buildProperties;
@@ -337,43 +365,47 @@ public class TestrayAttachmentRecorder {
 			throw new RuntimeException(ioException);
 		}
 
-		String upstreamBranchName = "master";
+		String qaWebsitesDirectoryPath = JenkinsResultsParserUtil.getProperty(
+			buildProperties, "qa.websites.dir[master]");
 
-		String upstreamDirPath = JenkinsResultsParserUtil.getProperty(
-			buildProperties, "qa.websites.dir", upstreamBranchName);
-		String upstreamRepository = JenkinsResultsParserUtil.getProperty(
-			buildProperties, "qa.websites.repository", upstreamBranchName);
+		File qaWebsitesDir = new File(qaWebsitesDirectoryPath);
 
-		_qaWebsitesGitWorkingDirectory =
-			GitWorkingDirectoryFactory.newGitWorkingDirectory(
-				upstreamBranchName, upstreamDirPath, upstreamRepository);
+		if (!qaWebsitesDir.exists()) {
+			return null;
+		}
 
-		return _qaWebsitesGitWorkingDirectory;
+		_qaWebsitesWorkspaceGitRepository =
+			(QAWebsitesWorkspaceGitRepository)
+				GitRepositoryFactory.getWorkspaceGitRepository(
+					qaWebsitesDir.getName());
+
+		return _qaWebsitesWorkspaceGitRepository;
 	}
 
 	private File _getRecordedFilesBuildDir() {
 		return new File(getRecordedFilesBaseDir(), getRelativeBuildDirPath());
 	}
 
-	private void _recordBuildReport() {
+	private void _recordBuildDatabase() {
 		if (!(_build instanceof TopLevelBuild)) {
 			return;
 		}
 
 		TopLevelBuild topLevelBuild = (TopLevelBuild)_build;
 
-		TopLevelBuildReport topLevelBuildReport =
-			BuildReportFactory.newTopLevelBuildReport(topLevelBuild);
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
+			topLevelBuild);
 
-		JSONObject buildReportJSONObject =
-			topLevelBuildReport.getBuildReportJSONObject();
+		File buildDatabaseFile = buildDatabase.getBuildDatabaseFile();
 
-		File buildReportJSONObjectFile = new File(
-			_getRecordedFilesBuildDir(), "build-report.json");
+		if (!buildDatabaseFile.exists()) {
+			return;
+		}
 
 		try {
-			JenkinsResultsParserUtil.write(
-				buildReportJSONObjectFile, buildReportJSONObject.toString());
+			JenkinsResultsParserUtil.copy(
+				buildDatabaseFile,
+				new File(_getRecordedFilesBuildDir(), "build-database.json"));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
@@ -549,11 +581,11 @@ public class TestrayAttachmentRecorder {
 	}
 
 	private void _recordGradlePluginsFiles() {
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			_getPortalGitWorkingDirectory();
+		PortalWorkspaceGitRepository portalWorkspaceGitRepository =
+			_getPortalWorkspaceGitRepository();
 
 		File gradlePluginsFile = new File(
-			portalGitWorkingDirectory.getWorkingDirectory(),
+			portalWorkspaceGitRepository.getDirectory(),
 			"tmp/gradle_plugins.tar");
 
 		if (!gradlePluginsFile.exists()) {
@@ -564,19 +596,6 @@ public class TestrayAttachmentRecorder {
 			JenkinsResultsParserUtil.copy(
 				gradlePluginsFile,
 				new File(_getRecordedFilesBuildDir(), "gradle_plugins.tar"));
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-	}
-
-	private void _recordJenkinsConsole() {
-		File jenkinsConsoleFile = new File(
-			_getRecordedFilesBuildDir(), "jenkins-console.txt");
-
-		try {
-			JenkinsResultsParserUtil.write(
-				jenkinsConsoleFile, _build.getConsoleText());
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
@@ -768,28 +787,36 @@ public class TestrayAttachmentRecorder {
 	}
 
 	private void _recordPlaywrightReportFile() {
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			_getPortalGitWorkingDirectory();
+		PortalWorkspaceGitRepository portalWorkspaceGitRepository =
+			_getPortalWorkspaceGitRepository();
 
-		if (portalGitWorkingDirectory != null) {
+		if (portalWorkspaceGitRepository != null) {
 			File playwrightReportFile = new File(
-				portalGitWorkingDirectory.getWorkingDirectory(),
+				portalWorkspaceGitRepository.getDirectory(),
 				"modules/test/playwright/playwright-report/index.html");
 
 			if (playwrightReportFile.exists()) {
 				_copyToRecordedFilesBuildDir(
 					playwrightReportFile.getParentFile());
 
+				File playwrightTestResultsDir = new File(
+					portalWorkspaceGitRepository.getDirectory(),
+					"modules/test/playwright/test-results");
+
+				if (playwrightTestResultsDir.exists()) {
+					_copyToRecordedFilesBuildDir(playwrightTestResultsDir);
+				}
+
 				return;
 			}
 		}
 
-		GitWorkingDirectory qaWebsitesGitWorkingDirectory =
-			_getQAWebsitesGitWorkingDirectory();
+		QAWebsitesWorkspaceGitRepository qaWebsitesWorkspaceGitRepository =
+			_getQAWebsitesWorkspaceGitRepository();
 
-		if (qaWebsitesGitWorkingDirectory != null) {
+		if (qaWebsitesWorkspaceGitRepository != null) {
 			File playwrightReportFile = new File(
-				qaWebsitesGitWorkingDirectory.getWorkingDirectory(),
+				qaWebsitesWorkspaceGitRepository.getDirectory(),
 				"playwright/playwright-report/index.html");
 
 			if (playwrightReportFile.exists()) {
@@ -800,14 +827,14 @@ public class TestrayAttachmentRecorder {
 	}
 
 	private void _recordPoshiReportFiles() {
-		PortalGitWorkingDirectory portalGitWorkingDirectory =
-			_getPortalGitWorkingDirectory();
+		PortalWorkspaceGitRepository portalWorkspaceGitRepository =
+			_getPortalWorkspaceGitRepository();
 
 		List<File> testResultsDirs = new ArrayList<>();
 
-		if (portalGitWorkingDirectory != null) {
+		if (portalWorkspaceGitRepository != null) {
 			File testResultsDir = new File(
-				portalGitWorkingDirectory.getWorkingDirectory(),
+				portalWorkspaceGitRepository.getDirectory(),
 				"portal-web/test-results");
 
 			if (testResultsDir.exists()) {
@@ -815,7 +842,7 @@ public class TestrayAttachmentRecorder {
 			}
 
 			File workspaceTestResultsDir = new File(
-				portalGitWorkingDirectory.getWorkingDirectory(),
+				portalWorkspaceGitRepository.getDirectory(),
 				JenkinsResultsParserUtil.combine(
 					"workspaces/", System.getenv("TEST_WORKSPACE_NAME"),
 					"/poshi/test-results"));
@@ -826,13 +853,13 @@ public class TestrayAttachmentRecorder {
 		}
 
 		if (testResultsDirs.isEmpty()) {
-			GitWorkingDirectory qaWebsitesGitWorkingDirectory =
-				_getQAWebsitesGitWorkingDirectory();
+			QAWebsitesWorkspaceGitRepository qaWebsitesWorkspaceGitRepository =
+				_getQAWebsitesWorkspaceGitRepository();
 
-			if (qaWebsitesGitWorkingDirectory != null) {
+			if (qaWebsitesWorkspaceGitRepository != null) {
 				testResultsDirs.addAll(
 					JenkinsResultsParserUtil.findDirs(
-						qaWebsitesGitWorkingDirectory.getWorkingDirectory(),
+						qaWebsitesWorkspaceGitRepository.getDirectory(),
 						"test-results"));
 			}
 		}
@@ -931,8 +958,8 @@ public class TestrayAttachmentRecorder {
 		"bundles(?<bundlesSuffix>.*)");
 
 	private final Build _build;
-	private PortalGitWorkingDirectory _portalGitWorkingDirectory;
-	private GitWorkingDirectory _qaWebsitesGitWorkingDirectory;
+	private PortalWorkspaceGitRepository _portalWorkspaceGitRepository;
+	private QAWebsitesWorkspaceGitRepository _qaWebsitesWorkspaceGitRepository;
 	private boolean _recorded;
 	private final Properties _startProperties;
 

@@ -52,6 +52,16 @@ public class RoleServiceWrapper
 		_roleService.addUserRoles(userId, roleIds);
 	}
 
+	@Override
+	public Role copyRole(
+			long userId, String name, long sourceRoleId,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _roleService.copyRole(
+			userId, name, sourceRoleId, serviceContext);
+	}
+
 	/**
 	 * Deletes the role with the primary key and its associated permissions.
 	 *
@@ -122,6 +132,16 @@ public class RoleServiceWrapper
 			excludedTeamRoleId, teamGroupId);
 	}
 
+	@Override
+	public Role getOrAddEmptyRole(
+			String externalReferenceCode, String className, long classPK,
+			String name, int type)
+		throws Exception {
+
+		return _roleService.getOrAddEmptyRole(
+			externalReferenceCode, className, classPK, name, type);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -162,6 +182,15 @@ public class RoleServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _roleService.getRole(companyId, name);
+	}
+
+	@Override
+	public Role getRoleByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _roleService.getRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -346,14 +375,15 @@ public class RoleServiceWrapper
 	 */
 	@Override
 	public Role updateRole(
-			long roleId, String name,
+			String externalReferenceCode, long roleId, String name,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String subtype, ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _roleService.updateRole(
-			roleId, name, titleMap, descriptionMap, subtype, serviceContext);
+			externalReferenceCode, roleId, name, titleMap, descriptionMap,
+			subtype, serviceContext);
 	}
 
 	@Override

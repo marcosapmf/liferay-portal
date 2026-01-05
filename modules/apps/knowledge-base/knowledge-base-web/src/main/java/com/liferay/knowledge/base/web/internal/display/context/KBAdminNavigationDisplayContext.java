@@ -46,16 +46,16 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.LiferayPortletUtil;
 import com.liferay.trash.TrashHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Sergio González
@@ -80,7 +80,7 @@ public class KBAdminNavigationDisplayContext {
 		_kbDropdownItemsProvider = new KBDropdownItemsProvider(
 			PortalUtil.getLiferayPortletRequest(
 				(PortletRequest)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST)),
+					JavaConstants.JAKARTA_PORTLET_REQUEST)),
 			_liferayPortletResponse, trashHelper);
 	}
 
@@ -528,14 +528,14 @@ public class KBAdminNavigationDisplayContext {
 			_httpServletRequest, "resourcePrimKey",
 			KBArticleConstants.DEFAULT_PARENT_RESOURCE_PRIM_KEY);
 
-		if (resourcePrimKey !=
+		if (resourcePrimKey ==
 				KBArticleConstants.DEFAULT_PARENT_RESOURCE_PRIM_KEY) {
 
-			return KBArticleServiceUtil.getLatestKBArticle(
-				resourcePrimKey, WorkflowConstants.STATUS_ANY);
+			return null;
 		}
 
-		return null;
+		return KBArticleServiceUtil.getLatestKBArticle(
+			resourcePrimKey, WorkflowConstants.STATUS_ANY);
 	}
 
 	private boolean _isKBArticleSelected() {

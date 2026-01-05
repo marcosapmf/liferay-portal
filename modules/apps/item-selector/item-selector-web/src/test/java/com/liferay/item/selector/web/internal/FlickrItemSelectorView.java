@@ -7,6 +7,12 @@ package com.liferay.item.selector.web.internal;
 
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.web.internal.item.selector.FlickrItemSelectorCriterion;
+
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,11 +20,6 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 /**
  * @author Iván Zaera

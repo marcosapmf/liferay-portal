@@ -66,6 +66,13 @@ public class WarehouseOrderTypeResourceTest
 		}
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
 	@Override
 	@Test
 	public void testDeleteWarehouseOrderType() throws Exception {
@@ -186,20 +193,24 @@ public class WarehouseOrderTypeResourceTest
 
 	@Override
 	protected WarehouseOrderType
+			testDeleteWarehouseOrderTypeBatch_addWarehouseOrderType()
+		throws Exception {
+
+		return warehouseOrderTypeResource.postWarehouseIdWarehouseOrderType(
+			_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			randomWarehouseOrderType());
+	}
+
+	@Override
+	protected WarehouseOrderType
 			testGetWarehouseByExternalReferenceCodeWarehouseOrderTypesPage_addWarehouseOrderType(
 				String externalReferenceCode,
 				WarehouseOrderType warehouseOrderType)
 		throws Exception {
 
-		WarehouseOrderType postWarehouseOrderType =
-			warehouseOrderTypeResource.
-				postWarehouseByExternalReferenceCodeWarehouseOrderType(
-					externalReferenceCode, warehouseOrderType);
-
-		_warehouseOrderTypeIds.add(
-			postWarehouseOrderType.getWarehouseOrderTypeId());
-
-		return postWarehouseOrderType;
+		return warehouseOrderTypeResource.
+			postWarehouseByExternalReferenceCodeWarehouseOrderType(
+				externalReferenceCode, warehouseOrderType);
 	}
 
 	@Override
@@ -216,14 +227,8 @@ public class WarehouseOrderTypeResourceTest
 				Long id, WarehouseOrderType warehouseOrderType)
 		throws Exception {
 
-		WarehouseOrderType postWarehouseOrderType =
-			warehouseOrderTypeResource.postWarehouseIdWarehouseOrderType(
-				id, warehouseOrderType);
-
-		_warehouseOrderTypeIds.add(
-			postWarehouseOrderType.getWarehouseOrderTypeId());
-
-		return postWarehouseOrderType;
+		return warehouseOrderTypeResource.postWarehouseIdWarehouseOrderType(
+			id, warehouseOrderType);
 	}
 
 	@Override

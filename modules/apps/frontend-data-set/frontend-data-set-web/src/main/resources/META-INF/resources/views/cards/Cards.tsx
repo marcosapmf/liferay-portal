@@ -5,105 +5,276 @@
 
 import {ClayCardWithInfo} from '@clayui/card';
 import classNames from 'classnames';
-import React, {useContext, useRef} from 'react';
+import {getObjectValueFromPath} from 'frontend-js-web';
+import React, {forwardRef, useContext, useRef} from 'react';
 
 import FrontendDataSetContext, {
 	IFrontendDataSetContext,
 } from '../../FrontendDataSetContext';
-import {IItemsActions} from '../../index';
+import FDSDndProvider from '../../dnd/FDSDndProvider';
+import useFDSDrop from '../../dnd/useFDSDrop';
 import filterItemActions from '../../utils/actionItems/filterItemActions';
+import formatActionURL from '../../utils/actionItems/formatActionURL';
 import handleActionClick from '../../utils/actionItems/handleActionClick';
 import {getLocalizedValue} from '../../utils/getLocalizedValue';
 import getRandomId from '../../utils/getRandomId';
 import isLink from '../../utils/isLink';
+import {
+	DisplayType,
+	ICardLabelSchema,
+	ICardSchema,
+	IItemsActions,
+	IView,
+} from '../../utils/types';
+import ViewsContext from '../ViewsContext';
 import imagePropsTransformer from '../utils/imagePropsTransformer';
 
-interface ICardSchema {
-	description: string;
-	image: string;
-	link: string;
-	sticker: string;
-	symbol: string;
-	title: string;
-}
+const Card = forwardRef<HTMLDivElement, any>(
+	(
+		{
+			item,
+			items,
+			onItemSelectionChange,
+			schema,
+		}: {
+			item: any;
+			items: any[];
+			onItemSelectionChange: Function;
+			schema: ICardSchema;
+		},
+		ref
+	) => {
+		const {
+			executeAsyncItemAction,
+			highlightItems,
+			infoPanelOpen,
+			itemsActions,
+			loadData,
+			onActionDropdownItemClick,
+			onInfoPanelToggleButtonClick,
+			openModal,
+			openSidePanel,
+			selectable,
+			selectedItemsKey,
+			selectedItemsValue,
+			selectionType,
+			toggleItemInlineEdit,
+		}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
 
-const Card = ({item, schema}: {item: any; schema: ICardSchema}) => {
-	const {
-		executeAsyncItemAction,
-		highlightItems,
-		itemsActions,
-		loadData,
-		onActionDropdownItemClick,
-		openModal,
-		openSidePanel,
-		selectItems,
-		selectable,
-		selectedItemsKey,
-		selectedItemsValue,
-		toggleItemInlineEdit,
-	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
+		const [viewsContext] = useContext(ViewsContext);
 
-	const actionsRef = useRef(
-		(itemsActions?.length && itemsActions) || item.actionDropdownItems
-	);
+		const activeView: IView = viewsContext.activeView;
 
-	const cardSelected =
-		selectable &&
-		!!selectedItemsValue?.find(
-			(element) => selectedItemsKey && element === item[selectedItemsKey]
+		const actions =
+			(itemsActions?.length && itemsActions) || item.actionDropdownItems;
+
+		const formattedActions =
+			actions &&
+			(filterItemActions({
+				actions,
+				infoPanelOpen,
+				itemData: item,
+				selectable,
+				selectedItemsKey,
+				selectedItemsValue,
+			}) as any);
+
+		const selectedItemKey =
+			selectedItemsKey &&
+			getObjectValueFromPath({object: item, path: selectedItemsKey});
+
+		const getLabels = (
+			item: any
+		): Array<{
+			displayType: DisplayType;
+			value: string;
+		}> => {
+			if (!schema.labels) {
+				return [];
+			}
+
+			return schema.labels.flatMap((label: ICardLabelSchema) => {
+				const {displayTypeKey, displayTypeValues} = label;
+				let {displayType} = label;
+
+				if (!displayType && displayTypeValues && displayTypeKey) {
+					const keyValue = getLocalizedValue(
+						item,
+						displayTypeKey
+					)?.value;
+
+					displayType = displayTypeValues[keyValue!];
+				}
+
+				const value = getLocalizedValue(item, label.value)?.value;
+
+				if (!value) {
+					return [];
+				}
+
+				return [
+					{
+						displayType: displayType || DisplayType.UNSTYLED,
+						value,
+					},
+				];
+			});
+		};
+
+		const getDropdownActions = (actions: IItemsActions[]): Array<any> => {
+			const processedActions: any[] = [];
+
+			actions.forEach((action, index) => {
+				if (action.type === 'group') {
+					const {items: nestedItems, ...otherProps} = action;
+
+					if (nestedItems?.length) {
+						if (action.separator && index !== 0) {
+							processedActions.push({type: 'divider'});
+						}
+
+						processedActions.push({
+							...otherProps,
+							items: getDropdownActions(nestedItems),
+						});
+					}
+				}
+				else {
+					processedActions.push({
+						...action,
+						href: isLink(action.target, null)
+							? formatActionURL(action.href, item, action.target)
+							: null,
+						onClick: (event: Event) => {
+							handleActionClick({
+								action,
+								event,
+								executeAsyncItemAction,
+								highlightItems,
+								infoPanelOpen,
+								itemData: item,
+								itemId: selectedItemKey,
+								items,
+								loadData,
+								onActionDropdownItemClick,
+								onInfoPanelToggleButtonClick,
+								onItemSelectionChange,
+								openModal,
+								openSidePanel,
+								toggleItemInlineEdit,
+							});
+						},
+						symbolLeft: action.icon,
+					});
+				}
+			});
+
+			return processedActions;
+		};
+
+		const props = {
+			actions: formattedActions && getDropdownActions(formattedActions),
+			description: getLocalizedValue(item, schema.description)?.value,
+			href: (schema.link && item[schema.link]) || null,
+			imgProps:
+				schema.image &&
+				imagePropsTransformer(
+					getLocalizedValue(item, schema.image)?.value
+				),
+			labels: getLabels(item),
+			onClick: (event: React.MouseEvent) => {
+				const target = event.nativeEvent.target as Element;
+
+				if (
+					target?.closest('.dropdown-toggle') ||
+					target?.closest('.dropdown-item')
+				) {
+					return;
+				}
+
+				// This logic is to avoid the onClick event from being
+				// triggered twice when the user clicks on anything other
+				// than the checkbox/radio in a selectable card
+
+				if (target.tagName !== 'INPUT' && target.tagName !== 'A') {
+					event.preventDefault();
+
+					onItemSelectionChange?.(item, true);
+				}
+			},
+			onSelectChange: selectable
+				? () => {
+						onItemSelectionChange?.(item);
+					}
+				: undefined,
+			selectableType: selectionType === 'single' ? 'radio' : 'checkbox',
+			selected:
+				selectable &&
+				!!selectedItemsValue?.find(
+					(element) =>
+						selectedItemsKey &&
+						element ===
+							getObjectValueFromPath({
+								object: item,
+								path: selectedItemsKey,
+							})
+				),
+			stickerProps: (schema.sticker && item[schema.sticker]) || null,
+			symbol: schema.symbol && item[schema.symbol],
+			title: getLocalizedValue(item, schema.title)?.value || '',
+		};
+
+		return (
+			<div ref={ref}>
+				<ClayCardWithInfo
+					{...props}
+					{...(activeView.setItemComponentProps?.({item, props}) ??
+						{})}
+				/>
+			</div>
 		);
-	const imageProps =
-		schema.image && imagePropsTransformer(item[schema.image]);
-	const localizedDescription = getLocalizedValue(
+	}
+);
+
+function ClayCardOptionalDropTarget({
+	item,
+	items,
+	onItemSelectionChange,
+	schema,
+}: React.ComponentProps<typeof Card>) {
+	const cardRef = useRef<HTMLDivElement>(null);
+
+	// ClayCardWithInfo does not take a ref, so we must query the target
+	// element to highlight just the part we want
+
+	useFDSDrop({
 		item,
-		schema.description
-	)?.value;
-	const localizedTitle = getLocalizedValue(item, schema.title)?.value || '';
-	const selectedItemKey = selectedItemsKey && item[selectedItemsKey];
-	const formattedActions =
-		actionsRef.current &&
-		(filterItemActions(actionsRef.current, item) as any);
+		targetDropRef: cardRef,
+		targetDropRefQuerySelector: '.card',
+	});
 
 	return (
-		<ClayCardWithInfo
-			actions={formattedActions?.map((action: IItemsActions) => ({
-				...action,
-				href: isLink(action.target, null) ? action.href : null,
-				onClick: (event: Event) => {
-					handleActionClick({
-						action,
-						event,
-						executeAsyncItemAction,
-						highlightItems,
-						itemData: item,
-						itemId: selectedItemKey,
-						loadData,
-						onActionDropdownItemClick,
-						openModal,
-						openSidePanel,
-						toggleItemInlineEdit,
-					});
-				},
-			}))}
-			description={localizedDescription}
-			href={(schema.link && item[schema.link]) || null}
-			imgProps={imageProps}
-			onSelectChange={
-				selectable
-					? () => {
-							selectItems(selectedItemKey);
-						}
-					: undefined
-			}
-			selected={cardSelected}
-			stickerProps={(schema.sticker && item[schema.sticker]) || null}
-			symbol={schema.symbol && item[schema.symbol]}
-			title={localizedTitle}
-		/>
+		<div className="col-md-3">
+			<Card
+				item={item}
+				items={items}
+				onItemSelectionChange={onItemSelectionChange}
+				ref={cardRef}
+				schema={schema}
+			/>
+		</div>
 	);
-};
+}
 
-const Cards = ({items, schema}: {items: Array<any>; schema: ICardSchema}) => {
+const Cards = ({
+	items,
+	onItemSelectionChange,
+	schema,
+}: {
+	items: Array<any>;
+	onItemSelectionChange: Function;
+	schema: ICardSchema;
+}) => {
 	const {selectedItemsKey, style}: IFrontendDataSetContext = useContext(
 		FrontendDataSetContext
 	);
@@ -119,24 +290,31 @@ const Cards = ({items, schema}: {items: Array<any>; schema: ICardSchema}) => {
 				style === 'default' && 'px-3 pt-4'
 			)}
 		>
-			<div className="row">
-				{items.map((item) => {
-					return (
-						<div
-							className="col-md-3"
-							key={
-								selectedItemsKey
-									? item[selectedItemsKey]
-									: getRandomId()
-							}
-						>
-							<Card item={item} schema={schema} />
-						</div>
-					);
-				})}
-			</div>
+			<FDSDndProvider>
+				<div className="row">
+					{items.map((item) => {
+						return (
+							<ClayCardOptionalDropTarget
+								item={item}
+								items={items}
+								key={
+									selectedItemsKey
+										? getObjectValueFromPath({
+												object: item,
+												path: selectedItemsKey,
+											})
+										: getRandomId()
+								}
+								onItemSelectionChange={onItemSelectionChange}
+								schema={schema}
+							/>
+						);
+					})}
+				</div>
+			</FDSDndProvider>
 		</div>
 	);
 };
 
+export {Card};
 export default Cards;

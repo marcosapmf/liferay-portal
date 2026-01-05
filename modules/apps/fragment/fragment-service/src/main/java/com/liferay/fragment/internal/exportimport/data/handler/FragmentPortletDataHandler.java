@@ -30,9 +30,9 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.staging.StagingGroupHelper;
 
-import java.util.List;
+import jakarta.portlet.PortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pavel Savinov
  */
 @Component(
-	property = "javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
+	property = "jakarta.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 	service = PortletDataHandler.class
 )
 public class FragmentPortletDataHandler extends BasePortletDataHandler {
@@ -77,12 +77,13 @@ public class FragmentPortletDataHandler extends BasePortletDataHandler {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(FragmentCollection.class),
 			new StagedModelType(FragmentEntry.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "entries", true, false, null,
 				FragmentEntry.class.getName()));
 		setPublishToLiveByDefault(true);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override
@@ -180,7 +181,8 @@ public class FragmentPortletDataHandler extends BasePortletDataHandler {
 		if (!fragmentServiceConfiguration.propagateChanges() ||
 			(ExportImportThreadLocal.isStagingInProcess() &&
 			 _stagingGroupHelper.isStagedPortlet(
-				 portletDataContext.getGroupId(), getPortletId()))) {
+				 portletDataContext.getGroupId(),
+				 FragmentPortletKeys.FRAGMENT))) {
 
 			for (Element fragmentEntryElement : fragmentEntryElements) {
 				StagedModelDataHandlerUtil.importStagedModel(

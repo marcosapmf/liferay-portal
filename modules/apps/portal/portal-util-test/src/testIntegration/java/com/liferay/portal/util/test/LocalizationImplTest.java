@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
+import com.liferay.portal.kernel.test.portlet.MockPortletRequest;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -23,7 +24,8 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.LocalizationImpl;
 import com.liferay.portlet.PortletPreferencesImpl;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockPortletRequest;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.lang.reflect.Field;
 
@@ -32,8 +34,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -76,19 +76,13 @@ public class LocalizationImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		StringBundler sb = new StringBundler(10);
+		StringBundler sb = new StringBundler(5);
 
-		sb.append("<?xml version=\"1.0\"?>");
-
-		sb.append("<root available-locales=\"en_US,es_ES\" ");
-		sb.append("default-locale=\"en_US\">");
-		sb.append("<static-content language-id=\"es_ES\">");
-		sb.append("foo&amp;bar");
-		sb.append("</static-content>");
-		sb.append("<static-content language-id=\"en_US\">");
-		sb.append("<![CDATA[Example in English]]>");
-		sb.append("</static-content>");
-		sb.append("</root>");
+		sb.append("<?xml version=\"1.0\"?><root available-locales=\"en_US,");
+		sb.append("es_ES\" default-locale=\"en_US\"><static-content language-");
+		sb.append("id=\"es_ES\">foo&amp;bar</static-content><static-content ");
+		sb.append("language-id=\"en_US\"><![CDATA[Example in English]]><");
+		sb.append("/static-content></root>");
 
 		_xml = sb.toString();
 

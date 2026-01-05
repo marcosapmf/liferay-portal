@@ -5,7 +5,6 @@
 
 package com.liferay.commerce.order.content.web.internal.frontend.data.set.provider;
 
-import com.liferay.commerce.context.CommerceGroupThreadLocal;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFDSNames;
 import com.liferay.commerce.order.content.web.internal.frontend.data.set.util.CommerceOrderFDSUtil;
@@ -16,6 +15,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
+import com.liferay.commerce.util.CommerceGroupThreadLocal;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -25,12 +25,13 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -63,14 +64,15 @@ public class PendingCommerceOrderFDSDataProvider
 			return Collections.emptyList();
 		}
 
-		String uuid = CookiesManagerUtil.getCookieValue(
-			CommerceOrder.class.getName() + StringPool.POUND +
-				commerceChannel.getGroupId(),
-			httpServletRequest);
-
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
-				uuid, commerceChannel.getGroupId());
+				StringUtil.extractFirst(
+					CookiesManagerUtil.getCookieValue(
+						CommerceOrder.class.getName() + StringPool.POUND +
+							commerceChannel.getGroupId(),
+						httpServletRequest),
+					StringPool.PIPE),
+				commerceChannel.getGroupId());
 
 		CommerceGroupThreadLocal.set(commerceChannel.getGroup());
 
@@ -113,14 +115,15 @@ public class PendingCommerceOrderFDSDataProvider
 			return 0;
 		}
 
-		String uuid = CookiesManagerUtil.getCookieValue(
-			CommerceOrder.class.getName() + StringPool.POUND +
-				commerceChannel.getGroupId(),
-			httpServletRequest);
-
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
-				uuid, commerceChannel.getGroupId());
+				StringUtil.extractFirst(
+					CookiesManagerUtil.getCookieValue(
+						CommerceOrder.class.getName() + StringPool.POUND +
+							commerceChannel.getGroupId(),
+						httpServletRequest),
+					StringPool.PIPE),
+				commerceChannel.getGroupId());
 
 		if ((commerceOrder != null) && commerceOrder.isGuestOrder()) {
 			return 1;

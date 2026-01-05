@@ -74,11 +74,8 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			new BaseUuidUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"CIWarehouse", "CIWarehouseId"},
-						{"CIWarehouseItem", "CIWarehouseItemId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"CIWarehouse", "CIWarehouseItem"};
 				}
 
 			});
@@ -88,11 +85,8 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			new BaseExternalReferenceCodeUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"CIWarehouse", "CIWarehouseId"},
-						{"CIWarehouseItem", "CIWarehouseItemId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"CIWarehouse", "CIWarehouseItem"};
 				}
 
 			});
@@ -102,10 +96,8 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			new BaseUuidUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"CIReplenishmentItem", "CIReplenishmentItemId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"CIReplenishmentItem"};
 				}
 
 			});
@@ -115,10 +107,8 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 			new BaseExternalReferenceCodeUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"CIReplenishmentItem", "CIReplenishmentItemId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"CIReplenishmentItem"};
 				}
 
 			});
@@ -142,7 +132,10 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 					"CIWarehouseItem.commerceInventoryWarehouseId)")));
 
 		registry.register(
-			"2.5.1", "2.6.0", CommerceInventoryWarehouseRelTable.create(),
+			"2.5.1", "2.5.2", CommerceInventoryWarehouseRelTable.create());
+
+		registry.register(
+			"2.5.2", "2.6.0",
 			new com.liferay.commerce.inventory.internal.upgrade.v2_6_0.
 				CommerceInventoryWarehouseUpgradeProcess());
 
@@ -199,6 +192,11 @@ public class CommerceInventoryServiceUpgradeStepRegistrator
 				CommercePermissionUpgradeProcess(
 					_resourceActionLocalService,
 					_resourcePermissionLocalService));
+
+		registry.register(
+			"2.11.2", "2.11.3",
+			UpgradeProcessFactory.dropColumns(
+				"CIWarehouseGroupRel", "mvccVersion"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce inventory upgrade step registrator finished");

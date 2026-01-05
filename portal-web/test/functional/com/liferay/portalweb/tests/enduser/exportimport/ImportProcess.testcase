@@ -10,6 +10,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		Staging.enableDeleteApplicationDataBeforeImport();
 	}
 
 	tearDown {
@@ -119,7 +121,9 @@ definition {
 
 			Navigator.gotoNavItem(navItem = "Scheduled Jobs");
 
-			Click.clickAtNotVisible(locator1 = "Blueprints#PAGINATION_NEXT_LINK");
+			while ((IsElementNotPresent(key_name = "DeleteObsoleteBackgroundTasksSchedulerJobConfiguration", locator1 = "JobScheduler#RUN_NOW_BUTTON")) && (maxIterations = "10")) {
+				Click.clickAtNotVisible(locator1 = "Blueprints#PAGINATION_NEXT_LINK");
+			}
 
 			Click.clickAtNotVisible(
 				key_name = "DeleteObsoleteBackgroundTasksSchedulerJobConfiguration",
@@ -246,7 +250,6 @@ definition {
 				dmDocumentTitle = "Document_1",
 				groupName = "Guest-staging",
 				mimeType = "image/jpeg",
-				site = "false",
 				sourceFileName = "Document_1.jpg");
 
 			for (var layoutUtilityPageName : list "404,500") {
@@ -330,6 +333,8 @@ definition {
 				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				virtualHostsURL = "http://www.able.com:8080");
+
+			Staging.enableDeleteApplicationDataBeforeImport(navigate = "false");
 
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",

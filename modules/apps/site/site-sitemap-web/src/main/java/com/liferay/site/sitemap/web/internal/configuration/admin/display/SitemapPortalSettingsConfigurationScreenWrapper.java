@@ -8,6 +8,7 @@ package com.liferay.site.sitemap.web.internal.configuration.admin.display;
 import com.liferay.configuration.admin.display.ConfigurationScreen;
 import com.liferay.configuration.admin.display.ConfigurationScreenWrapper;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -19,14 +20,14 @@ import com.liferay.portal.settings.configuration.admin.display.PortalSettingsCon
 import com.liferay.site.configuration.manager.SitemapConfigurationManager;
 import com.liferay.site.sitemap.web.internal.display.context.SitemapCompanyConfigurationDisplayContext;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,6 +53,9 @@ public class SitemapPortalSettingsConfigurationScreenWrapper
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private Portal _portal;
@@ -118,11 +122,11 @@ public class SitemapPortalSettingsConfigurationScreenWrapper
 					_groupLocalService, _itemSelector,
 					_portal.getLiferayPortletRequest(
 						(PortletRequest)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_REQUEST)),
+							JavaConstants.JAKARTA_PORTLET_REQUEST)),
 					_portal.getLiferayPortletResponse(
 						(PortletResponse)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_RESPONSE)),
-					_sitemapConfigurationManager,
+							JavaConstants.JAKARTA_PORTLET_RESPONSE)),
+					_objectDefinitionLocalService, _sitemapConfigurationManager,
 					(ThemeDisplay)httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY)));
 		}

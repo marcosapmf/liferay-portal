@@ -193,11 +193,11 @@ public class JavaParser {
 		if (rcurlyDetailAST != null) {
 			JavaClosingBrace javaClosingBrace = new JavaClosingBrace();
 
-			String curlyExpecedIndent = _getExpectedIndent(
+			String curlyExpectedIndent = _getExpectedIndent(
 				rcurlyDetailAST, fileContents);
 
 			String content = javaClosingBrace.toString(
-				curlyExpecedIndent, StringPool.BLANK, maxLineLength);
+				curlyExpectedIndent, StringPool.BLANK, maxLineLength);
 
 			parsedJavaClass.addJavaTerm(
 				content, DetailASTUtil.getStartPosition(rcurlyDetailAST),
@@ -426,7 +426,9 @@ public class JavaParser {
 			javaTermContent.contains(
 				"\n" + JavaEnumConstantDefinition.NESTED_CODE_BLOCK + "\n") ||
 			javaTermContent.contains(
-				"\n" + JavaLambdaExpression.NESTED_CODE_BLOCK + "\n")) {
+				"\n" + JavaLambdaExpression.NESTED_CODE_BLOCK + "\n") ||
+			javaTermContent.contains(
+				"\n" + JavaSwitchExpression.NESTED_CODE_BLOCK + "\n")) {
 
 			return _addJavaTermWithNestedCodeBlocks(
 				parsedJavaClass, detailAST, javaTermContent, className,
@@ -488,6 +490,10 @@ public class JavaParser {
 				else if (line.equals(JavaLambdaExpression.NESTED_CODE_BLOCK)) {
 					followingNestedCodeBlockClassName =
 						JavaLambdaExpression.class.getName();
+				}
+				else if (line.equals(JavaSwitchExpression.NESTED_CODE_BLOCK)) {
+					followingNestedCodeBlockClassName =
+						JavaSwitchExpression.class.getName();
 				}
 				else {
 					sb.append(line);
@@ -689,13 +695,36 @@ public class JavaParser {
 		else if (detailAST.getType() == TokenTypes.LAMBDA) {
 			DetailAST lastChildDetailAST = detailAST.getLastChild();
 
-			if (lastChildDetailAST.getType() == TokenTypes.SLIST) {
+			if ((lastChildDetailAST != null) &&
+				(lastChildDetailAST.getType() == TokenTypes.SLIST)) {
+
 				curlyBracePositionList.add(
 					new Position(
 						lastChildDetailAST.getLineNo(),
 						lastChildDetailAST.getColumnNo() + 1));
 
 				lastChildDetailAST = lastChildDetailAST.getLastChild();
+
+				curlyBracePositionList.add(
+					new Position(
+						lastChildDetailAST.getLineNo(),
+						lastChildDetailAST.getColumnNo()));
+			}
+		}
+		else if (detailAST.getType() == TokenTypes.LITERAL_SWITCH) {
+			DetailAST switchRuleDetailAST = detailAST.findFirstToken(
+				TokenTypes.SWITCH_RULE);
+
+			if (switchRuleDetailAST != null) {
+				DetailAST previousSiblingDetailAST =
+					switchRuleDetailAST.getPreviousSibling();
+
+				curlyBracePositionList.add(
+					new Position(
+						previousSiblingDetailAST.getLineNo(),
+						previousSiblingDetailAST.getColumnNo() + 1));
+
+				DetailAST lastChildDetailAST = detailAST.getLastChild();
 
 				curlyBracePositionList.add(
 					new Position(
@@ -933,11 +962,7 @@ public class JavaParser {
 	}
 
 	private static boolean _isAtLineStart(String line, int x) {
-		if (Validator.isNull(StringUtil.trim(line.substring(0, x)))) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNull(StringUtil.trim(line.substring(0, x)));
 	}
 
 	private static boolean _isExcludedJavaTerm(ParsedJavaTerm parsedJavaTerm) {
@@ -1147,22 +1172,32 @@ public class JavaParser {
 			}
 		}
 		else if (detailAST.getType() == TokenTypes.LITERAL_SWITCH) {
-			List<DetailAST> caseGroupDetailASTList =
+			List<DetailAST> caseGroupDetailASTs =
 				DetailASTUtil.getAllChildTokens(
 					detailAST, false, TokenTypes.CASE_GROUP);
 
-			for (DetailAST caseGroupDetailAST : caseGroupDetailASTList) {
+			for (DetailAST caseGroupDetailAST : caseGroupDetailASTs) {
 				parsedJavaClass = _parseDetailAST(
 					parsedJavaClass, caseGroupDetailAST, fileContents,
 					maxLineLength);
 			}
+
+			List<DetailAST> switchRuleDetailASTs =
+				DetailASTUtil.getAllChildTokens(
+					detailAST, false, TokenTypes.SWITCH_RULE);
+
+			for (DetailAST switchRuleDetailAST : switchRuleDetailASTs) {
+				parsedJavaClass = _parseDetailAST(
+					parsedJavaClass, switchRuleDetailAST, fileContents,
+					maxLineLength);
+			}
 		}
 		else if (detailAST.getType() == TokenTypes.LITERAL_TRY) {
-			List<DetailAST> literalCatchDetailASTList =
+			List<DetailAST> literalCatchDetailASTs =
 				DetailASTUtil.getAllChildTokens(
 					detailAST, false, TokenTypes.LITERAL_CATCH);
 
-			for (DetailAST literalCatchDetailAST : literalCatchDetailASTList) {
+			for (DetailAST literalCatchDetailAST : literalCatchDetailASTs) {
 				parsedJavaClass = _parseDetailAST(
 					parsedJavaClass, literalCatchDetailAST, fileContents,
 					maxLineLength);
@@ -1248,7 +1283,8 @@ public class JavaParser {
 		if (((detailAST.getType() == TokenTypes.ANNOTATION_DEF) ||
 			 (detailAST.getType() == TokenTypes.CLASS_DEF) ||
 			 (detailAST.getType() == TokenTypes.ENUM_DEF) ||
-			 (detailAST.getType() == TokenTypes.INTERFACE_DEF)) &&
+			 (detailAST.getType() == TokenTypes.INTERFACE_DEF) ||
+			 (detailAST.getType() == TokenTypes.RECORD_DEF)) &&
 			((parentDetailAST == null) ||
 			 (parentDetailAST.getType() != TokenTypes.OBJBLOCK))) {
 
@@ -1257,7 +1293,8 @@ public class JavaParser {
 		}
 		else if ((detailAST.getType() == TokenTypes.IMPORT) ||
 				 (detailAST.getType() == TokenTypes.PACKAGE_DEF) ||
-				 (detailAST.getType() == TokenTypes.STATIC_IMPORT)) {
+				 (detailAST.getType() == TokenTypes.STATIC_IMPORT) ||
+				 (detailAST.getType() == TokenTypes.SWITCH_RULE)) {
 
 			parsedJavaClass = _parseDetailAST(
 				parsedJavaClass, detailAST, fileContents, maxLineLength);
@@ -1307,10 +1344,10 @@ public class JavaParser {
 		}
 
 		public void addReplaceContent(
-			String content, int startlineNumber, int endLineNumber) {
+			String content, int startLineNumber, int endLineNumber) {
 
 			_replaceContentMap.put(
-				startlineNumber, new Tuple(content, endLineNumber));
+				startLineNumber, new Tuple(content, endLineNumber));
 		}
 
 		public Tuple getReplaceContentTuple(int lineNumber) {

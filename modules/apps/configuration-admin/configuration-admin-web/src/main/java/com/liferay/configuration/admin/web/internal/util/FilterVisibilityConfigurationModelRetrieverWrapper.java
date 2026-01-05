@@ -44,12 +44,20 @@ public class FilterVisibilityConfigurationModelRetrieverWrapper
 		String pid, ExtendedObjectClassDefinition.Scope scope,
 		Serializable scopePK) {
 
-		if (ConfigurationVisibilityUtil.isVisible(pid, scope, scopePK)) {
-			return _configurationModelRetriever.getConfiguration(
-				pid, scope, scopePK);
+		return getConfiguration(pid, scope, scopePK, true);
+	}
+
+	@Override
+	public Configuration getConfiguration(
+		String pid, ExtendedObjectClassDefinition.Scope scope,
+		Serializable scopePK, boolean strictScope) {
+
+		if (!ConfigurationVisibilityUtil.isVisible(pid, scope, scopePK)) {
+			return null;
 		}
 
-		return null;
+		return _configurationModelRetriever.getConfiguration(
+			pid, scope, scopePK, strictScope);
 	}
 
 	@Override
@@ -128,10 +136,10 @@ public class FilterVisibilityConfigurationModelRetrieverWrapper
 		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK,
 		Map<String, ConfigurationModel> configurationModelMap) {
 
-		Set<Map.Entry<String, ConfigurationModel>> set =
+		Set<Map.Entry<String, ConfigurationModel>> entries =
 			configurationModelMap.entrySet();
 
-		set.removeIf(
+		entries.removeIf(
 			entry -> !ConfigurationVisibilityUtil.isVisible(
 				entry.getValue(), scope, scopePK));
 	}

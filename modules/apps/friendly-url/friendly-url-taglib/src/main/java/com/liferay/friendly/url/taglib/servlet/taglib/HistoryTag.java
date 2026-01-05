@@ -13,14 +13,15 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * @author Adolfo Pérez
@@ -139,8 +140,8 @@ public class HistoryTag extends IncludeTag {
 		return StringBundler.concat(
 			themeDisplay.getPortalURL(), PortalUtil.getPathContext(),
 			Portal.PATH_MODULE, "/friendly-url/",
-			_getGroupId(httpServletRequest), StringPool.SLASH, getClassName(),
-			StringPool.SLASH, getClassPK());
+			_getGroupId(httpServletRequest), StringPool.SLASH,
+			HtmlUtil.escapeURL(getClassName()), StringPool.SLASH, getClassPK());
 	}
 
 	private long _getGroupId(HttpServletRequest httpServletRequest) {

@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {waitForElementToBeRemoved} from '@testing-library/dom';
-import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {waitFor, waitForElementToBeRemoved} from '@testing-library/dom';
+import {act, fireEvent, render} from '@testing-library/react';
 import {fetch as frontendJsFetch} from 'frontend-js-web';
-import {createMemoryHistory} from 'history';
 import React from 'react';
+import {MemoryRouter} from 'react-router';
 
 import ListView from '../../../../src/main/resources/META-INF/resources/js/components/list-view/ListView';
-import RouteWrapper from '../../RouterWrapper';
 import {
 	ACTIONS,
 	COLUMNS,
@@ -24,8 +23,6 @@ const BODY = (item) => ({
 	name: item.name,
 });
 
-let history;
-
 const customFetch = async ({data, endpoint, method = 'GET'}) => {
 	const response = await frontendJsFetch(endpoint, {
 		body: JSON.stringify(data),
@@ -35,25 +32,21 @@ const customFetch = async ({data, endpoint, method = 'GET'}) => {
 	return response.json();
 };
 
-const ListViewWrapper = (props) => (
-	<ListView
-		columns={COLUMNS}
-		customFetch={customFetch}
-		emptyState={EMPTY_STATE}
-		endpoint={ENDPOINT}
-		history={history}
-		{...props}
-	>
-		{BODY}
-	</ListView>
+const ListViewWrapper = ({initialEntries, ...props}) => (
+	<MemoryRouter initialEntries={initialEntries}>
+		<ListView
+			columns={COLUMNS}
+			customFetch={customFetch}
+			emptyState={EMPTY_STATE}
+			endpoint={ENDPOINT}
+			{...props}
+		>
+			{BODY}
+		</ListView>
+	</MemoryRouter>
 );
 
 describe('ListView', () => {
-	beforeEach(() => {
-		history = createMemoryHistory();
-		cleanup();
-	});
-
 	afterEach(() => {
 		jest.restoreAllMocks();
 	});
@@ -109,19 +102,18 @@ describe('ListView', () => {
 	});
 
 	it('current page is greater than total pages', async () => {
-		history.push('/test?page=2');
-
 		fetch.mockResponse(JSON.stringify(RESPONSES.ONE_ITEM));
 
 		const {container, queryAllByText} = render(
-			<ListViewWrapper actions={ACTIONS} />
+			<ListViewWrapper actions={ACTIONS} initialEntries={['/?page=2']} />
 		);
 
 		await waitForElementToBeRemoved(() => {
 			return document.querySelector('span.loading-animation');
 		});
 
-		expect(queryAllByText(/Item/).length).toBe(1);
+		await waitFor(() => expect(queryAllByText(/Item/).length).toBe(1));
+
 		expect(container.querySelectorAll('li.page-item').length).toBe(0);
 	});
 
@@ -144,17 +136,15 @@ describe('ListView', () => {
 			},
 		];
 
-		const {container, getAllByRole, queryByPlaceholderText} = render(
-			<RouteWrapper>
-				<ListViewWrapper actions={actions} />
-			</RouteWrapper>
+		const {container, findAllByRole, queryByPlaceholderText} = render(
+			<ListViewWrapper actions={actions} />
 		);
 
 		await waitForElementToBeRemoved(() => {
 			return document.querySelector('span.loading-animation');
 		});
 
-		let buttons = getAllByRole('menuitem', {hidden: true});
+		let buttons = await findAllByRole('menuitem', {hidden: true});
 		const refreshButton = buttons[buttons.length - 2];
 
 		await act(async () => {
@@ -163,7 +153,7 @@ describe('ListView', () => {
 
 		expect(refreshAction.mock.calls.length).toBe(1);
 
-		buttons = getAllByRole('menuitem', {hidden: true});
+		buttons = await findAllByRole('menuitem', {hidden: true});
 		const nonRefreshButton = buttons[buttons.length - 1];
 		fireEvent.click(nonRefreshButton);
 

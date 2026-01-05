@@ -73,6 +73,12 @@ public interface StagedModelDataHandler<T extends StagedModel> {
 	 */
 	public T fetchMissingReference(String uuid, long groupId);
 
+	public default T fetchStagedModelByExternalReferenceCodeAndGroupId(
+		String externalReferenceCode, long groupId) {
+
+		return null;
+	}
+
 	/**
 	 * Returns the staged model with the UUID and group. This method is used in
 	 * cases with grouped models.
@@ -190,6 +196,10 @@ public interface StagedModelDataHandler<T extends StagedModel> {
 	public void importStagedModel(
 			PortletDataContext portletDataContext, T stagedModel)
 		throws PortletDataException;
+
+	public default boolean isEnabled(long companyId) {
+		return true;
+	}
 
 	/**
 	 * Restores the staged model from the trash. This method is called during

@@ -5,7 +5,8 @@
 
 package com.liferay.partner;
 
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringUtil;
 
@@ -17,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.springframework.amqp.core.ExchangeTypes;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Jair Medeiros
@@ -234,11 +237,15 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/accounts",
-				"/by-external-reference-code/", accountExternalReferenceCode,
-				"/user-accounts/by-email-address/", contactEmailAddress));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/accounts",
+					"/by-external-reference-code/",
+					accountExternalReferenceCode,
+					"/user-accounts/by-email-address/", contactEmailAddress)
+			).build(
+			).toUri());
 	}
 
 	private void _assignUserToAccountRole(
@@ -260,20 +267,27 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/accounts",
-				"/by-external-reference-code/", accountExternalReferenceCode,
-				"/account-roles/", accountRoleId,
-				"/user-accounts/by-email-address/", contactEmailAddress));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/accounts",
+					"/by-external-reference-code/",
+					accountExternalReferenceCode, "/account-roles/",
+					accountRoleId, "/user-accounts/by-email-address/",
+					contactEmailAddress)
+			).build(
+			).toUri());
 	}
 
 	private void _assignUserToRegularRole(String emailAddress, String name) {
-		JSONObject userAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
-					emailAddress
-			).build());
+		JSONObject userAccountJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/user-accounts" +
+						"/by-email-address/" + emailAddress
+				).build(
+				).toUri()));
 
 		Long userAccountId = userAccountJSONObject.getLong("id");
 
@@ -295,24 +309,30 @@ public class QueueListener extends BaseRestController {
 		}
 
 		post(
-			"",
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/roles/", roleId,
-				"/association/user-account/", userAccountId));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/roles/", roleId,
+					"/association/user-account/", userAccountId)
+			).build(
+			).toUri());
 	}
 
 	private long _getAccountRoleId(
 		String accountExternalReferenceCode, String accountRoleName) {
 
-		JSONObject accountRolesResponseJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				StringBundler.concat(
-					"/o/headless-admin-user/v1.0/accounts",
-					"/by-external-reference-code/",
-					accountExternalReferenceCode, "/account-roles")
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		JSONObject accountRolesResponseJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					StringBundler.concat(
+						"/o/headless-admin-user/v1.0/accounts",
+						"/by-external-reference-code/",
+						accountExternalReferenceCode, "/account-roles")
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toUri()));
 
 		JSONArray accountRolesJSONArray =
 			accountRolesResponseJSONObject.getJSONArray("items");
@@ -329,6 +349,11 @@ public class QueueListener extends BaseRestController {
 		}
 
 		return 0;
+	}
+
+	private String _getAuthorization() {
+		return _liferayOAuth2AccessTokenManager.getAuthorization(
+			"liferay-partner-etc-spring-boot-oahs");
 	}
 
 	private String _getCountryISOCode(JSONObject koroneikiAccountJSONObject) {
@@ -359,21 +384,38 @@ public class QueueListener extends BaseRestController {
 		return "";
 	}
 
-	private long _getRegionOrganizationId(String regionName) {
-		JSONObject globalOrganizationJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/organizations" +
-					"/by-external-reference-code/PRM-ORG-GLOBAL"
-			).build());
+	private JSONObject _getJSONObject(String json) {
+		try {
+			return new JSONObject(json);
+		}
+		catch (JSONException jsonException) {
+			_log.error("Unable to create JSON object: " + json);
 
-		JSONObject organizationsJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/organizations/" +
-					globalOrganizationJSONObject.getLong("id") +
-						"/child-organizations"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+			throw jsonException;
+		}
+	}
+
+	private long _getRegionOrganizationId(String regionName) {
+		JSONObject globalOrganizationJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/organizations" +
+						"/by-external-reference-code/PRM-ORG-GLOBAL"
+				).build(
+				).toUri()));
+
+		JSONObject organizationsJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/organizations/" +
+						globalOrganizationJSONObject.getLong("id") +
+							"/child-organizations"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toUri()));
 
 		JSONArray organizationsJSONArray = organizationsJSONObject.getJSONArray(
 			"items");
@@ -391,14 +433,17 @@ public class QueueListener extends BaseRestController {
 	}
 
 	private long _getRegularRoleId(String name) {
-		JSONObject regularRolesResponseJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/roles"
-			).queryParam(
-				"filter", "name eq '" + name + "'"
-			).queryParam(
-				"pageSize", "-1"
-			).build());
+		JSONObject regularRolesResponseJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/roles"
+				).queryParam(
+					"filter", "name eq '" + name + "'"
+				).queryParam(
+					"pageSize", "-1"
+				).build(
+				).toUri()));
 
 		JSONArray regularRolesJSONArray =
 			regularRolesResponseJSONObject.getJSONArray("items");
@@ -525,15 +570,18 @@ public class QueueListener extends BaseRestController {
 		String accountExternalReferenceCode, String accountName,
 		String contactEmailAddress) {
 
-		JSONObject jsonObject = get(
-			uriBuilder -> uriBuilder.path(
-				StringBundler.concat(
-					"/o/headless-admin-user/v1.0/accounts",
-					"/by-external-reference-code/",
-					accountExternalReferenceCode,
-					"/user-accounts/by-email-address/", contactEmailAddress,
-					"/account-roles")
-			).build());
+		JSONObject jsonObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					StringBundler.concat(
+						"/o/headless-admin-user/v1.0/accounts",
+						"/by-external-reference-code/",
+						accountExternalReferenceCode,
+						"/user-accounts/by-email-address/", contactEmailAddress,
+						"/account-roles")
+				).build(
+				).toUri()));
 
 		if (jsonObject.getLong("totalCount") > 0) {
 			return;
@@ -547,10 +595,15 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/accounts",
-				"/by-external-reference-code/", accountExternalReferenceCode,
-				"/user-accounts/by-email-address/", contactEmailAddress));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/accounts",
+					"/by-external-reference-code/",
+					accountExternalReferenceCode,
+					"/user-accounts/by-email-address/", contactEmailAddress)
+			).build(
+			).toUri());
 	}
 
 	private void _unassignUserFromAccountRole(
@@ -572,21 +625,29 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/accounts",
-				"/by-external-reference-code/", accountExternalReferenceCode,
-				"/account-roles/", accountRoleId,
-				"/user-accounts/by-email-address/", contactEmailAddress));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/accounts",
+					"/by-external-reference-code/",
+					accountExternalReferenceCode, "/account-roles/",
+					accountRoleId, "/user-accounts/by-email-address/",
+					contactEmailAddress)
+			).build(
+			).toUri());
 	}
 
 	private void _unassignUserFromRegularRole(
 		String emailAddress, String name) {
 
-		JSONObject userAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/headless-admin-user/v1.0/user-accounts/by-email-address/" +
-					emailAddress
-			).build());
+		JSONObject userAccountJSONObject = _getJSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/user-accounts" +
+						"/by-email-address/" + emailAddress
+				).build(
+				).toUri()));
 
 		Long userAccountId = userAccountJSONObject.getLong("id");
 
@@ -608,9 +669,13 @@ public class QueueListener extends BaseRestController {
 		}
 
 		delete(
-			StringBundler.concat(
-				"/o/headless-admin-user/v1.0/roles/", roleId,
-				"/association/user-account/", userAccountId));
+			_getAuthorization(), "",
+			UriComponentsBuilder.fromPath(
+				StringBundler.concat(
+					"/o/headless-admin-user/v1.0/roles/", roleId,
+					"/association/user-account/", userAccountId)
+			).build(
+			).toUri());
 	}
 
 	private void _updateAccount(
@@ -624,11 +689,14 @@ public class QueueListener extends BaseRestController {
 			}
 		};
 
-		JSONObject proxyAccountJSONObject = get(
-			uriBuilder -> uriBuilder.path(
-				"/o/c/proxyaccounts/by-external-reference-code/" +
-					externalReferenceCode
-			).build());
+		JSONObject proxyAccountJSONObject = new JSONObject(
+			get(
+				_getAuthorization(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/proxyaccounts/by-external-reference-code/" +
+						externalReferenceCode
+				).build(
+				).toUri()));
 
 		if (proxyAccountJSONObject.has("currency")) {
 			JSONObject proxyCurrencyJSONObject =
@@ -642,10 +710,14 @@ public class QueueListener extends BaseRestController {
 			accountJSONObject.put("partnerCountry", countryISOCode);
 		}
 
-		JSONObject updatedAccountJSONObject = put(
-			accountJSONObject.toString(),
-			"/o/headless-admin-user/v1.0/accounts/by-external-reference-code/" +
-				externalReferenceCode);
+		JSONObject updatedAccountJSONObject = _getJSONObject(
+			put(
+				_getAuthorization(), accountJSONObject.toString(),
+				UriComponentsBuilder.fromPath(
+					"/o/headless-admin-user/v1.0/accounts" +
+						"/by-external-reference-code/" + externalReferenceCode
+				).build(
+				).toUri()));
 
 		if (proxyAccountJSONObject.has("region")) {
 			_updateAccountRegion(
@@ -673,12 +745,15 @@ public class QueueListener extends BaseRestController {
 
 		if (organizationIdsJSONArray.isEmpty()) {
 			post(
-				"",
-				StringBundler.concat(
-					"/o/headless-admin-user/v1.0/accounts",
-					"/by-external-reference-code/",
-					accountJSONObject.getString("externalReferenceCode"),
-					"/organizations/", regionOrganizationId));
+				_getAuthorization(), "",
+				UriComponentsBuilder.fromPath(
+					StringBundler.concat(
+						"/o/headless-admin-user/v1.0/accounts",
+						"/by-external-reference-code/",
+						accountJSONObject.getString("externalReferenceCode"),
+						"/organizations/", regionOrganizationId)
+				).build(
+				).toUri());
 		}
 		else {
 			Long organizationId = organizationIdsJSONArray.getLong(0);
@@ -691,11 +766,15 @@ public class QueueListener extends BaseRestController {
 					accountJSONObject.getString("externalReferenceCode"));
 
 				patch(
+					_getAuthorization(),
 					accountExternalReferenceCodeJSONArray.toString(),
-					StringBundler.concat(
-						"/o/headless-admin-user/v1.0/organizations",
-						"/move-accounts/", organizationId, "/",
-						regionOrganizationId, "/by-external-reference-code"));
+					UriComponentsBuilder.fromPath(
+						StringBundler.concat(
+							"/o/headless-admin-user/v1.0/organizations",
+							"/move-accounts/", organizationId, "/",
+							regionOrganizationId, "/by-external-reference-code")
+					).build(
+					).toUri());
 			}
 		}
 	}

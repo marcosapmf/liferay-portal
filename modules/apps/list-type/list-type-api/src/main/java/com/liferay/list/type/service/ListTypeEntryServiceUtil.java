@@ -33,17 +33,24 @@ public class ListTypeEntryServiceUtil {
 	 */
 	public static ListTypeEntry addListTypeEntry(
 			String externalReferenceCode, long listTypeDefinitionId, String key,
-			Map<java.util.Locale, String> nameMap)
+			Map<java.util.Locale, String> nameMap, boolean system)
 		throws PortalException {
 
 		return getService().addListTypeEntry(
-			externalReferenceCode, listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, listTypeDefinitionId, key, nameMap, system);
 	}
 
 	public static ListTypeEntry deleteListTypeEntry(long listTypeEntryId)
 		throws PortalException {
 
 		return getService().deleteListTypeEntry(listTypeEntryId);
+	}
+
+	public static ListTypeEntry fetchListTypeEntry(
+			long listTypeDefinitionId, String key)
+		throws PortalException {
+
+		return getService().fetchListTypeEntry(listTypeDefinitionId, key);
 	}
 
 	public static List<ListTypeEntry> getListTypeEntries(
@@ -73,6 +80,14 @@ public class ListTypeEntryServiceUtil {
 
 		return getService().getListTypeEntryByExternalReferenceCode(
 			externalReferenceCode, companyId, listTypeDefinitionId);
+	}
+
+	public static ListTypeEntry getOrAddEmptyListTypeEntry(
+			long userId, long listTypeDefinitionId, String key)
+		throws PortalException {
+
+		return getService().getOrAddEmptyListTypeEntry(
+			userId, listTypeDefinitionId, key);
 	}
 
 	/**

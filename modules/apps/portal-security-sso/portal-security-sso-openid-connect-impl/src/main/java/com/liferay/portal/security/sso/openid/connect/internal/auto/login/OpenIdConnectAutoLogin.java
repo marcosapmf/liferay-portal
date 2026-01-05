@@ -13,9 +13,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,22 +47,22 @@ public class OpenIdConnectAutoLogin extends BaseAutoLogin {
 		Long userId = (Long)httpSession.getAttribute(
 			OpenIdConnectWebKeys.OPEN_ID_CONNECT_AUTHENTICATING_USER_ID);
 
-		if (userId != null) {
-			httpSession.removeAttribute(
-				OpenIdConnectWebKeys.OPEN_ID_CONNECT_AUTHENTICATING_USER_ID);
-
-			User user = _userLocalService.getUserById(userId);
-
-			String[] credentials = new String[3];
-
-			credentials[0] = String.valueOf(user.getUserId());
-			credentials[1] = user.getPassword();
-			credentials[2] = Boolean.TRUE.toString();
-
-			return credentials;
+		if (userId == null) {
+			return null;
 		}
 
-		return null;
+		httpSession.removeAttribute(
+			OpenIdConnectWebKeys.OPEN_ID_CONNECT_AUTHENTICATING_USER_ID);
+
+		User user = _userLocalService.getUserById(userId);
+
+		String[] credentials = new String[3];
+
+		credentials[0] = String.valueOf(user.getUserId());
+		credentials[1] = user.getPassword();
+		credentials[2] = Boolean.TRUE.toString();
+
+		return credentials;
 	}
 
 	@Reference

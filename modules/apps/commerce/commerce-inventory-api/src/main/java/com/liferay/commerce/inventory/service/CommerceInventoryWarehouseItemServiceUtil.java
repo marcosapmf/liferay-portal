@@ -33,26 +33,28 @@ public class CommerceInventoryWarehouseItemServiceUtil {
 	public static CommerceInventoryWarehouseItem
 			addCommerceInventoryWarehouseItem(
 				String externalReferenceCode, long commerceInventoryWarehouseId,
-				java.math.BigDecimal quantity, String sku,
+				java.math.BigDecimal quantity,
+				java.math.BigDecimal reservedQuantity, String sku,
 				String unitOfMeasureKey)
 		throws PortalException {
 
 		return getService().addCommerceInventoryWarehouseItem(
-			externalReferenceCode, commerceInventoryWarehouseId, quantity, sku,
-			unitOfMeasureKey);
+			externalReferenceCode, commerceInventoryWarehouseId, quantity,
+			reservedQuantity, sku, unitOfMeasureKey);
 	}
 
 	public static CommerceInventoryWarehouseItem
 			addOrUpdateCommerceInventoryWarehouseItem(
 				String externalReferenceCode, long companyId,
 				long commerceInventoryWarehouseId,
-				java.math.BigDecimal quantity, String sku,
+				java.math.BigDecimal quantity,
+				java.math.BigDecimal reservedQuantity, String sku,
 				String unitOfMeasureKey)
 		throws PortalException {
 
 		return getService().addOrUpdateCommerceInventoryWarehouseItem(
 			externalReferenceCode, companyId, commerceInventoryWarehouseId,
-			quantity, sku, unitOfMeasureKey);
+			quantity, reservedQuantity, sku, unitOfMeasureKey);
 	}
 
 	public static void deleteCommerceInventoryWarehouseItem(
@@ -148,11 +150,12 @@ public class CommerceInventoryWarehouseItemServiceUtil {
 	}
 
 	public static int getCommerceInventoryWarehouseItemsCount(
-			long companyId, long groupId, String sku, String unitOfMeasureKey)
+			long companyId, long accountEntryId, long groupId, String sku,
+			String unitOfMeasureKey)
 		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouseItemsCount(
-			companyId, groupId, sku, unitOfMeasureKey);
+			companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	public static int getCommerceInventoryWarehouseItemsCount(
@@ -201,10 +204,11 @@ public class CommerceInventoryWarehouseItemServiceUtil {
 	}
 
 	public static java.math.BigDecimal getStockQuantity(
-		long companyId, long groupId, String sku, String unitOfMeasureKey) {
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey) {
 
 		return getService().getStockQuantity(
-			companyId, groupId, sku, unitOfMeasureKey);
+			companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	public static java.math.BigDecimal getStockQuantity(
@@ -238,23 +242,13 @@ public class CommerceInventoryWarehouseItemServiceUtil {
 			updateCommerceInventoryWarehouseItem(
 				long commerceInventoryWarehouseItemId,
 				java.math.BigDecimal quantity,
-				java.math.BigDecimal reservedQuantity, long mvccVersion)
+				java.math.BigDecimal reservedQuantity, String unitOfMeasureKey,
+				long mvccVersion)
 		throws PortalException {
 
 		return getService().updateCommerceInventoryWarehouseItem(
 			commerceInventoryWarehouseItemId, quantity, reservedQuantity,
-			mvccVersion);
-	}
-
-	public static CommerceInventoryWarehouseItem
-			updateCommerceInventoryWarehouseItem(
-				long commerceInventoryWarehouseItemId, long mvccVersion,
-				java.math.BigDecimal quantity, String unitOfMeasureKey)
-		throws PortalException {
-
-		return getService().updateCommerceInventoryWarehouseItem(
-			commerceInventoryWarehouseItemId, mvccVersion, quantity,
-			unitOfMeasureKey);
+			unitOfMeasureKey, mvccVersion);
 	}
 
 	public static CommerceInventoryWarehouseItemService getService() {

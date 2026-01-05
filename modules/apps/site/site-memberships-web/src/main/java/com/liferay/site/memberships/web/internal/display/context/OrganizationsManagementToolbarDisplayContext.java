@@ -34,9 +34,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.memberships.web.internal.util.GroupUtil;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -140,11 +140,6 @@ public class OrganizationsManagementToolbarDisplayContext
 	}
 
 	@Override
-	public String getInfoPanelId() {
-		return "infoPanelId";
-	}
-
-	@Override
 	public String getSearchContainerId() {
 		return "organizations";
 	}
@@ -171,11 +166,6 @@ public class OrganizationsManagementToolbarDisplayContext
 		}
 
 		return false;
-	}
-
-	@Override
-	public Boolean isShowInfoButton() {
-		return true;
 	}
 
 	@Override

@@ -12,9 +12,9 @@ import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Alicia Garcia
@@ -80,11 +80,7 @@ public class MultiSessionErrors {
 	}
 
 	private static boolean _isEmpty(HttpServletRequest httpServletRequest) {
-		if (SessionErrors.isEmpty(httpServletRequest)) {
-			return true;
-		}
-
-		return false;
+		return SessionErrors.isEmpty(httpServletRequest);
 	}
 
 	private static final Class<?>[] _CLASSES_HIDE_DEFAULT_ERROR_MESSAGE =

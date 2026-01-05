@@ -6,6 +6,8 @@
 package com.liferay.batch.engine.internal.reader;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,31 +15,40 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import com.liferay.batch.engine.BatchEngineTaskContentType;
 import com.liferay.batch.engine.action.ItemReaderPostAction;
+import com.liferay.batch.engine.exception.BatchEngineImportTaskExecutorException;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.vulcan.jackson.databind.ObjectMapperProviderUtil;
 
 import java.io.IOException;
 import java.io.Serializable;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * @author Ivica Cardic
+ * @author Petteri Karttunen
  */
 public class BatchEngineImportTaskItemReaderUtil {
 
@@ -45,72 +56,38 @@ public class BatchEngineImportTaskItemReaderUtil {
 			BatchEngineImportTask batchEngineImportTask, Class<T> itemClass,
 			Map<String, Object> fieldNameValueMap,
 			List<ItemReaderPostAction> itemReaderPostActions)
-		throws ReflectiveOperationException {
+		throws BatchEngineImportTaskExecutorException {
 
-		Map<String, Serializable> extendedProperties = new HashMap<>();
-		T item = itemClass.newInstance();
+		T item = null;
 
-		for (Map.Entry<String, Object> entry : fieldNameValueMap.entrySet()) {
-			String name = entry.getKey();
+		try {
+			Class<? extends T> resolvedClass = _resolveClass(
+				fieldNameValueMap, itemClass);
 
-			Field field = null;
+			Constructor<? extends T> constructor =
+				resolvedClass.getDeclaredConstructor();
 
-			for (Field declaredField : itemClass.getDeclaredFields()) {
-				if (name.equals(declaredField.getName()) ||
-					Objects.equals(
-						StringPool.UNDERLINE + name, declaredField.getName())) {
+			item = constructor.newInstance();
 
-					field = declaredField;
+			Map<String, Serializable> extendedProperties = new HashMap<>();
 
-					break;
-				}
+			_processFieldNameValueMap(
+				batchEngineImportTask,
+				_getDeclaredFields(itemClass, resolvedClass),
+				extendedProperties, fieldNameValueMap, item);
+
+			for (ItemReaderPostAction itemReaderPostAction :
+					itemReaderPostActions) {
+
+				itemReaderPostAction.run(
+					batchEngineImportTask, extendedProperties, item);
 			}
 
-			if (field != null) {
-				field.setAccessible(true);
-
-				ObjectMapper objectMapper = _getObjectMapper(field);
-
-				field.set(
-					item,
-					objectMapper.convertValue(
-						entry.getValue(), field.getType()));
-
-				continue;
-			}
-
-			for (Field declaredField : itemClass.getDeclaredFields()) {
-				JsonAnySetter[] jsonAnySetters =
-					declaredField.getAnnotationsByType(JsonAnySetter.class);
-
-				if (jsonAnySetters.length > 0) {
-					field = declaredField;
-
-					break;
-				}
-			}
-
-			if (field == null) {
-				extendedProperties.put(
-					entry.getKey(), (Serializable)entry.getValue());
-			}
-			else {
-				field.setAccessible(true);
-
-				Map<String, Object> map = (Map)field.get(item);
-
-				map.put(entry.getKey(), entry.getValue());
-			}
+			return item;
 		}
-
-		for (ItemReaderPostAction itemReaderPostAction :
-				itemReaderPostActions) {
-
-			itemReaderPostAction.run(
-				batchEngineImportTask, extendedProperties, item);
+		catch (Exception exception) {
+			throw new BatchEngineImportTaskExecutorException(item, exception);
 		}
-
-		return item;
 	}
 
 	public static Map<String, Object> mapFieldNames(
@@ -189,13 +166,96 @@ public class BatchEngineImportTaskItemReaderUtil {
 		return targetFieldNameValueMap;
 	}
 
-	private static ObjectMapper _getObjectMapper(Field field)
-		throws IllegalAccessException, InstantiationException {
+	public abstract static class CreatorMixin {
+
+		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+		public String externalReferenceCode;
+
+		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+		public Long id;
+
+	}
+
+	private static Field _getAnySetterField(Map<String, Field> fields) {
+		for (Field field : fields.values()) {
+			if (field.isAnnotationPresent(JsonAnySetter.class)) {
+				return field;
+			}
+		}
+
+		return null;
+	}
+
+	private static Set<String> _getBatchRestrictFieldNames(
+		BatchEngineImportTask batchEngineImportTask) {
+
+		Map<String, Serializable> parameters =
+			batchEngineImportTask.getParameters();
+
+		if (parameters == null) {
+			return new HashSet<>();
+		}
+
+		String batchRestrictFields = MapUtil.getString(
+			parameters, "batchRestrictFields");
+
+		if (Validator.isBlank(batchRestrictFields)) {
+			return new HashSet<>();
+		}
+
+		return SetUtil.fromArray(StringUtil.split(batchRestrictFields));
+	}
+
+	private static Map<String, Field> _getDeclaredFields(
+		Class<?> baseClass, Class<?> resolvedClass) {
+
+		Map<String, Field> fields = new HashMap<>();
+
+		for (Field field : baseClass.getDeclaredFields()) {
+			fields.put(field.getName(), field);
+		}
+
+		if (Objects.equals(baseClass, resolvedClass)) {
+			return fields;
+		}
+
+		for (Field field : resolvedClass.getDeclaredFields()) {
+			fields.put(field.getName(), field);
+		}
+
+		return fields;
+	}
+
+	private static ObjectMapper _getObjectMapper(
+			BatchEngineImportTask batchEngineImportTask, Field field,
+			Object value)
+		throws Exception {
+
+		if (StringUtil.equals(
+				batchEngineImportTask.getParameterValue(
+					"importCreatorStrategy"),
+				"KEEP_CREATOR") &&
+			StringUtil.equals(field.getName(), "creator")) {
+
+			return new ObjectMapper() {
+				{
+					addMixIn(field.getType(), CreatorMixin.class);
+				}
+			};
+		}
 
 		JsonDeserialize[] jsonDeserializes = field.getAnnotationsByType(
 			JsonDeserialize.class);
 
 		if (ArrayUtil.isEmpty(jsonDeserializes)) {
+			if (Objects.equals(
+					batchEngineImportTask.getContentType(),
+					BatchEngineTaskContentType.CSV.getFileExtension()) &&
+				_isCSVMapColumn(field.getType(), value)) {
+
+				return _csvMapObjectMapper;
+			}
+
 			return _objectMapper;
 		}
 
@@ -215,8 +275,140 @@ public class BatchEngineImportTaskItemReaderUtil {
 		};
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BatchEngineImportTaskItemReaderUtil.class);
+	private static boolean _isCSVMapColumn(Class<?> clazz, Object value) {
+		if (!Map.class.isAssignableFrom(clazz)) {
+			return false;
+		}
+
+		String string = value.toString();
+
+		if ((string == null) || string.isEmpty()) {
+			return false;
+		}
+
+		for (String line : string.split(StringPool.RETURN_NEW_LINE)) {
+			if (!line.contains(StringPool.COLON)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static void _processFieldNameValueMap(
+			BatchEngineImportTask batchEngineImportTask,
+			Map<String, Field> declaredFields,
+			Map<String, Serializable> extendedProperties,
+			Map<String, Object> fieldNameValueMap, Object item)
+		throws Exception {
+
+		Field anySetterField = _getAnySetterField(declaredFields);
+
+		Set<String> batchRestrictFieldNames = _getBatchRestrictFieldNames(
+			batchEngineImportTask);
+
+		for (Map.Entry<String, Object> entry : fieldNameValueMap.entrySet()) {
+			String name = entry.getKey();
+
+			try {
+				if (batchRestrictFieldNames.contains(name)) {
+					continue;
+				}
+
+				Field field = declaredFields.get(name);
+
+				if (field == null) {
+					field = declaredFields.get(StringPool.UNDERLINE + name);
+				}
+
+				if (field != null) {
+					_setField(
+						batchEngineImportTask, field, item, entry.getValue());
+
+					continue;
+				}
+
+				if (anySetterField != null) {
+					_setField(anySetterField, item, name, entry.getValue());
+				}
+				else {
+					extendedProperties.put(
+						entry.getKey(), (Serializable)entry.getValue());
+				}
+			}
+			catch (Exception exception) {
+				throw new Exception(
+					StringBundler.concat(
+						"Unable to set field ", name, StringPool.COLON,
+						StringPool.SPACE, exception.getMessage()),
+					exception);
+			}
+		}
+	}
+
+	private static <T> Class<? extends T> _resolveClass(
+		Map<String, Object> fieldNameValueMap, Class<T> itemClass) {
+
+		JsonTypeInfo jsonTypeInfo = itemClass.getAnnotation(JsonTypeInfo.class);
+
+		if (jsonTypeInfo == null) {
+			return itemClass;
+		}
+
+		String property = jsonTypeInfo.property();
+
+		ObjectMapper objectMapper =
+			ObjectMapperProviderUtil.getBatchEngineObjectMapper();
+
+		T value = objectMapper.convertValue(
+			HashMapBuilder.put(
+				property, fieldNameValueMap.get(property)
+			).build(),
+			itemClass);
+
+		return (Class<? extends T>)value.getClass();
+	}
+
+	private static void _setField(
+			BatchEngineImportTask batchEngineImportTask, Field field,
+			Object item, Object value)
+		throws Exception {
+
+		field.setAccessible(true);
+
+		ObjectMapper objectMapper = _getObjectMapper(
+			batchEngineImportTask, field, value);
+
+		field.set(item, objectMapper.convertValue(value, field.getType()));
+	}
+
+	private static void _setField(
+			Field field, Object item, String name, Object value)
+		throws Exception {
+
+		field.setAccessible(true);
+
+		Map<String, Object> map = (Map<String, Object>)field.get(item);
+
+		if (map == null) {
+			map = new HashMap<>();
+
+			field.set(item, map);
+		}
+
+		map.put(name, value);
+	}
+
+	private static final ObjectMapper _csvMapObjectMapper = new ObjectMapper() {
+		{
+			SimpleModule simpleModule = new SimpleModule();
+
+			simpleModule.addDeserializer(
+				Map.class, new MapStdCSVDeserializer());
+
+			registerModule(simpleModule);
+		}
+	};
 
 	private static final Pattern _multiselectPicklistPattern = Pattern.compile(
 		"key_\\d+|name_\\d+");
@@ -225,16 +417,14 @@ public class BatchEngineImportTaskItemReaderUtil {
 		{
 			SimpleModule simpleModule = new SimpleModule();
 
-			simpleModule.addDeserializer(Map.class, new MapStdDeserializer());
-
 			registerModule(simpleModule);
 		}
 	};
 
-	private static class MapStdDeserializer
+	private static class MapStdCSVDeserializer
 		extends StdDeserializer<Map<String, Object>> {
 
-		public MapStdDeserializer() {
+		public MapStdCSVDeserializer() {
 			this(Map.class);
 		}
 
@@ -244,30 +434,20 @@ public class BatchEngineImportTaskItemReaderUtil {
 				DeserializationContext deserializationContext)
 			throws IOException {
 
-			try {
-				return deserializationContext.readValue(
-					jsonParser, LinkedHashMap.class);
+			Map<String, Object> map = new LinkedHashMap<>();
+
+			String string = jsonParser.getValueAsString();
+
+			for (String line : string.split(StringPool.RETURN_NEW_LINE)) {
+				String[] lineParts = line.split(StringPool.COLON);
+
+				map.put(lineParts[0], lineParts[1]);
 			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
 
-				Map<String, Object> map = new LinkedHashMap<>();
-
-				String string = jsonParser.getValueAsString();
-
-				for (String line : string.split(StringPool.RETURN_NEW_LINE)) {
-					String[] lineParts = line.split(StringPool.COLON);
-
-					map.put(lineParts[0], lineParts[1]);
-				}
-
-				return map;
-			}
+			return map;
 		}
 
-		protected MapStdDeserializer(Class<?> clazz) {
+		protected MapStdCSVDeserializer(Class<?> clazz) {
 			super(clazz);
 		}
 

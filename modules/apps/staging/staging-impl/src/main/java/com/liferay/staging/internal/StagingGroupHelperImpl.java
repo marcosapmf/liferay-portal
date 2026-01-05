@@ -11,6 +11,7 @@ import com.liferay.exportimport.kernel.staging.StagingURLHelper;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -27,9 +28,11 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.service.http.GroupServiceHttp;
 import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.internal.constants.CompanyGroupConstants;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,6 +42,16 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = StagingGroupHelper.class)
 public class StagingGroupHelperImpl implements StagingGroupHelper {
+
+	@Override
+	public Group fetchCompanyGroup(long companyId) {
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-35914")) {
+			return null;
+		}
+
+		return _groupLocalService.fetchFriendlyURLGroup(
+			companyId, CompanyGroupConstants.FRIENDLY_URL);
+	}
 
 	@Override
 	public Group fetchLiveGroup(Group group) {
@@ -158,6 +171,34 @@ public class StagingGroupHelperImpl implements StagingGroupHelper {
 		}
 
 		return groupId;
+	}
+
+	@Override
+	public boolean isCompanyGroup(Group group) {
+		return isCompanyGroup(group.getCompanyId(), group.getGroupId());
+	}
+
+	@Override
+	public boolean isCompanyGroup(long companyId, long groupId) {
+		Group companyGroup = fetchCompanyGroup(companyId);
+
+		if ((companyGroup != null) && (companyGroup.getGroupId() == groupId)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isCompanyGroupFriendlyURL(String friendlyURL) {
+		return Objects.equals(friendlyURL, CompanyGroupConstants.FRIENDLY_URL);
+	}
+
+	@Override
+	public boolean isDepotGroup(long groupId) {
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		return group.isDepot();
 	}
 
 	@Override

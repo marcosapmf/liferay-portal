@@ -7,15 +7,15 @@ package com.liferay.commerce.product.content.web.internal.frontend.data.set.prov
 
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.PriceModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.content.web.internal.constants.CPContentFDSNames;
 import com.liferay.commerce.product.content.web.internal.model.ReplacementSku;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -24,19 +24,18 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -68,13 +67,12 @@ public class ReplacementCPInstanceFDSDataProvider
 		long cProductId = ParamUtil.getLong(httpServletRequest, "cProductId");
 
 		if (sort == null) {
-			sort = SortFactoryUtil.getSort(CPInstance.class, "sku", "ASC");
+			sort = new Sort("sku", Sort.STRING_TYPE, false);
 		}
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			_portal.getCompanyId(httpServletRequest), commerceChannelGroupId,
-			_portal.getUserId(httpServletRequest), commerceOrderId,
-			commerceAccountId);
+			commerceAccountId, commerceChannelGroupId, null, commerceOrderId,
+			_portal.getCompanyId(httpServletRequest));
 
 		Locale locale = _portal.getLocale(httpServletRequest);
 

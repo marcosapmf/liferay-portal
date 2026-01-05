@@ -6,6 +6,7 @@
 package com.liferay.analytics.settings.rest.internal.resource.v1_0;
 
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.dto.v1_0.DataSourceLiferayAnalyticsURL;
 import com.liferay.analytics.settings.rest.dto.v1_0.DataSourceToken;
 import com.liferay.analytics.settings.rest.internal.client.AnalyticsCloudClient;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
@@ -38,7 +39,8 @@ public class DataSourceResourceImpl extends BaseDataSourceResourceImpl {
 			_analyticsCloudClient.disconnectAnalyticsDataSource(
 				_configurationProvider.getCompanyConfiguration(
 					AnalyticsConfiguration.class,
-					contextCompany.getCompanyId()));
+					contextCompany.getCompanyId()),
+				_companyLocalService.getCompany(contextUser.getCompanyId()));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -51,7 +53,8 @@ public class DataSourceResourceImpl extends BaseDataSourceResourceImpl {
 	}
 
 	@Override
-	public void postDataSource(DataSourceToken dataSourceToken)
+	public DataSourceLiferayAnalyticsURL postDataSource(
+			DataSourceToken dataSourceToken)
 		throws Exception {
 
 		Map<String, Object> properties =
@@ -63,6 +66,14 @@ public class DataSourceResourceImpl extends BaseDataSourceResourceImpl {
 
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			contextUser.getCompanyId(), properties);
+
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL =
+			new DataSourceLiferayAnalyticsURL();
+
+		dataSourceLiferayAnalyticsURL.setLiferayAnalyticsURL(
+			() -> String.valueOf(properties.get("liferayAnalyticsURL")));
+
+		return dataSourceLiferayAnalyticsURL;
 	}
 
 	@Activate

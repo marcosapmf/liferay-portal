@@ -26,11 +26,14 @@ import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.exception.DuplicateStyleBookEntryKeyException;
+import com.liferay.style.book.exception.StyleBookEntryThemeIdException;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.service.StyleBookEntryService;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry;
+
+import jakarta.portlet.PortletException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -41,8 +44,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -106,8 +107,12 @@ public class StyleBookEntryZipProcessorImpl
 
 	private StyleBookEntry _addStyleBookEntry(
 			long groupId, String frontendTokensValues, String name,
-			boolean overwrite, String styleBookEntryKey)
+			boolean overwrite, String styleBookEntryKey, String themeId)
 		throws Exception {
+
+		if (Validator.isBlank(themeId)) {
+			throw new StyleBookEntryThemeIdException.MustNotBeNull();
+		}
 
 		StyleBookEntry styleBookEntry =
 			_styleBookEntryEntryLocalService.fetchStyleBookEntry(
@@ -121,7 +126,7 @@ public class StyleBookEntryZipProcessorImpl
 			if (styleBookEntry == null) {
 				styleBookEntry = _styleBookEntryEntryService.addStyleBookEntry(
 					null, groupId, frontendTokensValues, name,
-					styleBookEntryKey,
+					styleBookEntryKey, themeId,
 					ServiceContextThreadLocal.getServiceContext());
 			}
 			else {
@@ -304,6 +309,8 @@ public class StyleBookEntryZipProcessorImpl
 
 		String styleBookEntryContent = _getContent(zipFile, fileName);
 
+		String themeId = StringPool.BLANK;
+
 		if (Validator.isNotNull(styleBookEntryContent)) {
 			JSONObject styleBookEntryJSONObject = _jsonFactory.createJSONObject(
 				styleBookEntryContent);
@@ -314,10 +321,12 @@ public class StyleBookEntryZipProcessorImpl
 				zipFile, fileName,
 				styleBookEntryJSONObject.getString("frontendTokensValuesPath"));
 			name = styleBookEntryJSONObject.getString("name");
+			themeId = styleBookEntryJSONObject.getString("themeId");
 		}
 
 		StyleBookEntry styleBookEntry = _addStyleBookEntry(
-			groupId, frontendTokensValues, name, overwrite, styleBookEntryKey);
+			groupId, frontendTokensValues, name, overwrite, styleBookEntryKey,
+			themeId);
 
 		if (styleBookEntry == null) {
 			return;
@@ -352,11 +361,7 @@ public class StyleBookEntryZipProcessorImpl
 	}
 
 	private boolean _isStyleBookEntry(String fileName) {
-		if (Objects.equals(_getFileName(fileName), "style-book.json")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getFileName(fileName), "style-book.json");
 	}
 
 	@Reference

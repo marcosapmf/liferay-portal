@@ -16,7 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,21 +31,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Javier Gamarra
  * @generated
  */
 @Generated("")
 @GraphQLName("ClassPKReference")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"className", "classPK"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"className", "classPK"})
 @XmlRootElement(name = "ClassPKReference")
 public class ClassPKReference implements Serializable {
 
@@ -52,7 +52,7 @@ public class ClassPKReference implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ClassPKReference.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getClassName() {
 		if (_classNameSupplier != null) {
 			className = _classNameSupplier.get();
@@ -94,7 +94,7 @@ public class ClassPKReference implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _classNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getClassPK() {
 		if (_classPKSupplier != null) {
 			classPK = _classPKSupplier.get();
@@ -196,8 +196,8 @@ public class ClassPKReference implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ClassPKReference",
 		name = "x-class-name"
 	)

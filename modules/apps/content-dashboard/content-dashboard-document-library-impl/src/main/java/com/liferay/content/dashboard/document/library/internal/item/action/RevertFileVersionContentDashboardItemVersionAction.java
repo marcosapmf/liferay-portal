@@ -16,12 +16,12 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mikel Lorza
@@ -61,7 +61,7 @@ public class RevertFileVersionContentDashboardItemVersionAction
 		LiferayPortletResponse liferayPortletResponse =
 			_portal.getLiferayPortletResponse(
 				(PortletResponse)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE));
+					JavaConstants.JAKARTA_PORTLET_RESPONSE));
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 

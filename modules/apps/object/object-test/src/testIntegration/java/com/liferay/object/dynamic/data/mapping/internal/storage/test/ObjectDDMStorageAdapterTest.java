@@ -11,8 +11,12 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapter;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterGetRequest;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterGetResponse;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterRegistry;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterSaveRequest;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterSaveResponse;
@@ -31,6 +35,7 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -44,6 +49,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,7 +91,8 @@ public class ObjectDDMStorageAdapterTest {
 					ListTypeEntryUtil.createListTypeEntry(
 						"ListTypeEntry2",
 						Collections.singletonMap(
-							LocaleUtil.US, "ListTypeEntry2"))));
+							LocaleUtil.US, "ListTypeEntry2"))),
+				new ServiceContext());
 
 		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
 			ListUtil.fromArray(
@@ -120,7 +128,7 @@ public class ObjectDDMStorageAdapterTest {
 	}
 
 	@Test
-	public void testSave() throws Exception {
+	public void testGetAndSave() throws Exception {
 		DDMStorageAdapter objectDDMStorageAdapter =
 			_ddmStorageAdapterRegistry.getDDMStorageAdapter("object");
 
@@ -168,6 +176,23 @@ public class ObjectDDMStorageAdapterTest {
 		Assert.assertEquals(
 			"ListTypeEntry1",
 			MapUtil.getString(objectEntry.getValues(), "picklistObjectField"));
+
+		DDMStorageAdapterGetResponse ddmStorageAdapterGetResponse =
+			objectDDMStorageAdapter.get(
+				DDMStorageAdapterGetRequest.Builder.newBuilder(
+					objectEntry.getObjectEntryId(), ddmForm
+				).build());
+
+		_assertDDMFormFieldValue(
+			ddmStorageAdapterGetResponse.getDDMFormValues(),
+			"multiselectDDMFormField",
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"[\"ListTypeEntry1\",\"ListTypeEntry2\"]", LocaleUtil.US));
+		_assertDDMFormFieldValue(
+			ddmStorageAdapterGetResponse.getDDMFormValues(),
+			"selectDDMFormField",
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"[\"ListTypeEntry1\"]", LocaleUtil.US));
 	}
 
 	private void _adDDMFormFieldOption(
@@ -180,6 +205,21 @@ public class ObjectDDMStorageAdapterTest {
 			RandomTestUtil.randomString());
 		ddmFormFieldOptions.addOptionReference(
 			ddmFormFieldOptionValue, listTypeEntryKey);
+	}
+
+	private void _assertDDMFormFieldValue(
+		DDMFormValues ddmFormValues, String ddmFormFieldName,
+		Value expectedValue) {
+
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+			ddmFormValues.getDDMFormFieldValuesMap(true);
+
+		List<DDMFormFieldValue> ddmFormFieldValues = ddmFormFieldValuesMap.get(
+			ddmFormFieldName);
+
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+
+		Assert.assertEquals(expectedValue, ddmFormFieldValue.getValue());
 	}
 
 	private DDMFormField _createDDMFormField(

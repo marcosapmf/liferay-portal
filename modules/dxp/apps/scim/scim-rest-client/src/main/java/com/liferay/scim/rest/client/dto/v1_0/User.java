@@ -8,11 +8,11 @@ package com.liferay.scim.rest.client.dto.v1_0;
 import com.liferay.scim.rest.client.function.UnsafeSupplier;
 import com.liferay.scim.rest.client.serdes.v1_0.UserSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Olivér Kecskeméty
@@ -46,16 +46,16 @@ public class User implements Cloneable, Serializable {
 
 	protected Boolean active;
 
-	public Object[] getAddresses() {
+	public Address[] getAddresses() {
 		return addresses;
 	}
 
-	public void setAddresses(Object[] addresses) {
+	public void setAddresses(Address[] addresses) {
 		this.addresses = addresses;
 	}
 
 	public void setAddresses(
-		UnsafeSupplier<Object[], Exception> addressesUnsafeSupplier) {
+		UnsafeSupplier<Address[], Exception> addressesUnsafeSupplier) {
 
 		try {
 			addresses = addressesUnsafeSupplier.get();
@@ -65,7 +65,7 @@ public class User implements Cloneable, Serializable {
 		}
 	}
 
-	protected Object[] addresses;
+	protected Address[] addresses;
 
 	public String getDisplayName() {
 		return displayName;
@@ -485,6 +485,37 @@ public class User implements Cloneable, Serializable {
 	}
 
 	protected String title;
+
+	public UserSchemaExtension
+		getUrn_ietf_params_scim_schemas_extension_liferay_2_0_User() {
+
+		return urn_ietf_params_scim_schemas_extension_liferay_2_0_User;
+	}
+
+	public void setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+		UserSchemaExtension
+			urn_ietf_params_scim_schemas_extension_liferay_2_0_User) {
+
+		this.urn_ietf_params_scim_schemas_extension_liferay_2_0_User =
+			urn_ietf_params_scim_schemas_extension_liferay_2_0_User;
+	}
+
+	public void setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+		UnsafeSupplier<UserSchemaExtension, Exception>
+			urn_ietf_params_scim_schemas_extension_liferay_2_0_UserUnsafeSupplier) {
+
+		try {
+			urn_ietf_params_scim_schemas_extension_liferay_2_0_User =
+				urn_ietf_params_scim_schemas_extension_liferay_2_0_UserUnsafeSupplier.
+					get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected UserSchemaExtension
+		urn_ietf_params_scim_schemas_extension_liferay_2_0_User;
 
 	public String getUserName() {
 		return userName;

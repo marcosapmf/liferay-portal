@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -53,7 +51,9 @@ public class ContentField implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ContentField.class, json);
 	}
 
-	@Schema(description = "The field's value.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The field's value."
+	)
 	@Valid
 	public ContentFieldValue getContentFieldValue() {
 		if (_contentFieldValueSupplier != null) {
@@ -96,7 +96,9 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<ContentFieldValue> _contentFieldValueSupplier;
 
-	@Schema(description = "The localized field's values.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized field's values."
+	)
 	@Valid
 	public Map<String, ContentFieldValue> getContentFieldValue_i18n() {
 		if (_contentFieldValue_i18nSupplier != null) {
@@ -142,7 +144,9 @@ public class ContentField implements Serializable {
 	private Supplier<Map<String, ContentFieldValue>>
 		_contentFieldValue_i18nSupplier;
 
-	@Schema(description = "The field type (e.g., image, text, etc.).")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The field type (e.g., image, text, etc.)."
+	)
 	public String getDataType() {
 		if (_dataTypeSupplier != null) {
 			dataType = _dataTypeSupplier.get();
@@ -183,7 +187,52 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _dataTypeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The field's friendly reference name. This is used by developers when referencing the field in custom implementations."
+	)
+	public String getFieldReference() {
+		if (_fieldReferenceSupplier != null) {
+			fieldReference = _fieldReferenceSupplier.get();
+
+			_fieldReferenceSupplier = null;
+		}
+
+		return fieldReference;
+	}
+
+	public void setFieldReference(String fieldReference) {
+		this.fieldReference = fieldReference;
+
+		_fieldReferenceSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFieldReference(
+		UnsafeSupplier<String, Exception> fieldReferenceUnsafeSupplier) {
+
+		_fieldReferenceSupplier = () -> {
+			try {
+				return fieldReferenceUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The field's friendly reference name. This is used by developers when referencing the field in custom implementations."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String fieldReference;
+
+	@JsonIgnore
+	private Supplier<String> _fieldReferenceSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The field's control type (e.g., text, text area, etc.)."
 	)
 	public String getInputControl() {
@@ -228,7 +277,9 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _inputControlSupplier;
 
-	@Schema(description = "The field's label.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The field's label."
+	)
 	public String getLabel() {
 		if (_labelSupplier != null) {
 			label = _labelSupplier.get();
@@ -269,7 +320,9 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _labelSupplier;
 
-	@Schema(description = "The localized field's labels.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized field's labels."
+	)
 	@Valid
 	public Map<String, String> getLabel_i18n() {
 		if (_label_i18nSupplier != null) {
@@ -312,7 +365,7 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _label_i18nSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The field's internal name. This is valid for comparisons and unique in the structured content."
 	)
 	public String getName() {
@@ -355,7 +408,7 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A list of child content fields that depend on this resource."
 	)
 	@Valid
@@ -402,7 +455,7 @@ public class ContentField implements Serializable {
 	@JsonIgnore
 	private Supplier<ContentField[]> _nestedContentFieldsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether this field can be rendered multiple times."
 	)
 	public Boolean getRepeatable() {
@@ -515,6 +568,22 @@ public class ContentField implements Serializable {
 			sb.append("\"");
 		}
 
+		String fieldReference = getFieldReference();
+
+		if (fieldReference != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fieldReference\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fieldReference));
+
+			sb.append("\"");
+		}
+
 		String inputControl = getInputControl();
 
 		if (inputControl != null) {
@@ -614,8 +683,8 @@ public class ContentField implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentField",
 		name = "x-class-name"
 	)

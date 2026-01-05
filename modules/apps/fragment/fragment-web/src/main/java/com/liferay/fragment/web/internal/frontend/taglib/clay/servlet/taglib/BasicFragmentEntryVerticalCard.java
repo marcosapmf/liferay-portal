@@ -7,9 +7,7 @@ package com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.model.FragmentEntry;
-import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
-import com.liferay.fragment.validator.FragmentEntryValidator;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
 import com.liferay.fragment.web.internal.servlet.taglib.util.BasicFragmentEntryActionDropdownItemsProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -23,12 +21,12 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -74,7 +72,7 @@ public class BasicFragmentEntryVerticalCard
 				themeDisplay.getPermissionChecker(),
 				themeDisplay.getScopeGroupId(),
 				FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) ||
-			fragmentEntry.isTypeReact()) {
+			fragmentEntry.isTypeReact() || fragmentEntry.isMarketplace()) {
 
 			return null;
 		}
@@ -90,6 +88,15 @@ public class BasicFragmentEntryVerticalCard
 		).setParameter(
 			"fragmentEntryId", fragmentEntry.getFragmentEntryId()
 		).buildString();
+	}
+
+	@Override
+	public String getIcon() {
+		if (fragmentEntry.isMarketplace()) {
+			return "marketplace";
+		}
+
+		return super.getIcon();
 	}
 
 	@Override
@@ -115,13 +122,6 @@ public class BasicFragmentEntryVerticalCard
 		return LabelItemListBuilder.add(
 			labelItem -> labelItem.setStatus(fragmentEntry.getStatus())
 		).add(
-			this::_hasWarnings,
-			labelItem -> {
-				labelItem.setDisplayType("warning");
-				labelItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "warnings"));
-			}
-		).add(
 			fragmentEntry::isCacheable,
 			labelItem -> {
 				labelItem.setDisplayType("info");
@@ -132,12 +132,31 @@ public class BasicFragmentEntryVerticalCard
 	}
 
 	@Override
+	public String getStickerCssClass() {
+		if (fragmentEntry.isMarketplace()) {
+			return "fragment-marketplace-sticker";
+		}
+
+		return super.getStickerCssClass();
+	}
+
+	@Override
+	public String getStickerIcon() {
+		if (fragmentEntry.isMarketplace()) {
+			return "marketplace";
+		}
+
+		return super.getStickerIcon();
+	}
+
+	@Override
 	public String getSubtitle() {
 		return LanguageUtil.format(
 			_httpServletRequest, "x-usages",
 			FragmentEntryLinkLocalServiceUtil.
-				getFragmentEntryLinksCountByFragmentEntryId(
-					fragmentEntry.getFragmentEntryId(), false));
+				getFragmentEntryLinksCountByFragmentEntryERC(
+					fragmentEntry.getExternalReferenceCode(),
+					fragmentEntry.getScopeERC(), false));
 	}
 
 	@Override
@@ -147,36 +166,6 @@ public class BasicFragmentEntryVerticalCard
 		}
 
 		return super.isSelectable();
-	}
-
-	private boolean _hasWarnings() {
-		try {
-			FragmentEntryValidator fragmentEntryValidator =
-				(FragmentEntryValidator)_httpServletRequest.getAttribute(
-					FragmentEntryValidator.class.getName());
-
-			fragmentEntryValidator.validateConfiguration(
-				fragmentEntry.getConfiguration());
-			fragmentEntryValidator.validateTypeOptions(
-				fragmentEntry.getType(), fragmentEntry.getTypeOptions());
-
-			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry =
-				(FragmentEntryProcessorRegistry)
-					_httpServletRequest.getAttribute(
-						FragmentEntryProcessorRegistry.class.getName());
-
-			fragmentEntryProcessorRegistry.validateFragmentEntryHTML(
-				fragmentEntry.getHtml(), fragmentEntry.getConfiguration());
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return true;
-		}
-
-		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

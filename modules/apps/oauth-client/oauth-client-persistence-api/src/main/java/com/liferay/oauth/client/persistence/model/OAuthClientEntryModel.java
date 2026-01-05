@@ -223,6 +223,21 @@ public interface OAuthClientEntryModel
 	public void setClientId(String clientId);
 
 	/**
+	 * Returns the custom claims json of this o auth client entry.
+	 *
+	 * @return the custom claims json of this o auth client entry
+	 */
+	@AutoEscape
+	public String getCustomClaimsJSON();
+
+	/**
+	 * Sets the custom claims json of this o auth client entry.
+	 *
+	 * @param customClaimsJSON the custom claims json of this o auth client entry
+	 */
+	public void setCustomClaimsJSON(String customClaimsJSON);
+
+	/**
 	 * Returns the info json of this o auth client entry.
 	 *
 	 * @return the info json of this o auth client entry
@@ -236,6 +251,20 @@ public interface OAuthClientEntryModel
 	 * @param infoJSON the info json of this o auth client entry
 	 */
 	public void setInfoJSON(String infoJSON);
+
+	/**
+	 * Returns the metadata cache time of this o auth client entry.
+	 *
+	 * @return the metadata cache time of this o auth client entry
+	 */
+	public long getMetadataCacheTime();
+
+	/**
+	 * Sets the metadata cache time of this o auth client entry.
+	 *
+	 * @param metadataCacheTime the metadata cache time of this o auth client entry
+	 */
+	public void setMetadataCacheTime(long metadataCacheTime);
 
 	/**
 	 * Returns the oidc user info mapper json of this o auth client entry.

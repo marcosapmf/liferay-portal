@@ -13,16 +13,16 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.Portal;
+
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +46,7 @@ public class CommerceSpecificationOptionListTypeDefinitionFDSActionProvider
 		return Arrays.asList(
 			new FDSActionDropdownItem(
 				PortletURLBuilder.create(
-					PortletURLFactoryUtil.create(
+					_portal.getControlPanelPortletURL(
 						httpServletRequest,
 						ObjectPortletKeys.LIST_TYPE_DEFINITIONS,
 						PortletRequest.RENDER_PHASE)
@@ -69,5 +69,8 @@ public class CommerceSpecificationOptionListTypeDefinitionFDSActionProvider
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Portal _portal;
 
 }

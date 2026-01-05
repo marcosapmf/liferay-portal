@@ -34,9 +34,11 @@
 		<column name="street1" type="String" />
 		<column name="street2" type="String" />
 		<column name="street3" type="String" />
+		<column name="subtype" type="String" />
 		<column name="validationDate" type="Date" />
 		<column name="validationStatus" type="int" />
 		<column name="zip" type="String" />
+		<column name="status" type="int" />
 
 		<!-- Order -->
 
@@ -61,6 +63,10 @@
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="classNameId" />
+		</finder>
+		<finder name="CN_CPK" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
 		</finder>
 		<finder name="C_C_C" return-type="Collection">
 			<finder-column name="companyId" />
@@ -161,10 +167,7 @@
 		<finder name="WebId" return-type="Company" unique="true">
 			<finder-column name="webId" />
 		</finder>
-		<finder name="Mx" return-type="Company">
-			<finder-column name="mx" />
-		</finder>
-		<finder name="LogoId" return-type="Company">
+		<finder name="LogoId" return-type="Collection">
 			<finder-column name="logoId" />
 		</finder>
 	</entity>
@@ -265,24 +268,24 @@
 
 		<!-- Other fields -->
 
-		<column change-tracking-resolution-type="merge" name="a2" type="String" />
-		<column change-tracking-resolution-type="merge" name="a3" type="String" />
-		<column change-tracking-resolution-type="merge" name="active" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="billingAllowed" type="boolean" />
+		<column name="a2" type="String" />
+		<column name="a3" type="String" />
+		<column name="active" type="boolean" />
+		<column name="billingAllowed" type="boolean" />
 		<column name="groupFilterEnabled" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="idd" type="String" />
-		<column change-tracking-resolution-type="merge" name="name" type="String" />
-		<column change-tracking-resolution-type="merge" name="number" type="String" />
-		<column change-tracking-resolution-type="merge" name="position" type="double" />
-		<column change-tracking-resolution-type="merge" name="shippingAllowed" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="subjectToVAT" type="boolean" />
+		<column name="idd" type="String" />
+		<column name="name" type="String" />
+		<column name="number" type="String" />
+		<column name="position" type="double" />
+		<column name="shippingAllowed" type="boolean" />
+		<column name="subjectToVAT" type="boolean" />
 		<column name="zipRequired" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="lastPublishDate" type="Date" />
+		<column name="lastPublishDate" type="Date" />
 
 		<!-- Localized entity -->
 
 		<localized-entity>
-			<localized-column change-tracking-resolution-type="merge" name="title" />
+			<localized-column name="title" />
 		</localized-entity>
 
 		<!-- Order -->
@@ -329,8 +332,27 @@
 			<finder-column name="active" />
 			<finder-column name="shippingAllowed" />
 		</finder>
+		<finder name="C_A_B_G" return-type="Collection">
+			<finder-column name="countryId" />
+			<finder-column name="active" />
+			<finder-column name="billingAllowed" />
+			<finder-column name="groupFilterEnabled" />
+		</finder>
+		<finder name="C_A_G_S" return-type="Collection">
+			<finder-column name="countryId" />
+			<finder-column name="active" />
+			<finder-column name="groupFilterEnabled" />
+			<finder-column name="shippingAllowed" />
+		</finder>
+		<finder name="C_A_B_G_S" return-type="Collection">
+			<finder-column name="countryId" />
+			<finder-column name="active" />
+			<finder-column name="billingAllowed" />
+			<finder-column name="groupFilterEnabled" />
+			<finder-column name="shippingAllowed" />
+		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="EmailAddress" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="true" name="EmailAddress" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -432,7 +454,7 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="LiveGroupId" return-type="Group">
+		<finder name="LiveGroupId" return-type="Collection">
 			<finder-column name="liveGroupId" />
 		</finder>
 		<finder name="C_C" return-type="Collection">
@@ -593,39 +615,40 @@
 
 		<!-- Other fields -->
 
-		<column change-tracking-resolution-type="merge" name="parentPlid" type="long" />
+		<column name="parentPlid" type="long" />
 		<column name="privateLayout" type="boolean" />
 		<column accessor="true" name="layoutId" type="long" />
-		<column change-tracking-resolution-type="merge" name="parentLayoutId" type="long" />
+		<column name="parentLayoutId" type="long" />
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
-		<column change-tracking-resolution-type="merge" localized="true" name="name" type="String" />
-		<column change-tracking-resolution-type="merge" localized="true" name="title" type="String" />
-		<column change-tracking-resolution-type="merge" localized="true" name="description" type="String" />
-		<column change-tracking-resolution-type="merge" localized="true" name="keywords" type="String" />
-		<column change-tracking-resolution-type="merge" localized="true" name="robots" type="String" />
+		<column localized="true" name="name" type="String" />
+		<column localized="true" name="title" type="String" />
+		<column localized="true" name="description" type="String" />
+		<column localized="true" name="keywords" type="String" />
+		<column localized="true" name="robots" type="String" />
 		<column name="type" type="String" />
-		<column change-tracking-resolution-type="merge" name="typeSettings" type="String" />
-		<column change-tracking-resolution-type="merge" name="hidden" type="boolean" />
+		<column name="typeSettings" type="String" />
+		<column name="hidden" type="boolean" />
 		<column name="system" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="friendlyURL" type="String" />
-		<column change-tracking-resolution-type="merge" name="iconImageId" type="long" />
-		<column change-tracking-resolution-type="merge" name="themeId" type="String" />
-		<column change-tracking-resolution-type="merge" name="colorSchemeId" type="String" />
-		<column change-tracking-resolution-type="merge" name="styleBookEntryId" type="long" />
-		<column change-tracking-resolution-type="merge" name="css" type="String" />
-		<column change-tracking-resolution-type="merge" name="priority" type="int" />
-		<column change-tracking-resolution-type="merge" name="faviconFileEntryId" type="long" />
-		<column name="masterLayoutPlid" type="long" />
+		<column name="friendlyURL" type="String" />
+		<column name="iconImageId" type="long" />
+		<column name="themeId" type="String" />
+		<column name="colorSchemeId" type="String" />
+		<column name="styleBookEntryERC" type="String" />
+		<column name="css" type="String" />
+		<column name="priority" type="int" />
+		<column name="faviconFileEntryERC" type="String" />
+		<column name="faviconFileEntryScopeERC" type="String" />
+		<column db-name="masterLPTEERC" name="masterLayoutPageTemplateEntryERC" type="String" />
 		<column name="layoutPrototypeUuid" type="String" />
 		<column name="layoutPrototypeLinkEnabled" type="boolean" />
-		<column name="sourcePrototypeLayoutUuid" type="String" />
-		<column change-tracking-resolution-type="merge" name="publishDate" type="Date" />
-		<column change-tracking-resolution-type="merge" name="lastPublishDate" type="Date" />
-		<column change-tracking-resolution-type="merge" name="status" type="int" />
-		<column change-tracking-resolution-type="merge" name="statusByUserId" type="long" />
-		<column change-tracking-resolution-type="merge" name="statusByUserName" type="String" />
-		<column change-tracking-resolution-type="merge" name="statusDate" type="Date" />
+		<column name="layoutSetPrototypeLayoutERC" type="String" />
+		<column name="publishDate" type="Date" />
+		<column name="lastPublishDate" type="Date" />
+		<column name="status" type="int" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" />
+		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
 
@@ -645,16 +668,16 @@
 		<finder name="ParentPlid" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="parentPlid" />
 		</finder>
-		<finder name="IconImageId" return-type="Layout">
+		<finder name="IconImageId" return-type="Collection">
 			<finder-column name="iconImageId" />
 		</finder>
 		<finder name="LayoutPrototypeUuid" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="layoutPrototypeUuid" />
 		</finder>
-		<finder name="SourcePrototypeLayoutUuid" return-type="Collection" where="system = [$FALSE$]">
-			<finder-column name="sourcePrototypeLayoutUuid" />
+		<finder name="LayoutSetPrototypeLayoutERC" return-type="Collection" where="system = [$FALSE$]">
+			<finder-column name="layoutSetPrototypeLayoutERC" />
 		</finder>
-		<finder name="G_P" return-type="Collection" where="system = [$FALSE$]">
+		<finder name="G_P" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="privateLayout" />
 		</finder>
@@ -662,21 +685,21 @@
 			<finder-column name="groupId" />
 			<finder-column name="type" />
 		</finder>
-		<finder name="G_MLP" return-type="Collection">
+		<finder name="G_MLPTEERC" return-type="Collection">
 			<finder-column name="groupId" />
-			<finder-column name="masterLayoutPlid" />
+			<finder-column name="masterLayoutPageTemplateEntryERC" />
 		</finder>
 		<finder name="C_L" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="companyId" />
 			<finder-column name="layoutPrototypeUuid" />
 		</finder>
-		<finder name="P_I" return-type="Layout">
+		<finder name="P_I" return-type="Collection">
 			<finder-column name="privateLayout" />
 			<finder-column name="iconImageId" />
 		</finder>
-		<finder name="C_C" return-type="Layout">
+		<finder name="C_C" return-type="Collection">
 			<finder-column name="classNameId" />
-			<finder-column name="classPK" />
+			<finder-column arrayable-operator="OR" name="classPK" />
 		</finder>
 		<finder name="G_P_L" return-type="Layout" unique="true">
 			<finder-column name="groupId" />
@@ -693,15 +716,20 @@
 			<finder-column name="privateLayout" />
 			<finder-column arrayable-operator="OR" name="type" />
 		</finder>
+		<finder name="G_P_S" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="privateLayout" />
+			<finder-column name="system" />
+		</finder>
 		<finder name="G_P_F" return-type="Layout" unique="true">
 			<finder-column name="groupId" />
 			<finder-column name="privateLayout" />
 			<finder-column name="friendlyURL" />
 		</finder>
-		<finder name="G_P_SPLU" return-type="Layout">
+		<finder name="G_P_LSPLE" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="privateLayout" />
-			<finder-column name="sourcePrototypeLayoutUuid" />
+			<finder-column name="layoutSetPrototypeLayoutERC" />
 		</finder>
 		<finder name="G_P_ST" return-type="Collection" where="system = [$FALSE$]">
 			<finder-column name="groupId" />
@@ -796,7 +824,7 @@
 
 		<column name="plid" type="long" />
 		<column name="privateLayout" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="friendlyURL" type="String" />
+		<column name="friendlyURL" type="String" />
 		<column name="languageId" type="String" />
 		<column name="lastPublishDate" type="Date" />
 
@@ -955,11 +983,6 @@
 			<finder-column name="parentLayoutRevisionId" />
 			<finder-column name="plid" />
 		</finder>
-		<finder name="L_H_P" return-type="LayoutRevision">
-			<finder-column name="layoutSetBranchId" />
-			<finder-column name="head" />
-			<finder-column name="plid" />
-		</finder>
 		<finder name="L_H_P_Collection" return-type="Collection">
 			<finder-column name="layoutSetBranchId" />
 			<finder-column name="head" />
@@ -974,12 +997,6 @@
 			<finder-column name="layoutSetBranchId" />
 			<finder-column name="plid" />
 			<finder-column name="status" />
-		</finder>
-		<finder name="L_L_H_P" return-type="LayoutRevision">
-			<finder-column name="layoutSetBranchId" />
-			<finder-column name="layoutBranchId" />
-			<finder-column name="head" />
-			<finder-column name="plid" />
 		</finder>
 	</entity>
 	<entity change-tracking-enabled="true" local-service="true" name="LayoutSet" remote-service="true">
@@ -1026,7 +1043,7 @@
 			<finder-column name="companyId" />
 			<finder-column name="layoutSetPrototypeUuid" />
 		</finder>
-		<finder name="P_L" return-type="Layout">
+		<finder name="P_L" return-type="Collection">
 			<finder-column name="privateLayout" />
 			<finder-column name="logoId" />
 		</finder>
@@ -1089,7 +1106,7 @@
 			<finder-column name="master" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="LayoutSetPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="LayoutSetPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1236,6 +1253,7 @@
 		<column name="statusListTypeId" type="long" />
 		<column name="comments" type="String" />
 		<column name="logoId" type="long" />
+		<column name="status" type="int" />
 
 		<!-- Relationships -->
 
@@ -1255,6 +1273,9 @@
 		</finder>
 		<finder db-index="false" name="CompanyIdLocations" return-type="Collection" where="parentOrganizationId != 0">
 			<finder-column name="companyId" />
+		</finder>
+		<finder name="LogoId" return-type="Collection">
+			<finder-column name="logoId" />
 		</finder>
 		<finder name="C_P" return-type="Collection">
 			<finder-column name="companyId" />
@@ -1374,10 +1395,6 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="C_DP" return-type="PasswordPolicy">
-			<finder-column name="companyId" />
-			<finder-column name="defaultPolicy" />
-		</finder>
 		<finder name="C_N" return-type="PasswordPolicy" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="name" />
@@ -1440,7 +1457,7 @@
 	</entity>
 	<entity change-tracking-enabled="true" local-service="false" name="Permission" remote-service="true">
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="Phone" remote-service="true" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="true" name="Phone" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1543,7 +1560,7 @@
 		<finder name="OwnerType" return-type="Collection">
 			<finder-column name="ownerType" />
 		</finder>
-		<finder name="O_O" return-type="PortalPreferences">
+		<finder name="O_O" return-type="PortalPreferences" unique="true">
 			<finder-column name="ownerId" />
 			<finder-column name="ownerType" />
 		</finder>
@@ -1621,7 +1638,7 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="C_P" return-type="Portlet" unique="true">
+		<finder name="C_P" pretouch="true" return-type="Portlet" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="portletId" />
 		</finder>
@@ -1661,7 +1678,7 @@
 			<finder-column name="portletId" />
 			<finder-column name="classNameId" />
 		</finder>
-		<finder name="G_N_P_C" return-type="PortletItem">
+		<finder name="G_N_P_C" return-type="PortletItem" unique="true">
 			<finder-column name="groupId" />
 			<finder-column case-sensitive="false" name="name" />
 			<finder-column name="portletId" />
@@ -1911,16 +1928,16 @@
 		<!-- Other fields -->
 
 		<column name="countryId" type="long" />
-		<column change-tracking-resolution-type="merge" name="active" type="boolean" />
-		<column change-tracking-resolution-type="merge" name="name" type="String" />
-		<column change-tracking-resolution-type="merge" name="position" type="double" />
-		<column change-tracking-resolution-type="merge" name="regionCode" type="String" />
-		<column change-tracking-resolution-type="merge" name="lastPublishDate" type="Date" />
+		<column name="active" type="boolean" />
+		<column name="name" type="String" />
+		<column name="position" type="double" />
+		<column name="regionCode" type="String" />
+		<column name="lastPublishDate" type="Date" />
 
 		<!-- Localized entity -->
 
 		<localized-entity>
-			<localized-column change-tracking-resolution-type="merge" name="title" />
+			<localized-column name="title" />
 		</localized-entity>
 
 		<!-- Order -->
@@ -1964,13 +1981,14 @@
 		<column name="schemaVersion" type="String" />
 		<column name="buildNumber" type="int" />
 		<column name="buildDate" type="Date" />
+		<column name="versionDisplayName" type="String" />
 		<column name="verified" type="boolean" />
 		<column name="state" type="int" />
 		<column name="testString" type="String" />
 
 		<!-- Finder methods -->
 
-		<finder name="ServletContextName" return-type="Release" unique="true">
+		<finder name="ServletContextName" pretouch="true" return-type="Release" unique="true">
 			<finder-column case-sensitive="false" name="servletContextName" />
 		</finder>
 	</entity>
@@ -1996,8 +2014,11 @@
 		<finder name="UserId" return-type="Collection">
 			<finder-column name="userId" />
 		</finder>
+		<finder name="LteExpirationDate" return-type="Collection">
+			<finder-column comparator="&lt;=" name="expirationDate" />
+		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="Repository" remote-service="true" uad-dir-path="../modules/apps/portal/portal-uad/src/main/java" uad-package-path="com.liferay.portal" uuid="true">
+	<entity change-tracking-enabled="true" external-reference-code="group" local-service="true" name="Repository" remote-service="true" uad-dir-path="../modules/apps/portal/portal-uad/src/main/java" uad-package-path="com.liferay.portal" uuid="true">
 
 		<!-- PK fields -->
 
@@ -2029,6 +2050,9 @@
 
 		<finder name="GroupId" return-type="Collection">
 			<finder-column name="groupId" />
+		</finder>
+		<finder name="PortletId" return-type="Collection">
+			<finder-column name="portletId" />
 		</finder>
 		<finder name="G_N_P" return-type="Repository" unique="true">
 			<finder-column name="groupId" />
@@ -2138,6 +2162,11 @@
 			<finder-column name="companyId" />
 			<finder-column comparator="LIKE" name="primKey" />
 		</finder>
+		<finder name="C_N_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="name" />
+			<finder-column name="scope" />
+		</finder>
 		<finder name="C_S_P" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="scope" />
@@ -2162,7 +2191,14 @@
 			<finder-column name="primKey" />
 			<finder-column arrayable-operator="OR" arrayable-pagination="true" name="roleId" />
 		</finder>
-		<finder name="C_N_S_P_R_V" return-type="Collection">
+		<finder name="C_N_S_R_V" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="name" />
+			<finder-column name="scope" />
+			<finder-column arrayable-operator="OR" arrayable-pagination="true" name="roleId" />
+			<finder-column name="viewActionId" />
+		</finder>
+		<finder name="C_N_S_P_R_V" return-type="Collection" skip-db-index-optimization-and-finder-generation="true">
 			<finder-column name="companyId" />
 			<finder-column name="name" />
 			<finder-column name="scope" />
@@ -2194,6 +2230,7 @@
 		<column localized="true" name="description" type="String" />
 		<column name="type" type="int" />
 		<column name="subtype" type="String" />
+		<column name="status" type="int" />
 
 		<!-- Relationships -->
 
@@ -2220,7 +2257,7 @@
 		<finder name="Subtype" return-type="Collection">
 			<finder-column name="subtype" />
 		</finder>
-		<finder name="C_N" return-type="Role" unique="true">
+		<finder name="C_N" pretouch="true" return-type="Role" unique="true">
 			<finder-column name="companyId" />
 			<finder-column case-sensitive="false" name="name" />
 		</finder>
@@ -2342,6 +2379,7 @@
 
 		<!-- Other fields -->
 
+		<column name="classExternalReferenceCode" type="String" />
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
 		<column name="classUuid" type="String" />
@@ -2453,7 +2491,7 @@
 
 		<!-- Finder methods -->
 
-		<finder name="Key" return-type="Ticket">
+		<finder name="Key" return-type="Ticket" unique="true">
 			<finder-column name="key" />
 		</finder>
 		<finder name="C_C_C" return-type="Collection">
@@ -2543,7 +2581,7 @@
 		<finder name="EmailAddress" return-type="Collection">
 			<finder-column name="emailAddress" />
 		</finder>
-		<finder name="PortraitId" return-type="User">
+		<finder name="PortraitId" return-type="Collection">
 			<finder-column name="portraitId" />
 		</finder>
 		<finder db-index="false" name="GtU_C" return-type="Collection" where="type_ = 1">
@@ -2570,17 +2608,9 @@
 			<finder-column name="companyId" />
 			<finder-column name="emailAddress" />
 		</finder>
-		<finder name="C_FID" return-type="User">
+		<finder name="C_FID" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="facebookId" />
-		</finder>
-		<finder name="C_GUID" return-type="User">
-			<finder-column name="companyId" />
-			<finder-column name="googleUserId" />
-		</finder>
-		<finder name="C_O" return-type="User">
-			<finder-column name="companyId" />
-			<finder-column name="openId" />
 		</finder>
 		<finder name="C_T" return-type="Collection">
 			<finder-column name="companyId" />
@@ -3018,11 +3048,6 @@
 			<finder-column comparator="!=" name="layoutSetId" />
 			<finder-column arrayable-operator="OR" name="hostname" />
 		</finder>
-		<finder name="C_L_D" return-type="VirtualHost">
-			<finder-column name="companyId" />
-			<finder-column name="layoutSetId" />
-			<finder-column name="defaultVirtualHost" />
-		</finder>
 	</entity>
 	<entity local-service="true" name="WebDAVProps" remote-service="false">
 
@@ -3049,7 +3074,7 @@
 			<finder-column name="classPK" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="Website" remote-service="true" uuid="true">
+	<entity external-reference-code="company" local-service="true" name="Website" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -3102,7 +3127,7 @@
 			<finder-column name="primary" />
 		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="WorkflowDefinitionLink" remote-service="false" uad-application-name="Portal Workflow" uad-dir-path="../modules/apps/portal-workflow/portal-workflow-uad/src/main/java" uad-package-path="com.liferay.portal.workflow">
+	<entity change-tracking-enabled="true" external-reference-code="group" local-service="true" name="WorkflowDefinitionLink" remote-service="true" uad-application-name="Portal Workflow" uad-dir-path="../modules/apps/portal-workflow/portal-workflow-uad/src/main/java" uad-package-path="com.liferay.portal.workflow" uuid="true">
 
 		<!-- PK fields -->
 
@@ -3139,6 +3164,10 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="G_C_C" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
@@ -3160,7 +3189,7 @@
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="G_C_C_C_T" return-type="WorkflowDefinitionLink">
+		<finder name="G_C_C_C_T" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
 			<finder-column name="classNameId" />
@@ -3200,6 +3229,13 @@
 
 		<!-- Finder methods -->
 
+		<finder name="WorkflowInstanceId" return-type="WorkflowInstanceLink" unique="true">
+			<finder-column name="workflowInstanceId" />
+		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="G_C_C" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
@@ -3215,6 +3251,7 @@
 	<exceptions>
 		<exception>AddressCity</exception>
 		<exception>AddressStreet</exception>
+		<exception>AddressSubtype</exception>
 		<exception>AddressZip</exception>
 		<exception>AvailableLocale</exception>
 		<exception>CompanyMaxUsers</exception>
@@ -3232,9 +3269,7 @@
 		<exception>CountryNumber</exception>
 		<exception>CountryTitle</exception>
 		<exception>DuplicateCountry</exception>
-		<exception>DuplicateGoogleUserId</exception>
 		<exception>DuplicateGroup</exception>
-		<exception>DuplicateOpenId</exception>
 		<exception>DuplicateOrganization</exception>
 		<exception>DuplicatePasswordPolicy</exception>
 		<exception>DuplicateRegion</exception>
@@ -3253,18 +3288,21 @@
 		<exception>LayoutBranchName</exception>
 		<exception>LayoutFriendlyURL</exception>
 		<exception>LayoutFriendlyURLs</exception>
+		<exception>LayoutJavaScript</exception>
 		<exception>LayoutName</exception>
 		<exception>LayoutParentLayoutId</exception>
 		<exception>LayoutPermission</exception>
 		<exception>LayoutPrototype</exception>
 		<exception>LayoutRevisionMajor</exception>
 		<exception>LayoutSetBranchName</exception>
+		<exception>LayoutSetJavaScript</exception>
 		<exception>LayoutSetVirtualHost</exception>
 		<exception>LayoutType</exception>
 		<exception>LockedLayout</exception>
 		<exception>MasterLayout</exception>
 		<exception>MembershipRequestComments</exception>
 		<exception>OldServiceComponent</exception>
+		<exception>OrganizationComments</exception>
 		<exception>OrganizationId</exception>
 		<exception>OrganizationName</exception>
 		<exception>OrganizationParent</exception>
@@ -3304,6 +3342,7 @@
 		<exception>SitemapPagePriority</exception>
 		<exception>TeamName</exception>
 		<exception>UserActive</exception>
+		<exception>UserComments</exception>
 		<exception>UserEmailAddress</exception>
 		<exception>UserField</exception>
 		<exception>UserGroupName</exception>

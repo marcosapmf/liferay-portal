@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -25,6 +26,8 @@ import com.liferay.saml.opensaml.integration.internal.provider.CachingChainingMe
 import com.liferay.saml.opensaml.integration.internal.provider.DBMetadataResolver;
 import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
+import com.liferay.saml.persistence.model.SamlIdpSpConnection;
+import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
 import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
@@ -34,14 +37,14 @@ import com.liferay.saml.runtime.configuration.SamlProviderConfiguration;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.metadata.LocalEntityManager;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
@@ -177,7 +180,29 @@ public abstract class BaseProfile {
 
 		RoleDescriptor roleDescriptor = null;
 
-		if (samlProviderConfigurationHelper.isRoleIdp()) {
+		if (samlProviderConfigurationHelper.isRoleIb()) {
+			if (Validator.isNotNull(
+					entityDescriptor.getIDPSSODescriptor(
+						SAMLConstants.SAML20P_NS))) {
+
+				roleDescriptor = entityDescriptor.getIDPSSODescriptor(
+					SAMLConstants.SAML20P_NS);
+
+				samlPeerEntityContext.setRole(
+					IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
+			}
+			else if (Validator.isNotNull(
+						entityDescriptor.getSPSSODescriptor(
+							SAMLConstants.SAML20P_NS))) {
+
+				roleDescriptor = entityDescriptor.getSPSSODescriptor(
+					SAMLConstants.SAML20P_NS);
+
+				samlPeerEntityContext.setRole(
+					SPSSODescriptor.DEFAULT_ELEMENT_NAME);
+			}
+		}
+		else if (samlProviderConfigurationHelper.isRoleIdp()) {
 			roleDescriptor = entityDescriptor.getSPSSODescriptor(
 				SAMLConstants.SAML20P_NS);
 
@@ -273,7 +298,23 @@ public abstract class BaseProfile {
 
 		samlProtocolContext.setProtocol(SAMLConstants.SAML20P_NS);
 
-		if (samlProviderConfigurationHelper.isRoleIdp()) {
+		if (samlProviderConfigurationHelper.isRoleIb()) {
+			if (Validator.isNotNull(
+					httpServletRequest.getAttribute(
+						SamlWebKeys.SAML_ACS_LOGIN)) ||
+				Validator.isNotNull(
+					httpServletRequest.getAttribute(
+						SamlWebKeys.SAML_SP_IDP_CONNECTION))) {
+
+				roleDescriptor = entityDescriptor.getSPSSODescriptor(
+					SAMLConstants.SAML20P_NS);
+			}
+			else {
+				roleDescriptor = entityDescriptor.getIDPSSODescriptor(
+					SAMLConstants.SAML20P_NS);
+			}
+		}
+		else if (samlProviderConfigurationHelper.isRoleIdp()) {
 			roleDescriptor = entityDescriptor.getIDPSSODescriptor(
 				SAMLConstants.SAML20P_NS);
 		}
@@ -285,7 +326,23 @@ public abstract class BaseProfile {
 		SAMLPeerEntityContext samlPeerEntityContext =
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
-		if (samlProviderConfigurationHelper.isRoleIdp()) {
+		if (samlProviderConfigurationHelper.isRoleIb()) {
+			if (Validator.isNotNull(
+					httpServletRequest.getAttribute(
+						SamlWebKeys.SAML_ACS_LOGIN)) ||
+				Validator.isNotNull(
+					httpServletRequest.getAttribute(
+						SamlWebKeys.SAML_SP_IDP_CONNECTION))) {
+
+				samlPeerEntityContext.setRole(
+					IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
+			}
+			else {
+				samlPeerEntityContext.setRole(
+					SPSSODescriptor.DEFAULT_ELEMENT_NAME);
+			}
+		}
+		else if (samlProviderConfigurationHelper.isRoleIdp()) {
 			samlPeerEntityContext.setRole(SPSSODescriptor.DEFAULT_ELEMENT_NAME);
 		}
 		else if (samlProviderConfigurationHelper.isRoleSp()) {
@@ -330,7 +387,42 @@ public abstract class BaseProfile {
 
 		RoleDescriptor roleDescriptor = null;
 
-		if (samlProviderConfigurationHelper.isRoleIdp()) {
+		if (samlProviderConfigurationHelper.isRoleIb()) {
+			long companyId = CompanyThreadLocal.getCompanyId();
+
+			try {
+				SamlSpIdpConnection samlSpIdpConnection =
+					samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
+						companyId, peerEntityId);
+
+				if (samlSpIdpConnection.isEnabled()) {
+					roleDescriptor = entityDescriptor.getIDPSSODescriptor(
+						SAMLConstants.SAML20P_NS);
+				}
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+
+			try {
+				SamlIdpSpConnection samlIdpSpConnection =
+					samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+						companyId, peerEntityId);
+
+				if (samlIdpSpConnection.isEnabled()) {
+					roleDescriptor = entityDescriptor.getSPSSODescriptor(
+						SAMLConstants.SAML20P_NS);
+				}
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+		else if (samlProviderConfigurationHelper.isRoleIdp()) {
 			roleDescriptor = entityDescriptor.getSPSSODescriptor(
 				SAMLConstants.SAML20P_NS);
 		}

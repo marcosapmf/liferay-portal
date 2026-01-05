@@ -41,6 +41,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.tax.service.CommerceTaxMethodLocalService;
@@ -104,24 +105,34 @@ public class CommerceGrossPricingTest {
 			ServiceContextTestUtil.getServiceContext();
 
 		AccountGroup accountGroup = _accountGroupLocalService.addAccountGroup(
-			serviceContext.getUserId(), null, RandomTestUtil.randomString(),
-			serviceContext);
+			StringPool.BLANK, serviceContext.getUserId(), null,
+			RandomTestUtil.randomString(), serviceContext);
 
-		accountGroup.setExternalReferenceCode("");
 		accountGroup.setDefaultAccountGroup(false);
 		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_DYNAMIC);
 		accountGroup.setExpandoBridgeAttributes(serviceContext);
 
 		_accountGroupLocalService.updateAccountGroup(accountGroup);
 
-		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_group.getCompanyId());
+		_commerceCurrency =
+			CommerceCurrencyLocalServiceUtil.fetchPrimaryCommerceCurrency(
+				_group.getCompanyId());
+
+		if (_commerceCurrency == null) {
+			_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
+				_group.getCompanyId());
+		}
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
+
+		_commerceChannel.setPriceDisplayType("tax-included");
+
+		_commerceChannel = _commerceChannelLocalService.updateCommerceChannel(
+			_commerceChannel);
 
 		_rate = 22;
 
@@ -132,7 +143,7 @@ public class CommerceGrossPricingTest {
 			CommerceTaxTestUtil.getDefaultCompanyTaxCategory(
 				_user.getGroupId());
 
-		_commerceTaxMethod = CommerceTaxTestUtil.addCommerceByAddressTaxMethod(
+		_commerceTaxMethod = CommerceTaxTestUtil.addByAddressCommerceTaxMethod(
 			_user.getUserId(), _commerceChannel.getGroupId(), true);
 
 		CommerceTaxTestUtil.setCommerceMethodTaxRate(
@@ -161,7 +172,7 @@ public class CommerceGrossPricingTest {
 			"The correct price is returned given the quantity"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -169,7 +180,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList.setNetPrice(false);
 
@@ -179,7 +190,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -314,7 +325,7 @@ public class CommerceGrossPricingTest {
 			"The discounts are applied correctly"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -322,7 +333,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -337,7 +348,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -416,7 +427,7 @@ public class CommerceGrossPricingTest {
 			"The correct price is returned"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -424,7 +435,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList.setNetPrice(false);
 
@@ -434,7 +445,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -506,7 +517,7 @@ public class CommerceGrossPricingTest {
 			"The correct price and the promo is returned "
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -514,10 +525,11 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		CommercePriceList commercePromotion =
-			CommercePriceListTestUtil.addPromotion(catalog.getGroupId(), 0.0);
+			CommercePriceListTestUtil.addPromotion(
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePromotion.setNetPrice(false);
 
@@ -527,7 +539,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -610,7 +622,7 @@ public class CommerceGrossPricingTest {
 				"to the base price"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -618,7 +630,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -628,11 +640,11 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList basePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -706,7 +718,7 @@ public class CommerceGrossPricingTest {
 				"to the base price"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -714,7 +726,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -729,7 +741,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList basePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		basePriceList.setNetPrice(false);
 
@@ -752,7 +764,7 @@ public class CommerceGrossPricingTest {
 		long[] assetCategoryIds = {assetCategory.getCategoryId()};
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
-			catalog.getGroupId(), assetCategoryIds);
+			commerceCatalog.getGroupId(), assetCategoryIds);
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -845,7 +857,7 @@ public class CommerceGrossPricingTest {
 				"to the base price"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -853,7 +865,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -868,7 +880,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList basePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		basePriceList.setNetPrice(false);
 
@@ -878,7 +890,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1045,7 +1057,7 @@ public class CommerceGrossPricingTest {
 			"The correct price is returned given the quantity"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -1053,7 +1065,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePriceList.setNetPrice(false);
 
@@ -1063,7 +1075,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1167,7 +1179,7 @@ public class CommerceGrossPricingTest {
 			"The correct price and the promo is returned "
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				null, RandomTestUtil.randomString(),
 				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
@@ -1175,10 +1187,11 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), 0.0);
+				commerceCatalog.getGroupId(), 0.0);
 
 		CommercePriceList commercePromotion =
-			CommercePriceListTestUtil.addPromotion(catalog.getGroupId(), 0.0);
+			CommercePriceListTestUtil.addPromotion(
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePromotion.setNetPrice(false);
 
@@ -1188,7 +1201,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1287,7 +1300,7 @@ public class CommerceGrossPricingTest {
 			"The product price is correctly calculated"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -1295,7 +1308,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -1305,7 +1318,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1479,7 +1492,7 @@ public class CommerceGrossPricingTest {
 				"value between promo and unit price"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -1487,7 +1500,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -1502,7 +1515,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1589,7 +1602,8 @@ public class CommerceGrossPricingTest {
 			finalPrice.stripTrailingZeros());
 
 		CommercePriceList commercePromotion =
-			CommercePriceListTestUtil.addPromotion(catalog.getGroupId(), 0.0);
+			CommercePriceListTestUtil.addPromotion(
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePromotion.setNetPrice(false);
 
@@ -1652,7 +1666,7 @@ public class CommerceGrossPricingTest {
 				"value between promo and unit price"
 		);
 
-		CommerceCatalog catalog =
+		CommerceCatalog commerceCatalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LocaleUtil.US.getDisplayLanguage(), null,
@@ -1660,7 +1674,7 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceList commercePriceList1 =
 			CommercePriceListTestUtil.addCommercePriceList(
-				catalog.getGroupId(), true, 0.0);
+				commerceCatalog.getGroupId(), true, 0.0);
 
 		commercePriceList1.setNetPrice(false);
 
@@ -1675,7 +1689,7 @@ public class CommerceGrossPricingTest {
 
 		CPInstance cpInstance =
 			CPTestUtil.addCPInstanceWithRandomSkuFromCatalog(
-				catalog.getGroupId());
+				commerceCatalog.getGroupId());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -1762,7 +1776,8 @@ public class CommerceGrossPricingTest {
 			finalPrice.stripTrailingZeros());
 
 		CommercePriceList commercePromotion =
-			CommercePriceListTestUtil.addPromotion(catalog.getGroupId(), 0.0);
+			CommercePriceListTestUtil.addPromotion(
+				commerceCatalog.getGroupId(), 0.0);
 
 		commercePromotion.setNetPrice(false);
 
@@ -1866,6 +1881,10 @@ public class CommerceGrossPricingTest {
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	private CommerceChannel _commerceChannel;
+
+	@Inject
+	private CommerceChannelLocalService _commerceChannelLocalService;
+
 	private CommerceCurrency _commerceCurrency;
 
 	@Inject

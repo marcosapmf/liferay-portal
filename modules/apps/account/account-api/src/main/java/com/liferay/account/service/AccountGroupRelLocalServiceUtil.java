@@ -286,6 +286,14 @@ public class AccountGroupRelLocalServiceUtil {
 	}
 
 	public static List<AccountGroupRel> getAccountGroupRels(
+		long[] accountGroupIds, String className, long classPK, String keywords,
+		int start, int end) {
+
+		return getService().getAccountGroupRels(
+			accountGroupIds, className, classPK, keywords, start, end);
+	}
+
+	public static List<AccountGroupRel> getAccountGroupRels(
 		String className, long classPK) {
 
 		return getService().getAccountGroupRels(className, classPK);
@@ -297,13 +305,6 @@ public class AccountGroupRelLocalServiceUtil {
 
 		return getService().getAccountGroupRels(
 			className, classPK, start, end, orderByComparator);
-	}
-
-	public static List<AccountGroupRel> getAccountGroupRels(
-		String className, long classPK, String keywords, int start, int end) {
-
-		return getService().getAccountGroupRels(
-			className, classPK, keywords, start, end);
 	}
 
 	public static List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
@@ -329,6 +330,14 @@ public class AccountGroupRelLocalServiceUtil {
 		return getService().getAccountGroupRelsCount();
 	}
 
+	public static int getAccountGroupRelsCount(
+		long[] accountGroupIds, String className, long classPK,
+		String keywords) {
+
+		return getService().getAccountGroupRelsCount(
+			accountGroupIds, className, classPK, keywords);
+	}
+
 	public static int getAccountGroupRelsCount(String className, long classPK) {
 		return getService().getAccountGroupRelsCount(className, classPK);
 	}
@@ -338,6 +347,13 @@ public class AccountGroupRelLocalServiceUtil {
 
 		return getService().getAccountGroupRelsCountByAccountGroupId(
 			accountGroupId);
+	}
+
+	public static int getAccountGroupRelsCountByClassName(
+		long accountGroupId, String className) {
+
+		return getService().getAccountGroupRelsCountByClassName(
+			accountGroupId, className);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery

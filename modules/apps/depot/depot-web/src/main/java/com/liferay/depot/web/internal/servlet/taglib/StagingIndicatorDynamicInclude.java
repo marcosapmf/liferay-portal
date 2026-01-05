@@ -5,12 +5,14 @@
 
 package com.liferay.depot.web.internal.servlet.taglib;
 
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.util.StagingIndicatorUtil;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -25,6 +27,9 @@ import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -41,18 +46,18 @@ import com.liferay.portal.template.react.renderer.ReactRenderer;
 import com.liferay.site.provider.GroupURLProvider;
 import com.liferay.taglib.util.HtmlTopTag;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Map;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -101,7 +106,9 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
 		for (T value : values) {
-			jsonArray.put(value);
+			if (value != null) {
+				jsonArray.put(value);
+			}
 		}
 
 		return jsonArray;
@@ -174,7 +181,7 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 				return _groupURLProvider.getLiveGroupURL(
 					liveGroup,
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST));
+						JavaConstants.JAKARTA_PORTLET_REQUEST));
 			}
 		}
 
@@ -187,6 +194,29 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 		}
 
 		return "live";
+	}
+
+	private JSONObject _getPublishToLiveItemJSONObject(
+			HttpServletRequest httpServletRequest, Group stagingGroupId)
+		throws PortalException, PortletException {
+
+		if (!GroupPermissionUtil.contains(
+				PermissionThreadLocal.getPermissionChecker(), stagingGroupId,
+				ActionKeys.PUBLISH_STAGING)) {
+
+			return null;
+		}
+
+		return JSONUtil.put(
+			"action", "publishToLive"
+		).put(
+			"label", _language.get(httpServletRequest, "publish-to-live")
+		).put(
+			"publishURL",
+			_getPublishToLiveURL(stagingGroupId, httpServletRequest)
+		).put(
+			"symbolLeft", "cards2"
+		);
 	}
 
 	private String _getPublishToLiveURL(
@@ -267,17 +297,8 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 				_createJSONArray(
 					_getLiveGroupItemJSONObject(
 						httpServletRequest, scopeGroup, liveGroupURL),
-					JSONUtil.put(
-						"action", "publishToLive"
-					).put(
-						"label",
-						_language.get(httpServletRequest, "publish-to-live")
-					).put(
-						"publishURL",
-						_getPublishToLiveURL(scopeGroup, httpServletRequest)
-					).put(
-						"symbolLeft", "cards2"
-					))
+					_getPublishToLiveItemJSONObject(
+						httpServletRequest, scopeGroup))
 			).put(
 				"title", _language.get(httpServletRequest, "staging")
 			).build();
@@ -334,7 +355,11 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 							httpServletRequest,
 							_servletContext.getContextPath() +
 								"/dynamic_include/StagingIndicator.css"));
-					writer.write("\" rel=\"stylesheet\" type=\"text/css\" />");
+					writer.write(StringPool.QUOTE);
+					writer.write(
+						ContentSecurityPolicyNonceProviderUtil.getNonce(
+							httpServletRequest));
+					writer.write(" rel=\"stylesheet\" type=\"text/css\" />");
 				}
 				catch (IOException ioException) {
 					ReflectionUtil.throwException(ioException);

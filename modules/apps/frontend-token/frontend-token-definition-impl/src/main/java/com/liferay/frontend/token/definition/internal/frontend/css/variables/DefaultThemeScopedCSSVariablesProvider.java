@@ -11,18 +11,17 @@ import com.liferay.frontend.token.definition.FrontendToken;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.frontend.token.definition.FrontendTokenMapping;
-import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,13 +44,21 @@ public class DefaultThemeScopedCSSVariablesProvider
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Group group = themeDisplay.getScopeGroup();
+		FrontendTokenDefinition frontendTokenDefinition = null;
 
-		FrontendTokenDefinition frontendTokenDefinition =
-			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-				_layoutSetLocalService.fetchLayoutSet(
-					themeDisplay.getSiteGroupId(),
-					group.isLayoutSetPrototype()));
+		String styleBookEntryThemeId = ParamUtil.getString(
+			httpServletRequest, "styleBookEntryThemeId");
+
+		if (Validator.isNotNull(styleBookEntryThemeId)) {
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					themeDisplay.getCompanyId(), styleBookEntryThemeId);
+		}
+		else {
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					themeDisplay.getLayout());
+		}
 
 		if (frontendTokenDefinition == null) {
 			return Collections.emptyList();
@@ -76,7 +83,8 @@ public class DefaultThemeScopedCSSVariablesProvider
 
 					cssVariables.put(
 						frontendTokenMapping.getValue(),
-						frontendToken.getDefaultValue());
+						String.valueOf(
+							frontendToken.<Object>getDefaultValue()));
 				}
 			}
 		}
@@ -99,8 +107,5 @@ public class DefaultThemeScopedCSSVariablesProvider
 
 	@Reference
 	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
-
-	@Reference
-	private LayoutSetLocalService _layoutSetLocalService;
 
 }

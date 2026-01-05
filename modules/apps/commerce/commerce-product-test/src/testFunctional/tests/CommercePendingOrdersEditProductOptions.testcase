@@ -158,7 +158,7 @@ definition {
 
 				Click(
 					key_value = ${productName},
-					locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+					locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 				Click(
 					key_menuItem = "Edit",
@@ -189,7 +189,7 @@ definition {
 				productOptions = 48,
 				productQuantity = 1,
 				productSku = "MIN93016B",
-				productTotalPrice = "72.00");
+				productTotalPrice = "$ 72.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "50.00",
@@ -197,21 +197,25 @@ definition {
 				productOptions = "White",
 				productQuantity = 1,
 				productSku = "WHITE",
-				productTotalPrice = "50.00");
+				productTotalPrice = "$ 50.00");
+
+			Click(
+				key_cellContent = "Bundled Product",
+				locator1 = "CommerceEntry#BUNDLE_PRODUCT_EXPAND_BUTTON");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "30.00",
 				productName = "Brake Rotors",
 				productQuantity = 1,
 				productSku = "MIN93020",
-				productTotalPrice = "30.00");
+				productTotalPrice = "$ 30.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "4.00",
 				productName = "Wheel Seal - Front",
 				productQuantity = 1,
 				productSku = "MIN55858",
-				productTotalPrice = "4.00");
+				productTotalPrice = "$ 4.00");
 		}
 	}
 
@@ -362,7 +366,7 @@ definition {
 		task ("And edits all the fields from the Pending Orders selecting value2 and value4") {
 			Click(
 				key_value = "Options Product",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+				locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 			Click(
 				key_menuItem = "Edit",
@@ -398,7 +402,7 @@ definition {
 				productOptions = "Value2,2023-01-01,20,Value4,Text Content Edit",
 				productQuantity = 1,
 				productSku = "VALUE2VALUE4",
-				productTotalPrice = "20.00");
+				productTotalPrice = "$ 20.00");
 		}
 	}
 
@@ -538,7 +542,7 @@ definition {
 			for (var productName : list "Wheel Seal - Front,Brake Fluid,Bundled Product") {
 				Click(
 					key_value = ${productName},
-					locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+					locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 				AssertElementNotPresent(
 					key_menuItem = "Edit",

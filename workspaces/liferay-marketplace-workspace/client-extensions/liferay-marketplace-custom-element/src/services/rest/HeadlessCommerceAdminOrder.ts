@@ -5,20 +5,32 @@
 
 import fetcher from '../fetcher';
 
-class HeadlessCommerceAdminOrder {
-	deleteOrder(orderId: string) {
+export default class HeadlessCommerceAdminOrder {
+	static deleteOrder(orderId: number | string) {
 		return fetcher.delete(
 			`o/headless-commerce-admin-order/v1.0/orders/${orderId}`
 		);
 	}
 
-	getOrders(searchParams = new URLSearchParams()) {
+	static getOrder(
+		orderId: number | string,
+		searchParams = new URLSearchParams()
+	) {
+		return fetcher<Order>(
+			`o/headless-commerce-admin-order/v1.0/orders/${orderId}?${searchParams.toString()}`
+		);
+	}
+
+	static getOrders(searchParams = new URLSearchParams()) {
 		return fetcher<APIResponse>(
 			`o/headless-commerce-admin-order/v1.0/orders?${searchParams.toString()}`
 		);
 	}
+
+	static patchOrder(orderId: number | string, order: Partial<Order>) {
+		return fetcher.patch<Order>(
+			`o/headless-commerce-admin-order/v1.0/orders/${orderId}`,
+			order
+		);
+	}
 }
-
-const HeadlessCommerceAdminOrderImpl = new HeadlessCommerceAdminOrder();
-
-export default HeadlessCommerceAdminOrderImpl;

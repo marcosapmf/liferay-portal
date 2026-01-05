@@ -7,7 +7,7 @@ import {act, cleanup, render} from '@testing-library/react';
 import {PageProvider} from 'data-engine-js-components-web';
 import React from 'react';
 
-import Paragraph from '../../../src/main/resources/META-INF/resources/Paragraph/Paragraph.es';
+import Paragraph from '../../../src/main/resources/META-INF/resources/js/Paragraph/Paragraph.es';
 
 const spritemap = 'icons.svg';
 
@@ -27,6 +27,14 @@ describe('Field Paragraph', () => {
 	// eslint-disable-next-line no-console
 	const originalWarn = console.warn;
 
+	afterAll(() => {
+
+		// eslint-disable-next-line no-console
+		console.warn = originalWarn;
+	});
+
+	afterEach(cleanup);
+
 	beforeAll(() => {
 
 		// eslint-disable-next-line no-console
@@ -38,34 +46,14 @@ describe('Field Paragraph', () => {
 		};
 	});
 
-	afterAll(() => {
-
-		// eslint-disable-next-line no-console
-		console.warn = originalWarn;
-	});
-
-	afterEach(cleanup);
-
 	beforeEach(() => {
 		jest.useFakeTimers();
 		fetch.mockResponseOnce(JSON.stringify({}));
 	});
 
-	it('is readOnly', () => {
+	it('has a key', () => {
 		const {container} = render(
-			<ParagraphWithProvider {...defaultParagraphConfig} readOnly />
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('has an id', () => {
-		const {container} = render(
-			<ParagraphWithProvider {...defaultParagraphConfig} id="Id" />
+			<ParagraphWithProvider {...defaultParagraphConfig} key="key" />
 		);
 
 		act(() => {
@@ -102,12 +90,48 @@ describe('Field Paragraph', () => {
 		expect(container).toMatchSnapshot();
 	});
 
+	it('has a value', () => {
+		const {container} = render(
+			<ParagraphWithProvider {...defaultParagraphConfig} value="value" />
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
+	it('has an id', () => {
+		const {container} = render(
+			<ParagraphWithProvider {...defaultParagraphConfig} id="Id" />
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
 	it('is not required', () => {
 		const {container} = render(
 			<ParagraphWithProvider
 				{...defaultParagraphConfig}
 				required={false}
 			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
+	it('is readOnly', () => {
+		const {container} = render(
+			<ParagraphWithProvider {...defaultParagraphConfig} readOnly />
 		);
 
 		act(() => {
@@ -124,30 +148,6 @@ describe('Field Paragraph', () => {
 				label="text"
 				showLabel
 			/>
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('has a value', () => {
-		const {container} = render(
-			<ParagraphWithProvider {...defaultParagraphConfig} value="value" />
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('has a key', () => {
-		const {container} = render(
-			<ParagraphWithProvider {...defaultParagraphConfig} key="key" />
 		);
 
 		act(() => {

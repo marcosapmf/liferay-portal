@@ -25,17 +25,19 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -83,20 +85,21 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			_getLiferayAnalyticsChannelId(httpServletRequest, themeDisplay));
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_CLIENT_CONFIG,
-			_serialize(
-				HashMapBuilder.put(
-					"dataSourceId",
-					analyticsConfiguration.liferayAnalyticsDataSourceId()
-				).put(
-					"endpointUrl",
-					analyticsConfiguration.liferayAnalyticsEndpointURL()
-				).put(
-					"projectId",
-					analyticsConfiguration.liferayAnalyticsProjectId()
-				).build()));
-		httpServletRequest.setAttribute(
-			AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS,
-			_serialize(analyticsConfiguration.syncedGroupIds()));
+			_serialize(_getAnalyticsCloudClientConfig(analyticsConfiguration)));
+
+		if (GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.ANALYTICS_CLOUD_MOCK_ENABLED))) {
+
+			httpServletRequest.setAttribute(
+				AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS,
+				_serialize(new Long[] {themeDisplay.getScopeGroupId()}));
+		}
+		else {
+			httpServletRequest.setAttribute(
+				AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS,
+				_serialize(analyticsConfiguration.syncedGroupIds()));
+		}
+
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_COOKIES_EXPLICIT_CONSENT_MODE,
 			_isCookiesExplicitConsentMode(themeDisplay));
@@ -106,6 +109,10 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_CLIENT_READABLE_CONTENT,
 			Boolean.toString(layout.isTypeAssetDisplay()));
+
+		httpServletRequest.setAttribute(
+			AnalyticsWebKeys.ANALYTICS_EXTERNAL_REFERENCE_CODE,
+			layout.getExternalReferenceCode());
 
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
@@ -126,6 +133,27 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 	@Override
 	protected Log getLog() {
 		return _log;
+	}
+
+	private Map<String, String> _getAnalyticsCloudClientConfig(
+		AnalyticsConfiguration analyticsConfiguration) {
+
+		if (GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.ANALYTICS_CLOUD_MOCK_ENABLED))) {
+
+			return HashMapBuilder.put(
+				"endpointUrl", "/o/mock/osb-asah-publisher"
+			).build();
+		}
+
+		return HashMapBuilder.put(
+			"dataSourceId",
+			analyticsConfiguration.liferayAnalyticsDataSourceId()
+		).put(
+			"endpointUrl", analyticsConfiguration.liferayAnalyticsEndpointURL()
+		).put(
+			"projectId", analyticsConfiguration.liferayAnalyticsProjectId()
+		).build();
 	}
 
 	private String _getLiferayAnalyticsChannelId(
@@ -152,6 +180,12 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 	private boolean _isAnalyticsTrackingEnabled(
 		AnalyticsConfiguration analyticsConfiguration,
 		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
+
+		if (GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.ANALYTICS_CLOUD_MOCK_ENABLED))) {
+
+			return true;
+		}
 
 		Layout layout = themeDisplay.getLayout();
 

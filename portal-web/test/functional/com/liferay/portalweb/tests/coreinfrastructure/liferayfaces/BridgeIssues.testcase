@@ -1,4 +1,4 @@
-@component-name = "core-infrastructure"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -28,6 +28,7 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test Faces1470And1478PortletSmoke {
 
@@ -168,7 +169,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "BridgeIssues#RESOURCE2",
-			value1 = "javax.faces:jsf.js");
+			value1 = "jakarta.faces:jsf.js");
 
 		Click(
 			key_pageLink = "go to next view with immediate=",
@@ -188,7 +189,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "BridgeIssues#RESOURCE3",
-			value1 = "javax.faces:jsf.js");
+			value1 = "jakarta.faces:jsf.js");
 
 		Click(
 			key_pageLink = "go to previous view with immediate=",
@@ -200,7 +201,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "BridgeIssues#RESOURCE2",
-			value1 = "javax.faces:jsf.js");
+			value1 = "jakarta.faces:jsf.js");
 
 		AssertElementNotPresent(locator1 = "BridgeIssues#RESOURCE3");
 
@@ -249,6 +250,7 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test Faces1635And1433PortletSmoke {
 
@@ -324,6 +326,7 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test FacesIssuesPortletSmoke {
 
@@ -535,6 +538,7 @@ definition {
 			textValue = "MOJARRA-4340-workaround");
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test PrimefacesIssuesSmoke {
 

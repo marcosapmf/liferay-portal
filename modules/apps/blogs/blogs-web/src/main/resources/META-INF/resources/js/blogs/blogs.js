@@ -4,10 +4,10 @@
  */
 
 import {State} from '@liferay/frontend-js-state-web';
+import {openConfirmModal} from 'frontend-js-components-web';
 import {
 	fetch,
 	normalizeFriendlyURL,
-	openConfirmModal,
 	toggleBoxes,
 	toggleDisabled,
 } from 'frontend-js-web';
@@ -331,7 +331,7 @@ export default class Blogs {
 
 		CKEDITOR.instances[
 			`${this._config.namespace}coverImageCaptionEditor`
-		].setData(STR_BLANK);
+		]?.setData(STR_BLANK);
 	}
 
 	_saveEntry(draft, ajax) {

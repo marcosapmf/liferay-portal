@@ -14,7 +14,7 @@ import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.content.web.internal.constants.CommerceOrderFDSNames;
 import com.liferay.commerce.order.content.web.internal.model.PaymentEntry;
 import com.liferay.commerce.payment.model.CommercePaymentEntry;
-import com.liferay.commerce.payment.service.CommercePaymentEntryService;
+import com.liferay.commerce.payment.service.CommercePaymentEntryLocalService;
 import com.liferay.commerce.payment.util.comparator.CommercePaymentEntryComparator;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
@@ -33,6 +33,8 @@ import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
@@ -40,8 +42,6 @@ import java.text.Format;
 
 import java.util.Date;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +73,7 @@ public class CommerceRefundItemFDSDataProvider
 			commerceOrderId);
 
 		List<CommercePaymentEntry> commerceOrderCommercePaymentEntries =
-			_commercePaymentEntryService.getCommercePaymentEntries(
+			_commercePaymentEntryLocalService.getCommercePaymentEntries(
 				commerceOrder.getCompanyId(),
 				_classNameLocalService.getClassNameId(CommerceOrder.class),
 				commerceOrder.getCommerceOrderId(),
@@ -96,7 +96,7 @@ public class CommerceRefundItemFDSDataProvider
 		}
 
 		return TransformUtil.transform(
-			_commercePaymentEntryService.getCommercePaymentEntries(
+			_commercePaymentEntryLocalService.getCommercePaymentEntries(
 				commerceOrder.getCompanyId(),
 				_classNameLocalService.getClassNameId(
 					CommercePaymentEntry.class),
@@ -120,7 +120,7 @@ public class CommerceRefundItemFDSDataProvider
 			commerceOrderId);
 
 		List<CommercePaymentEntry> commerceOrderCommercePaymentEntries =
-			_commercePaymentEntryService.getCommercePaymentEntries(
+			_commercePaymentEntryLocalService.getCommercePaymentEntries(
 				commerceOrder.getCompanyId(),
 				_classNameLocalService.getClassNameId(CommerceOrder.class),
 				commerceOrder.getCommerceOrderId(),
@@ -142,7 +142,7 @@ public class CommerceRefundItemFDSDataProvider
 			}
 		}
 
-		return _commercePaymentEntryService.getCommercePaymentEntriesCount(
+		return _commercePaymentEntryLocalService.getCommercePaymentEntriesCount(
 			commerceOrder.getCompanyId(),
 			_classNameLocalService.getClassNameId(CommercePaymentEntry.class),
 			commerceOrderCommercePaymentEntryId,
@@ -202,7 +202,7 @@ public class CommerceRefundItemFDSDataProvider
 	private CommerceOrderService _commerceOrderService;
 
 	@Reference
-	private CommercePaymentEntryService _commercePaymentEntryService;
+	private CommercePaymentEntryLocalService _commercePaymentEntryLocalService;
 
 	@Reference
 	private Language _language;

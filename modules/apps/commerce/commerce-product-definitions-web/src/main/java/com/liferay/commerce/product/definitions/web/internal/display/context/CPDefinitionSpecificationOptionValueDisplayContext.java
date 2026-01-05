@@ -7,7 +7,7 @@ package com.liferay.commerce.product.definitions.web.internal.display.context;
 
 import com.liferay.commerce.product.constants.CPOptionCategoryConstants;
 import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayContext;
-import com.liferay.commerce.product.item.selector.criterion.CPSpecificationOptionItemSelectorCriterion;
+import com.liferay.commerce.product.item.selector.CPSpecificationOptionItemSelectorCriterion;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
@@ -17,6 +17,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryService;
 import com.liferay.petra.string.StringPool;
@@ -35,15 +36,17 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.CustomAttributesUtil;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.TreeMap;
 
 /**
  * @author Andrea Di Giorgi
@@ -157,35 +160,41 @@ public class CPDefinitionSpecificationOptionValueDisplayContext
 		).buildPortletURL();
 	}
 
-	public List<SelectOption> getSelectOptions() throws Exception {
-		List<SelectOption> selectOptions = new ArrayList<>();
+	public Map<String, List<SelectOption>> getSelectOptionsMap()
+		throws Exception {
+
+		Map<String, List<SelectOption>> selectOptionsMap = new TreeMap<>();
 
 		CPSpecificationOption cpSpecificationOption =
 			_cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
 
-		if (cpSpecificationOption.getListTypeDefinitionId() == 0) {
-			return selectOptions;
-		}
-
-		selectOptions.add(new SelectOption(StringPool.BLANK, StringPool.BLANK));
-
 		Locale locale = LocaleUtil.fromLanguageId(
 			LanguageUtil.getLanguageId(httpServletRequest));
 
-		for (ListTypeEntry listTypeEntry :
-				_listTypeEntryService.getListTypeEntries(
-					cpSpecificationOption.getListTypeDefinitionId(),
-					QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+		for (ListTypeDefinition listTypeDefinition :
+				cpSpecificationOption.getListTypeDefinitions()) {
 
-			selectOptions.add(
-				new SelectOption(
-					listTypeEntry.getName(locale), listTypeEntry.getKey(),
-					Objects.equals(
-						_cpDefinitionSpecificationOptionValue.getValue(locale),
-						listTypeEntry.getName(locale))));
+			List<SelectOption> selectOptions = new ArrayList<>();
+
+			for (ListTypeEntry listTypeEntry :
+					_listTypeEntryService.getListTypeEntries(
+						listTypeDefinition.getListTypeDefinitionId(),
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+				selectOptions.add(
+					new SelectOption(
+						listTypeEntry.getName(locale), listTypeEntry.getKey(),
+						Objects.equals(
+							_cpDefinitionSpecificationOptionValue.getValue(
+								locale),
+							listTypeEntry.getName(locale))));
+			}
+
+			selectOptionsMap.put(
+				listTypeDefinition.getName(locale), selectOptions);
 		}
 
-		return selectOptions;
+		return selectOptionsMap;
 	}
 
 	public boolean hasCustomAttributesAvailable() throws Exception {

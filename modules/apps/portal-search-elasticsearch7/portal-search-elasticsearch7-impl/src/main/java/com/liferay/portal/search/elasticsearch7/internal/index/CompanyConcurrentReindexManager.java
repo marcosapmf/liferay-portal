@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  */
 @Component(service = ConcurrentReindexManager.class)
 public class CompanyConcurrentReindexManager
@@ -223,8 +223,8 @@ public class CompanyConcurrentReindexManager
 
 	private static final Snapshot<CrossClusterReplicationHelper>
 		_crossClusterReplicationHelperSnapshot = new Snapshot(
-			CompanyIndexFactory.class, CrossClusterReplicationHelper.class,
-			null, true);
+			CompanyConcurrentReindexManager.class,
+			CrossClusterReplicationHelper.class, null, true);
 
 	@Reference
 	private CompanyIndexHelper _companyIndexHelper;

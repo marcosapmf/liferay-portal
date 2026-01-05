@@ -75,6 +75,10 @@ public class ScriptNotificationRecipientBuilder
 			List<Role> roles = (List<Role>)results.get(
 				ScriptingNotificationRecipientConstants.ROLES_RECIPIENT);
 
+			if (roles == null) {
+				return;
+			}
+
 			for (Role role : roles) {
 				addRoleRecipientAddresses(
 					notificationRecipients, role, notificationReceptionType,
@@ -93,7 +97,12 @@ public class ScriptNotificationRecipientBuilder
 	}
 
 	@Activate
-	protected void activate(BundleContext bundleContext) {
+	@Override
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		super.activate(bundleContext, properties);
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, NotificationRecipientEvaluator.class,
 			"scripting.language");
@@ -102,6 +111,8 @@ public class ScriptNotificationRecipientBuilder
 	@Deactivate
 	@Override
 	protected void deactivate() {
+		super.deactivate();
+
 		_serviceTrackerMap.close();
 	}
 

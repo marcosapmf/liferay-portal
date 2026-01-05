@@ -56,8 +56,22 @@ public class OrderRuleChannelResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testDeleteOrderRuleChannel() throws Exception {
 		super.testDeleteOrderRuleChannel();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteOrderRuleChannelBatch() throws Exception {
+		super.testDeleteOrderRuleChannelBatch();
 	}
 
 	@Ignore

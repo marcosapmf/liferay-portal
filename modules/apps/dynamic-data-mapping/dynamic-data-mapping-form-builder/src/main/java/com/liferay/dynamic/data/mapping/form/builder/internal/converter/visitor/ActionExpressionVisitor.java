@@ -15,7 +15,6 @@ import com.liferay.dynamic.data.mapping.expression.model.Term;
 import com.liferay.dynamic.data.mapping.form.builder.internal.converter.DDMFormRuleActionFactory;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,10 +36,8 @@ public class ActionExpressionVisitor extends ExpressionVisitor<Object> {
 		String action = _functionToActionMap.get(
 			functionCallExpression.getFunctionName());
 
-		List<Expression> parameters =
-			functionCallExpression.getParameterExpressions();
-
-		return DDMFormRuleActionFactory.create(action, parameters, this);
+		return DDMFormRuleActionFactory.create(
+			action, functionCallExpression.getParameterExpressions(), this);
 	}
 
 	@Override

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast} from 'frontend-js-web';
+import {openConfirmModal} from '@liferay/layout-js-components-web';
+import {openToast} from 'frontend-js-components-web';
 
 import deleteItemAction from '../actions/deleteItem';
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
@@ -16,11 +17,10 @@ import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
 } from '../utils/getFormErrorDescription';
+import {getFormParent} from '../utils/getFormParent';
 import getFragmentEntryLinkIdsFromItemId from '../utils/getFragmentEntryLinkIdsFromItemId';
 import getPortletId from '../utils/getPortletId';
-import {hasFormParent} from '../utils/hasFormParent';
 import {isRequiredFormInput} from '../utils/isRequiredFormInput';
-import selectFirstControlsItem from '../utils/selectFirstControlsItem';
 import {clearPageContents} from '../utils/usePageContents';
 import filterSelectedItems from './filterSelectedItems';
 
@@ -55,76 +55,102 @@ export default function deleteItem({itemIds, selectItems = () => {}}) {
 		const {fragmentEntryLinks, layoutData, segmentsExperienceId} =
 			getState();
 
-		return markItemForDeletion({
-			fragmentEntryLinks,
-			itemIds,
-			layoutData,
-			onNetworkStatus: dispatch,
-			segmentsExperienceId,
-		}).then(async ({portletIds = [], layoutData: nextLayoutData}) => {
-			const nextItemId = getPreviousItemId(
-				itemIds,
-				layoutData.items,
-				nextLayoutData.items
+		const isUsedInRule = layoutData.pageRules.some((rule) => {
+			const actionHasItem = rule.actions.some(({itemId}) =>
+				itemIds.includes(itemId)
 			);
 
-			if (!nextItemId) {
-				document
-					.querySelector('button[data-panel-id="browser"]')
-					.focus();
-
-				selectItems(null);
-			}
-			else {
-				selectFirstControlsItem({
-					itemId: nextItemId,
-					layoutData,
-					origin: ITEM_ACTIVATION_ORIGINS.itemActions,
-					selectItems,
-				});
-			}
-
-			const fragmentEntryLinkIds = itemIds.flatMap((itemId) =>
-				getFragmentEntryLinkIdsFromItemId({
-					itemId,
-					layoutData: nextLayoutData,
-				})
+			const conditionHasItem = rule.conditions.some(({field}) =>
+				itemIds.includes(field)
 			);
 
-			dispatch(
-				deleteItemAction({
-					fragmentEntryLinkIds,
-					itemIds,
-					layoutData: nextLayoutData,
-					portletIds,
-				})
-			);
-
-			clearPageContents();
-
-			// Show warning if deleting some required form input
-
-			for (const itemId of itemIds) {
-				if (
-					await isRequiredFormField(
-						layoutData,
-						itemId,
-						fragmentEntryLinks
-					)
-				) {
-					const {message} = getFormErrorDescription({
-						type: FORM_ERROR_TYPES.deletedFragment,
-					});
-
-					openToast({
-						message,
-						type: 'warning',
-					});
-
-					break;
-				}
-			}
+			return actionHasItem || conditionHasItem;
 		});
+
+		const handleDeleteItems = async () => {
+			return markItemForDeletion({
+				fragmentEntryLinks,
+				itemIds,
+				layoutData,
+				onNetworkStatus: dispatch,
+				segmentsExperienceId,
+			}).then(async ({portletIds = [], layoutData: nextLayoutData}) => {
+				const nextItemId = getPreviousItemId(
+					itemIds,
+					layoutData.items,
+					nextLayoutData.items
+				);
+
+				if (!nextItemId) {
+					document
+						.querySelector('button[data-panel-id="browser"]')
+						.focus();
+
+					selectItems(null);
+				}
+				else {
+					selectItems([nextItemId], {
+						origin: ITEM_ACTIVATION_ORIGINS.itemActions,
+					});
+				}
+
+				const fragmentEntryLinkIds = itemIds.flatMap((itemId) =>
+					getFragmentEntryLinkIdsFromItemId({
+						itemId,
+						layoutData: nextLayoutData,
+					})
+				);
+
+				dispatch(
+					deleteItemAction({
+						fragmentEntryLinkIds,
+						itemIds,
+						layoutData: nextLayoutData,
+						portletIds,
+					})
+				);
+
+				clearPageContents();
+
+				// Show warning if deleting some required form input
+
+				for (const itemId of itemIds) {
+					if (
+						await isRequiredFormField(
+							layoutData,
+							itemId,
+							fragmentEntryLinks
+						)
+					) {
+						const {message} = getFormErrorDescription({
+							type: FORM_ERROR_TYPES.deletedFragment,
+						});
+
+						openToast({
+							message,
+							type: 'warning',
+						});
+
+						break;
+					}
+				}
+			});
+		};
+
+		if (isUsedInRule) {
+			openConfirmModal({
+				buttonLabel: Liferay.Language.get('delete'),
+				onConfirm: handleDeleteItems,
+				status: 'warning',
+				text: Liferay.Language.get(
+					'one-or-more-of-the-selected-fragments-are-referenced-in-one-or-more-rules'
+				),
+				title: Liferay.Language.get('delete-referenced-fragments'),
+			});
+		}
+		else {
+			return handleDeleteItems();
+		}
 	};
 }
 
@@ -138,7 +164,7 @@ async function markItemForDeletion({
 
 	// We just need to remove the parents of the selected items
 
-	const selectedItemIds = filterSelectedItems(itemIds, layoutData);
+	const selectedItemIds = filterSelectedItems(itemIds, layoutData.items);
 
 	const portletIds = selectedItemIds.flatMap((itemId) =>
 		findPortletIds(itemId, layoutData, fragmentEntryLinks)
@@ -188,7 +214,7 @@ async function isRequiredFormField(layoutData, itemId, fragmentEntryLinks) {
 	if (
 		!item ||
 		item.type !== LAYOUT_DATA_ITEM_TYPES.fragment ||
-		!hasFormParent(item, layoutData)
+		!getFormParent(item, layoutData)
 	) {
 		return false;
 	}

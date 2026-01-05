@@ -27,9 +27,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -191,14 +191,8 @@ public class SiteAdminManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (PortalPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(),
-				ActionKeys.ADD_COMMUNITY)) {
-
-			return true;
-		}
-
-		return false;
+		return PortalPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), ActionKeys.ADD_COMMUNITY);
 	}
 
 	@Override

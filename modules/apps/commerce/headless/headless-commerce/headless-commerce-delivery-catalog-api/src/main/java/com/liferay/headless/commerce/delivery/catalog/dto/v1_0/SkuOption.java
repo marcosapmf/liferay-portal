@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.constraints.DecimalMin;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -51,7 +49,7 @@ public class SkuOption implements Serializable {
 	}
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -90,7 +88,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _keySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPrice() {
 		if (_priceSupplier != null) {
 			price = _priceSupplier.get();
@@ -131,7 +129,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _priceSupplier;
 
-	@Schema(example = "static")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "static")
 	public String getPriceType() {
 		if (_priceTypeSupplier != null) {
 			priceType = _priceTypeSupplier.get();
@@ -172,7 +170,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _priceTypeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getQuantity() {
 		if (_quantitySupplier != null) {
 			quantity = _quantitySupplier.get();
@@ -213,7 +211,48 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _quantitySupplier;
 
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getRequired() {
+		if (_requiredSupplier != null) {
+			required = _requiredSupplier.get();
+
+			_requiredSupplier = null;
+		}
+
+		return required;
+	}
+
+	public void setRequired(Boolean required) {
+		this.required = required;
+
+		_requiredSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setRequired(
+		UnsafeSupplier<Boolean, Exception> requiredUnsafeSupplier) {
+
+		_requiredSupplier = () -> {
+			try {
+				return requiredUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean required;
+
+	@JsonIgnore
+	private Supplier<Boolean> _requiredSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getSkuId() {
 		if (_skuIdSupplier != null) {
 			skuId = _skuIdSupplier.get();
@@ -252,7 +291,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _skuIdSupplier;
 
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getSkuOptionId() {
 		if (_skuOptionIdSupplier != null) {
 			skuOptionId = _skuOptionIdSupplier.get();
@@ -293,7 +332,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _skuOptionIdSupplier;
 
-	@Schema(example = "Sku Option Key")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Sku Option Key")
 	public String getSkuOptionKey() {
 		if (_skuOptionKeySupplier != null) {
 			skuOptionKey = _skuOptionKeySupplier.get();
@@ -334,7 +373,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _skuOptionKeySupplier;
 
-	@Schema(example = "Sku Option Name")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Sku Option Name")
 	public String getSkuOptionName() {
 		if (_skuOptionNameSupplier != null) {
 			skuOptionName = _skuOptionNameSupplier.get();
@@ -375,7 +414,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _skuOptionNameSupplier;
 
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getSkuOptionValueId() {
 		if (_skuOptionValueIdSupplier != null) {
 			skuOptionValueId = _skuOptionValueIdSupplier.get();
@@ -416,7 +455,9 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _skuOptionValueIdSupplier;
 
-	@Schema(example = "Sku Option Value Key")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "Sku Option Value Key"
+	)
 	public String getSkuOptionValueKey() {
 		if (_skuOptionValueKeySupplier != null) {
 			skuOptionValueKey = _skuOptionValueKeySupplier.get();
@@ -457,7 +498,7 @@ public class SkuOption implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _skuOptionValueKeySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getSkuOptionValueNames() {
 		if (_skuOptionValueNamesSupplier != null) {
 			skuOptionValueNames = _skuOptionValueNamesSupplier.get();
@@ -499,7 +540,7 @@ public class SkuOption implements Serializable {
 	private Supplier<String[]> _skuOptionValueNamesSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "31130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "31130")
 	public Long getValue() {
 		if (_valueSupplier != null) {
 			value = _valueSupplier.get();
@@ -623,6 +664,18 @@ public class SkuOption implements Serializable {
 			sb.append(_escape(quantity));
 
 			sb.append("\"");
+		}
+
+		Boolean required = getRequired();
+
+		if (required != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"required\": ");
+
+			sb.append(required);
 		}
 
 		Long skuId = getSkuId();
@@ -752,8 +805,8 @@ public class SkuOption implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption",
 		name = "x-class-name"
 	)

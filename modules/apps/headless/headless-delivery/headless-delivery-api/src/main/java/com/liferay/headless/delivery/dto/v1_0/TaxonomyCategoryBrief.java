@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -52,7 +50,7 @@ public class TaxonomyCategoryBrief implements Serializable {
 			TaxonomyCategoryBrief.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Optional field with the embedded taxonomy category, can be embedded with nestedFields"
 	)
 	@Valid
@@ -99,7 +97,7 @@ public class TaxonomyCategoryBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _embeddedTaxonomyCategorySupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API."
 	)
 	public Long getTaxonomyCategoryId() {
@@ -144,7 +142,9 @@ public class TaxonomyCategoryBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _taxonomyCategoryIdSupplier;
 
-	@Schema(description = "The category's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The category's name."
+	)
 	public String getTaxonomyCategoryName() {
 		if (_taxonomyCategoryNameSupplier != null) {
 			taxonomyCategoryName = _taxonomyCategoryNameSupplier.get();
@@ -185,7 +185,9 @@ public class TaxonomyCategoryBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _taxonomyCategoryNameSupplier;
 
-	@Schema(description = "The localized category's names.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized category's names."
+	)
 	@Valid
 	public Map<String, String> getTaxonomyCategoryName_i18n() {
 		if (_taxonomyCategoryName_i18nSupplier != null) {
@@ -231,7 +233,9 @@ public class TaxonomyCategoryBrief implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _taxonomyCategoryName_i18nSupplier;
 
-	@Schema(description = "A unique reference to a taxonomy category.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A unique reference to a taxonomy category."
+	)
 	@Valid
 	public TaxonomyCategoryReference getTaxonomyCategoryReference() {
 		if (_taxonomyCategoryReferenceSupplier != null) {
@@ -389,8 +393,8 @@ public class TaxonomyCategoryBrief implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief",
 		name = "x-class-name"
 	)

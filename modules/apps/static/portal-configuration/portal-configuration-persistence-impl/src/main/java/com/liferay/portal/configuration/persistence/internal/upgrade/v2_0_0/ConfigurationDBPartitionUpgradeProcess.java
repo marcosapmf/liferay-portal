@@ -10,13 +10,13 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
-import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 
 import java.io.Serializable;
 
@@ -37,8 +37,8 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		if (PortalInstancePool.getDefaultCompanyId() ==
-				CompanyThreadLocal.getCompanyId()) {
+		if (CompanyThreadLocal.getCompanyId() ==
+				PortalInstancePool.getDefaultCompanyId()) {
 
 			try (PreparedStatement preparedStatement =
 					connection.prepareStatement(
@@ -77,12 +77,15 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 			long[] companyIds = PortalInstancePool.getCompanyIds();
 
+			for (long companyId : companyIds) {
+				DBPartitionUtil.replaceByTable(
+					connection, companyId, "Configuration_", false);
+			}
+
 			_atomicInteger.set(companyIds.length - 1);
 
 			return;
 		}
-
-		DBPartitionUtil.replaceByTable(connection, false, "Configuration_");
 
 		for (ScopeConfiguration scopeConfiguration : _scopeConfigurations) {
 			if (_isApplicable(
@@ -136,11 +139,7 @@ public class ConfigurationDBPartitionUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected boolean isSkipUpgradeProcess() {
-		if (!DBPartition.isPartitionEnabled()) {
-			return true;
-		}
-
-		return false;
+		return !PropsValues.DATABASE_PARTITION_ENABLED;
 	}
 
 	private ScopeConfiguration _getScopeConfiguration(

@@ -6,6 +6,7 @@
 package com.liferay.commerce.warehouse.web.internal.portlet.action;
 
 import com.liferay.commerce.exception.NoSuchWarehouseItemException;
+import com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseItemQuantityException;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
@@ -18,10 +19,10 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.math.BigDecimal;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.math.BigDecimal;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
 		"mvc.command.name=/cp_definitions/edit_commerce_inventory_warehouse_item"
 	},
 	service = MVCActionCommand.class
@@ -60,6 +61,16 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
+			else if (exception instanceof
+						CommerceInventoryWarehouseItemQuantityException) {
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
 			else {
 				throw exception;
 			}
@@ -76,7 +87,8 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 			actionRequest, "commerceInventoryWarehouseItemId");
 
 		BigDecimal quantity = _commerceOrderItemQuantityFormatter.parse(
-			actionRequest, "quantity");
+			actionRequest, CommerceInventoryWarehouseItem.class.getName(),
+			"quantity");
 		String unitOfMeasureKey = ParamUtil.getString(
 			actionRequest, "unitOfMeasureKey");
 
@@ -84,9 +96,13 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 			commerceInventoryWarehouseItem =
 				_commerceInventoryWarehouseItemService.
 					updateCommerceInventoryWarehouseItem(
-						commerceInventoryWarehouseItemId,
-						ParamUtil.getLong(actionRequest, "mvccVersion"),
-						quantity, unitOfMeasureKey);
+						commerceInventoryWarehouseItemId, quantity,
+						_commerceOrderItemQuantityFormatter.parse(
+							actionRequest,
+							CommerceInventoryWarehouseItem.class.getName(),
+							"reservedQuantity"),
+						unitOfMeasureKey,
+						ParamUtil.getLong(actionRequest, "mvccVersion"));
 		}
 		else {
 			commerceInventoryWarehouseItem =
@@ -95,7 +111,8 @@ public class EditCommerceInventoryWarehouseItemMVCActionCommand
 						StringPool.BLANK,
 						ParamUtil.getLong(
 							actionRequest, "commerceInventoryWarehouseId"),
-						quantity, ParamUtil.getString(actionRequest, "sku"),
+						quantity, BigDecimal.ZERO,
+						ParamUtil.getString(actionRequest, "sku"),
 						unitOfMeasureKey);
 		}
 

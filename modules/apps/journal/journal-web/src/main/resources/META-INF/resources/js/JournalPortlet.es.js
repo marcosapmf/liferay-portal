@@ -3,16 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	debounce,
-	fetch,
-	navigate,
-	openConfirmModal,
-	sub,
-} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {debounce, fetch, navigate, sub} from 'frontend-js-web';
 
 import {LocaleChangedHandler} from './LocaleChangedHandler.es';
-import initializeLock from './initializeLock';
 import removeAlert from './removeAlert';
 import showAlert from './showAlert';
 
@@ -26,14 +20,13 @@ export default function _JournalPortlet({
 	classNameId,
 	contentTitle,
 	defaultLanguageId: initialDefaultLanguageId,
-	displayDate,
 	hasSavePermission,
 	namespace,
 }) {
 	const formId = `${namespace}fm1`;
 
 	const actionInput = document.getElementById(
-		`${namespace}javax-portlet-action`
+		`${namespace}jakarta-portlet-action`
 	);
 	const availableLocalesInput = document.getElementById(
 		`${namespace}availableLocales`
@@ -62,30 +55,9 @@ export default function _JournalPortlet({
 	let articleId = initialArticleId;
 	let defaultLanguageId = initialDefaultLanguageId;
 	let selectedLanguageId = initialDefaultLanguageId;
+	let formSubmitted = false;
 
 	const lockHolder = {};
-
-	if (!Liferay.FeatureFlags['LPD-15596']) {
-		initializeLock('publishing', {
-			lockedIndicator: document.getElementById(
-				`${namespace}savingChangesIndicator`
-			),
-			namespace,
-			onLockChange: ({isLocked}) => {
-				[publishButton, resetValuesButton, saveButton].forEach(
-					(triggerElement) => {
-						if (triggerElement) {
-							triggerElement.disabled = isLocked;
-						}
-					}
-				);
-			},
-			triggerElements: [publishButton, resetValuesButton, saveButton],
-			unlockedIndicator: document.getElementById(
-				`${namespace}changesSavedIndicator`
-			),
-		});
-	}
 
 	Liferay.componentReady(`${namespace}publishing`).then((lock) => {
 		lockHolder.lock = lock;
@@ -94,37 +66,9 @@ export default function _JournalPortlet({
 	const editingDefaultValues = classNameId && classNameId !== '0';
 
 	if (editingDefaultValues) {
-		const getInput = (inputName) =>
-			document.getElementById(`${namespace}${inputName}`);
-
-		const resetInput = (inputName) => {
-			const input = getInput(inputName);
-
-			if (input && !displayDate) {
-				input.value = '';
-			}
-		};
-
-		resetInput('displayDate');
-		resetInput('displayDateAmPm');
-		resetInput('displayDateDay');
-		resetInput('displayDateHour');
-		resetInput('displayDateMinute');
-		resetInput('displayDateMonth');
-		resetInput('displayDateTime');
-		resetInput('displayDateYear');
-
-		const displayDateInput = getInput('displayDate');
-
-		if (displayDateInput) {
-			displayDateInput.addEventListener('change', (event) => {
-				if (!event.target.value) {
-					getInput('displayDateDay').value = '';
-					getInput('displayDateMonth').value = '';
-					getInput('displayDateYear').value = '';
-				}
-			});
-		}
+		actionInput.value = articleId
+			? '/journal/update_data_engine_default_values'
+			: '/journal/add_data_engine_default_values';
 	}
 
 	const handleContextualSidebarButton = () => {
@@ -150,6 +94,19 @@ export default function _JournalPortlet({
 		contextualSidebarButton.setAttribute('title', title);
 	};
 
+	const handleAutoSave = () => {
+		lockHolder.lock?.lock();
+
+		actionInput.value = articleId
+			? '/journal/update_article'
+			: '/journal/add_article';
+
+		handleDDMFormValid({
+			redirectOnSave: false,
+			showErrors: false,
+		});
+	};
+
 	const handleContextualSidebarButtonClick = () => {
 		handleContextualSidebarButton();
 
@@ -161,8 +118,6 @@ export default function _JournalPortlet({
 	};
 
 	const handleDDMFormError = (event) => {
-		lockHolder.lock?.unlock(true);
-
 		if (event.error?.statusCode) {
 			showAlert(event.error.message);
 		}
@@ -177,6 +132,10 @@ export default function _JournalPortlet({
 			`${namespace}titleMapAsXML`
 		);
 
+		if (!titleInputComponent) {
+			return;
+		}
+
 		if (!titleInputComponent?.getValue(defaultLanguageId)) {
 			showAlert(
 				sub(
@@ -186,6 +145,8 @@ export default function _JournalPortlet({
 					defaultLanguageId.replaceAll('_', '-')
 				)
 			);
+
+			validateRequiredDDMFields();
 		}
 	};
 
@@ -198,6 +159,10 @@ export default function _JournalPortlet({
 		const titleInputComponent = Liferay.component(
 			`${namespace}titleMapAsXML`
 		);
+
+		if (!titleInputComponent) {
+			return;
+		}
 
 		if (
 			titleInputComponent?.getValue(defaultLanguageId) ||
@@ -220,41 +185,55 @@ export default function _JournalPortlet({
 			availableLocalesInput.value = availableLocales;
 
 			if (autoSaveDraftEnabled && !redirectOnSave) {
-				Liferay.componentReady(`${namespace}dataEngineLayoutRenderer`)
-					.then((dataEngineLayoutRenderer) => {
-						const dataEngineLayoutRendererRef =
-							dataEngineLayoutRenderer?.reactComponentRef;
+				if (showErrors) {
+					Liferay.componentReady(
+						`${namespace}dataEngineLayoutRenderer`
+					)
+						.then((dataEngineLayoutRenderer) => {
+							const dataEngineLayoutRendererRef =
+								dataEngineLayoutRenderer?.reactComponentRef;
 
-						return dataEngineLayoutRendererRef.current.validate();
-					})
-					.then((validForm) => {
-						if (validForm) {
-							removeAlert();
-							submitAsyncForm(form, {redirectOnSave});
-						}
-						else {
-							Liferay.fire('ddmFormError', {
-								formWrapperId: formId,
-							});
-						}
-					});
+							return dataEngineLayoutRendererRef.current.validate();
+						})
+						.then((validForm) => {
+							if (validForm) {
+								removeAlert();
+								submitAsyncForm(form, {redirectOnSave});
+							}
+						});
+				}
+				else {
+					submitAsyncForm(form, {redirectOnSave});
+				}
 			}
-			else {
+			else if (!formSubmitted) {
+				formSubmitted = true;
+
 				form.submit();
 			}
 		}
-		else {
-			if (showErrors) {
-				showAlert(
-					sub(
-						Liferay.Language.get(
-							'please-enter-a-valid-title-for-the-default-language-x'
-						),
-						defaultLanguageId.replaceAll('_', '-')
-					)
-				);
-			}
+		else if (showErrors) {
+			showAlert(
+				sub(
+					Liferay.Language.get(
+						'please-enter-a-valid-title-for-the-default-language-x'
+					),
+					defaultLanguageId.replaceAll('_', '-')
+				)
+			);
 
+			validateRequiredDDMFields();
+
+			lockHolder.lock?.unlock(true);
+		}
+		else {
+			showAlert(
+				Liferay.Language.get(
+					'please-complete-all-mandatory-fields-to-enable-autosave'
+				),
+				Liferay.Language.get('info'),
+				'info'
+			);
 			lockHolder.lock?.unlock(true);
 		}
 	};
@@ -286,10 +265,6 @@ export default function _JournalPortlet({
 				.forEach((field) => {
 					field.required = false;
 				});
-
-			actionInput.value = articleId
-				? '/journal/update_data_engine_default_values'
-				: '/journal/add_data_engine_default_values';
 		}
 		else {
 			articleId = document.getElementById(`${namespace}articleId`).value;
@@ -325,6 +300,8 @@ export default function _JournalPortlet({
 				}
 			}
 		);
+
+		lockHolder.lock?.unlock();
 	};
 
 	const handleResetValuesButtonClick = (event) => {
@@ -353,6 +330,8 @@ export default function _JournalPortlet({
 			},
 		});
 	};
+
+	let hasUnsavedChanges = false;
 
 	const submitAsyncForm = (
 		formElement,
@@ -434,10 +413,28 @@ export default function _JournalPortlet({
 
 					articleIdWrapper.classList.remove('hide');
 					displayedArticleId.innerHTML = articleId;
-				}
 
-				formDateInput.value = data.modifiedDate;
-				lockHolder.lock?.unlock();
+					formDateInput.value = data.modifiedDate;
+					lockHolder.lock?.unlock();
+					removeAlert();
+
+					if (hasUnsavedChanges) {
+						hasUnsavedChanges = false;
+
+						handleAutoSave();
+					}
+				}
+				else {
+					formDateInput.value = data.modifiedDate;
+					lockHolder.lock?.unlock(true);
+					showAlert(
+						Liferay.Language.get(
+							'please-complete-all-mandatory-fields-to-enable-autosave'
+						),
+						Liferay.Language.get('info'),
+						'info'
+					);
+				}
 			})
 			.catch((error) => {
 				console.error(error);
@@ -485,22 +482,25 @@ export default function _JournalPortlet({
 		),
 	];
 
+	const validateRequiredDDMFields = () => {
+		Liferay.componentReady(`${namespace}dataEngineLayoutRenderer`).then(
+			(dataEngineLayoutRenderer) => {
+				const dataEngineLayoutRendererRef =
+					dataEngineLayoutRenderer?.reactComponentRef;
+
+				return dataEngineLayoutRendererRef.current.validate();
+			}
+		);
+	};
+
 	if (
 		autoSaveDraftEnabled &&
 		hasSavePermission &&
 		(!classNameId || classNameId === '0')
 	) {
 		eventHandlers.push(
-			attachFormChangeListener(
-				form,
-				() => {
-					return !lockHolder.lock?.isLocked();
-				},
-				(mutationRecord) => {
-					if (lockHolder.lock?.isLocked()) {
-						return false;
-					}
-
+			attachFormChangeListener({
+				acceptMutationRecord: (mutationRecord) => {
 					return [
 						mutationRecord.target,
 						...mutationRecord.addedNodes,
@@ -512,24 +512,18 @@ export default function _JournalPortlet({
 							node.name !== `${namespace}languageId`
 					);
 				},
-				() => {
+				callback: () => {
 					if (lockHolder.lock?.isLocked()) {
+						hasUnsavedChanges = true;
+
 						return;
 					}
 
-					lockHolder.lock?.lock();
-
-					actionInput.value = articleId
-						? '/journal/update_article'
-						: '/journal/add_article';
-
-					handleDDMFormValid({
-						redirectOnSave: false,
-						showErrors: true,
-					});
+					handleAutoSave();
 				},
-				namespace
-			)
+				form,
+				namespace,
+			})
 		);
 	}
 
@@ -548,13 +542,12 @@ export default function _JournalPortlet({
 	};
 }
 
-function attachFormChangeListener(
-	form,
-	accentChangeEvent,
+function attachFormChangeListener({
 	acceptMutationRecord,
 	callback,
-	namespace
-) {
+	form,
+	namespace,
+}) {
 	const handleChange = debounce(() => {
 		callback();
 	}, AUTO_SAVE_DELAY);
@@ -586,26 +579,22 @@ function attachFormChangeListener(
 		}
 	});
 
-	mutationObserver.observe(form, {
-		attributeFilter: ['value'],
-		attributeOldValue: true,
-		attributes: true,
-		childList: true,
-		subtree: true,
+	Liferay.componentReady(`${namespace}SelectAssetDisplayPage`).then(() => {
+		mutationObserver.observe(form, {
+			attributeFilter: ['value'],
+			attributeOldValue: true,
+			attributes: true,
+			childList: true,
+			subtree: true,
+		});
+
+		form.addEventListener('change', handleChange);
 	});
-
-	const handleFormChange = (event) => {
-		if (accentChangeEvent(event)) {
-			handleChange();
-		}
-	};
-
-	form.addEventListener('change', handleFormChange);
 
 	return {
 		detach() {
 			mutationObserver.disconnect();
-			form.removeEventListener('change', handleFormChange);
+			form.removeEventListener('change', handleChange);
 		},
 	};
 }

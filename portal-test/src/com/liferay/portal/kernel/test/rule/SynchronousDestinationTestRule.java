@@ -120,6 +120,11 @@ public class SynchronousDestinationTestRule
 		public void enableSync() {
 			_serviceTracker.open();
 
+			MessageListenerRegistry messageListenerRegistry =
+				_serviceTracker.getService();
+
+			messageListenerRegistry.getMessageListeners("");
+
 			Filter audioProcessorFilter = _registerDestinationFilter(
 				DestinationNames.DOCUMENT_LIBRARY_AUDIO_PROCESSOR);
 			Filter asyncFilter = _registerDestinationFilter(
@@ -168,7 +173,8 @@ public class SynchronousDestinationTestRule
 				tensorflowModelDownloadFilter, videoProcessorFilter);
 
 			_bufferedIncrementForceSyncSafeCloseable =
-				BufferedIncrementThreadLocal.setWithSafeCloseable(true);
+				BufferedIncrementThreadLocal.setForceSyncWithSafeCloseable(
+					true);
 
 			replaceDestination(DestinationNames.ASYNC_SERVICE);
 			replaceDestination(DestinationNames.BACKGROUND_TASK);
@@ -190,6 +196,7 @@ public class SynchronousDestinationTestRule
 			replaceDestination(DestinationNames.SUBSCRIPTION_SENDER);
 			replaceDestination("liferay/adaptive_media_processor");
 			replaceDestination("liferay/asset_auto_tagger");
+			replaceDestination("liferay/asset_category_asset_entries_reindex");
 			replaceDestination("liferay/ddm_structure_reindex");
 			replaceDestination("liferay/report_request");
 			replaceDestination("liferay/reports_admin");

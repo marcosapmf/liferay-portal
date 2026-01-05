@@ -8,17 +8,17 @@ package com.liferay.adaptive.media.web.internal.portlet.action;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + AMPortletKeys.ADAPTIVE_MEDIA,
+		"jakarta.portlet.name=" + AMPortletKeys.ADAPTIVE_MEDIA,
 		"mvc.command.name=/adaptive_media/delete_image_configuration_entry"
 	},
 	service = MVCActionCommand.class
@@ -49,25 +49,25 @@ public class DeleteImageConfigurationEntryMVCActionCommand
 				actionRequest, "rowIdsAMImageConfigurationEntry");
 
 		List<AMImageConfigurationEntry> deletedAMImageConfigurationEntries =
-			new ArrayList<>();
+			TransformUtil.transformToList(
+				deleteAMImageConfigurationEntryUuids,
+				deleteAMImageConfigurationEntryUuid -> {
+					AMImageConfigurationEntry amImageConfigurationEntry =
+						_amImageConfigurationHelper.
+							getAMImageConfigurationEntry(
+								themeDisplay.getCompanyId(),
+								deleteAMImageConfigurationEntryUuid);
 
-		for (String deleteAMImageConfigurationEntryUuid :
-				deleteAMImageConfigurationEntryUuids) {
+					_amImageConfigurationHelper.deleteAMImageConfigurationEntry(
+						themeDisplay.getCompanyId(),
+						deleteAMImageConfigurationEntryUuid);
 
-			AMImageConfigurationEntry amImageConfigurationEntry =
-				_amImageConfigurationHelper.getAMImageConfigurationEntry(
-					themeDisplay.getCompanyId(),
-					deleteAMImageConfigurationEntryUuid);
+					if (amImageConfigurationEntry != null) {
+						return amImageConfigurationEntry;
+					}
 
-			_amImageConfigurationHelper.deleteAMImageConfigurationEntry(
-				themeDisplay.getCompanyId(),
-				deleteAMImageConfigurationEntryUuid);
-
-			if (amImageConfigurationEntry != null) {
-				deletedAMImageConfigurationEntries.add(
-					amImageConfigurationEntry);
-			}
-		}
+					return null;
+				});
 
 		SessionMessages.add(
 			actionRequest, "configurationEntriesDeleted",

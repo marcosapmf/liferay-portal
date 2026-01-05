@@ -18,6 +18,8 @@ public class CacheFieldEntryImpl extends CacheFieldEntryBaseImpl {
 			_nickname = "Nickname_" + getName();
 		}
 
+		nicknameUpdateEntityCacheBiConsumer.accept(this, _nickname);
+
 		return _nickname;
 	}
 

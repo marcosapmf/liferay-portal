@@ -31,11 +31,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.Objects;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletException;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,8 +45,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + AccountPortletKeys.ACCOUNT_ENTRIES_ADMIN,
-		"javax.portlet.name=" + AccountPortletKeys.ACCOUNT_ENTRIES_MANAGEMENT,
+		"jakarta.portlet.name=" + AccountPortletKeys.ACCOUNT_ENTRIES_ADMIN,
+		"jakarta.portlet.name=" + AccountPortletKeys.ACCOUNT_ENTRIES_MANAGEMENT,
 		"mvc.command.name=/account_admin/edit_account_entry"
 	},
 	service = MVCActionCommand.class
@@ -122,30 +122,24 @@ public class EditAccountEntryMVCActionCommand
 		AccountEntry accountEntry = _accountEntryService.getAccountEntry(
 			accountEntryId);
 
-		String name = ParamUtil.getString(actionRequest, "name");
-		String description = ParamUtil.getString(actionRequest, "description");
-		boolean deleteLogo = ParamUtil.getBoolean(actionRequest, "deleteLogo");
-
 		String[] domains = accountEntry.getDomainsArray();
 
 		if (_isAllowUpdateDomains(accountEntry.getType())) {
 			domains = ParamUtil.getStringValues(actionRequest, "domains");
 		}
 
-		String emailAddress = ParamUtil.getString(
-			actionRequest, "emailAddress");
-		String taxIdNumber = ParamUtil.getString(actionRequest, "taxIdNumber");
-
 		accountEntry = _accountEntryService.updateAccountEntry(
-			accountEntryId, accountEntry.getParentAccountEntryId(), name,
-			description, deleteLogo, domains, emailAddress,
-			_getLogoBytes(actionRequest), taxIdNumber, accountEntry.getStatus(),
+			ParamUtil.getString(actionRequest, "externalReferenceCode"),
+			accountEntryId, accountEntry.getParentAccountEntryId(),
+			ParamUtil.getString(actionRequest, "name"),
+			ParamUtil.getString(actionRequest, "description"),
+			ParamUtil.getBoolean(actionRequest, "deleteLogo"), domains,
+			ParamUtil.getString(actionRequest, "emailAddress"),
+			_getLogoBytes(actionRequest),
+			ParamUtil.getString(actionRequest, "taxIdNumber"),
+			accountEntry.getStatus(),
 			ServiceContextFactory.getInstance(
 				AccountEntry.class.getName(), actionRequest));
-
-		accountEntry = _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			ParamUtil.getString(actionRequest, "externalReferenceCode"));
 
 		if (Objects.equals(
 				AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON,
@@ -174,12 +168,7 @@ public class EditAccountEntryMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String name = ParamUtil.getString(actionRequest, "name");
-		String description = ParamUtil.getString(actionRequest, "description");
 		String[] domains = new String[0];
-		String emailAddress = ParamUtil.getString(
-			actionRequest, "emailAddress");
-		String taxIdNumber = ParamUtil.getString(actionRequest, "taxIdNumber");
 
 		String type = ParamUtil.getString(
 			actionRequest, "type",
@@ -189,17 +178,17 @@ public class EditAccountEntryMVCActionCommand
 			domains = ParamUtil.getStringValues(actionRequest, "domains");
 		}
 
-		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
+		return _accountEntryService.addAccountEntry(
+			ParamUtil.getString(actionRequest, "externalReferenceCode"),
 			themeDisplay.getUserId(), AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
-			name, description, domains, emailAddress,
-			_getLogoBytes(actionRequest), taxIdNumber, type,
+			ParamUtil.getString(actionRequest, "name"),
+			ParamUtil.getString(actionRequest, "description"), domains,
+			ParamUtil.getString(actionRequest, "emailAddress"),
+			_getLogoBytes(actionRequest),
+			ParamUtil.getString(actionRequest, "taxIdNumber"), type,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextFactory.getInstance(
 				AccountEntry.class.getName(), actionRequest));
-
-		return _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			ParamUtil.getString(actionRequest, "externalReferenceCode"));
 	}
 
 	private byte[] _getLogoBytes(ActionRequest actionRequest) throws Exception {
@@ -215,13 +204,8 @@ public class EditAccountEntryMVCActionCommand
 	}
 
 	private boolean _isAllowUpdateDomains(String type) {
-		if (Objects.equals(
-				AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, type)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, type);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

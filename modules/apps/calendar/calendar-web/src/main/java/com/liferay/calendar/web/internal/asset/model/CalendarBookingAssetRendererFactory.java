@@ -27,10 +27,10 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eduardo Lundgren
  */
 @Component(
-	property = "javax.portlet.name=" + CalendarPortletKeys.CALENDAR,
+	property = "jakarta.portlet.name=" + CalendarPortletKeys.CALENDAR,
 	service = AssetRendererFactory.class
 )
 public class CalendarBookingAssetRendererFactory
@@ -138,6 +138,10 @@ public class CalendarBookingAssetRendererFactory
 		}
 
 		Calendar calendar = calendarResource.getDefaultCalendar();
+
+		if (calendar == null) {
+			return false;
+		}
 
 		return _calendarModelResourcePermission.contains(
 			permissionChecker, calendar.getCalendarId(),

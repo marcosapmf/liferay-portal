@@ -8,11 +8,11 @@ package com.liferay.search.experiences.rest.client.dto.v1_0;
 import com.liferay.search.experiences.rest.client.function.UnsafeSupplier;
 import com.liferay.search.experiences.rest.client.serdes.v1_0.AdvancedConfigurationSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Brian Wing Shun Chan
@@ -45,6 +45,27 @@ public class AdvancedConfiguration implements Cloneable, Serializable {
 	}
 
 	protected Collapse collapse;
+
+	public String[] getFields() {
+		return fields;
+	}
+
+	public void setFields(String[] fields) {
+		this.fields = fields;
+	}
+
+	public void setFields(
+		UnsafeSupplier<String[], Exception> fieldsUnsafeSupplier) {
+
+		try {
+			fields = fieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] fields;
 
 	public Source getSource() {
 		return source;

@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		CommerceEntry.addAccountEntryUser(
 			accountName = "Commerce Account",
@@ -812,7 +815,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 2,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 
 		for (var termType : list "Payment,Delivery") {
 			CommerceOrders.editOrdersEntryTerms(
@@ -831,7 +834,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 2,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 	}
 
 	@description = "[Please Update]"
@@ -1123,7 +1126,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 2,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 	}
 
 	@description = "[Please Update]"
@@ -1203,7 +1206,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = 2,
 			productSku = "MIN93015",
-			productTotalPrice = "100.00");
+			productTotalPrice = "$ 100.00");
 	}
 
 }

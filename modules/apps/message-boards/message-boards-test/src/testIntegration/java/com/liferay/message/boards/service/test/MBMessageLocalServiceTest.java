@@ -11,35 +11,40 @@ import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
+import com.liferay.message.boards.service.MBThreadLocalServiceUtil;
 import com.liferay.message.boards.test.util.MBTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.InputStream;
 
 import java.text.DateFormat;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -86,6 +91,25 @@ public class MBMessageLocalServiceTest {
 
 		Assert.assertEquals(subject, message.getSubject());
 		Assert.assertEquals(subject, message.getBody());
+	}
+
+	@Test
+	public void testAddBBCodeSubjectWithLineBreakInBodyInBBCode()
+		throws Exception {
+
+		String subject = "<u>subject</u>";
+		String body = "a\nbc";
+		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
+			Collections.emptyList();
+
+		MBMessage message = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, body, "bbcode", inputStreamOVPs, false, 0.0, false,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		Assert.assertEquals(body, message.getBody());
 	}
 
 	@Test
@@ -143,6 +167,37 @@ public class MBMessageLocalServiceTest {
 	}
 
 	@Test
+	public void testAddMessageURLSubject() throws PortalException {
+		String subject = StringPool.DASH;
+		String body = StringPool.BLANK;
+		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
+			Collections.emptyList();
+
+		MBMessage message = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, body, "bbcode", inputStreamOVPs, false, 0.0, false,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		Assert.assertEquals(
+			subject + message.getMessageId(), message.getUrlSubject());
+
+		subject =
+			MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + StringPool.DASH;
+
+		message = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, body, "bbcode", inputStreamOVPs, false, 0.0, false,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		Assert.assertEquals(
+			"re-" + message.getMessageId(), message.getUrlSubject());
+	}
+
+	@Test
 	public void testAddMessageWithEmptyBody() throws Exception {
 		User user = TestPropsValues.getUser();
 		String subject = StringUtil.randomString();
@@ -153,6 +208,42 @@ public class MBMessageLocalServiceTest {
 			StringPool.BLANK, ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(subject, mbMessage.getBody());
+	}
+
+	@Test
+	public void testAddMessageWithMultipleRepliesToParentThreadWithMaxSubjectLength()
+		throws Exception {
+
+		String subject = StringUtil.randomString(
+			ModelHintsUtil.getMaxLength(MBMessage.class.getName(), "subject"));
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		MBMessage parentMessage = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			subject, StringPool.BLANK, "bbcode", Collections.emptyList(), false,
+			0.0, false, serviceContext);
+
+		for (int i = 0; i < 3; i++) {
+			MBMessageLocalServiceUtil.addMessage(
+				TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+				_group.getGroupId(),
+				MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				parentMessage.getThreadId(), parentMessage.getMessageId(),
+				subject, StringPool.BLANK, "bbcode", null, false, 0.0, false,
+				serviceContext);
+		}
+
+		MBThread thread = MBThreadLocalServiceUtil.getThread(
+			parentMessage.getThreadId());
+
+		List<MBMessage> messages = MBMessageLocalServiceUtil.getThreadMessages(
+			thread.getThreadId(), WorkflowConstants.STATUS_ANY);
+
+		Assert.assertEquals(messages.toString(), 4, messages.size());
 	}
 
 	@Test
@@ -404,6 +495,40 @@ public class MBMessageLocalServiceTest {
 		mbThread = message.getThread();
 
 		Assert.assertNotEquals(mbThread.getModifiedDate(), date);
+	}
+
+	@Test
+	public void testUpdateUserName() throws Exception {
+		User user = UserTestUtil.addUser(_group.getGroupId());
+
+		MBMessage mbMessage = MBMessageLocalServiceUtil.addMessage(
+			user.getUserId(), RandomTestUtil.randomString(),
+			_group.getGroupId(), MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			MBMessageConstants.DEFAULT_FORMAT, Collections.emptyList(), false,
+			0.0, false,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), user.getUserId()));
+
+		Date expectedModifiedDate = mbMessage.getModifiedDate();
+
+		user = UserLocalServiceUtil.updateUser(
+			user.getUserId(), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, false, StringPool.BLANK, StringPool.BLANK,
+			"TestUser" + RandomTestUtil.nextLong(),
+			"UserServiceTest." + RandomTestUtil.nextLong() + "@liferay.com",
+			false, null, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, RandomTestUtil.randomString(), StringPool.BLANK,
+			RandomTestUtil.randomString(), 0, 0, true, Calendar.JANUARY, 1,
+			1970, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null, null,
+			null, null, null, ServiceContextTestUtil.getServiceContext());
+
+		mbMessage = MBMessageLocalServiceUtil.fetchMBMessage(
+			mbMessage.getMessageId());
+
+		Assert.assertEquals(user.getFullName(), mbMessage.getUserName());
+		Assert.assertEquals(expectedModifiedDate, mbMessage.getModifiedDate());
 	}
 
 	protected MBMessage addMessage() throws Exception {

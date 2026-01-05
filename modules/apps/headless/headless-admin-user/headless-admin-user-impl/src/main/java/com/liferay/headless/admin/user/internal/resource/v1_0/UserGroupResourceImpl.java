@@ -31,9 +31,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,6 +61,18 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 		deleteUserGroup(
 			DTOConverterUtil.getModelPrimaryKey(
 				_userGroupResourceDTOConverter, externalReferenceCode));
+	}
+
+	@Override
+	public void deleteUserGroupByExternalReferenceCodeUsers(
+			String externalReferenceCode, Long[] userIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.UserGroup userGroup =
+			_userGroupService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		deleteUserGroupUsers(userGroup.getUserGroupId(), userIds);
 	}
 
 	@Override
@@ -139,12 +151,57 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 	}
 
 	@Override
+	public UserGroup patchUserGroup(Long userGroupId, UserGroup userGroup)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.UserGroup serviceBuilderUserGroup =
+			_userGroupService.getUserGroup(userGroupId);
+
+		return _toUserGroup(
+			_userGroupService.updateUserGroup(
+				GetterUtil.getString(
+					userGroup.getExternalReferenceCode(),
+					serviceBuilderUserGroup.getExternalReferenceCode()),
+				userGroupId,
+				GetterUtil.getString(
+					userGroup.getName(), serviceBuilderUserGroup.getName()),
+				GetterUtil.getString(
+					userGroup.getDescription(),
+					serviceBuilderUserGroup.getDescription()),
+				null));
+	}
+
+	@Override
+	public UserGroup patchUserGroupByExternalReferenceCode(
+			String externalReferenceCode, UserGroup userGroup)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.UserGroup serviceBuilderUserGroup =
+			_userGroupService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return patchUserGroup(
+			serviceBuilderUserGroup.getUserGroupId(), userGroup);
+	}
+
+	@Override
 	public UserGroup postUserGroup(UserGroup userGroup) throws Exception {
 		return _toUserGroup(
-			_userGroupService.updateExternalReferenceCode(
-				_userGroupService.addUserGroup(
-					userGroup.getName(), userGroup.getDescription(), null),
-				userGroup.getExternalReferenceCode()));
+			_userGroupService.addUserGroup(
+				userGroup.getExternalReferenceCode(), userGroup.getName(),
+				userGroup.getDescription(), null));
+	}
+
+	@Override
+	public void postUserGroupByExternalReferenceCodeUsers(
+			String externalReferenceCode, Long[] userIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.UserGroup serviceBuilderUserGroup =
+			_userGroupService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		postUserGroupUsers(serviceBuilderUserGroup.getUserGroupId(), userIds);
 	}
 
 	@Override
@@ -158,12 +215,14 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 	public UserGroup putUserGroup(Long userGroupId, UserGroup userGroup)
 		throws Exception {
 
+		if (userGroupId <= 0) {
+			return postUserGroup(userGroup);
+		}
+
 		return _toUserGroup(
-			_userGroupService.updateExternalReferenceCode(
-				_userGroupService.updateUserGroup(
-					userGroupId, userGroup.getName(),
-					userGroup.getDescription(), null),
-				userGroup.getExternalReferenceCode()));
+			_userGroupService.updateUserGroup(
+				userGroup.getExternalReferenceCode(), userGroupId,
+				userGroup.getName(), userGroup.getDescription(), null));
 	}
 
 	@Override
@@ -248,7 +307,7 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 			_getDTOConverterContext(userGroup.getUserGroupId()), userGroup);
 	}
 
-	private final EntityModel _entityModel = new UserGroupEntityModel();
+	private static final EntityModel _entityModel = new UserGroupEntityModel();
 
 	@Reference(
 		target = "(model.class.name=com.liferay.portal.kernel.model.UserGroup)"

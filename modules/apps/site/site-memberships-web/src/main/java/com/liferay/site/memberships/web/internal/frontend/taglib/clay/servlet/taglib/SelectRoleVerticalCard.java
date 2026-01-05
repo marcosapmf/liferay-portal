@@ -13,11 +13,11 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -32,7 +32,7 @@ public class SelectRoleVerticalCard implements VerticalCard {
 
 	@Override
 	public String getCssClass() {
-		return "selector-button";
+		return "card-interactive card-interactive-secondary selector-button";
 	}
 
 	@Override

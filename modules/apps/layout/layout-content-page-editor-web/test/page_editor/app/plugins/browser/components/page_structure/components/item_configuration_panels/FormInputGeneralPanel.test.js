@@ -5,7 +5,7 @@
 
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render, screen} from '@testing-library/react';
 
 import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/freemarkerFragmentEntryProcessor';
@@ -13,9 +13,6 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../../../../../src/main/resour
 import {VIEWPORT_SIZES} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {StoreAPIContextProvider} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import {FormInputGeneralPanel} from '../../../../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/browser/components/page_structure/components/item_configuration_panels/FormInputGeneralPanel';
-
-const FRAGMENT_ENTRY_LINK_ID_1 = '1';
-const FRAGMENT_ENTRY_LINK_ID_2 = '2';
 
 const FORM_ITEM = {
 	children: ['input-item-1', 'input-item-2'],
@@ -27,6 +24,9 @@ const FORM_ITEM = {
 	parentId: '',
 	type: LAYOUT_DATA_ITEM_TYPES.form,
 };
+
+const FRAGMENT_ENTRY_LINK_ID_1 = '1';
+const FRAGMENT_ENTRY_LINK_ID_2 = '2';
 
 const INPUT_ITEM_1 = {
 	children: [],
@@ -48,48 +48,11 @@ const INPUT_ITEM_2 = {
 	type: LAYOUT_DATA_ITEM_TYPES.fragment,
 };
 
-const MOCK_CACHE = {
+let MOCK_CACHE = {
 	'allowedInputTypes-dateFragment': ['date'],
 	'allowedInputTypes-numericFragment': ['numeric'],
 	'allowedInputTypes-textFragment': ['text'],
-	'formFields-classNameId-classTypeId': [
-		{
-			fields: [
-				{
-					key: 'requiredField',
-					label: 'Required Field',
-					name: 'requiredField',
-					required: true,
-					type: 'text',
-				},
-				{
-					key: 'notRequiredField',
-					label: 'Not Required Field',
-					name: 'notRequiredField',
-					required: false,
-					type: 'text',
-				},
-				{
-					key: 'numericField',
-					label: 'Numeric Field',
-					name: 'numericField',
-					required: false,
-					type: 'numeric',
-				},
-			],
-			label: 'Fieldset',
-		},
-	],
-	'relationships-classNameId-classTypeId': [
-		{classNameId: 'relationship-1', label: 'Relationship 1'},
-		{classNameId: 'relationship-2', label: 'Relationship 2'},
-	],
 };
-
-jest.mock(
-	'../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/useCache',
-	() => jest.fn(({key}) => MOCK_CACHE[key.join('-')])
-);
 
 jest.mock(
 	'../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/index',
@@ -115,6 +78,59 @@ jest.mock(
 		},
 	})
 );
+
+jest.mock(
+	'../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/useCache',
+	() => jest.fn(({key}) => MOCK_CACHE[key.join('-')])
+);
+
+jest.mock(
+	'../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ObjectDataContext',
+	() => {
+		return {
+			useObjectFields: () => {
+				return [
+					{
+						key: 'requiredField',
+						label: 'Required Field',
+						name: 'requiredField',
+						required: true,
+						type: 'text',
+					},
+					{
+						key: 'notRequiredField',
+						label: 'Not Required Field',
+						name: 'notRequiredField',
+						required: false,
+						type: 'text',
+					},
+					{
+						key: 'numericField',
+						label: 'Numeric Field',
+						name: 'numericField',
+						required: false,
+						type: 'numeric',
+					},
+				];
+			},
+			useObjectLabel: () => 'Object 1',
+		};
+	}
+);
+
+const mockRelationships = () => {
+	MOCK_CACHE = {
+		...MOCK_CACHE,
+		'relationships-classNameId-classTypeId': [
+			{classNameId: 'relationship-1', label: 'Relationship 1'},
+			{classNameId: 'relationship-2', label: 'Relationship 2'},
+		],
+	};
+};
+
+const clearRelationships = () => {
+	delete MOCK_CACHE['relationships-classNameId-classTypeId'];
+};
 
 const renderComponent = ({
 	fragmentEntryKey = 'textFragment',
@@ -174,6 +190,14 @@ const renderComponent = ({
 };
 
 describe('FormInputGeneralPanel', () => {
+	beforeAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = true;
+	});
+
+	afterAll(() => {
+		Liferay.FeatureFlags['LPD-60546'] = false;
+	});
+
 	it('shows an alert instead of field selector when there are no suitable fields for fragment allowed types', () => {
 		renderComponent({fragmentEntryKey: 'dateFragment'});
 
@@ -227,7 +251,7 @@ describe('FormInputGeneralPanel', () => {
 	it('shows configuration fieldset when fragment is mapped', () => {
 		renderComponent({mappedFieldId: 'requiredField'});
 
-		expect(screen.getByText('x-configuration')).toBeInTheDocument();
+		expect(screen.getByText('fragment-configuration')).toBeInTheDocument();
 	});
 
 	it('shows checkbox to set field as required disabled when fragment is mapped to a required field', () => {
@@ -243,12 +267,12 @@ describe('FormInputGeneralPanel', () => {
 	});
 
 	it('shows source selector when there is any relationship', () => {
-		Liferay.FeatureFlags['LPD-20213'] = true;
+		mockRelationships();
 
 		renderComponent();
 
 		expect(screen.getByLabelText('source')).toBeInTheDocument();
 
-		Liferay.FeatureFlags['LPD-20213'] = false;
+		clearRelationships();
 	});
 });

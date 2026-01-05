@@ -32,7 +32,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,7 +76,7 @@ public class DownloadFileVersionContentDashboardItemVersionActionProviderTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 
 		MockLiferayResourceRequest mockLiferayResourceRequest =
@@ -86,7 +86,7 @@ public class DownloadFileVersionContentDashboardItemVersionActionProviderTest {
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST, mockLiferayResourceRequest);
+			JavaConstants.JAKARTA_PORTLET_REQUEST, mockLiferayResourceRequest);
 
 		ContentDashboardItemVersionAction contentDashboardItemVersionAction =
 			_contentDashboardItemVersionActionProvider.

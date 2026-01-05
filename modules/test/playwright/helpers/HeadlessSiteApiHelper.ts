@@ -9,9 +9,12 @@ import {zipFolder} from '../utils/zip';
 import {ApiHelpers} from './ApiHelpers';
 
 type TSite = {
+	active?: boolean;
 	externalReferenceCode?: string;
 	id?: number;
+	membershipType?: string;
 	name: string;
+	parentSiteKey?: string;
 	templateKey?: string;
 	templateType?: string;
 };
@@ -41,7 +44,7 @@ export class HeadlessSiteApiHelper {
 		});
 
 		return this.apiHelpers.post(
-			`${this.apiHelpers.baseUrl}${this.basePath}/sites`,
+			`${this.apiHelpers.baseUrl}${this.basePath}/sites/site-initializer`,
 			{
 				headers: {
 					...(await this.apiHelpers.getCSRFTokenHeader()),

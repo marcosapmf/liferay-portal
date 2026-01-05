@@ -7,13 +7,14 @@ package com.liferay.headless.builder.internal.object.deployer;
 
 import com.liferay.headless.builder.internal.object.related.models.DeleteOnDisassociateObjectRelatedModelsProvider;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.deployer.ObjectDefinitionDeployer;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
-import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistrarHelper;
+import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistryUtil;
 import com.liferay.object.rest.filter.factory.FilterFactory;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
@@ -69,13 +70,13 @@ public class APIPropertyObjectDefinitionDeployerImpl
 			StringBundler.concat(
 				"(&(objectClass=", ObjectRelatedModelsProvider.class.getName(),
 				")(",
-				ObjectRelatedModelsProviderRegistrarHelper.
+				ObjectRelatedModelsProviderRegistryUtil.
 					KEY_OBJECT_DEFINITION_ERC,
 				"=L_API_PROPERTY)(",
-				ObjectRelatedModelsProviderRegistrarHelper.
-					KEY_RELATIONSHIP_TYPE,
+				ObjectRelatedModelsProviderRegistryUtil.KEY_RELATIONSHIP_TYPE,
 				"=", ObjectRelationshipConstants.TYPE_ONE_TO_MANY, "))"),
-			new ObjectRelatedModelsProviderServiceTrackerCustomizer());
+			new ObjectRelatedModelsProviderServiceTrackerCustomizer(
+				objectDefinition.getCompanyId()));
 
 		try {
 			_updateExistingAPIProperties(objectDefinition);
@@ -133,7 +134,7 @@ public class APIPropertyObjectDefinitionDeployerImpl
 			_objectEntryLocalService.getValuesList(
 				GroupThreadLocal.getGroupId(), objectDefinition.getCompanyId(),
 				objectDefinition.getUserId(),
-				objectDefinition.getObjectDefinitionId(), null,
+				objectDefinition.getObjectDefinitionId(),
 				_filterFactory.create("type eq null", objectDefinition), null,
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
@@ -146,9 +147,11 @@ public class APIPropertyObjectDefinitionDeployerImpl
 
 			_objectEntryLocalService.addOrUpdateObjectEntry(
 				(String)values.get("externalReferenceCode"),
-				objectDefinition.getUserId(), GroupThreadLocal.getGroupId(),
-				objectDefinition.getObjectDefinitionId(), values,
-				new ServiceContext());
+				GroupThreadLocal.getGroupId(), objectDefinition.getUserId(),
+				objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				values, new ServiceContext());
 		}
 	}
 
@@ -172,10 +175,6 @@ public class APIPropertyObjectDefinitionDeployerImpl
 	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
-	private ObjectRelatedModelsProviderRegistrarHelper
-		_objectRelatedModelsProviderRegistrarHelper;
-
-	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	private ServiceTracker
@@ -186,6 +185,12 @@ public class APIPropertyObjectDefinitionDeployerImpl
 		implements ServiceTrackerCustomizer
 			<ObjectRelatedModelsProvider, ObjectRelatedModelsProvider> {
 
+		public ObjectRelatedModelsProviderServiceTrackerCustomizer(
+			long companyId) {
+
+			_companyId = companyId;
+		}
+
 		@Override
 		public ObjectRelatedModelsProvider addingService(
 			ServiceReference<ObjectRelatedModelsProvider> serviceReference) {
@@ -194,8 +199,9 @@ public class APIPropertyObjectDefinitionDeployerImpl
 				objectRelatedModelsProvider = _bundleContext.getService(
 					serviceReference);
 
-			if (objectRelatedModelsProvider instanceof
-					DeleteOnDisassociateObjectRelatedModelsProvider) {
+			if ((_companyId != objectRelatedModelsProvider.getCompanyId()) ||
+				(objectRelatedModelsProvider instanceof
+					DeleteOnDisassociateObjectRelatedModelsProvider)) {
 
 				return objectRelatedModelsProvider;
 			}
@@ -212,7 +218,7 @@ public class APIPropertyObjectDefinitionDeployerImpl
 			ServiceRegistration<ObjectRelatedModelsProvider<?>>
 				serviceRegistration =
 					(ServiceRegistration<ObjectRelatedModelsProvider<?>>)
-						_objectRelatedModelsProviderRegistrarHelper.register(
+						ObjectRelatedModelsProviderRegistryUtil.register(
 							_bundleContext,
 							_objectDefinitionLocalService.
 								fetchObjectDefinitionByExternalReferenceCode(
@@ -250,6 +256,7 @@ public class APIPropertyObjectDefinitionDeployerImpl
 			}
 		}
 
+		private final long _companyId;
 		private final Map
 			<ServiceReference<ObjectRelatedModelsProvider>,
 			 ServiceRegistration<ObjectRelatedModelsProvider<?>>>

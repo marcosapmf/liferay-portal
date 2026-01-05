@@ -16,9 +16,9 @@ import com.liferay.headless.form.resource.v1_0.FormResource;
 import com.liferay.headless.form.resource.v1_0.FormStructureResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -27,17 +27,17 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.validation.constraints.NotEmpty;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -133,17 +133,18 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formRecord(formRecordId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formFormRecordByLatestDraft(formId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public FormRecord formRecord(@GraphQLName("formRecordId") Long formRecordId)
+	public FormRecord formFormRecordByLatestDraft(
+			@GraphQLName("formId") Long formId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_formRecordResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			formRecordResource -> formRecordResource.getFormRecord(
-				formRecordId));
+			formRecordResource ->
+				formRecordResource.getFormFormRecordByLatestDraft(formId));
 	}
 
 	/**
@@ -169,18 +170,17 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formFormRecordByLatestDraft(formId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {formRecord(formRecordId: ___){creator, dateCreated, dateModified, datePublished, draft, formFieldValues, formId, id}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public FormRecord formFormRecordByLatestDraft(
-			@GraphQLName("formId") Long formId)
+	public FormRecord formRecord(@GraphQLName("formRecordId") Long formRecordId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_formRecordResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			formRecordResource ->
-				formRecordResource.getFormFormRecordByLatestDraft(formId));
+			formRecordResource -> formRecordResource.getFormRecord(
+				formRecordId));
 	}
 
 	/**
@@ -421,6 +421,9 @@ public class Query {
 		formResource.setContextUriInfo(_uriInfo);
 		formResource.setContextUser(_user);
 		formResource.setGroupLocalService(_groupLocalService);
+		formResource.setResourceActionLocalService(_resourceActionLocalService);
+		formResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		formResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -436,6 +439,10 @@ public class Query {
 		formDocumentResource.setContextUriInfo(_uriInfo);
 		formDocumentResource.setContextUser(_user);
 		formDocumentResource.setGroupLocalService(_groupLocalService);
+		formDocumentResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		formDocumentResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		formDocumentResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -449,6 +456,10 @@ public class Query {
 		formRecordResource.setContextUriInfo(_uriInfo);
 		formRecordResource.setContextUser(_user);
 		formRecordResource.setGroupLocalService(_groupLocalService);
+		formRecordResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		formRecordResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		formRecordResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -464,6 +475,10 @@ public class Query {
 		formStructureResource.setContextUriInfo(_uriInfo);
 		formStructureResource.setContextUser(_user);
 		formStructureResource.setGroupLocalService(_groupLocalService);
+		formStructureResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		formStructureResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		formStructureResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -478,12 +493,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

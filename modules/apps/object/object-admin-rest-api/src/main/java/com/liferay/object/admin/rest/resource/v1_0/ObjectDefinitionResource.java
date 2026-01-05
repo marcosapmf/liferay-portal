@@ -6,8 +6,6 @@
 package com.liferay.object.admin.rest.resource.v1_0;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -21,18 +19,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -48,32 +46,6 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectDefinitionResource {
 
-	public Page<ObjectDefinition> getObjectDefinitionsPage(
-			String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postObjectDefinitionsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public ObjectDefinition postObjectDefinition(
-			ObjectDefinition objectDefinition)
-		throws Exception;
-
-	public Response postObjectDefinitionBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public ObjectDefinition getObjectDefinitionByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public ObjectDefinition putObjectDefinitionByExternalReferenceCode(
-			String externalReferenceCode, ObjectDefinition objectDefinition)
-		throws Exception;
-
 	public void deleteObjectDefinition(Long objectDefinitionId)
 		throws Exception;
 
@@ -84,8 +56,37 @@ public interface ObjectDefinitionResource {
 	public ObjectDefinition getObjectDefinition(Long objectDefinitionId)
 		throws Exception;
 
+	public ObjectDefinition getObjectDefinitionByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Page<ObjectDefinition> getObjectDefinitionsPage(
+			String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
 	public ObjectDefinition patchObjectDefinition(
 			Long objectDefinitionId, ObjectDefinition objectDefinition)
+		throws Exception;
+
+	public ObjectDefinition postObjectDefinition(
+			ObjectDefinition objectDefinition)
+		throws Exception;
+
+	public Response postObjectDefinitionBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public ObjectDefinition postObjectDefinitionPublish(Long objectDefinitionId)
+		throws Exception;
+
+	public Response postObjectDefinitionsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public ObjectDefinition putObjectDefinition(
@@ -95,7 +96,8 @@ public interface ObjectDefinitionResource {
 	public Response putObjectDefinitionBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public ObjectDefinition postObjectDefinitionPublish(Long objectDefinitionId)
+	public ObjectDefinition putObjectDefinitionByExternalReferenceCode(
+			String externalReferenceCode, ObjectDefinition objectDefinition)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -120,7 +122,8 @@ public interface ObjectDefinitionResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -145,19 +148,23 @@ public interface ObjectDefinitionResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

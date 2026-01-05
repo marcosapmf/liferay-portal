@@ -52,19 +52,19 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		return deployWorkflowDefinition(
-			companyId, userId, title, name,
+			externalReferenceCode, companyId, userId, title, name,
 			WorkflowDefinitionConstants.SCOPE_ALL, bytes);
 	}
 
 	@Override
 	public WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			String scope, byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, String scope, byte[] bytes)
 		throws WorkflowException {
 
 		ServiceContext serviceContext = new ServiceContext();
@@ -73,8 +73,8 @@ public class WorkflowDefinitionManagerImpl
 		serviceContext.setUserId(userId);
 
 		return _workflowEngine.deployWorkflowDefinition(
-			title, name, scope, new UnsyncByteArrayInputStream(bytes),
-			serviceContext);
+			externalReferenceCode, title, name, scope,
+			new UnsyncByteArrayInputStream(bytes), serviceContext);
 	}
 
 	@Override
@@ -200,7 +200,7 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition getWorkflowDefinition(long workflowDefinitionId)
-		throws WorkflowException {
+		throws PortalException {
 
 		try {
 			return _kaleoWorkflowModelConverter.toWorkflowDefinition(
@@ -221,9 +221,30 @@ public class WorkflowDefinitionManagerImpl
 	@Override
 	public WorkflowDefinition getWorkflowDefinition(
 			long companyId, String name, int version)
-		throws WorkflowException {
+		throws PortalException {
 
 		return _getWorkflowDefinition(companyId, name, version, false);
+	}
+
+	@Override
+	public WorkflowDefinition getWorkflowDefinition(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		try {
+			return _kaleoWorkflowModelConverter.toWorkflowDefinition(
+				_kaleoDefinitionService.getKaleoDefinition(
+					externalReferenceCode, companyId));
+		}
+		catch (NoSuchModelException noSuchModelException) {
+			throw new NoSuchWorkflowDefinitionException(noSuchModelException);
+		}
+		catch (WorkflowException workflowException) {
+			throw workflowException;
+		}
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
+		}
 	}
 
 	@Override
@@ -280,7 +301,7 @@ public class WorkflowDefinitionManagerImpl
 	@Override
 	public WorkflowDefinition liberalGetWorkflowDefinition(
 			long companyId, String name, int version)
-		throws WorkflowException {
+		throws PortalException {
 
 		return _getWorkflowDefinition(companyId, name, version, true);
 	}
@@ -297,19 +318,19 @@ public class WorkflowDefinitionManagerImpl
 
 	@Override
 	public WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		return saveWorkflowDefinition(
-			companyId, userId, title, name,
+			externalReferenceCode, companyId, userId, title, name,
 			WorkflowDefinitionConstants.SCOPE_ALL, bytes);
 	}
 
 	@Override
 	public WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			String scope, byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, String scope, byte[] bytes)
 		throws WorkflowException {
 
 		ServiceContext serviceContext = new ServiceContext();
@@ -318,7 +339,7 @@ public class WorkflowDefinitionManagerImpl
 		serviceContext.setUserId(userId);
 
 		return _workflowEngine.saveWorkflowDefinition(
-			title, name, scope, bytes, serviceContext);
+			externalReferenceCode, title, name, scope, bytes, serviceContext);
 	}
 
 	@Override
@@ -551,7 +572,7 @@ public class WorkflowDefinitionManagerImpl
 
 	private WorkflowDefinition _getWorkflowDefinition(
 			long companyId, String name, int version, boolean liberal)
-		throws WorkflowException {
+		throws PortalException {
 
 		try {
 			return _kaleoWorkflowModelConverter.toWorkflowDefinition(

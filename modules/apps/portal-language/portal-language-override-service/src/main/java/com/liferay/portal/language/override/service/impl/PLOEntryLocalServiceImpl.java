@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.language.override.exception.PLOEntryImportException;
@@ -24,7 +25,6 @@ import com.liferay.portal.language.override.exception.PLOEntryValueException;
 import com.liferay.portal.language.override.internal.PLOEntryModelListener;
 import com.liferay.portal.language.override.model.PLOEntry;
 import com.liferay.portal.language.override.service.base.PLOEntryLocalServiceBaseImpl;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.List;
 import java.util.Locale;
@@ -129,7 +129,7 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 		}
 
 		try (SafeCloseable safeCloseable =
-				ClusterInvokeThreadLocal.setWithSafeCloseable(false)) {
+				ClusterInvokeThreadLocal.setEnabledWithSafeCloseable(false)) {
 
 			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 				_addOrUpdatePLOEntry(
@@ -194,7 +194,13 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 		String[] parts = languageId.split(StringPool.UNDERLINE);
 
 		if (parts.length < 2) {
-			return languageId;
+			Locale locale = _language.getLocale(languageId);
+
+			if (locale == null) {
+				return languageId;
+			}
+
+			return locale.toString();
 		}
 
 		languageId =
@@ -223,7 +229,8 @@ public class PLOEntryLocalServiceImpl extends PLOEntryLocalServiceBaseImpl {
 		}
 
 		if (!ArrayUtil.contains(PropsValues.LOCALES, languageId)) {
-			throw new PLOEntryLanguageIdException.MustBeAvailable(languageId);
+			throw new PLOEntryLanguageIdException.MustBeAvailable(
+				PropsValues.LOCALES, languageId);
 		}
 
 		if (Validator.isBlank(value)) {

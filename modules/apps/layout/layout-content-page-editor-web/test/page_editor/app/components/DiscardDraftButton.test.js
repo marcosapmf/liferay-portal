@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {openConfirmModal} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
 import React from 'react';
 
 import DiscardDraftButton from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/DiscardDraftButton';
@@ -17,18 +17,18 @@ jest.mock(
 	() => jest.fn(() => false)
 );
 
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
+jest.mock('frontend-js-components-web', () => ({
+	...jest.requireActual('frontend-js-components-web'),
 	openConfirmModal: jest.fn(({onConfirm}) => onConfirm(true)),
 }));
 
 const renderComponent = () => render(<DiscardDraftButton />);
 
 describe('DiscardDraftButton', () => {
-	it('calls openConfirmModal when the Discard Draft button is pressed', () => {
+	it('calls openConfirmModal when the Discard Draft button is pressed', async () => {
 		renderComponent();
 
-		userEvent.click(screen.getByText('discard-draft'));
+		await userEvent.click(screen.getByText('discard-draft'));
 
 		expect(openConfirmModal).toHaveBeenCalledWith({
 			message:

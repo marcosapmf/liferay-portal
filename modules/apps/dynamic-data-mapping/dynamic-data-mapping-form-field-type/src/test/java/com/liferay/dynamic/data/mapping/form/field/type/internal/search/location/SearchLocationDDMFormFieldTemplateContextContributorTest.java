@@ -29,12 +29,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -198,6 +198,7 @@ public class SearchLocationDDMFormFieldTemplateContextContributorTest {
 		).thenReturn(
 			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
 		);
+
 		portalUtil.setPortal(portal);
 
 		ResourceBundleLoader resourceBundleLoader = Mockito.mock(

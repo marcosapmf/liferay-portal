@@ -19,7 +19,6 @@ import {
 import classNames from 'classnames';
 import React, {useMemo, useState} from 'react';
 
-import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
 
 import './ModalAddObjectLayoutField.scss';
@@ -104,11 +103,10 @@ export default function ModalAddObjectLayoutField({
 				if (!inLayout) {
 					availableObjectFields.push({
 						businessType,
-						label: stringUtils.getLocalizableLabel(
-							defaultLanguageId,
-							label,
-							name
-						),
+						label: stringUtils.getLocalizableLabel({
+							fallbackLabel: name,
+							labels: label,
+						}),
 						readOnly,
 						required,
 						value: id,
@@ -158,7 +156,9 @@ export default function ModalAddObjectLayoutField({
 	return (
 		<ClayModal observer={observer}>
 			<ClayForm onSubmit={handleSubmit}>
-				<ClayModal.Header>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
 					{Liferay.Language.get('add-field')}
 				</ClayModal.Header>
 

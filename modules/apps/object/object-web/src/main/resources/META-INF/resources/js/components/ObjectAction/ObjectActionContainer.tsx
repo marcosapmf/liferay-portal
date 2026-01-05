@@ -14,13 +14,20 @@ import {
 } from '@liferay/object-js-components-web';
 import React, {useState} from 'react';
 
+import {Error, getErrorMessage, parseError} from '../../utils/errors';
 import ActionBuilder from './tabs/ActionBuilder';
 import BasicInfo from './tabs/BasicInfo';
 import {useObjectActionForm} from './useObjectActionForm';
 
 const TABS = [
-	Liferay.Language.get('basic-info'),
-	Liferay.Language.get('action-builder'),
+	{
+		key: 'basic-info',
+		label: Liferay.Language.get('basic-info'),
+	},
+	{
+		key: 'action-builder',
+		label: Liferay.Language.get('action-builder'),
+	},
 ];
 
 interface ObjectActionContainerProps {
@@ -34,6 +41,7 @@ interface ObjectActionContainerProps {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	objectFields: ObjectField[];
 	readOnly?: boolean;
 	requestParams: {
 		method: 'POST' | 'PUT';
@@ -44,16 +52,6 @@ interface ObjectActionContainerProps {
 	systemObject: boolean;
 	title: string;
 	validateExpressionURL: string;
-}
-
-interface ErrorMessage {
-	fieldName: keyof ObjectAction;
-	message?: string;
-	messages?: ErrorMessage[];
-}
-
-interface Error {
-	[key: string]: string | Error;
 }
 
 export type ActionError = FormError<ObjectAction & ObjectActionParameters> & {
@@ -71,6 +69,7 @@ export function ObjectActionContainer({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	objectFields,
 	readOnly,
 	requestParams: {method, url},
 	scriptManagementConfigurationPortletURL,
@@ -98,42 +97,14 @@ export function ObjectActionContainer({
 			const details = JSON.parse(detail as string);
 			const newErrors: Error = {};
 
-			const parseError = (details: ErrorMessage[], errors: Error) => {
-				details.forEach(({fieldName, message, messages}) => {
-					if (message) {
-						errors[fieldName] = message;
-					}
-					else {
-						errors[fieldName] = {};
-						parseError(
-							messages as ErrorMessage[],
-							errors[fieldName] as Error
-						);
-					}
-				});
-			};
-
 			parseError(details, newErrors);
 
 			setBackEndErrors(newErrors);
 
 			const errorMessages = new Set<string>();
 
-			const getErrorMessage = (errors: Error) => {
-				Object.values(errors).forEach((value) => {
-					if (typeof value === 'string') {
-						if (!errorMessages.has(value)) {
-							errorMessages.add(value);
-						}
-					}
-					else {
-						getErrorMessage(value);
-					}
-				});
-			};
-
 			if (newErrors) {
-				getErrorMessage(newErrors);
+				getErrorMessage(newErrors, errorMessages);
 				errorMessages.forEach((message) => {
 					openToast({
 						message,
@@ -173,11 +144,17 @@ export function ObjectActionContainer({
 			title={Liferay.Language.get('new-action')}
 		>
 			<ClayTabs>
-				{TABS.map((label, index) => (
+				{TABS.map(({key, label}, index) => (
 					<ClayTabs.Item
 						active={activeIndex === index}
 						key={index}
-						onClick={() => setActiveIndex(index)}
+						onClick={() => {
+							setActiveIndex(index);
+
+							if (key === 'action-builder') {
+								Liferay.fire('reloadFDS');
+							}
+						}}
 					>
 						{label}
 					</ClayTabs.Item>
@@ -224,6 +201,7 @@ export function ObjectActionContainer({
 						objectDefinitionsRelationshipsURL={
 							objectDefinitionsRelationshipsURL
 						}
+						objectFields={objectFields}
 						scriptManagementConfigurationPortletURL={
 							scriptManagementConfigurationPortletURL
 						}

@@ -62,7 +62,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		User omniAdminUser = _omniadminUserDemoDataCreator.create(
+		User omniadminUser = _omniadminUserDemoDataCreator.create(
 			company.getCompanyId());
 
 		LocalDateTime nowLocalDateTime = LocalDateTime.now();
@@ -71,7 +71,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionDemoDataCreator.create(
-				company.getCompanyId(), omniAdminUser.getUserId(),
+				company.getCompanyId(), omniadminUser.getUserId(),
 				_toDate(startLocalDateTime));
 
 		Group group = _groupLocalService.getGroup(
@@ -90,16 +90,16 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		DDMFormInstance ddmFormInstance =
 			_ddmFormInstanceDemoDataCreator.create(
-				omniAdminUser.getUserId(), group.getGroupId(),
+				omniadminUser.getUserId(), group.getGroupId(),
 				_toDate(startLocalDateTime));
 
 		_workflowDefinitionLinkDemoDataCreator.create(
-			omniAdminUser.getUserId(), company.getCompanyId(),
+			omniadminUser.getUserId(), company.getCompanyId(),
 			group.getGroupId(), DDMFormInstance.class.getName(),
 			ddmFormInstance.getFormInstanceId(), 0);
 
 		_workflowMetricsSLADefinitionDemoDataCreator.create(
-			company.getCompanyId(), omniAdminUser.getUserId(),
+			company.getCompanyId(), omniadminUser.getUserId(),
 			_toDate(startLocalDateTime),
 			workflowDefinition.getWorkflowDefinitionId());
 
@@ -259,7 +259,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 		}
 
 		_backgroundTaskLocalService.addBackgroundTask(
-			omniAdminUser.getUserId(), group.getGroupId(),
+			omniadminUser.getUserId(), group.getGroupId(),
 			WorkflowMetricsDemo.class.getSimpleName(),
 			WorkflowMetricsBackgroundTaskExecutorNames.
 				WORKFLOW_METRICS_REINDEX_BACKGROUND_TASK_EXECUTOR,

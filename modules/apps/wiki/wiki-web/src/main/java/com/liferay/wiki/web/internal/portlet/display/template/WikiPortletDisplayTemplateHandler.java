@@ -6,6 +6,7 @@
 package com.liferay.wiki.web.internal.portlet.display.template;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.template.TemplateHandler;
@@ -31,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Juan Fernández
  */
 @Component(
-	property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
+	property = "jakarta.portlet.name=" + WikiPortletKeys.WIKI,
 	service = TemplateHandler.class
 )
 public class WikiPortletDisplayTemplateHandler
@@ -92,6 +93,11 @@ public class WikiPortletDisplayTemplateHandler
 			wikiServicesTemplateVariableGroup);
 
 		return templateVariableGroups;
+	}
+
+	@Override
+	public boolean isEnabled(long companyId) {
+		return FeatureFlagManagerUtil.isEnabled(companyId, "LPD-35013");
 	}
 
 	@Override

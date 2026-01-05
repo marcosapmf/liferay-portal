@@ -12,13 +12,16 @@ import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManagerUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -45,12 +48,14 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.asset.service.base.AssetVocabularyLocalServiceBaseImpl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -165,9 +170,11 @@ public class AssetVocabularyLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
+		Map<Locale, String> trimmedTitleMap = _getTrimmedTitleMap(titleMap);
+
 		if (Validator.isNull(name)) {
 			name = _generateVocabularyName(
-				groupId, titleMap.get(LocaleUtil.getSiteDefault()));
+				groupId, trimmedTitleMap.get(LocaleUtil.getSiteDefault()));
 		}
 
 		name = _getVocabularyName(name);
@@ -193,12 +200,19 @@ public class AssetVocabularyLocalServiceImpl
 			vocabulary.setTitle(title);
 		}
 		else {
-			vocabulary.setTitleMap(titleMap);
+			vocabulary.setTitleMap(trimmedTitleMap);
 		}
 
 		vocabulary.setDescriptionMap(descriptionMap);
 		vocabulary.setSettings(settings);
 		vocabulary.setVisibilityType(visibilityType);
+
+		if (EmptyModelManagerUtil.isEmptyModel()) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_EMPTY);
+		}
+		else {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
 
 		vocabulary = assetVocabularyPersistence.update(vocabulary);
 
@@ -386,6 +400,24 @@ public class AssetVocabularyLocalServiceImpl
 		return assetVocabularyPersistence.findByG_N(groupId, name);
 	}
 
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long userId, long groupId)
+		throws PortalException {
+
+		return EmptyModelManagerUtil.getOrAddEmptyModel(
+			AssetVocabulary.class,
+			() -> assetVocabularyLocalService.addVocabulary(
+				externalReferenceCode, userId, groupId, externalReferenceCode,
+				externalReferenceCode,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(), externalReferenceCode),
+				null, null, AssetVocabularyConstants.VISIBILITY_TYPE_EMPTY,
+				new ServiceContext()),
+			externalReferenceCode,
+			this::fetchAssetVocabularyByExternalReferenceCode,
+			this::getAssetVocabularyByExternalReferenceCode, groupId);
+	}
+
 	@Override
 	public List<AssetVocabulary> getVocabularies(Hits hits)
 		throws PortalException {
@@ -453,30 +485,42 @@ public class AssetVocabularyLocalServiceImpl
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings)
 		throws PortalException {
 
 		return assetVocabularyLocalService.updateVocabulary(
-			vocabularyId, titleMap, descriptionMap, settings,
-			AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
+			externalReferenceCode, vocabularyId, titleMap, descriptionMap,
+			settings, AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			int visibilityType)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType)
 		throws PortalException {
 
 		AssetVocabulary vocabulary =
 			assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
 
-		vocabulary.setTitleMap(titleMap);
+		if (Validator.isNotNull(externalReferenceCode) &&
+			FeatureFlagManagerUtil.isEnabled(
+				vocabulary.getCompanyId(), "LPD-31228")) {
+
+			vocabulary.setExternalReferenceCode(externalReferenceCode);
+		}
+
+		vocabulary.setTitleMap(_getTrimmedTitleMap(titleMap));
 		vocabulary.setDescriptionMap(descriptionMap);
 		vocabulary.setSettings(settings);
 		vocabulary.setVisibilityType(visibilityType);
+
+		if (vocabulary.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
 
 		return assetVocabularyPersistence.update(vocabulary);
 	}
@@ -484,15 +528,19 @@ public class AssetVocabularyLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String title, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long vocabularyId, String title,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType, ServiceContext serviceContext)
 		throws PortalException {
 
 		AssetVocabulary vocabulary =
 			assetVocabularyPersistence.findByPrimaryKey(vocabularyId);
 
-		vocabulary.setTitleMap(titleMap);
+		if (Validator.isNotNull(externalReferenceCode)) {
+			vocabulary.setExternalReferenceCode(externalReferenceCode);
+		}
+
+		vocabulary.setTitleMap(_getTrimmedTitleMap(titleMap));
 
 		if (Validator.isNotNull(title)) {
 			vocabulary.setTitle(title);
@@ -500,8 +548,23 @@ public class AssetVocabularyLocalServiceImpl
 
 		vocabulary.setDescriptionMap(descriptionMap);
 		vocabulary.setSettings(settings);
+		vocabulary.setVisibilityType(visibilityType);
 
-		return assetVocabularyPersistence.update(vocabulary);
+		if (vocabulary.getStatus() == WorkflowConstants.STATUS_EMPTY) {
+			vocabulary.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
+		vocabulary = assetVocabularyPersistence.update(vocabulary);
+
+		if (serviceContext.isAddGroupPermissions() ||
+			serviceContext.isAddGuestPermissions()) {
+
+			addVocabularyResources(
+				vocabulary, serviceContext.isAddGroupPermissions(),
+				serviceContext.isAddGuestPermissions());
+		}
+
+		return vocabulary;
 	}
 
 	protected SearchContext buildSearchContext(
@@ -590,6 +653,21 @@ public class AssetVocabularyLocalServiceImpl
 
 			curVocabularyName = curVocabularyName + CharPool.DASH + count++;
 		}
+	}
+
+	private Map<Locale, String> _getTrimmedTitleMap(
+		Map<Locale, String> titleMap) {
+
+		Map<Locale, String> trimmedTitleMap = new HashMap<>();
+
+		for (Map.Entry<Locale, String> entry : titleMap.entrySet()) {
+			trimmedTitleMap.put(
+				entry.getKey(),
+				ModelHintsUtil.trimString(
+					AssetVocabulary.class.getName(), "name", entry.getValue()));
+		}
+
+		return trimmedTitleMap;
 	}
 
 	private String _getVocabularyName(String vocabularyName) {

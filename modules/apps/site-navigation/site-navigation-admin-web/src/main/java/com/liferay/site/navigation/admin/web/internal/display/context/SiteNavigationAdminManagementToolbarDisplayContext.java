@@ -24,9 +24,9 @@ import com.liferay.site.navigation.admin.web.internal.security.permission.resour
 import com.liferay.site.navigation.constants.SiteNavigationActionKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -128,15 +128,9 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (SiteNavigationPermission.contains(
-				themeDisplay.getPermissionChecker(),
-				themeDisplay.getSiteGroupId(),
-				SiteNavigationActionKeys.ADD_SITE_NAVIGATION_MENU)) {
-
-			return true;
-		}
-
-		return false;
+		return SiteNavigationPermission.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getSiteGroupId(),
+			SiteNavigationActionKeys.ADD_SITE_NAVIGATION_MENU);
 	}
 
 	@Override

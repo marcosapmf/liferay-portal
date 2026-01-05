@@ -7,6 +7,7 @@ AUI.add(
 	'liferay-scheduler-event-recorder',
 	(A) => {
 		const AArray = A.Array;
+		const DateMath = A.DataType.DateMath;
 		const Lang = A.Lang;
 
 		const CalendarWorkflow = Liferay.CalendarWorkflow;
@@ -254,22 +255,14 @@ AUI.add(
 							schedulerEvent.get('calendarBookingId');
 					}
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy() {
-									scheduler.load();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: 'dialog-with-footer',
+						onClose: function destroy() {
+							scheduler.load();
 						},
-						dialogIframe: {
-							bodyCssClass: 'dialog-with-footer',
-						},
-						refreshWindow: window,
 						title: Liferay.Language.get('edit-calendar-booking'),
-						uri: CalendarUtil.fillURLParameters(
+						url: CalendarUtil.fillURLParameters(
 							editCalendarBookingURL,
 							data
 						),
@@ -352,21 +345,16 @@ AUI.add(
 					data.calendarBookingId =
 						schedulerEvent.get('calendarBookingId');
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy() {
-									schedulerEvent.syncWithServer();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: '',
+						onClose: function destroy() {
+							schedulerEvent.syncWithServer();
 						},
-						refreshWindow: window,
 						title: Liferay.Language.get(
 							'view-calendar-booking-details'
 						),
-						uri: CalendarUtil.fillURLParameters(
+						url: CalendarUtil.fillURLParameters(
 							viewCalendarBookingURL,
 							data
 						),
@@ -658,6 +646,46 @@ AUI.add(
 					}
 
 					messageNode.innerHTML = messageHTML;
+				},
+
+				getFormattedDate() {
+					const instance = this;
+					const event = instance.get('event') || instance;
+					const endDate = event.get('endDate');
+					const startDate = event.get('startDate');
+
+					const formattedStartDate = event._formatDate(
+						startDate,
+						instance.get('dateFormat')
+					);
+
+					if (event.get('allDay')) {
+						return formattedStartDate;
+					}
+
+					let formattedEndDate = event._formatDate(
+						endDate,
+						instance.get('dateFormat')
+					);
+
+					if (formattedEndDate === formattedStartDate) {
+						formattedEndDate = '';
+					}
+
+					const scheduler = event.get('scheduler');
+					const formatHours = scheduler
+						.get('activeView')
+						.get('isoTime')
+						? DateMath.toIsoTimeString
+						: DateMath.toUsTimeString;
+
+					return [
+						formattedStartDate.concat(','),
+						formatHours(startDate),
+						'-',
+						formattedEndDate ? formattedEndDate.concat(',') : '',
+						formatHours(endDate),
+					].join(' ');
 				},
 
 				getTemplateData() {

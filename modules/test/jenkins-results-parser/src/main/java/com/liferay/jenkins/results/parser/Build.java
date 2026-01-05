@@ -26,6 +26,8 @@ public interface Build {
 
 	public void addInvocation(Invocation invocation);
 
+	public void addTestrayAttachmentURL(URL testrayAttachmentURL);
+
 	public void addTimelineData(TimelineData timelineData);
 
 	public void archive();
@@ -66,6 +68,8 @@ public interface Build {
 
 	public Job.BuildProfile getBuildProfile();
 
+	public JSONObject getBuildReportJSONObject();
+
 	public String getBuildURL();
 
 	public String getBuildURLRegex();
@@ -87,8 +91,6 @@ public interface Build {
 	public Element getGitHubMessageBuildAnchorElement();
 
 	public Element getGitHubMessageElement();
-
-	public Element getGitHubMessageUpstreamJobFailureElement();
 
 	public Map<String, String> getInjectedEnvironmentVariablesMap()
 		throws IOException;
@@ -153,8 +155,6 @@ public interface Build {
 
 	public String getTestrayBuildDateString();
 
-	public List<URL> getTestrayS3AttachmentURLs();
-
 	public JSONObject getTestReportJSONObject(boolean checkCache);
 
 	public List<TestResult> getTestResults();
@@ -176,6 +176,10 @@ public interface Build {
 	public boolean hasGenericCIFailure();
 
 	public boolean hasMaximumInvocationCount();
+
+	public boolean isBuildCached();
+
+	public boolean isBuildCachingEnabled();
 
 	public boolean isBuildModified();
 
@@ -200,6 +204,8 @@ public interface Build {
 	public void setArchiveName(String archiveName);
 
 	public void setArchiveRootDir(File archiveRootDir);
+
+	public void setBuildCached(boolean buildCached);
 
 	public void setBuildURL(String buildURL);
 
@@ -272,6 +278,11 @@ public interface Build {
 			_buildURL = JenkinsResultsParserUtil.getBuildURL(
 				_build.getJobName(), getJenkinsMaster(), getQueueId());
 
+			String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
+				_buildURL);
+
+			_buildURL = JenkinsResultsParserUtil.getRemoteURL(localBuildURL);
+
 			return _buildURL;
 		}
 
@@ -281,6 +292,10 @@ public interface Build {
 
 		public long getQueueId() {
 			return _queueId;
+		}
+
+		public ReinvokeRule getReinvokeRule() {
+			return _reinvokeRule;
 		}
 
 		public void setBuildURL(String buildURL) {
@@ -295,10 +310,15 @@ public interface Build {
 			_queueId = queueId;
 		}
 
+		public void setReinvokeRule(ReinvokeRule reinvokeRule) {
+			_reinvokeRule = reinvokeRule;
+		}
+
 		private final Build _build;
 		private String _buildURL;
 		private JenkinsMaster _jenkinsMaster;
 		private long _queueId;
+		private ReinvokeRule _reinvokeRule;
 
 	}
 

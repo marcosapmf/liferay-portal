@@ -6,9 +6,9 @@
 package com.liferay.depot.web.internal.portlet.action;
 
 import com.liferay.application.list.PanelAppRegistry;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.display.context.DepotAdminViewDepotDashboardDisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
@@ -19,10 +19,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
+		"jakarta.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
 		"mvc.command.name=/depot/view_depot_dashboard"
 	},
 	service = MVCRenderCommand.class

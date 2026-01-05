@@ -33,14 +33,14 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.text.Format;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -208,19 +208,19 @@ public class GetLayoutReportsIssuesStrutsAction implements StrutsAction {
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
 
-		if (permissionChecker.isCompanyAdmin()) {
-			String configurationPid =
-				"com.liferay.layout.seo.internal.configuration." +
-					"LayoutSEOCompanyConfiguration";
-
-			return HttpComponentsUtil.addParameters(
-				themeDisplay.getPortalURL() + themeDisplay.getPathMain() +
-					"/layout_reports/get_layout_reports_issues",
-				"redirect", _getCompleteURL(themeDisplay), "factoryPid",
-				configurationPid, "pid", configurationPid);
+		if (!permissionChecker.isCompanyAdmin()) {
+			return null;
 		}
 
-		return null;
+		String configurationPid =
+			"com.liferay.layout.seo.internal.configuration." +
+				"LayoutSEOCompanyConfiguration";
+
+		return HttpComponentsUtil.addParameters(
+			themeDisplay.getPortalURL() + themeDisplay.getPathMain() +
+				"/layout_reports/get_layout_reports_issues",
+			"redirect", _getCompleteURL(themeDisplay), "factoryPid",
+			configurationPid, "pid", configurationPid);
 	}
 
 	private JSONObject _getLayoutReportIssuesResponseJSONObject(
@@ -260,13 +260,8 @@ public class GetLayoutReportsIssuesStrutsAction implements StrutsAction {
 			Layout layout, PermissionChecker permissionChecker)
 		throws Exception {
 
-		if (!LayoutPermissionUtil.contains(
-				permissionChecker, layout, ActionKeys.VIEW)) {
-
-			return false;
-		}
-
-		return true;
+		return LayoutPermissionUtil.contains(
+			permissionChecker, layout, ActionKeys.VIEW);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

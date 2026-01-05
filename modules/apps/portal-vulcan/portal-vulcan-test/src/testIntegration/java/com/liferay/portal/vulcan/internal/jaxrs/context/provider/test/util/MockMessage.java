@@ -5,6 +5,10 @@
 
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider.test.util;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.Application;
+
 import java.io.Closeable;
 
 import java.lang.reflect.Method;
@@ -16,10 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.core.Application;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -93,23 +93,22 @@ public class MockMessage implements Message {
 
 	@Override
 	public <T> T get(Class<T> clazz) {
-		if (Objects.equals(OperationResourceInfoStack.class, clazz)) {
-			OperationResourceInfoStack operationResourceInfoStack =
-				new OperationResourceInfoStack();
-
-			ClassResourceInfo classResourceInfo =
-				_operationResourceInfo.getClassResourceInfo();
-
-			operationResourceInfoStack.add(
-				new MethodInvocationInfo(
-					_operationResourceInfo,
-					classResourceInfo.getResourceClass(),
-					Collections.emptyList()));
-
-			return (T)operationResourceInfoStack;
+		if (!Objects.equals(OperationResourceInfoStack.class, clazz)) {
+			return null;
 		}
 
-		return null;
+		OperationResourceInfoStack operationResourceInfoStack =
+			new OperationResourceInfoStack();
+
+		ClassResourceInfo classResourceInfo =
+			_operationResourceInfo.getClassResourceInfo();
+
+		operationResourceInfoStack.add(
+			new MethodInvocationInfo(
+				_operationResourceInfo, classResourceInfo.getResourceClass(),
+				Collections.emptyList()));
+
+		return (T)operationResourceInfoStack;
 	}
 
 	@Override
@@ -248,14 +247,13 @@ public class MockMessage implements Message {
 
 					@Override
 					public Object get(Object key) {
-						if (Objects.equals(
-								key, "javax.ws.rs.core.Application")) {
+						if (!Objects.equals(
+								key, "jakarta.ws.rs.core.Application")) {
 
-							return new ProviderInfo(
-								new Application(), null, true);
+							return null;
 						}
 
-						return null;
+						return new ProviderInfo(new Application(), null, true);
 					}
 
 					@Override

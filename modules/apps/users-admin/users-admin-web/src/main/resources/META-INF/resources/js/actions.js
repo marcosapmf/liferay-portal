@@ -4,14 +4,16 @@
  */
 
 import {
-	createActionURL,
-	createRenderURL,
-	fetch,
-	getCheckedCheckboxes,
 	openConfirmModal,
 	openModal,
 	openSelectionModal,
 	openToast,
+} from 'frontend-js-components-web';
+import {
+	createActionURL,
+	createRenderURL,
+	fetch,
+	getCheckedCheckboxes,
 	postForm,
 } from 'frontend-js-web';
 
@@ -193,7 +195,7 @@ export const ACTIONS = {
 						'addUserIds': values.join(','),
 						'assignmentsRedirect':
 							assignmentsRedirectURL.toString(),
-						'javax.portlet.action':
+						'jakarta.portlet.action':
 							'/users_admin/edit_organization_assignments',
 						organizationId,
 						'p_auth': Liferay.authToken,

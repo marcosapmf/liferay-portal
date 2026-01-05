@@ -9,7 +9,9 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.service.CommerceShippingMethodService;
+import com.liferay.commerce.shipping.engine.fixed.exception.CommerceShippingFixedOptionRelPriceException;
 import com.liferay.commerce.shipping.engine.fixed.exception.NoSuchShippingFixedOptionRelException;
+import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOptionRel;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionRelService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -20,10 +22,10 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.math.BigDecimal;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.math.BigDecimal;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
+		"jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
 		"mvc.command.name=/commerce_shipping_methods/edit_commerce_shipping_fixed_option_rel"
 	},
 	service = MVCActionCommand.class
@@ -57,7 +59,9 @@ public class EditCommerceShippingFixedOptionRelMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof NoSuchShippingFixedOptionRelException ||
+			if (exception instanceof
+					CommerceShippingFixedOptionRelPriceException ||
+				exception instanceof NoSuchShippingFixedOptionRelException ||
 				exception instanceof PrincipalException) {
 
 				SessionErrors.add(actionRequest, exception.getClass());
@@ -105,26 +109,26 @@ public class EditCommerceShippingFixedOptionRelMVCActionCommand
 		long commerceShippingFixedOptionRelId = ParamUtil.getLong(
 			actionRequest, "commerceShippingFixedOptionRelId");
 
-		long commerceInventoryWarehouseId = ParamUtil.getLong(
-			actionRequest, "commerceInventoryWarehouseId");
 		long countryId = ParamUtil.getLong(actionRequest, "countryId");
 		long regionId = ParamUtil.getLong(actionRequest, "regionId");
 		String zip = ParamUtil.getString(actionRequest, "zip");
 		double weightFrom = ParamUtil.getDouble(actionRequest, "weightFrom");
 		double weightTo = ParamUtil.getDouble(actionRequest, "weightTo");
 		BigDecimal fixedPrice = _commercePriceFormatter.parse(
-			actionRequest, "fixedPrice");
+			actionRequest, false,
+			CommerceShippingFixedOptionRel.class.getName(), "fixedPrice");
 		BigDecimal rateUnitWeightPrice = _commercePriceFormatter.parse(
-			actionRequest, "rateUnitWeightPrice");
+			actionRequest, false,
+			CommerceShippingFixedOptionRel.class.getName(),
+			"rateUnitWeightPrice");
 		double ratePercentage = ParamUtil.getDouble(
 			actionRequest, "ratePercentage");
 
 		if (commerceShippingFixedOptionRelId > 0) {
 			_commerceShippingFixedOptionRelService.
 				updateCommerceShippingFixedOptionRel(
-					commerceShippingFixedOptionRelId,
-					commerceInventoryWarehouseId, countryId, regionId, zip,
-					weightFrom, weightTo, fixedPrice, rateUnitWeightPrice,
+					commerceShippingFixedOptionRelId, 0L, countryId, regionId,
+					zip, weightFrom, weightTo, fixedPrice, rateUnitWeightPrice,
 					ratePercentage);
 		}
 		else {
@@ -141,9 +145,8 @@ public class EditCommerceShippingFixedOptionRelMVCActionCommand
 					commerceShippingMethod.getCommerceShippingMethodId(),
 					ParamUtil.getLong(
 						actionRequest, "commerceShippingFixedOptionId"),
-					commerceInventoryWarehouseId, countryId, regionId, zip,
-					weightFrom, weightTo, fixedPrice, rateUnitWeightPrice,
-					ratePercentage);
+					0L, countryId, regionId, zip, weightFrom, weightTo,
+					fixedPrice, rateUnitWeightPrice, ratePercentage);
 		}
 	}
 

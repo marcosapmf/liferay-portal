@@ -8,6 +8,7 @@ package com.liferay.portal.struts;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.action.UpdatePasswordActionUtil;
 import com.liferay.portal.kernel.exception.LayoutPermissionException;
 import com.liferay.portal.kernel.exception.PortletActiveException;
 import com.liferay.portal.kernel.exception.UserActiveException;
@@ -15,7 +16,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTracker;
@@ -38,6 +38,8 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -46,8 +48,14 @@ import com.liferay.portal.security.auth.InterruptedPortletRequestWhitelistUtil;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 import com.liferay.portal.struts.model.ModuleConfig;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -57,14 +65,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -76,10 +76,10 @@ import javax.servlet.http.HttpSession;
 public class PortalRequestProcessor {
 
 	public static final String INCLUDE_PATH_INFO =
-		"javax.servlet.include.path_info";
+		"jakarta.servlet.include.path_info";
 
 	public static final String INCLUDE_SERVLET_PATH =
-		"javax.servlet.include.servlet_path";
+		"jakarta.servlet.include.servlet_path";
 
 	public PortalRequestProcessor(
 		ModuleConfig moduleConfig, ServletContext servletContext,
@@ -126,6 +126,34 @@ public class PortalRequestProcessor {
 		throws IOException, ServletException {
 
 		String path = _processPath(httpServletRequest);
+
+		try {
+			User user = PortalUtil.getUser(httpServletRequest);
+
+			if (path.equals(_PATH_PORTAL_UPDATE_PASSWORD) &&
+				Validator.isNull(
+					ParamUtil.getString(httpServletRequest, "ticketId")) &&
+				(user != null) && !user.isGuestUser() &&
+				user.isPasswordReset()) {
+
+				String updatePasswordURL =
+					UpdatePasswordActionUtil.generateUpdatePasswordURL(
+						httpServletRequest, user);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug("Update password URL " + updatePasswordURL);
+				}
+
+				httpServletResponse.sendRedirect(updatePasswordURL);
+
+				return;
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
 
 		ActionMapping actionMapping = _moduleConfig.getActionMapping(path);
 
@@ -633,24 +661,10 @@ public class PortalRequestProcessor {
 				// Authenticated users must have a current password
 
 				if (user.isPasswordReset()) {
-					try {
-						PasswordPolicy passwordPolicy =
-							user.getPasswordPolicy();
-
-						if ((passwordPolicy == null) ||
-							passwordPolicy.isChangeable()) {
-
-							return _PATH_PORTAL_UPDATE_PASSWORD;
-						}
-					}
-					catch (Exception exception) {
-						_log.error(exception);
-
-						return _PATH_PORTAL_UPDATE_PASSWORD;
-					}
+					return _PATH_PORTAL_UPDATE_PASSWORD;
 				}
 				else if (path.equals(_PATH_PORTAL_UPDATE_PASSWORD)) {
-					return _PATH_PORTAL_LAYOUT;
+					return _PATH_PORTAL_UPDATE_PASSWORD;
 				}
 
 				// Authenticated users must have an email address

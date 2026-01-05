@@ -81,6 +81,11 @@ public interface NotificationTemplateLocalService
 			String externalReferenceCode, long userId, String type)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public NotificationTemplate addSubscriptionNotificationTemplate(
+			String externalReferenceCode, long userId)
+		throws PortalException;
+
 	/**
 	 * Creates a new notification template with the primary key. Does not add the notification template to the database.
 	 *
@@ -95,6 +100,9 @@ public interface NotificationTemplateLocalService
 	 * @throws PortalException
 	 */
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	public void deleteCompanyNotificationTemplates(long companyId)
 		throws PortalException;
 
 	/**

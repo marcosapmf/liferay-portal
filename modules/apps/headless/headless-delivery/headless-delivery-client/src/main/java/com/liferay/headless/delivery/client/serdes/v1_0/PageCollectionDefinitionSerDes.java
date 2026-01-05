@@ -10,13 +10,13 @@ import com.liferay.headless.delivery.client.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.client.dto.v1_0.PageCollectionDefinition;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -260,9 +260,7 @@ public class PageCollectionDefinitionSerDes {
 			sb.append("\"paginationType\": ");
 
 			sb.append("\"");
-
 			sb.append(pageCollectionDefinition.getPaginationType());
-
 			sb.append("\"");
 		}
 
@@ -748,6 +746,10 @@ public class PageCollectionDefinitionSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

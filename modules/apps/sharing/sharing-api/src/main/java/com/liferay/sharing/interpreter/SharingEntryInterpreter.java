@@ -11,6 +11,7 @@ import com.liferay.sharing.renderer.SharingEntryEditRenderer;
 import com.liferay.sharing.renderer.SharingEntryViewRenderer;
 
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Sergio González
@@ -24,7 +25,9 @@ public interface SharingEntryInterpreter {
 
 	public SharingEntryViewRenderer getSharingEntryViewRenderer();
 
-	public String getTitle(SharingEntry sharingEntry);
+	public String getTitle(SharingEntry sharingEntry, Locale locale);
+
+	public Map<Locale, String> getTitleMap(SharingEntry sharingEntry);
 
 	public boolean isVisible(SharingEntry sharingEntry) throws PortalException;
 

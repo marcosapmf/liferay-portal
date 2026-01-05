@@ -18,9 +18,9 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.model.MBThreadFlag;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
+	property = "jakarta.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
 	service = PortletDataHandler.class
 )
 public class MBPortletDataHandler extends BasePortletDataHandler {
@@ -102,7 +102,7 @@ public class MBPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(MBMessage.class),
 			new StagedModelType(MBThread.class),
 			new StagedModelType(MBThreadFlag.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				getNamespace(), "categories", true, false, null,
 				MBCategory.class.getName()),
@@ -118,11 +118,12 @@ public class MBPortletDataHandler extends BasePortletDataHandler {
 				MBBan.class.getName()));
 		setPublishToLiveByDefault(
 			PropsValues.MESSAGE_BOARDS_PUBLISH_TO_LIVE_BY_DEFAULT);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN + ")"
+		target = "(jakarta.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN + ")"
 	)
 	private PortletDataHandler _mbAdminPortletDataHandler;
 

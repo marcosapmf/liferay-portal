@@ -28,11 +28,12 @@ public class AssetTagServiceWrapper
 
 	@Override
 	public AssetTag addTag(
-			long groupId, String name,
+			String externalReferenceCode, long groupId, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _assetTagService.addTag(groupId, name, serviceContext);
+		return _assetTagService.addTag(
+			externalReferenceCode, groupId, name, serviceContext);
 	}
 
 	@Override
@@ -47,6 +48,23 @@ public class AssetTagServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_assetTagService.deleteTags(tagIds);
+	}
+
+	@Override
+	public AssetTag fetchAssetTagByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return _assetTagService.fetchAssetTagByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public AssetTag getAssetTagByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetTagService.getAssetTagByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	@Override
@@ -216,11 +234,12 @@ public class AssetTagServiceWrapper
 
 	@Override
 	public AssetTag updateTag(
-			long tagId, String name,
+			String externalReferenceCode, long tagId, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _assetTagService.updateTag(tagId, name, serviceContext);
+		return _assetTagService.updateTag(
+			externalReferenceCode, tagId, name, serviceContext);
 	}
 
 	@Override

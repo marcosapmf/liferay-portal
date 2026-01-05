@@ -7,9 +7,9 @@ package com.liferay.search.experiences.rest.internal.graphql.query.v1_0;
 
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -39,16 +39,16 @@ import com.liferay.search.experiences.rest.resource.v1_0.SearchIndexResource;
 import com.liferay.search.experiences.rest.resource.v1_0.SearchableAssetNameDisplayResource;
 import com.liferay.search.experiences.rest.resource.v1_0.SearchableAssetNameResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -220,6 +220,58 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprint(sxpBlueprintId: ___){actions, collectionProviderSubtypeName, collectionProviderTypeName, configuration, createDate, description, description_i18n, elementInstances, externalReferenceCode, id, modifiedDate, schemaVersion, title, title_i18n, userName, version}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public SXPBlueprint sXPBlueprint(
+			@GraphQLName("sxpBlueprintId") Long sxpBlueprintId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sxpBlueprintResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sxpBlueprintResource -> sxpBlueprintResource.getSXPBlueprint(
+				sxpBlueprintId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprintByExternalReferenceCode(externalReferenceCode: ___){actions, collectionProviderSubtypeName, collectionProviderTypeName, configuration, createDate, description, description_i18n, elementInstances, externalReferenceCode, id, modifiedDate, schemaVersion, title, title_i18n, userName, version}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public SXPBlueprint sXPBlueprintByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sxpBlueprintResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sxpBlueprintResource ->
+				sxpBlueprintResource.getSXPBlueprintByExternalReferenceCode(
+					externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprintExport(sxpBlueprintId: ___){}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Response sXPBlueprintExport(
+			@GraphQLName("sxpBlueprintId") Long sxpBlueprintId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sxpBlueprintResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sxpBlueprintResource -> sxpBlueprintResource.getSXPBlueprintExport(
+				sxpBlueprintId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprints(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -246,53 +298,52 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprintByExternalReferenceCode(externalReferenceCode: ___){actions, configuration, createDate, description, description_i18n, elementInstances, externalReferenceCode, id, modifiedDate, schemaVersion, title, title_i18n, userName, version}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElement(sxpElementId: ___){actions, createDate, description, description_i18n, elementDefinition, externalReferenceCode, fallbackDescription, fallbackTitle, hidden, id, modifiedDate, readOnly, schemaVersion, title, title_i18n, type, userName, version}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public SXPBlueprint sXPBlueprintByExternalReferenceCode(
+	public SXPElement sXPElement(@GraphQLName("sxpElementId") Long sxpElementId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_sxpElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			sxpElementResource -> sxpElementResource.getSXPElement(
+				sxpElementId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElementByExternalReferenceCode(externalReferenceCode: ___){actions, createDate, description, description_i18n, elementDefinition, externalReferenceCode, fallbackDescription, fallbackTitle, hidden, id, modifiedDate, readOnly, schemaVersion, title, title_i18n, type, userName, version}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public SXPElement sXPElementByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_sxpBlueprintResourceComponentServiceObjects,
+			_sxpElementResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			sxpBlueprintResource ->
-				sxpBlueprintResource.getSXPBlueprintByExternalReferenceCode(
+			sxpElementResource ->
+				sxpElementResource.getSXPElementByExternalReferenceCode(
 					externalReferenceCode));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprint(sxpBlueprintId: ___){actions, configuration, createDate, description, description_i18n, elementInstances, externalReferenceCode, id, modifiedDate, schemaVersion, title, title_i18n, userName, version}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElementExport(sxpElementId: ___){}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public SXPBlueprint sXPBlueprint(
-			@GraphQLName("sxpBlueprintId") Long sxpBlueprintId)
+	public Response sXPElementExport(
+			@GraphQLName("sxpElementId") Long sxpElementId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_sxpBlueprintResourceComponentServiceObjects,
+			_sxpElementResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			sxpBlueprintResource -> sxpBlueprintResource.getSXPBlueprint(
-				sxpBlueprintId));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPBlueprintExport(sxpBlueprintId: ___){}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Response sXPBlueprintExport(
-			@GraphQLName("sxpBlueprintId") Long sxpBlueprintId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_sxpBlueprintResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			sxpBlueprintResource -> sxpBlueprintResource.getSXPBlueprintExport(
-				sxpBlueprintId));
+			sxpElementResource -> sxpElementResource.getSXPElementExport(
+				sxpElementId));
 	}
 
 	/**
@@ -318,57 +369,6 @@ public class Query {
 					_filterBiFunction.apply(sxpElementResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(sxpElementResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElementByExternalReferenceCode(externalReferenceCode: ___){actions, createDate, description, description_i18n, elementDefinition, externalReferenceCode, fallbackDescription, fallbackTitle, hidden, id, modifiedDate, readOnly, schemaVersion, title, title_i18n, type, userName, version}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public SXPElement sXPElementByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_sxpElementResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			sxpElementResource ->
-				sxpElementResource.getSXPElementByExternalReferenceCode(
-					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElement(sxpElementId: ___){actions, createDate, description, description_i18n, elementDefinition, externalReferenceCode, fallbackDescription, fallbackTitle, hidden, id, modifiedDate, readOnly, schemaVersion, title, title_i18n, type, userName, version}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public SXPElement sXPElement(@GraphQLName("sxpElementId") Long sxpElementId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_sxpElementResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			sxpElementResource -> sxpElementResource.getSXPElement(
-				sxpElementId));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {sXPElementExport(sxpElementId: ___){}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Response sXPElementExport(
-			@GraphQLName("sxpElementId") Long sxpElementId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_sxpElementResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			sxpElementResource -> sxpElementResource.getSXPElementExport(
-				sxpElementId));
 	}
 
 	/**
@@ -916,6 +916,10 @@ public class Query {
 		fieldMappingInfoResource.setContextUriInfo(_uriInfo);
 		fieldMappingInfoResource.setContextUser(_user);
 		fieldMappingInfoResource.setGroupLocalService(_groupLocalService);
+		fieldMappingInfoResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		fieldMappingInfoResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		fieldMappingInfoResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -934,6 +938,10 @@ public class Query {
 		keywordQueryContributorResource.setContextUser(_user);
 		keywordQueryContributorResource.setGroupLocalService(
 			_groupLocalService);
+		keywordQueryContributorResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		keywordQueryContributorResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		keywordQueryContributorResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -952,6 +960,10 @@ public class Query {
 		modelPrefilterContributorResource.setContextUser(_user);
 		modelPrefilterContributorResource.setGroupLocalService(
 			_groupLocalService);
+		modelPrefilterContributorResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		modelPrefilterContributorResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		modelPrefilterContributorResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -971,6 +983,10 @@ public class Query {
 		queryPrefilterContributorResource.setContextUser(_user);
 		queryPrefilterContributorResource.setGroupLocalService(
 			_groupLocalService);
+		queryPrefilterContributorResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		queryPrefilterContributorResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		queryPrefilterContributorResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -987,6 +1003,10 @@ public class Query {
 		sxpBlueprintResource.setContextUriInfo(_uriInfo);
 		sxpBlueprintResource.setContextUser(_user);
 		sxpBlueprintResource.setGroupLocalService(_groupLocalService);
+		sxpBlueprintResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		sxpBlueprintResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		sxpBlueprintResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1000,6 +1020,10 @@ public class Query {
 		sxpElementResource.setContextUriInfo(_uriInfo);
 		sxpElementResource.setContextUser(_user);
 		sxpElementResource.setGroupLocalService(_groupLocalService);
+		sxpElementResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		sxpElementResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		sxpElementResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1019,6 +1043,10 @@ public class Query {
 		sxpParameterContributorDefinitionResource.setContextUser(_user);
 		sxpParameterContributorDefinitionResource.setGroupLocalService(
 			_groupLocalService);
+		sxpParameterContributorDefinitionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		sxpParameterContributorDefinitionResource.
+			setResourcePermissionLocalService(_resourcePermissionLocalService);
 		sxpParameterContributorDefinitionResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1034,6 +1062,10 @@ public class Query {
 		searchIndexResource.setContextUriInfo(_uriInfo);
 		searchIndexResource.setContextUser(_user);
 		searchIndexResource.setGroupLocalService(_groupLocalService);
+		searchIndexResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		searchIndexResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		searchIndexResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1050,6 +1082,10 @@ public class Query {
 		searchableAssetNameResource.setContextUriInfo(_uriInfo);
 		searchableAssetNameResource.setContextUser(_user);
 		searchableAssetNameResource.setGroupLocalService(_groupLocalService);
+		searchableAssetNameResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		searchableAssetNameResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		searchableAssetNameResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1069,6 +1105,10 @@ public class Query {
 		searchableAssetNameDisplayResource.setContextUser(_user);
 		searchableAssetNameDisplayResource.setGroupLocalService(
 			_groupLocalService);
+		searchableAssetNameDisplayResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		searchableAssetNameDisplayResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		searchableAssetNameDisplayResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -1097,12 +1137,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

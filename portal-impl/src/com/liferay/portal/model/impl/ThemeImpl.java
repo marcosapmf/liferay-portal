@@ -28,8 +28,10 @@ import com.liferay.portal.kernel.theme.ThemeGroupLimit;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.ServletContext;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -38,8 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.ServletContext;
 
 /**
  * @author Brian Wing Shun Chan
@@ -89,11 +89,7 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 
 		Theme theme = (Theme)object;
 
-		if (Objects.equals(getThemeId(), theme.getThemeId())) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getThemeId(), theme.getThemeId());
 	}
 
 	@Override
@@ -402,11 +398,7 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 
 	@Override
 	public boolean hasColorSchemes() {
-		if (!_colorSchemesMap.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return !_colorSchemesMap.isEmpty();
 	}
 
 	@Override

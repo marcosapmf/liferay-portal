@@ -49,11 +49,11 @@ public class ExportImportContentValidationException extends PortalException {
 		return _className;
 	}
 
-	public String getDlReference() {
+	public String getDLReference() {
 		return _dlReference;
 	}
 
-	public Map<String, String[]> getDlReferenceParameters() {
+	public Map<String, String[]> getDLReferenceParameters() {
 		return _dlReferenceParameters;
 	}
 
@@ -89,11 +89,11 @@ public class ExportImportContentValidationException extends PortalException {
 		_className = className;
 	}
 
-	public void setDlReference(String dlReference) {
+	public void setDLReference(String dlReference) {
 		_dlReference = dlReference;
 	}
 
-	public void setDlReferenceParameters(
+	public void setDLReferenceParameters(
 		Map<String, String[]> dlReferenceParameters) {
 
 		_dlReferenceParameters = dlReferenceParameters;

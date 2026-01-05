@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,12 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Marcos Martins, Rachael Koestartyo, Riccardo Ferrari
@@ -58,7 +56,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 			AnalyticsMostViewedContentRecommendation.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long[] getAssetCategoryIds() {
 		if (_assetCategoryIdsSupplier != null) {
 			assetCategoryIds = _assetCategoryIdsSupplier.get();
@@ -99,7 +97,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 	@JsonIgnore
 	private Supplier<Long[]> _assetCategoryIdsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -140,7 +138,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getJobId() {
 		if (_jobIdSupplier != null) {
 			jobId = _jobIdSupplier.get();
@@ -181,7 +179,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _jobIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getRank() {
 		if (_rankSupplier != null) {
 			rank = _rankSupplier.get();
@@ -220,7 +218,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _rankSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getRecommendedAssetEntryId() {
 		if (_recommendedAssetEntryIdSupplier != null) {
 			recommendedAssetEntryId = _recommendedAssetEntryIdSupplier.get();
@@ -261,7 +259,7 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _recommendedAssetEntryIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Float getScore() {
 		if (_scoreSupplier != null) {
@@ -429,8 +427,8 @@ public class AnalyticsMostViewedContentRecommendation implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.analytics.dxp.entity.rest.dto.v1_0.AnalyticsMostViewedContentRecommendation",
 		name = "x-class-name"
 	)

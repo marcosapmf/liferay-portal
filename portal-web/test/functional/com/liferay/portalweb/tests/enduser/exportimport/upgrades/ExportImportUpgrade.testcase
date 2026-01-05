@@ -1,7 +1,8 @@
-@component-name = "portal-upgrades"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
+	property custom.properties = "passwords.encryption.algorithm.legacy=PBKDF2WithHmacSHA1/160/128000";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -381,7 +382,7 @@ definition {
 
 			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-			Button.clickPublish();
+			WebContent.publishExistingWCArticleWithPermissions();
 
 			ExportImport.viewValidationMessage(
 				url = "/dl/XYZ123",
@@ -411,7 +412,7 @@ definition {
 
 			ExportImport.addSourceContent(content = '''<p><a href="${portalURL}/dl/XYZ123">${portalURL}/dl/XYZ123</a></p>''');
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 	}
 

@@ -13,11 +13,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Iterator;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -33,11 +33,7 @@ public class DynamicIncludeUtil {
 	}
 
 	public static boolean hasDynamicInclude(String key) {
-		if (ListUtil.isEmpty(getDynamicIncludes(key))) {
-			return false;
-		}
-
-		return true;
+		return ListUtil.isNotEmpty(getDynamicIncludes(key));
 	}
 
 	public static void include(

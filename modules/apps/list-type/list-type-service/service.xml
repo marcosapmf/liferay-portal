@@ -22,6 +22,14 @@
 
 		<column localized="true" name="name" type="String" />
 		<column name="system" type="boolean" />
+		<column name="status" type="int" />
+
+		<!-- Finder methods -->
+
+		<finder name="C_U" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="userId" />
+		</finder>
 	</entity>
 	<entity local-service="true" name="ListTypeEntry" remote-service="true" uuid="true">
 
@@ -46,7 +54,9 @@
 		<column name="listTypeDefinitionId" type="long" />
 		<column name="key" type="String" />
 		<column localized="true" name="name" type="String" />
+		<column name="system" type="boolean" />
 		<column name="type" type="String" />
+		<column name="status" type="int" />
 
 		<!-- Finder methods -->
 
@@ -54,7 +64,11 @@
 			<finder-column arrayable-operator="OR" comparator="=" name="listTypeEntryId" />
 		</finder>
 		<finder name="ListTypeDefinitionId" return-type="Collection">
-			<finder-column name="listTypeDefinitionId" />
+			<finder-column arrayable-operator="OR" name="listTypeDefinitionId" />
+		</finder>
+		<finder name="C_U" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="userId" />
 		</finder>
 		<finder name="LTDI_K" return-type="ListTypeEntry">
 			<finder-column name="listTypeDefinitionId" />
@@ -73,6 +87,7 @@
 		<exception>ListTypeDefinitionSystem</exception>
 		<exception>ListTypeEntryKey</exception>
 		<exception>ListTypeEntryName</exception>
+		<exception>ListTypeEntrySystem</exception>
 		<exception>RequiredListTypeDefinition</exception>
 	</exceptions>
 </service-builder>

@@ -11,6 +11,7 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
+import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.lang.SafeCloseable;
@@ -28,6 +29,8 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
@@ -36,14 +39,14 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -86,6 +89,13 @@ public class CTDisplayRendererRegistryImpl
 			return (T)ctService.updateWithUnsafeFunction(
 				ctPersistence -> ctPersistence.fetchByPrimaryKey(modelClassPK));
 		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception);
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -298,6 +308,19 @@ public class CTDisplayRendererRegistryImpl
 			return null;
 		}
 
+		try {
+			if ((ctCollectionId != 0) &&
+				!CTCollectionPermission.contains(
+					PermissionThreadLocal.getPermissionChecker(),
+					ctCollectionId, ActionKeys.UPDATE)) {
+
+				return null;
+			}
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
+
 		try (SafeCloseable safeCloseable1 =
 				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					ctCollectionId);
@@ -450,16 +473,6 @@ public class CTDisplayRendererRegistryImpl
 			modelClassNameId);
 
 		return ctDisplayRenderer.isHideable(model);
-	}
-
-	@Override
-	public <T extends BaseModel<T>> boolean isMovable(
-		T model, long modelClassNameId) {
-
-		CTDisplayRenderer<T> ctDisplayRenderer = getCTDisplayRenderer(
-			modelClassNameId);
-
-		return ctDisplayRenderer.isMovable(model);
 	}
 
 	@Override

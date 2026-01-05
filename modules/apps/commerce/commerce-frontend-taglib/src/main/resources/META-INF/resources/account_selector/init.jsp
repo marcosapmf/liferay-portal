@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
@@ -22,15 +22,17 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %>
 <liferay-theme:defineObjects />
 
 <%
-String[] accountEntryAllowedTypes = (String[])request.getAttribute("liferay-commerce:account-selector:accountEntryAllowedTypes");
 long commerceChannelId = (long)request.getAttribute("liferay-commerce:account-selector:commerceChannelId");
 String createNewOrderURL = (String)request.getAttribute("liferay-commerce:account-selector:createNewOrderURL");
 String cssClasses = (String)request.getAttribute("liferay-commerce:account-selector:cssClasses");
+String currencyCode = (String)request.getAttribute("liferay-commerce:account-selector:currencyCode");
 CurrentCommerceAccountModel currentCommerceAccount = (CurrentCommerceAccountModel)request.getAttribute("liferay-commerce:account-selector:currentCommerceAccount");
 CurrentCommerceOrderModel currentCommerceOrder = (CurrentCommerceOrderModel)request.getAttribute("liferay-commerce:account-selector:currentCommerceOrder");
+boolean hasAddCommerceOrderPermission = (boolean)request.getAttribute("liferay-commerce:account-selector:hasAddCommerceOrderPermission");
+boolean hasManageAccountsPermission = (boolean)request.getAttribute("liferay-commerce:account-selector:hasManageAccountsPermission");
+boolean orderSelectionDisabled = (boolean)request.getAttribute("liferay-commerce:account-selector:orderSelectionDisabled");
 String selectOrderURL = (String)request.getAttribute("liferay-commerce:account-selector:selectOrderURL");
 String setCurrentAccountURL = (String)request.getAttribute("liferay-commerce:account-selector:setCurrentAccountURL");
-Boolean showOrderTypeModal = (Boolean)request.getAttribute("liferay-commerce:account-selector:showOrderTypeModal");
 
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_account_selector") + StringPool.UNDERLINE;
 

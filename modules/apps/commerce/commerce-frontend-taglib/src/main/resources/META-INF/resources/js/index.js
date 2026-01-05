@@ -8,9 +8,7 @@ import {
 	AddToWishList,
 	DropdownMenu,
 	MiniCart,
-	Modal,
 	Price,
-	RequestQuote,
 	StepTracker,
 	accountSelector,
 	compareCheckbox,
@@ -18,37 +16,48 @@ import {
 
 import '../css/main.scss';
 
+export {default as discontinuedLabelCPInstanceChangeHandler} from './discontinued_label/DiscontinuedLabelCPInstanceChangeHandler';
+export {default as ExternalReferenceCodeButtonPropsTransformer} from './header';
+export {default as ModalActionContextHandler} from './info_box';
+export {default as ModalContentHandler} from './modal_content';
 export {default as searchBar} from './search_bar/SearchBar';
 export {default as searchResults} from './search_results/SearchResults';
-export {default as discontinuedLabelCPInstanceChangeHandler} from './discontinued_label/DiscontinuedLabelCPInstanceChangeHandler';
-export {default as infoBoxHandler} from './info_box';
 
 export function accountSelectorTag({
 	accountEntryAllowedTypes,
 	accountSelectorId,
+	checkoutURL,
 	commerceChannelId,
 	createNewOrderURL,
+	currencyCode,
 	currentCommerceAccount,
 	currentCommerceOrder,
+	hasAddCommerceOrderPermission,
+	hasCommerceOpenOrderContentPortlet,
+	hasManageAccountsPermission,
+	orderSelectionDisabled,
 	refreshPageOnAccountSelected,
 	selectOrderURL,
 	setCurrentAccountURL,
-	showOrderTypeModal,
 }) {
 	accountSelector(accountSelectorId, accountSelectorId, {
 		accountEntryAllowedTypes:
 			typeof accountEntryAllowedTypes === 'string'
 				? JSON.parse(accountEntryAllowedTypes)
 				: accountEntryAllowedTypes,
+		checkoutURL,
 		commerceChannelId,
 		createNewOrderURL,
+		currencyCode,
 		currentCommerceAccount,
 		currentCommerceOrder,
-		namespace: accountSelectorId,
+		hasAddCommerceOrderPermission,
+		hasCommerceOpenOrderContentPortlet,
+		hasManageAccountsPermission,
+		orderSelectionDisabled,
 		refreshPageOnAccountSelected,
 		selectOrderURL,
 		setCurrentAccountURL,
-		showOrderTypeModal,
 	});
 }
 
@@ -94,31 +103,6 @@ export function dropdownMain({items, spritemap}) {
 	DropdownMenu('dropdown-header', 'dropdown-header-container', {
 		items,
 		spritemap,
-	});
-}
-
-export function modal({
-	containerId,
-	id,
-	portletId,
-	refreshPageOnClose,
-	size,
-	spritemap,
-	title,
-	url,
-}) {
-	Modal(id, containerId, {
-		id,
-		onClose: refreshPageOnClose
-			? function () {
-					window.location.reload();
-				}
-			: null,
-		portletId,
-		size,
-		spritemap,
-		title,
-		url,
 	});
 }
 
@@ -169,36 +153,9 @@ export function addToCart({
 	});
 }
 
-export function requestQuote({
-	accountId,
-	channel,
-	cpDefinitionId,
-	cpInstance,
-	disabled,
-	namespace,
-	orderDetailURL,
-	requestQuoteElementId,
-}) {
-	if (cpInstance.skuOptions && typeof cpInstance.skuOptions === 'string') {
-		try {
-			cpInstance.skuOptions = JSON.parse(cpInstance.skuOptions);
-		}
-		catch (event) {}
-	}
-
-	RequestQuote(requestQuoteElementId, requestQuoteElementId, {
-		accountId: Number(accountId),
-		channel,
-		cpDefinitionId,
-		cpInstance,
-		disabled,
-		namespace,
-		orderDetailURL,
-	});
-}
-
 export function cart({
 	accountId,
+	baseOrderDetailURL,
 	cartViews,
 	checkoutURL,
 	currencyCode,
@@ -206,6 +163,8 @@ export function cart({
 	displayDiscountLevels,
 	displayTotalItemsQuantity,
 	groupId,
+	guestOrderEnabled,
+	hasCommerceOpenOrderContentPortlet,
 	id,
 	itemsQuantity,
 	labels,
@@ -214,18 +173,22 @@ export function cart({
 	orderId,
 	productURLSeparator,
 	requestQuoteEnabled,
+	signInURL,
 	siteDefaultURL,
+	slowConnectionOrderFlowEnabled,
 	toggleable,
+	undoCartItemDeletionDisabled,
 }) {
-	MiniCart(miniCartId, miniCartId, {
+	const props = {
 		accountId: Number(accountId),
 		cartActionURLs: {
+			baseOrderDetailURL,
 			checkoutURL,
 			orderDetailURL,
 			productURLSeparator,
+			signInURL,
 			siteDefaultURL,
 		},
-		cartViews,
 		channel: {
 			currencyCode,
 			groupId,
@@ -234,10 +197,39 @@ export function cart({
 		detachedOpener,
 		displayDiscountLevels,
 		displayTotalItemsQuantity,
+		guestOrderEnabled,
+		hasCommerceOpenOrderContentPortlet,
 		itemsQuantity: Number(itemsQuantity),
-		labels,
 		orderId: Number(orderId),
 		requestQuoteEnabled,
+		slowConnectionOrderFlowEnabled,
 		toggleable,
-	});
+		undoCartItemDeletionDisabled,
+	};
+
+	const customCartViews = Object.entries(cartViews);
+
+	if (customCartViews.length) {
+		props.cartViews = customCartViews.reduce(
+			(views, [viewName, contentRendererModuleUrl]) => ({
+				...views,
+				[viewName]: {contentRendererModuleUrl},
+			}),
+			{}
+		);
+	}
+
+	const customLabels = Object.entries(labels);
+
+	if (customLabels.length) {
+		props.labels = customLabels.reduce(
+			(labels, [key, value]) => ({
+				...labels,
+				[key]: value,
+			}),
+			{}
+		);
+	}
+
+	MiniCart(miniCartId, miniCartId, props);
 }

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
@@ -13,7 +14,9 @@ import React, {useState} from 'react';
 import ChangeTrackingRenderView from './ChangeTrackingRenderView';
 
 export default function ChangeTrackingRelatedEntriesView({
+	actionType,
 	ctEntriesJSONArray,
+	showWarning,
 	spritemap,
 	typeNames,
 	userInfo,
@@ -172,7 +175,9 @@ export default function ChangeTrackingRelatedEntriesView({
 				size="full-screen"
 				spritemap={spritemap}
 			>
-				<ClayModal.Header>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
 					<div className="autofit-row">
 						<div className="autofit-col publications-related-entries-user-portrait">
 							<ClaySticker
@@ -219,9 +224,19 @@ export default function ChangeTrackingRelatedEntriesView({
 		);
 	};
 
-	return (
+	return ctEntries.length ? (
 		<>
 			{renderViewModal()}
+
+			<div>
+				{showWarning && (
+					<ClayAlert displayType="warning" spritemap={spritemap}>
+						{actionType === 'discard'
+							? Liferay.Language.get('discard-changes-warning')
+							: Liferay.Language.get('move-changes-warning')}
+					</ClayAlert>
+				)}
+			</div>
 
 			<ClayTable className="publications-table" hover>
 				<ClayTable.Head>
@@ -240,6 +255,12 @@ export default function ChangeTrackingRelatedEntriesView({
 			</ClayTable>
 
 			{renderPagination()}
+		</>
+	) : (
+		<>
+			<ClayAlert displayType="danger">
+				{Liferay.Language.get('no-changes-were-found')}
+			</ClayAlert>
 		</>
 	);
 }

@@ -22,14 +22,14 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -127,13 +127,13 @@ public class SitesThatIAdministerItemSelectorViewDisplayContext
 		).put(
 			"usersGroups",
 			() -> {
-				if (filterManageableGroups) {
-					User user = themeDisplay.getUser();
-
-					return user.getUserId();
+				if (!filterManageableGroups) {
+					return null;
 				}
 
-				return null;
+				User user = themeDisplay.getUser();
+
+				return user.getUserId();
 			}
 		).build();
 

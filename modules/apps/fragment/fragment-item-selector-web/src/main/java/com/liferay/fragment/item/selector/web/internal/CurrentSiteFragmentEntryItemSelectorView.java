@@ -5,8 +5,8 @@
 
 package com.liferay.fragment.item.selector.web.internal;
 
+import com.liferay.fragment.item.selector.FragmentEntryItemSelectorCriterion;
 import com.liferay.fragment.item.selector.FragmentEntryItemSelectorReturnType;
-import com.liferay.fragment.item.selector.criterion.FragmentEntryItemSelectorCriterion;
 import com.liferay.fragment.item.selector.web.internal.display.context.FragmentEntriesDisplayContext;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
@@ -22,21 +22,21 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -103,7 +103,7 @@ public class CurrentSiteFragmentEntryItemSelectorView
 				themeDisplay.getScopeGroup(),
 				_portal.getLiferayPortletRequest(
 					(PortletRequest)servletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST)),
+						JavaConstants.JAKARTA_PORTLET_REQUEST)),
 				portletURL));
 
 		requestDispatcher.include(servletRequest, servletResponse);

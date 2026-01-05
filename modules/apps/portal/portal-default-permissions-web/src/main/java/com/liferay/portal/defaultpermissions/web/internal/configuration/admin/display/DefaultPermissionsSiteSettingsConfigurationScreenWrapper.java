@@ -7,20 +7,18 @@ package com.liferay.portal.defaultpermissions.web.internal.configuration.admin.d
 
 import com.liferay.configuration.admin.display.ConfigurationScreen;
 import com.liferay.configuration.admin.display.ConfigurationScreenWrapper;
-import com.liferay.portal.defaultpermissions.resource.PortalDefaultPermissionsModelResourceRegistry;
 import com.liferay.portal.defaultpermissions.web.internal.display.context.GroupViewPortalDefaultPermissionsConfigurationDisplayContext;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.defaultpermissions.resource.PortalDefaultPermissionsModelResourceRegistry;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.settings.configuration.admin.display.SiteSettingsConfigurationScreenContributor;
 import com.liferay.site.settings.configuration.admin.display.SiteSettingsConfigurationScreenFactory;
 
-import java.util.Locale;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,15 +79,6 @@ public class DefaultPermissionsSiteSettingsConfigurationScreenWrapper
 		@Override
 		public ServletContext getServletContext() {
 			return _servletContext;
-		}
-
-		@Override
-		public boolean isVisible(Group group) {
-			if (FeatureFlagManagerUtil.isEnabled("LPD-21265")) {
-				return true;
-			}
-
-			return false;
 		}
 
 		@Override

@@ -6,6 +6,8 @@
 package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
@@ -15,6 +17,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestHelper;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentStructure;
+import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -26,6 +29,8 @@ import com.liferay.portal.test.rule.Inject;
 
 import java.io.InputStream;
 
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -34,6 +39,25 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ContentStructureResourceTest
 	extends BaseContentStructureResourceTestCase {
+
+	@Test
+	public void testGetSiteContentStructuresPageSearch() throws Exception {
+		DDMStructure ddmStructure = _addDDMStructure(
+			testGroup, RandomTestUtil.randomString());
+
+		Page<ContentStructure> page =
+			contentStructureResource.getSiteContentStructuresPage(
+				testGroup.getGroupId(), ddmStructure.getName("en_US"), null,
+				null, null, null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		page = contentStructureResource.getSiteContentStructuresPage(
+			testGroup.getGroupId(), ddmStructure.getDescription("en_US"), null,
+			null, null, null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+	}
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -54,9 +78,12 @@ public class ContentStructureResourceTest
 				Long assetLibraryId, ContentStructure contentStructure)
 		throws Exception {
 
+		DepotEntry depotEntry = DepotEntryLocalServiceUtil.getDepotEntry(
+			assetLibraryId);
+
 		return _toContentStructure(
 			_addDDMStructure(
-				testDepotEntry.getGroup(), contentStructure.getName()));
+				depotEntry.getGroup(), contentStructure.getName()));
 	}
 
 	@Override
@@ -135,7 +162,7 @@ public class ContentStructureResourceTest
 
 		return ddmStructureTestHelper.addStructure(
 			PortalUtil.getClassNameId(JournalArticle.class),
-			RandomTestUtil.randomString(), name,
+			RandomTestUtil.randomString(), name, RandomTestUtil.randomString(),
 			_deserialize(_read("test-ddm-structure.json")),
 			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 	}

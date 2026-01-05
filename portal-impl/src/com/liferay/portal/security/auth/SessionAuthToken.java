@@ -5,6 +5,7 @@
 
 package com.liferay.portal.security.auth;
 
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -20,17 +21,17 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.SecurityPortletContainerWrapper;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * @author Amos Fong
@@ -98,7 +99,11 @@ public class SessionAuthToken implements AuthToken {
 			return;
 		}
 
+		boolean skipMerge = MergeLayoutPrototypesThreadLocal.isSkipMerge();
+
 		try {
+			MergeLayoutPrototypesThreadLocal.setSkipMerge(true);
+
 			Layout layout = LayoutLocalServiceUtil.getLayout(plid);
 
 			LayoutTypePortlet layoutTypePortlet =
@@ -114,6 +119,9 @@ public class SessionAuthToken implements AuthToken {
 			if (_log.isDebugEnabled()) {
 				_log.debug(exception);
 			}
+		}
+		finally {
+			MergeLayoutPrototypesThreadLocal.setSkipMerge(skipMerge);
 		}
 
 		liferayPortletURL.setParameter(

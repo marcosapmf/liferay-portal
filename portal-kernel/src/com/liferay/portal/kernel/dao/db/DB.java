@@ -6,6 +6,7 @@
 package com.liferay.portal.kernel.dao.db;
 
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.io.IOException;
@@ -36,6 +37,11 @@ public interface DB {
 	public void addIndexes(
 			Connection connection, List<IndexMetadata> indexMetadatas)
 		throws IOException, SQLException;
+
+	public SafeCloseable addTemporaryIndex(
+			Connection connection, String tableName, boolean unique,
+			String... columnNames)
+		throws Exception;
 
 	public void alterColumnName(
 			Connection connection, String tableName, String oldColumnName,
@@ -68,9 +74,15 @@ public interface DB {
 			Connection connection, String tableName, String newTableName)
 		throws Exception;
 
+	public void dropIndexes(
+			Connection connection, List<String> indexNames, String tableName)
+		throws Exception;
+
 	public List<IndexMetadata> dropIndexes(
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException;
+
+	public String getCharacterSet(Connection connection) throws SQLException;
 
 	public DBType getDBType();
 
@@ -78,7 +90,7 @@ public interface DB {
 
 	public List<Index> getIndexes(Connection connection) throws SQLException;
 
-	public List<IndexMetadata> getIndexes(
+	public List<IndexMetadata> getIndexMetadatas(
 			Connection connection, String tableName, String columnName,
 			boolean onlyUnique)
 		throws SQLException;
@@ -120,6 +132,9 @@ public interface DB {
 	public boolean isSupportsAlterColumnName();
 
 	public boolean isSupportsAlterColumnType();
+
+	public boolean isSupportsCharacterSet(Connection connection)
+		throws SQLException;
 
 	public boolean isSupportsDBPartition();
 
@@ -218,6 +233,11 @@ public interface DB {
 	public void updateIndexes(
 			Connection connection, String tableName, String indexesSQL,
 			boolean dropStaleIndexes)
+		throws Exception;
+
+	public void updatePrimaryKey(
+			Connection connection, String tableName,
+			String[] primaryKeyColumnNames)
 		throws Exception;
 
 }

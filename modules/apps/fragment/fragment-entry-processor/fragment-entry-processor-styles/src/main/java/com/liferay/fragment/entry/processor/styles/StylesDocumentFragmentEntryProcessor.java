@@ -16,7 +16,7 @@ import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -39,6 +39,12 @@ public class StylesDocumentFragmentEntryProcessor
 	public void processFragmentEntryLinkHTML(
 		FragmentEntryLink fragmentEntryLink, Document document,
 		FragmentEntryProcessorContext fragmentEntryProcessorContext) {
+
+		String html = fragmentEntryLink.getHtml();
+
+		if (!html.contains("data-lfr-styles")) {
+			return;
+		}
 
 		Elements elements = document.getElementsByAttribute("data-lfr-styles");
 

@@ -15,11 +15,12 @@ const AdminCatalogResource = CommerceServiceProvider.AdminCatalogAPI('v1');
 const CPDefinitionSpecificationOptionValueAutocomplete = ({
 	catalogDefaultLanguageId,
 	createNewSpecification,
+	siteLanguage,
 }) => {
 	const [specifications, setSpecifications] = useState([]);
-	const [listTypeEntries, setListTypeEntries] = useState([]);
+	const [listTypeDefinitions, setListTypeDefinitions] = useState([]);
 	const [search, setSearch] = useState('');
-	const [selectedItem, setSelectedItem] = useState(0);
+	const [selectedItems, setSelectedItems] = useState([]);
 
 	useEffect(() => {
 		window.top.Liferay.fire('is-loading-modal', {isLoading: true});
@@ -44,31 +45,57 @@ const CPDefinitionSpecificationOptionValueAutocomplete = ({
 	}, [search]);
 
 	useEffect(() => {
-		if (selectedItem > 0) {
-			fetch(
-				`/o/headless-admin-list-type/v1.0/list-type-definitions/${selectedItem}/list-type-entries`
-			)
-				.catch((error) => {
-					const message =
-						error.message ??
-						Liferay.Language.get('an-unexpected-error-occurred');
+		if (selectedItems.length !== 0) {
+			const allListTypeEntries = [];
 
-					window.parent.Liferay.Util.openToast({
-						message,
-						type: 'danger',
+			selectedItems.forEach((selectedItem, index) => {
+				fetch(
+					`/o/headless-admin-list-type/v1.0/list-type-definitions/${selectedItem}`
+				)
+					.catch((error) => {
+						const message =
+							error.message ??
+							Liferay.Language.get(
+								'an-unexpected-error-occurred'
+							);
+
+						window.parent.Liferay.Util.openToast({
+							message,
+							type: 'danger',
+						});
+					})
+					.then((response) => response.json())
+					.then(({listTypeEntries, name}) => {
+						allListTypeEntries.push({
+							listTypeEntries: listTypeEntries.sort(
+								(current, next) => {
+									return current.name > next.name ? 1 : -1;
+								}
+							),
+							name,
+						});
+
+						if (selectedItems.length - 1 === index) {
+							setListTypeDefinitions(allListTypeEntries);
+						}
 					});
-				})
-				.then((response) => response.json())
-				.then(({items}) => setListTypeEntries(items));
+			});
 		}
 		else {
-			setListTypeEntries([]);
+			setListTypeDefinitions([]);
 		}
-	}, [selectedItem]);
+	}, [selectedItems]);
 
 	const handleSelectChange = (event) => {
 		const selectedValue = event.target.value;
-		const selectedListTypeEntry = listTypeEntries.find(
+
+		const allListTypeEntries = [];
+
+		listTypeDefinitions.map(({listTypeEntries}) =>
+			allListTypeEntries.push(...listTypeEntries)
+		);
+
+		const selectedListTypeEntry = allListTypeEntries.find(
 			(listTypeEntry) => listTypeEntry.key === selectedValue
 		);
 		if (selectedListTypeEntry) {
@@ -91,6 +118,18 @@ const CPDefinitionSpecificationOptionValueAutocomplete = ({
 			inputValue,
 		});
 	};
+
+	listTypeDefinitions.sort((current, next) => {
+		return current.name > next.name ? 1 : -1;
+	});
+
+	function getName(title) {
+		if (title[catalogDefaultLanguageId]) {
+			return title[catalogDefaultLanguageId];
+		}
+
+		return title[siteLanguage];
+	}
 
 	return (
 		<ClayForm.Group aria-required={true}>
@@ -137,7 +176,7 @@ const CPDefinitionSpecificationOptionValueAutocomplete = ({
 					{(
 						{
 							key: specificationKey,
-							listTypeDefinitionId,
+							listTypeDefinitionIds,
 							optionCategory = {},
 							title,
 						},
@@ -146,13 +185,13 @@ const CPDefinitionSpecificationOptionValueAutocomplete = ({
 						<ClayAutocomplete.Item
 							key={index}
 							onClick={() => {
-								setSelectedItem(listTypeDefinitionId);
+								setSelectedItems(listTypeDefinitionIds);
 								Liferay.fire('specification-selected', {
 									optionCategoryId: optionCategory.id ?? 0,
 									specificationKey,
 								});
 							}}
-							textValue={title[catalogDefaultLanguageId]}
+							textValue={getName(title)}
 						/>
 					)}
 				</ClayAutocomplete>
@@ -175,25 +214,39 @@ const CPDefinitionSpecificationOptionValueAutocomplete = ({
 				</span>
 			</label>
 
-			{!!listTypeEntries.length && (
+			{!!listTypeDefinitions.length && (
 				<ClaySelect
 					name="listTypeEntriesSelect"
 					onChange={handleSelectChange}
+					required
 				>
-					<ClaySelect.Option label="Select an option" />
+					<ClaySelect.Option
+						aria-label={Liferay.Language.get('select-an-option')}
+						label={Liferay.Language.get('select-an-option')}
+						value=""
+					/>
 
-					{listTypeEntries.map((listTypeEntry) => (
-						<ClaySelect.Option
-							key={listTypeEntry}
-							label={`${listTypeEntry.name}`}
-							value={listTypeEntry.key}
-						/>
+					{listTypeDefinitions.map((listTypeDefinition) => (
+						<ClaySelect.OptGroup
+							key={listTypeDefinition}
+							label={listTypeDefinition.name}
+						>
+							{listTypeDefinition.listTypeEntries.map(
+								(listTypeEntry) => (
+									<ClaySelect.Option
+										key={listTypeEntry}
+										label={`${listTypeEntry.name}`}
+										value={listTypeEntry.key}
+									/>
+								)
+							)}
+						</ClaySelect.OptGroup>
 					))}
 				</ClaySelect>
 			)}
 
-			{!listTypeEntries.length && (
-				<ClayInput onChange={handleInputChange} />
+			{!listTypeDefinitions.length && (
+				<ClayInput onChange={handleInputChange} required />
 			)}
 		</ClayForm.Group>
 	);

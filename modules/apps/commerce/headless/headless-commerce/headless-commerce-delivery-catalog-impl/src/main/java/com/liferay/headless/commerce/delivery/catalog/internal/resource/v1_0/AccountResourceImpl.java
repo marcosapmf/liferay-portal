@@ -11,14 +11,24 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
+import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
+import com.liferay.commerce.constants.CommerceAccountActionKeys;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
+import com.liferay.commerce.product.exception.NoSuchChannelException;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Account;
-import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.delivery.catalog.internal.odata.entity.v1_0.AccountEntityModel;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AccountResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
@@ -27,24 +37,34 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.io.Serializable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -67,6 +87,23 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			Sort[] sorts)
 		throws Exception {
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannel(channelId);
+
+		long[] accountEntryIds = transformToLongArray(
+			_commerceChannelAccountEntryRelLocalService.
+				getCommerceChannelAccountEntryRels(
+					commerceChannel.getCommerceChannelId(), null,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			commerceChannelAccountEntryRel ->
+				commerceChannelAccountEntryRel.getAccountEntryId());
+
+		if (accountEntryIds.length > 0) {
+			_validateCommerceChannelEligibility(
+				accountEntryIds, commerceChannel);
+		}
+
 		return SearchUtil.search(
 			HashMapBuilder.<String, Map<String, String>>put(
 				"create",
@@ -80,14 +117,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					_accountEntryModelResourcePermission)
 			).build(),
 			booleanQuery -> {
-				int count =
-					_commerceChannelAccountEntryRelLocalService.
-						getCommerceChannelAccountEntryRelsCount(
-							channelId, null,
-							CommerceChannelAccountEntryRelConstants.
-								TYPE_ELIGIBILITY);
-
-				if (count > 0) {
+				if (accountEntryIds.length > 0) {
 					BooleanFilter booleanFilter =
 						booleanQuery.getPreBooleanFilter();
 
@@ -95,7 +125,10 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 						"commerceChannelIds");
 
 					termsFilter.addValues(
-						ArrayUtil.toStringArray(new long[] {channelId}));
+						ArrayUtil.toStringArray(
+							new long[] {
+								commerceChannel.getCommerceChannelId()
+							}));
 
 					booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 				}
@@ -122,24 +155,35 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	public Account postChannelAccount(Long channelId, Account account)
 		throws Exception {
 
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannel(channelId);
+
+		long[] accountEntryIds = transformToLongArray(
+			_commerceChannelAccountEntryRelLocalService.
+				getCommerceChannelAccountEntryRels(
+					commerceChannel.getCommerceChannelId(), null,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			commerceChannelAccountEntryRel ->
+				commerceChannelAccountEntryRel.getAccountEntryId());
+
+		if (accountEntryIds.length > 0) {
+			_validateCommerceChannelEligibility(
+				accountEntryIds, commerceChannel);
+		}
+
 		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
-			contextUser.getUserId(), 0, account.getName(),
-			account.getDescription(), _getDomains(account), null,
-			_getLogoBytes(account, null, false), account.getTaxId(),
+			account.getExternalReferenceCode(), contextUser.getUserId(), 0,
+			account.getName(), account.getDescription(), _getDomains(account),
+			null, _getLogoBytes(account, null, false), account.getTaxId(),
 			_getType(account), _getStatus(account),
 			_createServiceContext(account));
 
-		int count =
-			_commerceChannelAccountEntryRelLocalService.
-				getCommerceChannelAccountEntryRelsCount(
-					channelId, null,
-					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
-
-		if (count > 0) {
+		if (accountEntryIds.length > 0) {
 			_commerceChannelAccountEntryRelLocalService.
 				addCommerceChannelAccountEntryRel(
 					contextUser.getUserId(), accountEntry.getAccountEntryId(),
-					null, 0, channelId, false, 0,
+					null, 0, commerceChannel.getCommerceChannelId(), false, 0,
 					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
 		}
 
@@ -155,10 +199,6 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				account.getDefaultShippingAddressId());
 		}
 
-		accountEntry = _accountEntryService.updateExternalReferenceCode(
-			accountEntry.getAccountEntryId(),
-			account.getExternalReferenceCode());
-
 		_accountEntryOrganizationRelLocalService.
 			setAccountEntryOrganizationRels(
 				accountEntry.getAccountEntryId(), _getOrganizationIds(account));
@@ -169,13 +209,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	private ServiceContext _createServiceContext(Account account)
 		throws Exception {
 
-		ServiceContext serviceContext = ServiceContextBuilder.create(
-			contextCompany.getGroupId(), contextHttpServletRequest, null
-		).expandoBridgeAttributes(
+		Map<String, Serializable> expandoBridgeAttributes =
 			CustomFieldsUtil.toMap(
 				AccountEntry.class.getName(), contextCompany.getCompanyId(),
 				account.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale())
+				contextAcceptLanguage.getPreferredLocale());
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		ServiceContext serviceContext = ServiceContextBuilder.create(
+			contextCompany.getGroupId(), contextHttpServletRequest, null
+		).expandoBridgeAttributes(
+			expandoBridgeAttributes
 		).build();
 
 		serviceContext.setCompanyId(contextCompany.getCompanyId());
@@ -207,15 +254,15 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			logoId = accountEntry.getLogoId();
 		}
 
-		if ((logoId != null) && (logoId != 0) &&
-			((accountEntry == null) || (accountEntry.getLogoId() != logoId))) {
+		if ((logoId == null) || (logoId == 0) ||
+			((accountEntry != null) && (accountEntry.getLogoId() == logoId))) {
 
-			FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
-
-			return _file.getBytes(fileEntry.getContentStream());
+			return null;
 		}
 
-		return null;
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
+
+		return _file.getBytes(fileEntry.getContentStream());
 	}
 
 	private long[] _getOrganizationIds(Account account) {
@@ -267,6 +314,52 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
+	private void _validateCommerceChannelEligibility(
+			long[] accountEntryIds, CommerceChannel commerceChannel)
+		throws Exception {
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (permissionChecker.isCompanyAdmin(contextCompany.getCompanyId()) ||
+			_resourcePermissionLocalService.hasResourcePermission(
+				contextCompany.getCompanyId(), AccountEntry.class.getName(),
+				ResourceConstants.SCOPE_GROUP_TEMPLATE,
+				String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+				contextUser.getRoleIds(),
+				CommerceAccountActionKeys.VIEW_CHANNELS_ACCOUNTS)) {
+
+			return;
+		}
+
+		CommerceAccountGroupServiceConfiguration
+			commerceAccountGroupServiceConfiguration =
+				_configurationProvider.getConfiguration(
+					CommerceAccountGroupServiceConfiguration.class,
+					new GroupServiceSettingsLocator(
+						commerceChannel.getGroupId(),
+						CommerceConstants.SERVICE_NAME_COMMERCE_ACCOUNT));
+
+		Set<Long> eligibleAccountEntryIds = SetUtil.intersect(
+			accountEntryIds,
+			transformToLongArray(
+				_accountEntryLocalService.getUserAccountEntries(
+					contextUser.getUserId(),
+					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
+					AccountEntryAllowedTypesUtil.getAllowedTypes(
+						commerceAccountGroupServiceConfiguration.
+							commerceSiteType()),
+					WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS),
+				accountEntry -> accountEntry.getAccountEntryId()));
+
+		if (eligibleAccountEntryIds.isEmpty()) {
+			throw new NoSuchChannelException();
+		}
+	}
+
+	private static final EntityModel _entityModel = new AccountEntityModel();
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.AccountDTOConverter)"
 	)
@@ -295,11 +388,18 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		_commerceChannelAccountEntryRelLocalService;
 
 	@Reference
-	private DLAppLocalService _dlAppLocalService;
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
-	private final EntityModel _entityModel = new AccountEntityModel();
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private File _file;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 }

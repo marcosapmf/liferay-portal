@@ -5,9 +5,9 @@
 
 import fg from 'fast-glob';
 import fs from 'fs/promises';
-import {r2} from 'liferay-theme-tasks';
 import path from 'path';
 import resolve from 'resolve';
+import rtlcss from 'rtlcss';
 
 import {
 	BUILD_RESOURCES_PATH,
@@ -15,6 +15,7 @@ import {
 	SRC_PATH,
 } from '../../util/constants.mjs';
 import projectScopeRequire from '../../util/projectScopeRequire.mjs';
+import calculateFileHash from '../util/calculateFileHash.mjs';
 import runSass from './runSass.mjs';
 
 const CSS_IMPORT_REGEX = /@import\s+url\s*\(\s*['"]?(.+?\.css)/g;
@@ -204,21 +205,44 @@ async function processSassFile(filePath, includePaths, timestamp) {
 
 	const {css, map} = await runSass(filePath, includePaths, outFilePath);
 
+	// Remove leftovers
+
+	await safeUnlink(outFilePath);
+	await safeUnlink(`${outFilePath}.map`);
+
 	// Apply timestamps to CSS
 
 	const timestampedCss = appendTimestamps(css, timestamp);
 
 	// Apply RTL translation to CSS
 
-	const rtlTimestampedCss = r2.swap(timestampedCss);
+	const rtlTimestampedCss = rtlcss.process(timestampedCss);
 
 	// Write stuff
 
 	await fs.mkdir(path.dirname(outFilePath), {recursive: true});
 
+	const hash = await calculateFileHash(timestampedCss);
+
+	const finalExt = `.(${hash}).css`;
+
+	const finalOutFilePath = outFilePath.replace(/\.css$/, finalExt);
+	const finalOutRtlFilePath = outRtlFilePath.replace(/\.css$/, finalExt);
+
 	await Promise.all([
-		fs.writeFile(outFilePath, timestampedCss, 'utf-8'),
-		fs.writeFile(`${outFilePath}.map`, map, 'utf-8'),
-		fs.writeFile(outRtlFilePath, rtlTimestampedCss, 'utf-8'),
+		fs.writeFile(finalOutFilePath, timestampedCss, 'utf-8'),
+		fs.writeFile(`${finalOutFilePath}.map`, map, 'utf-8'),
+		fs.writeFile(finalOutRtlFilePath, rtlTimestampedCss, 'utf-8'),
 	]);
+}
+
+async function safeUnlink(filePath) {
+	try {
+		await fs.unlink(filePath);
+	}
+	catch (error) {
+		if (error.code !== 'ENOENT') {
+			throw error;
+		}
+	}
 }

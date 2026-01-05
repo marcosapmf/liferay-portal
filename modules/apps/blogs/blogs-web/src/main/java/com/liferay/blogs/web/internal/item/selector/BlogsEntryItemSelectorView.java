@@ -22,8 +22,10 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
@@ -33,6 +35,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Collections;
@@ -40,14 +50,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -106,6 +108,9 @@ public class BlogsEntryItemSelectorView
 
 	@Reference
 	private BlogsEntryService _blogsEntryService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ItemSelectorViewDescriptorRenderer<InfoItemItemSelectorCriterion>
@@ -177,6 +182,26 @@ public class BlogsEntryItemSelectorView
 				_portal.getClassNameId(BlogsEntry.class.getName())
 			).put(
 				"classPK", _blogsEntry.getEntryId()
+			).put(
+				"externalReferenceCode", _blogsEntry.getExternalReferenceCode()
+			).put(
+				"scopeExternalReferenceCode",
+				() -> {
+					long scopeGroupId = themeDisplay.getRefererGroupId();
+
+					if (scopeGroupId <= 0) {
+						scopeGroupId = themeDisplay.getScopeGroupId();
+					}
+
+					if (_blogsEntry.getGroupId() == scopeGroupId) {
+						return null;
+					}
+
+					Group group = _groupLocalService.getGroup(
+						_blogsEntry.getGroupId());
+
+					return group.getExternalReferenceCode();
+				}
 			).put(
 				"title",
 				BlogsEntryUtil.getDisplayTitle(_resourceBundle, _blogsEntry)
@@ -283,7 +308,7 @@ public class BlogsEntryItemSelectorView
 			SearchContainer<BlogsEntry> entriesSearchContainer =
 				new SearchContainer<>(
 					(PortletRequest)_httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST),
+						JavaConstants.JAKARTA_PORTLET_REQUEST),
 					_portletURL, null, "no-entries-were-found");
 
 			entriesSearchContainer.setOrderByCol(getOrderByCol());

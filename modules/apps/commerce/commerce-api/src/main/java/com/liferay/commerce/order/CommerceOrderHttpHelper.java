@@ -8,12 +8,12 @@ package com.liferay.commerce.order;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo
@@ -32,15 +32,18 @@ public interface CommerceOrderHttpHelper {
 			String uuid, long groupId)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartBaseURL(HttpServletRequest httpServletRequest)
+		throws PortalException;
+
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			long groupId, HttpServletRequest httpServletRequest,
 			CommerceOrder commerceOrder)
 		throws PortalException;
@@ -59,8 +62,23 @@ public interface CommerceOrderHttpHelper {
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
+	public boolean hasCommerceOrderPortlet(
+			HttpServletRequest httpServletRequest, String portletKey)
+		throws PortalException;
+
+	public boolean hasCommerceOrderReturns(
+			HttpServletRequest httpServletRequest)
+		throws PortalException;
+
+	public boolean hasCommerceOrderShipments(
+			HttpServletRequest httpServletRequest)
+		throws PortalException;
+
 	public boolean isGuestCheckoutEnabled(HttpServletRequest httpServletRequest)
 		throws PortalException;
+
+	public boolean isMultishippingEnabled(
+		HttpServletRequest httpServletRequest);
 
 	public void setCurrentCommerceOrder(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)

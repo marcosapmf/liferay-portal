@@ -19,7 +19,6 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
-import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.feature.flag.FeatureFlag;
@@ -29,6 +28,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -42,12 +42,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.osgi.framework.BundleContext;
@@ -67,6 +69,8 @@ public class FeatureFlagsBagProviderImpl
 	@Override
 	public void clearCache() {
 		_featureFlagsBags.clear();
+
+		_initSystemFeatureFlags(true);
 	}
 
 	@Override
@@ -92,6 +96,11 @@ public class FeatureFlagsBagProviderImpl
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return FeatureFlagsBagProviderImpl.class.getName();
+	}
+
+	@Override
+	public boolean isSystemKey(String key) {
+		return _systemFeatureFlags.contains(key);
 	}
 
 	@Clusterable
@@ -132,14 +141,14 @@ public class FeatureFlagsBagProviderImpl
 	}
 
 	@Override
-	public <T> T withFeatureFlagsBag(
-		long companyId, Function<FeatureFlagsBag, T> function) {
-
-		return function.apply(getOrCreateFeatureFlagsBag(companyId));
+	public FeatureFlagsBagProvider unwrapProxy() {
+		return this;
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		_initSystemFeatureFlags(false);
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, FeatureFlagListener.class, null,
 			(serviceReference, emitter) -> {
@@ -167,7 +176,7 @@ public class FeatureFlagsBagProviderImpl
 	}
 
 	private FeatureFlagsBag _createFeatureFlagsBag(long companyId) {
-		Map<String, FeatureFlag> featureFlags = new HashMap<>();
+		Map<String, FeatureFlag> featureFlags = new TreeMap<>();
 
 		Map<String, FeatureFlag> systemFeatureFlags = new HashMap<>();
 
@@ -188,7 +197,8 @@ public class FeatureFlagsBagProviderImpl
 		}
 		else {
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(companyId)) {
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
 				_populateFeatureFlagsMap(
 					companyId, featureFlags, systemFeatureFlags);
@@ -202,7 +212,7 @@ public class FeatureFlagsBagProviderImpl
 	private List<String> _getFeatureFlagKeys(
 		ServiceReference<?> serviceReference) {
 
-		Object value = serviceReference.getProperty("featureFlagKey");
+		Object value = serviceReference.getProperty("feature.flag.key");
 
 		if (value == null) {
 			return null;
@@ -213,6 +223,33 @@ public class FeatureFlagsBagProviderImpl
 		}
 
 		return Arrays.asList(String.valueOf(value));
+	}
+
+	private void _initSystemFeatureFlags(boolean reload) {
+		if (reload) {
+			_featureFlagProperties.clear();
+
+			_featureFlagProperties.putAll(
+				PropsUtil.getProperties(
+					FeatureFlagConstants.PORTAL_PROPERTY_KEY_FEATURE_FLAG +
+						StringPool.PERIOD,
+					true));
+
+			_systemFeatureFlags.clear();
+		}
+
+		for (String stringPropertyName :
+				_featureFlagProperties.stringPropertyNames()) {
+
+			if (stringPropertyName.endsWith(".system") &&
+				GetterUtil.getBoolean(
+					_featureFlagProperties.getProperty(stringPropertyName))) {
+
+				_systemFeatureFlags.add(
+					stringPropertyName.substring(
+						0, stringPropertyName.length() - 7));
+			}
+		}
 	}
 
 	private boolean _isFeatureFlagKey(String value) {
@@ -247,16 +284,14 @@ public class FeatureFlagsBagProviderImpl
 		long companyId, Map<String, FeatureFlag> featureFlags,
 		Map<String, FeatureFlag> systemFeatureFlags) {
 
-		Properties properties = PropsUtil.getProperties(
-			FeatureFlagConstants.FEATURE_FLAG + StringPool.PERIOD, true);
+		for (String stringPropertyName :
+				_featureFlagProperties.stringPropertyNames()) {
 
-		for (String stringPropertyName : properties.stringPropertyNames()) {
 			if (!_isFeatureFlagKey(stringPropertyName)) {
 				continue;
 			}
 
-			boolean system = GetterUtil.getBoolean(
-				properties.get(stringPropertyName + ".system"));
+			boolean system = _systemFeatureFlags.contains(stringPropertyName);
 
 			if ((system && (companyId == CompanyConstants.SYSTEM)) ||
 				(!system && (companyId != CompanyConstants.SYSTEM))) {
@@ -288,12 +323,7 @@ public class FeatureFlagsBagProviderImpl
 				}
 
 				if ((companyId == CompanyConstants.SYSTEM) &&
-					!GetterUtil.getBoolean(
-						properties.get(
-							FeatureFlagConstants.getKey(
-								dependencyKey,
-								ExtendedObjectClassDefinition.Scope.SYSTEM.
-									getValue())))) {
+					!_systemFeatureFlags.contains(dependencyKey)) {
 
 					_log.error(
 						StringBundler.concat(
@@ -349,11 +379,20 @@ public class FeatureFlagsBagProviderImpl
 	@Reference
 	private FeatureFlagPreferencesManager _featureFlagPreferencesManager;
 
+	private final Properties _featureFlagProperties = PropsUtil.getProperties(
+		FeatureFlagConstants.PORTAL_PROPERTY_KEY_FEATURE_FLAG +
+			StringPool.PERIOD,
+		true);
+
 	@Reference
 	private Language _language;
 
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
 	private ServiceTrackerMap<String, List<FeatureFlagListener>>
 		_serviceTrackerMap;
+	private final Set<String> _systemFeatureFlags = new HashSet<>();
 
 	private class FeatureFlagListenerEagerServiceTrackerCustomizer
 		implements EagerServiceTrackerCustomizer

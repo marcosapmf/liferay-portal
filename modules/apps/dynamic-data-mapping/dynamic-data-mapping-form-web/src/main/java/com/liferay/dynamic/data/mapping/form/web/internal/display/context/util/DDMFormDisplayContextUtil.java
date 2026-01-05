@@ -13,14 +13,16 @@ import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.portlet.RenderRequest;
 
-import javax.portlet.RenderRequest;
+import java.util.List;
 
 /**
  * @author Carolina Barbosa
@@ -39,6 +41,14 @@ public class DDMFormDisplayContextUtil {
 			_DDM_FORM_FIELD_NAME_CAPTCHA, DDMFormFieldTypeConstants.CAPTCHA);
 
 		captchaDDMFormField.setDataType("string");
+		captchaDDMFormField.setLabel(
+			new LocalizedValue() {
+				{
+					addString(
+						LocaleUtil.getDefault(),
+						DDMFormFieldTypeConstants.CAPTCHA);
+				}
+			});
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -54,6 +64,7 @@ public class DDMFormDisplayContextUtil {
 		}
 
 		captchaDDMFormField.setProperty("url", captchaResourceURL);
+		captchaDDMFormField.setShowLabel(false);
 
 		ddmForm.addDDMFormField(captchaDDMFormField);
 	}

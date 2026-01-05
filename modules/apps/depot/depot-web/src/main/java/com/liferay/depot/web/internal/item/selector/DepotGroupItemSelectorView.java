@@ -5,8 +5,8 @@
 
 package com.liferay.depot.web.internal.item.selector;
 
-import com.liferay.depot.web.internal.item.selector.criteria.depot.group.criterion.DepotGroupItemSelectorCriterion;
-import com.liferay.depot.web.internal.util.DepotAdminGroupSearchProvider;
+import com.liferay.depot.item.selector.DepotGroupItemSelectorCriterion;
+import com.liferay.depot.web.internal.util.DepotEntryAdminSearchProvider;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
@@ -26,6 +26,15 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Collections;
@@ -33,14 +42,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -98,7 +99,7 @@ public class DepotGroupItemSelectorView
 			new GroupItemSelectorReturnType());
 
 	@Reference
-	private DepotAdminGroupSearchProvider _depotAdminGroupSearchProvider;
+	private DepotEntryAdminSearchProvider _depotEntryAdminSearchProvider;
 
 	@Reference
 	private ItemSelectorViewDescriptorRenderer<DepotGroupItemSelectorCriterion>
@@ -234,11 +235,15 @@ public class DepotGroupItemSelectorView
 			try {
 				PortletRequest portletRequest =
 					(PortletRequest)_httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST);
+						JavaConstants.JAKARTA_PORTLET_REQUEST);
 
-				return _depotAdminGroupSearchProvider.getGroupSearch(
+				PortletResponse portletResponse =
+					(PortletResponse)_httpServletRequest.getAttribute(
+						JavaConstants.JAKARTA_PORTLET_RESPONSE);
+
+				return _depotEntryAdminSearchProvider.getGroupSearch(
 					_depotGroupItemSelectorCriterion, portletRequest,
-					_portletURL);
+					portletResponse, _portletURL);
 			}
 			catch (PortalException portalException) {
 				return ReflectionUtil.throwException(portalException);

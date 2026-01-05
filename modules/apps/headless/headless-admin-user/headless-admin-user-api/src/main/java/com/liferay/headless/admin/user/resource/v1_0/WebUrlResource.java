@@ -6,8 +6,6 @@
 package com.liferay.headless.admin.user.resource.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -20,18 +18,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTa
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -47,27 +45,26 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface WebUrlResource {
 
+	public void deleteWebUrl(Long webUrlId) throws Exception;
+
+	public Response deleteWebUrlBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteWebUrlByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Page<WebUrl> getAccountByExternalReferenceCodeWebUrlsPage(
 			String externalReferenceCode)
 		throws Exception;
 
 	public Page<WebUrl> getAccountWebUrlsPage(Long accountId) throws Exception;
 
-	public Response postAccountWebUrlsPageExportBatch(
-			Long accountId, String callbackURL, String contentType,
-			String fieldNames)
-		throws Exception;
-
 	public Page<WebUrl> getOrganizationByExternalReferenceCodeWebUrlsPage(
 			String externalReferenceCode)
 		throws Exception;
 
 	public Page<WebUrl> getOrganizationWebUrlsPage(String organizationId)
-		throws Exception;
-
-	public Response postOrganizationWebUrlsPageExportBatch(
-			String organizationId, String callbackURL, String contentType,
-			String fieldNames)
 		throws Exception;
 
 	public Page<WebUrl> getUserAccountByExternalReferenceCodeWebUrlsPage(
@@ -77,12 +74,31 @@ public interface WebUrlResource {
 	public Page<WebUrl> getUserAccountWebUrlsPage(Long userAccountId)
 		throws Exception;
 
+	public WebUrl getWebUrl(Long webUrlId) throws Exception;
+
+	public WebUrl getWebUrlByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public WebUrl patchWebUrl(Long webUrlId, WebUrl webUrl) throws Exception;
+
+	public WebUrl patchWebUrlByExternalReferenceCode(
+			String externalReferenceCode, WebUrl webUrl)
+		throws Exception;
+
+	public Response postAccountWebUrlsPageExportBatch(
+			Long accountId, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public Response postOrganizationWebUrlsPageExportBatch(
+			String organizationId, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
 	public Response postUserAccountWebUrlsPageExportBatch(
 			Long userAccountId, String callbackURL, String contentType,
 			String fieldNames)
 		throws Exception;
-
-	public WebUrl getWebUrl(Long webUrlId) throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -106,7 +122,8 @@ public interface WebUrlResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -131,19 +148,23 @@ public interface WebUrlResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

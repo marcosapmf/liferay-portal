@@ -22,13 +22,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.LayoutSetPrototypeCreateDateComparator;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -142,27 +142,15 @@ public class LayoutSetPrototypeDisplayContext {
 	}
 
 	public boolean isDescriptiveView() {
-		if (Objects.equals(getDisplayStyle(), "descriptive")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "descriptive");
 	}
 
 	public boolean isIconView() {
-		if (Objects.equals(getDisplayStyle(), "icon")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "icon");
 	}
 
 	public boolean isListView() {
-		if (Objects.equals(getDisplayStyle(), "list")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getDisplayStyle(), "list");
 	}
 
 	public boolean isShowAddButton() {
@@ -170,14 +158,9 @@ public class LayoutSetPrototypeDisplayContext {
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (PortalPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(),
-				ActionKeys.ADD_LAYOUT_SET_PROTOTYPE)) {
-
-			return true;
-		}
-
-		return false;
+		return PortalPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(),
+			ActionKeys.ADD_LAYOUT_SET_PROTOTYPE);
 	}
 
 	private String _displayStyle;

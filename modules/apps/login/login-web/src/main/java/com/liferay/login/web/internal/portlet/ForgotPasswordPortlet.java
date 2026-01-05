@@ -6,19 +6,24 @@
 package com.liferay.login.web.internal.portlet;
 
 import com.liferay.login.web.constants.LoginPortletKeys;
+import com.liferay.login.web.internal.portlet.util.LoginUtil;
 import com.liferay.portal.kernel.model.Release;
+import com.liferay.portal.kernel.model.Ticket;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.service.TicketLocalService;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,17 +44,17 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.restore-current-view=false",
 		"com.liferay.portlet.single-page-application=false",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Forgot Password",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.add-process-action-success-action=false",
-		"javax.portlet.init-param.config-template=/forgot_password/configuration.jsp",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/forgot_password.jsp",
-		"javax.portlet.name=" + LoginPortletKeys.FORGOT_PASSWORD,
-		"javax.portlet.portlet-mode=text/html;config",
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Forgot Password",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.add-process-action-success-action=false",
+		"jakarta.portlet.init-param.config-template=/forgot_password/configuration.jsp",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/forgot_password.jsp",
+		"jakarta.portlet.name=" + LoginPortletKeys.FORGOT_PASSWORD,
+		"jakarta.portlet.portlet-mode=text/html;config",
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=guest,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -60,41 +65,51 @@ public class ForgotPasswordPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		if (!_isAllowedToRenderView(renderRequest)) {
+		if (!LoginUtil.isAllowedToRenderView(
+				"/forgot_password.jsp", "/login/forgot_password",
+				renderRequest)) {
+
 			renderRequest.setAttribute(
 				getMVCPathAttributeName(renderResponse.getNamespace()),
 				"/login.jsp");
 		}
 
+		HttpServletRequest httpServletRequest =
+			_portal.getOriginalServletRequest(
+				_portal.getHttpServletRequest(renderRequest));
+
+		String currentURL = URLCodec.decodeURL(
+			(String)httpServletRequest.getAttribute("CURRENT_URL"));
+
+		if (currentURL.contains("/login/update_password")) {
+			Ticket ticket = _ticketLocalService.fetchTicket(
+				ParamUtil.getLong(httpServletRequest, "ticketId"));
+
+			if (ticket != null) {
+				httpServletRequest.setAttribute(WebKeys.TICKET, ticket);
+			}
+		}
+
+		if (currentURL.contains("/login/update_password") ||
+			currentURL.contains("/portal/update_password")) {
+
+			renderRequest.setAttribute(
+				getMVCPathAttributeName(renderResponse.getNamespace()),
+				"/update_password.jsp");
+		}
+
 		super.render(renderRequest, renderResponse);
 	}
 
-	private boolean _isAllowedToRenderView(RenderRequest renderRequest) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (!themeDisplay.isSignedIn()) {
-			return true;
-		}
-
-		String mvcPath = ParamUtil.getString(renderRequest, "mvcPath");
-		String mvcRenderCommandName = ParamUtil.getString(
-			renderRequest, "mvcRenderCommandName");
-
-		if ((Validator.isNull(mvcPath) &&
-			 Validator.isNull(mvcRenderCommandName)) ||
-			mvcPath.equals("/forgot_password.jsp") ||
-			mvcRenderCommandName.equals("/login/forgot_password")) {
-
-			return false;
-		}
-
-		return true;
-	}
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.login.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
 	private Release _release;
+
+	@Reference
+	private TicketLocalService _ticketLocalService;
 
 }

@@ -8,13 +8,13 @@ package com.liferay.headless.delivery.client.serdes.v1_0;
 import com.liferay.headless.delivery.client.dto.v1_0.FormConfig;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -86,10 +86,18 @@ public class FormConfigSerDes {
 			sb.append("\"formType\": ");
 
 			sb.append("\"");
-
 			sb.append(formConfig.getFormType());
-
 			sb.append("\"");
+		}
+
+		if (formConfig.getLocalizationConfig() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"localizationConfig\": ");
+
+			sb.append(String.valueOf(formConfig.getLocalizationConfig()));
 		}
 
 		if (formConfig.getNumberOfSteps() != null) {
@@ -144,6 +152,15 @@ public class FormConfigSerDes {
 			map.put("formType", String.valueOf(formConfig.getFormType()));
 		}
 
+		if (formConfig.getLocalizationConfig() == null) {
+			map.put("localizationConfig", null);
+		}
+		else {
+			map.put(
+				"localizationConfig",
+				String.valueOf(formConfig.getLocalizationConfig()));
+		}
+
 		if (formConfig.getNumberOfSteps() == null) {
 			map.put("numberOfSteps", null);
 		}
@@ -181,6 +198,11 @@ public class FormConfigSerDes {
 			else if (Objects.equals(jsonParserFieldName, "formType")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "localizationConfig")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "numberOfSteps")) {
 				return false;
 			}
@@ -210,6 +232,15 @@ public class FormConfigSerDes {
 				if (jsonParserFieldValue != null) {
 					formConfig.setFormType(
 						FormConfig.FormType.create(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "localizationConfig")) {
+
+				if (jsonParserFieldValue != null) {
+					formConfig.setLocalizationConfig(
+						LocalizationConfigSerDes.toDTO(
 							(String)jsonParserFieldValue));
 				}
 			}
@@ -264,6 +295,10 @@ public class FormConfigSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

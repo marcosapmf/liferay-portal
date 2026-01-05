@@ -18,7 +18,6 @@ import com.liferay.headless.common.spi.resource.SPIRatingResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.DocumentFolderEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
@@ -42,26 +41,26 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.search.aggregation.Aggregations;
-import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
-import java.util.ArrayList;
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -203,8 +202,8 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 		return new DocumentFolderEntityModel(
 			EntityFieldsUtil.getEntityFields(
 				_portal.getClassNameId(DLFolder.class.getName()),
-				contextCompany.getCompanyId(), _expandoBridgeIndexer,
-				_expandoColumnLocalService, _expandoTableLocalService));
+				contextCompany.getCompanyId(), _expandoColumnLocalService,
+				_expandoTableLocalService));
 	}
 
 	@Override
@@ -400,7 +399,8 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 	}
 
 	private ServiceContext _createServiceContext(
-		long groupId, DocumentFolder documentFolder, String viewableBy) {
+			long groupId, DocumentFolder documentFolder, String viewableBy)
+		throws Exception {
 
 		return ServiceContextBuilder.create(
 			groupId, contextHttpServletRequest, viewableBy
@@ -409,6 +409,13 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 				DLFolder.class.getName(), contextCompany.getCompanyId(),
 				documentFolder.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale())
+		).permissions(
+			ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), documentFolder.getPermissions(),
+				getPermissionCheckerResourceId(documentFolder.getId()),
+				getPermissionCheckerResourceName(documentFolder.getId()),
+				resourceActionLocalService, resourcePermissionLocalService,
+				roleLocalService)
 		).build();
 	}
 
@@ -567,13 +574,9 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 	private List<DocumentFolder> _toDocumentFolders(List<DLFolder> dlFolders)
 		throws Exception {
 
-		List<DocumentFolder> documentFolders = new ArrayList<>();
-
-		for (DLFolder dlFolder : dlFolders) {
-			documentFolders.add(_toDocumentFolder(new LiferayFolder(dlFolder)));
-		}
-
-		return documentFolders;
+		return transform(
+			dlFolders,
+			dlFolder -> _toDocumentFolder(new LiferayFolder(dlFolder)));
 	}
 
 	private DocumentFolder _updateDocumentFolder(
@@ -614,9 +617,6 @@ public class DocumentFolderResourceImpl extends BaseDocumentFolderResourceImpl {
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
-
-	@Reference
-	private ExpandoBridgeIndexer _expandoBridgeIndexer;
 
 	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;

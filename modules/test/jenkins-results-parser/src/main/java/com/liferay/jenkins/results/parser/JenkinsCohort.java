@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,14 +81,15 @@ public class JenkinsCohort {
 	}
 
 	public JenkinsMaster getMostAvailableJenkinsMaster(
-		int invokedBatchSize, int minimumRAM, int maximumSlavesPerHost) {
+		int invokedBatchSize, String jobName, String labelExpression,
+		int minimumRAM, int maximumSlavesPerHost) {
 
 		String mostAvailableMasterURL =
 			JenkinsResultsParserUtil.getMostAvailableMasterURL(
-				JenkinsResultsParserUtil.combine(
-					"http://", getName(), ".liferay.com"),
+				"http://" + getName() + ".liferay.com",
 				JenkinsResultsParserUtil.join(",", _jenkinsMastersBlacklist),
-				invokedBatchSize, minimumRAM, maximumSlavesPerHost);
+				invokedBatchSize, jobName, labelExpression, minimumRAM,
+				maximumSlavesPerHost);
 
 		return JenkinsMaster.getInstance(
 			mostAvailableMasterURL.replaceAll("http://(.+)", "$1"));
@@ -169,6 +171,42 @@ public class JenkinsCohort {
 		}
 
 		return runningBuildCount;
+	}
+
+	public int getStartedDownstreamBuildCountAfter(Date date) {
+		int buildCount = 0;
+
+		if (_jenkinsCohortJobsMap.isEmpty()) {
+			update();
+		}
+
+		for (JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
+			if (jenkinsMaster.isBlackListed() || !jenkinsMaster.isAvailable()) {
+				continue;
+			}
+
+			buildCount += jenkinsMaster.getStartedBuildCountAfter(date, false);
+		}
+
+		return buildCount;
+	}
+
+	public int getStartedTopLevelBuildCountAfter(Date date) {
+		int buildCount = 0;
+
+		if (_jenkinsCohortJobsMap.isEmpty()) {
+			update();
+		}
+
+		for (JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
+			if (jenkinsMaster.isBlackListed() || !jenkinsMaster.isAvailable()) {
+				continue;
+			}
+
+			buildCount += jenkinsMaster.getStartedBuildCountAfter(date, true);
+		}
+
+		return buildCount;
 	}
 
 	public void update() {
@@ -395,64 +433,73 @@ public class JenkinsCohort {
 	public void writeNodeDataJSONFile(String filePath) throws IOException {
 		File file = new File(filePath);
 
-		JSONObject jsonObject = null;
+		JSONObject jsonObject = new JSONObject();
 
 		if (file.exists()) {
 			String fileContent = JenkinsResultsParserUtil.read(file);
 
 			jsonObject = new JSONObject(fileContent);
 		}
-		else {
-			jsonObject = new JSONObject();
 
-			jsonObject.put(
-				"idle_nodes", new JSONArray()
-			).put(
-				"occupied_nodes", new JSONArray()
-			).put(
-				"offline_nodes", new JSONArray()
-			).put(
-				"online_nodes", new JSONArray()
-			).put(
-				"queued_builds", new JSONArray()
-			).put(
-				"timestamps", new JSONArray()
-			);
+		long currentTimestamp = System.currentTimeMillis();
+
+		JSONArray timestampsJSONArray = jsonObject.optJSONArray(
+			"timestamps", new JSONArray());
+
+		int timestampCount = timestampsJSONArray.length();
+
+		long previousTimestamp = currentTimestamp;
+
+		if (timestampCount > 0) {
+			previousTimestamp = timestampsJSONArray.getLong(
+				timestampsJSONArray.length() - 1);
 		}
 
-		JSONArray idleNodesJSONArray = jsonObject.getJSONArray("idle_nodes");
+		Date previousDate = new Date(previousTimestamp);
 
-		idleNodesJSONArray.put(getIdleJenkinsSlaveCount());
+		_addNodeData(
+			jsonObject, timestampCount, "downstream_started_builds",
+			getStartedDownstreamBuildCountAfter(previousDate));
 
-		JSONArray occupiedNodesJSONArray = jsonObject.getJSONArray(
-			"occupied_nodes");
-
-		occupiedNodesJSONArray.put(getRunningBuildCount());
-
-		JSONArray offlineNodesJSONArray = jsonObject.getJSONArray(
-			"offline_nodes");
-
-		offlineNodesJSONArray.put(getOfflineJenkinsSlaveCount());
-
-		JSONArray onlineNodesJSONArray = jsonObject.getJSONArray(
-			"online_nodes");
-
-		onlineNodesJSONArray.put(getOnlineJenkinsSlaveCount());
-
-		JSONArray queuedBuildsJSONArray = jsonObject.getJSONArray(
-			"queued_builds");
-
-		queuedBuildsJSONArray.put(getQueuedBuildCount());
-
-		JSONArray timestampsJSONArray = jsonObject.getJSONArray("timestamps");
-
-		timestampsJSONArray.put(System.currentTimeMillis());
+		_addNodeData(
+			jsonObject, timestampCount, "idle_nodes",
+			getIdleJenkinsSlaveCount());
+		_addNodeData(
+			jsonObject, timestampCount, "occupied_nodes",
+			getRunningBuildCount());
+		_addNodeData(
+			jsonObject, timestampCount, "offline_nodes",
+			getOfflineJenkinsSlaveCount());
+		_addNodeData(
+			jsonObject, timestampCount, "online_nodes",
+			getOnlineJenkinsSlaveCount());
+		_addNodeData(
+			jsonObject, timestampCount, "queued_builds", getQueuedBuildCount());
+		_addNodeData(
+			jsonObject, timestampCount, "timestamps", currentTimestamp);
+		_addNodeData(
+			jsonObject, timestampCount, "top_level_started_builds",
+			getStartedTopLevelBuildCountAfter(previousDate));
 
 		JenkinsResultsParserUtil.write(filePath, jsonObject.toString());
 	}
 
 	protected JenkinsCohort(String name) {
 		_name = name;
+	}
+
+	private void _addNodeData(
+		JSONObject jsonObject, int recordCount, String key, long value) {
+
+		JSONArray jsonArray = jsonObject.optJSONArray(key, new JSONArray());
+
+		while (jsonArray.length() < recordCount) {
+			jsonArray.put(0);
+		}
+
+		jsonArray.put(value);
+
+		jsonObject.put(key, jsonArray);
 	}
 
 	private JSONArray _createJSONArray(Object... items) {

@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -42,6 +42,7 @@ page import="com.liferay.change.tracking.web.internal.display.context.ViewRelate
 page import="com.liferay.change.tracking.web.internal.display.context.ViewScheduledDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ViewTemplatesDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.display.context.ViewTemplatesManagementToolbarDisplayContext" %><%@
+page import="com.liferay.change.tracking.web.internal.display.context.ViewTimelineHistoryDisplayContext" %><%@
 page import="com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -63,10 +64,10 @@ page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %>
 
+<%@ page import="jakarta.portlet.RenderResponse" %>
+
 <%@ page import="java.util.Date" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.RenderResponse" %>
 
 <liferay-frontend:defineObjects />
 

@@ -16,7 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,21 +31,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Drew Brokke
  * @generated
  */
 @Generated("")
 @GraphQLName("Region")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"regionCode", "name"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"regionCode", "name"})
 @XmlRootElement(name = "Region")
 public class Region implements Serializable {
 
@@ -52,7 +52,7 @@ public class Region implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Region.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getActive() {
 		if (_activeSupplier != null) {
 			active = _activeSupplier.get();
@@ -93,7 +93,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _activeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getCountryId() {
 		if (_countryIdSupplier != null) {
 			countryId = _countryIdSupplier.get();
@@ -134,7 +134,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _countryIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -173,7 +173,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -213,7 +213,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Double getPosition() {
 		if (_positionSupplier != null) {
 			position = _positionSupplier.get();
@@ -254,7 +254,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _positionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getRegionCode() {
 		if (_regionCodeSupplier != null) {
 			regionCode = _regionCodeSupplier.get();
@@ -296,7 +296,7 @@ public class Region implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _regionCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, String> getTitle_i18n() {
 		if (_title_i18nSupplier != null) {
@@ -463,8 +463,8 @@ public class Region implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.address.dto.v1_0.Region",
 		name = "x-class-name"
 	)

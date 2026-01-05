@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -70,12 +70,12 @@ describe('ContainerGeneralPanel', () => {
 		expect(screen.getByLabelText('url')).toHaveValue('https://liferay.us');
 	});
 
-	it('stores link target', () => {
+	it('stores link target', async () => {
 		renderComponent();
 
 		const targetInput = screen.getByLabelText('open-in-a-new-tab');
 
-		userEvent.click(targetInput);
+		await userEvent.click(targetInput);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {
@@ -88,12 +88,13 @@ describe('ContainerGeneralPanel', () => {
 		});
 	});
 
-	it('stores link href as localizable', () => {
+	it('stores link href as localizable', async () => {
 		renderComponent();
 
 		const urlInput = screen.getByLabelText('url');
 
-		userEvent.type(urlInput, 'https://liferay.us');
+		await userEvent.clear(urlInput);
+		await userEvent.type(urlInput, 'https://liferay.us');
 		fireEvent.blur(urlInput);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({

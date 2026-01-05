@@ -12,16 +12,16 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -74,7 +74,7 @@ public class ViewScheduledDisplayContext {
 					"ctCollectionId", "{id}"
 				).buildString(),
 				"time", "unschedule",
-				_language.get(_httpServletRequest, "unschedule"), "get",
+				_language.get(_httpServletRequest, "unschedule"), "post",
 				"schedule", "async"),
 			new FDSActionDropdownItem(
 				PortletURLBuilder.createRenderURL(

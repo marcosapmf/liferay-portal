@@ -16,7 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,14 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -43,11 +41,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents a collection viewport.",
 	value = "CollectionViewport"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "Represents a collection viewport.",
 	requiredProperties = {"id", "collectionViewportDefinition"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "CollectionViewport")
 public class CollectionViewport implements Serializable {
 
@@ -59,7 +57,9 @@ public class CollectionViewport implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(CollectionViewport.class, json);
 	}
 
-	@Schema(description = "The definition of the collection viewport.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The definition of the collection viewport."
+	)
 	@Valid
 	public CollectionViewportDefinition getCollectionViewportDefinition() {
 		if (_collectionViewportDefinitionSupplier != null) {
@@ -107,7 +107,9 @@ public class CollectionViewport implements Serializable {
 	private Supplier<CollectionViewportDefinition>
 		_collectionViewportDefinitionSupplier;
 
-	@Schema(description = "The collection viewport's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The collection viewport's ID."
+	)
 	public String getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -208,8 +210,8 @@ public class CollectionViewport implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.CollectionViewport",
 		name = "x-class-name"
 	)

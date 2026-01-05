@@ -21,9 +21,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -37,99 +40,28 @@ import org.osgi.service.component.annotations.Reference;
 public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 
 	@Override
-	public void validateConfiguration(String configuration)
+	public void validateConfiguration(JSONObject configurationJSONObject)
 		throws FragmentEntryConfigurationException {
 
-		validateConfigurationValues(configuration, null);
+		validateConfigurationValues(configurationJSONObject, null);
 	}
 
 	@Override
 	public void validateConfigurationValues(
-			String configuration, JSONObject valuesJSONObject)
+			JSONObject configurationJSONObject, JSONObject valuesJSONObject)
 		throws FragmentEntryConfigurationException {
 
-		if (Validator.isNull(configuration)) {
+		if (configurationJSONObject == null) {
 			return;
 		}
 
 		try {
-			_configurationJSONValidator.validate(configuration);
-
-			JSONObject configurationJSONObject = _jsonFactory.createJSONObject(
-				configuration);
-
-			JSONArray fieldSetsJSONArray = configurationJSONObject.getJSONArray(
-				"fieldSets");
-
-			Set<String> fieldNames = new HashSet<>();
-
-			for (int fieldSetIndex = 0;
-				 fieldSetIndex < fieldSetsJSONArray.length(); fieldSetIndex++) {
-
-				JSONObject fieldSetJSONObject =
-					fieldSetsJSONArray.getJSONObject(fieldSetIndex);
-
-				JSONArray fieldsJSONArray = fieldSetJSONObject.getJSONArray(
-					"fields");
-
-				for (int fieldIndex = 0; fieldIndex < fieldsJSONArray.length();
-					 fieldIndex++) {
-
-					JSONObject fieldJSONObject = fieldsJSONArray.getJSONObject(
-						fieldIndex);
-
-					String fieldName = fieldJSONObject.getString("name");
-
-					if (fieldNames.contains(fieldName)) {
-						throw new FragmentEntryConfigurationException(
-							"Field names must be unique");
-					}
-
-					JSONObject typeOptionsJSONObject =
-						fieldJSONObject.getJSONObject("typeOptions");
-
-					if (typeOptionsJSONObject != null) {
-						String defaultValue = fieldJSONObject.getString(
-							"defaultValue");
-
-						if (!_checkValidationRules(
-								defaultValue,
-								typeOptionsJSONObject.getJSONObject(
-									"validation"))) {
-
-							throw new FragmentEntryConfigurationException(
-								"Invalid default configuration value for " +
-									"field " + fieldName);
-						}
-
-						if (valuesJSONObject != null) {
-							String value = valuesJSONObject.getString(
-								fieldName);
-
-							if (!_checkValidationRules(
-									value,
-									typeOptionsJSONObject.getJSONObject(
-										"validation"))) {
-
-								throw new FragmentEntryConfigurationException(
-									"Invalid configuration value for field " +
-										fieldName);
-							}
-						}
-					}
-
-					fieldNames.add(fieldName);
-				}
-			}
+			_validateConfigurationValues(
+				configurationJSONObject, valuesJSONObject);
 		}
-		catch (JSONException jsonException) {
+		catch (Exception exception) {
 			throw new FragmentEntryConfigurationException(
-				_getMessage(jsonException.getMessage()), jsonException);
-		}
-		catch (JSONValidatorException jsonValidatorException) {
-			throw new FragmentEntryConfigurationException(
-				_getMessage(jsonValidatorException.getMessage()),
-				jsonValidatorException);
+				_getMessage(exception.getMessage()), exception);
 		}
 	}
 
@@ -171,6 +103,14 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 
 				throw new FragmentEntryFieldTypesException(
 					"Captcha field type cannot be mixed with other field " +
+						"types");
+			}
+
+			if ((fieldTypesJSONArray.length() > 1) &&
+				JSONUtil.hasValue(fieldTypesJSONArray, "stepper")) {
+
+				throw new FragmentEntryFieldTypesException(
+					"Stepper field type cannot be mixed with other field " +
 						"types");
 			}
 		}
@@ -238,6 +178,117 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 			System.lineSeparator(), message);
 	}
 
+	private void _validateConfigurationValues(
+			JSONObject configurationJSONObject, JSONObject valuesJSONObject)
+		throws Exception {
+
+		_configurationJSONValidator.validate(
+			_jsonFactory.toString(configurationJSONObject));
+
+		Set<String> fieldNames = new HashSet<>();
+
+		JSONArray fieldSetsJSONArray = configurationJSONObject.getJSONArray(
+			"fieldSets");
+
+		for (int i = 0; i < fieldSetsJSONArray.length(); i++) {
+			JSONObject fieldSetJSONObject = fieldSetsJSONArray.getJSONObject(i);
+
+			JSONArray fieldsJSONArray = fieldSetJSONObject.getJSONArray(
+				"fields");
+
+			Map<String, JSONObject> fieldJSONObjects = new HashMap<>(
+				fieldsJSONArray.length());
+
+			for (int j = 0; j < fieldsJSONArray.length(); j++) {
+				JSONObject fieldJSONObject = fieldsJSONArray.getJSONObject(j);
+
+				String fieldName = fieldJSONObject.getString("name");
+
+				if (fieldNames.contains(fieldName)) {
+					throw new FragmentEntryConfigurationException(
+						"Field names must be unique");
+				}
+
+				fieldNames.add(fieldName);
+
+				fieldJSONObjects.put(fieldName, fieldJSONObject);
+			}
+
+			for (Map.Entry<String, JSONObject> entry :
+					fieldJSONObjects.entrySet()) {
+
+				JSONObject fieldJSONObject = entry.getValue();
+
+				JSONObject typeOptionsJSONObject =
+					fieldJSONObject.getJSONObject("typeOptions");
+
+				if (typeOptionsJSONObject == null) {
+					continue;
+				}
+
+				String fieldName = entry.getKey();
+
+				String defaultValue = fieldJSONObject.getString("defaultValue");
+
+				if (!_checkValidationRules(
+						defaultValue,
+						typeOptionsJSONObject.getJSONObject("validation"))) {
+
+					throw new FragmentEntryConfigurationException(
+						"Invalid default configuration value for field \"" +
+							fieldName + "\"");
+				}
+
+				if (valuesJSONObject != null) {
+					String value = valuesJSONObject.getString(fieldName);
+
+					if (!_checkValidationRules(
+							value,
+							typeOptionsJSONObject.getJSONObject(
+								"validation"))) {
+
+						throw new FragmentEntryConfigurationException(
+							"Invalid configuration value for field \"" +
+								fieldName + "\"");
+					}
+				}
+
+				JSONObject dependencyJSONObject =
+					typeOptionsJSONObject.getJSONObject("dependency");
+
+				if (dependencyJSONObject == null) {
+					continue;
+				}
+
+				for (String key : dependencyJSONObject.keySet()) {
+					if (key.equals(fieldName)) {
+						throw new FragmentEntryConfigurationException(
+							"Dependency field cannot reference itself");
+					}
+
+					if (!fieldJSONObjects.containsKey(key)) {
+						throw new FragmentEntryConfigurationException(
+							"Dependency field cannot depend on field \"" + key +
+								"\" that does not exist");
+					}
+
+					JSONObject dependencyFieldJSONObject = fieldJSONObjects.get(
+						key);
+
+					if (!_allowedDependencyTypes.contains(
+							dependencyFieldJSONObject.getString("type"))) {
+
+						throw new FragmentEntryConfigurationException(
+							"Dependency field type should be checkbox, " +
+								"select, or text");
+					}
+				}
+			}
+		}
+	}
+
+	private static final Set<String> _allowedDependencyTypes =
+		SetUtil.fromArray("checkbox", "select", "text");
 	private static final JSONValidator _configurationJSONValidator =
 		new JSONValidator(
 			FragmentEntryValidatorImpl.class.getResource(

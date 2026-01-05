@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -52,7 +50,9 @@ public class CustomMetaTag implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(CustomMetaTag.class, json);
 	}
 
-	@Schema(description = "The custom metatag's key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The custom metatag's key."
+	)
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -91,7 +91,9 @@ public class CustomMetaTag implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
-	@Schema(description = "The custom metatag's value")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The custom metatag's value"
+	)
 	public String getValue() {
 		if (_valueSupplier != null) {
 			value = _valueSupplier.get();
@@ -132,7 +134,9 @@ public class CustomMetaTag implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _valueSupplier;
 
-	@Schema(description = "The localized custom metatag's values.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized custom metatag's values."
+	)
 	@Valid
 	public Map<String, String> getValue_i18n() {
 		if (_value_i18nSupplier != null) {
@@ -251,8 +255,8 @@ public class CustomMetaTag implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.CustomMetaTag",
 		name = "x-class-name"
 	)

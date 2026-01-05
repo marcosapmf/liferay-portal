@@ -30,12 +30,12 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -219,27 +219,15 @@ public class BookmarksDisplayContext {
 	}
 
 	public boolean isNavigationHome() {
-		if (Objects.equals(getNavigation(), "all")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getNavigation(), "all");
 	}
 
 	public boolean isNavigationMine() {
-		if (Objects.equals(getNavigation(), "mine")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getNavigation(), "mine");
 	}
 
 	public boolean isNavigationRecent() {
-		if (Objects.equals(getNavigation(), "recent")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getNavigation(), "recent");
 	}
 
 	private Long _getAssetCategoryId() {

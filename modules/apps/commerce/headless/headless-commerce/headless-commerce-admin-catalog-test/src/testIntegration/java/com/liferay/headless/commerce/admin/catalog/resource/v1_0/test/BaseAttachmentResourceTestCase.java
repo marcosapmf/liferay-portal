@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -22,6 +25,7 @@ import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.Attachment
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -29,22 +33,27 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,10 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -83,7 +88,7 @@ public abstract class BaseAttachmentResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -97,10 +102,25 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		_attachmentResource.setContextCompany(testCompany);
 
-		AttachmentResource.Builder builder = AttachmentResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		attachmentResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		attachmentResource = AttachmentResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +134,32 @@ public abstract class BaseAttachmentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Attachment attachment1 = randomAttachment();
+
+		String json = objectMapper.writeValueAsString(attachment1);
+
+		Attachment attachment2 = AttachmentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(attachment1, attachment2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Attachment attachment = randomAttachment();
+
+		String json1 = objectMapper.writeValueAsString(attachment);
+		String json2 = AttachmentSerDes.toJSON(attachment);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +174,6 @@ public abstract class BaseAttachmentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Attachment attachment1 = randomAttachment();
-
-		String json = objectMapper.writeValueAsString(attachment1);
-
-		Attachment attachment2 = AttachmentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(attachment1, attachment2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Attachment attachment = randomAttachment();
-
-		String json1 = objectMapper.writeValueAsString(attachment);
-		String json2 = AttachmentSerDes.toJSON(attachment);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -175,6 +186,8 @@ public abstract class BaseAttachmentResourceTestCase {
 		attachment.setCdnURL(regex);
 		attachment.setContentType(regex);
 		attachment.setExternalReferenceCode(regex);
+		attachment.setFileEntryExternalReferenceCode(regex);
+		attachment.setFileEntryGroupExternalReferenceCode(regex);
 		attachment.setSrc(regex);
 
 		String json = AttachmentSerDes.toJSON(attachment);
@@ -187,28 +200,11 @@ public abstract class BaseAttachmentResourceTestCase {
 		Assert.assertEquals(regex, attachment.getCdnURL());
 		Assert.assertEquals(regex, attachment.getContentType());
 		Assert.assertEquals(regex, attachment.getExternalReferenceCode());
+		Assert.assertEquals(
+			regex, attachment.getFileEntryExternalReferenceCode());
+		Assert.assertEquals(
+			regex, attachment.getFileEntryGroupExternalReferenceCode());
 		Assert.assertEquals(regex, attachment.getSrc());
-	}
-
-	@Test
-	public void testDeleteAttachmentByExternalReferenceCode() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Attachment attachment =
-			testDeleteAttachmentByExternalReferenceCode_addAttachment();
-
-		assertHttpResponseStatusCode(
-			204,
-			attachmentResource.
-				deleteAttachmentByExternalReferenceCodeHttpResponse(
-					attachment.getExternalReferenceCode()));
-	}
-
-	protected Attachment
-			testDeleteAttachmentByExternalReferenceCode_addAttachment()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -268,6 +264,317 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	protected Attachment testGraphQLDeleteAttachment_addAttachment()
+		throws Exception {
+
+		return testGraphQLAttachment_addAttachment();
+	}
+
+	@Test
+	public void testDeleteAttachmentBatch() throws Exception {
+		Attachment attachment1 = testDeleteAttachmentBatch_addAttachment();
+
+		testDeleteAttachmentBatch_deleteAttachment(
+			202, attachment1.getExternalReferenceCode(), null);
+
+		attachment1 = testDeleteAttachmentBatch_addAttachment();
+
+		testDeleteAttachmentBatch_deleteAttachment(
+			202, null, attachment1.getId());
+
+		attachment1 = testDeleteAttachmentBatch_addAttachment();
+		Attachment attachment2 = testDeleteAttachmentBatch_addAttachment();
+
+		testDeleteAttachmentBatch_deleteAttachment(
+			202, attachment2.getExternalReferenceCode(), attachment1.getId());
+
+		testDeleteAttachmentBatch_deleteAttachment(
+			202, attachment2.getExternalReferenceCode(), attachment1.getId());
+	}
+
+	protected Attachment testDeleteAttachmentBatch_addAttachment()
+		throws Exception {
+
+		return testDeleteAttachment_addAttachment();
+	}
+
+	protected void testDeleteAttachmentBatch_deleteAttachment(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			attachmentResource.deleteAttachmentBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteAttachmentByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Attachment attachment =
+			testDeleteAttachmentByExternalReferenceCode_addAttachment();
+
+		assertHttpResponseStatusCode(
+			204,
+			attachmentResource.
+				deleteAttachmentByExternalReferenceCodeHttpResponse(
+					attachment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			attachmentResource.getAttachmentByExternalReferenceCodeHttpResponse(
+				attachment.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			attachmentResource.getAttachmentByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected Attachment
+			testDeleteAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAttachmentByExternalReferenceCode()
+		throws Exception {
+
+		// No namespace
+
+		Attachment attachment1 =
+			testGraphQLDeleteAttachmentByExternalReferenceCode_addAttachment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAttachmentByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										attachment1.getExternalReferenceCode() +
+											"\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAttachmentByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"attachmentByExternalReferenceCode",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"externalReferenceCode",
+								"\"" + attachment1.getExternalReferenceCode() +
+									"\"");
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Attachment attachment2 =
+			testGraphQLDeleteAttachmentByExternalReferenceCode_addAttachment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteAttachmentByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										"\"" +
+											attachment2.
+												getExternalReferenceCode() +
+													"\"");
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteAttachmentByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"attachmentByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										attachment2.getExternalReferenceCode() +
+											"\"");
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Attachment
+			testGraphQLDeleteAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		return testGraphQLAttachment_addAttachment();
+	}
+
+	@Test
+	public void testGetAttachmentByExternalReferenceCode() throws Exception {
+		Attachment postAttachment =
+			testGetAttachmentByExternalReferenceCode_addAttachment();
+
+		Attachment getAttachment =
+			attachmentResource.getAttachmentByExternalReferenceCode(
+				postAttachment.getExternalReferenceCode());
+
+		assertEquals(postAttachment, getAttachment);
+		assertValid(getAttachment);
+	}
+
+	protected Attachment
+			testGetAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetAttachmentByExternalReferenceCode()
+		throws Exception {
+
+		Attachment attachment =
+			testGraphQLGetAttachmentByExternalReferenceCode_addAttachment();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				attachment,
+				AttachmentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"attachmentByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												attachment.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/attachmentByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				attachment,
+				AttachmentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"attachmentByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													attachment.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/attachmentByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetAttachmentByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"attachmentByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"attachmentByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Attachment
+			testGraphQLGetAttachmentByExternalReferenceCode_addAttachment()
 		throws Exception {
 
 		return testGraphQLAttachment_addAttachment();
@@ -353,11 +660,11 @@ public abstract class BaseAttachmentResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeAttachmentsPage_getExternalReferenceCode();
 
-		Page<Attachment> attachmentPage =
+		Page<Attachment> attachmentsPage =
 			attachmentResource.getProductByExternalReferenceCodeAttachmentsPage(
 				externalReferenceCode, null);
 
-		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(attachmentsPage.getTotalCount());
 
 		Attachment attachment1 =
 			testGetProductByExternalReferenceCodeAttachmentsPage_addAttachment(
@@ -470,75 +777,6 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeAttachment()
-		throws Exception {
-
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeAttachment_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeAttachment_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductByExternalReferenceCodeAttachmentByBase64()
-		throws Exception {
-
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeAttachmentByBase64_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeAttachmentByBase64_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductByExternalReferenceCodeAttachmentByUrl()
-		throws Exception {
-
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeAttachmentByUrl_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeAttachmentByUrl_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductByExternalReferenceCodeImagesPage()
 		throws Exception {
 
@@ -616,11 +854,11 @@ public abstract class BaseAttachmentResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeImagesPage_getExternalReferenceCode();
 
-		Page<Attachment> attachmentPage =
+		Page<Attachment> attachmentsPage =
 			attachmentResource.getProductByExternalReferenceCodeImagesPage(
 				externalReferenceCode, null);
 
-		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(attachmentsPage.getTotalCount());
 
 		Attachment attachment1 =
 			testGetProductByExternalReferenceCodeImagesPage_addAttachment(
@@ -725,73 +963,6 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeImage() throws Exception {
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeImage_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeImage_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductByExternalReferenceCodeImageByBase64()
-		throws Exception {
-
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeImageByBase64_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeImageByBase64_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductByExternalReferenceCodeImageByUrl()
-		throws Exception {
-
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductByExternalReferenceCodeImageByUrl_addAttachment(
-				randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment
-			testPostProductByExternalReferenceCodeImageByUrl_addAttachment(
-				Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdAttachmentsPage() throws Exception {
 		Long id = testGetProductIdAttachmentsPage_getId();
 		Long irrelevantId = testGetProductIdAttachmentsPage_getIrrelevantId();
@@ -855,10 +1026,10 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		Long id = testGetProductIdAttachmentsPage_getId();
 
-		Page<Attachment> attachmentPage =
+		Page<Attachment> attachmentsPage =
 			attachmentResource.getProductIdAttachmentsPage(id, null);
 
-		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(attachmentsPage.getTotalCount());
 
 		Attachment attachment1 = testGetProductIdAttachmentsPage_addAttachment(
 			id, randomAttachment());
@@ -954,63 +1125,6 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductIdAttachment() throws Exception {
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment = testPostProductIdAttachment_addAttachment(
-			randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment testPostProductIdAttachment_addAttachment(
-			Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductIdAttachmentByBase64() throws Exception {
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductIdAttachmentByBase64_addAttachment(randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment testPostProductIdAttachmentByBase64_addAttachment(
-			Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostProductIdAttachmentByUrl() throws Exception {
-		Attachment randomAttachment = randomAttachment();
-
-		Attachment postAttachment =
-			testPostProductIdAttachmentByUrl_addAttachment(randomAttachment);
-
-		assertEquals(randomAttachment, postAttachment);
-		assertValid(postAttachment);
-	}
-
-	protected Attachment testPostProductIdAttachmentByUrl_addAttachment(
-			Attachment attachment)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetProductIdImagesPage() throws Exception {
 		Long id = testGetProductIdImagesPage_getId();
 		Long irrelevantId = testGetProductIdImagesPage_getIrrelevantId();
@@ -1070,10 +1184,10 @@ public abstract class BaseAttachmentResourceTestCase {
 	public void testGetProductIdImagesPageWithPagination() throws Exception {
 		Long id = testGetProductIdImagesPage_getId();
 
-		Page<Attachment> attachmentPage =
+		Page<Attachment> attachmentsPage =
 			attachmentResource.getProductIdImagesPage(id, null);
 
-		int totalCount = GetterUtil.getInteger(attachmentPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(attachmentsPage.getTotalCount());
 
 		Attachment attachment1 = testGetProductIdImagesPage_addAttachment(
 			id, randomAttachment());
@@ -1163,6 +1277,233 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	@Test
+	public void testPatchAttachmentByExternalReferenceCode() throws Exception {
+		Attachment postAttachment =
+			testPatchAttachmentByExternalReferenceCode_addAttachment();
+
+		Attachment randomPatchAttachment = randomPatchAttachment();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Attachment patchAttachment =
+			attachmentResource.patchAttachmentByExternalReferenceCode(
+				postAttachment.getExternalReferenceCode(),
+				randomPatchAttachment);
+
+		Attachment expectedPatchAttachment = postAttachment.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchAttachment, expectedPatchAttachment);
+
+		Attachment getAttachment =
+			attachmentResource.getAttachmentByExternalReferenceCode(
+				patchAttachment.getExternalReferenceCode());
+
+		assertEquals(expectedPatchAttachment, getAttachment);
+		assertValid(getAttachment);
+	}
+
+	protected Attachment
+			testPatchAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeAttachment()
+		throws Exception {
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeAttachment_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeAttachment_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeAttachmentByBase64()
+		throws Exception {
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeAttachmentByBase64_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeAttachmentByBase64_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeAttachmentByUrl()
+		throws Exception {
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeAttachmentByUrl_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeAttachmentByUrl_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeImage() throws Exception {
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeImage_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeImage_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeImageByBase64()
+		throws Exception {
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeImageByBase64_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeImageByBase64_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeImageByUrl()
+		throws Exception {
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductByExternalReferenceCodeImageByUrl_addAttachment(
+				randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment
+			testPostProductByExternalReferenceCodeImageByUrl_addAttachment(
+				Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductIdAttachment() throws Exception {
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment = testPostProductIdAttachment_addAttachment(
+			randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment testPostProductIdAttachment_addAttachment(
+			Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductIdAttachmentByBase64() throws Exception {
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductIdAttachmentByBase64_addAttachment(randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment testPostProductIdAttachmentByBase64_addAttachment(
+			Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProductIdAttachmentByUrl() throws Exception {
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment postAttachment =
+			testPostProductIdAttachmentByUrl_addAttachment(randomAttachment);
+
+		assertEquals(randomAttachment, postAttachment);
+		assertValid(postAttachment);
+	}
+
+	protected Attachment testPostProductIdAttachmentByUrl_addAttachment(
+			Attachment attachment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostProductIdImage() throws Exception {
 		Attachment randomAttachment = randomAttachment();
 
@@ -1217,6 +1558,126 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAttachmentByExternalReferenceCode() throws Exception {
+		Attachment postAttachment =
+			testPutAttachmentByExternalReferenceCode_addAttachment();
+
+		Attachment randomAttachment = randomAttachment();
+
+		Attachment putAttachment =
+			attachmentResource.putAttachmentByExternalReferenceCode(
+				postAttachment.getExternalReferenceCode(), randomAttachment);
+
+		assertEquals(randomAttachment, putAttachment);
+		assertValid(putAttachment);
+
+		Attachment getAttachment =
+			attachmentResource.getAttachmentByExternalReferenceCode(
+				putAttachment.getExternalReferenceCode());
+
+		assertEquals(randomAttachment, getAttachment);
+		assertValid(getAttachment);
+
+		Attachment newAttachment =
+			testPutAttachmentByExternalReferenceCode_createAttachment();
+
+		putAttachment = attachmentResource.putAttachmentByExternalReferenceCode(
+			newAttachment.getExternalReferenceCode(), newAttachment);
+
+		assertEquals(newAttachment, putAttachment);
+		assertValid(putAttachment);
+
+		getAttachment = attachmentResource.getAttachmentByExternalReferenceCode(
+			putAttachment.getExternalReferenceCode());
+
+		assertEquals(newAttachment, getAttachment);
+
+		Assert.assertEquals(
+			newAttachment.getExternalReferenceCode(),
+			putAttachment.getExternalReferenceCode());
+	}
+
+	protected Attachment
+			testPutAttachmentByExternalReferenceCode_addAttachment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Attachment
+			testPutAttachmentByExternalReferenceCode_createAttachment()
+		throws Exception {
+
+		return randomAttachment();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Attachment attachment1 =
+			testBatchEngineDeleteImportTask_addAttachment();
+
+		testBatchEngineDeleteImportTask_deleteAttachment(
+			200, attachment1.getExternalReferenceCode(), null);
+
+		attachment1 = testBatchEngineDeleteImportTask_addAttachment();
+
+		testBatchEngineDeleteImportTask_deleteAttachment(
+			200, null, attachment1.getId());
+
+		attachment1 = testBatchEngineDeleteImportTask_addAttachment();
+		Attachment attachment2 =
+			testBatchEngineDeleteImportTask_addAttachment();
+
+		testBatchEngineDeleteImportTask_deleteAttachment(
+			200, attachment2.getExternalReferenceCode(), attachment1.getId());
+
+		testBatchEngineDeleteImportTask_deleteAttachment(
+			200, attachment2.getExternalReferenceCode(), attachment1.getId());
+	}
+
+	protected Attachment testBatchEngineDeleteImportTask_addAttachment()
+		throws Exception {
+
+		return testDeleteAttachment_addAttachment();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteAttachment(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	protected Attachment testGraphQLAttachment_addAttachment()
@@ -1369,6 +1830,30 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"fileEntryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (attachment.getFileEntryExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"fileEntryGroupExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (attachment.getFileEntryGroupExternalReferenceCode() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("fileEntryId", additionalAssertFieldName)) {
 				if (attachment.getFileEntryId() == null) {
 					valid = false;
@@ -1498,6 +1983,10 @@ public abstract class BaseAttachmentResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1640,6 +2129,34 @@ public abstract class BaseAttachmentResourceTestCase {
 				if (!Objects.deepEquals(
 						attachment1.getExternalReferenceCode(),
 						attachment2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"fileEntryExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						attachment1.getFileEntryExternalReferenceCode(),
+						attachment2.getFileEntryExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"fileEntryGroupExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						attachment1.getFileEntryGroupExternalReferenceCode(),
+						attachment2.getFileEntryGroupExternalReferenceCode())) {
 
 					return false;
 				}
@@ -2016,13 +2533,11 @@ public abstract class BaseAttachmentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2032,7 +2547,7 @@ public abstract class BaseAttachmentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(attachment.getDisplayDate()));
+				sb.append(_format.format(attachment.getDisplayDate()));
 			}
 
 			return sb.toString();
@@ -2047,13 +2562,11 @@ public abstract class BaseAttachmentResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2063,7 +2576,7 @@ public abstract class BaseAttachmentResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(attachment.getExpirationDate()));
+				sb.append(_format.format(attachment.getExpirationDate()));
 			}
 
 			return sb.toString();
@@ -2071,6 +2584,98 @@ public abstract class BaseAttachmentResourceTestCase {
 
 		if (entityFieldName.equals("externalReferenceCode")) {
 			Object object = attachment.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fileEntryExternalReferenceCode")) {
+			Object object = attachment.getFileEntryExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fileEntryGroupExternalReferenceCode")) {
+			Object object = attachment.getFileEntryGroupExternalReferenceCode();
 
 			String value = String.valueOf(object);
 
@@ -2263,6 +2868,10 @@ public abstract class BaseAttachmentResourceTestCase {
 				expirationDate = RandomTestUtil.nextDate();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				fileEntryExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				fileEntryGroupExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				fileEntryId = RandomTestUtil.randomLong();
 				galleryEnabled = RandomTestUtil.randomBoolean();
 				id = RandomTestUtil.randomLong();
@@ -2284,7 +2893,30 @@ public abstract class BaseAttachmentResourceTestCase {
 		return randomAttachment();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AttachmentResource attachmentResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -2294,12 +2926,12 @@ public abstract class BaseAttachmentResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2308,11 +2940,16 @@ public abstract class BaseAttachmentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2344,6 +2981,24 @@ public abstract class BaseAttachmentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2365,16 +3020,6 @@ public abstract class BaseAttachmentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2472,7 +3117,9 @@ public abstract class BaseAttachmentResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseAttachmentResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

@@ -27,11 +27,11 @@ import com.liferay.portal.lock.exception.NoSuchLockException;
 import com.liferay.portal.lock.model.Lock;
 import com.liferay.portal.lock.service.base.LockLocalServiceBaseImpl;
 
+import jakarta.persistence.PersistenceException;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import javax.persistence.PersistenceException;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -109,6 +109,11 @@ public class LockLocalServiceImpl extends LockLocalServiceBaseImpl {
 	@Override
 	public List<Lock> getLocks(long companyId, long userId, String className) {
 		return lockPersistence.findByC_U_C(companyId, userId, className);
+	}
+
+	@Override
+	public List<Lock> getLocks(long companyId, String className) {
+		return lockPersistence.findByC_C(companyId, className);
 	}
 
 	@Override

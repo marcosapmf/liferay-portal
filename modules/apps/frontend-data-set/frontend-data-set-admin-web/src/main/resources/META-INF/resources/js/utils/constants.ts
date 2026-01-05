@@ -5,19 +5,6 @@
 
 import {IBaseVisualizationMode} from './types';
 
-const API_URL = {
-	ACTIONS: '/o/data-set-manager/actions',
-	CARDS_SECTIONS: '/o/data-set-manager/cards-sections',
-	CLIENT_EXTENSION_FILTERS: '/o/data-set-manager/client-extension-filters',
-	DATA_SETS: '/o/data-set-manager/data-sets',
-	DATE_FILTERS: '/o/data-set-manager/date-filters',
-	FDS_ENTRIES: '/o/data-set-manager/entries',
-	LIST_SECTIONS: '/o/data-set-manager/list-sections',
-	SELECTION_FILTERS: '/o/data-set-manager/selection-filters',
-	SORTS: '/o/data-set-manager/sorts',
-	TABLE_SECTIONS: '/o/data-set-manager/table-sections',
-};
-
 const DEFAULT_FETCH_HEADERS = {
 	'Accept': 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
@@ -29,32 +16,17 @@ const FUZZY_OPTIONS = {
 	pre: '<strong>',
 };
 
+const OBJECT_RELATIONSHIP_PREFIX = 'dataSetTo';
+
 const OBJECT_RELATIONSHIP = {
-	DATA_SET_CARDS_SECTION: 'fdsViewFDSCardsSectionRelationship',
-	DATA_SET_CARDS_SECTION_ERC:
-		'r_fdsViewFDSCardsSectionRelationship_c_fdsViewERC',
-	DATA_SET_CLIENT_EXTENSION_FILTER: 'fdsViewFDSClientExtensionFilter',
-	DATA_SET_CLIENT_EXTENSION_FILTER_ID:
-		'r_fdsViewFDSClientExtensionFilter_c_fdsViewId',
-	DATA_SET_CREATION_ACTION: 'fdsViewFDSCreationActionRelationship',
-	DATA_SET_CREATION_ACTION_ID:
-		'r_fdsViewFDSCreationActionRelationship_c_fdsViewId',
-	DATA_SET_DATE_FILTER: 'fdsViewFDSDateFilterRelationship',
-	DATA_SET_DATE_FILTER_ID: 'r_fdsViewFDSDateFilterRelationship_c_fdsViewId',
-	DATA_SET_ITEM_ACTION: 'fdsViewFDSItemActionRelationship',
-	DATA_SET_ITEM_ACTION_ID: 'r_fdsViewFDSItemActionRelationship_c_fdsViewId',
-	DATA_SET_LIST_SECTION: 'fdsViewFDSListSectionRelationship',
-	DATA_SET_LIST_SECTION_ERC:
-		'r_fdsViewFDSListSectionRelationship_c_fdsViewERC',
-	DATA_SET_SELECTION_FILTER: 'fdsViewFDSDynamicFilterRelationship',
-	DATA_SET_SELECTION_FILTER_ID:
-		'r_fdsViewFDSDynamicFilterRelationship_c_fdsViewId',
-	DATA_SET_SORT: 'fdsViewFDSSortRelationship',
-	DATA_SET_SORT_ID: 'r_fdsViewFDSSortRelationship_c_fdsViewId',
-	DATA_SET_TABLE_SECTION: 'fdsViewFDSFieldRelationship',
-	DATA_SET_TABLE_SECTION_ID: 'r_fdsViewFDSFieldRelationship_c_fdsViewId',
-	FDS_ENTRY_FDS_VIEW: 'fdsEntryFDSViewRelationship',
-	FDS_ENTRY_FDS_VIEW_ID: 'r_fdsEntryFDSViewRelationship_c_fdsEntryId',
+	DATA_SET_ACTIONS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetActions`,
+	DATA_SET_CARDS_SECTIONS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetCardsSections`,
+	DATA_SET_CLIENT_EXTENSION_FILTERS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetClientExtensionFilters`,
+	DATA_SET_DATE_FILTERS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetDateFilters`,
+	DATA_SET_LIST_SECTIONS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetListSections`,
+	DATA_SET_SELECTION_FILTERS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetSelectionFilters`,
+	DATA_SET_SORTS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetSorts`,
+	DATA_SET_TABLE_SECTIONS: `${OBJECT_RELATIONSHIP_PREFIX}DataSetTableSections`,
 } as const;
 
 const FDS_DEFAULT_PROPS = {
@@ -62,7 +34,6 @@ const FDS_DEFAULT_PROPS = {
 		deltas: [{label: 4}, {label: 8}, {label: 20}, {label: 40}, {label: 60}],
 		initialDelta: 8,
 	},
-	style: 'fluid' as const,
 };
 
 const DEFAULT_VISUALIZATION_MODES: Array<IBaseVisualizationMode<any>> = [
@@ -88,12 +59,14 @@ const DEFAULT_VISUALIZATION_MODES: Array<IBaseVisualizationMode<any>> = [
 
 const ALLOWED_ENDPOINTS_PARAMETERS = ['scopeKey', 'siteId', 'userId'];
 
+const PAGE_SIZE = '100';
+
 export {
-	API_URL,
 	DEFAULT_VISUALIZATION_MODES,
 	FDS_DEFAULT_PROPS,
 	FUZZY_OPTIONS,
 	DEFAULT_FETCH_HEADERS,
 	OBJECT_RELATIONSHIP,
 	ALLOWED_ENDPOINTS_PARAMETERS,
+	PAGE_SIZE,
 };

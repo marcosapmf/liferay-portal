@@ -16,7 +16,13 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,27 +32,19 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Jaclyn Ong
  * @generated
  */
 @Generated("")
 @GraphQLName("PunchOutSession")
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	requiredProperties = {
 		"buyerAccountReferenceCode", "buyerGroup", "buyerUser", "cart",
 		"punchOutReturnURL", "punchOutSessionType"
 	}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PunchOutSession")
 public class PunchOutSession implements Serializable {
 
@@ -58,7 +56,7 @@ public class PunchOutSession implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PunchOutSession.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getBuyerAccountReferenceCode() {
 		if (_buyerAccountReferenceCodeSupplier != null) {
 			buyerAccountReferenceCode =
@@ -102,7 +100,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _buyerAccountReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Group getBuyerGroup() {
 		if (_buyerGroupSupplier != null) {
@@ -145,7 +143,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<Group> _buyerGroupSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Organization getBuyerOrganization() {
 		if (_buyerOrganizationSupplier != null) {
@@ -188,7 +186,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<Organization> _buyerOrganizationSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public User getBuyerUser() {
 		if (_buyerUserSupplier != null) {
@@ -231,7 +229,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<User> _buyerUserSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Cart getCart() {
 		if (_cartSupplier != null) {
@@ -272,7 +270,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<Cart> _cartSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPunchOutReturnURL() {
 		if (_punchOutReturnURLSupplier != null) {
 			punchOutReturnURL = _punchOutReturnURLSupplier.get();
@@ -314,7 +312,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _punchOutReturnURLSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPunchOutSessionType() {
 		if (_punchOutSessionTypeSupplier != null) {
 			punchOutSessionType = _punchOutSessionTypeSupplier.get();
@@ -356,7 +354,7 @@ public class PunchOutSession implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _punchOutSessionTypeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPunchOutStartURL() {
 		if (_punchOutStartURLSupplier != null) {
 			punchOutStartURL = _punchOutStartURLSupplier.get();
@@ -541,8 +539,8 @@ public class PunchOutSession implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.punchout.dto.v1_0.PunchOutSession",
 		name = "x-class-name"
 	)

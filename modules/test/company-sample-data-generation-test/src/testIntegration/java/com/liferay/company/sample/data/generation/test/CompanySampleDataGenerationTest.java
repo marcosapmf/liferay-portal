@@ -30,11 +30,11 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -114,8 +114,8 @@ public class CompanySampleDataGenerationTest {
 				futures.add(
 					_executorService.submit(
 						() -> {
-							BufferedIncrementThreadLocal.setWithSafeCloseable(
-								true);
+							BufferedIncrementThreadLocal.
+								setForceSyncWithSafeCloseable(true);
 
 							_addCompany(companyIndex);
 
@@ -154,7 +154,7 @@ public class CompanySampleDataGenerationTest {
 			// Add user
 
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 						company.getCompanyId())) {
 
 				int originalCompanyUsersCount =

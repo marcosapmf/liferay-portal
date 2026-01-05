@@ -6,7 +6,7 @@
 package com.liferay.info.collection.provider.item.selector.web.internal.item.selector;
 
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
-import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.RelatedInfoItemCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnType;
@@ -15,19 +15,19 @@ import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ListUtil;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,14 +82,14 @@ public class RelatedInfoItemCollectionProviderItemSelectorView
 				relatedInfoItemCollectionProviderItemSelectorCriterion) {
 
 		List<RelatedInfoItemCollectionProvider<?, ?>>
-			itemRelatedItemsProviders = new ArrayList<>();
+			relatedInfoItemCollectionProviders = new ArrayList<>();
 
 		List<String> itemTypes =
 			relatedInfoItemCollectionProviderItemSelectorCriterion.
 				getSourceItemTypes();
 
 		for (String itemType : itemTypes) {
-			itemRelatedItemsProviders.addAll(
+			relatedInfoItemCollectionProviders.addAll(
 				ListUtil.filter(
 					_infoItemServiceRegistry.getAllInfoItemServices(
 						(Class<RelatedInfoItemCollectionProvider<?, ?>>)
@@ -98,7 +98,7 @@ public class RelatedInfoItemCollectionProviderItemSelectorView
 					RelatedInfoItemCollectionProvider::isAvailable));
 		}
 
-		return Collections.unmodifiableList(itemRelatedItemsProviders);
+		return Collections.unmodifiableList(relatedInfoItemCollectionProviders);
 	}
 
 	private static final List<ItemSelectorReturnType>

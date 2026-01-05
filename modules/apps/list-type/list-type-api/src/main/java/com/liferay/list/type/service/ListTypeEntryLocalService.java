@@ -73,7 +73,8 @@ public interface ListTypeEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ListTypeEntry addListTypeEntry(
 			String externalReferenceCode, long userId,
-			long listTypeDefinitionId, String key, Map<Locale, String> nameMap)
+			long listTypeDefinitionId, String key, Map<Locale, String> nameMap,
+			boolean system)
 		throws PortalException;
 
 	/**
@@ -263,6 +264,9 @@ public interface ListTypeEntryLocalService
 		long listTypeDefinitionId, int start, int end,
 		OrderByComparator<ListTypeEntry> orderByComparator);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ListTypeEntry> getListTypeEntries(long[] listTypeDefinitionIds);
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -308,6 +312,12 @@ public interface ListTypeEntryLocalService
 			String uuid, long companyId)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ListTypeEntry getOrAddEmptyListTypeEntry(
+			long userId, long listTypeDefinitionId, String key)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -340,6 +350,9 @@ public interface ListTypeEntryLocalService
 	public ListTypeEntry updateListTypeEntry(
 			String externalReferenceCode, long listTypeEntryId,
 			Map<Locale, String> nameMap)
+		throws PortalException;
+
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
 		throws PortalException;
 
 }

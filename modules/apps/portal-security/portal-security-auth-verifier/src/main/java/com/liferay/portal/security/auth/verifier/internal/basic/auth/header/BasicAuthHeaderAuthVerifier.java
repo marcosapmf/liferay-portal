@@ -18,9 +18,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.security.auth.http.HttpAuthManagerUtil;
 
-import java.util.Properties;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Properties;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,15 +61,11 @@ public class BasicAuthHeaderAuthVerifier implements AuthVerifier {
 			return authVerifierResult;
 		}
 		catch (AutoLoginException autoLoginException) {
-			if (_isBasicAuth(accessControlContext, properties)) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(autoLoginException);
-				}
-
-				return _generateChallenge(accessControlContext);
+			if (_log.isDebugEnabled()) {
+				_log.debug(autoLoginException);
 			}
 
-			throw new AuthException(autoLoginException);
+			return _generateChallenge(accessControlContext);
 		}
 	}
 

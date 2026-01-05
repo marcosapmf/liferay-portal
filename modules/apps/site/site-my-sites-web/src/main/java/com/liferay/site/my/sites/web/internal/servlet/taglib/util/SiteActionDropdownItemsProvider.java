@@ -21,13 +21,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -203,13 +203,8 @@ public class SiteActionDropdownItemsProvider {
 			return false;
 		}
 
-		if (SiteMembershipPolicyUtil.isMembershipRequired(
-				_themeDisplay.getUserId(), _group.getGroupId())) {
-
-			return false;
-		}
-
-		return true;
+		return !SiteMembershipPolicyUtil.isMembershipRequired(
+			_themeDisplay.getUserId(), _group.getGroupId());
 	}
 
 	private boolean _isShowMembershipRequestAction() throws Exception {
@@ -227,14 +222,9 @@ public class SiteActionDropdownItemsProvider {
 	}
 
 	private boolean _isShowMembershipRequestedAction() {
-		if (MembershipRequestLocalServiceUtil.hasMembershipRequest(
-				_themeDisplay.getUserId(), _group.getGroupId(),
-				MembershipRequestConstants.STATUS_PENDING)) {
-
-			return true;
-		}
-
-		return false;
+		return MembershipRequestLocalServiceUtil.hasMembershipRequest(
+			_themeDisplay.getUserId(), _group.getGroupId(),
+			MembershipRequestConstants.STATUS_PENDING);
 	}
 
 	private final Group _group;

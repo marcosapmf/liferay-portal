@@ -5,7 +5,10 @@
 
 package com.liferay.commerce.internal.order.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.role.AccountRolePermissionThreadLocal;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceWebKeys;
@@ -26,6 +29,7 @@ import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -39,6 +43,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -49,12 +54,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.theme.ThemeDisplayFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.frutilla.FrutillaRule;
 
@@ -152,7 +157,7 @@ public class CommerceOrderHttpHelperImplTest {
 			_commerceOrderLocalService.deleteCommerceOrder(commerceOrder);
 		}
 
-		CentralizedThreadLocal.clearShortLivedThreadLocals();
+		CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
 	}
 
 	@Test
@@ -178,6 +183,24 @@ public class CommerceOrderHttpHelperImplTest {
 
 		Assert.assertEquals(
 			expectedCommerceOrder.getCommerceOrderId(),
+			actualCommerceOrder.getCommerceOrderId());
+
+		CommerceOrder commerceOrder =
+			_commerceOrderLocalService.addCommerceOrder(
+				_user.getUserId(), _commerceChannel.getGroupId(),
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
+
+		_commerceOrders.add(commerceOrder);
+
+		actualCommerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
+			_httpServletRequest);
+
+		Assert.assertEquals(
+			expectedCommerceOrder.getCommerceOrderId(),
+			actualCommerceOrder.getCommerceOrderId());
+		Assert.assertNotEquals(
+			commerceOrder.getCommerceOrderId(),
 			actualCommerceOrder.getCommerceOrderId());
 	}
 
@@ -228,6 +251,78 @@ public class CommerceOrderHttpHelperImplTest {
 					_httpServletRequest)));
 	}
 
+	@Test
+	public void testGetCommerceOrderWithNullCommerceContext() throws Exception {
+		frutillaRule.scenario(
+			"Attempt to get a commerce order from http servlet request"
+		).given(
+			"An HttpServletRequest and a ThemeDisplay"
+		).when(
+			"I use an empty HttpServletRequest with null CommerceContext"
+		).then(
+			"I should get a null value"
+		);
+
+		CommerceOrder commerceOrder =
+			_commerceOrderHttpHelper.getCurrentCommerceOrder(
+				new MockHttpServletRequest());
+
+		Assert.assertNull(commerceOrder);
+	}
+
+	@Test
+	public void testSetCurrentCommerceOrder() throws Exception {
+		CommerceOrder commerceOrder = _commerceOrderHttpHelper.addCommerceOrder(
+			_httpServletRequest);
+
+		_commerceOrders.add(commerceOrder);
+
+		try (SafeCloseable safeCloseable =
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(
+						RandomTestUtil.nextInt())) {
+
+			_commerceOrderHttpHelper.setCurrentCommerceOrder(
+				_httpServletRequest, commerceOrder);
+
+			Assert.assertEquals(
+				commerceOrder.getCommerceAccountId(),
+				AccountRolePermissionThreadLocal.getAccountEntryId());
+		}
+
+		_accountEntry.setType(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS);
+
+		_accountEntry = _accountEntryLocalService.updateAccountEntry(
+			_accountEntry);
+
+		try (SafeCloseable safeCloseable =
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(
+						RandomTestUtil.nextInt())) {
+
+			_commerceOrderHttpHelper.setCurrentCommerceOrder(
+				_httpServletRequest, commerceOrder);
+
+			Assert.fail();
+		}
+		catch (PortalException portalException) {
+			Assert.assertNotNull(portalException);
+		}
+
+		try (SafeCloseable safeCloseable =
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(
+						commerceOrder.getCommerceAccountId())) {
+
+			_commerceOrderHttpHelper.setCurrentCommerceOrder(
+				_httpServletRequest, commerceOrder);
+
+			Assert.assertEquals(
+				commerceOrder.getCommerceAccountId(),
+				AccountRolePermissionThreadLocal.getAccountEntryId());
+		}
+	}
+
 	@Rule
 	public FrutillaRule frutillaRule = new FrutillaRule();
 
@@ -235,6 +330,9 @@ public class CommerceOrderHttpHelperImplTest {
 
 	@DeleteAfterTestRun
 	private AccountEntry _accountEntry;
+
+	@Inject
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;

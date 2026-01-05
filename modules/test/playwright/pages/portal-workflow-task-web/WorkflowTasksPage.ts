@@ -7,16 +7,25 @@ import {Locator, Page} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
-import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import {waitForAlert} from '../../utils/waitForAlert';
 
 export class WorkflowTasksPage {
 	readonly assignedToMyRolesLink: Locator;
+	readonly performanceTab: Locator;
+	readonly processSingleAprover: Locator;
 	readonly page: Page;
 
 	constructor(page: Page) {
 		this.assignedToMyRolesLink = page.getByRole('link', {
 			name: 'Assigned to my roles',
 		});
+
+		this.processSingleAprover = page
+			.getByRole('cell', {name: 'Single Approver'})
+			.getByRole('link');
+
+		this.performanceTab = page.getByRole('link', {name: 'Performance'});
+
 		this.page = page;
 	}
 
@@ -35,9 +44,7 @@ export class WorkflowTasksPage {
 	}
 
 	async approve(articleTitle: string) {
-		const row = await this.page
-			.getByRole('row')
-			.filter({hasText: articleTitle});
+		const row = this.page.getByRole('row').filter({hasText: articleTitle});
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,
@@ -49,7 +56,7 @@ export class WorkflowTasksPage {
 
 		await this.page.getByRole('button', {name: 'Done'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async assignToMe(articleTitle: string) {
@@ -75,7 +82,31 @@ export class WorkflowTasksPage {
 			.getByRole('button', {name: 'Done'})
 			.click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
+	}
+
+	async assignToUser(articleTitle: string, user: TUserAccount) {
+		const row = this.page.getByRole('row').filter({hasText: articleTitle});
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page
+				.locator('.dropdown-menu:visible')
+				.getByText('Assign to...', {exact: true}),
+			trigger: row.locator('.dropdown-toggle'),
+		});
+
+		await this.page
+			.frameLocator(`iframe[title="Assign to..."]`)
+			.getByRole('combobox')
+			.selectOption({
+				label: `${user.alternateName} (${user.givenName} ${user.givenName})`,
+			});
+
+		await this.page
+			.frameLocator(`iframe[title="Assign to..."]`)
+			.getByRole('button', {name: 'Done'})
+			.click();
 	}
 
 	async reject(articleTitle: string) {
@@ -93,7 +124,7 @@ export class WorkflowTasksPage {
 
 		await this.page.getByRole('button', {name: 'Done'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
 	}
 
 	async resubmit(articleTitle: string) {
@@ -115,6 +146,32 @@ export class WorkflowTasksPage {
 
 		await this.page.getByRole('button', {name: 'Done'}).click();
 
-		await waitForSuccessAlert(this.page);
+		await waitForAlert(this.page);
+	}
+
+	async updateDueDate(articleTitle: string, date: string) {
+		const currDate = new Date();
+
+		const year = currDate.getFullYear() + 1;
+
+		const row = this.page.getByRole('row').filter({hasText: articleTitle});
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page
+				.locator('.dropdown-menu:visible')
+				.getByText('Update Due Date', {exact: true}),
+			trigger: row.locator('.dropdown-toggle'),
+		});
+
+		const frame = this.page.frameLocator('iframe[title="Update Due Date"]');
+
+		await frame
+			.getByRole('textbox', {name: 'Due Date'})
+			.fill(`${date}/${year}`);
+
+		await frame.getByRole('textbox', {name: 'Due Date'}).click();
+
+		await frame.getByRole('button', {name: 'Done'}).click();
 	}
 }

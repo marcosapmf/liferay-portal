@@ -58,12 +58,12 @@ public class BatchEngineExportTaskLocalServiceUtil {
 	public static BatchEngineExportTask addBatchEngineExportTask(
 		String externalReferenceCode, long companyId, long userId,
 		String callbackURL, String className, String contentType,
-		String executeStatus, List<String> fieldNamesList,
+		String executeStatus, List<String> fieldNames,
 		Map<String, Serializable> parameters, String taskItemDelegateName) {
 
 		return getService().addBatchEngineExportTask(
 			externalReferenceCode, companyId, userId, callbackURL, className,
-			contentType, executeStatus, fieldNamesList, parameters,
+			contentType, executeStatus, fieldNames, parameters,
 			taskItemDelegateName);
 	}
 
@@ -78,6 +78,18 @@ public class BatchEngineExportTaskLocalServiceUtil {
 
 		return getService().createBatchEngineExportTask(
 			batchEngineExportTaskId);
+	}
+
+	public static BatchEngineExportTask createBatchEngineExportTask(
+		long batchEngineExportTaskId, String externalReferenceCode,
+		long companyId, long userId, String callbackURL, String className,
+		String contentType, String executeStatus, List<String> fieldNames,
+		Map<String, Serializable> parameters, String taskItemDelegateName) {
+
+		return getService().createBatchEngineExportTask(
+			batchEngineExportTaskId, externalReferenceCode, companyId, userId,
+			callbackURL, className, contentType, executeStatus, fieldNames,
+			parameters, taskItemDelegateName);
 	}
 
 	/**

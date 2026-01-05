@@ -5,20 +5,22 @@
 
 package com.liferay.object.web.internal.object.entries.portlet.action;
 
+import com.liferay.object.exception.ObjectEntryGroupIdException;
 import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 /**
  * @author Marco Leo
@@ -29,11 +31,11 @@ public class EditObjectEntryRelatedModelMVCActionCommand
 	public EditObjectEntryRelatedModelMVCActionCommand(
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
-		Portal portal) {
+		ObjectRelationshipService objectRelationshipService) {
 
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
-		_portal = portal;
+		_objectRelationshipService = objectRelationshipService;
 	}
 
 	@Override
@@ -70,21 +72,33 @@ public class EditObjectEntryRelatedModelMVCActionCommand
 				_objectDefinitionLocalService.getObjectDefinition(
 					objectRelationship.getObjectDefinitionId2());
 
-			_objectRelationshipLocalService.
-				addObjectRelationshipMappingTableValues(
-					_portal.getUserId(actionRequest), objectRelationshipId,
-					objectEntryId, objectRelationshipPrimaryKey2,
-					ServiceContextFactory.getInstance(
-						objectDefinition.getClassName(), actionRequest));
+			_objectRelationshipService.addObjectRelationshipMappingTableValues(
+				objectRelationshipId, objectEntryId,
+				objectRelationshipPrimaryKey2,
+				ServiceContextFactory.getInstance(
+					objectDefinition.getClassName(), actionRequest));
 		}
 		catch (Exception exception) {
-			if (exception instanceof ObjectEntryValuesException) {
+			if (exception instanceof ObjectEntryGroupIdException ||
+				exception instanceof ObjectEntryValuesException) {
+
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				String redirect = ParamUtil.getString(
 					actionRequest, "redirect");
 
 				sendRedirect(actionRequest, actionResponse, redirect);
+			}
+			else if (exception instanceof
+						PrincipalException.MustHavePermission) {
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				hideDefaultErrorMessage(actionRequest);
+
+				sendRedirect(
+					actionRequest, actionResponse,
+					ParamUtil.getString(actionRequest, "redirect"));
 			}
 			else {
 				throw exception;
@@ -95,6 +109,6 @@ public class EditObjectEntryRelatedModelMVCActionCommand
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
-	private final Portal _portal;
+	private final ObjectRelationshipService _objectRelationshipService;
 
 }

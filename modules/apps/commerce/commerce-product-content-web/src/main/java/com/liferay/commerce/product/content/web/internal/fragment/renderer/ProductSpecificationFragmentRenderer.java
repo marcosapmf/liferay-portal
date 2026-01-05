@@ -34,16 +34,15 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,11 +59,8 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", getClass());
 
 		try {
 			JSONObject jsonObject = _jsonFactory.createJSONObject(
@@ -75,14 +71,15 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 							"/dependencies/configuration.json"));
 
 			return _fragmentEntryConfigurationParser.translateConfiguration(
-				jsonObject, resourceBundle);
+				jsonObject,
+				ResourceBundleUtil.getBundle("content.Language", getClass()));
 		}
 		catch (JSONException jsonException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(jsonException);
 			}
 
-			return StringPool.BLANK;
+			return null;
 		}
 	}
 
@@ -103,15 +100,11 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher(
-				"/fragment/renderer/product_specification/page.jsp");
-
-		Object infoItem = httpServletRequest.getAttribute(
-			InfoDisplayWebKeys.INFO_ITEM);
-
 		try {
-			if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+			Object infoItem = httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM);
+
+			if (!(infoItem instanceof CPDefinition)) {
 				if (_isEditMode(httpServletRequest)) {
 					_printPortletMessageInfo(
 						httpServletRequest, httpServletResponse,
@@ -121,6 +114,10 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 
 				return;
 			}
+
+			RequestDispatcher requestDispatcher =
+				_servletContext.getRequestDispatcher(
+					"/fragment/renderer/product_specification/page.jsp");
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)httpServletRequest.getAttribute(
@@ -198,6 +195,22 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 						fragmentRendererContext.getFragmentEntryLink(),
 						"valueElementType")));
 
+			if (cpDefinitionSpecificationOptionValue != null) {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
+
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					cpDefinitionSpecificationOptionValue.isVisible() &&
+					cpSpecificationOption.isVisible());
+			}
+			else {
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					Boolean.FALSE);
+			}
+
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
@@ -209,8 +222,8 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 		FragmentEntryLink fragmentEntryLink, String name) {
 
 		return _fragmentEntryConfigurationParser.getFieldValue(
-			fragmentEntryLink.getConfiguration(),
-			fragmentEntryLink.getEditableValues(),
+			fragmentEntryLink.getConfigurationJSONObject(),
+			fragmentEntryLink.getEditableValuesJSONObject(),
 			LocaleUtil.getMostRelevantLocale(), name);
 	}
 
@@ -221,39 +234,20 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 		String layoutMode = ParamUtil.getString(
 			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	private void _printPortletMessageInfo(
-		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse, String message) {
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String message)
+		throws IOException {
 
-		try {
-			PrintWriter printWriter = httpServletResponse.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
-			StringBundler sb = new StringBundler(3);
-
-			sb.append("<div class=\"portlet-msg-info\">");
-
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			sb.append(themeDisplay.translate(message));
-
-			sb.append("</div>");
-
-			printWriter.write(sb.toString());
-		}
-		catch (IOException ioException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(ioException);
-			}
-		}
+		printWriter.write(
+			StringBundler.concat(
+				"<div class=\"portlet-msg-info\">",
+				_language.get(httpServletRequest, message), "</div>"));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

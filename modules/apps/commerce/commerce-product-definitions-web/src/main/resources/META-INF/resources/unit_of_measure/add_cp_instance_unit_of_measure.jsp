@@ -16,6 +16,7 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 <commerce-ui:modal-content
 	submitButtonLabel='<%= LanguageUtil.get(request, "add") %>'
 	title='<%= LanguageUtil.get(request, "add-unit-of-measure") %>'
+	useNativeSubmit="<%= false %>"
 >
 	<portlet:actionURL name="/cp_definitions/edit_cp_instance_unit_of_measure" var="editCPInstanceUnitOfMeasureActionURL" />
 
@@ -34,7 +35,10 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 			<aui:input name="primary" type="hidden" value="<%= true %>" />
 		</c:if>
 
+		<liferay-ui:error exception="<%= CommercePriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureIncrementalOrderQuantityException.class %>" message="decimals-allowed-cannot-be-less-than-the-number-of-decimals-in-the-base-unit-quantity" />
+		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasurePriceException.class %>" message="please-enter-a-valid-price" />
+		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureQuantityException.class %>" message="please-enter-a-valid-quantity" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureRateException.class %>" message="conversion-rate-quantity-must-be-greater-than-zero" />
 		<liferay-ui:error exception="<%= DuplicateCPInstanceUnitOfMeasureKeyException.class %>" message="there-is-another-unit-of-measure-with-the-same-key" />
 
@@ -50,7 +54,7 @@ CPInstance cpInstance = cpInstanceUnitOfMeasureDisplayContext.getCPInstance();
 					<label class="field-label"><liferay-ui:message key="primary-unit-of-measure" /></label>
 
 					<div class="col-6 form-group">
-						<%= cpInstanceUnitOfMeasureDisplayContext.getPrimaryCPInstanceUnitOfMeasureName() %>
+						<%= HtmlUtil.escape(cpInstanceUnitOfMeasureDisplayContext.getPrimaryCPInstanceUnitOfMeasureName()) %>
 					</div>
 				</div>
 			</div>

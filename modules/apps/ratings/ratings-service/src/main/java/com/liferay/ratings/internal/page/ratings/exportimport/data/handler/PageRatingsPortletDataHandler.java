@@ -33,10 +33,10 @@ import com.liferay.ratings.kernel.model.RatingsEntry;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 import com.liferay.ratings.page.ratings.constants.PageRatingsPortletKeys;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -46,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + PageRatingsPortletKeys.PAGE_RATINGS,
+	property = "jakarta.portlet.name=" + PageRatingsPortletKeys.PAGE_RATINGS,
 	service = PortletDataHandler.class
 )
 public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
@@ -66,13 +66,14 @@ public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
 		setDataLevel(DataLevel.PORTLET_INSTANCE);
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(RatingsEntry.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "ratings-entries", true, false, null,
 				RatingsEntry.class.getName(),
 				StagedModelType.REFERRER_CLASS_NAME_ALL));
 		setPublishToLiveByDefault(true);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override

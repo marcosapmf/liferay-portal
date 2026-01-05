@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -21,6 +21,7 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.commerce.exception.CommerceGeocoderException" %><%@
 page import="com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseActiveException" %><%@
+page import="com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseItemQuantityException" %><%@
 page import="com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseNameException" %><%@
 page import="com.liferay.commerce.inventory.exception.DuplicateCommerceInventoryWarehouseExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.inventory.exception.MVCCException" %><%@
@@ -42,16 +43,15 @@ page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %>
+
+<%@ page import="jakarta.portlet.PortletURL" %>
 
 <%@ page import="java.math.BigDecimal" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

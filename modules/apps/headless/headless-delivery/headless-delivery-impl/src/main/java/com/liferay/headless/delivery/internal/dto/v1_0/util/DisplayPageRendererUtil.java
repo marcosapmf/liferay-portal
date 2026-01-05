@@ -26,7 +26,7 @@ import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
@@ -37,10 +37,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.JaxRsLinkUtil;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriInfo;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -57,7 +57,7 @@ public class DisplayPageRendererUtil {
 		long groupId, Object item,
 		InfoItemServiceRegistry infoItemServiceRegistry,
 		LayoutDisplayPageProviderRegistry layoutDisplayPageProviderRegistry,
-		LayoutLocalService layoutLocalService,
+		LayoutService layoutService,
 		LayoutPageTemplateEntryService layoutPageTemplateEntryService,
 		String methodName) {
 
@@ -104,8 +104,7 @@ public class DisplayPageRendererUtil {
 								new DummyHttpServletResponse(), item,
 								infoItemServiceRegistry,
 								layoutDisplayPageProviderRegistry,
-								layoutLocalService,
-								layoutPageTemplateEntryService);
+								layoutService, layoutPageTemplateEntryService);
 						});
 				}
 			},
@@ -118,7 +117,7 @@ public class DisplayPageRendererUtil {
 			HttpServletResponse httpServletResponse, Object item,
 			InfoItemServiceRegistry infoItemServiceRegistry,
 			LayoutDisplayPageProviderRegistry layoutDisplayPageProviderRegistry,
-			LayoutLocalService layoutLocalService,
+			LayoutService layoutService,
 			LayoutPageTemplateEntryService layoutPageTemplateEntryService)
 		throws Exception {
 
@@ -135,7 +134,7 @@ public class DisplayPageRendererUtil {
 			throw new NoSuchPageTemplateEntryException();
 		}
 
-		Layout layout = layoutLocalService.getLayout(
+		Layout layout = layoutService.getLayout(
 			layoutPageTemplateEntry.getPlid());
 
 		httpServletRequest = DynamicServletRequest.addQueryString(

@@ -11,24 +11,26 @@ import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
-import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.search.IndexWriterHelperUtil;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.ReindexCacheThreadLocal;
 import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.search.index.ConcurrentReindexManager;
 import com.liferay.portal.search.index.SyncReindexManager;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 
@@ -185,6 +187,8 @@ public class SearchEngineInitializer implements Runnable {
 			}
 
 			Set<String> indexerClassNames = new HashSet<>();
+			Map<String, Object> sharedReindexCacheMap =
+				new ConcurrentHashMap<>();
 
 			for (Indexer<?> indexer : _indexers) {
 				indexerClassNames.add(indexer.getClassName());
@@ -194,25 +198,17 @@ public class SearchEngineInitializer implements Runnable {
 
 						@Override
 						public Void call() throws Exception {
-							CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
-								CTSQLModeThreadLocal.getCTSQLMode();
-
-							try (SafeCloseable safeCloseable =
+							try (SafeCloseable safeCloseable1 =
 									BackgroundTaskThreadLocal.
 										setBackgroundTaskIdWithSafeCloseable(
-											backgroundTaskId)) {
-
-								CTSQLModeThreadLocal.
-									setCTSQLModeWithSafeCloseable(
-										CTSQLModeThreadLocal.CTSQLMode.CT_ALL);
+											backgroundTaskId);
+								SafeCloseable safeCloseable2 =
+									ReindexCacheThreadLocal.openReindexMode(
+										sharedReindexCacheMap)) {
 
 								reindex(indexer);
 
 								return null;
-							}
-							finally {
-								CTSQLModeThreadLocal.
-									setCTSQLModeWithSafeCloseable(ctSQLMode);
 							}
 						}
 

@@ -13,29 +13,50 @@ import type {
 	LayoutDataItem,
 } from '../../types/layout_data/LayoutData';
 
+type ReturnType =
+	| {
+			classNameId: string;
+			classTypeId: string;
+			fieldSetName: string | null;
+			formId: string;
+	  }
+	| Record<string, never>;
+
 export default function selectFormConfiguration(
 	item: LayoutDataItem,
 	layoutData: LayoutData
-) {
+): ReturnType {
 	if (!item) {
 		return {};
 	}
 
-	const findFormConfiguration: (childItem: LayoutDataItem) => void = (
+	let fieldSetName: string | null = null;
+
+	const findFormConfiguration: (childItem: LayoutDataItem) => ReturnType = (
 		childItem
 	) => {
-		const parentItem = layoutData.items[childItem?.parentId];
-
-		if (!parentItem) {
+		if (!childItem) {
 			return {};
 		}
 
-		if (parentItem.type === LAYOUT_DATA_ITEM_TYPES.form) {
-			const classNameId = parentItem.config?.classNameId;
-			const mappingSource = parentItem.config?.formConfig;
+		if (
+			childItem.type === LAYOUT_DATA_ITEM_TYPES.formRelationship &&
+			!fieldSetName
+		) {
+			fieldSetName = childItem.config.contentType;
+		}
+
+		if (childItem.type === LAYOUT_DATA_ITEM_TYPES.form) {
+			const classNameId = childItem.config?.classNameId;
+			const mappingSource = childItem.config?.formConfig;
 
 			if (classNameId && classNameId !== '0') {
-				return {...parentItem.config, formId: parentItem.itemId};
+				return {
+					classNameId,
+					classTypeId: childItem.config?.classTypeId || '',
+					fieldSetName,
+					formId: childItem.itemId,
+				};
 			}
 			else if (
 				config.layoutType === LAYOUT_TYPES.display &&
@@ -45,9 +66,10 @@ export default function selectFormConfiguration(
 				const {selectedMappingTypes} = config;
 
 				return {
-					classNameId: selectedMappingTypes?.type.id,
-					classTypeId: selectedMappingTypes?.subtype.id,
-					formId: parentItem.itemId,
+					classNameId: selectedMappingTypes!.type.id,
+					classTypeId: selectedMappingTypes!.subtype?.id || '',
+					fieldSetName,
+					formId: childItem.itemId,
 				};
 			}
 			else {
@@ -55,8 +77,8 @@ export default function selectFormConfiguration(
 			}
 		}
 
-		return findFormConfiguration(parentItem);
+		return findFormConfiguration(layoutData.items[childItem.parentId]);
 	};
 
-	return findFormConfiguration(layoutData.items[item.itemId]);
+	return findFormConfiguration(item);
 }

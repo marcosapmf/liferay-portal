@@ -23,10 +23,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.xml.Element;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + PageCommentsPortletKeys.PAGE_COMMENTS,
+	property = "jakarta.portlet.name=" + PageCommentsPortletKeys.PAGE_COMMENTS,
 	service = PortletDataHandler.class
 )
 public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
@@ -64,7 +64,7 @@ public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getExportControls() {
+	public PortletDataHandlerControl[] getExportPortletDataHandlerControls() {
 		DiscussionStagingHandler discussionStagingHandler =
 			_commentManager.getDiscussionStagingHandler();
 
@@ -72,18 +72,17 @@ public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
 			return new PortletDataHandlerControl[0];
 		}
 
-		PortletDataHandlerBoolean portletDataHandlerBoolean =
+		return new PortletDataHandlerControl[] {
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "comment", true, false, null,
 				discussionStagingHandler.getClassName(),
-				StagedModelType.REFERRER_CLASS_NAME_ANY);
-
-		return new PortletDataHandlerControl[] {portletDataHandlerBoolean};
+				StagedModelType.REFERRER_CLASS_NAME_ANY)
+		};
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getImportControls() {
-		return getExportControls();
+	public PortletDataHandlerControl[] getImportPortletDataHandlerControls() {
+		return getExportPortletDataHandlerControls();
 	}
 
 	@Override

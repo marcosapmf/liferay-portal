@@ -12,9 +12,9 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * @author Javier Gamarra
@@ -31,12 +31,18 @@ public class ObjectEntryValuesExceptionMapper
 	protected Problem getProblem(
 		ObjectEntryValuesException objectEntryValuesException) {
 
-		return new Problem(
-			Response.Status.BAD_REQUEST,
-			ObjectExceptionMapperUtil.getTitle(
-				_acceptLanguage, objectEntryValuesException.getArguments(),
-				_language, objectEntryValuesException.getMessage(),
-				objectEntryValuesException.getMessageKey()));
+		String title = ObjectExceptionMapperUtil.getTitle(
+			_acceptLanguage, objectEntryValuesException.getArguments(),
+			_language, objectEntryValuesException.getMessage(),
+			objectEntryValuesException.getMessageKey());
+
+		if (objectEntryValuesException instanceof
+				ObjectEntryValuesException.NoSuchRelatedObjectEntry) {
+
+			return new Problem(Response.Status.NOT_FOUND, title);
+		}
+
+		return new Problem(Response.Status.BAD_REQUEST, title);
 	}
 
 	@Context

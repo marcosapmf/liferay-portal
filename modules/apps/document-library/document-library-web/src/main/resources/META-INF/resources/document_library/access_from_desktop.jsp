@@ -11,7 +11,7 @@
 DLAccessFromDesktopDisplayContext dlAccessFromDesktopDisplayContext = new DLAccessFromDesktopDisplayContext(request);
 %>
 
-<div id="<%= dlAccessFromDesktopDisplayContext.getRandomNamespace() %>webDav" style="display: none;">
+<div class="hide" id="<%= dlAccessFromDesktopDisplayContext.getRandomNamespace() %>webDav">
 	<div class="portlet-document-library">
 		<liferay-ui:message key="<%= dlAccessFromDesktopDisplayContext.getWebDAVHelpMessage() %>" />
 
@@ -22,7 +22,28 @@ DLAccessFromDesktopDisplayContext dlAccessFromDesktopDisplayContext = new DLAcce
 
 		<br /><br />
 
-		<aui:input cssClass="webdav-url-resource" id='<%= dlAccessFromDesktopDisplayContext.getRandomNamespace() + "webDavURL" %>' name="webDavURL" type="resource" value="<%= dlAccessFromDesktopDisplayContext.getWebDAVURL() %>" />
+		<%
+		String webDavURLInputId = dlAccessFromDesktopDisplayContext.getRandomNamespace() + "webDavURLInput_modal";
+		%>
+
+		<div class="form-group">
+			<label for="<%= webDavURLInputId %>">
+				<liferay-ui:message key='<%= TextFormatter.format("webDavURL", TextFormatter.K) %>' />
+			</label>
+
+			<div>
+				<react:component
+					module="{WebdavURLCopyButton} from document-library-web"
+					props='<%=
+						HashMapBuilder.<String, Object>put(
+							"id", webDavURLInputId
+						).put(
+							"url", dlAccessFromDesktopDisplayContext.getWebDAVURL()
+						).build()
+					%>'
+				/>
+			</div>
+		</div>
 
 		<div class="alert alert-info">
 			<liferay-ui:message arguments='<%= "<a href=" + PersonalApplicationURLUtil.getPersonalApplicationURL(request, PortletKeys.MY_ACCOUNT) + ">" + LanguageUtil.get(resourceBundle, "my-account") + "</a>" %>' key="webdav-access-requires-generation-of-a-webdav-specific-password-at-x" />
@@ -43,19 +64,8 @@ DLAccessFromDesktopDisplayContext dlAccessFromDesktopDisplayContext = new DLAcce
 			if (webdavContentContainer) {
 				html = webdavContentContainer.innerHTML;
 
-				webdavContentContainer.remove();
-
 				Liferay.Util.openModal({
 					bodyHTML: html,
-					onOpen: function (event) {
-						var webdavURLInput = document.getElementById(
-							'<portlet:namespace /><%= dlAccessFromDesktopDisplayContext.getRandomNamespace() %>webDavURL'
-						);
-
-						if (webdavURLInput) {
-							webdavURLInput.focus();
-						}
-					},
 					title: '<%= UnicodeLanguageUtil.get(request, "access-from-desktop") %>',
 				});
 			}

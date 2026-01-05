@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 
 import java.util.Collections;
 
@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * @author Sergio Jiménez del Coso
  */
-@FeatureFlags("LPS-178642")
+@FeatureFlag("LPS-178642")
 public class APISchemaRelevantObjectEntryModelListenerTest
 	extends BaseTestCase {
 
@@ -70,7 +70,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -86,7 +86,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -131,7 +131,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationErc",
+				"r_apiApplicationToAPISchemas_l_apiApplicationErc",
 				_objectEntry.getExternalReferenceCode()
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -148,7 +148,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", _API_SCHEMA_NAME
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -168,7 +168,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", _API_SCHEMA_NAME
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				apiApplicationJSONObject.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -185,7 +185,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 			).put(
 				"name", RandomTestUtil.randomString()
 			).put(
-				"r_apiApplicationToAPISchemas_c_apiApplicationId",
+				"r_apiApplicationToAPISchemas_l_apiApplicationId",
 				jsonObject2.getLong("id")
 			).toString(),
 			"headless-builder/schemas", Http.Method.POST);
@@ -193,7 +193,7 @@ public class APISchemaRelevantObjectEntryModelListenerTest
 		Assert.assertEquals("BAD_REQUEST", jsonObject1.get("status"));
 		Assert.assertEquals(
 			"The value is invalid for object field " +
-				"\"r_apiApplicationToAPISchemas_c_apiApplicationId\"",
+				"\"r_apiApplicationToAPISchemas_l_apiApplicationId\"",
 			jsonObject1.get("title"));
 	}
 

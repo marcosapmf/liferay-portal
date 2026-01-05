@@ -6,19 +6,22 @@
 package com.liferay.taglib.security;
 
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
+import com.liferay.portal.kernel.io.BigEndianCodec;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.ChecksumUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.tagext.TagSupport;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.tagext.TagSupport;
 
 /**
  * @author Brian Wing Shun Chan
@@ -49,8 +52,14 @@ public class DoAsURLTag extends TagSupport {
 			doAsUserId = guestUser.getUserId();
 		}
 
-		String encDoAsUserId = EncryptorUtil.encrypt(
-			company.getKeyObj(), String.valueOf(doAsUserId));
+		byte[] doAsUserIdBytes = new byte[Long.BYTES];
+
+		BigEndianCodec.putLong(doAsUserIdBytes, 0, doAsUserId);
+
+		String encDoAsUserId = StringUtil.bytesToHexString(
+			ChecksumUtil.appendChecksum(
+				EncryptorUtil.encryptUnencoded(
+					company.getKeyObj(), doAsUserIdBytes)));
 
 		return HttpComponentsUtil.addParameter(
 			doAsURL, "doAsUserId", encDoAsUserId);

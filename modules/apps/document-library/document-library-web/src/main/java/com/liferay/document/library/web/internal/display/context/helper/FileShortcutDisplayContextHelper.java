@@ -77,7 +77,9 @@ public class FileShortcutDisplayContextHelper {
 	}
 
 	public boolean isCopyActionAvailable() throws PortalException {
-		if (hasViewPermission() && !_isExternalRepository()) {
+		if (_permissionChecker.isSignedIn() && hasViewPermission() &&
+			!_isExternalRepository()) {
+
 			return true;
 		}
 
@@ -105,6 +107,10 @@ public class FileShortcutDisplayContextHelper {
 		return hasDeletePermission();
 	}
 
+	public boolean isHistoryActionAvailable() throws PortalException {
+		return _permissionChecker.isSignedIn();
+	}
+
 	public boolean isMoveActionAvailable() throws PortalException {
 		return isUpdatable();
 	}
@@ -115,6 +121,14 @@ public class FileShortcutDisplayContextHelper {
 
 	public boolean isUpdatable() throws PortalException {
 		return hasUpdatePermission();
+	}
+
+	public boolean isViewUsagesActionAvailable() throws PortalException {
+		if (_fileShortcut == null) {
+			return false;
+		}
+
+		return _permissionChecker.isGroupAdmin(_fileShortcut.getGroupId());
 	}
 
 	private boolean _isExternalRepository() {

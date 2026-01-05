@@ -6,16 +6,21 @@
 package com.liferay.commerce.product.internal.upgrade.v1_6_0;
 
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
+import com.liferay.commerce.product.internal.upgrade.v1_6_0.util.CommerceCatalogTable;
+import com.liferay.commerce.product.internal.upgrade.v1_6_0.util.CommerceChannelRelTable;
+import com.liferay.commerce.product.internal.upgrade.v1_6_0.util.CommerceChannelTable;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -111,22 +116,24 @@ public class CommerceCatalogUpgradeProcess extends UpgradeProcess {
 				preparedStatement2.addBatch();
 
 				Group catalogGroup = _groupLocalService.addGroup(
-					userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
+					StringPool.BLANK, userId,
+					GroupConstants.DEFAULT_PARENT_GROUP_ID,
 					CommerceCatalog.class.getName(), commerceCatalogId,
 					GroupConstants.DEFAULT_LIVE_GROUP_ID,
 					siteGroup.getNameMap(), null,
-					GroupConstants.TYPE_SITE_PRIVATE, false,
+					GroupConstants.TYPE_SITE_PRIVATE, null, false,
 					GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false,
-					true, null);
+					false, true, null);
 
 				Group channelGroup = _groupLocalService.addGroup(
-					userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
+					StringPool.BLANK, userId,
+					GroupConstants.DEFAULT_PARENT_GROUP_ID,
 					CommerceChannel.class.getName(), commerceChannelId,
 					GroupConstants.DEFAULT_LIVE_GROUP_ID,
 					siteGroup.getNameMap(), null,
-					GroupConstants.TYPE_SITE_PRIVATE, false,
+					GroupConstants.TYPE_SITE_PRIVATE, null, false,
 					GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false,
-					true, null);
+					false, true, null);
 
 				String updateTableGroupIdSQL =
 					"update %s set groupId = %s where groupId = %s";
@@ -227,9 +234,19 @@ public class CommerceCatalogUpgradeProcess extends UpgradeProcess {
 			}
 
 			preparedStatement1.executeBatch();
+
 			preparedStatement2.executeBatch();
+
 			preparedStatement3.executeBatch();
 		}
+	}
+
+	@Override
+	protected UpgradeStep[] getPreUpgradeSteps() {
+		return new UpgradeStep[] {
+			CommerceCatalogTable.create(), CommerceChannelRelTable.create(),
+			CommerceChannelTable.create()
+		};
 	}
 
 	private final ClassNameLocalService _classNameLocalService;

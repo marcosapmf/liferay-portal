@@ -10,8 +10,9 @@ import React from 'react';
 
 interface ConfigurationContainerProps {
 	hasUpdateObjectDefinitionPermission: boolean;
+	isApproved: boolean;
+	isEnableObjectEntrySchedule: boolean;
 	isLinkedObjectDefinition?: boolean;
-	isRootDescendantNode: boolean;
 	onSubmit?: (editedObjectDefinition?: Partial<ObjectDefinition>) => void;
 	setValues: (values: Partial<ObjectDefinition>) => void;
 	values: Partial<ObjectDefinition>;
@@ -19,8 +20,9 @@ interface ConfigurationContainerProps {
 
 export function ConfigurationContainer({
 	hasUpdateObjectDefinitionPermission,
+	isApproved,
+	isEnableObjectEntrySchedule,
 	isLinkedObjectDefinition,
-	isRootDescendantNode,
 	onSubmit,
 	setValues,
 	values,
@@ -36,7 +38,7 @@ export function ConfigurationContainer({
 		<div className="lfr-objects__object-definition-details-configuration">
 			<ClayForm.Group>
 				<Toggle
-					disabled={disabled || isRootDescendantNode}
+					disabled={disabled}
 					label={sub(
 						Liferay.Language.get('show-widget-in-x'),
 						Liferay.Language.get('page-builder')
@@ -104,7 +106,7 @@ export function ConfigurationContainer({
 
 			<ClayForm.Group>
 				<Toggle
-					disabled={disabled || values.active}
+					disabled={disabled || isApproved}
 					label={sub(
 						Liferay.Language.get('enable-x'),
 						Liferay.Language.get('indexed-search')
@@ -153,9 +155,7 @@ export function ConfigurationContainer({
 
 			<ClayForm.Group>
 				<Toggle
-					disabled={
-						isReadOnly || !hasUpdateObjectDefinitionPermission
-					}
+					disabled={disabled}
 					label={Liferay.Language.get(
 						'allow-users-to-save-entries-as-draft'
 					)}
@@ -176,6 +176,64 @@ export function ConfigurationContainer({
 					toggled={values.enableObjectEntryDraft}
 				/>
 			</ClayForm.Group>
+
+			{Liferay.FeatureFlags['LPD-17564'] && (
+				<>
+					<ClayForm.Group>
+						<Toggle
+							disabled={
+								disabled ||
+								(isEnableObjectEntrySchedule && isApproved)
+							}
+							label={Liferay.Language.get(
+								'allow-users-to-schedule-a-display-expiration-and-review-date-for-entries'
+							)}
+							name="enableObjectEntrySchedule"
+							onBlur={(event) => {
+								event.stopPropagation();
+
+								if (onSubmit) {
+									onSubmit();
+								}
+							}}
+							onToggle={() => {
+								setValues({
+									enableObjectEntrySchedule:
+										!values.enableObjectEntrySchedule,
+								});
+							}}
+							toggled={values.enableObjectEntrySchedule}
+						/>
+					</ClayForm.Group>
+
+					<ClayForm.Group>
+						<Toggle
+							disabled={disabled}
+							label={sub(
+								Liferay.Language.get('enable-x'),
+								Liferay.Language.get(
+									'mapping-in-form-container'
+								)
+							)}
+							name="enableFormContainer"
+							onBlur={(event) => {
+								event.stopPropagation();
+
+								if (onSubmit) {
+									onSubmit();
+								}
+							}}
+							onToggle={() => {
+								setValues({
+									enableFormContainer:
+										!values.enableFormContainer,
+								});
+							}}
+							toggled={values.enableFormContainer}
+						/>
+					</ClayForm.Group>
+				</>
+			)}
 		</div>
 	);
 }

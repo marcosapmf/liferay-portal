@@ -8,13 +8,13 @@ package com.liferay.headless.admin.taxonomy.client.serdes.v1_0;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyCategoryProperty;
 import com.liferay.headless.admin.taxonomy.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -47,6 +47,21 @@ public class TaxonomyCategoryPropertySerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		if (taxonomyCategoryProperty.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(taxonomyCategoryProperty.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
 
 		if (taxonomyCategoryProperty.getKey() != null) {
 			if (sb.length() > 1) {
@@ -97,6 +112,16 @@ public class TaxonomyCategoryPropertySerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (taxonomyCategoryProperty.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					taxonomyCategoryProperty.getExternalReferenceCode()));
+		}
+
 		if (taxonomyCategoryProperty.getKey() == null) {
 			map.put("key", null);
 		}
@@ -130,7 +155,10 @@ public class TaxonomyCategoryPropertySerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "key")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "value")) {
@@ -145,7 +173,13 @@ public class TaxonomyCategoryPropertySerDes {
 			TaxonomyCategoryProperty taxonomyCategoryProperty,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "key")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					taxonomyCategoryProperty.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
 				if (jsonParserFieldValue != null) {
 					taxonomyCategoryProperty.setKey(
 						(String)jsonParserFieldValue);
@@ -202,6 +236,10 @@ public class TaxonomyCategoryPropertySerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

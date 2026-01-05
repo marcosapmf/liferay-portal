@@ -10,6 +10,7 @@ import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.product.definitions.web.internal.constants.CommerceProductFDSNames;
 import com.liferay.commerce.product.definitions.web.internal.model.ProductOptionValue;
+import com.liferay.commerce.product.helper.CPCollectionProviderHelper;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
@@ -17,11 +18,11 @@ import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
-import com.liferay.commerce.product.util.CPCollectionProviderHelper;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
 import com.liferay.info.pagination.Pagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,13 +34,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,8 +60,6 @@ public class CommerceProductOptionValueFDSDataProvider
 			FDSKeywords fdsKeywords, FDSPagination fdsPagination,
 			HttpServletRequest httpServletRequest, Sort sort)
 		throws PortalException {
-
-		List<ProductOptionValue> productOptionValues = new ArrayList<>();
 
 		List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels =
 			new ArrayList<>();
@@ -100,31 +99,23 @@ public class CommerceProductOptionValueFDSDataProvider
 				cpDefinitionOptionValueRelBaseModelSearchResult.getBaseModels();
 		}
 
-		for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
-				cpDefinitionOptionValueRels) {
-
-			productOptionValues.add(
-				new ProductOptionValue(
-					cpDefinitionOptionValueRel.
-						getCPDefinitionOptionValueRelId(),
-					_commercePriceFormatter.format(
-						commerceCurrency,
-						_getPrice(
-							cpDefinitionOptionValueRel,
-							cpDefinitionOptionRelId),
-						locale),
-					cpDefinitionOptionValueRel.getKey(),
-					cpDefinitionOptionValueRel.getName(
-						_language.getLanguageId(locale)),
-					cpDefinitionOptionValueRel.getPriority(),
-					_language.get(
-						locale,
-						cpDefinitionOptionValueRel.isPreselected() ? "yes" :
-							"no"),
-					_getSku(cpDefinitionOptionValueRel)));
-		}
-
-		return productOptionValues;
+		return TransformUtil.transform(
+			cpDefinitionOptionValueRels,
+			cpDefinitionOptionValueRel -> new ProductOptionValue(
+				cpDefinitionOptionValueRel.getCPDefinitionOptionValueRelId(),
+				_commercePriceFormatter.format(
+					commerceCurrency,
+					_getPrice(
+						cpDefinitionOptionValueRel, cpDefinitionOptionRelId),
+					locale),
+				cpDefinitionOptionValueRel.getKey(),
+				cpDefinitionOptionValueRel.getName(
+					_language.getLanguageId(locale)),
+				cpDefinitionOptionValueRel.getPriority(),
+				_language.get(
+					locale,
+					cpDefinitionOptionValueRel.isPreselected() ? "yes" : "no"),
+				_getSku(cpDefinitionOptionValueRel)));
 	}
 
 	@Override

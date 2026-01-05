@@ -6,6 +6,7 @@
 package com.liferay.depot.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
@@ -71,12 +72,13 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "description"
 			).build(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
 		_depotGroup = _groupLocalService.getGroup(_depotEntry.getGroupId());
 
 		DDMStructure depotDDMStructure = _ddmStructureLocalService.addStructure(
-			_depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
+			null, _depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -100,7 +102,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 		_group = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			_group.getCreatorUserId(), _group.getGroupId(),
+			null, _group.getCreatorUserId(), _group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -166,7 +168,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			dlFileEntry2.getFileEntryTypeId());
 	}
 
-	@Test
+	@Test(expected = InvalidFileEntryTypeException.class)
 	public void testCopyFileEntryShouldNotCopyDLFileEntryTypeFromRelatedGroupUnlessDLFileEntryTypeAvailable()
 		throws Exception {
 
@@ -187,17 +189,10 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
 			dlFileEntry1.getFileEntryTypeId());
 
-		FileEntry fileEntry2 = _copyFileEntry(
-			_group.getGroupId(), fileEntry1.getFileEntryId());
-
-		DLFileEntry dlFileEntry2 = (DLFileEntry)fileEntry2.getModel();
-
-		Assert.assertEquals(
-			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
-			dlFileEntry2.getFileEntryTypeId());
+		_copyFileEntry(_group.getGroupId(), fileEntry1.getFileEntryId());
 	}
 
-	@Test
+	@Test(expected = InvalidFileEntryTypeException.class)
 	public void testCopyFileEntryShouldNotCopyDLFileEntryTypeFromUnrelatedGroup()
 		throws Exception {
 
@@ -214,17 +209,10 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
 			dlFileEntry1.getFileEntryTypeId());
 
-		FileEntry fileEntry2 = _copyFileEntry(
-			_depotGroup.getGroupId(), fileEntry1.getFileEntryId());
-
-		DLFileEntry dlFileEntry2 = (DLFileEntry)fileEntry2.getModel();
-
-		Assert.assertEquals(
-			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
-			dlFileEntry2.getFileEntryTypeId());
+		_copyFileEntry(_depotGroup.getGroupId(), fileEntry1.getFileEntryId());
 	}
 
-	@Test
+	@Test(expected = InvalidFileEntryTypeException.class)
 	public void testCopyFileEntryShouldNotCopyDLFileEntryTypeToUnrelatedGroup()
 		throws Exception {
 
@@ -242,17 +230,10 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
 			dlFileEntry1.getFileEntryTypeId());
 
-		FileEntry fileEntry2 = _copyFileEntry(
-			_group.getGroupId(), fileEntry1.getFileEntryId());
-
-		DLFileEntry dlFileEntry2 = (DLFileEntry)fileEntry2.getModel();
-
-		Assert.assertEquals(
-			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
-			dlFileEntry2.getFileEntryTypeId());
+		_copyFileEntry(_group.getGroupId(), fileEntry1.getFileEntryId());
 	}
 
-	@Test
+	@Test(expected = InvalidFileEntryTypeException.class)
 	public void testCopyFileEntryShouldNotCopyDLFileEntryTypeUnlessDLFileEntryTypeAvailable()
 		throws Exception {
 
@@ -272,14 +253,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
 			dlFileEntry1.getFileEntryTypeId());
 
-		FileEntry fileEntry2 = _copyFileEntry(
-			_depotGroup.getGroupId(), fileEntry1.getFileEntryId());
-
-		DLFileEntry dlFileEntry2 = (DLFileEntry)fileEntry2.getModel();
-
-		Assert.assertEquals(
-			DLFileEntryTypeConstants.COMPANY_ID_BASIC_DOCUMENT,
-			dlFileEntry2.getFileEntryTypeId());
+		_copyFileEntry(_depotGroup.getGroupId(), fileEntry1.getFileEntryId());
 	}
 
 	private FileEntry _addFileEntry(long groupId, long fileEntryTypeId)

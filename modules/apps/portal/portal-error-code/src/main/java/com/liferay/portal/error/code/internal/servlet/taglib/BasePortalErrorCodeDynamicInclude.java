@@ -11,14 +11,14 @@ import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.MapUtil;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Map;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 
@@ -37,16 +37,16 @@ public abstract class BasePortalErrorCodeDynamicInclude
 		httpServletResponse.setContentType(_contentType);
 
 		String message = (String)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_SERVLET_ERROR_MESSAGE);
+			JavaConstants.JAKARTA_SERVLET_ERROR_MESSAGE);
 		PrintWriter printWriter = httpServletResponse.getWriter();
 		int statusCode = (Integer)httpServletRequest.getAttribute(
 			RequestDispatcher.ERROR_STATUS_CODE);
 
 		if (_log.isDebugEnabled()) {
 			String requestURI = (String)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_SERVLET_ERROR_REQUEST_URI);
+				JavaConstants.JAKARTA_SERVLET_ERROR_REQUEST_URI);
 			Throwable throwable = (Throwable)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_SERVLET_ERROR_EXCEPTION);
+				JavaConstants.JAKARTA_SERVLET_ERROR_EXCEPTION);
 
 			write(message, printWriter, requestURI, statusCode, throwable);
 		}

@@ -4,8 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.component.names = "OneDrive";
-	property testray.main.component.name = "Online Editing";
+	property testray.main.component.name = "External Document Repositories";
 
 	var pageName = "Documents and Media Page";
 	var portletName = "Documents and Media";
@@ -606,7 +605,7 @@ definition {
 
 		OneDrive.editTitle(dmDocumentTitle = "OneDrive Entry Title ${num} Edited");
 
-		AssertConsoleTextNotPresent(value1 = "javax.portlet.PortletException: org.hibernate.exception.ConstraintViolationException");
+		AssertConsoleTextNotPresent(value1 = "jakarta.portlet.PortletException: org.hibernate.exception.ConstraintViolationException");
 	}
 
 	@description = "This test ensures that an Excel sheet can be deleted."

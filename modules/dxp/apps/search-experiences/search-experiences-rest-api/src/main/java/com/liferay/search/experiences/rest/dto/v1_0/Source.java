@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Brian Wing Shun Chan
@@ -48,7 +46,7 @@ public class Source implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Source.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getExcludes() {
 		if (_excludesSupplier != null) {
 			excludes = _excludesSupplier.get();
@@ -89,7 +87,7 @@ public class Source implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _excludesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getFetchSource() {
 		if (_fetchSourceSupplier != null) {
 			fetchSource = _fetchSourceSupplier.get();
@@ -130,7 +128,7 @@ public class Source implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _fetchSourceSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getIncludes() {
 		if (_includesSupplier != null) {
 			includes = _includesSupplier.get();
@@ -267,8 +265,8 @@ public class Source implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.search.experiences.rest.dto.v1_0.Source",
 		name = "x-class-name"
 	)

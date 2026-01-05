@@ -1,12 +1,13 @@
-apiDir: "../scim-rest-api/src/main/java"
-apiPackagePath: "com.liferay.scim.rest"
+apiDir: ../scim-rest-api/src/main/java
+apiPackagePath: com.liferay.scim.rest
 application:
-    baseURI: "/scim"
-    className: "ScimRESTApplication"
-    name: "Liferay.Scim.REST"
-author: "Olivér Kecskeméty"
-clientDir: "../scim-rest-client/src/main/java"
-compatibilityVersion: 6
+    baseURI: /scim
+    className: ScimRESTApplication
+    name: Liferay.Scim.REST
+author: Olivér Kecskeméty
+clientDir: ../scim-rest-client/src/main/java
+compatibilityVersion: 14
 forcePredictableOperationId: false
 generateGraphQL: false
-testDir: "../scim-rest-test/src/testIntegration/java"
+javaEEPackage: jakarta
+testDir: ../scim-rest-test/src/testIntegration/java

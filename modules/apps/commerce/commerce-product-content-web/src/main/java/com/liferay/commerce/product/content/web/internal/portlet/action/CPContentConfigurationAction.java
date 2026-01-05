@@ -9,14 +9,16 @@ import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.constants.CPContentWebKeys;
 import com.liferay.commerce.product.content.helper.CPContentHelper;
 import com.liferay.commerce.product.content.web.internal.display.context.CPContentConfigurationDisplayContext;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,10 +28,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "javax.portlet.name=" + CPPortletKeys.CP_CONTENT_WEB,
+	property = "jakarta.portlet.name=" + CPPortletKeys.CP_CONTENT_WEB,
 	service = ConfigurationAction.class
 )
-public class CPContentConfigurationAction extends DefaultConfigurationAction {
+public class CPContentConfigurationAction extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -37,6 +39,7 @@ public class CPContentConfigurationAction extends DefaultConfigurationAction {
 			CPContentConfigurationDisplayContext
 				cpContentConfigurationDisplayContext =
 					new CPContentConfigurationDisplayContext(
+						_configurationProvider, _groupLocalService,
 						httpServletRequest);
 
 			httpServletRequest.setAttribute(
@@ -57,6 +60,12 @@ public class CPContentConfigurationAction extends DefaultConfigurationAction {
 		CPContentConfigurationAction.class);
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private CPContentHelper _cpContentHelper;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

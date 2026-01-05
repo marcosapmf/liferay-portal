@@ -8,7 +8,6 @@ package com.liferay.commerce.payment.internal.search.spi.model.query.contributor
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.MissingFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -49,12 +48,11 @@ public class CommercePaymentEntryAuditModelPreFilterContributor
 		BooleanFilter commercePaymentEntryIdBooleanFilter = new BooleanFilter();
 
 		for (long commercePaymentEntryId : commercePaymentEntryIds) {
-			Filter termFilter = new TermFilter(
-				"commercePaymentEntryId",
-				String.valueOf(commercePaymentEntryId));
-
 			commercePaymentEntryIdBooleanFilter.add(
-				termFilter, BooleanClauseOccur.SHOULD);
+				new TermFilter(
+					"commercePaymentEntryId",
+					String.valueOf(commercePaymentEntryId)),
+				BooleanClauseOccur.SHOULD);
 		}
 
 		commercePaymentEntryIdBooleanFilter.add(
@@ -78,9 +76,8 @@ public class CommercePaymentEntryAuditModelPreFilterContributor
 		BooleanFilter logTypeBooleanFilter = new BooleanFilter();
 
 		for (String logType : logTypes) {
-			Filter termFilter = new TermFilter("logType", logType);
-
-			logTypeBooleanFilter.add(termFilter, BooleanClauseOccur.SHOULD);
+			logTypeBooleanFilter.add(
+				new TermFilter("logType", logType), BooleanClauseOccur.SHOULD);
 		}
 
 		logTypeBooleanFilter.add(

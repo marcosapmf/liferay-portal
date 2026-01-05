@@ -5,6 +5,7 @@
 
 package com.liferay.content.dashboard.document.library.internal.item.filter;
 
+import com.liferay.content.dashboard.document.library.internal.constants.ContentDashboardConstants;
 import com.liferay.content.dashboard.item.filter.ContentDashboardItemFilter;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
@@ -18,14 +19,14 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mikel Lorza
@@ -46,11 +47,11 @@ public class FileAspectRatioContentDashboardItemFilter
 	public DropdownItem getDropdownItem() {
 		return DropdownItemBuilder.setDropdownItems(
 			DropdownItemListBuilder.add(
-				_getDropdownItem(AspectRatio.WIDE)
+				_getDropdownItem(ContentDashboardConstants.AspectRatio.WIDE)
 			).add(
-				_getDropdownItem(AspectRatio.TALL)
+				_getDropdownItem(ContentDashboardConstants.AspectRatio.TALL)
 			).add(
-				_getDropdownItem(AspectRatio.SQUARE)
+				_getDropdownItem(ContentDashboardConstants.AspectRatio.SQUARE)
 			).build()
 		).setLabel(
 			_language.get(_httpServletRequest, "content-dashboard-aspect-ratio")
@@ -73,7 +74,8 @@ public class FileAspectRatioContentDashboardItemFilter
 			return termsFilter;
 		}
 
-		AspectRatio aspectRatio = AspectRatio.parse(parameterValues.get(0));
+		ContentDashboardConstants.AspectRatio aspectRatio =
+			ContentDashboardConstants.AspectRatio.parse(parameterValues.get(0));
 
 		if (aspectRatio != null) {
 			termsFilter.addValue(aspectRatio.getType());
@@ -123,7 +125,9 @@ public class FileAspectRatioContentDashboardItemFilter
 		return null;
 	}
 
-	private DropdownItem _getDropdownItem(AspectRatio aspectRatio) {
+	private DropdownItem _getDropdownItem(
+		ContentDashboardConstants.AspectRatio aspectRatio) {
+
 		return DropdownItemBuilder.setActive(
 			_isSelected(aspectRatio)
 		).setHref(
@@ -133,10 +137,10 @@ public class FileAspectRatioContentDashboardItemFilter
 		).build();
 	}
 
-	private String _getURL(AspectRatio aspectRatio) {
+	private String _getURL(ContentDashboardConstants.AspectRatio aspectRatio) {
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		String url = HttpComponentsUtil.removeParameter(
 			_portal.getCurrentCompleteURL(_httpServletRequest),
@@ -147,7 +151,9 @@ public class FileAspectRatioContentDashboardItemFilter
 			aspectRatio.getType());
 	}
 
-	private boolean _isSelected(AspectRatio aspectRatio) {
+	private boolean _isSelected(
+		ContentDashboardConstants.AspectRatio aspectRatio) {
+
 		List<String> parameterValues = getParameterValues();
 
 		if (ListUtil.isEmpty(parameterValues)) {
@@ -160,36 +166,5 @@ public class FileAspectRatioContentDashboardItemFilter
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final Portal _portal;
-
-	private enum AspectRatio {
-
-		SQUARE("square"), TALL("tall"), WIDE("wide");
-
-		public static AspectRatio parse(String type) {
-			for (AspectRatio aspectRatio : values()) {
-				if (Objects.equals(aspectRatio.getType(), type)) {
-					return aspectRatio;
-				}
-			}
-
-			return null;
-		}
-
-		public String getType() {
-			return _type;
-		}
-
-		@Override
-		public String toString() {
-			return _type;
-		}
-
-		private AspectRatio(String type) {
-			_type = type;
-		}
-
-		private final String _type;
-
-	}
 
 }

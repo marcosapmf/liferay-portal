@@ -5,10 +5,44 @@
 
 import getTop from './get_top';
 
+export function openInDialog(event, config) {
+	event.preventDefault();
+
+	const {currentTarget} = event;
+
+	// eslint-disable-next-line prefer-object-spread
+	config = Object.assign(
+		{},
+
+		// eslint-disable-next-line prefer-object-spread
+		Object.assign({}, currentTarget.dataset),
+		config
+	);
+
+	if (!config.uri) {
+		config.uri =
+			currentTarget.dataset.href || currentTarget.getAttribute('href');
+	}
+
+	if (!config.title) {
+		config.title = currentTarget.getAttribute('title');
+	}
+
+	if (!config.url) {
+		config.url = config.uri;
+	}
+
+	openWindow(config);
+}
+
 export default function openWindow(config, callback) {
 	const topUtil = getTop();
 
 	config.openingWindow = window;
 
-	topUtil.Liferay.Util._openWindowProvider(config, callback);
+	if (config.uri && !config.url) {
+		config.url = config.uri;
+	}
+
+	topUtil.Liferay.Util.openModal(config, callback);
 }

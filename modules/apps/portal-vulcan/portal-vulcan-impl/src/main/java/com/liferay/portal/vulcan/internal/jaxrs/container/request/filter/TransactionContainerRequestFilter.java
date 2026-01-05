@@ -15,19 +15,20 @@ import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
 import com.liferay.portal.spring.transaction.TransactionAttributeBuilder;
 import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
+import com.liferay.portal.vulcan.internal.constants.VulcanConstants;
+
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
 
 import org.apache.cxf.interceptor.InterceptorChain;
 import org.apache.cxf.message.Message;
@@ -74,7 +75,7 @@ public class TransactionContainerRequestFilter
 							_transactionAttributeAdapter));
 
 			containerRequestContext.setProperty(
-				_TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER,
+				VulcanConstants.TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER,
 				transactionCleanUpMessageObserver);
 
 			interceptorChain.add(transactionCleanUpMessageObserver);
@@ -92,7 +93,7 @@ public class TransactionContainerRequestFilter
 		TransactionCleanUpMessageObserver transactionCleanUpMessageObserver =
 			(TransactionCleanUpMessageObserver)
 				containerRequestContext.getProperty(
-					_TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER);
+					VulcanConstants.TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER);
 
 		if (transactionCleanUpMessageObserver == null) {
 			return;
@@ -111,10 +112,6 @@ public class TransactionContainerRequestFilter
 					containerResponseContext.getStatus()));
 		}
 	}
-
-	private static final String _TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER =
-		TransactionContainerRequestFilter.class.getName() +
-			"#TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		TransactionContainerRequestFilter.class);

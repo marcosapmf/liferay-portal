@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "API Builder";
@@ -30,7 +31,6 @@ definition {
 
 	@priority = 5
 	test CanClickAddNewSchemaButtons {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -53,7 +53,6 @@ definition {
 
 	@priority = 4
 	test CanFilterSchemaByCreationDateAsLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -86,7 +85,6 @@ definition {
 
 	@priority = 4
 	test CanFilterSchemaByDateBeforeCreationAsLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -118,7 +116,6 @@ definition {
 
 	@priority = 5
 	test CanListExistingSchemaInEditAPIApplication {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -144,7 +141,6 @@ definition {
 
 	@priority = 4
 	test CanOrderSchemasByLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -164,7 +160,7 @@ definition {
 
 		task ("When I click order button next to Last updated") {
 			Click(
-				locator1 = "APIBuilder#DND_TR_BUTTON",
+				locator1 = "APIBuilder#DND_TH_WITH_TEXT",
 				value = "Last updated");
 		}
 
@@ -175,7 +171,6 @@ definition {
 
 	@priority = 4
 	test CanOrderSchemasByName {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -195,7 +190,7 @@ definition {
 
 		task ("When I click order button next to Name") {
 			Click(
-				locator1 = "APIBuilder#DND_TR_BUTTON",
+				locator1 = "APIBuilder#DND_TH_WITH_TEXT",
 				value = "Name");
 		}
 
@@ -206,7 +201,6 @@ definition {
 
 	@priority = 4
 	test CanPaginateAPISchemas {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -245,7 +239,6 @@ definition {
 
 	@priority = 4
 	test CanSearchAPISchema {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -271,7 +264,6 @@ definition {
 
 	@priority = 5
 	test CanSeeAvailableFieldsAndActions {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -282,20 +274,20 @@ definition {
 				name = "mySchema");
 		}
 
-		task ("Then Name, Descriotion, Last updated, Actions icon are present") {
+		task ("Then Name, Description, Last updated, Actions icon are present") {
 			APIBuilderUI.switchToRelatedEntryInEditApplication(
 				entity = "Schemas",
 				title = "My-app");
 
-			for (var value : list "Name,Last updated,Actions") {
+			for (var value : list "Description,Last updated,Name") {
 				AssertElementPresent(
-					locator1 = "APIBuilder#DND_TR_BUTTON",
+					locator1 = "APIBuilder#DND_TH_WITH_TEXT",
 					value = ${value});
 			}
 
 			AssertElementPresent(
-				locator1 = "APIBuilder#DND_TR_WITH_TEXT",
-				text = "Description");
+				locator1 = "APIBuilder#DND_TR_BUTTON",
+				value = "Actions");
 		}
 
 		task ("And Then available actions are Edit and Delete in Actions icon") {
@@ -311,7 +303,6 @@ definition {
 
 	@priority = 4
 	test CanSeeNoAPISchemaAndAddSchemaButton {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

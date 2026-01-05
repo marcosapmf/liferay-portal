@@ -19,7 +19,11 @@ import com.liferay.account.service.base.AccountEntryLocalServiceBaseImpl;
 import com.liferay.account.validator.AccountEntryEmailAddressValidator;
 import com.liferay.account.validator.AccountEntryEmailAddressValidatorFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
@@ -139,9 +143,10 @@ public class AccountEntryLocalServiceImpl
 
 	@Override
 	public AccountEntry addAccountEntry(
-			long userId, long parentAccountEntryId, String name,
-			String description, String[] domains, String emailAddress,
-			byte[] logoBytes, String taxIdNumber, String type, int status,
+			String externalReferenceCode, long userId,
+			long parentAccountEntryId, String name, String description,
+			String[] domains, String emailAddress, byte[] logoBytes,
+			String taxIdNumber, String type, int status,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -154,6 +159,7 @@ public class AccountEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
+		accountEntry.setExternalReferenceCode(externalReferenceCode);
 		accountEntry.setCompanyId(user.getCompanyId());
 		accountEntry.setUserId(user.getUserId());
 		accountEntry.setUserName(user.getFullName());
@@ -186,6 +192,7 @@ public class AccountEntryLocalServiceImpl
 
 		accountEntry.setType(type);
 		accountEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
+		accountEntry.setExpandoBridgeAttributes(serviceContext);
 
 		accountEntry = accountEntryPersistence.update(accountEntry);
 
@@ -196,12 +203,12 @@ public class AccountEntryLocalServiceImpl
 		// Group
 
 		_groupLocalService.addGroup(
-			userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
+			StringPool.BLANK, userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
 			AccountEntry.class.getName(), accountEntryId,
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, getLocalizationMap(name),
-			null, GroupConstants.TYPE_SITE_PRIVATE, false,
-			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, true,
-			null);
+			null, GroupConstants.TYPE_SITE_PRIVATE, null, false,
+			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, false,
+			true, null);
 
 		// Resources
 
@@ -217,22 +224,24 @@ public class AccountEntryLocalServiceImpl
 
 			_updateAsset(accountEntry, serviceContext);
 
-			// Expando
-
-			accountEntry.setExpandoBridgeAttributes(serviceContext);
-
 			workflowServiceContext = (ServiceContext)serviceContext.clone();
 		}
 
 		// Workflow
 
-		if (_isWorkflowEnabled(accountEntry.getCompanyId())) {
+		if (!_emptyModelManager.isEmptyModel() &&
+			_isWorkflowEnabled(accountEntry.getCompanyId())) {
+
 			_checkStatus(accountEntry.getStatus(), status);
 
 			accountEntry = _startWorkflowInstance(
 				userId, accountEntry, workflowServiceContext);
 		}
 		else {
+			if (_emptyModelManager.isEmptyModel()) {
+				status = WorkflowConstants.STATUS_EMPTY;
+			}
+
 			accountEntry = updateStatus(
 				userId, accountEntryId, status, workflowServiceContext,
 				Collections.emptyMap());
@@ -257,18 +266,15 @@ public class AccountEntryLocalServiceImpl
 
 		if (accountEntry != null) {
 			return updateAccountEntry(
-				accountEntry.getAccountEntryId(), parentAccountEntryId, name,
-				description, false, domains, emailAddress, logoBytes,
-				taxIdNumber, status, serviceContext);
+				externalReferenceCode, accountEntry.getAccountEntryId(),
+				parentAccountEntryId, name, description, false, domains,
+				emailAddress, logoBytes, taxIdNumber, status, serviceContext);
 		}
 
-		accountEntry = addAccountEntry(
-			userId, parentAccountEntryId, name, description, domains,
-			emailAddress, logoBytes, taxIdNumber, type, status, serviceContext);
-
-		accountEntry.setExternalReferenceCode(externalReferenceCode);
-
-		return accountEntryPersistence.update(accountEntry);
+		return addAccountEntry(
+			externalReferenceCode, userId, parentAccountEntryId, name,
+			description, domains, emailAddress, logoBytes, taxIdNumber, type,
+			status, serviceContext);
 	}
 
 	@Override
@@ -363,7 +369,8 @@ public class AccountEntryLocalServiceImpl
 	public AccountEntry deleteAccountEntry(long accountEntryId)
 		throws PortalException {
 
-		return deleteAccountEntry(getAccountEntry(accountEntryId));
+		return accountEntryLocalService.deleteAccountEntry(
+			getAccountEntry(accountEntryId));
 	}
 
 	@Override
@@ -472,6 +479,25 @@ public class AccountEntryLocalServiceImpl
 		accountEntryImpl.setStatus(WorkflowConstants.STATUS_APPROVED);
 
 		return accountEntryImpl;
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	public AccountEntry getOrAddEmptyAccountEntry(
+			String externalReferenceCode, long companyId, long userId,
+			String name, String type)
+		throws PortalException {
+
+		return _emptyModelManager.getOrAddEmptyModel(
+			AccountEntry.class, companyId,
+			() -> accountEntryLocalService.addAccountEntry(
+				externalReferenceCode, userId,
+				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
+				GetterUtil.get(name, externalReferenceCode), StringPool.BLANK,
+				null, StringPool.BLANK, null, StringPool.BLANK, type,
+				WorkflowConstants.STATUS_EMPTY, null),
+			externalReferenceCode,
+			this::fetchAccountEntryByExternalReferenceCode,
+			this::getAccountEntryByExternalReferenceCode);
 	}
 
 	@Override
@@ -610,15 +636,17 @@ public class AccountEntryLocalServiceImpl
 
 	@Override
 	public AccountEntry updateAccountEntry(
-			long accountEntryId, long parentAccountEntryId, String name,
-			String description, boolean deleteLogo, String[] domains,
-			String emailAddress, byte[] logoBytes, String taxIdNumber,
-			int status, ServiceContext serviceContext)
+			String externalReferenceCode, long accountEntryId,
+			long parentAccountEntryId, String name, String description,
+			boolean deleteLogo, String[] domains, String emailAddress,
+			byte[] logoBytes, String taxIdNumber, int status,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		AccountEntry accountEntry = accountEntryPersistence.findByPrimaryKey(
 			accountEntryId);
 
+		accountEntry.setExternalReferenceCode(externalReferenceCode);
 		accountEntry.setParentAccountEntryId(parentAccountEntryId);
 
 		_validateName(name);
@@ -643,42 +671,56 @@ public class AccountEntryLocalServiceImpl
 		accountEntry.setTaxIdNumber(taxIdNumber);
 		accountEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
 
-		accountEntry = accountEntryPersistence.update(accountEntry);
+		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
+			accountEntry.getCompanyId(), accountEntry.getModelClassName(),
+			accountEntryId);
 
-		if (domains != null) {
-			accountEntry = updateDomains(accountEntryId, domains);
-		}
-
-		ServiceContext workflowServiceContext = new ServiceContext();
-		long workflowUserId = accountEntry.getUserId();
-
-		if (serviceContext != null) {
-
-			// Asset
-
-			_updateAsset(accountEntry, serviceContext);
-
-			// Expando
+		try {
+			ObjectEntryThreadLocal.setExpandoBridgeAttributes(
+				expandoBridge.getAttributes());
 
 			accountEntry.setExpandoBridgeAttributes(serviceContext);
 
-			workflowServiceContext = (ServiceContext)serviceContext.clone();
-			workflowUserId = serviceContext.getUserId();
-		}
+			accountEntry = accountEntryPersistence.update(accountEntry);
 
-		if (_isWorkflowEnabled(accountEntry.getCompanyId())) {
-			_checkStatus(accountEntry.getStatus(), status);
+			if (domains != null) {
+				accountEntry = updateDomains(accountEntryId, domains);
+			}
 
-			accountEntry = _startWorkflowInstance(
-				workflowUserId, accountEntry, workflowServiceContext);
-		}
-		else {
-			updateStatus(
-				workflowUserId, accountEntryId, status, workflowServiceContext,
-				Collections.emptyMap());
-		}
+			if (status == WorkflowConstants.STATUS_EMPTY) {
+				status = WorkflowConstants.STATUS_APPROVED;
+			}
 
-		return accountEntry;
+			ServiceContext workflowServiceContext = new ServiceContext();
+			long workflowUserId = accountEntry.getUserId();
+
+			if (serviceContext != null) {
+
+				// Asset
+
+				_updateAsset(accountEntry, serviceContext);
+
+				workflowServiceContext = (ServiceContext)serviceContext.clone();
+				workflowUserId = serviceContext.getUserId();
+			}
+
+			if (_isWorkflowEnabled(accountEntry.getCompanyId())) {
+				_checkStatus(accountEntry.getStatus(), status);
+
+				accountEntry = _startWorkflowInstance(
+					workflowUserId, accountEntry, workflowServiceContext);
+			}
+			else {
+				updateStatus(
+					workflowUserId, accountEntryId, status,
+					workflowServiceContext, Collections.emptyMap());
+			}
+
+			return accountEntry;
+		}
+		finally {
+			ObjectEntryThreadLocal.clearExpandoBridgeAttributes();
+		}
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -1261,6 +1303,9 @@ public class AccountEntryLocalServiceImpl
 
 	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private EmptyModelManager _emptyModelManager;
 
 	@Reference
 	private ExpandoRowLocalService _expandoRowLocalService;

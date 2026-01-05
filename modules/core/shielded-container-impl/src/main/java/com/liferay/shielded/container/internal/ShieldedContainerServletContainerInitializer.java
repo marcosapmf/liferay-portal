@@ -10,6 +10,10 @@ import com.liferay.shielded.container.ShieldedContainerInitializer;
 import com.liferay.shielded.container.internal.proxy.ServletContextDelegate;
 import com.liferay.shielded.container.internal.session.ShieldedContainerHttpSessionListener;
 
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+
 import java.io.File;
 
 import java.net.MalformedURLException;
@@ -19,12 +23,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
-
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Shuyang Zhou
@@ -113,6 +115,20 @@ public class ShieldedContainerServletContainerInitializer
 
 		servletContext.setAttribute(
 			ShieldedContainerClassLoader.NAME, classLoader);
+
+		// Test path to capture ShieldedContainerClassLoader in order to support
+		// IPC object deserialization.
+
+		Properties properties = System.getProperties();
+
+		Object value = properties.get(ShieldedContainerClassLoader.NAME);
+
+		if (value instanceof CompletableFuture) {
+			CompletableFuture<ClassLoader> completableFuture =
+				(CompletableFuture<ClassLoader>)value;
+
+			completableFuture.complete(classLoader);
+		}
 
 		return classLoader;
 	}

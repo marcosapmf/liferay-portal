@@ -11,9 +11,9 @@ import com.liferay.portal.kernel.service.PhoneService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.util.List;
+import jakarta.portlet.ActionRequest;
 
-import javax.portlet.ActionRequest;
+import java.util.List;
 
 /**
  * @author Drew Brokke
@@ -52,8 +52,9 @@ public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 	@Override
 	public Phone doAdd(Phone phone) throws Exception {
 		return _phoneService.addPhone(
-			_className, _classPK, phone.getNumber(), phone.getExtension(),
-			phone.getListTypeId(), phone.isPrimary(), new ServiceContext());
+			phone.getExternalReferenceCode(), _className, _classPK,
+			phone.getNumber(), phone.getExtension(), phone.getListTypeId(),
+			phone.isPrimary(), new ServiceContext());
 	}
 
 	@Override
@@ -64,8 +65,9 @@ public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 	@Override
 	public void doUpdate(Phone phone) throws Exception {
 		_phoneService.updatePhone(
-			phone.getPhoneId(), phone.getNumber(), phone.getExtension(),
-			phone.getListTypeId(), phone.isPrimary());
+			phone.getExternalReferenceCode(), phone.getPhoneId(),
+			phone.getNumber(), phone.getExtension(), phone.getListTypeId(),
+			phone.isPrimary());
 	}
 
 	@Override

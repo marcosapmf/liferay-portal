@@ -6,8 +6,6 @@
 package com.liferay.headless.commerce.delivery.order.resource.v1_0;
 
 import com.liferay.headless.commerce.delivery.order.dto.v1_0.PlacedOrderItem;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -21,18 +19,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -48,27 +46,30 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PlacedOrderItemResource {
 
-	public PlacedOrderItem getPlacedOrderItemByExternalReferenceCode(
-			String externalReferenceCode)
+	public Page<PlacedOrderItem>
+			getPlacedOrderByExternalReferenceCodePlacedOrderItemsPage(
+				String externalReferenceCode, String search, Long skuId,
+				Pagination pagination,
+				com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public PlacedOrderItem getPlacedOrderItem(Long placedOrderItemId)
 		throws Exception;
 
-	public Page<PlacedOrderItem>
-			getPlacedOrderByExternalReferenceCodePlacedOrderItemsPage(
-				String externalReferenceCode, String search, Long skuId,
-				Pagination pagination, Sort[] sorts)
+	public PlacedOrderItem getPlacedOrderItemByExternalReferenceCode(
+			String externalReferenceCode)
 		throws Exception;
 
 	public Page<PlacedOrderItem> getPlacedOrderPlacedOrderItemsPage(
 			Long placedOrderId, String search, Long skuId,
-			Pagination pagination, Sort[] sorts)
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
 	public Response postPlacedOrderPlacedOrderItemsPageExportBatch(
-			Long placedOrderId, String search, Long skuId, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
+			Long placedOrderId, String search, Long skuId,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -93,7 +94,8 @@ public interface PlacedOrderItemResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -118,19 +120,23 @@ public interface PlacedOrderItemResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

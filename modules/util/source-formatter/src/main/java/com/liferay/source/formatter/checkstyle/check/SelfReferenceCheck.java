@@ -28,10 +28,10 @@ public class SelfReferenceCheck extends BaseCheck {
 	protected void doVisitToken(DetailAST detailAST) {
 		String className = getName(detailAST);
 
-		List<DetailAST> methodCallDetailASTList = getAllChildTokens(
+		List<DetailAST> methodCallDetailASTs = getAllChildTokens(
 			detailAST, true, TokenTypes.METHOD_CALL);
 
-		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+		for (DetailAST methodCallDetailAST : methodCallDetailASTs) {
 			DetailAST dotDetailAST = methodCallDetailAST.findFirstToken(
 				TokenTypes.DOT);
 
@@ -109,11 +109,7 @@ public class SelfReferenceCheck extends BaseCheck {
 				(parentDetailAST.getType() == TokenTypes.ENUM_DEF) ||
 				(parentDetailAST.getType() == TokenTypes.INTERFACE_DEF)) {
 
-				if (className.equals(getName(parentDetailAST))) {
-					return false;
-				}
-
-				return true;
+				return !className.equals(getName(parentDetailAST));
 			}
 
 			parentDetailAST = parentDetailAST.getParent();

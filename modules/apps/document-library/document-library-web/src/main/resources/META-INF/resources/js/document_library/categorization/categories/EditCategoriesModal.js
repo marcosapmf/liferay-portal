@@ -252,7 +252,9 @@ const EditCategoriesModal = ({
 			observer={observer}
 			size="md"
 		>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('edit-categories')}
 			</ClayModal.Header>
 
@@ -273,7 +275,7 @@ const EditCategoriesModal = ({
 					{multiple && (
 						<ClayRadioGroup
 							name="add-replace"
-							onChage={handleMultiSelectOptionChange}
+							onChange={handleMultiSelectOptionChange}
 							value={selectedRadioGroupValue}
 						>
 							<ClayRadio

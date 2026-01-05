@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Alejandro Tardín
@@ -48,7 +46,7 @@ public class SelectionScope implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(SelectionScope.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getFolderId() {
 		if (_folderIdSupplier != null) {
 			folderId = _folderIdSupplier.get();
@@ -89,7 +87,7 @@ public class SelectionScope implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _folderIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getRepositoryId() {
 		if (_repositoryIdSupplier != null) {
 			repositoryId = _repositoryIdSupplier.get();
@@ -130,7 +128,7 @@ public class SelectionScope implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _repositoryIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getSelectAll() {
 		if (_selectAllSupplier != null) {
 			selectAll = _selectAllSupplier.get();
@@ -239,8 +237,8 @@ public class SelectionScope implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.bulk.rest.dto.v1_0.SelectionScope",
 		name = "x-class-name"
 	)

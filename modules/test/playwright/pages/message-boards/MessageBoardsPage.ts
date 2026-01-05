@@ -67,6 +67,22 @@ export class MessageBoardsPage {
 		});
 	}
 
+	async goToThreadPriorities(siteUrl?: Site['friendlyUrlPath']) {
+		this.goto(siteUrl);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page
+				.locator('.dropdown-menu')
+				.getByRole('menuitem', {name: 'Configuration'}),
+			trigger: this.optionsMenu,
+		});
+
+		await this.page
+			.getByRole('menuitem', {name: 'Thread Priorities'})
+			.click();
+	}
+
 	async setGuestCategoryPermissions(siteUrl?: Site['friendlyUrlPath']) {
 		await this.goto(siteUrl);
 
@@ -78,7 +94,7 @@ export class MessageBoardsPage {
 
 		await this.saveButton.click();
 
-		await this.page.getByLabel('close', {exact: true}).click();
+		await this.page.getByLabel('Close', {exact: true}).click();
 	}
 
 	async setRoleCategoryPermissions(
@@ -107,6 +123,6 @@ export class MessageBoardsPage {
 
 		await this.saveButton.click();
 
-		await this.page.getByLabel('close', {exact: true}).click();
+		await this.page.getByLabel('Close', {exact: true}).click();
 	}
 }

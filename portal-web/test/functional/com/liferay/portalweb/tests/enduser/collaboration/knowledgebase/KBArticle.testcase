@@ -79,7 +79,7 @@ definition {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.viewKBArticleWithAttachmentCP(
-			kbArticleAttachment = "Document_1.txt (259 B) Delete",
+			kbArticleAttachment = "Document_1.txt (259 B)",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title");
 	}
@@ -253,41 +253,6 @@ definition {
 			pageTreePanel = "true");
 	}
 
-	@priority = 3
-	@refactordone
-	test CanCancelAddingArticle {
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		KBArticle.cancelAddKBArticle(
-			kbArticleContent = "Knowledge Base Article Content",
-			kbArticleTitle = "Knowledge Base Article Title");
-
-		KBArticle.viewDefaultCP();
-	}
-
-	@priority = 3
-	@refactordone
-	test CanCancelEditingArticle {
-		JSONKnowledgeBase.addkBArticle(
-			groupName = "Guest",
-			kbArticleContent = "Knowledge Base Article Content",
-			kbArticleTitle = "Knowledge Base Article Title");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		KBArticle.editCP(
-			cancel = "true",
-			kbArticleContentEdit = "Knowledge Base Article Content Edit",
-			kbArticleTitle = "Knowledge Base Article Title",
-			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		KBArticle.viewCP(
-			kbArticleContent = "Knowledge Base Article Content",
-			kbArticleTitle = "Knowledge Base Article Title");
-	}
-
 	@description = "This test ensures that a user can delete the kb entry from the navigation pane."
 	@priority = 5
 	test CanDeleteArticleFromNavigationPane {
@@ -323,32 +288,13 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
-		LexiconTable.delete(tableEntry = "Knowledge Base Article Title");
+		LexiconTable.clickEllipsisItem(
+			item = "Delete",
+			tableEntry = "Knowledge Base Article Title");
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.viewDefaultCP();
-	}
-
-	@description = "This test ensures that users can edit article in the table view."
-	@priority = 4
-	test CanEditArticleInTableView {
-		JSONKnowledgeBase.addkBArticle(
-			groupName = "Guest",
-			kbArticleContent = "Knowledge Base Article Content",
-			kbArticleTitle = "Knowledge Base Article Title");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
-		KBArticle.editCP(
-			kbArticleTitle = "Knowledge Base Article Title",
-			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		LexiconEntry.viewEntryName(rowEntry = "Knowledge Base Article Title Edit");
 	}
 
 	@description = "This test ensures that a user can edit the kb entry permissions from the navigation pane."
@@ -387,31 +333,6 @@ definition {
 			roleTitle = "site member");
 	}
 
-	@description = "This test checks that a user can edit from an article."
-	@priority = 4
-	test CanEditArticleViaToolbar {
-		JSONKnowledgeBase.addkBArticle(
-			groupName = "Guest",
-			kbArticleContent = "Knowledge Base Article Content",
-			kbArticleTitle = "Knowledge Base Article Title");
-
-		KBArticle.openToKBArticleInSite(
-			groupName = "Guest",
-			kbArticleTitle = "Knowledge Base Article Title",
-			siteURLKey = "guest");
-
-		KBArticle.editCP(
-			editActionToolbar = "true",
-			kbArticleContentEdit = "Knowledge Base Article Content Edit",
-			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
-
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		KBArticle.viewCP(
-			kbArticleContent = "Knowledge Base Article Content Edit",
-			kbArticleTitle = "Knowledge Base Article Title Edit");
-	}
-
 	@description = "This test ensures that a user can edit the kb entry from the navigation pane."
 	@priority = 5
 	test CanEditEntryFromNavigationPane {
@@ -447,6 +368,10 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -762,12 +687,12 @@ definition {
 
 		KBArticle.selectAttachmentCP(kbArticleAttachment = "Document_1.txt");
 
-		PortletEntry.publish();
+		KBArticle.clickPublish();
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.viewKBArticleWithAttachmentCP(
-			kbArticleAttachment = "Document_1.txt (259 B) Delete",
+			kbArticleAttachment = "Document_1.txt (259 B)",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title");
 
@@ -812,7 +737,7 @@ definition {
 			categoryName = "Category Name2",
 			vocabularyName = "Vocabulary Name");
 
-		PortletEntry.publish();
+		KBArticle.clickPublish();
 
 		KBArticle.openToEditKBArticleInSite(
 			groupName = "Guest",
@@ -857,7 +782,7 @@ definition {
 			assetTitle = "Blogs Entry Title",
 			assetType = "Blogs Entry");
 
-		PortletEntry.publish();
+		KBArticle.clickPublish();
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -887,7 +812,7 @@ definition {
 
 		AssetCategorization.addTag(tagName = "Tag2");
 
-		PortletEntry.publish();
+		KBArticle.clickPublish();
 
 		KBArticle.openToEditKBArticleInSite(
 			groupName = "Guest",
@@ -970,9 +895,7 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
-		KBArticle.deleteCP(
-			kbArticleTitle = "Knowledge Base Article Title",
-			moveToRecycleBin = "true");
+		KBArticle.deleteCP(kbArticleTitle = "Knowledge Base Article Title");
 
 		KBArticle.viewDefaultCP();
 
@@ -1048,9 +971,7 @@ definition {
 
 		KBArticle.gotoChildArticleDescriptiveDetails(kbArticleTitle = "Knowledge Base Article Title");
 
-		KBArticle.deleteCP(
-			kbArticleTitle = "Knowledge Base Child Article Title",
-			moveToRecycleBin = "true");
+		KBArticle.deleteCP(kbArticleTitle = "Knowledge Base Child Article Title");
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -1085,9 +1006,7 @@ definition {
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
-		KBArticle.deleteCP(
-			kbArticleTitle = "Knowledge Base Article Title",
-			moveToRecycleBin = "true");
+		KBArticle.deleteCP(kbArticleTitle = "Knowledge Base Article Title");
 
 		KBArticle.viewDefaultCP();
 
@@ -1281,7 +1200,7 @@ definition {
 
 		KBArticle.setReviewDate(increaseMinutes = 1);
 
-		PortletEntry.publish();
+		KBArticle.clickPublish();
 
 		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 20000);
 

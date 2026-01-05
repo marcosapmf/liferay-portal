@@ -12,11 +12,12 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.translation.constants.TranslationPortletKeys;
 import com.liferay.translation.info.field.TranslationInfoFieldChecker;
+import com.liferay.translation.manager.TranslationManager;
 import com.liferay.translation.model.TranslationEntry;
 import com.liferay.translation.service.TranslationEntryLocalService;
 import com.liferay.translation.snapshot.TranslationSnapshotProvider;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -25,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Adolfo Pérez
  */
 @Component(
-	property = "javax.portlet.name=" + TranslationPortletKeys.TRANSLATION,
+	property = "jakarta.portlet.name=" + TranslationPortletKeys.TRANSLATION,
 	service = AssetRendererFactory.class
 )
 public class TranslationEntryAssetRendererFactory
@@ -47,10 +48,16 @@ public class TranslationEntryAssetRendererFactory
 		if (translationEntry != null) {
 			return new TranslationEntryAssetRenderer(
 				_infoItemServiceRegistry, _servletContext, translationEntry,
-				_translationInfoFieldChecker, _translationSnapshotProvider);
+				_translationManager, _translationInfoFieldChecker,
+				_translationSnapshotProvider);
 		}
 
 		return null;
+	}
+
+	@Override
+	public String getIconCssClass() {
+		return "automatic-translate";
 	}
 
 	@Override
@@ -69,6 +76,9 @@ public class TranslationEntryAssetRendererFactory
 
 	@Reference
 	private TranslationInfoFieldChecker _translationInfoFieldChecker;
+
+	@Reference
+	private TranslationManager _translationManager;
 
 	@Reference
 	private TranslationSnapshotProvider _translationSnapshotProvider;

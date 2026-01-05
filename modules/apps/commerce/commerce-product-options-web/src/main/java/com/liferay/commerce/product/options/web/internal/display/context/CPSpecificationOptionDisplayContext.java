@@ -30,12 +30,12 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Andrea Di Giorgi
@@ -196,7 +196,7 @@ public class CPSpecificationOptionDisplayContext
 
 		searchContainer.setResultsAndTotal(
 			_cpSpecificationOptionService.searchCPSpecificationOptions(
-				cpRequestHelper.getCompanyId(), facetable, getKeywords(),
+				cpRequestHelper.getCompanyId(), facetable, null, getKeywords(),
 				searchContainer.getStart(), searchContainer.getEnd(),
 				CPOptionsPortletUtil.getCPSpecificationOptionSort(
 					getOrderByCol(), getOrderByType())));

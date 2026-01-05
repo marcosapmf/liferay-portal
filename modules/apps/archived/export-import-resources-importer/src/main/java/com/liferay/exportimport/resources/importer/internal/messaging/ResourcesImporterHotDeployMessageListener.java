@@ -13,6 +13,7 @@ import com.liferay.exportimport.resources.importer.internal.util.ImporterFactory
 import com.liferay.exportimport.resources.importer.internal.util.PluginPackageProperties;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,9 +33,9 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Dictionary;
+import jakarta.servlet.ServletContext;
 
-import javax.servlet.ServletContext;
+import java.util.Dictionary;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -112,10 +113,9 @@ public class ResourcesImporterHotDeployMessageListener
 			String messageResponseId)
 		throws Exception {
 
-		long companyId = CompanyThreadLocal.getCompanyId();
-
-		try {
-			CompanyThreadLocal.setCompanyId(company.getCompanyId());
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					company.getCompanyId())) {
 
 			Importer importer = _importerFactory.createImporter(
 				company.getCompanyId(), servletContext,
@@ -193,9 +193,6 @@ public class ResourcesImporterHotDeployMessageListener
 
 			_messageBus.sendMessage(
 				ResourcesImporterDestinationNames.RESOURCES_IMPORTER, message);
-		}
-		finally {
-			CompanyThreadLocal.setCompanyId(companyId);
 		}
 	}
 

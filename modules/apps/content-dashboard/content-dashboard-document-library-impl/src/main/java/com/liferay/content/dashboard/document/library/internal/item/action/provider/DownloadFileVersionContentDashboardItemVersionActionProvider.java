@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -72,11 +72,7 @@ public class DownloadFileVersionContentDashboardItemVersionActionProvider
 		ContentDashboardItemVersionAction contentDashboardItemVersionAction =
 			_getContentDashboardItemVersionAction(fileEntry);
 
-		if (Validator.isNull(contentDashboardItemVersionAction.getURL())) {
-			return false;
-		}
-
-		return true;
+		return Validator.isNotNull(contentDashboardItemVersionAction.getURL());
 	}
 
 	private ContentDashboardItemVersionAction

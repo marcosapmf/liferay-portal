@@ -13,6 +13,7 @@ CommerceInventoryDisplayContext commerceInventoryDisplayContext = (CommerceInven
 CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem = commerceInventoryDisplayContext.getCommerceInventoryReplenishmentItem();
 %>
 
+<liferay-ui:error exception="<%= CommerceInventoryReplenishmentQuantityException.class %>" message="please-enter-a-valid-quantity" />
 <liferay-ui:error exception="<%= MVCCException.class %>" message="this-item-is-no-longer-valid-please-try-again" />
 
 <portlet:actionURL name="/commerce_inventory/edit_commerce_inventory_replenishment_item" var="editCommerceInventoryReplenishmentItemActionURL" />
@@ -20,7 +21,7 @@ CommerceInventoryReplenishmentItem commerceInventoryReplenishmentItem = commerce
 <c:choose>
 	<c:when test="<%= commerceInventoryReplenishmentItem == null %>">
 		<commerce-ui:modal-content
-			title='<%= LanguageUtil.get(request, "add-income") %>'
+			title='<%= LanguageUtil.get(request, "add-incoming") %>'
 		>
 			<aui:form action="<%= editCommerceInventoryReplenishmentItemActionURL %>" method="post" name="fm">
 				<%@ include file="/edit_commerce_inventory_replenishment_item.jspf" %>

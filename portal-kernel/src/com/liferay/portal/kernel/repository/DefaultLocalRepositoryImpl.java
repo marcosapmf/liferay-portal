@@ -66,8 +66,8 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 
 	@Override
 	public FileShortcut addFileShortcut(
-		long userId, long folderId, long toFileEntryId,
-		ServiceContext serviceContext) {
+		String externalReferenceCode, long userId, long folderId,
+		long toFileEntryId, ServiceContext serviceContext) {
 
 		throw new UnsupportedOperationException();
 	}
@@ -140,6 +140,11 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 	@Override
 	public void deleteFolder(long folderId) throws PortalException {
 		_repository.deleteFolder(folderId);
+	}
+
+	@Override
+	public FileEntry fetchFileEntry(long fileEntryId) throws PortalException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

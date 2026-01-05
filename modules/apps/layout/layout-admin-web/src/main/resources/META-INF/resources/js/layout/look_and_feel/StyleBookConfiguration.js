@@ -5,19 +5,19 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {openSelectionModal} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
 export default function StyleBookConfiguration({
 	changeStyleBookURL,
 	isReadOnly,
 	portletNamespace,
-	styleBookEntryId: initialStyleBookEntryId,
+	styleBookEntryERC: initialStyleBookEntryERC,
 	styleBookEntryName: initialStyleBookEntryName,
 }) {
 	const [styleBookEntry, setStyleBookEntry] = useState({
 		name: initialStyleBookEntryName,
-		styleBookEntryId: initialStyleBookEntryId,
+		styleBookEntryERC: initialStyleBookEntryERC,
 	});
 
 	const handleChangeStyleBookClick = () => {
@@ -33,7 +33,7 @@ export default function StyleBookConfiguration({
 
 					setStyleBookEntry({
 						name: itemValue.name,
-						styleBookEntryId: itemValue.styleBookEntryId,
+						styleBookEntryERC: itemValue.externalReferenceCode,
 					});
 				}
 			},
@@ -46,9 +46,9 @@ export default function StyleBookConfiguration({
 	return (
 		<>
 			<input
-				name={`${portletNamespace}styleBookEntryId`}
+				name={`${portletNamespace}styleBookEntryERC`}
 				type="hidden"
-				value={styleBookEntry.styleBookEntryId}
+				value={styleBookEntry.styleBookEntryERC}
 			/>
 
 			<label htmlFor={`${portletNamespace}styleBookEntry`}>

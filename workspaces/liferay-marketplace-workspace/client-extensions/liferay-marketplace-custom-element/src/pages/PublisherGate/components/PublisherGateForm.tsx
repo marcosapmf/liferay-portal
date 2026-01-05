@@ -4,7 +4,7 @@
  */
 
 import ClayButton from '@clayui/button';
-import DropDown from '@clayui/drop-down/lib/DropDown';
+import DropDown from '@clayui/drop-down';
 import ClayForm, {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import {Fragment, useState} from 'react';
@@ -13,17 +13,17 @@ import {useNavigate} from 'react-router-dom';
 
 import {Header} from '../../../components/Header/Header';
 import FormInput from '../../../components/Input/formInput';
-import {getSiteURL} from '../../../components/InviteMemberModal/services';
 import {Tooltip} from '../../../components/Tooltip/Tooltip';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../liferay/liferay';
 import {phones} from '../../../utils/phones';
-import {PublisherForm, StepType} from './PublisherGateSteps';
+import {getSiteURL} from '../../../utils/site';
+import {PublisherForm, PublisherGateStep} from './PublisherGateSteps';
 
 type PublisherGateFormProps = {
 	form: UseFormReturn<PublisherForm, any>;
 	listTypeDefinition?: ListTypeDefinition;
-	setStep: React.Dispatch<React.SetStateAction<StepType>>;
+	setStep: React.Dispatch<React.SetStateAction<PublisherGateStep>>;
 };
 
 const tooltipText = {
@@ -273,7 +273,9 @@ const PublisherGateForm: React.FC<PublisherGateFormProps> = ({
 
 							<ClayButton
 								disabled={!form.formState.isValid}
-								onClick={() => setStep(StepType.SUMMARY)}
+								onClick={() =>
+									setStep(PublisherGateStep.SUMMARY)
+								}
 							>
 								{i18n.translate('continue')}
 							</ClayButton>

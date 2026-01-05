@@ -16,11 +16,12 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,11 +30,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
-	property = "javax.portlet.name=" + CPPortletKeys.CP_ASSET_CATEGORIES_NAVIGATION,
+	property = "jakarta.portlet.name=" + CPPortletKeys.CP_ASSET_CATEGORIES_NAVIGATION,
 	service = ConfigurationAction.class
 )
 public class CPAssetCategoriesNavigationConfigurationAction
-	extends DefaultConfigurationAction {
+	extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -41,10 +42,10 @@ public class CPAssetCategoriesNavigationConfigurationAction
 			CPAssetCategoriesNavigationDisplayContext
 				cpAssetCategoryNavigationDisplayContext =
 					new CPAssetCategoriesNavigationDisplayContext(
-						httpServletRequest, _assetCategoryService,
-						_assetVocabularyService, _commerceMediaResolver,
-						_cpAttachmentFileEntryService, _cpFriendlyURL,
-						_friendlyURLEntryLocalService, _portal);
+						_assetCategoryService, _assetVocabularyService,
+						_commerceMediaResolver, _cpAttachmentFileEntryService,
+						_cpFriendlyURL, _friendlyURLEntryLocalService,
+						_groupLocalService, httpServletRequest, _portal);
 
 			httpServletRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -77,6 +78,9 @@ public class CPAssetCategoriesNavigationConfigurationAction
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

@@ -21,6 +21,7 @@ import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
 import com.liferay.batch.engine.unit.BundleBatchEngineUnit;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -31,7 +32,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -43,9 +46,11 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipEntry;
@@ -78,12 +83,14 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 				BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
 					batchEngineUnit.getBatchEngineUnitMetaInfo();
 
-				String featureFlag = batchEngineUnitMetaInfo.getFeatureFlag();
+				String featureFlagKey =
+					batchEngineUnitMetaInfo.getFeatureFlagKey();
 
-				if (_isFeatureFlagDisabled(featureFlag)) {
+				if (_isFeatureFlagDisabled(featureFlagKey)) {
 					_featureFlagBatchEngineUnitProcessor.
 						registerBatchEngineUnit(
-							batchEngineUnitMetaInfo.getCompanyId(), featureFlag,
+							batchEngineUnitMetaInfo.getCompanyId(),
+							featureFlagKey,
 							() -> {
 								CompletableFuture<Void> localCompletableFuture =
 									new CompletableFuture<>();
@@ -151,8 +158,11 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 						"(!(batch.engine.task.item.delegate.name=*)))",
 						"(&(batch.engine.entity.class.name=",
 						_getObjectEntryClassName(batchEngineUnitConfiguration),
-						")(batch.engine.task.item.delegate.name=",
+						")(batch.engine.task.item.delegate=true)",
+						"(batch.engine.task.item.delegate.name=",
 						batchEngineUnitConfiguration.getTaskItemDelegateName(),
+						")(companyId=",
+						batchEngineUnitConfiguration.getCompanyId(),
 						"))(&(batch.engine.entity.class.name=",
 						batchEngineUnitConfiguration.getClassName(),
 						")(batch.engine.task.item.delegate.name=",
@@ -198,26 +208,39 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 			ServiceTracker<Object, Object> serviceTracker)
 		throws Exception {
 
+		int importStrategy =
+			BatchEngineImportTaskConstants.IMPORT_STRATEGY_ON_ERROR_FAIL;
+
+		Map<String, Serializable> parameters =
+			batchEngineUnitConfiguration.getParameters();
+
+		if (Validator.isNotNull(parameters.get("importStrategy"))) {
+			importStrategy = BatchEngineImportTaskConstants.getImportStrategy(
+				(String)parameters.get("importStrategy"));
+		}
+
 		BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate =
 			_batchEngineTaskItemDelegateProvider.toBatchEngineTaskItemDelegate(
 				service);
 
-		BatchEngineImportTask batchEngineImportTask =
-			_batchEngineImportTaskLocalService.addBatchEngineImportTask(
-				null, batchEngineUnitConfiguration.getCompanyId(),
-				batchEngineUnitConfiguration.getUserId(), 100,
-				batchEngineUnitConfiguration.getCallbackURL(),
-				batchEngineUnitConfiguration.getClassName(), content,
-				StringUtil.toUpperCase(contentType),
-				BatchEngineTaskExecuteStatus.INITIAL.name(),
-				batchEngineUnitConfiguration.getFieldNameMappingMap(),
-				BatchEngineImportTaskConstants.IMPORT_STRATEGY_ON_ERROR_FAIL,
-				BatchEngineTaskOperation.CREATE.name(),
-				batchEngineUnitConfiguration.getParameters(),
-				batchEngineUnitConfiguration.getTaskItemDelegateName(),
-				batchEngineTaskItemDelegate);
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					batchEngineUnitConfiguration.getCompanyId())) {
 
-		try {
+			BatchEngineImportTask batchEngineImportTask =
+				_batchEngineImportTaskLocalService.addBatchEngineImportTask(
+					null, batchEngineUnitConfiguration.getCompanyId(),
+					batchEngineUnitConfiguration.getUserId(), 100,
+					batchEngineUnitConfiguration.getCallbackURL(),
+					batchEngineUnitConfiguration.getClassName(), content,
+					StringUtil.toUpperCase(contentType),
+					BatchEngineTaskExecuteStatus.INITIAL.name(),
+					batchEngineUnitConfiguration.getFieldNameMappingMap(),
+					importStrategy, BatchEngineTaskOperation.CREATE.name(),
+					parameters,
+					batchEngineUnitConfiguration.getTaskItemDelegateName(),
+					batchEngineTaskItemDelegate);
+
 			BatchEngineUnitThreadLocal.setFileName(
 				batchEngineUnit.getFileName());
 
@@ -244,16 +267,18 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		Role role = _roleLocalService.getRole(
 			companyId, RoleConstants.ADMINISTRATOR);
 
-		long[] userIds = _userLocalService.getRoleUserIds(role.getRoleId());
+		for (long userId : _userLocalService.getRoleUserIds(role.getRoleId())) {
+			User user = _userLocalService.fetchUser(userId);
 
-		if (userIds.length == 0) {
-			throw new NoSuchUserException(
-				StringBundler.concat(
-					"No user exists in company ", companyId, " with role ",
-					role.getName()));
+			if ((user != null) && user.isActive()) {
+				return user.getUserId();
+			}
 		}
 
-		return userIds[0];
+		throw new NoSuchUserException(
+			StringBundler.concat(
+				"No active user exists in company ", companyId, " with role ",
+				role.getName()));
 	}
 
 	private Bundle _getBundle(BatchEngineUnit batchEngineUnit) {
@@ -347,13 +372,17 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 			CompletableFuture<Void> completableFuture)
 		throws Exception {
 
+		if (_isProcessed(batchEngineUnit)) {
+			return null;
+		}
+
 		BatchEngineUnitConfiguration batchEngineUnitConfiguration = null;
 		byte[] content = null;
 		String contentType = null;
 
 		if (batchEngineUnit.isValid()) {
-			batchEngineUnitConfiguration = _updateBatchEngineUnitConfiguration(
-				batchEngineUnit.getBatchEngineUnitConfiguration());
+			batchEngineUnitConfiguration =
+				batchEngineUnit.getBatchEngineUnitConfiguration();
 
 			UnsyncByteArrayOutputStream compressedUnsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream();
@@ -382,13 +411,10 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 					" ", batchEngineUnit.getDataFileName()));
 		}
 
-		if (_isProcessed(batchEngineUnit)) {
-			return null;
-		}
-
 		return _execute(
-			batchEngineUnit, batchEngineUnitConfiguration, content, contentType,
-			completableFuture);
+			batchEngineUnit,
+			_updateBatchEngineUnitConfiguration(batchEngineUnitConfiguration),
+			content, contentType, completableFuture);
 	}
 
 	private BatchEngineUnitConfiguration _updateBatchEngineUnitConfiguration(

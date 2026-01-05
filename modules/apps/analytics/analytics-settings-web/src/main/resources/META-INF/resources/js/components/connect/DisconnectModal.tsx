@@ -16,17 +16,18 @@ interface IDisconnectModalProps {
 	onOpenChange: (value: boolean) => void;
 }
 
-const DisconnectModal: React.FC<IDisconnectModalProps> = ({
-	observer,
-	onOpenChange,
-}) => {
+const DisconnectModal: React.FC<
+	{children?: React.ReactNode | undefined} & IDisconnectModalProps
+> = ({observer, onOpenChange}) => {
 	const [submitting, setSubmitting] = useState(false);
 
 	const dispatch = useDispatch();
 
 	return (
 		<ClayModal center observer={observer} status="warning">
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('disconnecting-data-source')}
 			</ClayModal.Header>
 

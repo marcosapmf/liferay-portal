@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.EmailAddress;
+import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
@@ -122,7 +124,7 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 			UsersAdminUtil.updateAddresses(
 				Organization.class.getName(), organization.getOrganizationId(),
-				addresses);
+				addresses, ListTypeConstants.ORGANIZATION_ADDRESS);
 
 			UsersAdminUtil.updateEmailAddresses(
 				Organization.class.getName(), organization.getOrganizationId(),
@@ -280,7 +282,7 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
 				Organization.class.getName(), organization.getOrganizationId(),
-				addresses);
+				addresses, ListTypeConstants.ORGANIZATION_ADDRESS);
 		}
 
 		if (emailAddresses != null) {
@@ -429,6 +431,27 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 			OrganizationIdComparator.getInstance(true));
 	}
 
+	public Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, String name)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		Organization organization = fetchOrganizationByExternalReferenceCode(
+			externalReferenceCode, permissionChecker.getCompanyId());
+
+		if (organization != null) {
+			return organization;
+		}
+
+		PortalPermissionUtil.check(
+			getPermissionChecker(), ActionKeys.ADD_ORGANIZATION);
+
+		return organizationLocalService.getOrAddEmptyOrganization(
+			externalReferenceCode, permissionChecker.getCompanyId(),
+			permissionChecker.getUserId(), name);
+	}
+
 	/**
 	 * Returns the organization with the primary key.
 	 *
@@ -450,7 +473,7 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 	@Override
 	public Organization getOrganizationByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		Organization organization =
@@ -789,7 +812,8 @@ public class OrganizationServiceImpl extends OrganizationServiceBaseImpl {
 
 		if (addresses != null) {
 			UsersAdminUtil.updateAddresses(
-				Organization.class.getName(), organizationId, addresses);
+				Organization.class.getName(), organizationId, addresses,
+				ListTypeConstants.ORGANIZATION_ADDRESS);
 		}
 
 		if (emailAddresses != null) {

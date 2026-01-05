@@ -11,7 +11,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,7 +51,8 @@ public class LayoutBasicInfoFormNavigatorEntry
 			return false;
 		}
 
-		if (layout.isTypeAssetDisplay() || layout.isTypeUtility() ||
+		if (layout.isTypeAssetDisplay() || layout.isTypeEmpty() ||
+			layout.isTypeUtility() ||
 			(layout.isTypeContent() && (layout.fetchDraftLayout() == null))) {
 
 			return false;

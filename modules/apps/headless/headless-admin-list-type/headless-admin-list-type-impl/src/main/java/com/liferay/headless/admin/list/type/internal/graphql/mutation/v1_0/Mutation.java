@@ -11,8 +11,6 @@ import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionReso
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeEntryResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -21,15 +19,15 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -54,74 +52,6 @@ public class Mutation {
 
 		_listTypeEntryResourceComponentServiceObjects =
 			listTypeEntryResourceComponentServiceObjects;
-	}
-
-	@GraphQLField
-	public Response createListTypeDefinitionsPageExportBatch(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("sort") String sortsString,
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("contentType") String contentType,
-			@GraphQLName("fieldNames") String fieldNames)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.
-					postListTypeDefinitionsPageExportBatch(
-						search,
-						_filterBiFunction.apply(
-							listTypeDefinitionResource, filterString),
-						_sortsBiFunction.apply(
-							listTypeDefinitionResource, sortsString),
-						callbackURL, contentType, fieldNames));
-	}
-
-	@GraphQLField
-	public ListTypeDefinition createListTypeDefinition(
-			@GraphQLName("listTypeDefinition") ListTypeDefinition
-				listTypeDefinition)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.postListTypeDefinition(
-					listTypeDefinition));
-	}
-
-	@GraphQLField
-	public Response createListTypeDefinitionBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.postListTypeDefinitionBatch(
-					callbackURL, object));
-	}
-
-	@GraphQLField
-	public ListTypeDefinition updateListTypeDefinitionByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode,
-			@GraphQLName("listTypeDefinition") ListTypeDefinition
-				listTypeDefinition)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeDefinitionResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeDefinitionResource ->
-				listTypeDefinitionResource.
-					putListTypeDefinitionByExternalReferenceCode(
-						externalReferenceCode, listTypeDefinition));
 	}
 
 	@GraphQLField
@@ -169,6 +99,58 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public ListTypeDefinition createListTypeDefinition(
+			@GraphQLName("listTypeDefinition") ListTypeDefinition
+				listTypeDefinition)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.postListTypeDefinition(
+					listTypeDefinition));
+	}
+
+	@GraphQLField
+	public Response createListTypeDefinitionBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.postListTypeDefinitionBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createListTypeDefinitionsPageExportBatch(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.
+					postListTypeDefinitionsPageExportBatch(
+						search,
+						_filterBiFunction.apply(
+							listTypeDefinitionResource, filterString),
+						_sortsBiFunction.apply(
+							listTypeDefinitionResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public ListTypeDefinition updateListTypeDefinition(
 			@GraphQLName("listTypeDefinitionId") Long listTypeDefinitionId,
 			@GraphQLName("listTypeDefinition") ListTypeDefinition
@@ -194,6 +176,50 @@ public class Mutation {
 			this::_populateResourceContext,
 			listTypeDefinitionResource ->
 				listTypeDefinitionResource.putListTypeDefinitionBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public ListTypeDefinition updateListTypeDefinitionByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("listTypeDefinition") ListTypeDefinition
+				listTypeDefinition)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeDefinitionResource ->
+				listTypeDefinitionResource.
+					putListTypeDefinitionByExternalReferenceCode(
+						externalReferenceCode, listTypeDefinition));
+	}
+
+	@GraphQLField
+	public boolean deleteListTypeEntry(
+			@GraphQLName("listTypeEntryId") Long listTypeEntryId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_listTypeEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeEntryResource -> listTypeEntryResource.deleteListTypeEntry(
+				listTypeEntryId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteListTypeEntryBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_listTypeEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			listTypeEntryResource ->
+				listTypeEntryResource.deleteListTypeEntryBatch(
 					callbackURL, object));
 	}
 
@@ -266,34 +292,6 @@ public class Mutation {
 			listTypeEntryResource ->
 				listTypeEntryResource.postListTypeDefinitionListTypeEntryBatch(
 					listTypeDefinitionId, callbackURL, object));
-	}
-
-	@GraphQLField
-	public boolean deleteListTypeEntry(
-			@GraphQLName("listTypeEntryId") Long listTypeEntryId)
-		throws Exception {
-
-		_applyVoidComponentServiceObjects(
-			_listTypeEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeEntryResource -> listTypeEntryResource.deleteListTypeEntry(
-				listTypeEntryId));
-
-		return true;
-	}
-
-	@GraphQLField
-	public Response deleteListTypeEntryBatch(
-			@GraphQLName("callbackURL") String callbackURL,
-			@GraphQLName("object") Object object)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_listTypeEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			listTypeEntryResource ->
-				listTypeEntryResource.deleteListTypeEntryBatch(
-					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -411,12 +409,15 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 	private VulcanBatchEngineExportTaskResource

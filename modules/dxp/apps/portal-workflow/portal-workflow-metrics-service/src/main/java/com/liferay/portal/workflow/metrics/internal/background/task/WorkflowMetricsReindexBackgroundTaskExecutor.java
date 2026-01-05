@@ -17,8 +17,6 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -102,8 +100,9 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 								getWorkflowMetricsReindexer(indexEntityName);
 
 						try (SafeCloseable safeCloseable =
-								CompanyThreadLocal.setWithSafeCloseable(
-									backgroundTask.getCompanyId())) {
+								CompanyThreadLocal.
+									setCompanyIdWithSafeCloseable(
+										backgroundTask.getCompanyId())) {
 
 							workflowMetricsReindexer.reindex(
 								backgroundTask.getCompanyId());
@@ -143,22 +142,8 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 				(String[])taskContextMap.get(
 					"workflow.metrics.index.entity.names"),
 				name -> {
-					try {
-						WorkflowMetricsIndex workflowMetricsIndex =
-							WorkflowMetricsIndex.toWorkflowMetricsIndex(name);
-
-						if (_workflowMetricsReindexerRegistry.containsKey(
-								workflowMetricsIndex.name())) {
-
-							return name;
-						}
-
-						return null;
-					}
-					catch (IllegalArgumentException illegalArgumentException) {
-						_log.error(
-							"Unknown workflow metrics index: " + name,
-							illegalArgumentException);
+					if (_workflowMetricsReindexerRegistry.containsKey(name)) {
+						return name;
 					}
 
 					return null;
@@ -175,7 +160,7 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 		Message message = new Message();
 
 		message.put(
-			BackgroundTaskConstants.BACKGROUND_TASK_ID,
+			BackgroundTaskConstants.MESSAGE_KEY_BACKGROUND_TASK_ID,
 			BackgroundTaskThreadLocal.getBackgroundTaskId());
 		message.put(
 			WorkflowMetricsReindexBackgroundTaskConstants.COMPANY_ID,
@@ -197,9 +182,6 @@ public class WorkflowMetricsReindexBackgroundTaskExecutor
 		_backgroundTaskStatusMessageSender.sendBackgroundTaskStatusMessage(
 			message);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		WorkflowMetricsReindexBackgroundTaskExecutor.class);
 
 	@Reference
 	private BackgroundTaskStatusMessageSender

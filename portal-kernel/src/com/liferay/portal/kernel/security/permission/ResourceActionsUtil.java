@@ -11,10 +11,10 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.xml.Document;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -132,6 +132,12 @@ public class ResourceActionsUtil {
 		String name) {
 
 		return _resourceActions.getPortletResourceLayoutManagerActions(name);
+	}
+
+	public static List<String> getPortletResourceOwnerDefaultActions(
+		String name) {
+
+		return _resourceActions.getPortletResourceOwnerDefaultActions(name);
 	}
 
 	public static String getPortletRootModelResource(String portletName) {

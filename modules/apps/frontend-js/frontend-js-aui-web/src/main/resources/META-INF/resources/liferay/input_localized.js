@@ -591,7 +591,15 @@ AUI.add(
 						instance.set('edited', false);
 
 						Liferay.fire('journal:storeState', {
-							fieldName: instance.get('name'),
+							fieldName:
+								Liferay.Language.get('edit') +
+								' ' +
+								document.querySelector(
+									"label[for='" +
+										instance.get('namespace') +
+										instance.get('id') +
+										"']"
+								).textContent,
 						});
 					}
 				},
@@ -932,6 +940,10 @@ AUI.add(
 						instance.getValue(defaultLanguageId);
 
 					const inputLanguageValue = instance.getValue(languageId);
+
+					const boundingBox = instance.get('boundingBox');
+
+					instance._flags = boundingBox.one('.palette-container');
 
 					instance._animate(inputPlaceholder, shouldFocus);
 					instance._clearFormValidator(inputPlaceholder);

@@ -211,6 +211,25 @@ public class DLFileEntryServiceImpl extends DLFileEntryServiceBaseImpl {
 	}
 
 	@Override
+	public void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		ModelResourcePermission<DLFileEntry>
+			dlFileEntryModelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					DLFileEntry.class.getName());
+
+		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByERC_G(
+			externalReferenceCode, groupId);
+
+		dlFileEntryModelResourcePermission.check(
+			getPermissionChecker(), dlFileEntry, ActionKeys.DELETE);
+
+		dlFileEntryLocalService.deleteFileEntry(dlFileEntry);
+	}
+
+	@Override
 	public void deleteFileVersion(long fileEntryId, String version)
 		throws PortalException {
 
@@ -223,6 +242,24 @@ public class DLFileEntryServiceImpl extends DLFileEntryServiceBaseImpl {
 
 		dlFileEntryLocalService.deleteFileVersion(
 			getUserId(), fileEntryId, version);
+	}
+
+	@Override
+	public DLFileEntry fetchFileEntry(long fileEntryId) throws PortalException {
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.fetchDLFileEntry(
+			fileEntryId);
+
+		if (dlFileEntry != null) {
+			ModelResourcePermission<DLFileEntry>
+				dlFileEntryModelResourcePermission =
+					ModelResourcePermissionRegistryUtil.
+						getModelResourcePermission(DLFileEntry.class.getName());
+
+			dlFileEntryModelResourcePermission.check(
+				getPermissionChecker(), dlFileEntry, ActionKeys.VIEW);
+		}
+
+		return dlFileEntry;
 	}
 
 	@Override
@@ -552,7 +589,7 @@ public class DLFileEntryServiceImpl extends DLFileEntryServiceBaseImpl {
 
 	@Override
 	public DLFileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		ModelResourcePermission<DLFileEntry>

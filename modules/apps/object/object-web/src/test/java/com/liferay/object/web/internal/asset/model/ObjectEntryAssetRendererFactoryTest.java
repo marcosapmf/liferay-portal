@@ -6,6 +6,7 @@
 package com.liferay.object.web.internal.asset.model;
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectEntryLocalService;
@@ -14,7 +15,7 @@ import com.liferay.object.web.internal.object.entries.display.context.ObjectEntr
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,9 +36,9 @@ public class ObjectEntryAssetRendererFactoryTest {
 	@Before
 	public void setUp() throws Exception {
 		_objectEntryAssetRendererFactory = new ObjectEntryAssetRendererFactory(
-			_assetDisplayPageFriendlyURLProvider, _objectDefinition,
-			_objectEntryDisplayContextFactoryImpl, _objectEntryLocalService,
-			_objectEntryService, _servletContext);
+			_assetDisplayPageFriendlyURLProvider, _depotEntryLocalService,
+			_objectDefinition, _objectEntryDisplayContextFactoryImpl,
+			_objectEntryLocalService, _objectEntryService, _servletContext);
 	}
 
 	@Test
@@ -85,6 +86,8 @@ public class ObjectEntryAssetRendererFactoryTest {
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider = Mockito.mock(
 			AssetDisplayPageFriendlyURLProvider.class);
+	private final DepotEntryLocalService _depotEntryLocalService = Mockito.mock(
+		DepotEntryLocalService.class);
 	private final ObjectDefinition _objectDefinition = Mockito.mock(
 		ObjectDefinition.class);
 	private ObjectEntryAssetRendererFactory _objectEntryAssetRendererFactory;

@@ -635,7 +635,6 @@ public class DLFileVersionPersistenceImpl
 		"(dlFileVersion.uuid IS NULL OR dlFileVersion.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the document library file version where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchFileVersionException</code> if it could not be found.
@@ -820,68 +819,13 @@ public class DLFileVersionPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileVersion.class)) {
+		DLFileVersion dlFileVersion = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEVERSION_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileVersion == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -4189,7 +4133,6 @@ public class DLFileVersionPersistenceImpl
 		"dlFileVersion.status != ?";
 
 	private FinderPath _finderPathFetchByF_V;
-	private FinderPath _finderPathCountByF_V;
 
 	/**
 	 * Returns the document library file version where fileEntryId = &#63; and version = &#63; or throws a <code>NoSuchFileVersionException</code> if it could not be found.
@@ -4374,68 +4317,13 @@ public class DLFileVersionPersistenceImpl
 	 */
 	@Override
 	public int countByF_V(long fileEntryId, String version) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					DLFileVersion.class)) {
+		DLFileVersion dlFileVersion = fetchByF_V(fileEntryId, version);
 
-			version = Objects.toString(version, "");
-
-			FinderPath finderPath = _finderPathCountByF_V;
-
-			Object[] finderArgs = new Object[] {fileEntryId, version};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_DLFILEVERSION_WHERE);
-
-				sb.append(_FINDER_COLUMN_F_V_FILEENTRYID_2);
-
-				boolean bindVersion = false;
-
-				if (version.isEmpty()) {
-					sb.append(_FINDER_COLUMN_F_V_VERSION_3);
-				}
-				else {
-					bindVersion = true;
-
-					sb.append(_FINDER_COLUMN_F_V_VERSION_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(fileEntryId);
-
-					if (bindVersion) {
-						queryPos.add(version);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (dlFileVersion == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_F_V_FILEENTRYID_2 =
@@ -8264,8 +8152,6 @@ public class DLFileVersionPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByUUID_G, args, dlFileVersionModelImpl);
 
 			args = new Object[] {
@@ -8273,8 +8159,6 @@ public class DLFileVersionPersistenceImpl
 				dlFileVersionModelImpl.getVersion()
 			};
 
-			FinderCacheUtil.putResult(
-				_finderPathCountByF_V, args, Long.valueOf(1));
 			FinderCacheUtil.putResult(
 				_finderPathFetchByF_V, args, dlFileVersionModelImpl);
 		}
@@ -8954,6 +8838,7 @@ public class DLFileVersionPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
 		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
@@ -8965,34 +8850,36 @@ public class DLFileVersionPersistenceImpl
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
-		ctMergeColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("repositoryId");
-		ctStrictColumnNames.add("folderId");
-		ctStrictColumnNames.add("fileEntryId");
-		ctStrictColumnNames.add("treePath");
-		ctStrictColumnNames.add("fileName");
-		ctStrictColumnNames.add("extension");
-		ctStrictColumnNames.add("mimeType");
-		ctStrictColumnNames.add("title");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("changeLog");
-		ctStrictColumnNames.add("extraSettings");
-		ctStrictColumnNames.add("fileEntryTypeId");
-		ctStrictColumnNames.add("version");
-		ctStrictColumnNames.add("size_");
-		ctStrictColumnNames.add("checksum");
-		ctStrictColumnNames.add("storeUUID");
-		ctStrictColumnNames.add("displayDate");
-		ctStrictColumnNames.add("expirationDate");
-		ctStrictColumnNames.add("reviewDate");
-		ctStrictColumnNames.add("lastPublishDate");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctMergeColumnNames.add("repositoryId");
+		ctMergeColumnNames.add("folderId");
+		ctMergeColumnNames.add("fileEntryId");
+		ctMergeColumnNames.add("treePath");
+		ctMergeColumnNames.add("fileName");
+		ctMergeColumnNames.add("extension");
+		ctMergeColumnNames.add("mimeType");
+		ctMergeColumnNames.add("title");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("changeLog");
+		ctMergeColumnNames.add("extraSettings");
+		ctMergeColumnNames.add("fileEntryTypeId");
+		ctMergeColumnNames.add("version");
+		ctMergeColumnNames.add("size_");
+		ctMergeColumnNames.add("checksum");
+		ctMergeColumnNames.add("storeUUID");
+		ctMergeColumnNames.add("displayDate");
+		ctMergeColumnNames.add("expirationDate");
+		ctMergeColumnNames.add("reviewDate");
+		ctMergeColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
 		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
 		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("fileVersionId"));
@@ -9045,11 +8932,6 @@ public class DLFileVersionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -9161,11 +9043,6 @@ public class DLFileVersionPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByF_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"fileEntryId", "version"}, true);
-
-		_finderPathCountByF_V = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_V",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"fileEntryId", "version"}, false);
 
 		_finderPathWithPaginationFindByF_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByF_S",

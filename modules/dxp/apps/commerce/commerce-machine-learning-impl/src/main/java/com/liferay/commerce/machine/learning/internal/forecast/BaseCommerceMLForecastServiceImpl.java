@@ -121,9 +121,6 @@ public abstract class BaseCommerceMLForecastServiceImpl
 	protected T getCommerceMLForecast(long companyId, long forecastId)
 		throws PortalException {
 
-		TermFilter termFilter = new TermFilter(
-			CommerceMLForecastField.FORECAST_ID, String.valueOf(forecastId));
-
 		List<T> searchResults = getSearchResults(
 			getSearchSearchRequest(
 				getIndexName(companyId),
@@ -132,7 +129,11 @@ public abstract class BaseCommerceMLForecastServiceImpl
 						setPreBooleanFilter(
 							new BooleanFilter() {
 								{
-									add(termFilter, BooleanClauseOccur.MUST);
+									add(
+										new TermFilter(
+											CommerceMLForecastField.FORECAST_ID,
+											String.valueOf(forecastId)),
+										BooleanClauseOccur.MUST);
 								}
 							});
 					}
@@ -220,7 +221,6 @@ public abstract class BaseCommerceMLForecastServiceImpl
 
 		document.addNumber(
 			CommerceMLForecastField.ACTUAL, commerceMLForecast.getActual());
-		document.addNumber(Field.COMPANY_ID, commerceMLForecast.getCompanyId());
 		document.addNumber(
 			CommerceMLForecastField.FORECAST, commerceMLForecast.getForecast());
 		document.addNumber(
@@ -243,6 +243,7 @@ public abstract class BaseCommerceMLForecastServiceImpl
 		document.addDate(
 			CommerceMLForecastField.TIMESTAMP,
 			commerceMLForecast.getTimestamp());
+		document.addNumber(Field.COMPANY_ID, commerceMLForecast.getCompanyId());
 
 		return document;
 	}

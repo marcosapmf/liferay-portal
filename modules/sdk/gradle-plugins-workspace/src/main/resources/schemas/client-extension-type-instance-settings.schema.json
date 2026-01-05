@@ -75,6 +75,24 @@
 		},
 		{
 			"properties": {
+				"enabled": {
+					"default": false,
+					"description": "Enable postprocessing of all legacy markup in fragments, web content, and blogs so that Adaptive Media is able to work with it. Enabling this option may impact the performance of your sites.",
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal.configuration.AMBackwardsCompatibilityHtmlContentTransformerConfiguration",
+					"title": "Backwards Compatibility HTML Content Transformer"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Backwards Compatibility HTML Content Transformer"
+		},
+		{
+			"properties": {
 				"imageVariants": {
 					"items": {
 						"type": "string"
@@ -127,6 +145,12 @@
 					},
 					"type": "array"
 				},
+				"contentRecommenderMostPopularItemsEnabled": {
+					"type": "boolean"
+				},
+				"contentRecommenderUserPersonalizationEnabled": {
+					"type": "boolean"
+				},
 				"firstSync": {
 					"default": true,
 					"type": "boolean"
@@ -172,6 +196,12 @@
 						"type": "string"
 					},
 					"type": "array"
+				},
+				"previousContentRecommenderMostPopularItemsEnabled": {
+					"type": "boolean"
+				},
+				"previousContentRecommenderUserPersonalizationEnabled": {
+					"type": "boolean"
 				},
 				"previousSyncAllAccounts": {
 					"type": "boolean"
@@ -496,10 +526,207 @@
 		},
 		{
 			"properties": {
+				"captchaEngine": {
+					"default": "com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl",
+					"description": "Set the engine used to generate captchas. reCAPTCHA uses an external service that must be configured independently but provides an audible alternative which makes the captcha accessible to the visually impaired. See https://www.google.com/recaptcha/admin/create for details.",
+					"title": "CAPTCHA Engine",
+					"type": "string"
+				},
+				"createAccountCaptchaEnabled": {
+					"default": true,
+					"title": "Create Account CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"maxChallenges": {
+					"default": 1,
+					"description": "Set the maximum number of captcha checks per portlet session. Set this value to 0 to always check. Set this value to a number less than 0 to never check. Unauthenticated users will always be checked on every request if captcha checks are enabled.",
+					"title": "Maximum Challenges",
+					"type": "number"
+				},
+				"messageBoardsEditCategoryCaptchaEnabled": {
+					"default": false,
+					"title": "Message Boards Edit Category CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"messageBoardsEditMessageCaptchaEnabled": {
+					"default": false,
+					"title": "Message Boards Edit Message CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.captcha.configuration.CaptchaConfiguration",
+					"title": "CAPTCHA"
+				},
+				"reCaptchaNoScriptURL": {
+					"default": "https://www.google.com/recaptcha/api/fallback?k=",
+					"title": "reCAPTCHA No Script URL",
+					"type": "string"
+				},
+				"reCaptchaPrivateKey": {
+					"title": "reCAPTCHA Private Key",
+					"type": "string"
+				},
+				"reCaptchaPublicKey": {
+					"title": "reCAPTCHA Public Key",
+					"type": "string"
+				},
+				"reCaptchaScriptURL": {
+					"default": "https://www.google.com/recaptcha/api.js",
+					"title": "reCAPTCHA Script URL",
+					"type": "string"
+				},
+				"reCaptchaVerifyURL": {
+					"default": "https://www.google.com/recaptcha/api/siteverify",
+					"title": "reCAPTCHA Verify URL",
+					"type": "string"
+				},
+				"sendPasswordCaptchaEnabled": {
+					"default": true,
+					"title": "Send Password CAPTCHA Enabled",
+					"type": "boolean"
+				},
+				"simpleCaptchaBackgroundProducers": {
+					"default": "nl.captcha.backgrounds.FlatColorBackgroundProducer|nl.captcha.backgrounds.GradiatedBackgroundProducer|nl.captcha.backgrounds.SquigglesBackgroundProducer|nl.captcha.backgrounds.TransparentBackgroundProducer",
+					"description": "Input class names that implement nl.captcha.backgrounds.BackgroundProducer. These classes will be randomly used by Simple CAPTCHA to generate a background for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Background Producers",
+					"type": "array"
+				},
+				"simpleCaptchaGimpyRenderers": {
+					"default": "com.liferay.captcha.simplecaptcha.gimpy.BlockGimpyRenderer|com.liferay.captcha.simplecaptcha.gimpy.DropShadowGimpyRenderer|nl.captcha.gimpy.FishEyeGimpyRenderer|com.liferay.captcha.simplecaptcha.gimpy.RippleGimpyRenderer|nl.captcha.gimpy.ShearGimpyRenderer",
+					"description": "Input class names that implement nl.captcha.gimpy.GimpyRenderer. These classes will be randomly used by Simple CAPTCHA to gimp a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Gimpy Renderers",
+					"type": "array"
+				},
+				"simpleCaptchaHeight": {
+					"default": 50,
+					"description": "Set the height for captcha images generated by Simple CAPTCHA.",
+					"title": "Simple CAPTCHA Height",
+					"type": "number"
+				},
+				"simpleCaptchaNoiseProducers": {
+					"default": "nl.captcha.noise.CurvedLineNoiseProducer|nl.captcha.noise.StraightLineNoiseProducer",
+					"description": "Input class names that implement nl.captcha.noise.NoiseProducer. These classes will be randomly used by Simple CAPTCHA to add noise to a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Noise Producers",
+					"type": "array"
+				},
+				"simpleCaptchaTextProducers": {
+					"default": "com.liferay.captcha.simplecaptcha.PinNumberTextProducer|nl.captcha.text.producer.DefaultTextProducer|nl.captcha.text.producer.FiveLetterFirstNameTextProducer",
+					"description": "Input class names that implement nl.captcha.text.producer.TextProducer. These classes will be randomly used by Simple CAPTCHA to generate text for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Text Producers",
+					"type": "array"
+				},
+				"simpleCaptchaWidth": {
+					"default": 150,
+					"description": "Set the width for captcha images generated by Simple CAPTCHA.",
+					"title": "Simple CAPTCHA Width",
+					"type": "number"
+				},
+				"simpleCaptchaWordRenderers": {
+					"default": "nl.captcha.text.renderer.DefaultWordRenderer",
+					"description": "Input class names that implement nl.captcha.text.renderer.WordRenderer. These classes will be randomly used by Simple CAPTCHA to render text for a captcha image.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Simple CAPTCHA Word Renderers",
+					"type": "array"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "CAPTCHA"
+		},
+		{
+			"properties": {
+				"captchaName": {
+					"type": "string"
+				},
+				"captchaResponseParameterName": {
+					"type": "string"
+				},
+				"customElementExternalReferenceCode": {
+					"type": "string"
+				},
+				"oAuth2ApplicationExternalReferenceCode": {
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.captcha.internal.configuration.FunctionCaptchaImplConfiguration"
+				},
+				"resourcePath": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"pid",
+				"captchaName",
+				"captchaResponseParameterName",
+				"customElementExternalReferenceCode",
+				"oAuth2ApplicationExternalReferenceCode",
+				"resourcePath"
+			]
+		},
+		{
+			"properties": {
+				"emailFromAddress": {
+					"default": "",
+					"title": "Email from Address",
+					"type": "string"
+				},
+				"emailFromName": {
+					"default": "",
+					"title": "Email from Name",
+					"type": "string"
+				},
+				"invitationEmailBody": {
+					"description": "Provide a localized template for the body of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Body",
+					"type": "object"
+				},
+				"invitationEmailSubject": {
+					"description": "Provide a localized template for the subject of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Subject",
+					"type": "object"
+				},
+				"pid": {
+					"const": "com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
+					"title": "Publications Email Notifications"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Publications Email Notifications"
+		},
+		{
+			"properties": {
 				"defaultCTCollectionTemplateId": {
 					"default": 0,
 					"title": "Default Publication Template ID",
 					"type": "number"
+				},
+				"defaultOwnerActionIds": {
+					"items": {
+						"type": "string"
+					},
+					"title": "Defaults Owner Action IDs",
+					"type": "array"
 				},
 				"defaultSandboxCTCollectionTemplateId": {
 					"default": 0,
@@ -509,6 +736,12 @@
 				"enabled": {
 					"default": false,
 					"title": "Enabled",
+					"type": "boolean"
+				},
+				"modificationDeletionConflictCheckEnabled": {
+					"default": false,
+					"description": "Check this option to automatically check all modification deletion conflicts by default. This will let you review any deletion conflicts and prevent Liferay from overwriting deletions made in a publication when updating production.",
+					"title": "Modification Deletion Conflict Check Enabled",
 					"type": "boolean"
 				},
 				"pid": {
@@ -533,9 +766,15 @@
 					"title": "Sandbox Enabled",
 					"type": "boolean"
 				},
+				"schemaVersionCheckEnabled": {
+					"default": false,
+					"description": "Enabling the schema version check will allow unpublished publications to go out of date after an upgrade.",
+					"title": "Schema Version Check Enabled",
+					"type": "boolean"
+				},
 				"unapprovedChangesAllowed": {
 					"default": false,
-					"title": "Allow Unapproved Changes",
+					"title": "Allow Publishing Unapproved Changes",
 					"type": "boolean"
 				}
 			},
@@ -559,7 +798,7 @@
 					"title": "Publications View Changes"
 				},
 				"productionOnlyApplication": {
-					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet",
+					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
 					"description": "These applications do not participate in a publication. Any data saved will be saved directly into production.",
 					"items": {
 						"type": "string"
@@ -567,8 +806,13 @@
 					"title": "Production Only Application",
 					"type": "array"
 				},
+				"showAllData": {
+					"description": "Show all data in the data tab when reviewing a change as an administrator.",
+					"title": "Show All Data When Reviewing Changes",
+					"type": "boolean"
+				},
 				"unsupportedApplication": {
-					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
+					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet",
 					"description": "These applications do not support publications. Any data saved in a publication will result in an error.",
 					"items": {
 						"type": "string"
@@ -720,6 +964,22 @@
 		},
 		{
 			"properties": {
+				"cpConfigurationListDiscovery": {
+					"title": "Product Configuration Discovery Method",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.commerce.product.configuration.CPConfigurationListRelConfiguration",
+					"title": "Product Configurations"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Product Configurations"
+		},
+		{
+			"properties": {
 				"pid": {
 					"const": "com.liferay.commerce.product.configuration.CPDefinitionOptionRelConfiguration",
 					"title": "Product Options"
@@ -758,6 +1018,29 @@
 				"pid"
 			],
 			"title": "Friendly URL"
+		},
+		{
+			"properties": {
+				"enabled": {
+					"default": false,
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.commerce.product.configuration.CProductVersionConfiguration",
+					"title": "Product Versioning"
+				},
+				"versionThreshold": {
+					"default": 5,
+					"min": 0,
+					"title": "Versions to Retain",
+					"type": "number"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Product Versioning"
 		},
 		{
 			"properties": {
@@ -1239,6 +1522,45 @@
 		},
 		{
 			"properties": {
+				"enableFriendlyURLWithExtension": {
+					"default": false,
+					"description": "Add the file extension to the file entry friendly URL by default.",
+					"title": "Enable Friendly URL With Extension",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
+					"title": "File Entry Friendly URL"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "File Entry Friendly URL"
+		},
+		{
+			"properties": {
+				"fileMimeTypes": {
+					"default": "*",
+					"description": "A file mime type of * will permit all file mime types.",
+					"items": {
+						"type": "string"
+					},
+					"title": "File Mime Types",
+					"type": "array"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration",
+					"title": "Mime Type"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Mime Type"
+		},
+		{
+			"properties": {
 				"clientId": {
 					"description": "Set the OAuth 2 client id for the Google Drive API. Go to {0} to create it.",
 					"title": "Client ID",
@@ -1316,13 +1638,13 @@
 		{
 			"properties": {
 				"cacheControl": {
-					"default": "private, no-cache, no-store, must-revalidate",
+					"default": "must-revalidate",
 					"description": "Set the cache control policy for documents with view permissions for guests.",
 					"title": "Cache Control",
 					"type": "string"
 				},
 				"maxAge": {
-					"default": 0,
+					"default": 600,
 					"description": "Set the number of seconds after a response is generated in which a response will be considered fresh.",
 					"title": "Max Age",
 					"type": "number"
@@ -1472,14 +1794,14 @@
 		},
 		{
 			"properties": {
-				"javascriptModuleEnabled": {
+				"javaScriptModuleEnabled": {
 					"default": true,
 					"description": "When enabled, fragment JavaScript is embedded in a script as a module instead of as a function.",
 					"title": "Javascript Module Enabled",
 					"type": "boolean"
 				},
 				"pid": {
-					"const": "com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
+					"const": "com.liferay.fragment.configuration.FragmentJavaScriptConfiguration",
 					"title": "Javascript"
 				}
 			},
@@ -1595,6 +1917,67 @@
 			]
 		},
 		{
+			"description": "For changes made here to take effect, you must reload the browser page after saving.",
+			"properties": {
+				"cacheExpirationTime": {
+					"default": -1,
+					"description": "Define the time, in minutes, in which the SPA cache is cleared. Use a zero value if the cache should never expire during SPA navigation. Use a negative value if the cache should be disabled.",
+					"title": "Cache Expiration Time",
+					"type": "number"
+				},
+				"customExcludedPaths": {
+					"description": "Define the custom paths that SPA should ignore.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Custom Excluded Paths",
+					"type": "array"
+				},
+				"enabled": {
+					"default": true,
+					"description": "If this is checked, the single page application framework will allow for faster navigation between pages.",
+					"title": "Enable Single Page Application",
+					"type": "boolean"
+				},
+				"navigationExceptionSelectors": {
+					"default": ":not([target=\\",
+					"description": "Define the CSS selectors that SPA should ignore.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Navigation Exception Selectors",
+					"type": "array"
+				},
+				"pid": {
+					"const": "com.liferay.frontend.js.spa.web.internal.configuration.SPAConfiguration",
+					"description": "For changes made here to take effect, you must reload the browser page after saving.",
+					"title": "Frontend SPA Infrastructure"
+				},
+				"preloadCSS": {
+					"default": false,
+					"description": "Preload CSS resources before applying UI changes. This will prevent FOUC (flash of unstyled content) at the expense of making UI updates slower.",
+					"title": "Preload CSS",
+					"type": "boolean"
+				},
+				"requestTimeout": {
+					"default": 0,
+					"description": "Define the time, in milliseconds, in which a SPA request times out. Use a zero value if the request should never timeout.",
+					"title": "Request Timeout Time",
+					"type": "number"
+				},
+				"userNotificationTimeout": {
+					"default": 30000,
+					"description": "Define the time, in milliseconds, in which a notification is shown to the user stating that the request is taking longer than expected. Set to 0 if no notification should be shown.",
+					"title": "User Notification Timeout",
+					"type": "number"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Frontend SPA Infrastructure"
+		},
+		{
 			"properties": {
 				"enabled": {
 					"default": false,
@@ -1610,6 +1993,60 @@
 				"pid"
 			],
 			"title": "Custom Dialogs"
+		},
+		{
+			"properties": {
+				"cssStyleSheetsMaxAge": {
+					"default": 86400,
+					"description": "Set the value of the \"max-age\" directive in the \"Cache-Control\" header for CSS style sheets.",
+					"title": "CSS Style Sheets Max Age Directive Value",
+					"type": "number"
+				},
+				"esModulesMaxAge": {
+					"default": 86400,
+					"description": "Set the value of the \"max-age\" directive in the \"Cache-Control\" header for ES modules.",
+					"title": "ES Modules Max Age Directive Value",
+					"type": "number"
+				},
+				"pid": {
+					"const": "com.liferay.frontend.js.web.internal.configuration.FrontendCachingConfiguration",
+					"title": "Frontend Caching"
+				},
+				"sendNoCacheForCSSStyleSheets": {
+					"default": false,
+					"description": "If checked, a \"no-cache\" directive (instead of \"must-revalidate\") will be sent in the \"Cache-Control\" header for CSS style sheets.",
+					"title": "Send No Cache Directive For CSS Style Sheets",
+					"type": "boolean"
+				},
+				"sendNoCacheForESModules": {
+					"default": false,
+					"description": "If checked, a \"no-cache\" directive (instead of \"must-revalidate\") will be sent in the \"Cache-Control\" header for ES modules.",
+					"title": "Send No Cache Directive For ES Modules",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Frontend Caching"
+		},
+		{
+			"properties": {
+				"disableGetRemoteMethods": {
+					"default": false,
+					"description": "If checked, the methods getRemoteAddr() and getRemoteHost() will be undefined within the Liferay.ThemeDisplay global object. This configuration is primarily implemented to mitigate privacy risks by avoiding the exposure of client IP/host information and to optimize performance by allowing public caching of pages for unauthenticated users. Note that checking this option will make custom code that relies on these methods fail.",
+					"title": "Disable getRemoteAddr() and getRemoteHost() Methods",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.frontend.js.web.internal.configuration.LiferayGlobalObjectConfiguration",
+					"title": "Liferay Global Object"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Liferay Global Object"
 		},
 		{
 			"properties": {
@@ -1833,7 +2270,7 @@
 				},
 				"enableLayoutTranslatedLanguages": {
 					"default": false,
-					"description": "Generate Hreflang meta data only for languages with translated content.",
+					"description": "Generate Hreflang metadata only for languages with translated content.",
 					"title": "Enable Only Translated Hreflangs",
 					"type": "boolean"
 				},
@@ -1923,6 +2360,84 @@
 				"tenantId"
 			],
 			"title": "Outlook Auth Connector"
+		},
+		{
+			"properties": {
+				"additionalJavaMailProperties": {
+					"default": "",
+					"description": "Manually specify additional JavaMail properties to override the existing configuration.",
+					"title": "Additional Java Mail Properties",
+					"type": "string"
+				},
+				"enablePOPServerNotifications": {
+					"default": false,
+					"title": "Enable POP Server Notifications",
+					"type": "boolean"
+				},
+				"enableStartTLS": {
+					"default": true,
+					"title": "Enable StartTLS",
+					"type": "boolean"
+				},
+				"incomingPOPPort": {
+					"default": "110",
+					"title": "Incoming Port",
+					"type": "string"
+				},
+				"incomingPOPServer": {
+					"default": "localhost",
+					"title": "Incoming POP Server",
+					"type": "string"
+				},
+				"outgoingSMTPPort": {
+					"default": "25",
+					"title": "Outgoing Port",
+					"type": "string"
+				},
+				"outgoingSMTPServer": {
+					"default": "localhost",
+					"title": "Outgoing SMTP Server",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.mail.settings.configuration.MailSettingCompanyConfiguration",
+					"title": "Mail Settings"
+				},
+				"popPassword": {
+					"default": "",
+					"title": "POP Password",
+					"type": "string"
+				},
+				"popUserName": {
+					"default": "",
+					"title": "POP User Name",
+					"type": "string"
+				},
+				"smtpPassword": {
+					"default": "",
+					"title": "SMTP Password",
+					"type": "string"
+				},
+				"smtpUserName": {
+					"default": "",
+					"title": "SMTP User Name",
+					"type": "string"
+				},
+				"storeProtocol": {
+					"default": "pop3",
+					"title": "Store Protocol",
+					"type": "string"
+				},
+				"transportProtocol": {
+					"default": "smtp",
+					"title": "Transport Protocol",
+					"type": "string"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Mail Settings"
 		},
 		{
 			"properties": {
@@ -2264,6 +2779,383 @@
 		},
 		{
 			"properties": {
+				"checkInterval": {
+					"default": 15,
+					"description": "Set the interval (in minutes) to check for expiration, publishing, and review of object entries.",
+					"min": 1,
+					"title": "Object Entry Check Interval",
+					"type": "number"
+				},
+				"pid": {
+					"const": "com.liferay.object.configuration.ObjectEntryScheduleConfiguration",
+					"title": "Schedule"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Schedule"
+		},
+		{
+			"properties": {
+				"maximumRetentionPeriod": {
+					"default": 0,
+					"description": "Define the maximum retention period for entry versions. Once this period expires, the system will automatically delete the oldest versions to optimize storage space.",
+					"title": "Maximum Retention Period",
+					"type": "number"
+				},
+				"maximumVersionsPerEntry": {
+					"default": 0,
+					"description": "Define the maximum number of entries to be stored per object. Once this limit is reached, the oldest versions will be automatically deleted to optimize storage space.",
+					"title": "Maximum Versions per Entry",
+					"type": "number"
+				},
+				"pid": {
+					"const": "com.liferay.object.configuration.ObjectEntryVersionConfiguration",
+					"title": "Versioning for Entries"
+				}
+			},
+			"required": [
+				"pid",
+				"maximumRetentionPeriod"
+			],
+			"title": "Versioning for Entries"
+		},
+		{
+			"properties": {
+				"githubURL": {
+					"default": "",
+					"type": "string"
+				},
+				"googleCloudHotfixBucket": {
+					"default": "",
+					"type": "string"
+				},
+				"helpCenterURL": {
+					"default": "",
+					"type": "string"
+				},
+				"hotfixMountPath": {
+					"default": "",
+					"type": "string"
+				},
+				"infoModifyTicketsListURL": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsAdminUserName": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsAdminUserToken": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsBuildWithParametersPath": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsLoadBalancerBaseInvocationURL": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsLoadBalancerEnabled": {
+					"default": false,
+					"type": "boolean"
+				},
+				"jenkinsToken": {
+					"default": "",
+					"type": "string"
+				},
+				"jenkinsURL": {
+					"default": "",
+					"type": "string"
+				},
+				"jiraURL": {
+					"default": "",
+					"type": "string"
+				},
+				"lesaURL": {
+					"default": "",
+					"type": "string"
+				},
+				"liferayUsersProfileURL": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherAccountWhitelist": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"patcherAgentJenkinsURL": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherBuildDownloadURL": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherGitTagPrefix": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherJenkinsRequestsEnabled": {
+					"default": false,
+					"type": "boolean"
+				},
+				"patcherLiferayPortalRepository": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherPubsubCredentialFilePath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherPubsubProjectId": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherPubsubSubscriptionId": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherScanningEnabled": {
+					"default": false,
+					"type": "boolean"
+				},
+				"patcherSharedRequestAddFixPatcherType": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherSharedRequestBuildPatchPatcherType": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherStatusBuildJenkinsPath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherStatusBuildJenkinsTestPath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherStatusBuildPath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherStatusFixPath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherStatusPath": {
+					"default": "",
+					"type": "string"
+				},
+				"patcherTestsEnabled": {
+					"default": false,
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.osb.patcher.configuration.PatcherConfiguration"
+				},
+				"supportLiferayAPIClientId": {
+					"default": "",
+					"type": "string"
+				},
+				"supportLiferayAPIClientSecret": {
+					"default": "",
+					"type": "string"
+				},
+				"supportLiferayAccountSearchAPIEndpoint": {
+					"default": "",
+					"type": "string"
+				},
+				"supportLiferayLFUURL": {
+					"default": "",
+					"type": "string"
+				},
+				"supportLiferayTicketAttachmentAPIEndpoint": {
+					"default": "",
+					"type": "string"
+				},
+				"supportLiferayURL": {
+					"default": "",
+					"type": "string"
+				},
+				"troubleshootingURL": {
+					"default": "",
+					"type": "string"
+				}
+			},
+			"required": [
+				"pid"
+			]
+		},
+		{
+			"properties": {
+				"emailPatcherBuildCompleteBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-complete-body",
+					"type": "object"
+				},
+				"emailPatcherBuildCompleteSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-complete-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildConflictBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-conflict-body",
+					"type": "object"
+				},
+				"emailPatcherBuildConflictSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-conflict-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildFailedBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-failed-body",
+					"type": "object"
+				},
+				"emailPatcherBuildFailedSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-failed-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildQAAnalysisNeededBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-analysis-needed-body",
+					"type": "object"
+				},
+				"emailPatcherBuildQAAnalysisNeededSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-analysis-needed-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildQAAutomationPassedBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-automation-passed-body",
+					"type": "object"
+				},
+				"emailPatcherBuildQAAutomationPassedSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-automation-passed-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildQAFailedManuallyBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-failed-manually-body",
+					"type": "object"
+				},
+				"emailPatcherBuildQAFailedManuallySubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-failed-manually-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildQAPassedManuallyBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-passed-manually-body",
+					"type": "object"
+				},
+				"emailPatcherBuildQAPassedManuallySubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-qa-passed-manually-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildRebaseConflictBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-rebase-conflict-body",
+					"type": "object"
+				},
+				"emailPatcherBuildRebaseConflictSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-rebase-conflict-subject",
+					"type": "object"
+				},
+				"emailPatcherBuildTimeoutBody": {
+					"properties": {
+					},
+					"title": "email-patcher-build-timeout-body",
+					"type": "object"
+				},
+				"emailPatcherBuildTimeoutSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-build-timeout-subject",
+					"type": "object"
+				},
+				"emailPatcherFixCompleteBody": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-complete-body",
+					"type": "object"
+				},
+				"emailPatcherFixCompleteSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-complete-subject",
+					"type": "object"
+				},
+				"emailPatcherFixFailedBody": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-failed-body",
+					"type": "object"
+				},
+				"emailPatcherFixFailedSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-failed-subject",
+					"type": "object"
+				},
+				"emailPatcherFixTimeoutBody": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-timeout-body",
+					"type": "object"
+				},
+				"emailPatcherFixTimeoutSubject": {
+					"properties": {
+					},
+					"title": "email-patcher-fix-timeout-subject",
+					"type": "object"
+				},
+				"emailQAComments": {
+					"properties": {
+					},
+					"title": "email-qa-comments",
+					"type": "object"
+				},
+				"pid": {
+					"const": "com.liferay.osb.patcher.configuration.PatcherEmailConfiguration"
+				}
+			},
+			"required": [
+				"pid"
+			]
+		},
+		{
+			"properties": {
 				"configurationName": {
 					"description": "Set hash provider configuration name.",
 					"title": "Hash Provider Configuration Name",
@@ -2350,7 +3242,7 @@
 					"type": "array"
 				},
 				"headers": {
-					"default": "Access-Control-Allow-Credentials: true|Access-Control-Allow-Headers: *|Access-Control-Allow-Methods: *|Access-Control-Allow-Origin: *",
+					"default": "Access-Control-Allow-Credentials: true|Access-Control-Allow-Headers: *|Access-Control-Allow-Methods: *|Access-Control-Allow-Origin: http://localhost:8080 http://127.0.0.1:8080 ::1",
 					"description": "Set the headers to be sent in response to CORS requests in the form of \"Name: Value\".",
 					"items": {
 						"type": "string"
@@ -2375,6 +3267,38 @@
 			"title": "Portal Cross-Origin Resource Sharing (CORS)"
 		},
 		{
+			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+			"properties": {
+				"pid": {
+					"const": "com.liferay.portal.search.configuration.SemanticSearchConfiguration",
+					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+					"title": "Semantic Search (Beta)"
+				},
+				"textEmbeddingCacheTimeout": {
+					"default": 604800,
+					"title": "Text Embedding Cache Timeout",
+					"type": "number"
+				},
+				"textEmbeddingProviderConfigurationJSONs": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Text Embedding Provider Configuration JSONs",
+					"type": "array"
+				},
+				"textEmbeddingsEnabled": {
+					"default": false,
+					"title": "Text Embeddings Enabled",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Semantic Search (Beta)"
+		},
+		{
 			"properties": {
 				"enableDeepPagination": {
 					"default": false,
@@ -2384,6 +3308,30 @@
 				},
 				"pid": {
 					"const": "com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
+					"title": "Deep Pagination Configuration"
+				},
+				"pointInTimeKeepAliveSeconds": {
+					"default": 60,
+					"description": "The amount of time in seconds the search engine will keep a point in time alive (between 1 and 60).",
+					"title": "Point in Time Keep Alive",
+					"type": "number"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Deep Pagination Configuration"
+		},
+		{
+			"properties": {
+				"enableDeepPagination": {
+					"default": false,
+					"description": "Enable deep pagination to paginate through all the results of a search query.",
+					"title": "Enable Deep Pagination",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.portal.search.elasticsearch8.configuration.DeepPaginationConfiguration",
 					"title": "Deep Pagination Configuration"
 				},
 				"pointInTimeKeepAliveSeconds": {
@@ -2789,14 +3737,6 @@
 					"title": "Connection Properties",
 					"type": "array"
 				},
-				"errorPasswordAgeKeywords": {
-					"default": "age",
-					"items": {
-						"type": "string"
-					},
-					"title": "Error Password Age Keywords",
-					"type": "array"
-				},
 				"errorPasswordExpiredKeywords": {
 					"default": "expired",
 					"items": {
@@ -2811,30 +3751,6 @@
 						"type": "string"
 					},
 					"title": "Error Password History Keywords",
-					"type": "array"
-				},
-				"errorPasswordNotChangeableKeywords": {
-					"default": "not allowed to change",
-					"items": {
-						"type": "string"
-					},
-					"title": "Error Password Not Changeable Keywords",
-					"type": "array"
-				},
-				"errorPasswordSyntaxKeywords": {
-					"default": "syntax",
-					"items": {
-						"type": "string"
-					},
-					"title": "Error Password Syntax Keywords",
-					"type": "array"
-				},
-				"errorPasswordTrivialTextKeywords": {
-					"default": "trivial",
-					"items": {
-						"type": "string"
-					},
-					"title": "Error Password Trivial Text Keywords",
 					"type": "array"
 				},
 				"errorUserLockoutKeywords": {
@@ -2998,7 +3914,7 @@
 		},
 		{
 			"properties": {
-				"authorizationEndPoint": {
+				"authorizationEndpoint": {
 					"default": "",
 					"description": "Set the authorization endpoint for the OpenID Connect provider.",
 					"title": "Authorization Endpoint",
@@ -3013,6 +3929,15 @@
 					"title": "Custom Authorization Request Parameters",
 					"type": "array"
 				},
+				"customClaims": {
+					"default": "",
+					"description": "Map the custom claims from the OpenId Connect provider to custom fields.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Custom Claims",
+					"type": "array"
+				},
 				"customTokenRequestParameters": {
 					"default": "",
 					"description": "Add custom token request parameters, e.g.: resource=https://contacts.google.com https://maps.google.com",
@@ -3022,15 +3947,15 @@
 					"title": "Custom Token Request Parameters",
 					"type": "array"
 				},
-				"discoveryEndPoint": {
+				"discoveryEndpoint": {
 					"default": "",
 					"description": "Set the discovery endpoint for the OpenID Connect provider. If this is set, manually set endpoints will be ignored.",
 					"title": "Discovery Endpoint",
 					"type": "string"
 				},
-				"discoveryEndPointCacheInMillis": {
+				"discoveryEndpointCacheInMillis": {
 					"default": 360000,
-					"description": "Discovery endpoint metadata will be cached on this interval in milliseconds. If 0 is set, the metadata is never refreshed.",
+					"description": "Discovery endpoint metadata will be cached on this interval in milliseconds. If set to 0, Ehcache's default time to live value of 600 seconds will be used.",
 					"title": "Discovery Endpoint Cache in Milliseconds",
 					"type": "number"
 				},
@@ -3053,6 +3978,12 @@
 					"default": "",
 					"description": "Set the JWKS URI for the OpenID Connect provider.",
 					"title": "JWKS URI",
+					"type": "string"
+				},
+				"matcherField": {
+					"default": "email",
+					"description": "The \"sub\" claim is the primary user matcher. If matching fails, the configured matcher field is used as a fallback.",
+					"title": "Matcher Field",
 					"type": "string"
 				},
 				"openIdConnectClientId": {
@@ -3104,13 +4035,13 @@
 					"title": "Token Connection Timeout in Milliseconds",
 					"type": "number"
 				},
-				"tokenEndPoint": {
+				"tokenEndpoint": {
 					"default": "",
 					"description": "Set the token endpoint for the OpenID Connect provider.",
 					"title": "Token Endpoint",
 					"type": "string"
 				},
-				"userInfoEndPoint": {
+				"userInfoEndpoint": {
 					"default": "",
 					"description": "Set the user information endpoint for the OpenID Connect provider.",
 					"title": "User Information Endpoint",
@@ -3119,6 +4050,7 @@
 			},
 			"required": [
 				"pid",
+				"matcherField",
 				"openIdConnectClientId",
 				"openIdConnectClientSecret",
 				"providerName",
@@ -3255,6 +4187,15 @@
 					"title": "Allowed IPs",
 					"type": "array"
 				},
+				"allowedProtocols": {
+					"default": "http|https",
+					"description": "Set which protocols are allowed in redirect URLs. Remove all entries to allow any protocol.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Allowed Protocols",
+					"type": "array"
+				},
 				"pid": {
 					"const": "com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 					"description": "Configure which domains or IP addresses can be redirected to.",
@@ -3384,38 +4325,6 @@
 				"pid"
 			],
 			"title": "SAML Provider Configuration"
-		},
-		{
-			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-			"properties": {
-				"pid": {
-					"const": "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
-					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-					"title": "Semantic Search (Beta)"
-				},
-				"textEmbeddingCacheTimeout": {
-					"default": 604800,
-					"title": "Text Embedding Cache Timeout",
-					"type": "number"
-				},
-				"textEmbeddingProviderConfigurationJSONs": {
-					"default": "",
-					"items": {
-						"type": "string"
-					},
-					"title": "Text Embedding Provider Configuration JSONs",
-					"type": "array"
-				},
-				"textEmbeddingsEnabled": {
-					"default": false,
-					"title": "Text Embeddings Enabled",
-					"type": "boolean"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Semantic Search (Beta)"
 		},
 		{
 			"properties": {
@@ -3565,14 +4474,6 @@
 		},
 		{
 			"properties": {
-				"authorizationGrantEndpoint": {
-					"title": "Authorization Grant Endpoint",
-					"type": "string"
-				},
-				"authorizationTokenEndpoint": {
-					"title": "Authorization Token Endpoint",
-					"type": "string"
-				},
 				"clientId": {
 					"title": "Client ID",
 					"type": "string"
@@ -3589,16 +4490,8 @@
 					"const": "com.liferay.sharepoint.rest.repository.internal.configuration.SharepointRepositoryConfiguration",
 					"title": "Sharepoint OAuth2"
 				},
-				"resource": {
-					"title": "Resource",
-					"type": "string"
-				},
 				"scope": {
 					"title": "Scope",
-					"type": "string"
-				},
-				"siteDomain": {
-					"title": "Site Domain",
 					"type": "string"
 				},
 				"tenantId": {
@@ -3630,12 +4523,39 @@
 		},
 		{
 			"properties": {
+				"checkInterval": {
+					"default": 15,
+					"description": "Set the check interval in minutes.",
+					"min": 1,
+					"title": "Check Interval",
+					"type": "number"
+				},
+				"pid": {
+					"const": "com.liferay.site.cms.site.initializer.configuration.BulkActionTaskConfiguration",
+					"title": "Bulk Action Task Configuration"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Bulk Action Task Configuration"
+		},
+		{
+			"properties": {
 				"companySitemapGroupIds": {
 					"default": "",
 					"items": {
 						"type": "string"
 					},
 					"title": "Sites Included in the XML Sitemap",
+					"type": "array"
+				},
+				"companySitemapObjectDefinitionIds": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Objects and CMS Structures Included in the XML Sitemap",
 					"type": "array"
 				},
 				"includeCategories": {
@@ -3656,6 +4576,11 @@
 				"pid": {
 					"const": "com.liferay.site.internal.configuration.SitemapCompanyConfiguration",
 					"title": "XML Sitemap"
+				},
+				"xmlSitemapIndexEnabled": {
+					"default": true,
+					"title": "XML Sitemap Index Enabled",
+					"type": "boolean"
 				}
 			},
 			"required": [
@@ -3907,6 +4832,7 @@
 			"enum": [
 				"com.liferay.account.configuration.AccountEntryEmailConfiguration",
 				"com.liferay.account.configuration.AccountEntryEmailDomainsConfiguration",
+				"com.liferay.adaptive.media.image.content.transformer.backwards.compatibility.internal.configuration.AMBackwardsCompatibilityHtmlContentTransformerConfiguration",
 				"com.liferay.adaptive.media.image.internal.configuration.AMImageCompanyConfiguration",
 				"com.liferay.ai.creator.openai.configuration.AICreatorOpenAICompanyConfiguration",
 				"com.liferay.analytics.settings.configuration.AnalyticsConfiguration",
@@ -3915,14 +4841,19 @@
 				"com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration",
 				"com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration",
 				"com.liferay.batch.engine.configuration.BatchEngineTaskCompanyConfiguration",
+				"com.liferay.captcha.configuration.CaptchaConfiguration",
+				"com.liferay.captcha.internal.configuration.FunctionCaptchaImplConfiguration",
+				"com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
 				"com.liferay.change.tracking.configuration.CTSettingsConfiguration",
 				"com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 				"com.liferay.click.to.chat.web.internal.configuration.ClickToChatConfiguration",
 				"com.liferay.client.extension.type.configuration.CETConfiguration",
 				"com.liferay.commerce.payment.configuration.CommercePaymentEntryAuditConfiguration",
 				"com.liferay.commerce.payment.configuration.CommercePaymentEntryRefundTypeConfiguration",
+				"com.liferay.commerce.product.configuration.CPConfigurationListRelConfiguration",
 				"com.liferay.commerce.product.configuration.CPDefinitionOptionRelConfiguration",
 				"com.liferay.commerce.product.configuration.CPFriendlyURLConfiguration",
+				"com.liferay.commerce.product.configuration.CProductVersionConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AccountEntryCommerceQualifierConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AccountGroupCommerceQualifierConfiguration",
 				"com.liferay.commerce.qualifier.configuration.AddressCommerceQualifierConfiguration",
@@ -3940,19 +4871,24 @@
 				"com.liferay.document.library.asset.auto.tagger.google.cloud.vision.internal.configuration.GCloudVisionAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.microsoft.cognitive.services.internal.configuration.MSCognitiveServicesAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration",
+				"com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
+				"com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration",
 				"com.liferay.document.library.google.drive.configuration.DLGoogleDriveCompanyConfiguration",
 				"com.liferay.document.library.internal.configuration.DLIndexerConfiguration",
 				"com.liferay.document.library.opener.onedrive.web.internal.configuration.DLOneDriveCompanyConfiguration",
 				"com.liferay.document.library.web.internal.configuration.CacheControlConfiguration",
 				"com.liferay.exportimport.configuration.ExportImportServiceConfiguration",
 				"com.liferay.flags.configuration.FlagsGroupServiceConfiguration",
-				"com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
+				"com.liferay.fragment.configuration.FragmentJavaScriptConfiguration",
 				"com.liferay.fragment.configuration.FragmentServiceConfiguration",
 				"com.liferay.fragment.entry.processor.freemarker.internal.configuration.FreeMarkerFragmentEntryProcessorConfiguration",
 				"com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration",
 				"com.liferay.friendly.url.configuration.FriendlyURLRedirectionConfiguration",
 				"com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration",
+				"com.liferay.frontend.js.spa.web.internal.configuration.SPAConfiguration",
 				"com.liferay.frontend.js.web.internal.configuration.CustomDialogsSettingsConfiguration",
+				"com.liferay.frontend.js.web.internal.configuration.FrontendCachingConfiguration",
+				"com.liferay.frontend.js.web.internal.configuration.LiferayGlobalObjectConfiguration",
 				"com.liferay.journal.configuration.JournalServiceConfiguration",
 				"com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration",
 				"com.liferay.layout.locked.layouts.web.internal.configuration.LockedLayoutsCompanyConfiguration",
@@ -3960,6 +4896,7 @@
 				"com.liferay.layout.seo.internal.configuration.LayoutSEOCompanyConfiguration",
 				"com.liferay.layout.set.prototype.configuration.LayoutSetPrototypeConfiguration",
 				"com.liferay.mail.outlook.auth.connector.provider.internal.configuration.MailOutlookAuthConnectorCompanyConfiguration",
+				"com.liferay.mail.settings.configuration.MailSettingCompanyConfiguration",
 				"com.liferay.multi.factor.authentication.email.otp.configuration.MFAEmailOTPConfiguration",
 				"com.liferay.multi.factor.authentication.fido2.web.internal.configuration.MFAFIDO2Configuration",
 				"com.liferay.multi.factor.authentication.ip.address.internal.configuration.MFAIPAddressConfiguration",
@@ -3968,11 +4905,17 @@
 				"com.liferay.oauth2.provider.rest.internal.configuration.OAuth2InAssertionConfiguration",
 				"com.liferay.oauth2.provider.rest.internal.endpoint.authorize.configuration.AuthorizeScreenConfiguration",
 				"com.liferay.object.configuration.ObjectConfiguration",
+				"com.liferay.object.configuration.ObjectEntryScheduleConfiguration",
+				"com.liferay.object.configuration.ObjectEntryVersionConfiguration",
+				"com.liferay.osb.patcher.configuration.PatcherConfiguration",
+				"com.liferay.osb.patcher.configuration.PatcherEmailConfiguration",
 				"com.liferay.portal.crypto.hash.provider.bcrypt.internal.configuration.BCryptCryptoHashProviderConfiguration",
 				"com.liferay.portal.crypto.hash.provider.message.digest.internal.configuration.MessageDigestCryptoHashProviderConfiguration",
 				"com.liferay.portal.defaultpermissions.configuration.PortalDefaultPermissionsCompanyConfiguration",
 				"com.liferay.portal.remote.cors.configuration.PortalCORSConfiguration",
+				"com.liferay.portal.search.configuration.SemanticSearchConfiguration",
 				"com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
+				"com.liferay.portal.search.elasticsearch8.configuration.DeepPaginationConfiguration",
 				"com.liferay.portal.search.internal.configuration.SiteActivityAsahConfiguration",
 				"com.liferay.portal.search.internal.configuration.UserActivityAsahConfiguration",
 				"com.liferay.portal.search.opensearch2.configuration.DeepPaginationConfiguration",
@@ -3992,7 +4935,6 @@
 				"com.liferay.product.navigation.personal.menu.configuration.PersonalMenuConfiguration",
 				"com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 				"com.liferay.saml.runtime.configuration.SamlProviderConfiguration",
-				"com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 				"com.liferay.search.experiences.internal.configuration.IpstackConfiguration",
 				"com.liferay.search.experiences.internal.configuration.OpenWeatherMapConfiguration",
 				"com.liferay.segments.asah.connector.internal.configuration.SegmentsAsahCompanyConfiguration",
@@ -4000,6 +4942,7 @@
 				"com.liferay.segments.context.vocabulary.internal.configuration.SegmentsContextVocabularyCompanyConfiguration",
 				"com.liferay.sharepoint.rest.repository.internal.configuration.SharepointRepositoryConfiguration",
 				"com.liferay.sharing.internal.configuration.SharingCompanyConfiguration",
+				"com.liferay.site.cms.site.initializer.configuration.BulkActionTaskConfiguration",
 				"com.liferay.site.internal.configuration.SitemapCompanyConfiguration",
 				"com.liferay.social.activity.internal.configuration.SocialActivityCompanyConfiguration",
 				"com.liferay.staging.configuration.StagingConfiguration",

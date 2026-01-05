@@ -8,7 +8,7 @@ package com.liferay.depot.web.internal.application.list;
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
@@ -22,7 +22,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"panel.app.order:Integer=210",
+		"panel.app.order:Integer=250",
 		"panel.category.key=" + PanelCategoryKeys.SITE_ADMINISTRATION_CONFIGURATION
 	},
 	service = PanelApp.class
@@ -51,7 +51,7 @@ public class DepotSettingsPanelApp extends BasePanelApp {
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + DepotPortletKeys.DEPOT_SETTINGS + ")"
+		target = "(jakarta.portlet.name=" + DepotPortletKeys.DEPOT_SETTINGS + ")"
 	)
 	private Portlet _portlet;
 

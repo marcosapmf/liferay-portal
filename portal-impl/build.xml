@@ -12,34 +12,6 @@
 	<property name="manifest.bundle.symbolic.name" value="com.liferay.portal.impl;singleton:=true" />
 	<property name="service.file" value="service.xml" />
 
-	<target name="build-alloy-taglib-jar">
-		<if>
-			<not>
-				<isset property="alloy.taglibs.dir" />
-			</not>
-			<then>
-				<fail>
-.
-
-Please set the property "alloy.taglibs.dir" to point to a checked out version of
-svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
-				</fail>
-			</then>
-		</if>
-
-		<ant dir="${alloy.taglibs.dir}" inheritAll="false" target="clean" />
-		<ant dir="${alloy.taglibs.dir}" inheritAll="false" target="start" />
-
-		<copy
-			preservelastmodified="true"
-			todir="${project.dir}/lib/development"
-		>
-			<fileset
-				file="${alloy.taglibs.dir}/alloy-taglib/alloy-taglib.jar"
-			/>
-		</copy>
-	</target>
-
 	<target name="build-db">
 		<ant dir="../sql" target="build-db" />
 	</target>
@@ -53,6 +25,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		>
 			<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<arg value="src/com/liferay/portal/tools/instance_wrappers.xml" />
+			<env key="JDK_JAVA_OPTIONS" value="--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED" />
 		</java>
 	</target>
 
@@ -161,6 +134,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 			<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<arg value="${project.dir}/lib/versions.xsl" />
 			<arg value="${project.dir}/lib/versions.html" />
+			<env key="JDK_JAVA_OPTIONS" value="--add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED" />
 		</java>
 
 		<if>
@@ -215,10 +189,10 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		>
 			<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
 			<jvmarg value="-Dfile.encoding=UTF-8" />
+			<jvmarg value="-XX:MaxMetaspaceSize=512m" />
 			<jvmarg value="-Xms512m" />
 			<jvmarg value="-Xmx1024m" />
 			<jvmarg value="-Xss2048k" />
-			<jvmarg value="-XX:MaxPermSize=512m" />
 			<arg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<arg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.Log4JLogger" />
 			<arg value="service.api.dir=${basedir}/../portal-kernel/src" />
@@ -235,7 +209,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 			<arg value="service.model.hints.file=${basedir}/src/META-INF/portal-model-hints.xml" />
 			<arg value="service.osgi.module=false" />
 			<arg value="service.plugin.name=" />
-			<arg value="service.props.util=com.liferay.portal.util.PropsUtil" />
+			<arg value="service.props.util=com.liferay.portal.kernel.util.PropsUtil" />
 			<arg value="service.resources.dir=${basedir}/src" />
 			<arg value="service.spring.file=${basedir}/src/META-INF/portal-spring.xml" />
 			<arg value="service.spring.namespaces=beans" />
@@ -649,11 +623,11 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 					newenvironment="true"
 				>
 					<jvmarg if:true="${jvm.debug}" value="${jpda.settings}" />
-					<jvmarg value="-Xmx2048m" />
-					<jvmarg value="-Xss2048k" />
 					<jvmarg value="-Dfile.encoding=UTF-8" />
 					<jvmarg value="-Dsource.formatter.check.registry.in.test.classes=${source.formatter.check.registry.in.test.classes}" />
 					<jvmarg value="-Dsource.formatter.excludes=${source.formatter.excludes}" />
+					<jvmarg value="-Xmx2048m" />
+					<jvmarg value="-Xss2048k" />
 					<arg value="check.vulnerabilities=${check.vulnerabilities}" />
 					<arg value="commit.count=${source.formatter.commit.count}" />
 					<arg value="format.current.branch=${format.current.branch}" />

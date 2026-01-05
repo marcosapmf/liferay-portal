@@ -17,8 +17,8 @@ public class PortalTopLevelBuild
 			   PluginsBranchInformationBuild, PortalBranchInformationBuild,
 			   PortalFixpackReleaseBuild, PortalReleaseBuild {
 
-	public PortalTopLevelBuild(String url, TopLevelBuild topLevelBuild) {
-		super(url, topLevelBuild);
+	public PortalTopLevelBuild(String buildURL, TopLevelBuild topLevelBuild) {
+		super(buildURL, topLevelBuild);
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class PortalTopLevelBuild
 		}
 
 		WorkspaceGitRepository workspaceGitRepository =
-			portalWorkspace.getOSBAsahWorkspaceGitRepository();
+			portalWorkspace.getLiferayOSBAsahWorkspaceGitRepository();
 
 		if (workspaceGitRepository == null) {
 			return null;
@@ -146,7 +146,7 @@ public class PortalTopLevelBuild
 			"PORTAL_FIX_PACK_VERSION");
 
 		if (portalFixPackVersion != null) {
-			portalFixpackRelease = new PortalFixpackRelease(
+			portalFixpackRelease = PortalReleaseFactory.newPortalFixpackRelease(
 				portalFixPackVersion, getPortalRelease());
 
 			return portalFixpackRelease;
@@ -157,8 +157,9 @@ public class PortalTopLevelBuild
 
 		if (portalFixPackZipURL != null) {
 			try {
-				portalFixpackRelease = new PortalFixpackRelease(
-					new URL(portalFixPackZipURL));
+				portalFixpackRelease =
+					PortalReleaseFactory.newPortalFixpackRelease(
+						new URL(portalFixPackZipURL));
 
 				return portalFixpackRelease;
 			}
@@ -186,7 +187,8 @@ public class PortalTopLevelBuild
 			"PORTAL_BUNDLE_VERSION");
 
 		if (portalBundleVersion != null) {
-			portalRelease = new PortalRelease(portalBundleVersion);
+			portalRelease = PortalReleaseFactory.newPortalRelease(
+				portalBundleVersion);
 
 			return portalRelease;
 		}

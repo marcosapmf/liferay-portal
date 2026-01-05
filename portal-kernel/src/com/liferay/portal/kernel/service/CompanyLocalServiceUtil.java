@@ -87,6 +87,12 @@ public class CompanyLocalServiceUtil {
 			companyId, name, virtualHostname, webId);
 	}
 
+	public static Company checkCompany(Company company, boolean newCompany)
+		throws PortalException {
+
+		return getService().checkCompany(company, newCompany);
+	}
+
 	/**
 	 * Returns the company with the web domain.
 	 *
@@ -276,10 +282,8 @@ public class CompanyLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static Company extractDBPartitionCompany(long companyId)
-		throws PortalException {
-
-		return getService().extractDBPartitionCompany(companyId);
+	public static Company exportCompany(long companyId) throws PortalException {
+		return getService().exportCompany(companyId);
 	}
 
 	public static Company fetchCompany(long companyId) {
@@ -400,28 +404,6 @@ public class CompanyLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getCompanyById(companyId);
-	}
-
-	/**
-	 * Returns the company with the logo.
-	 *
-	 * @param logoId the ID of the company's logo
-	 * @return the company with the logo
-	 */
-	public static Company getCompanyByLogoId(long logoId)
-		throws PortalException {
-
-		return getService().getCompanyByLogoId(logoId);
-	}
-
-	/**
-	 * Returns the company with the mail domain.
-	 *
-	 * @param mx the company's mail domain
-	 * @return the company with the mail domain
-	 */
-	public static Company getCompanyByMx(String mx) throws PortalException {
-		return getService().getCompanyByMx(mx);
 	}
 
 	/**

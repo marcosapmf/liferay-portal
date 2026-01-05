@@ -52,17 +52,17 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alicia García
@@ -81,9 +81,9 @@ public class KBArticleItemSelectorViewDisplayContext {
 		_search = search;
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 		_portletResponse = (RenderResponse)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -111,6 +111,26 @@ public class KBArticleItemSelectorViewDisplayContext {
 			"classNameId", PortalUtil.getClassNameId(KBArticle.class.getName())
 		).put(
 			"classPK", kbArticle.getResourcePrimKey()
+		).put(
+			"externalReferenceCode", kbArticle.getExternalReferenceCode()
+		).put(
+			"scopeExternalReferenceCode",
+			() -> {
+				long scopeGroupId = _themeDisplay.getRefererGroupId();
+
+				if (scopeGroupId <= 0) {
+					scopeGroupId = _themeDisplay.getScopeGroupId();
+				}
+
+				if (kbArticle.getGroupId() == scopeGroupId) {
+					return null;
+				}
+
+				Group group = GroupLocalServiceUtil.getGroup(
+					kbArticle.getGroupId());
+
+				return group.getExternalReferenceCode();
+			}
 		).put(
 			"title", kbArticle.getTitle()
 		).put(

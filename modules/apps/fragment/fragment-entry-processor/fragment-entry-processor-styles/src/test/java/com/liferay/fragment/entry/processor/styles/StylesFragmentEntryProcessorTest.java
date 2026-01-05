@@ -20,9 +20,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.Collections;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -80,6 +80,12 @@ public class StylesFragmentEntryProcessorTest {
 			fragmentStyledLayoutStructureItem);
 
 		String html = "<div data-lfr-styles><span>Test</span>Fragment</div>";
+
+		Mockito.when(
+			fragmentEntryLink.getHtml()
+		).thenReturn(
+			html
+		);
 
 		Document document = _getDocument(html);
 

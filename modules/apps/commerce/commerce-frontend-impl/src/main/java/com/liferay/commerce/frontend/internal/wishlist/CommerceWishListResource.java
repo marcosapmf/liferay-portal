@@ -15,10 +15,11 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.frontend.internal.wishlist.model.WishListItemUpdated;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.commerce.util.CommerceContextThreadLocal;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
@@ -27,21 +28,19 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,20 +65,13 @@ public class CommerceWishListResource {
 		WishListItemUpdated wishListItemUpdated = new WishListItemUpdated();
 
 		try {
-			long userId = _portal.getUserId(httpServletRequest);
-
-			if (userId == 0) {
-				User user = _userLocalService.getGuestUser(
-					_portal.getCompanyId(httpServletRequest));
-
-				userId = user.getUserId();
-			}
-
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				_portal.getCompanyId(httpServletRequest),
+				commerceAccountId,
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
-				userId, 0, commerceAccountId);
+				null, 0, _portal.getCompanyId(httpServletRequest));
+
+			CommerceContextThreadLocal.set(commerceContext);
 
 			httpServletRequest.setAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -90,13 +82,12 @@ public class CommerceWishListResource {
 			serviceContext.setScopeGroupId(groupId);
 
 			CommerceWishList commerceWishList =
-				_commerceWishListService.getDefaultCommerceWishList(
-					groupId, userId);
+				_commerceWishListService.getDefaultCommerceWishList(groupId);
 
 			if (commerceWishList == null) {
 				commerceWishList = _commerceWishListService.addCommerceWishList(
-					_language.get(serviceContext.getLocale(), "default"), true,
-					serviceContext);
+					groupId,
+					_language.get(serviceContext.getLocale(), "default"), true);
 			}
 
 			CPCatalogEntry cpCatalogEntry =
@@ -122,8 +113,7 @@ public class CommerceWishListResource {
 			if (commerceWishListItemCount == 0) {
 				_commerceWishListItemService.addCommerceWishListItem(
 					commerceAccountId, commerceWishList.getCommerceWishListId(),
-					cpCatalogEntry.getCProductId(), cpInstanceUuid, options,
-					serviceContext);
+					cpInstanceUuid, cpCatalogEntry.getCProductId(), options);
 
 				wishListItemUpdated.setSuccess(true);
 			}
@@ -204,8 +194,5 @@ public class CommerceWishListResource {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 }

@@ -11,22 +11,27 @@ import com.liferay.document.library.repository.authorization.oauth2.OAuth2Author
 import com.liferay.document.library.repository.authorization.oauth2.Token;
 import com.liferay.document.library.repository.authorization.oauth2.TokenStore;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.sharepoint.rest.repository.internal.configuration.SharepointRepositoryConfiguration;
+import com.liferay.sharepoint.rest.repository.internal.document.library.repository.authorization.oauth2.SharepointRepositoryAuthenticationResult;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.authorization.oauth2.SharepointRepositoryRequestState;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.authorization.oauth2.SharepointRepositoryTokenBroker;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Adolfo Pérez
@@ -49,7 +54,7 @@ public class SharepointRepositoryAuthorizationCapability
 	public void authorize(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
-		throws IOException, PortalException {
+		throws PortalException {
 
 		_authorize(
 			PortalUtil.getOriginalServletRequest(httpServletRequest),
@@ -59,7 +64,7 @@ public class SharepointRepositoryAuthorizationCapability
 	@Override
 	public void authorize(
 			PortletRequest portletRequest, PortletResponse portletResponse)
-		throws IOException, PortalException {
+		throws PortalException {
 
 		authorize(
 			PortalUtil.getHttpServletRequest(portletRequest),
@@ -85,12 +90,9 @@ public class SharepointRepositoryAuthorizationCapability
 		if (token == null) {
 			return true;
 		}
-		else if (token.isExpired()) {
-			if (Validator.isNotNull(token.getRefreshToken())) {
-				return false;
-			}
 
-			return true;
+		if (token.isExpired()) {
+			return Validator.isNull(token.getRefreshToken());
 		}
 
 		return false;
@@ -99,7 +101,7 @@ public class SharepointRepositoryAuthorizationCapability
 	private void _authorize(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
-		throws IOException, PortalException {
+		throws PortalException {
 
 		_validateRequest(httpServletRequest);
 
@@ -111,39 +113,14 @@ public class SharepointRepositoryAuthorizationCapability
 				_sharepointRepositoryConfiguration.name(),
 				PortalUtil.getUserId(httpServletRequest));
 
-			if (token == null) {
+			if (token != null) {
+				_requestAccessToken(httpServletRequest, token);
+			}
+			else {
 				_requestAuthorizationGrant(
 					httpServletRequest, httpServletResponse);
 			}
-			else if (token.isExpired()) {
-				if (Validator.isNotNull(token.getRefreshToken())) {
-					_refreshAccessToken(token, httpServletRequest);
-				}
-				else {
-					_requestAccessToken(
-						httpServletRequest, httpServletResponse);
-				}
-			}
 		}
-	}
-
-	private String _getGrantURL(
-		HttpServletRequest httpServletRequest, String state) {
-
-		String url =
-			_sharepointRepositoryConfiguration.authorizationGrantEndpoint();
-
-		url = HttpComponentsUtil.addParameter(
-			url, "client_id", _sharepointRepositoryConfiguration.clientId());
-
-		url = HttpComponentsUtil.addParameter(
-			url, "redirect_uri", _getRedirectURI(httpServletRequest));
-		url = HttpComponentsUtil.addParameter(url, "response_type", "code");
-		url = HttpComponentsUtil.addParameter(
-			url, "scope", _sharepointRepositoryConfiguration.scope());
-		url = HttpComponentsUtil.addParameter(url, "state", state);
-
-		return url;
 	}
 
 	private String _getRedirectURI(HttpServletRequest httpServletRequest) {
@@ -157,71 +134,85 @@ public class SharepointRepositoryAuthorizationCapability
 
 		String code = ParamUtil.getString(httpServletRequest, "code");
 
-		if (Validator.isNull(code)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private void _refreshAccessToken(
-			Token token, HttpServletRequest httpServletRequest)
-		throws IOException, PortalException {
-
-		long userId = PortalUtil.getUserId(httpServletRequest);
-
-		try {
-			Token freshToken =
-				_sharepointOAuth2AuthorizationServer.refreshAccessToken(token);
-
-			_tokenStore.save(
-				_sharepointRepositoryConfiguration.name(), userId, freshToken);
-		}
-		catch (AuthorizationException authorizationException) {
-			_tokenStore.delete(
-				_sharepointRepositoryConfiguration.name(), userId);
-
-			throw authorizationException;
-		}
+		return Validator.isNotNull(code);
 	}
 
 	private void _requestAccessToken(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
-		throws IOException, PortalException {
+		throws PortalException {
 
 		SharepointRepositoryRequestState sharepointRepositoryRequestState =
 			SharepointRepositoryRequestState.get(httpServletRequest);
 
-		sharepointRepositoryRequestState.validate(
+		sharepointRepositoryRequestState.validateState(
 			ParamUtil.getString(httpServletRequest, "state"));
 
-		long userId = PortalUtil.getUserId(httpServletRequest);
+		try {
+			SharepointRepositoryAuthenticationResult
+				sharepointRepositoryAuthenticationResult =
+					_sharepointOAuth2AuthorizationServer.requestAccessToken(
+						ParamUtil.getString(httpServletRequest, "code"),
+						_getRedirectURI(httpServletRequest));
 
-		String code = ParamUtil.getString(httpServletRequest, "code");
+			sharepointRepositoryRequestState.validateNonce(
+				sharepointRepositoryAuthenticationResult.getNonce());
 
-		Token accessToken =
-			_sharepointOAuth2AuthorizationServer.requestAccessToken(
-				code, _getRedirectURI(httpServletRequest));
+			_tokenStore.save(
+				_sharepointRepositoryConfiguration.name(),
+				PortalUtil.getUserId(httpServletRequest),
+				sharepointRepositoryAuthenticationResult.getToken());
 
-		_tokenStore.save(
-			_sharepointRepositoryConfiguration.name(), userId, accessToken);
+			sharepointRepositoryRequestState.restore(
+				httpServletRequest, httpServletResponse);
+		}
+		catch (ExecutionException | InterruptedException | IOException |
+			   URISyntaxException exception) {
 
-		sharepointRepositoryRequestState.restore(
-			httpServletRequest, httpServletResponse);
+			throw new PortalException(exception);
+		}
+	}
+
+	private void _requestAccessToken(
+			HttpServletRequest httpServletRequest, Token token)
+		throws PortalException {
+
+		try {
+			SharepointRepositoryAuthenticationResult
+				sharepointRepositoryAuthenticationResult =
+					_sharepointOAuth2AuthorizationServer.
+						requestAccessTokenSilently(token);
+
+			_tokenStore.save(
+				_sharepointRepositoryConfiguration.name(),
+				PortalUtil.getUserId(httpServletRequest),
+				sharepointRepositoryAuthenticationResult.getToken());
+		}
+		catch (ExecutionException | InterruptedException | MalformedURLException
+					exception) {
+
+			throw new PortalException(exception);
+		}
 	}
 
 	private void _requestAuthorizationGrant(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
-		throws IOException {
+		throws PortalException {
 
-		String state = StringUtil.randomString(5);
+		String nonce = String.valueOf(UUID.randomUUID());
+		String state = String.valueOf(UUID.randomUUID());
 
-		SharepointRepositoryRequestState.save(httpServletRequest, state);
+		SharepointRepositoryRequestState.save(httpServletRequest, nonce, state);
 
-		httpServletResponse.sendRedirect(
-			_getGrantURL(httpServletRequest, state));
+		try {
+			httpServletResponse.sendRedirect(
+				_sharepointOAuth2AuthorizationServer.getAuthorizationRequestUrl(
+					nonce, _getRedirectURI(httpServletRequest), state));
+		}
+		catch (IOException ioException) {
+			throw new PortalException(ioException);
+		}
 	}
 
 	private void _validateRequest(HttpServletRequest httpServletRequest)

@@ -5,8 +5,6 @@
 
 package com.liferay.search.experiences.rest.resource.v1_0;
 
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -21,18 +19,18 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -48,58 +46,59 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface SXPBlueprintResource {
 
-	public Page<SXPBlueprint> getSXPBlueprintsPage(
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+	public void deleteSXPBlueprint(Long sxpBlueprintId) throws Exception;
+
+	public Response deleteSXPBlueprintBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public Response postSXPBlueprintsPageExportBatch(
-			String search, Filter filter, Sort[] sorts, String callbackURL,
-			String contentType, String fieldNames)
-		throws Exception;
-
-	public SXPBlueprint postSXPBlueprint(SXPBlueprint sxpBlueprint)
-		throws Exception;
-
-	public Response postSXPBlueprintBatch(
-			SXPBlueprint sxpBlueprint, String callbackURL, Object object)
-		throws Exception;
+	public SXPBlueprint getSXPBlueprint(Long sxpBlueprintId) throws Exception;
 
 	public SXPBlueprint getSXPBlueprintByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
 
-	public SXPBlueprint putSXPBlueprintByExternalReferenceCode(
-			String externalReferenceCode, SXPBlueprint sxpBlueprint)
+	public Response getSXPBlueprintExport(Long sxpBlueprintId) throws Exception;
+
+	public Page<SXPBlueprint> getSXPBlueprintsPage(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public SXPBlueprint patchSXPBlueprint(
+			Long sxpBlueprintId, SXPBlueprint sxpBlueprint)
+		throws Exception;
+
+	public SXPBlueprint postSXPBlueprint(SXPBlueprint sxpBlueprint)
+		throws Exception;
+
+	public Response postSXPBlueprintBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public SXPBlueprint postSXPBlueprintCopy(Long sxpBlueprintId)
 		throws Exception;
 
 	public SXPBlueprint postSXPBlueprintValidate(String string)
 		throws Exception;
 
-	public void deleteSXPBlueprint(Long sxpBlueprintId) throws Exception;
-
-	public Response deleteSXPBlueprintBatch(
-			Long sxpBlueprintId, String callbackURL, Object object)
-		throws Exception;
-
-	public SXPBlueprint getSXPBlueprint(Long sxpBlueprintId) throws Exception;
-
-	public SXPBlueprint patchSXPBlueprint(
-			Long sxpBlueprintId, SXPBlueprint sxpBlueprint)
+	public Response postSXPBlueprintsPageExportBatch(
+			String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public SXPBlueprint putSXPBlueprint(
 			Long sxpBlueprintId, SXPBlueprint sxpBlueprint)
 		throws Exception;
 
-	public Response putSXPBlueprintBatch(
-			Long sxpBlueprintId, SXPBlueprint sxpBlueprint, String callbackURL,
-			Object object)
+	public Response putSXPBlueprintBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public SXPBlueprint postSXPBlueprintCopy(Long sxpBlueprintId)
+	public SXPBlueprint putSXPBlueprintByExternalReferenceCode(
+			String externalReferenceCode, SXPBlueprint sxpBlueprint)
 		throws Exception;
-
-	public Response getSXPBlueprintExport(Long sxpBlueprintId) throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
@@ -123,7 +122,8 @@ public interface SXPBlueprintResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -148,19 +148,23 @@ public interface SXPBlueprintResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

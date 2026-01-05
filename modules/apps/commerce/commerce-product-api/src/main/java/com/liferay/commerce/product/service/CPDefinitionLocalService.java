@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
+import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
@@ -39,13 +40,14 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -90,7 +92,7 @@ public interface CPDefinitionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -118,7 +120,7 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -143,8 +145,8 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
-			Map<Locale, String> nameMap,
+			String externalReferenceCode, long userId, long cpDefinitionId,
+			long groupId, Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
 			Map<Locale, String> metaTitleMap,
@@ -171,7 +173,7 @@ public interface CPDefinitionLocalService
 		throws PortalException;
 
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<Locale, String> nameMap,
 			Map<Locale, String> shortDescriptionMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> urlTitleMap,
@@ -354,6 +356,10 @@ public interface CPDefinitionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPDefinition fetchCPDefinitionByCProductId(long cProductId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinition fetchCPDefinitionByFriendlyURL(
+		long groupId, String friendlyURL);
+
 	/**
 	 * Returns the cp definition matching the UUID and group.
 	 *
@@ -369,6 +375,9 @@ public interface CPDefinitionLocalService
 	public CPDefinitionLocalization fetchCPDefinitionLocalization(
 		long CPDefinitionId, String languageId);
 
+	public List<CPDefinition> findByExpirationDate(
+		Date expirationDate, QueryDefinition<CPDefinition> queryDefinition);
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
@@ -381,6 +390,10 @@ public interface CPDefinitionLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPDefinition getCPDefinition(long CPDefinitionId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinition getCPDefinitionByCProductId(long cProductId)
 		throws PortalException;
 
 	/**
@@ -454,11 +467,6 @@ public interface CPDefinitionLocalService
 		long groupId, int status, int start, int end,
 		OrderByComparator<CPDefinition> orderByComparator);
 
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CPDefinition> getCPDefinitions(
-		long groupId, String productTypeName, String languageId, int status,
-		int start, int end, OrderByComparator<CPDefinition> orderByComparator);
-
 	/**
 	 * Returns all the cp definitions matching the UUID and company.
 	 *
@@ -498,10 +506,6 @@ public interface CPDefinitionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCPDefinitionsCount(long groupId, int status);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getCPDefinitionsCount(
-		long groupId, String productTypeName, String languageId, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Map<Locale, String> getCPDefinitionShortDescriptionMap(
@@ -584,7 +588,7 @@ public interface CPDefinitionLocalService
 	public boolean isVersionable(
 		long cpDefinitionId, HttpServletRequest httpServletRequest);
 
-	public void maintainVersionThreshold(long cProductId)
+	public void maintainVersionThreshold(long companyId, long cProductId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

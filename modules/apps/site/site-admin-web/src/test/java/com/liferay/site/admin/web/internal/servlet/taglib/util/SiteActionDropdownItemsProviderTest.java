@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -36,15 +34,15 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.site.admin.web.internal.display.context.SiteAdminDisplayContext;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -80,10 +78,6 @@ public class SiteActionDropdownItemsProviderTest {
 
 		_groupPermissionUtilMockedStatic = Mockito.mockStatic(
 			GroupPermissionUtil.class);
-
-		PropsUtil propsUtil = new PropsUtil();
-
-		propsUtil.setProps(Mockito.mock(Props.class));
 	}
 
 	@AfterClass
@@ -291,9 +285,7 @@ public class SiteActionDropdownItemsProviderTest {
 			}
 
 			Assert.assertEquals(entry.getKey(), dropdownItem.get("label"));
-			Assert.assertTrue(
-				href,
-				StringUtil.contains(href, entry.getValue(), StringPool.BLANK));
+			Assert.assertTrue(href, href.contains(entry.getValue()));
 		}
 	}
 

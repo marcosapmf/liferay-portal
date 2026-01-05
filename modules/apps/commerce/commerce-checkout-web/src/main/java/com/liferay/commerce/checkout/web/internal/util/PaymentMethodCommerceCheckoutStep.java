@@ -26,11 +26,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,14 +66,9 @@ public class PaymentMethodCommerceCheckoutStep
 			(CommerceOrder)httpServletRequest.getAttribute(
 				CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
-		if (!_commerceCheckoutStepHttpHelper.
-				isActivePaymentMethodCommerceCheckoutStep(
-					httpServletRequest, commerceOrder)) {
-
-			return false;
-		}
-
-		return true;
+		return _commerceCheckoutStepHttpHelper.
+			isActivePaymentMethodCommerceCheckoutStep(
+				httpServletRequest, commerceOrder);
 	}
 
 	@Override

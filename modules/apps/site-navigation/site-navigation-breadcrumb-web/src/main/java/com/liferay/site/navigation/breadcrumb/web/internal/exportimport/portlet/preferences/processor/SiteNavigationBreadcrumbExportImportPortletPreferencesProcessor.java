@@ -12,9 +12,9 @@ import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortle
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.site.navigation.breadcrumb.web.internal.constants.SiteNavigationBreadcrumbPortletKeys;
 
-import java.util.List;
+import jakarta.portlet.PortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jürgen Kappler
  */
 @Component(
-	property = "javax.portlet.name=" + SiteNavigationBreadcrumbPortletKeys.SITE_NAVIGATION_BREADCRUMB,
+	property = "jakarta.portlet.name=" + SiteNavigationBreadcrumbPortletKeys.SITE_NAVIGATION_BREADCRUMB,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class SiteNavigationBreadcrumbExportImportPortletPreferencesProcessor
@@ -57,10 +57,10 @@ public class SiteNavigationBreadcrumbExportImportPortletPreferencesProcessor
 		return null;
 	}
 
-	@Reference(target = "(name=PortletDisplayTemplateExporter)")
+	@Reference(target = "(name=CommonPortletDisplayTemplateExportCapability)")
 	private Capability _exportCapability;
 
-	@Reference(target = "(name=PortletDisplayTemplateImporter)")
+	@Reference(target = "(name=CommonPortletDisplayTemplateImportCapability)")
 	private Capability _importCapability;
 
 }

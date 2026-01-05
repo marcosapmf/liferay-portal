@@ -115,6 +115,13 @@ public class DataListViewResourceTest extends BaseDataListViewResourceTestCase {
 	}
 
 	@Override
+	protected Long testDeleteDataDefinitionDataListView_getDataDefinitionId(
+		DataListView dataListView) {
+
+		return dataListView.getDataDefinitionId();
+	}
+
+	@Override
 	protected DataListView testDeleteDataListView_addDataListView()
 		throws Exception {
 
@@ -155,11 +162,35 @@ public class DataListViewResourceTest extends BaseDataListViewResourceTestCase {
 	}
 
 	@Override
+	protected Long testGraphQLDataDefinitionDataListView_getDataDefinitionId()
+		throws Exception {
+
+		return _dataDefinition.getId();
+	}
+
+	@Override
 	protected DataListView testGraphQLDataListView_addDataListView()
 		throws Exception {
 
 		return dataListViewResource.postDataDefinitionDataListView(
 			_dataDefinition.getId(), randomDataListView());
+	}
+
+	@Override
+	protected Long
+		testGraphQLDeleteDataDefinitionDataListView_getDataDefinitionId(
+			DataListView dataListView) {
+
+		return dataListView.getDataDefinitionId();
+	}
+
+	@Override
+	protected Long
+			testGraphQLPostDataDefinitionDataListView_getDataDefinitionId(
+				DataListView dataListView)
+		throws Exception {
+
+		return _dataDefinition.getId();
 	}
 
 	@Override

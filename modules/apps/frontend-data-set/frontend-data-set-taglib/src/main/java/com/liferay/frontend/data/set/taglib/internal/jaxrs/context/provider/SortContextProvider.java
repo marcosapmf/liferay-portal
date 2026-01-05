@@ -12,9 +12,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.Provider;
 
 import org.apache.cxf.jaxrs.ext.ContextProvider;
 import org.apache.cxf.message.Message;
@@ -41,14 +41,14 @@ public class SortContextProvider implements ContextProvider<Sort> {
 
 		String sort = ParamUtil.getString(httpServletRequest, "sort");
 
-		if (Validator.isNotNull(sort)) {
-			String[] sortArray = StringUtil.split(sort, StringPool.COLON);
-
-			return SortFactoryUtil.create(
-				StringUtil.trim(sortArray[0]), sortArray[1].equals("desc"));
+		if (Validator.isNull(sort)) {
+			return null;
 		}
 
-		return null;
+		String[] sortArray = StringUtil.split(sort, StringPool.COLON);
+
+		return SortFactoryUtil.create(
+			StringUtil.trim(sortArray[0]), sortArray[1].equals("desc"));
 	}
 
 }

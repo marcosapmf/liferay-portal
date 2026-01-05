@@ -5,16 +5,26 @@
 
 package com.liferay.saml.opensaml.integration.internal.field.expression.handler;
 
+import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.expando.kernel.model.ExpandoValue;
+import com.liferay.expando.kernel.service.ExpandoValueLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.opensaml.integration.field.expression.handler.UserFieldExpressionHandler;
+import com.liferay.saml.opensaml.integration.internal.util.SamlProvisioningUtil;
 import com.liferay.saml.opensaml.integration.processor.context.UserProcessorContext;
 
 import java.util.ArrayList;
@@ -51,9 +61,13 @@ public class MembershipsUserFieldExpressionHandler
 			userProcessorContext.bind(
 				_processingIndex,
 				(currentUser, newUser, serviceContext) -> {
-					_userGroupLocalService.setUserUserGroups(
-						newUser.getUserId(),
-						ArrayUtil.toArray(userGroupIds.toArray(new Long[0])));
+					if (!userProcessorContext.isDefined(
+							String.class, "userGroups")) {
+
+						return newUser;
+					}
+
+					_setUserUserGroups(newUser, serviceContext, userGroupIds);
 
 					return newUser;
 				});
@@ -69,12 +83,47 @@ public class MembershipsUserFieldExpressionHandler
 					UserGroup userGroup = _userGroupLocalService.fetchUserGroup(
 						user.getCompanyId(), value);
 
-					if (userGroup != null) {
-						userGroupIds.add(userGroup.getUserGroupId());
+					if (userGroup == null) {
+						try {
+							userGroup = _userGroupLocalService.addUserGroup(
+								StringPool.BLANK,
+								_userLocalService.getGuestUserId(
+									user.getCompanyId()),
+								user.getCompanyId(), value, StringPool.BLANK,
+								null);
+
+							ServiceContext serviceContext =
+								ServiceContextThreadLocal.getServiceContext();
+
+							String samlIdpEntityId = GetterUtil.getString(
+								serviceContext.getAttribute("SamlIdpEntityId"));
+
+							ExpandoColumn expandoColumn =
+								SamlProvisioningUtil.getOrAddExpandoColumn(
+									userGroup.getCompanyId(),
+									UserGroup.class.getName(),
+									"samlIdpEntityId");
+
+							_expandoValueLocalService.addValue(
+								_classNameLocalService.getClassNameId(
+									UserGroup.class.getName()),
+								expandoColumn.getTableId(),
+								expandoColumn.getColumnId(),
+								userGroup.getUserGroupId(), samlIdpEntityId);
+						}
+						catch (Exception exception) {
+							if (_log.isWarnEnabled()) {
+								_log.warn(
+									"Unable to create user group", exception);
+							}
+						}
 					}
-					else if (_log.isWarnEnabled()) {
-						_log.warn("Ignored unknown user group: " + value);
+
+					if (userGroup == null) {
+						continue;
 					}
+
+					userGroupIds.add(userGroup.getUserGroupId());
 				}
 			});
 	}
@@ -121,13 +170,65 @@ public class MembershipsUserFieldExpressionHandler
 			properties.get("processing.index"));
 	}
 
+	private void _setUserUserGroups(
+			User newUser, ServiceContext serviceContext,
+			List<Long> userGroupIds)
+		throws PortalException {
+
+		String samlIdpEntityId = GetterUtil.getString(
+			serviceContext.getAttribute("SamlIdpEntityId"));
+
+		if (Validator.isNotNull(samlIdpEntityId)) {
+			ExpandoColumn expandoColumn =
+				SamlProvisioningUtil.getOrAddExpandoColumn(
+					newUser.getCompanyId(), UserGroup.class.getName(),
+					"samlIdpEntityId");
+
+			for (UserGroup userGroup :
+					_userGroupLocalService.getUserUserGroups(
+						newUser.getUserId())) {
+
+				if (userGroupIds.contains(userGroup.getUserGroupId())) {
+					continue;
+				}
+
+				ExpandoValue expandoValue = _expandoValueLocalService.getValue(
+					expandoColumn.getTableId(), expandoColumn.getColumnId(),
+					userGroup.getUserGroupId());
+
+				if ((expandoValue != null) &&
+					samlIdpEntityId.equals(expandoValue.getString())) {
+
+					_expandoValueLocalService.deleteExpandoValue(expandoValue);
+
+					continue;
+				}
+
+				userGroupIds.add(userGroup.getUserGroupId());
+			}
+		}
+
+		_userGroupLocalService.setUserUserGroups(
+			newUser.getUserId(),
+			ArrayUtil.toArray(userGroupIds.toArray(new Long[0])));
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		MembershipsUserFieldExpressionHandler.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ExpandoValueLocalService _expandoValueLocalService;
 
 	private int _processingIndex;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 	private final List<String> _validFieldExpressions =
 		Collections.unmodifiableList(Arrays.asList("userGroups"));

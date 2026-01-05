@@ -4,10 +4,8 @@
  */
 
 import {TestrayBuildsCases} from '.';
-import TestrayError from '../../TestrayError';
 import Rest from '../../core/Rest';
 import SearchBuilder from '../../core/SearchBuilder';
-import i18n from '../../i18n';
 import {CategoryOptions} from '../../pages/Project/Routines/Builds/BuildForm/Stack/RunsList';
 import yupSchema from '../../schema/yup';
 import {CaseResultStatuses} from '../../util/statuses';
@@ -29,6 +27,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 	constructor() {
 		super({
 			adapter: ({
+				cpuUseTime,
 				description,
 				dueStatus,
 				gitHash,
@@ -41,6 +40,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 				templateTestrayBuildId,
 			}) => ({
 				archived: false,
+				cpuUseTime,
 				description,
 				dueStatus,
 				gitHash,
@@ -168,40 +168,6 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		return !!buildResponse?.totalCount;
 	}
 
-	protected async validate(build: Build, id?: number) {
-		const searchBuilder = new SearchBuilder({useURIEncode: true});
-
-		if (id) {
-			searchBuilder.ne('id', id).and();
-		}
-
-		const filter = searchBuilder
-			.eq('name', build.name)
-			.and()
-			.eq('projectId', build.projectId)
-			.and()
-			.eq('routineId', build.routineId)
-			.build();
-
-		const response = await this.fetcher<APIResponse<TestrayBuild>>(
-			`/builds?filter=${filter}`
-		);
-
-		if (response?.totalCount) {
-			throw new TestrayError(
-				i18n.sub('the-x-name-already-exists', 'build')
-			);
-		}
-	}
-
-	protected async beforeCreate(build: Build): Promise<void> {
-		await this.validate(build);
-	}
-
-	protected async beforeUpdate(id: number, build: Build): Promise<void> {
-		await this.validate(build, id);
-	}
-
 	public async archiveUpdate(id: number, archived: boolean | undefined) {
 		await this.fetcher.patch(`/builds/${id}`, {
 			archived: !archived,
@@ -279,6 +245,10 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		}
 
 		return this.update(id, data);
+	}
+
+	public async updateBuildSummary(id: string) {
+		return fetcher.patch(`/testray-build/${id}`, null);
 	}
 
 	public async updateArchivedFlag(id: number, archived: boolean) {

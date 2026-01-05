@@ -15,19 +15,18 @@ import com.liferay.commerce.shipping.engine.fixed.web.internal.model.ShippingFix
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,37 +58,24 @@ public class CommerceShippingFixedOptionFDSDataProvider
 			_commerceShippingMethodLocalService.getCommerceShippingMethod(
 				commerceShippingMethodId);
 
-		List<CommerceShippingFixedOption> commerceShippingFixedOptions =
-			_commerceShippingFixedOptionService.getCommerceShippingFixedOptions(
-				themeDisplay.getCompanyId(),
-				commerceShippingMethod.getGroupId(), commerceShippingMethodId,
-				fdsKeywords.getKeywords(), fdsPagination.getStartPosition(),
-				fdsPagination.getEndPosition());
-
-		List<ShippingFixedOption> shippingFixedOptions = new ArrayList<>();
-
-		commerceShippingFixedOptions = ListUtil.sort(
-			commerceShippingFixedOptions,
-			new CommerceShippingFixedOptionPriorityComparator(
-				sort.isReverse()));
-
-		for (CommerceShippingFixedOption commerceShippingFixedOption :
-				commerceShippingFixedOptions) {
-
-			shippingFixedOptions.add(
-				new ShippingFixedOption(
-					HtmlUtil.escape(
-						commerceShippingFixedOption.getDescription(
-							themeDisplay.getLocale())),
-					HtmlUtil.escape(
-						commerceShippingFixedOption.getName(
-							themeDisplay.getLocale())),
-					commerceShippingFixedOption.getPriority(),
-					commerceShippingFixedOption.
-						getCommerceShippingFixedOptionId()));
-		}
-
-		return shippingFixedOptions;
+		return TransformUtil.transform(
+			ListUtil.sort(
+				_commerceShippingFixedOptionService.
+					getCommerceShippingFixedOptions(
+						themeDisplay.getCompanyId(),
+						commerceShippingMethod.getGroupId(),
+						commerceShippingMethodId, fdsKeywords.getKeywords(),
+						fdsPagination.getStartPosition(),
+						fdsPagination.getEndPosition()),
+				CommerceShippingFixedOptionPriorityComparator.getInstance(
+					sort.isReverse())),
+			commerceShippingFixedOption -> new ShippingFixedOption(
+				commerceShippingFixedOption.getDescription(
+					themeDisplay.getLocale()),
+				commerceShippingFixedOption.getName(themeDisplay.getLocale()),
+				commerceShippingFixedOption.getPriority(),
+				commerceShippingFixedOption.
+					getCommerceShippingFixedOptionId()));
 	}
 
 	@Override

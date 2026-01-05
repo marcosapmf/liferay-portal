@@ -16,7 +16,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Jorge Ferrer
  */
 @Component(
-	property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
+	property = "jakarta.portlet.name=" + WikiPortletKeys.WIKI,
 	service = CustomAttributesDisplay.class
 )
 public class WikiPageCustomAttributesDisplay
@@ -25,6 +25,11 @@ public class WikiPageCustomAttributesDisplay
 	@Override
 	public String getClassName() {
 		return WikiPage.class.getName();
+	}
+
+	@Override
+	public String getFeatureFlagKey() {
+		return "LPD-35013";
 	}
 
 	@Override

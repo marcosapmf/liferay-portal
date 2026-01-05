@@ -8,13 +8,13 @@ package com.liferay.object.admin.rest.client.serdes.v1_0;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectRelationship;
 import com.liferay.object.admin.rest.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -64,9 +64,7 @@ public class ObjectRelationshipSerDes {
 			sb.append("\"deletionType\": ");
 
 			sb.append("\"");
-
 			sb.append(objectRelationship.getDeletionType());
-
 			sb.append("\"");
 		}
 
@@ -210,6 +208,20 @@ public class ObjectRelationshipSerDes {
 			sb.append("\"");
 		}
 
+		if (objectRelationship.getObjectDefinitionScope2() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectDefinitionScope2\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectRelationship.getObjectDefinitionScope2()));
+
+			sb.append("\"");
+		}
+
 		if (objectRelationship.getObjectDefinitionSystem2() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -283,9 +295,7 @@ public class ObjectRelationshipSerDes {
 			sb.append("\"type\": ");
 
 			sb.append("\"");
-
 			sb.append(objectRelationship.getType());
-
 			sb.append("\"");
 		}
 
@@ -426,6 +436,15 @@ public class ObjectRelationshipSerDes {
 				String.valueOf(objectRelationship.getObjectDefinitionName2()));
 		}
 
+		if (objectRelationship.getObjectDefinitionScope2() == null) {
+			map.put("objectDefinitionScope2", null);
+		}
+		else {
+			map.put(
+				"objectDefinitionScope2",
+				String.valueOf(objectRelationship.getObjectDefinitionScope2()));
+		}
+
 		if (objectRelationship.getObjectDefinitionSystem2() == null) {
 			map.put("objectDefinitionSystem2", null);
 		}
@@ -555,6 +574,11 @@ public class ObjectRelationshipSerDes {
 			}
 			else if (Objects.equals(
 						jsonParserFieldName, "objectDefinitionName2")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "objectDefinitionScope2")) {
 
 				return false;
 			}
@@ -690,6 +714,14 @@ public class ObjectRelationshipSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "objectDefinitionScope2")) {
+
+				if (jsonParserFieldValue != null) {
+					objectRelationship.setObjectDefinitionScope2(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "objectDefinitionSystem2")) {
 
 				if (jsonParserFieldValue != null) {
@@ -782,6 +814,10 @@ public class ObjectRelationshipSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

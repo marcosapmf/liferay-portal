@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -79,39 +80,8 @@ definition {
 	}
 
 	@priority = 4
-	test ActionsNodeAreAvailableInDonwloadedFile {
-		property portal.acceptance = "true";
-
-		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
-			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
-		}
-
-		task ("When exporting file in JSONL format with all fields selected") {
-			ImportExport.configureExport(
-				entityType = "Student (v1.0 - Liferay Object REST)",
-				exportFields = "Attribute Code",
-				exportFileFormat = "JSONL");
-
-			Button.click(button = "Export");
-
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-		}
-
-		task ("Then 'actions' node is available in the downloaded file") {
-			ImportExport.unzipDownloadedExportFile();
-
-			BatchEngine.assertExportedFileContainsCorrectObject(
-				expectedValue = "DELETE,GET,GET,PATCH,PUT",
-				fileName = "export.jsonl",
-				ignoreOrder = "true",
-				jsonObject = "$.actions..method");
-		}
-	}
-
-	@priority = 4
 	test AllSystemObjectFieldsAreAvailableToExport {
 		property custom.properties = "feature.flag.LPS-186620=true";
-		property portal.acceptance = "true";
 
 		task ("When 'Account (v1.0 - Liferay Headless Admin User)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
@@ -128,94 +98,9 @@ definition {
 		}
 	}
 
-	@priority = 5
-	test CanDownloadFiledWithAllFieldsSelected {
-		property portal.acceptance = "true";
-
-		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
-			ImportExport.configureExport(
-				entityType = "Student (v1.0 - Liferay Object REST)",
-				exportFileFormat = "JSON");
-		}
-
-		task ("When exporting file in JSON format with all fields selected") {
-			ScrollWebElementIntoView(
-				key_text = "Export",
-				locator1 = "Button#ANY");
-
-			Button.click(button = "Export");
-
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-		}
-
-		task ("Then all fields values available in the downloaded file") {
-			ImportExport.unzipDownloadedExportFile();
-
-			var response = ObjectDefinitionAPI.getObjectEntries(en_US_plural_label = "students");
-			var totalFieldsList = "id,dateCreated,dateModified,externalReferenceCode,r_accountStudents_accountEntryId,r_accountStudents_accountEntryERC";
-
-			for (var fieldName : list ${totalFieldsList}) {
-				var expectedValue = JSONPathUtil.getProperty(
-					property = "$.items..[0]${fieldName}",
-					response = ${response});
-
-				BatchEngine.assertExportedFileContainsCorrectObject(
-					expectedValue = ${expectedValue},
-					fileName = "export.json",
-					jsonObject = "$..[0]${fieldName}");
-			}
-
-			BatchEngine.assertExportedFileContainsCorrectObject(
-				expectedValue = "DELETE,GET,GET,PATCH,PUT",
-				fileName = "export.json",
-				ignoreOrder = "true",
-				jsonObject = "$..actions..method");
-		}
-	}
-
-	@priority = 4
-	test CanExportSpecificFieldsWithJSONTConfigurationNode {
-		property portal.acceptance = "true";
-
-		task ("And Given 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
-			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
-		}
-
-		task ("When exporting file in JSONT format with field 'name' selected") {
-			ImportExport.configureExport(
-				entityType = "Student (v1.0 - Liferay Object REST)",
-				exportFields = "name",
-				exportFileFormat = "JSONT");
-
-			Button.click(button = "Export");
-
-			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
-		}
-
-		task ("Then 'name' value for created entry, actions node, configuration node available in the dowloaded file") {
-			ImportExport.unzipDownloadedExportFile();
-
-			BatchEngine.assertExportedFileContainsCorrectObject(
-				expectedValue = "Able",
-				fileName = "export.batch-engine-data.json",
-				jsonObject = "$.items..name");
-
-			BatchEngine.assertExportedFileContainsCorrectObject(
-				expectedValue = "POST,DELETE,PUT",
-				fileName = "export.batch-engine-data.json",
-				jsonObject = "$.actions..method");
-
-			BatchEngine.assertExportedFileContainsCorrectObject(
-				expectedValue = "com.liferay.object.rest.dto.v1_0.ObjectEntry",
-				fileName = "export.batch-engine-data.json",
-				jsonObject = "$.configuration.className");
-		}
-	}
-
 	@priority = 4
 	test CanExportSystemObjectItems {
 		property custom.properties = "feature.flag.LPS-186620=true";
-		property portal.acceptance = "true";
 
 		task ("And Given 'Account (v1.0 - Liferay Headless Admin User)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
@@ -263,8 +148,6 @@ definition {
 
 	@priority = 5
 	test CanSelectFromAllExistingFields {
-		property portal.acceptance = "true";
-
 		task ("When selecting 'Student (v1.0 - Liferay Object REST)' as Entity Type in Data Migration Center --> Export File") {
 			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}

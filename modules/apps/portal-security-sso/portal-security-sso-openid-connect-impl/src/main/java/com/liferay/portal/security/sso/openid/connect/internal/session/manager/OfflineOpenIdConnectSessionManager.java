@@ -37,18 +37,23 @@ import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnec
 import com.liferay.portal.security.sso.openid.connect.persistence.model.OpenIdConnectSession;
 import com.liferay.portal.security.sso.openid.connect.persistence.service.OpenIdConnectSessionLocalService;
 
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 
+import jakarta.servlet.http.HttpSession;
+
+import java.text.ParseException;
+
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpSession;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -237,7 +242,9 @@ public class OfflineOpenIdConnectSessionManager {
 					JSONObjectUtils.parse(oAuthClientEntry.getInfoJSON())),
 				_authorizationServerMetadataResolver.
 					resolveOIDCProviderMetadata(
-						openIdConnectSession.getAuthServerWellKnownURI()),
+						openIdConnectSession.getAuthServerWellKnownURI(),
+						oAuthClientEntry.getMetadataCacheInSeconds(),
+						oAuthClientEntry.getOAuthClientEntryId()),
 				refreshToken, oAuthClientEntry.getTokenRequestParametersJSON());
 
 			_updateOpenIdConnectSession(
@@ -334,6 +341,21 @@ public class OfflineOpenIdConnectSessionManager {
 		openIdConnectSession.setAuthServerWellKnownURI(authServerWellKnownURI);
 		openIdConnectSession.setClientId(clientId);
 		openIdConnectSession.setIdToken(idTokenString);
+
+		try {
+			JWT jwt = JWTParser.parse(idTokenString);
+
+			JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
+
+			openIdConnectSession.setIssuer(jwtClaimsSet.getIssuer());
+			openIdConnectSession.setSessionId(
+				jwtClaimsSet.getClaimAsString("sid"));
+		}
+		catch (ParseException parseException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(parseException);
+			}
+		}
 
 		_updateOpenIdConnectSession(
 			accessToken, openIdConnectSession, refreshToken);

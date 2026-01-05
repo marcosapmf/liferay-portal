@@ -19,13 +19,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.TeamNameComparator;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.LinkedHashMap;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -118,7 +118,7 @@ public class SiteTeamsItemSelectorViewDescriptor
 	private SearchContainer<Team> _getTeamSearchContainer() {
 		RenderRequest renderRequest =
 			(RenderRequest)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		SearchContainer<Team> teamSearchContainer = new SearchContainer<>(
 			renderRequest, _portletURL, null, "no-teams-were-found");

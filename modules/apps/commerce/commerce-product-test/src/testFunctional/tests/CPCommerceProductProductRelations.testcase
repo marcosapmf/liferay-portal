@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(storeFront = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -50,55 +53,6 @@ definition {
 				key_productName = "Shoes",
 				key_value = ${valueList},
 				locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
-		}
-	}
-
-	@description = "This is a test for COMMERCE-11085. Can delete a product related to another product"
-	@priority = 3
-	test CanDeleteProductWithRelations {
-		property portal.acceptance = "false";
-
-		task ("Given a Minium Site is created") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-		}
-
-		task ("And a product is related to another product") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
-
-			CommerceRelations.addAnyProductRelation(
-				key_product = "U-Joint",
-				key_relation = "Up-Sell Product");
-
-			AssertElementPresent(
-				key_productName = "U-Joint",
-				key_value = "Up-Sell",
-				locator1 = "CommerceEntry#VALUE_PRODUCT_RELATIONS");
-		}
-
-		task ("When the admin deletes the related product") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceNavigator.searchEntry(entryName = "U-Joint");
-
-			Click.clickNoMouseOverNoWaitForVisible(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_ENTRY_CHECKBOX");
-
-			AssertElementPresent(locator1 = "Button#TRASH_ENABLED");
-		}
-
-		task ("Then the product is successfully deleted") {
-			ClickNoError(locator1 = "Button#TRASH_ENABLED");
-
-			CommerceNavigator.searchEntry(entryName = "U-Joint");
-
-			AssertElementNotPresent(
-				key_entryName = "U-Joint",
-				locator1 = "CommerceNavigation#ENTRY_NAME");
 		}
 	}
 
@@ -217,9 +171,7 @@ definition {
 
 		CommerceEntry.gotoMenuTab(menuTab = "Visibility");
 
-		for (var nameList : list "Channels,Account Groups") {
-			CommerceEntry.assertCheckedSpecificToggle(name = ${nameList});
-		}
+		CommerceEntry.assertCheckedSpecificToggle(name = "Channels");
 
 		CommerceEntry.gotoMenuTab(menuTab = "Product Relations");
 

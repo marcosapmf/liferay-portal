@@ -14,7 +14,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -28,15 +27,15 @@ import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.io.File;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
+		"jakarta.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
 		"mvc.command.name=/style_book/import_style_book_entries"
 	},
 	service = MVCActionCommand.class
@@ -99,22 +98,6 @@ public class ImportStyleBookEntriesMVCActionCommand
 
 			SessionMessages.add(actionRequest, "success");
 
-			Set<String> frontendTokenNames = new HashSet<>();
-
-			FrontendTokenDefinition frontendTokenDefinition =
-				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-					_layoutSetLocalService.fetchLayoutSet(
-						themeDisplay.getSiteGroupId(), false));
-
-			if (frontendTokenDefinition != null) {
-				Collection<FrontendToken> frontendTokens =
-					frontendTokenDefinition.getFrontendTokens();
-
-				for (FrontendToken frontendToken : frontendTokens) {
-					frontendTokenNames.add(frontendToken.getName());
-				}
-			}
-
 			for (StyleBookEntryZipProcessorImportResultEntry
 					styleBookEntryZipProcessorImportResultEntry :
 						styleBookEntryZipProcessorImportResultEntries) {
@@ -128,7 +111,9 @@ public class ImportStyleBookEntriesMVCActionCommand
 							INVALID) &&
 					(styleBookEntry != null) &&
 					!_isValidFrontendTokenDefinition(
-						frontendTokenNames, styleBookEntry)) {
+						_getFrontendTokenNames(
+							themeDisplay, styleBookEntry.getThemeId()),
+						styleBookEntry)) {
 
 					SessionMessages.add(
 						actionRequest,
@@ -143,6 +128,27 @@ public class ImportStyleBookEntriesMVCActionCommand
 		}
 
 		sendRedirect(actionRequest, actionResponse);
+	}
+
+	private Set<String> _getFrontendTokenNames(
+		ThemeDisplay themeDisplay, String themeId) {
+
+		Set<String> frontendTokenNames = new HashSet<>();
+
+		FrontendTokenDefinition frontendTokenDefinition =
+			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+				themeDisplay.getCompanyId(), themeId);
+
+		if (frontendTokenDefinition != null) {
+			Collection<FrontendToken> frontendTokens =
+				frontendTokenDefinition.getFrontendTokens();
+
+			for (FrontendToken frontendToken : frontendTokens) {
+				frontendTokenNames.add(frontendToken.getName());
+			}
+		}
+
+		return frontendTokenNames;
 	}
 
 	private List<StyleBookEntryZipProcessorImportResultEntry>
@@ -179,9 +185,6 @@ public class ImportStyleBookEntriesMVCActionCommand
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
 	private Portal _portal;

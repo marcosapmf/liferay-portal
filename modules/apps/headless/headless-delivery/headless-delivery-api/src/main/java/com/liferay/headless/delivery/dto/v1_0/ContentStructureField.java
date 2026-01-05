@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -54,7 +52,7 @@ public class ContentStructureField implements Serializable {
 			ContentStructureField.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The form field's type (e.g., date, geolocation, text, etc.)."
 	)
 	public String getDataType() {
@@ -99,7 +97,52 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _dataTypeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The field's friendly reference name. This is used by developers when referencing the field in custom implementations."
+	)
+	public String getFieldReference() {
+		if (_fieldReferenceSupplier != null) {
+			fieldReference = _fieldReferenceSupplier.get();
+
+			_fieldReferenceSupplier = null;
+		}
+
+		return fieldReference;
+	}
+
+	public void setFieldReference(String fieldReference) {
+		this.fieldReference = fieldReference;
+
+		_fieldReferenceSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFieldReference(
+		UnsafeSupplier<String, Exception> fieldReferenceUnsafeSupplier) {
+
+		_fieldReferenceSupplier = () -> {
+			try {
+				return fieldReferenceUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The field's friendly reference name. This is used by developers when referencing the field in custom implementations."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String fieldReference;
+
+	@JsonIgnore
+	private Supplier<String> _fieldReferenceSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The form field's input control type (e.g., text, textarea, select field, etc.)."
 	)
 	public String getInputControl() {
@@ -144,7 +187,9 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _inputControlSupplier;
 
-	@Schema(description = "The form field's label.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form field's label."
+	)
 	public String getLabel() {
 		if (_labelSupplier != null) {
 			label = _labelSupplier.get();
@@ -185,7 +230,9 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _labelSupplier;
 
-	@Schema(description = "The form field's labels.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form field's labels."
+	)
 	@Valid
 	public Map<String, String> getLabel_i18n() {
 		if (_label_i18nSupplier != null) {
@@ -228,7 +275,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _label_i18nSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the content is accessible in different languages."
 	)
 	public Boolean getLocalizable() {
@@ -273,7 +320,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _localizableSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the form field can have several values."
 	)
 	public Boolean getMultiple() {
@@ -318,7 +365,9 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _multipleSupplier;
 
-	@Schema(description = "The form field's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form field's name."
+	)
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -357,7 +406,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The child content structure fields that depend on this form field."
 	)
 	@Valid
@@ -408,7 +457,9 @@ public class ContentStructureField implements Serializable {
 	private Supplier<ContentStructureField[]>
 		_nestedContentStructureFieldsSupplier;
 
-	@Schema(description = "The list of different possible values.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The list of different possible values."
+	)
 	@Valid
 	public Option[] getOptions() {
 		if (_optionsSupplier != null) {
@@ -450,7 +501,9 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Option[]> _optionsSupplier;
 
-	@Schema(description = "The form field's default value.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form field's default value."
+	)
 	public String getPredefinedValue() {
 		if (_predefinedValueSupplier != null) {
 			predefinedValue = _predefinedValueSupplier.get();
@@ -491,7 +544,9 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _predefinedValueSupplier;
 
-	@Schema(description = "The localized form field's default values.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized form field's default values."
+	)
 	@Valid
 	public Map<String, String> getPredefinedValue_i18n() {
 		if (_predefinedValue_i18nSupplier != null) {
@@ -536,7 +591,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _predefinedValue_i18nSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether this content can be rendered (and answered) several times."
 	)
 	public Boolean getRepeatable() {
@@ -581,7 +636,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _repeatableSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether this form field is required."
 	)
 	public Boolean getRequired() {
@@ -626,7 +681,7 @@ public class ContentStructureField implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _requiredSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the structure's end target should render the field label."
 	)
 	public Boolean getShowLabel() {
@@ -711,6 +766,22 @@ public class ContentStructureField implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(dataType));
+
+			sb.append("\"");
+		}
+
+		String fieldReference = getFieldReference();
+
+		if (fieldReference != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fieldReference\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fieldReference));
 
 			sb.append("\"");
 		}
@@ -913,8 +984,8 @@ public class ContentStructureField implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentStructureField",
 		name = "x-class-name"
 	)

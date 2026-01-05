@@ -26,10 +26,10 @@ public class AddressServiceImpl extends AddressServiceBaseImpl {
 	@Override
 	public Address addAddress(
 			String externalReferenceCode, String className, long classPK,
-			String name, String description, String street1, String street2,
-			String street3, String city, String zip, long regionId,
-			long countryId, long listTypeId, boolean mailing, boolean primary,
-			String phoneNumber, ServiceContext serviceContext)
+			long countryId, long listTypeId, long regionId, String city,
+			String description, boolean mailing, String name, boolean primary,
+			String street1, String street2, String street3, String subtype,
+			String zip, String phoneNumber, ServiceContext serviceContext)
 		throws PortalException {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
@@ -47,9 +47,9 @@ public class AddressServiceImpl extends AddressServiceBaseImpl {
 
 		return addressLocalService.addAddress(
 			externalReferenceCode, permissionChecker.getUserId(), className,
-			classPK, name, description, street1, street2, street3, city, zip,
-			regionId, countryId, listTypeId, mailing, primary, phoneNumber,
-			serviceContext);
+			classPK, countryId, listTypeId, regionId, city, description,
+			mailing, name, primary, street1, street2, street3, subtype, zip,
+			phoneNumber, serviceContext);
 	}
 
 	@Override
@@ -70,6 +70,24 @@ public class AddressServiceImpl extends AddressServiceBaseImpl {
 			address.getClassPK(), actionId);
 
 		addressLocalService.deleteAddress(address);
+	}
+
+	@Override
+	public Address fetchAddressByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		Address address =
+			addressLocalService.fetchAddressByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		if (address != null) {
+			CommonPermissionUtil.check(
+				getPermissionChecker(), address.getClassNameId(),
+				address.getClassPK(), ActionKeys.VIEW);
+		}
+
+		return address;
 	}
 
 	@Override
@@ -111,11 +129,42 @@ public class AddressServiceImpl extends AddressServiceBaseImpl {
 	}
 
 	@Override
+	public Address getOrAddEmptyAddress(
+			String externalReferenceCode, String className, long classPK)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		Address address = fetchAddressByExternalReferenceCode(
+			externalReferenceCode, permissionChecker.getCompanyId());
+
+		if (address != null) {
+			return address;
+		}
+
+		String actionId = ActionKeys.UPDATE;
+
+		if (Objects.equals(
+				className, "com.liferay.account.model.AccountEntry")) {
+
+			actionId = "MANAGE_ADDRESSES";
+		}
+
+		CommonPermissionUtil.check(
+			permissionChecker, className, classPK, actionId);
+
+		return addressLocalService.getOrAddEmptyAddress(
+			externalReferenceCode, permissionChecker.getCompanyId(),
+			permissionChecker.getUserId(), className, classPK);
+	}
+
+	@Override
 	public Address updateAddress(
-			long addressId, String name, String description, String street1,
-			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long listTypeId, boolean mailing,
-			boolean primary, String phoneNumber)
+			String externalReferenceCode, long addressId, long countryId,
+			long listTypeId, long regionId, String city, String description,
+			boolean mailing, String name, boolean primary, String street1,
+			String street2, String street3, String subtype, String zip,
+			String phoneNumber)
 		throws PortalException {
 
 		Address address = addressPersistence.findByPrimaryKey(addressId);
@@ -134,8 +183,9 @@ public class AddressServiceImpl extends AddressServiceBaseImpl {
 			address.getClassPK(), actionId);
 
 		return addressLocalService.updateAddress(
-			addressId, name, description, street1, street2, street3, city, zip,
-			regionId, countryId, listTypeId, mailing, primary, phoneNumber);
+			externalReferenceCode, addressId, countryId, listTypeId, regionId,
+			city, description, mailing, name, primary, street1, street2,
+			street3, subtype, zip, phoneNumber);
 	}
 
 	@Override

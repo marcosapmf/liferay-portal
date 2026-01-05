@@ -8,8 +8,9 @@ package com.liferay.change.tracking.web.internal.frontend.data.set.filter;
 import com.liferay.frontend.data.set.filter.BaseSelectionFDSFilter;
 import com.liferay.frontend.data.set.filter.FDSFilter;
 import com.liferay.frontend.data.set.filter.SelectionFDSFilterItem;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,7 +23,10 @@ import org.osgi.service.component.annotations.Component;
 @Component(service = FDSFilter.class)
 public class TypeNameSelectionFDSFilter extends BaseSelectionFDSFilter {
 
-	public TypeNameSelectionFDSFilter(Map<Long, String> typeNamesMap) {
+	public TypeNameSelectionFDSFilter(
+		long selectedTypeName, Map<Long, String> typeNamesMap) {
+
+		_selectedTypeName = selectedTypeName;
 		_typeNamesMap = typeNamesMap;
 	}
 
@@ -37,21 +41,37 @@ public class TypeNameSelectionFDSFilter extends BaseSelectionFDSFilter {
 	}
 
 	@Override
+	public Map<String, Object> getPreloadedData() {
+		if (_selectedTypeName == 0) {
+			return null;
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"selectedItems",
+			TransformUtil.transform(
+				_typeNamesMap.entrySet(),
+				entry -> {
+					if (entry.getKey() == _selectedTypeName) {
+						return new SelectionFDSFilterItem(
+							entry.getValue(), String.valueOf(entry.getKey()));
+					}
+
+					return null;
+				})
+		).build();
+	}
+
+	@Override
 	public List<SelectionFDSFilterItem> getSelectionFDSFilterItems(
 		Locale locale) {
 
-		List<SelectionFDSFilterItem> selectionFDSFilterItems =
-			new ArrayList<>();
-
-		for (Map.Entry<Long, String> entry : _typeNamesMap.entrySet()) {
-			selectionFDSFilterItems.add(
-				new SelectionFDSFilterItem(
-					entry.getValue(), String.valueOf(entry.getKey())));
-		}
-
-		return selectionFDSFilterItems;
+		return TransformUtil.transform(
+			_typeNamesMap.entrySet(),
+			entry -> new SelectionFDSFilterItem(
+				entry.getValue(), String.valueOf(entry.getKey())));
 	}
 
+	private final long _selectedTypeName;
 	private final Map<Long, String> _typeNamesMap;
 
 }

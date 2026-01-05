@@ -21,6 +21,12 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 }
 %>
 
+<aui:style type="text/css">
+	.bg-img-app {
+		background-image: url('<%= HtmlUtil.escapeAttribute(oAuth2AuthorizePortletDisplayContext.getThumbnailURL()) %>');
+	}
+</aui:style>
+
 <clay:container-fluid
 	cssClass="closed consent"
 >
@@ -28,7 +34,7 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 		<div class="sheet">
 			<div class="panel-group panel-group-flush">
 				<div class="panel-body">
-					<div class="app-icon aspect-ratio-bg-cover" style="background-image: url('<%= HtmlUtil.escapeAttribute(oAuth2AuthorizePortletDisplayContext.getThumbnailURL()) %>');"></div>
+					<div class="app-icon aspect-ratio-bg-cover bg-img-app"></div>
 
 					<liferay-user:user-portrait
 						user="<%= user %>"
@@ -42,7 +48,7 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 						</c:when>
 						<c:when test="<%= !oAuth2AuthorizePortletDisplayContext.hasCreateTokenApplicationPermission(oAuth2Application) %>">
 							<h1>
-								<liferay-ui:message key="you-dont-have-permissions-to-authorize-the-application" />
+								<liferay-ui:message key="you-do-not-have-permissions-to-authorize-the-application" />
 							</h1>
 						</c:when>
 						<c:otherwise>

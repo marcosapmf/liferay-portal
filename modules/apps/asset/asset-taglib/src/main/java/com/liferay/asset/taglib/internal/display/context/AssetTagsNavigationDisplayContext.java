@@ -18,21 +18,20 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mikel Lorza
@@ -192,7 +191,7 @@ public class AssetTagsNavigationDisplayContext {
 				_maxAssetTags, AssetTagCountComparator.getInstance(false));
 		}
 
-		return ListUtil.sort(assetTags);
+		return assetTags;
 	}
 
 	private double _getMultiplier() {
@@ -246,11 +245,7 @@ public class AssetTagsNavigationDisplayContext {
 	}
 
 	private boolean _showBreadcrumb() {
-		if (Validator.isNotNull(_getTag())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getTag());
 	}
 
 	private final Map<String, Integer> _assetTagCounts = new HashMap<>();

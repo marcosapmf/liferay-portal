@@ -46,6 +46,10 @@ public class ConfigYAML {
 		return _implDir;
 	}
 
+	public String getJavaEEPackage() {
+		return _javaEEPackage;
+	}
+
 	public String getLicenseName() {
 		return _licenseName;
 	}
@@ -90,12 +94,24 @@ public class ConfigYAML {
 		return _generateBatch;
 	}
 
+	public boolean isGenerateClientJS() {
+		return _generateClientJS;
+	}
+
+	public boolean isGenerateCRUD() {
+		return _generateCRUD;
+	}
+
 	public boolean isGenerateGraphQL() {
 		return _generateGraphQL;
 	}
 
 	public boolean isGenerateOpenAPI() {
 		return _generateOpenAPI;
+	}
+
+	public boolean isGeneratePermissions() {
+		return _generatePermissions;
 	}
 
 	public boolean isGenerateREST() {
@@ -176,12 +192,24 @@ public class ConfigYAML {
 		_generateBatch = generateBatch;
 	}
 
+	public void setGenerateClientJS(boolean generateClientJS) {
+		_generateClientJS = generateClientJS;
+	}
+
+	public void setGenerateCRUD(boolean generateCRUD) {
+		_generateCRUD = generateCRUD;
+	}
+
 	public void setGenerateGraphQL(boolean generateGraphQL) {
 		_generateGraphQL = generateGraphQL;
 	}
 
 	public void setGenerateOpenAPI(boolean generateOpenAPI) {
 		_generateOpenAPI = generateOpenAPI;
+	}
+
+	public void setGeneratePermissions(boolean generatePermissions) {
+		_generatePermissions = generatePermissions;
 	}
 
 	public void setGenerateREST(boolean generateREST) {
@@ -194,6 +222,10 @@ public class ConfigYAML {
 
 	public void setImplDir(String implDir) {
 		_implDir = implDir;
+	}
+
+	public void setJavaEEPackage(String javaEEPackage) {
+		_javaEEPackage = javaEEPackage;
 	}
 
 	public void setLicenseName(String licenseName) {
@@ -234,11 +266,15 @@ public class ConfigYAML {
 	private boolean _forcePredictableSchemaPropertyName = true;
 	private boolean _generateActionProviders;
 	private boolean _generateBatch = true;
+	private boolean _generateClientJS;
+	private boolean _generateCRUD = true;
 	private boolean _generateGraphQL = true;
 	private boolean _generateOpenAPI = true;
+	private boolean _generatePermissions;
 	private boolean _generateREST = true;
 	private String _graphQLNamespace;
 	private String _implDir = "src/main/java";
+	private String _javaEEPackage = "javax";
 	private String _licenseName = "Apache 2.0";
 	private String _licenseURL =
 		"http://www.apache.org/licenses/LICENSE-2.0.html";

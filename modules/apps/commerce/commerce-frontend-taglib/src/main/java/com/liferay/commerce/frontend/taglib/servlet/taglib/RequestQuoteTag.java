@@ -12,11 +12,11 @@ import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
-import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.frontend.util.ProductHelper;
+import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
@@ -28,6 +28,7 @@ import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -41,12 +42,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * @author Stefano Motta
@@ -62,19 +63,18 @@ public class RequestQuoteTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
+			if ((commerceContext == null) ||
+				(commerceContext.getCommerceChannelId() == 0)) {
 
-			if (_commerceChannelId == 0) {
 				return SKIP_BODY;
 			}
 
+			_baseOrderDetailURL =
+				_commerceOrderHttpHelper.getCommerceCartBaseURL(
+					httpServletRequest);
+
 			_commerceAccountId = CommerceUtil.getCommerceAccountId(
 				commerceContext);
-
-			CommerceCurrency commerceCurrency =
-				commerceContext.getCommerceCurrency();
-
-			_commerceCurrencyCode = commerceCurrency.getCode();
 
 			CPSku cpSku = null;
 
@@ -124,11 +124,11 @@ public class RequestQuoteTag extends IncludeTag {
 			AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 			if (accountEntry != null) {
-				if (accountEntry.isBusinessAccount()) {
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)httpServletRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
+				if (accountEntry.isBusinessAccount()) {
 					_disabled =
 						_disabled ||
 						!_commerceOrderPortletResourcePermission.contains(
@@ -143,6 +143,19 @@ public class RequestQuoteTag extends IncludeTag {
 						 (CommerceChannelConstants.SITE_TYPE_B2B ==
 							 commerceContext.getCommerceSiteType()));
 				}
+
+				_notesPermission =
+					_commerceOrderPortletResourcePermission.contains(
+						themeDisplay.getPermissionChecker(),
+						accountEntry.getAccountEntryGroupId(),
+						CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES);
+
+				_restrictedNotesPermission =
+					_commerceOrderPortletResourcePermission.contains(
+						themeDisplay.getPermissionChecker(),
+						accountEntry.getAccountEntryGroupId(),
+						CommerceOrderActionKeys.
+							MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES);
 			}
 
 			_orderDetailURL = _getOrderDetailURL(
@@ -162,6 +175,14 @@ public class RequestQuoteTag extends IncludeTag {
 		return _cpCatalogEntry;
 	}
 
+	public boolean getCreateCart() {
+		return _createCart;
+	}
+
+	public String getDisplayType() {
+		return _displayType;
+	}
+
 	public String getNamespace() {
 		return _namespace;
 	}
@@ -169,23 +190,23 @@ public class RequestQuoteTag extends IncludeTag {
 	@Override
 	public void setAttributes(HttpServletRequest httpServletRequest) {
 		httpServletRequest.setAttribute(
-			"liferay-commerce:request-quote:commerceAccountId",
-			_commerceAccountId);
-		httpServletRequest.setAttribute(
-			"liferay-commerce:request-quote:commerceChannelId",
-			_commerceChannelId);
-		httpServletRequest.setAttribute(
-			"liferay-commerce:request-quote:commerceCurrencyCode",
-			_commerceCurrencyCode);
+			"liferay-commerce:request-quote:baseOrderDetailURL",
+			_baseOrderDetailURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:cpDefinitionId",
 			_cpCatalogEntry.getCPDefinitionId());
 		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:cpInstanceId", _cpInstanceId);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:request-quote:createCart", _createCart);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:disabled", _disabled);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:request-quote:displayType", _displayType);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:namespace", _namespace);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:request-quote:notesPermission", _notesPermission);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:orderDetailURL", _orderDetailURL);
 		httpServletRequest.setAttribute(
@@ -194,6 +215,9 @@ public class RequestQuoteTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:requestQuoteEnabled",
 			_requestQuoteEnabled);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:request-quote:restrictedNotesPermission",
+			_restrictedNotesPermission);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:request-quote:skuOptions", _skuOptions);
 	}
@@ -206,6 +230,14 @@ public class RequestQuoteTag extends IncludeTag {
 		_cpCatalogEntry = cpCatalogEntry;
 	}
 
+	public void setCreateCart(boolean createCart) {
+		_createCart = createCart;
+	}
+
+	public void setDisplayType(String displayType) {
+		_displayType = displayType;
+	}
+
 	public void setNamespace(String namespace) {
 		_namespace = namespace;
 	}
@@ -216,6 +248,8 @@ public class RequestQuoteTag extends IncludeTag {
 
 		setServletContext(ServletContextUtil.getServletContext());
 
+		_commerceOrderHttpHelper =
+			ServletContextUtil.getCommerceOrderHttpHelper();
 		_commerceOrderPortletResourcePermission =
 			ServletContextUtil.getCommerceOrderPortletResourcePermission();
 		_configurationProvider = ServletContextUtil.getConfigurationProvider();
@@ -229,21 +263,25 @@ public class RequestQuoteTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_baseOrderDetailURL = StringPool.BLANK;
 		_commerceAccountId = 0;
-		_commerceChannelId = 0;
-		_commerceCurrencyCode = null;
+		_commerceOrderHttpHelper = null;
 		_commerceOrderPortletResourcePermission = null;
 		_configurationProvider = null;
 		_cpCatalogEntry = null;
 		_cpContentHelper = null;
 		_cpDefinitionOptionRelLocalService = null;
 		_cpInstanceId = 0;
+		_createCart = false;
 		_disabled = false;
+		_displayType = "secondary";
 		_namespace = StringPool.BLANK;
+		_notesPermission = false;
 		_orderDetailURL = null;
 		_priceOnApplication = false;
 		_productHelper = null;
 		_requestQuoteEnabled = false;
+		_restrictedNotesPermission = false;
 		_skuOptions = null;
 	}
 
@@ -257,17 +295,15 @@ public class RequestQuoteTag extends IncludeTag {
 
 		long plid = PortalUtil.getPlidFromPortletId(
 			themeDisplay.getScopeGroupId(),
-			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
+			CommercePortletKeys.COMMERCE_ORDER_CONTENT);
 
 		if (plid > 0) {
 			return PortletURLBuilder.create(
 				_getPortletURL(
 					themeDisplay.getRequest(),
-					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
-			).setActionName(
-				"/commerce_open_order_content/edit_commerce_order"
-			).setCMD(
-				"setCurrent"
+					CommercePortletKeys.COMMERCE_ORDER_CONTENT)
+			).setMVCRenderCommandName(
+				"/commerce_order_content/view_commerce_order_details"
 			).setParameter(
 				"commerceOrderId", "{id}"
 			).buildString();
@@ -284,7 +320,7 @@ public class RequestQuoteTag extends IncludeTag {
 
 		long plid = PortalUtil.getPlidFromPortletId(groupId, portletId);
 
-		if (plid > 0) {
+		if ((plid > 0) || FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
 			return PortletURLFactoryUtil.create(
 				httpServletRequest, portletId, plid,
 				PortletRequest.ACTION_PHASE);
@@ -306,7 +342,7 @@ public class RequestQuoteTag extends IncludeTag {
 
 		ProductSettingsModel productSettingsModel =
 			_productHelper.getProductSettingsModel(
-				_cpCatalogEntry.getCPDefinitionId());
+				_cpCatalogEntry.getCPDefinitionId(), commerceContext);
 
 		return _productHelper.getPriceModel(
 			cpInstanceId, StringPool.BLANK,
@@ -319,9 +355,9 @@ public class RequestQuoteTag extends IncludeTag {
 	private static final Log _log = LogFactoryUtil.getLog(
 		RequestQuoteTag.class);
 
+	private String _baseOrderDetailURL = StringPool.BLANK;
 	private long _commerceAccountId;
-	private long _commerceChannelId;
-	private String _commerceCurrencyCode;
+	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private PortletResourcePermission _commerceOrderPortletResourcePermission;
 	private ConfigurationProvider _configurationProvider;
 	private CPCatalogEntry _cpCatalogEntry;
@@ -329,12 +365,16 @@ public class RequestQuoteTag extends IncludeTag {
 	private CPDefinitionOptionRelLocalService
 		_cpDefinitionOptionRelLocalService;
 	private long _cpInstanceId;
+	private boolean _createCart;
 	private boolean _disabled;
+	private String _displayType = "secondary";
 	private String _namespace = StringPool.BLANK;
+	private boolean _notesPermission;
 	private String _orderDetailURL;
 	private boolean _priceOnApplication;
 	private ProductHelper _productHelper;
 	private boolean _requestQuoteEnabled;
+	private boolean _restrictedNotesPermission;
 	private String _skuOptions;
 
 }

@@ -10,14 +10,17 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -26,13 +29,18 @@ import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
+import com.liferay.portal.search.web.internal.facet.display.context.FacetDisplayContext;
 import com.liferay.portal.search.web.internal.modified.facet.configuration.ModifiedFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.modified.facet.display.context.builder.ModifiedFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.util.DateRangeFactoryUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -55,6 +63,7 @@ public class ModifiedFacetDisplayContextBuilderTest
 	@Before
 	@Override
 	public void setUp() throws Exception {
+		_defaultLocale = LocaleThreadLocal.getDefaultLocale();
 		_jsonFactoryImpl = new JSONFactoryImpl();
 
 		_setUpPortalUtil();
@@ -76,6 +85,11 @@ public class ModifiedFacetDisplayContextBuilderTest
 		).when(
 			_facet
 		).getSearchContext();
+	}
+
+	@After
+	public void tearDown() {
+		LocaleThreadLocal.setDefaultLocale(_defaultLocale);
 	}
 
 	@Test
@@ -156,6 +170,44 @@ public class ModifiedFacetDisplayContextBuilderTest
 		Assert.assertEquals(frequency, bucketDisplayContext.getFrequency());
 	}
 
+	@Test
+	public void testCustomRangeUsesStandardDateFormat() {
+		ModifiedFacetDisplayContextBuilder modifiedFacetDisplayContextBuilder =
+			createDisplayContextBuilder();
+
+		modifiedFacetDisplayContextBuilder.setCurrentURL(
+			"/?modifiedFrom=2018-01-01&modifiedTo=2018-01-31");
+
+		for (Locale locale : List.of(LocaleUtil.US, new Locale("ar", "SA"))) {
+			LocaleThreadLocal.setDefaultLocale(locale);
+
+			ModifiedFacetDisplayContext modifiedFacetDisplayContext =
+				modifiedFacetDisplayContextBuilder.build();
+
+			BucketDisplayContext bucketDisplayContext =
+				modifiedFacetDisplayContext.
+					getCustomRangeBucketDisplayContext();
+
+			String modifiedFrom = HttpComponentsUtil.getParameter(
+				bucketDisplayContext.getFilterValue(), "modifiedFrom", false);
+
+			Assert.assertNotEquals("2018-01-01", modifiedFrom);
+
+			String modifiedTo = HttpComponentsUtil.getParameter(
+				bucketDisplayContext.getFilterValue(), "modifiedTo", false);
+
+			Assert.assertNotEquals("2018-01-31", modifiedTo);
+
+			Matcher matcher = _pattern.matcher(modifiedFrom);
+
+			Assert.assertTrue(modifiedFrom, matcher.matches());
+
+			matcher = _pattern.matcher(modifiedTo);
+
+			Assert.assertTrue(modifiedTo, matcher.matches());
+		}
+	}
+
 	@Override
 	@Test
 	public void testEmptySearchResults() throws Exception {
@@ -164,6 +216,34 @@ public class ModifiedFacetDisplayContextBuilderTest
 	@Override
 	@Test
 	public void testEmptySearchResultsWithPreviousSelection() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testGetDisplayStyleGroup() throws Exception {
+		setUpGroupLocalServiceUtil(getGroup());
+		setUpPortletDisplayStyleGroupExternalReferenceCode(null);
+
+		_assertDisplayContext(getGroup());
+
+		groupLocalServiceUtilMockedStatic.verifyNoInteractions();
+	}
+
+	@Override
+	@Test
+	public void testGetDisplayStyleGroupWithConfiguration() throws Exception {
+		Group group = getGroup();
+
+		setUpGroupLocalServiceUtil(group);
+		setUpPortletDisplayStyleGroupExternalReferenceCode(
+			group.getExternalReferenceCode());
+
+		_assertDisplayContext(group);
+
+		groupLocalServiceUtilMockedStatic.verify(
+			() -> GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				group.getExternalReferenceCode(), 0L),
+			Mockito.times(1));
 	}
 
 	@Test
@@ -270,8 +350,30 @@ public class ModifiedFacetDisplayContextBuilderTest
 		ModifiedFacetDisplayContext modifiedFacetDisplayContext =
 			modifiedFacetDisplayContextBuilder.build();
 
-		_assertTermDisplayContextsDoNotHaveFromAndToParameters(
-			modifiedFacetDisplayContext.getBucketDisplayContexts());
+		for (BucketDisplayContext bucketDisplayContext :
+				modifiedFacetDisplayContext.getBucketDisplayContexts()) {
+
+			String label = bucketDisplayContext.getBucketText();
+
+			if (label.equals("custom-range")) {
+				continue;
+			}
+
+			String rangeURL = bucketDisplayContext.getFilterValue();
+
+			Assert.assertTrue(
+				Validator.isNotNull(
+					HttpComponentsUtil.getParameter(
+						rangeURL, "modified", false)));
+			Assert.assertTrue(
+				Validator.isNull(
+					HttpComponentsUtil.getParameter(
+						rangeURL, "modifiedFrom", false)));
+			Assert.assertTrue(
+				Validator.isNull(
+					HttpComponentsUtil.getParameter(
+						rangeURL, "modifiedTo", false)));
+		}
 	}
 
 	@Override
@@ -366,6 +468,36 @@ public class ModifiedFacetDisplayContextBuilderTest
 	}
 
 	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		return null;
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		ModifiedFacetPortletInstanceConfiguration
+			modifiedFacetPortletInstanceConfiguration = Mockito.mock(
+				ModifiedFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			modifiedFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			modifiedFacetPortletInstanceConfiguration
+		);
+	}
+
+	@Override
 	protected void testOrderBy(
 			int[] expectedFrequencies, String[] expectedTerms,
 			int[] frequencies, String order, String[] terms)
@@ -410,34 +542,22 @@ public class ModifiedFacetDisplayContextBuilderTest
 		jsonArray.put(jsonObject);
 	}
 
-	private void _assertDoesNotHasParameter(String url, String name) {
-		Assert.assertTrue(
-			Validator.isNull(
-				HttpComponentsUtil.getParameter(url, name, false)));
-	}
+	private void _assertDisplayContext(Group group) throws Exception {
+		ModifiedFacetDisplayContextBuilder modifiedFacetDisplayContextBuilder =
+			new ModifiedFacetDisplayContextBuilder(getRenderRequest(group));
 
-	private void _assertHasParameter(String url, String name) {
-		Assert.assertTrue(
-			Validator.isNotNull(
-				HttpComponentsUtil.getParameter(url, name, false)));
-	}
+		modifiedFacetDisplayContextBuilder.setFacet(_facet);
+		modifiedFacetDisplayContextBuilder.setFromParameterValue("2018-01-01");
+		modifiedFacetDisplayContextBuilder.setTimeZone(
+			TimeZoneUtil.getDefault());
+		modifiedFacetDisplayContextBuilder.setToParameterValue("2018-01-31");
 
-	private void _assertTermDisplayContextsDoNotHaveFromAndToParameters(
-		List<BucketDisplayContext> termDisplayContexts) {
+		ModifiedFacetDisplayContext modifiedFacetDisplayContext =
+			modifiedFacetDisplayContextBuilder.build();
 
-		for (BucketDisplayContext termDisplayContext : termDisplayContexts) {
-			String label = termDisplayContext.getBucketText();
-
-			if (label.equals("custom-range")) {
-				continue;
-			}
-
-			String rangeURL = termDisplayContext.getFilterValue();
-
-			_assertHasParameter(rangeURL, "modified");
-			_assertDoesNotHasParameter(rangeURL, "modifiedFrom");
-			_assertDoesNotHasParameter(rangeURL, "modifiedTo");
-		}
+		Assert.assertEquals(
+			group.getGroupId(),
+			modifiedFacetDisplayContext.getDisplayStyleGroupId());
 	}
 
 	private JSONObject _createDataJSONObject(String... labelsAndRanges) {
@@ -541,6 +661,10 @@ public class ModifiedFacetDisplayContextBuilderTest
 		portalUtil.setPortal(portal);
 	}
 
+	private static final Pattern _pattern = Pattern.compile(
+		"\\d{4}-\\d{2}-\\d{2}");
+
+	private Locale _defaultLocale;
 	private final Facet _facet = Mockito.mock(Facet.class);
 	private final FacetCollector _facetCollector = Mockito.mock(
 		FacetCollector.class);

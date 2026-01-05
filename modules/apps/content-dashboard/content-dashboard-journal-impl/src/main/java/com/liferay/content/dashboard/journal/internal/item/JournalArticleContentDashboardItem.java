@@ -16,7 +16,6 @@ import com.liferay.content.dashboard.item.action.ContentDashboardItemVersionActi
 import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemActionException;
 import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemVersionActionException;
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemActionProvider;
-import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemVersionActionProvider;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemClassDetails;
@@ -48,6 +47,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,11 +60,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -426,7 +425,7 @@ public class JournalArticleContentDashboardItem
 				LiferayPortletResponse liferayPortletResponse =
 					_portal.getLiferayPortletResponse(
 						(PortletResponse)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_RESPONSE));
+							JavaConstants.JAKARTA_PORTLET_RESPONSE));
 
 				return liferayPortletResponse.createRenderURL();
 			}
@@ -485,45 +484,36 @@ public class JournalArticleContentDashboardItem
 			HttpServletRequest httpServletRequest,
 			JournalArticle journalArticleVersion) {
 
-		List<ContentDashboardItemVersionAction>
-			contentDashboardItemVersionActions = new ArrayList<>();
+		return TransformUtil.transform(
+			_contentDashboardItemVersionActionProviderRegistry.
+				getContentDashboardItemVersionActionProviders(
+					JournalArticle.class.getName()),
+			contentDashboardItemVersionActionProvider -> {
+				if (!contentDashboardItemVersionActionProvider.isShow(
+						journalArticleVersion, httpServletRequest)) {
 
-		List<ContentDashboardItemVersionActionProvider>
-			contentDashboardItemVersionActionProviders =
-				_contentDashboardItemVersionActionProviderRegistry.
-					getContentDashboardItemVersionActionProviders(
-						JournalArticle.class.getName());
-
-		for (ContentDashboardItemVersionActionProvider
-				contentDashboardItemVersionActionProvider :
-					contentDashboardItemVersionActionProviders) {
-
-			if (!contentDashboardItemVersionActionProvider.isShow(
-					journalArticleVersion, httpServletRequest)) {
-
-				continue;
-			}
-
-			try {
-				ContentDashboardItemVersionAction
-					contentDashboardItemVersionAction =
-						contentDashboardItemVersionActionProvider.
-							getContentDashboardItemVersionAction(
-								journalArticleVersion, httpServletRequest);
-
-				if (contentDashboardItemVersionAction != null) {
-					contentDashboardItemVersionActions.add(
-						contentDashboardItemVersionAction);
+					return null;
 				}
-			}
-			catch (ContentDashboardItemVersionActionException
-						contentDashboardItemVersionActionException) {
 
-				_log.error(contentDashboardItemVersionActionException);
-			}
-		}
+				try {
+					ContentDashboardItemVersionAction
+						contentDashboardItemVersionAction =
+							contentDashboardItemVersionActionProvider.
+								getContentDashboardItemVersionAction(
+									journalArticleVersion, httpServletRequest);
 
-		return contentDashboardItemVersionActions;
+					if (contentDashboardItemVersionAction != null) {
+						return contentDashboardItemVersionAction;
+					}
+				}
+				catch (ContentDashboardItemVersionActionException
+							contentDashboardItemVersionActionException) {
+
+					_log.error(contentDashboardItemVersionActionException);
+				}
+
+				return null;
+			});
 	}
 
 	private ContentDashboardItemVersion _getLastContentDashboardItemVersion(

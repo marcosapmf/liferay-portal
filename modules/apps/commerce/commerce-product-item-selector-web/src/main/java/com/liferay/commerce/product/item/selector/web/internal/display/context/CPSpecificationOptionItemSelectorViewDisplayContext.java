@@ -11,9 +11,9 @@ import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Andrea Di Giorgi
@@ -53,7 +53,7 @@ public class CPSpecificationOptionItemSelectorViewDisplayContext
 		searchContainer.setOrderByType(getOrderByType());
 		searchContainer.setResultsAndTotal(
 			_cpSpecificationOptionService.searchCPSpecificationOptions(
-				cpRequestHelper.getCompanyId(), null, getKeywords(),
+				cpRequestHelper.getCompanyId(), null, null, getKeywords(),
 				searchContainer.getStart(), searchContainer.getEnd(),
 				CPItemSelectorViewUtil.getCPSpecificationOptionSort(
 					getOrderByCol(), getOrderByType())));

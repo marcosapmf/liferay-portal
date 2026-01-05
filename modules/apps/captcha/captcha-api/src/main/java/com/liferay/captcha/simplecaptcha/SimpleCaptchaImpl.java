@@ -6,7 +6,7 @@
 package com.liferay.captcha.simplecaptcha;
 
 import com.liferay.captcha.configuration.CaptchaConfiguration;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.captcha.provider.CaptchaProvider;
 import com.liferay.portal.kernel.captcha.Captcha;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.captcha.CaptchaTextException;
@@ -22,20 +22,25 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletSession;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
+import java.lang.reflect.Array;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletSession;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import nl.captcha.backgrounds.BackgroundProducer;
 import nl.captcha.gimpy.GimpyRenderer;
@@ -44,9 +49,7 @@ import nl.captcha.servlet.CaptchaServletUtil;
 import nl.captcha.text.producer.TextProducer;
 import nl.captcha.text.renderer.WordRenderer;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -54,7 +57,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Daniel Sanz
  */
 @Component(
-	configurationPid = "com.liferay.captcha.configuration.CaptchaConfiguration",
 	property = "captcha.engine.impl=com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl",
 	service = Captcha.class
 )
@@ -102,25 +104,27 @@ public class SimpleCaptchaImpl implements Captcha {
 	}
 
 	@Override
-	public String getTaglibPath() {
-		return _TAGLIB_PATH;
+	public String getName() {
+		return "SimpleCaptcha";
 	}
 
 	@Override
 	public boolean isEnabled(HttpServletRequest httpServletRequest) {
+		CaptchaConfiguration captchaConfiguration =
+			captchaProvider.getCaptchaConfiguration();
 		HttpSession httpSession = _getHttpSession(httpServletRequest);
 
-		int maxChallenges;
+		int maxChallenges = 0;
 
 		if (GetterUtil.getBoolean(PropsUtil.get("captcha.enforce.disabled"))) {
-			maxChallenges = _captchaConfiguration.maxChallenges();
+			maxChallenges = captchaConfiguration.maxChallenges();
 		}
 		else {
 			maxChallenges = GetterUtil.getInteger(
 				httpSession.getAttribute(
 					_getHttpSessionKey(
 						_CAPTCHA_MAX_CHALLENGES, httpServletRequest)),
-				_captchaConfiguration.maxChallenges());
+				captchaConfiguration.maxChallenges());
 		}
 
 		if (maxChallenges == 0) {
@@ -144,6 +148,27 @@ public class SimpleCaptchaImpl implements Captcha {
 	@Override
 	public boolean isEnabled(PortletRequest portletRequest) {
 		return isEnabled(portal.getHttpServletRequest(portletRequest));
+	}
+
+	@Override
+	public void render(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws IOException {
+
+		RequestDispatcher requestDispatcher =
+			servletContext.getRequestDispatcher(getTaglibPath());
+
+		try {
+			requestDispatcher.include(httpServletRequest, httpServletResponse);
+		}
+		catch (ServletException servletException) {
+			_log.error(
+				"Unable to render JSP " + getTaglibPath(), servletException);
+
+			throw new IOException(
+				"Unable to render " + getTaglibPath(), servletException);
+		}
 	}
 
 	@Override
@@ -207,96 +232,85 @@ public class SimpleCaptchaImpl implements Captcha {
 			simpleCaptcha.getImage());
 	}
 
-	protected void activate() {
-		initBackgroundProducers();
-		initGimpyRenderers();
-		initNoiseProducers();
-		initTextProducers();
-		initWordRenderers();
+	protected BackgroundProducer getBackgroundProducer(
+		CaptchaConfiguration captchaConfiguration) {
+
+		return _getInstance(
+			captchaConfiguration.simpleCaptchaBackgroundProducers(),
+			BackgroundProducer.class);
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_captchaConfiguration = ConfigurableUtil.createConfigurable(
-			CaptchaConfiguration.class, properties);
+	protected GimpyRenderer getGimpyRenderer(
+		CaptchaConfiguration captchaConfiguration) {
 
-		activate();
+		return _getInstance(
+			captchaConfiguration.simpleCaptchaGimpyRenderers(),
+			GimpyRenderer.class);
 	}
 
-	protected BackgroundProducer getBackgroundProducer() {
-		if (_backgroundProducers.length == 1) {
-			return _backgroundProducers[0];
-		}
-
-		int pos = RandomUtil.nextInt(_backgroundProducers.length);
-
-		return _backgroundProducers[pos];
+	protected int getHeight(CaptchaConfiguration captchaConfiguration) {
+		return captchaConfiguration.simpleCaptchaHeight();
 	}
 
-	protected GimpyRenderer getGimpyRenderer() {
-		if (_gimpyRenderers.length == 1) {
-			return _gimpyRenderers[0];
-		}
+	protected NoiseProducer getNoiseProducer(
+		CaptchaConfiguration captchaConfiguration) {
 
-		int pos = RandomUtil.nextInt(_gimpyRenderers.length);
-
-		return _gimpyRenderers[pos];
-	}
-
-	protected int getHeight() {
-		return _captchaConfiguration.simpleCaptchaHeight();
-	}
-
-	protected NoiseProducer getNoiseProducer() {
-		if (_noiseProducers.length == 1) {
-			return _noiseProducers[0];
-		}
-
-		int pos = RandomUtil.nextInt(_noiseProducers.length);
-
-		return _noiseProducers[pos];
+		return _getInstance(
+			captchaConfiguration.simpleCaptchaNoiseProducers(),
+			NoiseProducer.class);
 	}
 
 	protected nl.captcha.Captcha getSimpleCaptcha() {
-		nl.captcha.Captcha.Builder captchaBuilder =
-			new nl.captcha.Captcha.Builder(getWidth(), getHeight());
+		CaptchaConfiguration captchaConfiguration =
+			captchaProvider.getCaptchaConfiguration();
 
-		captchaBuilder.addText(getTextProducer(), getWordRenderer());
-		captchaBuilder.addBackground(getBackgroundProducer());
-		captchaBuilder.gimp(getGimpyRenderer());
-		captchaBuilder.addNoise(getNoiseProducer());
+		nl.captcha.Captcha.Builder captchaBuilder =
+			new nl.captcha.Captcha.Builder(
+				getWidth(captchaConfiguration),
+				getHeight(captchaConfiguration));
+
+		captchaBuilder.addText(
+			getTextProducer(captchaConfiguration),
+			getWordRenderer(captchaConfiguration));
+		captchaBuilder.addBackground(
+			getBackgroundProducer(captchaConfiguration));
+		captchaBuilder.gimp(getGimpyRenderer(captchaConfiguration));
+		captchaBuilder.addNoise(getNoiseProducer(captchaConfiguration));
+
 		captchaBuilder.addBorder();
 
 		return captchaBuilder.build();
 	}
 
-	protected TextProducer getTextProducer() {
-		if (_textProducers.length == 1) {
-			return _textProducers[0];
-		}
-
-		int pos = RandomUtil.nextInt(_textProducers.length);
-
-		return _textProducers[pos];
+	protected String getTaglibPath() {
+		return _TAGLIB_PATH;
 	}
 
-	protected int getWidth() {
-		return _captchaConfiguration.simpleCaptchaWidth();
+	protected TextProducer getTextProducer(
+		CaptchaConfiguration captchaConfiguration) {
+
+		return _getInstance(
+			captchaConfiguration.simpleCaptchaTextProducers(),
+			TextProducer.class);
 	}
 
-	protected WordRenderer getWordRenderer() {
-		if (_wordRenderers.length == 1) {
-			return _wordRenderers[0];
-		}
+	protected int getWidth(CaptchaConfiguration captchaConfiguration) {
+		return captchaConfiguration.simpleCaptchaWidth();
+	}
 
-		int pos = RandomUtil.nextInt(_wordRenderers.length);
+	protected WordRenderer getWordRenderer(
+		CaptchaConfiguration captchaConfiguration) {
 
-		return _wordRenderers[pos];
+		return _getInstance(
+			captchaConfiguration.simpleCaptchaWordRenderers(),
+			WordRenderer.class);
 	}
 
 	protected void incrementCounter(HttpServletRequest httpServletRequest) {
-		if ((_captchaConfiguration.maxChallenges() > 0) &&
+		CaptchaConfiguration captchaConfiguration =
+			captchaProvider.getCaptchaConfiguration();
+
+		if ((captchaConfiguration.maxChallenges() > 0) &&
 			Validator.isNotNull(httpServletRequest.getRemoteUser())) {
 
 			HttpSession httpSession = _getHttpSession(httpServletRequest);
@@ -323,84 +337,6 @@ public class SimpleCaptchaImpl implements Captcha {
 
 	protected void incrementCounter(PortletRequest portletRequest) {
 		incrementCounter(portal.getHttpServletRequest(portletRequest));
-	}
-
-	protected void initBackgroundProducers() {
-		String[] backgroundProducerClassNames =
-			_captchaConfiguration.simpleCaptchaBackgroundProducers();
-
-		_backgroundProducers =
-			new BackgroundProducer[backgroundProducerClassNames.length];
-
-		for (int i = 0; i < backgroundProducerClassNames.length; i++) {
-			String backgroundProducerClassName =
-				backgroundProducerClassNames[i];
-
-			_backgroundProducers[i] = (BackgroundProducer)_getInstance(
-				backgroundProducerClassName);
-		}
-	}
-
-	protected void initGimpyRenderers() {
-		String[] gimpyRendererClassNames =
-			_captchaConfiguration.simpleCaptchaGimpyRenderers();
-
-		_gimpyRenderers = new GimpyRenderer[gimpyRendererClassNames.length];
-
-		for (int i = 0; i < gimpyRendererClassNames.length; i++) {
-			String gimpyRendererClassName = gimpyRendererClassNames[i];
-
-			_gimpyRenderers[i] = (GimpyRenderer)_getInstance(
-				gimpyRendererClassName);
-		}
-	}
-
-	protected void initNoiseProducers() {
-		String[] noiseProducerClassNames =
-			_captchaConfiguration.simpleCaptchaNoiseProducers();
-
-		_noiseProducers = new NoiseProducer[noiseProducerClassNames.length];
-
-		for (int i = 0; i < noiseProducerClassNames.length; i++) {
-			String noiseProducerClassName = noiseProducerClassNames[i];
-
-			_noiseProducers[i] = (NoiseProducer)_getInstance(
-				noiseProducerClassName);
-		}
-	}
-
-	protected void initTextProducers() {
-		String[] textProducerClassNames =
-			_captchaConfiguration.simpleCaptchaTextProducers();
-
-		_textProducers = new TextProducer[textProducerClassNames.length];
-
-		for (int i = 0; i < textProducerClassNames.length; i++) {
-			String textProducerClassName = textProducerClassNames[i];
-
-			_textProducers[i] = (TextProducer)_getInstance(
-				textProducerClassName);
-		}
-	}
-
-	protected void initWordRenderers() {
-		String[] wordRendererClassNames =
-			_captchaConfiguration.simpleCaptchaWordRenderers();
-
-		_wordRenderers = new WordRenderer[wordRendererClassNames.length];
-
-		for (int i = 0; i < wordRendererClassNames.length; i++) {
-			String wordRendererClassName = wordRendererClassNames[i];
-
-			_wordRenderers[i] = (WordRenderer)_getInstance(
-				wordRendererClassName);
-		}
-	}
-
-	protected void setCaptchaConfiguration(
-		CaptchaConfiguration captchaConfiguration) {
-
-		_captchaConfiguration = captchaConfiguration;
 	}
 
 	protected boolean validateChallenge(HttpServletRequest httpServletRequest)
@@ -439,12 +375,18 @@ public class SimpleCaptchaImpl implements Captcha {
 	}
 
 	@Reference
+	protected CaptchaProvider captchaProvider;
+
+	@Reference
 	protected Portal portal;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.captcha.impl)(release.schema.version>=1.1.0))"
 	)
 	protected Release release;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.captcha.taglib)")
+	protected ServletContext servletContext;
 
 	private HttpSession _getHttpSession(HttpServletRequest httpServletRequest) {
 		HttpServletRequest originalHttpServletRequest =
@@ -488,6 +430,22 @@ public class SimpleCaptchaImpl implements Captcha {
 		return instance;
 	}
 
+	private <T> T _getInstance(String[] classNames, Class<T> clazz) {
+		T[] array = (T[])Array.newInstance(clazz, classNames.length);
+
+		for (int i = 0; i < classNames.length; i++) {
+			array[i] = (T)_getInstance(classNames[i]);
+		}
+
+		if (array.length == 1) {
+			return array[0];
+		}
+
+		int pos = RandomUtil.nextInt(array.length);
+
+		return array[pos];
+	}
+
 	private Class<?> _loadClass(String className) throws Exception {
 		Class<?> clazz = getClass();
 
@@ -504,12 +462,6 @@ public class SimpleCaptchaImpl implements Captcha {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SimpleCaptchaImpl.class);
 
-	private BackgroundProducer[] _backgroundProducers;
-	private volatile CaptchaConfiguration _captchaConfiguration;
-	private GimpyRenderer[] _gimpyRenderers;
 	private final Map<String, Object> _instances = new ConcurrentHashMap<>();
-	private NoiseProducer[] _noiseProducers;
-	private TextProducer[] _textProducers;
-	private WordRenderer[] _wordRenderers;
 
 }

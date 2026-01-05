@@ -6,6 +6,7 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.exception.DuplicateDLFolderExternalReferenceCodeException;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.DuplicateFolderNameException;
 import com.liferay.document.library.kernel.exception.FolderNameException;
@@ -37,11 +38,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,9 +56,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-		"javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+		"jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
 		"mvc.command.name=/document_library/edit_folder"
 	},
 	service = MVCActionCommand.class
@@ -110,7 +111,8 @@ public class EditFolderMVCActionCommand extends BaseMVCActionCommand {
 			actionResponse.setRenderParameter(
 				"mvcPath", "/document_library/error.jsp");
 		}
-		catch (DuplicateFileEntryException | DuplicateFolderNameException |
+		catch (DuplicateDLFolderExternalReferenceCodeException |
+			   DuplicateFileEntryException | DuplicateFolderNameException |
 			   FolderNameException | RequiredFileEntryTypeException exception) {
 
 			SessionErrors.add(actionRequest, exception.getClass());
@@ -218,14 +220,16 @@ public class EditFolderMVCActionCommand extends BaseMVCActionCommand {
 
 			// Add folder
 
+			String externalReferenceCode = ParamUtil.getString(
+				actionRequest, "externalReferenceCode");
 			long repositoryId = ParamUtil.getLong(
 				actionRequest, "repositoryId");
 			long parentFolderId = ParamUtil.getLong(
 				actionRequest, "parentFolderId");
 
 			_dlAppService.addFolder(
-				null, repositoryId, parentFolderId, name, description,
-				serviceContext);
+				externalReferenceCode, repositoryId, parentFolderId, name,
+				description, serviceContext);
 		}
 		else {
 

@@ -42,7 +42,8 @@ export default function useTranslationProgress({
 				)
 					.filter(
 						(input) =>
-							input.value || input.getAttribute('data-translated')
+							input.value?.trim() ||
+							input.getAttribute('data-translated') === 'true'
 					)
 					.map(
 						(input) =>
@@ -100,6 +101,11 @@ export default function useTranslationProgress({
 
 			setDefaultLanguageId(selectedLanguageId);
 			setSelectedLanguageId(selectedLanguageId);
+			Liferay.fire('journal:updateSelectedLanguage', {
+				item: document.querySelector(
+					`[data-languageid="${selectedLanguageId}"][data-value="${selectedLanguageId}"]`
+				),
+			});
 		},
 		[namespace, setDefaultLanguageId, setSelectedLanguageId]
 	);

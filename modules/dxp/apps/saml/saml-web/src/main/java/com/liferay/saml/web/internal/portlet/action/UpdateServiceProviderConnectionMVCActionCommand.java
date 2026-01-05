@@ -16,12 +16,12 @@ import com.liferay.saml.constants.SamlPortletKeys;
 import com.liferay.saml.persistence.model.SamlIdpSpConnection;
 import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.io.InputStream;
 
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SamlPortletKeys.SAML_ADMIN,
+		"jakarta.portlet.name=" + SamlPortletKeys.SAML_ADMIN,
 		"mvc.command.name=/admin/update_service_provider_connection"
 	},
 	service = MVCActionCommand.class
@@ -92,17 +92,17 @@ public class UpdateServiceProviderConnectionMVCActionCommand
 
 		if (samlIdpSpConnectionId <= 0) {
 			_samlIdpSpConnectionLocalService.addSamlIdpSpConnection(
-				assertionLifetime, attributeNames, attributesEnabled,
-				attributesNamespaceEnabled, enabled, encryptionForced,
-				metadataUrl, metadataXmlInputStream, name, nameIdAttribute,
-				nameIdFormat, samlSpEntityId, serviceContext);
+				samlSpEntityId, assertionLifetime, attributeNames,
+				attributesEnabled, attributesNamespaceEnabled, enabled,
+				encryptionForced, metadataUrl, metadataXmlInputStream, name,
+				nameIdAttribute, nameIdFormat, serviceContext);
 		}
 		else {
 			_samlIdpSpConnectionLocalService.updateSamlIdpSpConnection(
-				samlIdpSpConnectionId, assertionLifetime, attributeNames,
-				attributesEnabled, attributesNamespaceEnabled, enabled,
-				encryptionForced, metadataUrl, metadataXmlInputStream, name,
-				nameIdAttribute, nameIdFormat, samlSpEntityId, serviceContext);
+				samlIdpSpConnectionId, samlSpEntityId, assertionLifetime,
+				attributeNames, attributesEnabled, attributesNamespaceEnabled,
+				enabled, encryptionForced, metadataUrl, metadataXmlInputStream,
+				name, nameIdAttribute, nameIdFormat, serviceContext);
 		}
 	}
 

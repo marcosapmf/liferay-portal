@@ -28,6 +28,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 <clay:container-fluid
 	cssClass="container-view"
 	id='<%= liferayPortletResponse.getNamespace() + "layoutPageTemplateEntries" %>'
+	size="xxxl"
 >
 	<clay:row>
 		<clay:col
@@ -135,7 +136,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 				height: '60vh',
 				id: 'addLayoutDialog',
 				size: 'md',
-				title: '<liferay-ui:message key="add-page" />',
+				title: '<liferay-ui:message key="<%= layoutsAdminDisplayContext.getAddModalTitle() %>" />',
 				url: event.delegateTarget.dataset.addLayoutUrl,
 			});
 		}

@@ -14,6 +14,7 @@ import {
 import React, {useEffect, useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
+import {getNonInheritanceObjectRelationshipFields} from '../../utils/getNonInheritanceObjectRelationshipFields';
 import BasicInfoScreen from './BasicInfoScreen/BasicInfoScreen';
 import {DefaultSortScreen} from './DefaultSortScreen/DefaultSortScreen';
 import {FilterScreen} from './FilterScreen/FilterScreen';
@@ -40,7 +41,9 @@ const TABS = [
 	},
 ];
 
-const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
+const CustomView: React.FC<
+	{children?: React.ReactNode | undefined} & React.HTMLAttributes<HTMLElement>
+> = () => {
 	const [
 		{
 			isViewOnly,
@@ -67,14 +70,14 @@ const CustomView: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				`/o/object-admin/v1.0/object-views/${objectViewId}`
 			);
 
-			const objectFields =
-				await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-					objectDefinitionExternalReferenceCode
-				);
-
 			const objectDefinition =
 				await API.getObjectDefinitionByExternalReferenceCode(
 					objectDefinitionExternalReferenceCode
+				);
+
+			const objectFields =
+				await getNonInheritanceObjectRelationshipFields(
+					objectDefinition
 				);
 
 			const objectView = {
@@ -230,7 +233,9 @@ interface ICustomViewWrapperProps extends React.HTMLAttributes<HTMLElement> {
 	workflowStatuses: TWorkflowStatus[];
 }
 
-const CustomViewWrapper: React.FC<ICustomViewWrapperProps> = ({
+const CustomViewWrapper: React.FC<
+	{children?: React.ReactNode | undefined} & ICustomViewWrapperProps
+> = ({
 	filterOperators,
 	isViewOnly,
 	objectDefinitionExternalReferenceCode,

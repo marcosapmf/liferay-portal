@@ -13,7 +13,7 @@ import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
 import com.liferay.headless.commerce.admin.shipment.dto.v1_0.ShipmentItem;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -88,8 +88,10 @@ public class ShipmentItemUtil {
 		}
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				shipmentItem.getWarehouseExternalReferenceCode(), companyId);
+			commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					shipmentItem.getWarehouseExternalReferenceCode(),
+					companyId);
 
 		if (commerceInventoryWarehouse != null) {
 			return commerceInventoryWarehouse.getCommerceInventoryWarehouseId();
@@ -111,8 +113,10 @@ public class ShipmentItemUtil {
 		}
 
 		CommerceOrderItem commerceOrderItem =
-			commerceOrderItemService.fetchByExternalReferenceCode(
-				shipmentItem.getOrderItemExternalReferenceCode(), companyId);
+			commerceOrderItemService.
+				fetchCommerceOrderItemByExternalReferenceCode(
+					shipmentItem.getOrderItemExternalReferenceCode(),
+					companyId);
 
 		if (commerceOrderItem != null) {
 			return commerceOrderItem.getCommerceOrderItemId();

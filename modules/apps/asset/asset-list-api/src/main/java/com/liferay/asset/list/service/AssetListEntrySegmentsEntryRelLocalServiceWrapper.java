@@ -336,6 +336,14 @@ public class AssetListEntrySegmentsEntryRelLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<AssetListEntrySegmentsEntryRel>
+		fetchDynamicAssetListEntrySegmentsEntryRels(long companyId) {
+
+		return _assetListEntrySegmentsEntryRelLocalService.
+			fetchDynamicAssetListEntrySegmentsEntryRels(companyId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -426,6 +434,16 @@ public class AssetListEntrySegmentsEntryRelLocalServiceWrapper
 			getAssetListEntrySegmentsEntryRels(
 				assetListEntryId, segmentsEntryIds, start, end,
 				orderByComparator);
+	}
+
+	@Override
+	public java.util.List<AssetListEntrySegmentsEntryRel>
+		getAssetListEntrySegmentsEntryRelsByClassNameId(
+			long companyId, long classNameId) {
+
+		return _assetListEntrySegmentsEntryRelLocalService.
+			getAssetListEntrySegmentsEntryRelsByClassNameId(
+				companyId, classNameId);
 	}
 
 	/**

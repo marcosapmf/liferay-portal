@@ -16,12 +16,12 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Yurena Cabrera
@@ -48,12 +48,12 @@ public class DisplayPageTemplateCollectionHorizontalCard
 		LayoutPageTemplateCollectionActionDropdownItem
 			layoutPageTemplateCollectionActionDropdownItem =
 				new LayoutPageTemplateCollectionActionDropdownItem(
-					httpServletRequest, _renderResponse);
+					httpServletRequest, _layoutPageTemplateCollection,
+					_renderResponse, "display-page-templates");
 
 		try {
 			return layoutPageTemplateCollectionActionDropdownItem.
-				getActionDropdownItems(
-					_layoutPageTemplateCollection, "display-page-templates");
+				getActionDropdownItems();
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

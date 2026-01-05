@@ -5,8 +5,10 @@
 
 package com.liferay.petra.reflect;
 
+import com.liferay.portal.kernel.test.SwappableSecurityManager;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
@@ -16,7 +18,12 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import java.security.Permission;
+
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Assert;
@@ -35,9 +42,352 @@ public class ReflectionUtilTest {
 		new AggregateTestRule(
 			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
 	@Test
-	public void testConstructor() {
+	public void testClassInitializationFailure() throws Exception {
+		SecurityException securityException = new SecurityException();
+
+		try (SwappableSecurityManager swappableSecurityManager =
+				new SwappableSecurityManager() {
+
+					@Override
+					public void checkPermission(Permission permission) {
+						if (Objects.equals(
+								permission.getName(),
+								"accessDeclaredMembers")) {
+
+							throw securityException;
+						}
+					}
+
+				}) {
+
+			swappableSecurityManager.install();
+
+			Class.forName(ReflectionUtil.class.getName());
+
+			Assert.fail();
+		}
+		catch (ExceptionInInitializerError eiie) {
+			Assert.assertSame(securityException, eiie.getCause());
+		}
+	}
+
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
+	@Test
+	public void testClassInitializationFallback() throws Exception {
+		_runInFallbackMode(
+			() -> {
+				Class.forName(ReflectionUtil.class.getName());
+
+				Field field = ReflectionUtil.class.getDeclaredField(
+					"_fetchDeclaredFieldMethodHandle");
+
+				field.setAccessible(true);
+
+				Assert.assertNull(field.get(null));
+
+				field = ReflectionUtil.class.getDeclaredField(
+					"_fetchDeclaredMethodMethodHandle");
+
+				field.setAccessible(true);
+
+				Assert.assertNull(field.get(null));
+
+				field = ReflectionUtil.class.getDeclaredField(
+					"_fetchFieldMethodHandle");
+
+				field.setAccessible(true);
+
+				Assert.assertNull(field.get(null));
+
+				field = ReflectionUtil.class.getDeclaredField(
+					"_fetchMethodMethodHandle");
+
+				field.setAccessible(true);
+
+				Assert.assertNull(field.get(null));
+
+				return null;
+			});
+	}
+
+	@Test
+	public void testConstructor() throws Exception {
 		new ReflectionUtil();
+
+		Field field = ReflectionUtil.class.getDeclaredField(
+			"_fetchDeclaredFieldMethodHandle");
+
+		field.setAccessible(true);
+
+		Assert.assertNotNull(field.get(null));
+
+		field = ReflectionUtil.class.getDeclaredField(
+			"_fetchDeclaredMethodMethodHandle");
+
+		field.setAccessible(true);
+
+		Assert.assertNotNull(field.get(null));
+
+		field = ReflectionUtil.class.getDeclaredField(
+			"_fetchFieldMethodHandle");
+
+		field.setAccessible(true);
+
+		Assert.assertNotNull(field.get(null));
+
+		field = ReflectionUtil.class.getDeclaredField(
+			"_fetchMethodMethodHandle");
+
+		field.setAccessible(true);
+
+		Assert.assertNotNull(field.get(null));
+	}
+
+	@Test
+	public void testFetchDeclaredField() throws Exception {
+		Field staticField = ReflectionUtil.fetchDeclaredField(
+			TestClass.class, "_privateStaticFinalObject");
+
+		Assert.assertTrue(staticField.isAccessible());
+		Assert.assertSame(
+			TestClass._privateStaticFinalObject, staticField.get(null));
+
+		staticField = ReflectionUtil.fetchDeclaredField(
+			false, TestClass.class, "_privateStaticFinalObject");
+
+		Assert.assertFalse(staticField.isAccessible());
+		Assert.assertSame(
+			TestClass._privateStaticFinalObject, staticField.get(null));
+
+		TestClass testClass = new TestClass();
+
+		Field field = ReflectionUtil.fetchDeclaredField(
+			TestClass.class, "_privateFinalObject");
+
+		Assert.assertTrue(field.isAccessible());
+		Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
+		Assert.assertSame(testClass._privateFinalObject, field.get(testClass));
+
+		Assert.assertNull(
+			ReflectionUtil.fetchDeclaredField(
+				TestClass.class, "_notExistField"));
+
+		try {
+			ReflectionUtil.fetchDeclaredField(null, "_notExistField");
+
+			Assert.fail();
+		}
+		catch (NullPointerException nullPointerException) {
+		}
+	}
+
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
+	@Test
+	public void testFetchDeclaredFieldFallback() throws Exception {
+		_runInFallbackMode(
+			() -> {
+				Field staticField = ReflectionUtil.fetchDeclaredField(
+					TestClass.class, "_privateStaticFinalObject");
+
+				Assert.assertTrue(staticField.isAccessible());
+				Assert.assertSame(
+					TestClass._privateStaticFinalObject, staticField.get(null));
+
+				TestClass testClass = new TestClass();
+
+				Field field = ReflectionUtil.fetchDeclaredField(
+					TestClass.class, "_privateFinalObject");
+
+				Assert.assertTrue(field.isAccessible());
+				Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
+				Assert.assertSame(
+					testClass._privateFinalObject, field.get(testClass));
+
+				Assert.assertNull(
+					ReflectionUtil.fetchDeclaredField(
+						TestClass.class, "_notExistField"));
+
+				return null;
+			});
+	}
+
+	@Test
+	public void testFetchDeclaredMethod() throws Exception {
+		Method method = ReflectionUtil.fetchDeclaredMethod(
+			TestClass.class, "_getPrivateStaticObject");
+
+		Assert.assertTrue(method.isAccessible());
+		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+
+		method = ReflectionUtil.fetchDeclaredMethod(
+			false, TestClass.class, "_getPrivateStaticObject");
+
+		Assert.assertFalse(method.isAccessible());
+		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+
+		Assert.assertNull(
+			ReflectionUtil.fetchDeclaredMethod(
+				TestClass.class, "_notExistMethod"));
+
+		try {
+			ReflectionUtil.fetchDeclaredMethod(null, "_notExistMethod");
+
+			Assert.fail();
+		}
+		catch (NullPointerException nullPointerException) {
+		}
+	}
+
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
+	@Test
+	public void testFetchDeclaredMethodFallback() throws Exception {
+		_runInFallbackMode(
+			() -> {
+				Method method = ReflectionUtil.fetchDeclaredMethod(
+					TestClass.class, "_getPrivateStaticObject");
+
+				Assert.assertTrue(method.isAccessible());
+				Assert.assertSame(
+					TestClass._privateStaticObject, method.invoke(null));
+
+				Assert.assertNull(
+					ReflectionUtil.fetchDeclaredMethod(
+						TestClass.class, "_notExistMethod"));
+
+				return null;
+			});
+	}
+
+	@Test
+	public void testFetchField() throws Exception {
+		Field staticField = ReflectionUtil.fetchField(
+			TestClass.class, "publicStaticObject");
+
+		Assert.assertTrue(staticField.isAccessible());
+		Assert.assertSame(TestClass.publicStaticObject, staticField.get(null));
+
+		staticField = ReflectionUtil.fetchField(
+			false, TestClass.class, "publicStaticObject");
+
+		Assert.assertFalse(staticField.isAccessible());
+		Assert.assertSame(TestClass.publicStaticObject, staticField.get(null));
+
+		TestClass testClass = new TestClass();
+
+		Field field = ReflectionUtil.fetchField(
+			TestClass.class, "publicObject");
+
+		Assert.assertTrue(field.isAccessible());
+		Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
+		Assert.assertSame(testClass.publicObject, field.get(testClass));
+
+		Assert.assertNull(
+			ReflectionUtil.fetchField(TestClass.class, "_notExistField"));
+
+		try {
+			ReflectionUtil.fetchField(null, "_notExistField");
+
+			Assert.fail();
+		}
+		catch (NullPointerException nullPointerException) {
+		}
+	}
+
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
+	@Test
+	public void testFetchFieldFallback() throws Exception {
+		_runInFallbackMode(
+			() -> {
+				Field staticField = ReflectionUtil.fetchField(
+					TestClass.class, "publicStaticObject");
+
+				Assert.assertTrue(staticField.isAccessible());
+				Assert.assertSame(
+					TestClass.publicStaticObject, staticField.get(null));
+
+				staticField = ReflectionUtil.fetchField(
+					false, TestClass.class, "publicStaticObject");
+
+				Assert.assertFalse(staticField.isAccessible());
+				Assert.assertSame(
+					TestClass.publicStaticObject, staticField.get(null));
+
+				TestClass testClass = new TestClass();
+
+				Field field = ReflectionUtil.fetchField(
+					TestClass.class, "publicObject");
+
+				Assert.assertTrue(field.isAccessible());
+				Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
+				Assert.assertSame(testClass.publicObject, field.get(testClass));
+
+				Assert.assertNull(
+					ReflectionUtil.fetchField(
+						TestClass.class, "_notExistField"));
+
+				return null;
+			});
+	}
+
+	@Test
+	public void testFetchMethod() throws Exception {
+		Method method = ReflectionUtil.fetchMethod(
+			TestClass.class, "getPrivateStaticObject");
+
+		Assert.assertTrue(method.isAccessible());
+		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+
+		method = ReflectionUtil.fetchMethod(
+			false, TestClass.class, "getPrivateStaticObject");
+
+		Assert.assertFalse(method.isAccessible());
+		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+
+		Assert.assertNull(
+			ReflectionUtil.fetchMethod(TestClass.class, "_notExistMethod"));
+
+		try {
+			ReflectionUtil.fetchMethod(null, "_notExistMethod");
+
+			Assert.fail();
+		}
+		catch (NullPointerException nullPointerException) {
+		}
+	}
+
+	@NewEnv(type = NewEnv.Type.JVM)
+	@NewEnv.JVMArgsLine("-Djava.security.manager=allow")
+	@Test
+	public void testFetchMethodFallback() throws Exception {
+		_runInFallbackMode(
+			() -> {
+				Method method = ReflectionUtil.fetchMethod(
+					TestClass.class, "getPrivateStaticObject");
+
+				Assert.assertTrue(method.isAccessible());
+				Assert.assertSame(
+					TestClass._privateStaticObject, method.invoke(null));
+
+				method = ReflectionUtil.fetchMethod(
+					false, TestClass.class, "getPrivateStaticObject");
+
+				Assert.assertFalse(method.isAccessible());
+				Assert.assertSame(
+					TestClass._privateStaticObject, method.invoke(null));
+
+				Assert.assertNull(
+					ReflectionUtil.fetchMethod(
+						TestClass.class, "_notExistMethod"));
+
+				return null;
+			});
 	}
 
 	@Test
@@ -46,6 +396,13 @@ public class ReflectionUtilTest {
 			TestClass.class, "_privateStaticFinalObject");
 
 		Assert.assertTrue(staticField.isAccessible());
+		Assert.assertSame(
+			TestClass._privateStaticFinalObject, staticField.get(null));
+
+		staticField = ReflectionUtil.getDeclaredField(
+			false, TestClass.class, "_privateStaticFinalObject");
+
+		Assert.assertFalse(staticField.isAccessible());
 		Assert.assertSame(
 			TestClass._privateStaticFinalObject, staticField.get(null));
 
@@ -77,6 +434,23 @@ public class ReflectionUtilTest {
 					TestClass._privateStaticObject, field.get(null));
 			}
 		}
+
+		fields = ReflectionUtil.getDeclaredFields(false, TestClass.class);
+
+		for (Field field : fields) {
+			Assert.assertFalse(field.isAccessible());
+
+			String name = field.getName();
+
+			if (name.equals("_privateStaticFinalObject")) {
+				Assert.assertSame(
+					TestClass._privateStaticFinalObject, field.get(null));
+			}
+			else if (name.equals("_privateStaticObject")) {
+				Assert.assertSame(
+					TestClass._privateStaticObject, field.get(null));
+			}
+		}
 	}
 
 	@Test
@@ -86,6 +460,17 @@ public class ReflectionUtilTest {
 
 		Assert.assertTrue(method.isAccessible());
 		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+
+		method = ReflectionUtil.getDeclaredMethod(
+			false, TestClass.class, "_getPrivateStaticObject");
+
+		Assert.assertFalse(method.isAccessible());
+		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+	}
+
+	@Test
+	public void testGetImplLookup() {
+		Assert.assertNotNull(ReflectionUtil.getImplLookup());
 	}
 
 	@Test
@@ -126,7 +511,41 @@ public class ReflectionUtilTest {
 		}
 	}
 
+	private void _runInFallbackMode(Callable<Void> callable) throws Exception {
+		Thread currentThread = Thread.currentThread();
+
+		AtomicInteger counter = new AtomicInteger();
+
+		try (SwappableSecurityManager swappableSecurityManager =
+				new SwappableSecurityManager() {
+
+					@Override
+					public void checkPermission(Permission permission) {
+						if ((currentThread == Thread.currentThread()) &&
+							Objects.equals(
+								permission.getName(),
+								"accessDeclaredMembers") &&
+							(counter.incrementAndGet() == 2)) {
+
+							throw new SecurityException();
+						}
+					}
+
+				}) {
+
+			swappableSecurityManager.install();
+
+			callable.call();
+		}
+	}
+
 	private static class TestClass implements TestInterface {
+
+		public static final Object publicStaticObject = new Object();
+
+		public static Object getPrivateStaticObject() {
+			return _privateStaticObject;
+		}
 
 		public static void setPrivateStaticObject(Object privateStaticObject) {
 			_privateStaticObject = privateStaticObject;
@@ -135,6 +554,8 @@ public class ReflectionUtilTest {
 		public void setPrivateObject(Object privateObject) {
 			_privateObject = privateObject;
 		}
+
+		public final Object publicObject = new Object();
 
 		@SuppressWarnings("unused")
 		private static Object _getPrivateStaticObject() {

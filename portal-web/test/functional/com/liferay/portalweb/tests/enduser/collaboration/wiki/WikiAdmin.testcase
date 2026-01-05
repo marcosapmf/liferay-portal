@@ -1,8 +1,10 @@
 @component-name = "portal-content-management"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
 	property portal.acceptance = "true";
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Wiki";
 
@@ -10,6 +12,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -38,6 +42,8 @@ definition {
 			groupName = "Guest",
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_2.jpg");
+
+		WikiNavigator.openWikiAdmin(siteURLKey = "guest");
 
 		WikiPage.addCP(
 			contentImageName = "Document_2.jpg",
@@ -309,6 +315,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewImportedPages {
+		property portal.acceptance = "quarantine";
+
 		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
@@ -444,6 +452,49 @@ definition {
 		WikiPage.viewCP(
 			wikiPageContent = "Wiki Page Content",
 			wikiPageTitle = "Wiki Page Title2");
+	}
+
+	@description = "This is a use case for LPS-45254. View wiki."
+	@priority = 4
+	test NoXSSVulnerabilityInWiki {
+		task ("Edit user information") {
+			Navigator.openURL();
+
+			UserBar.gotoDropdownItem(dropdownItem = "Account Settings");
+
+			User.editUserInformation(
+				userFirstNameEdit = '''<script>alert(123);</script>''',
+				userLastNameEdit = '''<script>alert(123);</script>''',
+				userMiddleNameEdit = '''<script>alert(123);</script>''');
+		}
+
+		task ("Add CP to main wiki node") {
+			WikiNavigator.openWikiAdmin(siteURLKey = "guest");
+
+			JSONWiki.addWikiPage(
+				groupName = "Guest",
+				wikiNodeName = "Main",
+				wikiPageContent = "Wiki Page Content",
+				wikiPageName = "Wiki Page Title");
+		}
+
+		task ("Assert correct name showed") {
+			WikiNavigator.openToWikiPage(
+				siteURLKey = "guest",
+				wikiNodeName = "Main",
+				wikiPageTitle = "Wiki Page Title");
+
+			WikiPage.viewNotPresentInPageBody(elementValue = "XSS");
+		}
+
+		task ("Assert correct HTML source text") {
+			var actualScript = '''<script>alert(123);</script>''';
+			var escapedScript = '''&lt;script&gt;alert(123);&lt;/script&gt;''';
+
+			AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
+
+			AssertHTMLSourceTextPresent(value1 = ${escapedScript});
+		}
 	}
 
 }

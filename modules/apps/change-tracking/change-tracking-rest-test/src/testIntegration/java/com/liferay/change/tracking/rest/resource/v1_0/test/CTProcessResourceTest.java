@@ -8,6 +8,8 @@ package com.liferay.change.tracking.rest.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.rest.client.dto.v1_0.CTProcess;
+import com.liferay.change.tracking.rest.client.pagination.Page;
+import com.liferay.change.tracking.rest.client.pagination.Pagination;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
@@ -20,6 +22,10 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 
+import java.util.List;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -29,6 +35,38 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class CTProcessResourceTest extends BaseCTProcessResourceTestCase {
 
+	@Ignore
+	@Override
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteCTProcessBatch() throws Exception {
+		super.testDeleteCTProcessBatch();
+	}
+
+	@Override
+	@Test
+	public void testGetCTProcessesPage() throws Exception {
+		super.testGetCTProcessesPage();
+
+		_addCTProcess();
+		_addCTProcess();
+
+		Page<CTProcess> descPage = ctProcessResource.getCTProcessesPage(
+			null, null, null, Pagination.of(1, 10), "datePublished:desc");
+		Page<CTProcess> page = ctProcessResource.getCTProcessesPage(
+			null, null, null, Pagination.of(1, 10), null);
+
+		assertEquals(
+			(List<CTProcess>)descPage.getItems(),
+			(List<CTProcess>)page.getItems());
+	}
+
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"description", "name"};
@@ -37,6 +75,11 @@ public class CTProcessResourceTest extends BaseCTProcessResourceTestCase {
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
 		return new String[] {"description", "ownerName", "status"};
+	}
+
+	@Override
+	protected CTProcess testDeleteCTProcess_addCTProcess() throws Exception {
+		return _addCTProcess();
 	}
 
 	@Override

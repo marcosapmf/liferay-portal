@@ -1,6 +1,6 @@
 dependencies {
-	compileOnly group: "org.ow2.asm", name: "asm", version: "9.6"
-	compileOnly group: "org.ow2.asm", name: "asm-tree", version: "9.6"
+	compileOnly group: "org.ow2.asm", name: "asm", version: "9.7"
+	compileOnly group: "org.ow2.asm", name: "asm-tree", version: "9.7"
 }
 
 liferay {
@@ -8,6 +8,6 @@ liferay {
 }
 
 updateFileVersions {
-	match(/com\.liferay\.whip=(\d.+)/, "../../sdk/gradle-plugins/src/main/resources/com/liferay/gradle/plugins/dependencies/portal-tools.properties")
 	match(/\t\t<dependency name="com.liferay.whip" org="com.liferay" rev="(\d.+)" \/>/, "../../../tools/sdk/dependencies/com.liferay.whip/ivy.xml")
+	match(/com\.liferay\.whip=(\d.+)/, "../../sdk/gradle-plugins/src/main/resources/com/liferay/gradle/plugins/dependencies/portal-tools.properties")
 }

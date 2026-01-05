@@ -13,8 +13,8 @@ import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
 import com.liferay.headless.commerce.admin.inventory.internal.odata.entity.v1_0.WarehouseEntityModel;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -30,13 +30,13 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,8 +57,9 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -88,8 +89,9 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -132,8 +134,9 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -165,9 +168,10 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 	@Override
 	public Warehouse postWarehouse(Warehouse warehouse) throws Exception {
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				warehouse.getExternalReferenceCode(),
-				contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					warehouse.getExternalReferenceCode(),
+					contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			commerceInventoryWarehouse =
@@ -189,6 +193,63 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 		else {
 			commerceInventoryWarehouse = _updateWarehouse(
 				commerceInventoryWarehouse, warehouse);
+		}
+
+		// Update nested resources
+
+		_updateNestedResources(warehouse, commerceInventoryWarehouse);
+
+		return _toWarehouse(commerceInventoryWarehouse);
+	}
+
+	@Override
+	public Warehouse putWarehouseByExternalReferenceCode(
+			String externalReferenceCode, Warehouse warehouse)
+		throws Exception {
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceInventoryWarehouse == null) {
+			commerceInventoryWarehouse =
+				_commerceInventoryWarehouseService.
+					addCommerceInventoryWarehouse(
+						externalReferenceCode,
+						LanguageUtils.getLocalizedMap(warehouse.getName()),
+						LanguageUtils.getLocalizedMap(
+							warehouse.getDescription()),
+						GetterUtil.get(warehouse.getActive(), true),
+						warehouse.getStreet1(), warehouse.getStreet2(),
+						warehouse.getStreet3(), warehouse.getCity(),
+						warehouse.getZip(), warehouse.getRegionISOCode(),
+						warehouse.getCountryISOCode(),
+						GetterUtil.get(warehouse.getLatitude(), 0D),
+						GetterUtil.get(warehouse.getLongitude(), 0D),
+						_serviceContextHelper.getServiceContext());
+		}
+		else {
+			commerceInventoryWarehouse =
+				_commerceInventoryWarehouseService.
+					updateCommerceInventoryWarehouse(
+						commerceInventoryWarehouse.
+							getCommerceInventoryWarehouseId(),
+						LanguageUtils.getLocalizedMap(warehouse.getName()),
+						LanguageUtils.getLocalizedMap(
+							warehouse.getDescription()),
+						GetterUtil.getBoolean(warehouse.getActive()),
+						GetterUtil.getString(warehouse.getStreet1()),
+						GetterUtil.getString(warehouse.getStreet2()),
+						GetterUtil.getString(warehouse.getStreet3()),
+						GetterUtil.getString(warehouse.getCity()),
+						GetterUtil.getString(warehouse.getZip()),
+						GetterUtil.getString(warehouse.getRegionISOCode()),
+						GetterUtil.getString(warehouse.getCountryISOCode()),
+						GetterUtil.getDouble(warehouse.getLatitude()),
+						GetterUtil.getDouble(warehouse.getLongitude()),
+						commerceInventoryWarehouse.getMvccVersion(),
+						_serviceContextHelper.getServiceContext());
 		}
 
 		// Update nested resources
@@ -271,6 +332,9 @@ public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 							getCommerceInventoryWarehouseId(),
 						BigDecimalUtil.get(
 							warehouseItem.getQuantity(), BigDecimal.ZERO),
+						BigDecimalUtil.get(
+							warehouseItem.getReservedQuantity(),
+							BigDecimal.ZERO),
 						warehouseItem.getSku(),
 						warehouseItem.getUnitOfMeasureKey());
 			}

@@ -154,6 +154,16 @@ public class SourceUtil {
 		return sb.toString();
 	}
 
+	public static String getLeadingSpaces(String line) {
+		for (int i = 0; i < line.length(); i++) {
+			if (line.charAt(i) != CharPool.SPACE) {
+				return line.substring(0, i);
+			}
+		}
+
+		return line;
+	}
+
 	public static String getLine(String content, int lineNumber) {
 		int nextLineStartPos = getLineStartPos(content, lineNumber);
 
@@ -264,19 +274,17 @@ public class SourceUtil {
 				return true;
 			}
 
-			if (s1.charAt(s1.length() - j) != s2.charAt(s2.length() - j)) {
-				char[] chars1 = s1.toCharArray();
-				char[] chars2 = s2.toCharArray();
-
-				Arrays.sort(chars1);
-				Arrays.sort(chars2);
-
-				if (!Arrays.equals(chars1, chars2)) {
-					return false;
-				}
-
-				return true;
+			if (s1.charAt(s1.length() - j) == s2.charAt(s2.length() - j)) {
+				continue;
 			}
+
+			char[] chars1 = s1.toCharArray();
+			char[] chars2 = s2.toCharArray();
+
+			Arrays.sort(chars1);
+			Arrays.sort(chars2);
+
+			return Arrays.equals(chars1, chars2);
 		}
 	}
 
@@ -392,10 +400,10 @@ public class SourceUtil {
 		return stripQuotes(s, CharPool.APOSTROPHE, CharPool.QUOTE);
 	}
 
-	public static String stripQuotes(String s, char... delimeters) {
-		List<Character> delimetersList = ListUtil.fromArray(delimeters);
+	public static String stripQuotes(String s, char... delimiters) {
+		List<Character> delimitersList = ListUtil.fromArray(delimiters);
 
-		char delimeter = CharPool.SPACE;
+		char delimiter = CharPool.SPACE;
 		boolean insideQuotes = false;
 
 		StringBundler sb = new StringBundler();
@@ -404,7 +412,7 @@ public class SourceUtil {
 			char c = s.charAt(i);
 
 			if (insideQuotes) {
-				if (c == delimeter) {
+				if (c == delimiter) {
 					int precedingBackSlashCount = 0;
 
 					for (int j = i - 1; j >= 0; j--) {
@@ -423,8 +431,8 @@ public class SourceUtil {
 					}
 				}
 			}
-			else if (delimetersList.contains(c)) {
-				delimeter = c;
+			else if (delimitersList.contains(c)) {
+				delimiter = c;
 				insideQuotes = true;
 			}
 			else {

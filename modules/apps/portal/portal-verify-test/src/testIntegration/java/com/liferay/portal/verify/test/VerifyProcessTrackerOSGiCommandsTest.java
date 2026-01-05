@@ -11,7 +11,6 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
@@ -24,6 +23,7 @@ import com.liferay.portal.verify.VerifyProcess;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -51,18 +51,25 @@ public class VerifyProcessTrackerOSGiCommandsTest {
 		Bundle bundle = FrameworkUtil.getBundle(
 			VerifyProcessTrackerOSGiCommandsTest.class);
 
-		_symbolicName = bundle.getSymbolicName();
-
 		_bundleContext = bundle.getBundleContext();
 
-		_upgrading = ReflectionTestUtil.getAndSetFieldValue(
-			StartupHelperUtil.class, "_upgrading", false);
+		_runOnPortalUpgradeVerifiers =
+			StartupHelperUtil.isRunOnPortalUpgradeVerifiers();
+		_symbolicName = bundle.getSymbolicName();
+		_upgrading = StartupHelperUtil.isUpgrading();
+	}
+
+	@Before
+	public void setUp() {
+		StartupHelperUtil.setRunOnPortalUpgradeVerifiers(false);
+		StartupHelperUtil.setUpgrading(false);
 	}
 
 	@After
 	public void tearDown() {
-		ReflectionTestUtil.setFieldValue(
-			StartupHelperUtil.class, "_upgrading", _upgrading);
+		StartupHelperUtil.setRunOnPortalUpgradeVerifiers(
+			_runOnPortalUpgradeVerifiers);
+		StartupHelperUtil.setUpgrading(_upgrading);
 
 		Release release = _releaseLocalService.fetchRelease(_symbolicName);
 
@@ -394,14 +401,13 @@ public class VerifyProcessTrackerOSGiCommandsTest {
 
 		_releaseLocalService.updateRelease(release);
 
-		ReflectionTestUtil.setFieldValue(
-			StartupHelperUtil.class, "_upgrading", true);
+		StartupHelperUtil.setRunOnPortalUpgradeVerifiers(true);
 
-		return () -> ReflectionTestUtil.setFieldValue(
-			StartupHelperUtil.class, "_upgrading", false);
+		return () -> StartupHelperUtil.setRunOnPortalUpgradeVerifiers(false);
 	}
 
 	private static BundleContext _bundleContext;
+	private static boolean _runOnPortalUpgradeVerifiers;
 	private static String _symbolicName;
 	private static boolean _upgrading;
 

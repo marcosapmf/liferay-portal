@@ -92,10 +92,6 @@ public class CPOptionValueLocalServiceImpl
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
 		key = _friendlyURLNormalizer.normalize(key);
 
 		_validateKey(_cpOptionPersistence.findByPrimaryKey(cpOptionId), 0, key);
@@ -131,10 +127,7 @@ public class CPOptionValueLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-		else {
+		if (Validator.isNotNull(externalReferenceCode)) {
 			CPOptionValue cpOptionValue = cpOptionValuePersistence.fetchByERC_C(
 				externalReferenceCode, serviceContext.getCompanyId());
 
@@ -188,18 +181,6 @@ public class CPOptionValueLocalServiceImpl
 		for (CPOptionValue cpOptionValue : cpOptionValues) {
 			cpOptionValueLocalService.deleteCPOptionValue(cpOptionValue);
 		}
-	}
-
-	@Override
-	public CPOptionValue fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return cpOptionValuePersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override

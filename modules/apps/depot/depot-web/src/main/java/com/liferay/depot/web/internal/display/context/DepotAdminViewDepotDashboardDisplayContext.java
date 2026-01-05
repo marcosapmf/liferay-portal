@@ -13,7 +13,7 @@ import com.liferay.application.list.util.PanelCategoryRegistryUtil;
 import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.frontend.taglib.clay.servlet.taglib.DepotDashboardApplicationNavigationCard;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
@@ -29,16 +29,16 @@ import com.liferay.site.memberships.constants.SiteMembershipsPortletKeys;
 import com.liferay.staging.constants.StagingProcessesPortletKeys;
 import com.liferay.trash.constants.TrashPortletKeys;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -90,11 +90,7 @@ public class DepotAdminViewDepotDashboardDisplayContext {
 	}
 
 	public boolean isPrimaryPanelCategory(PanelCategory panelCategory) {
-		if (Objects.equals(panelCategory.getKey(), _PANEL_CATEGORY_KEYS[0])) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(panelCategory.getKey(), _PANEL_CATEGORY_KEYS[0]);
 	}
 
 	private String _getIcon(PanelApp panelApp) {

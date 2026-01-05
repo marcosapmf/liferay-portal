@@ -90,8 +90,8 @@ public class InfoFormValidationException extends InfoFormException {
 
 		@Override
 		public String getLocalizedMessage(Locale locale) {
-			return LanguageUtil.get(
-				locale, "value-exceeds-maximum-length-of-x");
+			return LanguageUtil.format(
+				locale, "value-exceeds-maximum-length-of-x", _maxLength);
 		}
 
 		@Override
@@ -216,6 +216,25 @@ public class InfoFormValidationException extends InfoFormException {
 
 		private final CaptchaException _captchaException;
 		private final long _fragmentEntryLinkId;
+
+	}
+
+	public static class InvalidExpirationDate extends InvalidInfoFieldValue {
+
+		public InvalidExpirationDate(
+			String infoFieldUniqueId, String messageKey) {
+
+			super(infoFieldUniqueId);
+
+			_messageKey = messageKey;
+		}
+
+		@Override
+		public String getLocalizedMessage(Locale locale) {
+			return LanguageUtil.get(locale, _messageKey);
+		}
+
+		private final String _messageKey;
 
 	}
 

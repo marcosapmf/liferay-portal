@@ -28,13 +28,13 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -163,15 +163,17 @@ public class RegionResourceImpl extends BaseRegionResourceImpl {
 	private OrderByComparator<com.liferay.portal.kernel.model.Region>
 		_toOrderByComparator(Sort[] sorts) {
 
-		if (ArrayUtil.isEmpty(sorts)) {
-			return null;
-		}
-
 		List<Object> objects = new ArrayList<>();
 
-		for (Sort sort : sorts) {
-			objects.add(sort.getFieldName());
-			objects.add(!sort.isReverse());
+		if (ArrayUtil.isEmpty(sorts)) {
+			objects.add(RegionTable.INSTANCE.regionId.getName());
+			objects.add(true);
+		}
+		else {
+			for (Sort sort : sorts) {
+				objects.add(sort.getFieldName());
+				objects.add(!sort.isReverse());
+			}
 		}
 
 		return OrderByComparatorFactoryUtil.create(

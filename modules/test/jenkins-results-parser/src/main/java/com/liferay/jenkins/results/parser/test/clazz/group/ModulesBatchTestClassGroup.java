@@ -6,8 +6,11 @@
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,6 +100,29 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 		}
 	}
 
+	protected void addTestClasses(Set<File> moduleDirs) {
+		Set<File> testModuleDirs = new HashSet<>();
+
+		for (File moduleDir : moduleDirs) {
+			File testModuleDir = _getTestModuleDir(moduleDir);
+
+			if (testModuleDirs.contains(testModuleDir)) {
+				continue;
+			}
+
+			testModuleDirs.add(testModuleDir);
+
+			TestClass testClass = TestClassFactory.newTestClass(
+				this, testModuleDir);
+
+			if (!testClass.hasTestClassMethods()) {
+				continue;
+			}
+
+			addTestClass(testClass);
+		}
+	}
+
 	protected List<JobProperty> getExcludesJobProperties() {
 		List<JobProperty> excludesJobProperties = new ArrayList<>();
 
@@ -111,7 +137,7 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 
 			excludesJobProperties.add(
 				getJobProperty(
-					"modules.excludes.private", modulesDir,
+					"modules.excludes.private", testSuiteName, modulesDir,
 					JobProperty.Type.EXCLUDE_GLOB));
 
 			if (includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -124,7 +150,7 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 		else {
 			excludesJobProperties.add(
 				getJobProperty(
-					"modules.excludes.public", modulesDir,
+					"modules.excludes.public", testSuiteName, modulesDir,
 					JobProperty.Type.EXCLUDE_GLOB));
 
 			if (includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -137,7 +163,8 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 
 		excludesJobProperties.add(
 			getJobProperty(
-				"modules.excludes", modulesDir, JobProperty.Type.EXCLUDE_GLOB));
+				"modules.excludes", testSuiteName, modulesDir,
+				JobProperty.Type.EXCLUDE_GLOB));
 
 		excludesJobProperties.add(
 			getJobProperty(
@@ -163,7 +190,7 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 
 			includesJobProperties.add(
 				getJobProperty(
-					"modules.includes.private", modulesDir,
+					"modules.includes.private", testSuiteName, modulesDir,
 					JobProperty.Type.INCLUDE_GLOB));
 
 			if (includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -176,7 +203,7 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 		else {
 			includesJobProperties.add(
 				getJobProperty(
-					"modules.includes.public", modulesDir,
+					"modules.includes.public", testSuiteName, modulesDir,
 					JobProperty.Type.INCLUDE_GLOB));
 
 			if (includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -189,12 +216,13 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 
 		includesJobProperties.add(
 			getJobProperty(
-				"modules.includes", modulesDir, JobProperty.Type.INCLUDE_GLOB));
+				"modules.includes", testSuiteName, modulesDir,
+				JobProperty.Type.INCLUDE_GLOB));
 
 		includesJobProperties.add(
 			getJobProperty(
 				"modules.includes." + portalTestClassJob.getBuildProfile(),
-				modulesDir, JobProperty.Type.INCLUDE_GLOB));
+				testSuiteName, modulesDir, JobProperty.Type.INCLUDE_GLOB));
 
 		recordJobProperties(includesJobProperties);
 
@@ -236,5 +264,43 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 	protected abstract void setTestClasses() throws IOException;
 
 	protected Set<File> moduleDirsList = new HashSet<>();
+
+	private File _getTestModuleDir(File moduleDir) {
+		List<File> testModuleDirs = new ArrayList<>();
+
+		File currentDir = moduleDir;
+
+		File modulesDir = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
+
+		while ((currentDir != null) &&
+			   !modulesDir.equals(currentDir.getParentFile())) {
+
+			testModuleDirs.add(currentDir);
+
+			currentDir = currentDir.getParentFile();
+		}
+
+		Collections.reverse(testModuleDirs);
+
+		for (File testModuleDir : testModuleDirs) {
+			if (_isTestModuleDir(testModuleDir)) {
+				return testModuleDir;
+			}
+		}
+
+		return moduleDir;
+	}
+
+	private boolean _isTestModuleDir(File testModuleDir) {
+		PortalGitWorkingDirectory.Module module =
+			PortalGitWorkingDirectory.Module.getModule(testModuleDir.toPath());
+
+		if ((module != null) && testModuleDir.equals(module.getFile())) {
+			return true;
+		}
+
+		return false;
+	}
 
 }

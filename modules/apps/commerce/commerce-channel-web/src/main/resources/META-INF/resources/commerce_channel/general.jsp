@@ -21,6 +21,8 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 ).build();
 %>
 
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
+
 <liferay-ui:error embed="<%= false %>" exception="<%= AccountEntryStatusException.class %>" message="please-select-a-valid-supplier" />
 <liferay-ui:error embed="<%= false %>" exception="<%= AccountEntryTypeException.class %>" message="please-select-a-valid-supplier" />
 <liferay-ui:error embed="<%= false %>" exception="<%= DuplicateCommerceChannelAccountEntryIdException.class %>" message="a-supplier-account-can-be-linked-only-to-one-channel" />
@@ -159,11 +161,67 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 					</div>
 
 					<div class="col-lg-6">
-						<aui:input checked="<%= commerceChannelDisplayContext.isGuestCheckoutEnabled() %>" helpMessage="configures-whether-a-guest-may-checkout-by-providing-an-email-address-or-if-they-must-sign-in" label="guest-checkout" labelOff="disabled" labelOn="enabled" name="settings--guestCheckoutEnabled--" type="toggle-switch" />
+						<aui:input checked="<%= commerceChannelDisplayContext.isGuestCheckoutEnabled() %>" helpMessage="configures-whether-a-guest-may-check-out-by-providing-an-email-address-or-if-they-must-sign-in" label="guest-checkout" labelOff="disabled" labelOn="enabled" name="settings--guestCheckoutEnabled--" type="toggle-switch" />
 					</div>
+
+					<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-58472") %>'>
+						<div class="col-lg-6">
+							<aui:input checked="<%= commerceChannelDisplayContext.isOrderSelectionDisabled() %>" helpMessage="configures-whether-the-list-of-open-orders-can-be-hidden-from-the-account-selector" label="hide-orders-list-view-in-the-account-selector" labelOff="disabled" labelOn="enabled" name="settings--orderSelectionDisabled--" type="toggle-switch" />
+						</div>
+					</c:if>
 
 					<div class="col-lg-6">
 						<aui:input checked="<%= commerceChannelDisplayContext.isRequestQuoteEnabled() %>" helpMessage="allow-buyers-to-request-a-quote-when-no-product-in-the-cart-is-priced-as-price-on-application" label="allow-request-a-quote-on-a-fully-priced-cart" labelOff="disabled" labelOn="enabled" name="orderSettings--requestQuoteEnabled--" type="toggle-switch" />
+					</div>
+
+					<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-20379") %>'>
+						<div class="col-lg-6">
+							<aui:input checked="<%= commerceChannelDisplayContext.isQuickCheckoutEnabled() %>" helpMessage="allow-customers-to-complete-purchases-with-a-single-click-if-all-required-information-is-provided-in-the-order-streamlining-the-checkout-process" label="quick-checkout" labelOff="disabled" labelOn="enabled" name="settings--quickCheckoutEnabled--" type="toggle-switch" />
+						</div>
+					</c:if>
+
+					<div class="col-lg-6">
+						<aui:input checked="<%= commerceChannelDisplayContext.isSlowConnectionOrderFlowEnabled() %>" helpMessage="allow-an-overlay-to-be-displayed-when-adding-items-to-the-cart,-helping-manage-slow-connections" label="slow-connection-order-flow-enabled" labelOff="disabled" labelOn="enabled" name="settings--slowConnectionOrderFlowEnabled--" type="toggle-switch" />
+					</div>
+
+					<div class="col-lg-6">
+						<aui:input checked="<%= commerceChannelDisplayContext.isUndoCartItemDeletionDisabled() %>" helpMessage="configures-whether-a-buyer-can-undo-the-deletion-of-an-item-from-the-mini-cart" label="undo-cart-item-deletion-disabled" labelOff="disabled" labelOn="enabled" name="settings--undoCartItemDeletionDisabled--" type="toggle-switch" />
+					</div>
+
+					<div class="col-lg-6">
+						<aui:select label="open-orders-visibility-scope" name="settings--openOrdersVisibilityScope--">
+
+							<%
+							String openOrdersVisibilityScope = commerceChannelDisplayContext.getOpenOrdersVisibilityScope();
+
+							for (String orderVisibilityScope : CommerceOrderConstants.ORDER_VISIBILITY_SCOPES) {
+							%>
+
+								<aui:option label="<%= orderVisibilityScope %>" selected="<%= openOrdersVisibilityScope.equals(orderVisibilityScope) %>" value="<%= orderVisibilityScope %>" />
+
+							<%
+							}
+							%>
+
+						</aui:select>
+					</div>
+
+					<div class="col-lg-6">
+						<aui:select label="placed-orders-visibility-scope" name="settings--placedOrdersVisibilityScope--">
+
+							<%
+							String placedOrdersVisibilityScope = commerceChannelDisplayContext.getPlacedOrdersVisibilityScope();
+
+							for (String orderVisibilityScope : CommerceOrderConstants.ORDER_VISIBILITY_SCOPES) {
+							%>
+
+								<aui:option label="<%= orderVisibilityScope %>" selected="<%= placedOrdersVisibilityScope.equals(orderVisibilityScope) %>" value="<%= orderVisibilityScope %>" />
+
+							<%
+							}
+							%>
+
+						</aui:select>
 					</div>
 				</div>
 
@@ -179,6 +237,18 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 						<aui:input label="order-importer-date-format" labelOff="disabled" labelOn="enabled" name="format--orderImporterDateFormat--" type="text" value="<%= commerceChannelDisplayContext.getOrderImporterDateFormat() %>" />
 					</div>
 
+					<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-20379") %>'>
+						<div class="col-lg-6">
+							<aui:input checked="<%= commerceChannelDisplayContext.isMultishippingEnabled() %>" helpMessage="configures-whether-a-buyer-can-initiate-from-an-order-shipments-to-multiple-delivery-groups" label="allow-multishipping" labelOff="disabled" labelOn="enabled" name="settings--multishippingEnabled--" type="toggle-switch" />
+						</div>
+					</c:if>
+
+					<div class="col-lg-6">
+						<aui:input checked="<%= commerceChannelDisplayContext.isShowSeparateOrderItems() %>" helpMessage="show-separate-order-items-help" label="show-separate-order-items" labelOff="disabled" labelOn="enabled" name="settings--showSeparateOrderItems--" type="toggle-switch" />
+					</div>
+				</div>
+
+				<div class="row">
 					<div class="col-lg-6">
 
 						<%
@@ -212,10 +282,6 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 							</p>
 						</div>
 					</div>
-
-					<div class="col-lg-6">
-						<aui:input checked="<%= commerceChannelDisplayContext.isShowSeparateOrderItems() %>" helpMessage="show-separate-order-items-help" label="show-separate-order-items" labelOff="disabled" labelOn="enabled" name="settings--showSeparateOrderItems--" type="toggle-switch" />
-					</div>
 				</div>
 			</commerce-ui:panel>
 		</div>
@@ -241,14 +307,36 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 	bodyClasses="p-0"
 	title='<%= LanguageUtil.get(request, "payment-methods") %>'
 >
-	<frontend-data-set:classic-display
-		contextParams="<%= contextParams %>"
-		dataProviderKey="<%= CommerceChannelFDSNames.PAYMENT_METHOD %>"
-		id="<%= CommerceChannelFDSNames.PAYMENT_METHOD %>"
-		itemsPerPage="<%= 10 %>"
-		selectedItemsKey="key"
-		showManagementBar="<%= false %>"
-	/>
+	<div>
+		<c:if test="<%= commerceChannelDisplayContext.hasAddPaymentMethodsPermission() %>">
+			<div>
+				<react:component
+					module="{CommerceChannelAddPaymentMethod} from commerce-channel-web"
+					props='<%=
+						HashMapBuilder.<String, Object>put(
+							"baseResourceURL", baseResourceURL
+						).put(
+							"permissions",
+							HashMapBuilder.<String, Object>put(
+								"installFreeApps", PortletPermissionUtil.contains(themeDisplay.getPermissionChecker(), MarketplacePortletKeys.PAYMENT_METHODS, MarketplaceActionKeys.INSTALL_FREE_BUNDLED_APPS)
+							).put(
+								"purchaseAndInstallPaidApps", PortletPermissionUtil.contains(themeDisplay.getPermissionChecker(), MarketplacePortletKeys.PAYMENT_METHODS, MarketplaceActionKeys.PURCHASE_AND_INSTALL_PAID_APPS)
+							).build()
+						).build()
+					%>'
+				/>
+			</div>
+		</c:if>
+
+		<frontend-data-set:classic-display
+			contextParams="<%= contextParams %>"
+			dataProviderKey="<%= CommerceChannelFDSNames.PAYMENT_METHOD %>"
+			id="<%= CommerceChannelFDSNames.PAYMENT_METHOD %>"
+			itemsPerPage="<%= 10 %>"
+			selectedItemsKey="key"
+			showManagementBar="<%= false %>"
+		/>
+	</div>
 </commerce-ui:panel>
 
 <commerce-ui:panel

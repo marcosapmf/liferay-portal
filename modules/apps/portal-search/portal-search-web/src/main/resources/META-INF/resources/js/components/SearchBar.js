@@ -10,7 +10,7 @@ import {ClayInput, ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import getCN from 'classnames';
-import {addParams, fetch, navigate} from 'frontend-js-web';
+import {addParams, fetch, navigate, sub} from 'frontend-js-web';
 import React, {useCallback, useRef, useState} from 'react';
 
 import {FacetUtil} from '../FacetUtil';
@@ -21,6 +21,7 @@ export default function SearchBar({
 	destinationFriendlyURL,
 	emptySearchEnabled,
 	initialKeywords = '',
+	inputPlaceholder = '',
 	isDXP = true,
 	isSearchExperiencesSupported = true,
 	keywordsParameterName = 'q',
@@ -176,7 +177,7 @@ export default function SearchBar({
 
 		if (!!inputValue.trim().length || emptySearchEnabled) {
 			const keywords = inputValue.trim();
-			let queryString = _updateQueryString(document.location.search);
+			let queryString = _updateQueryString(window.location.search);
 
 			/*
 			 * Refer to LPD-19994 for acceptance criteria regarding
@@ -237,7 +238,7 @@ export default function SearchBar({
 					onChange={_handleValueChange}
 					onFocus={_handleFocus}
 					onKeyDown={_handleKeyDown}
-					placeholder={Liferay.Language.get('search-...')}
+					placeholder={inputPlaceholder}
 					title={Liferay.Language.get('search')}
 					type="text"
 					value={inputValue}
@@ -275,7 +276,7 @@ export default function SearchBar({
 							onChange={_handleValueChange}
 							onFocus={_handleFocus}
 							onKeyDown={_handleKeyDown}
-							placeholder={Liferay.Language.get('search-...')}
+							placeholder={inputPlaceholder}
 							type="text"
 							value={inputValue}
 						/>
@@ -356,6 +357,27 @@ export default function SearchBar({
 
 	return (
 		<ClayAutocomplete className="search-bar-suggestions">
+			<span className="sr-only" role="status">
+				{loading
+					? Liferay.Language.get('loading')
+					: active
+						? suggestionsResponseItems.length
+							? sub(Liferay.Language.get('showing-x-x'), [
+									suggestionsResponseItems.reduce(
+										(accumulator, currentValue) =>
+											accumulator +
+											(currentValue?.suggestions
+												?.length || 0),
+										0
+									),
+									Liferay.Language.get('suggestions'),
+								])
+							: sub(Liferay.Language.get('no-x-were-found'), [
+									Liferay.Language.get('suggestions'),
+								])
+						: ''}
+			</span>
+
 			<ClayInput.Group ref={alignElementRef}>
 				{letUserChooseScope
 					? _renderSearchBarWithScope()

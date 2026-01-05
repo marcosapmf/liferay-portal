@@ -6,6 +6,7 @@
 import {Root, createRoot} from 'react-dom/client';
 
 import Routes, {RouteType} from './Routes';
+import {getAttributes} from './utils/attributes';
 
 import './main.scss';
 
@@ -19,34 +20,13 @@ class WebComponent extends HTMLElement {
 			this.root.render(
 				<Routes
 					path={this.getAttribute('path') as RouteType}
-					properties={{
-						cloudBaseURL: this.getAttribute('cloudBaseURL') || '',
-						contactSupportUrl:
-							this.getAttribute('contactSupportUrl') || '',
-						eulaBaseURL: this.getAttribute('eulaBaseURL') || '',
-						featureFlags: (this.getAttribute('featureFlags') ?? '')
-							.split(',')
-							.map((featureflag) => featureflag.trim()),
-						featurePreviews: (
-							this.getAttribute('featurePreviews') ?? ''
-						)
-							.split(',')
-							.map((featurePreview) =>
-								featurePreview.trim()
-							) as any,
-						marketoFormId: this.getAttribute('marketoFormId') || '',
-						trialAccountCheck:
-							(this.getAttribute('trialAccountCheck') as any) ||
-							'true',
-						trialEulaURL: this.getAttribute('trialEulaURL') || '',
-						trialProductId:
-							this.getAttribute('trialProductId') || '',
-					}}
+					properties={getAttributes(this)}
 				/>
 			);
 		}
 	}
 }
+
 const ELEMENT_ID = 'liferay-marketplace-custom-element';
 
 if (!customElements.get(ELEMENT_ID)) {

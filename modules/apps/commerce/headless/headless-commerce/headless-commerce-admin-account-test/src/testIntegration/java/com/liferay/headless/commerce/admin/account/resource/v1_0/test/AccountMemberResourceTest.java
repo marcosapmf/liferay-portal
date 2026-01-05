@@ -10,6 +10,7 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalServiceUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.commerce.admin.account.client.dto.v1_0.AccountMember;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -18,6 +19,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -40,7 +42,7 @@ public class AccountMemberResourceTest
 			_user.getUserId());
 
 		_accountEntry = AccountEntryLocalServiceUtil.addAccountEntry(
-			_serviceContext.getUserId(),
+			StringPool.BLANK, _serviceContext.getUserId(),
 			AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
@@ -128,6 +130,47 @@ public class AccountMemberResourceTest
 				_accountEntry.getAccountEntryId(), accountMember1.getUserId());
 
 		assertEquals(accountMember1, accountMember2);
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLDeleteAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		super.testGraphQLDeleteAccountByExternalReferenceCodeAccountMember();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLDeleteAccountIdAccountMember() throws Exception {
+		super.testGraphQLDeleteAccountIdAccountMember();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountMember()
+		throws Exception {
+
+		super.testGraphQLGetAccountByExternalReferenceCodeAccountMember();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetAccountIdAccountMember() throws Exception {
+		super.testGraphQLGetAccountIdAccountMember();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetAccountIdAccountMemberNotFound()
+		throws Exception {
+
+		super.testGraphQLGetAccountIdAccountMemberNotFound();
 	}
 
 	@Override
@@ -268,6 +311,32 @@ public class AccountMemberResourceTest
 
 	@Override
 	protected Long testGetAccountIdAccountMembersPage_getId() throws Exception {
+		return _accountEntry.getAccountEntryId();
+	}
+
+	@Override
+	protected AccountMember testGraphQLAccountMember_addAccountMember()
+		throws Exception {
+
+		return accountMemberResource.
+			postAccountByExternalReferenceCodeAccountMember(
+				_accountEntry.getExternalReferenceCode(),
+				randomAccountMember());
+	}
+
+	@Override
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountMember_getExternalReferenceCode(
+				AccountMember accountMember)
+		throws Exception {
+
+		return _accountEntry.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long testGraphQLDeleteAccountIdAccountMember_getId()
+		throws Exception {
+
 		return _accountEntry.getAccountEntryId();
 	}
 

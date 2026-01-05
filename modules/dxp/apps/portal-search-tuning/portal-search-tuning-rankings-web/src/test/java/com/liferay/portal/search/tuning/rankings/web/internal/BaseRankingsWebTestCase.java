@@ -24,8 +24,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -60,22 +58,21 @@ import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuil
 import com.liferay.portal.search.tuning.rankings.web.internal.helper.RankingHelperImpl;
 import com.liferay.portal.search.web.interpreter.SearchResultInterpreterProvider;
 
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.MimeResponse;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.text.SimpleDateFormat;
 
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.function.Consumer;
-
-import javax.portlet.ActionResponse;
-import javax.portlet.MimeResponse;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -535,28 +532,6 @@ public abstract class BaseRankingsWebTestCase {
 		).getParameter(
 			Mockito.eq(paramName)
 		);
-	}
-
-	protected void setUpPropsUtil() {
-		Props props = Mockito.mock(Props.class);
-
-		Mockito.doReturn(
-			""
-		).when(
-			props
-		).get(
-			Mockito.anyString()
-		);
-
-		Mockito.doReturn(
-			Mockito.mock(Properties.class)
-		).when(
-			props
-		).getProperties(
-			Mockito.anyString(), Mockito.anyBoolean()
-		);
-
-		PropsUtil.setProps(props);
 	}
 
 	protected void setUpQuery() {

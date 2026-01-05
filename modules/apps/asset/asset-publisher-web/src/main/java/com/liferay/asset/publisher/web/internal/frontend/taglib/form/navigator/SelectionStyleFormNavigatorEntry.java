@@ -12,6 +12,7 @@ import com.liferay.asset.publisher.web.internal.util.AssetPublisherCustomizer;
 import com.liferay.asset.publisher.web.internal.util.AssetPublisherCustomizerRegistry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.PortletLocalService;
@@ -20,10 +21,10 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
-import java.util.Map;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -58,6 +59,10 @@ public class SelectionStyleFormNavigatorEntry
 
 	@Override
 	public boolean isVisible(User user, Object object) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-39304")) {
+			return false;
+		}
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -74,13 +79,8 @@ public class SelectionStyleFormNavigatorEntry
 			_assetPublisherCustomizerRegistry.getAssetPublisherCustomizer(
 				portlet.getRootPortletId());
 
-		if (assetPublisherCustomizer.isSelectionStyleEnabled(
-				httpServletRequest)) {
-
-			return true;
-		}
-
-		return false;
+		return assetPublisherCustomizer.isSelectionStyleEnabled(
+			httpServletRequest);
 	}
 
 	@Activate

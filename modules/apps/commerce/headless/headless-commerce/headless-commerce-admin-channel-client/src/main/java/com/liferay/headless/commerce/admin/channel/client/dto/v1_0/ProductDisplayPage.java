@@ -8,12 +8,12 @@ package com.liferay.headless.commerce.admin.channel.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.channel.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.channel.client.serdes.v1_0.ProductDisplayPageSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -108,6 +108,31 @@ public class ProductDisplayPage implements Cloneable, Serializable {
 	}
 
 	protected String pageUuid;
+
+	public String getProductExternalReferenceCode() {
+		return productExternalReferenceCode;
+	}
+
+	public void setProductExternalReferenceCode(
+		String productExternalReferenceCode) {
+
+		this.productExternalReferenceCode = productExternalReferenceCode;
+	}
+
+	public void setProductExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			productExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			productExternalReferenceCode =
+				productExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String productExternalReferenceCode;
 
 	public Long getProductId() {
 		return productId;

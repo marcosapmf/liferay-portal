@@ -5,6 +5,7 @@
 
 package com.liferay.saml.internal.events;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.events.SessionAction;
@@ -18,7 +19,7 @@ import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.persistence.service.SamlSpSessionLocalService;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,21 +56,17 @@ public class SamlSpSessionDestroyAction extends SessionAction {
 			return;
 		}
 
-		long companyId = CompanyThreadLocal.getCompanyId();
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					userCompanyId)) {
 
-		CompanyThreadLocal.setCompanyId(userCompanyId);
-
-		try {
 			_run(httpSession);
-		}
-		finally {
-			CompanyThreadLocal.setCompanyId(companyId);
 		}
 	}
 
 	private void _run(HttpSession httpSession) throws ActionException {
 		if (!_samlProviderConfigurationHelper.isEnabled() ||
-			!_samlProviderConfigurationHelper.isRoleSp()) {
+			_samlProviderConfigurationHelper.isRoleIdp()) {
 
 			return;
 		}

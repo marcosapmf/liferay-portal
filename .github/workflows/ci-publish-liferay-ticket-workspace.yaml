@@ -4,10 +4,9 @@ jobs:
         uses: ./.github/workflows/ci-publish-workspace.yaml
         with:
             workspace-name: liferay-ticket-workspace
-name: CI Publish liferay-ticket-workspace
 on:
     push:
         branches:
-            - master
+            -   master
         paths:
-            - workspaces/liferay-ticket-workspace/**
+            -   workspaces/liferay-ticket-workspace/**

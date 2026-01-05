@@ -31,8 +31,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + UsersAdminPortletKeys.MY_ORGANIZATIONS,
-		"javax.portlet.name=" + UsersAdminPortletKeys.USERS_ADMIN
+		"jakarta.portlet.name=" + UsersAdminPortletKeys.MY_ORGANIZATIONS,
+		"jakarta.portlet.name=" + UsersAdminPortletKeys.USERS_ADMIN
 	},
 	service = ControlPanelEntry.class
 )
@@ -65,10 +65,13 @@ public class UsersControlPanelEntry extends BaseControlPanelEntry {
 
 		for (Organization organization : organizations) {
 			if (OrganizationPermissionUtil.contains(
+					permissionChecker, organization,
+					ActionKeys.MANAGE_SUBORGANIZATIONS) ||
+				OrganizationPermissionUtil.contains(
 					permissionChecker, organization, ActionKeys.MANAGE_USERS) ||
 				OrganizationPermissionUtil.contains(
 					permissionChecker, organization,
-					ActionKeys.MANAGE_SUBORGANIZATIONS)) {
+					ActionKeys.UPDATE_SUBORGANIZATIONS)) {
 
 				return true;
 			}

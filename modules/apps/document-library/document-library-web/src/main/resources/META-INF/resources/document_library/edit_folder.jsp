@@ -31,6 +31,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 
 <clay:container-fluid
 	cssClass="container-form-lg"
+	size="lg"
 >
 	<portlet:actionURL name="/document_library/edit_folder" var="editFolderURL">
 		<portlet:param name="mvcRenderCommandName" value="/document_library/edit_folder" />
@@ -44,6 +45,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 		<aui:input name="repositoryId" type="hidden" value="<%= dlEditFolderDisplayContext.getRepositoryId() %>" />
 		<aui:input name="parentFolderId" type="hidden" value="<%= dlEditFolderDisplayContext.getParentFolderId() %>" />
 
+		<liferay-ui:error exception="<%= DuplicateDLFolderExternalReferenceCodeException.class %>" message="please-enter-a-unique-external-reference-code" />
 		<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="please-enter-a-unique-folder-name" />
 		<liferay-ui:error exception="<%= DuplicateFolderNameException.class %>" message="please-enter-a-unique-folder-name" />
 
@@ -70,18 +72,28 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 				<aui:fieldset>
 					<c:if test="<%= !dlEditFolderDisplayContext.isRootFolder() %>">
 						<c:if test="<%= folder != null %>">
-							<aui:input name="parentFolder" type="resource" value="<%= dlEditFolderDisplayContext.getParentFolderName() %>" />
+							<aui:input disabled="<%= !dlEditFolderDisplayContext.hasUpdateDLFolderPermission() %>" name="parentFolder" type="resource" value="<%= dlEditFolderDisplayContext.getParentFolderName() %>" />
 						</c:if>
 
-						<aui:input name="name" />
+						<aui:input disabled="<%= !dlEditFolderDisplayContext.hasUpdateDLFolderPermission() %>" name="name" />
 
 						<c:if test="<%= dlEditFolderDisplayContext.isShowDescription() %>">
-							<aui:input name="description" />
+							<aui:input disabled="<%= !dlEditFolderDisplayContext.hasUpdateDLFolderPermission() %>" name="description" />
 						</c:if>
+
+						<aui:field-wrapper cssClass="form-group" label="external-reference-code" name="externalReferenceCode">
+							<div class="small text-secondary"><liferay-ui:message key="unique-key-for-referencing-the-folder-definition" /></div>
+
+							<div class="input-group">
+								<div class="input-group-item">
+									<aui:input disabled="<%= dlEditFolderDisplayContext.isERCFieldEnabled() %>" label="" name="externalReferenceCode" type="text" />
+								</div>
+							</div>
+						</aui:field-wrapper>
 					</c:if>
 				</aui:fieldset>
 
-				<c:if test="<%= dlEditFolderDisplayContext.isFileEntryTypeSupported() %>">
+				<c:if test="<%= dlEditFolderDisplayContext.hasAdvancedUpdateDLFolderPermission() && dlEditFolderDisplayContext.isFileEntryTypeSupported() %>">
 					<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" helpMessage="<%= dlEditFolderDisplayContext.getFileEntryTypeRestrictionsHelpMessage() %>" label="<%= dlEditFolderDisplayContext.getFileEntryTypeRestrictionsLabel() %>">
 						<c:if test="<%= !dlEditFolderDisplayContext.isRootFolder() %>">
 							<aui:input checked="<%= dlEditFolderDisplayContext.isRestrictionTypeInherit() %>" id="restrictionTypeInherit" label='<%= LanguageUtil.format(request, dlEditFolderDisplayContext.isWorkflowEnabled() ? "use-document-type-restrictions-and-workflow-of-the-parent-folder-x" : "use-document-type-restrictions-of-the-parent-folder-x", dlEditFolderDisplayContext.getParentFolderName(), false) %>' name="restrictionType" type="radio" value="<%= DLFolderConstants.RESTRICTION_TYPE_INHERIT %>" />

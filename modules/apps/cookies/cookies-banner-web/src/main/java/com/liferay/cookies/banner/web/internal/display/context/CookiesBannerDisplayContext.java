@@ -11,7 +11,6 @@ import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryCo
 import com.liferay.layout.utility.page.kernel.provider.LayoutUtilityPageEntryLayoutProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
@@ -24,11 +23,10 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eduardo García
@@ -40,17 +38,17 @@ public class CookiesBannerDisplayContext
 		CookiesConfigurationProvider cookiesConfigurationProvider,
 		LayoutUtilityPageEntryLayoutProvider
 			layoutUtilityPageEntryLayoutProvider,
-		RenderRequest renderRequest, RenderResponse renderResponse) {
+		RenderRequest renderRequest) {
 
 		super(
-			cookiesConfigurationProvider, layoutUtilityPageEntryLayoutProvider,
-			renderRequest, renderResponse);
+			cookiesConfigurationProvider,
+			PortalUtil.getHttpServletRequest(renderRequest),
+			layoutUtilityPageEntryLayoutProvider);
 	}
 
 	public Object getConfigurationURL() {
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
-			RequestBackedPortletURLFactoryUtil.create(
-				PortalUtil.getLiferayPortletRequest(renderRequest));
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest);
 
 		return PortletURLBuilder.create(
 			requestBackedPortletURLFactory.createRenderURL(
@@ -70,24 +68,40 @@ public class CookiesBannerDisplayContext
 	}
 
 	public Map<String, Object> getContext(Locale locale) {
-		LocalizedValuesMap titleLocalizedValuesMap =
-			cookiesConsentConfiguration.title();
+		HashMapBuilder.HashMapWrapper<String, Object> hashMapWrapper =
+			HashMapBuilder.<String, Object>put(
+				"configurationNamespace",
+				CookiesBannerPortletKeys.COOKIES_BANNER_CONFIGURATION
+			).put(
+				"configurationURL", getConfigurationURL()
+			).put(
+				"includeDeclineAllButton", isIncludeDeclineAllButton()
+			).put(
+				"optionalConsentCookieTypeNames",
+				getConsentCookieTypeNamesJSONArray(
+					getOptionalConsentCookieTypes())
+			).put(
+				"requiredConsentCookieTypeNames",
+				getConsentCookieTypeNamesJSONArray(
+					getRequiredConsentCookieTypes())
+			).put(
+				"title",
+				() -> {
+					LocalizedValuesMap titleLocalizedValuesMap =
+						cookiesConsentConfiguration.title();
 
-		return HashMapBuilder.<String, Object>put(
-			"configurationNamespace",
-			CookiesBannerPortletKeys.COOKIES_BANNER_CONFIGURATION
+					return titleLocalizedValuesMap.get(locale);
+				}
+			);
+
+		if (!isConsentRenewalPeriodEnabled()) {
+			return hashMapWrapper.build();
+		}
+
+		return hashMapWrapper.put(
+			"consentRenewalPeriod", getConsentRenewalPeriod()
 		).put(
-			"configurationURL", getConfigurationURL()
-		).put(
-			"includeDeclineAllButton", isIncludeDeclineAllButton()
-		).put(
-			"optionalConsentCookieTypeNames",
-			getConsentCookieTypeNamesJSONArray(getOptionalConsentCookieTypes())
-		).put(
-			"requiredConsentCookieTypeNames",
-			getConsentCookieTypeNamesJSONArray(getRequiredConsentCookieTypes())
-		).put(
-			"title", titleLocalizedValuesMap.get(locale)
+			"modifiedDate", getModifiedDate()
 		).build();
 	}
 
@@ -106,12 +120,9 @@ public class CookiesBannerDisplayContext
 			return privacyPolicyLink;
 		}
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-10588")) {
-			return StringPool.POUND;
-		}
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout =
 			layoutUtilityPageEntryLayoutProvider.
@@ -124,6 +135,13 @@ public class CookiesBannerDisplayContext
 		}
 
 		return StringPool.POUND;
+	}
+
+	public String getTitle(Locale locale) {
+		LocalizedValuesMap titleLocalizedValuesMap =
+			cookiesBannerConfiguration.title();
+
+		return titleLocalizedValuesMap.get(locale);
 	}
 
 }

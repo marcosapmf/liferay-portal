@@ -71,9 +71,9 @@ const withQueryOptions = Component => ({
 							unsuppressUser({
 								variables: {
 									emailAddresses: [emailAddress],
-									ownerId: currentUser.id,
+									ownerId: String(currentUser.id),
 									types: [GDPRRequestTypes.Unsuppress],
-									userId: currentUser.userId,
+									userId: String(currentUser.userId),
 									userName: currentUser.name
 								}
 							})
@@ -183,7 +183,7 @@ const SuppressedUserList: React.FC<ISuppressedUserListProps> = props => (
 					icon={{
 						border: false,
 						size: Sizes.XXXLarge,
-						symbol: 'ac-satellite'
+						symbol: 'ac_satellite'
 					}}
 					title={Liferay.Language.get('no-suppressed-users-found')}
 				/>

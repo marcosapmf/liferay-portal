@@ -74,7 +74,7 @@ public class SkuUtil {
 					sku.getReplacementSkuExternalReferenceCode())) {
 
 				discontinuedCPInstance =
-					cpInstanceService.fetchByExternalReferenceCode(
+					cpInstanceService.fetchCPInstanceByExternalReferenceCode(
 						sku.getReplacementSkuExternalReferenceCode(),
 						cpDefinition.getCompanyId());
 			}
@@ -417,13 +417,6 @@ public class SkuUtil {
 				null, cpDefinition.getCProductId(),
 				cpInstance.getCPInstanceUuid(),
 				commercePriceList.getCommercePriceListId(), price, false, null,
-				unitOfMeasureKey, serviceContext);
-		}
-		else {
-			commercePriceEntryLocalService.updatePricingInfo(
-				commercePriceEntry.getCommercePriceEntryId(),
-				commercePriceEntry.isBulkPricing(), price,
-				commercePriceEntry.isPriceOnApplication(), null,
 				unitOfMeasureKey, serviceContext);
 		}
 	}

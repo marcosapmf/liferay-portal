@@ -21,14 +21,13 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.saml.constants.SamlProviderConfigurationKeys;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBindingProvider;
 import com.liferay.saml.opensaml.integration.internal.credential.FileSystemKeyStoreManagerImpl;
@@ -48,6 +47,8 @@ import com.liferay.saml.runtime.configuration.SamlProviderConfiguration;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.util.PortletPropsKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.UnsupportedEncodingException;
 
 import java.net.URLDecoder;
@@ -57,9 +58,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
-import javax.servlet.http.HttpServletRequest;
 
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet;
 import net.shibboleth.utilities.java.support.resolver.ResolverException;
@@ -71,6 +69,7 @@ import org.apache.http.client.HttpClient;
 import org.junit.After;
 import org.junit.Before;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
@@ -93,8 +92,6 @@ public abstract class BaseSamlTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		_setupProps();
-
 		Class.forName(ConfigurationServiceBootstrapUtil.class.getName());
 
 		_setupConfiguration();
@@ -250,11 +247,11 @@ public abstract class BaseSamlTestCase {
 
 		samlPeerBinding.setSamlPeerBindingId(_samlPeerBindings.size() + 1);
 		samlPeerBinding.setCompanyId(COMPANY_ID);
+		samlPeerBinding.setSamlPeerEntityId(peerEntityId);
 		samlPeerBinding.setDeleted(false);
 		samlPeerBinding.setSamlNameIdFormat(samlNameIdFormat);
 		samlPeerBinding.setSamlNameIdNameQualifier(samlNameIdNameQualifier);
 		samlPeerBinding.setSamlNameIdValue(samlNameIdValue);
-		samlPeerBinding.setSamlPeerEntityId(peerEntityId);
 
 		_samlPeerBindings.put(
 			samlPeerBinding.getSamlPeerBindingId(), samlPeerBinding);
@@ -605,6 +602,19 @@ public abstract class BaseSamlTestCase {
 				return identifier;
 			}
 		);
+
+		_portalUUIDUtilMockedStatic.when(
+			PortalUUIDUtil::generate
+		).thenAnswer(
+			(Answer<String>)invocationOnMock -> {
+				String identifier =
+					samlIdentifierGenerator.generateIdentifier();
+
+				identifiers.add(identifier);
+
+				return identifier;
+			}
+		);
 	}
 
 	private void _setupMetadata() throws Exception {
@@ -729,15 +739,6 @@ public abstract class BaseSamlTestCase {
 			UserLocalServiceUtil.class, UserLocalService.class);
 	}
 
-	private void _setupProps() {
-		PropsTestUtil.setProps(
-			HashMapBuilder.<String, Object>put(
-				PropsKeys.LIFERAY_HOME, System.getProperty("java.io.tmpdir")
-			).put(
-				"configuration.override.", new Properties()
-			).build());
-	}
-
 	private void _setupSamlBindings() {
 		samlBindingProvider = new SamlBindingProvider();
 
@@ -764,6 +765,9 @@ public abstract class BaseSamlTestCase {
 			answer -> _samlPeerBindings.get((long)answer.getArguments()[0])
 		);
 	}
+
+	private static final MockedStatic<PortalUUIDUtil>
+		_portalUUIDUtilMockedStatic = Mockito.mockStatic(PortalUUIDUtil.class);
 
 	private final Map<Long, SamlPeerBinding> _samlPeerBindings =
 		new HashMap<>();

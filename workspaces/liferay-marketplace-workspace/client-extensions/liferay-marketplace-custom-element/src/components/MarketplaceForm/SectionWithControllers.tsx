@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
+import ButtonWithIcon from '../ButtonWithIcon';
 
 import './index.scss';
 
 import ClayDropDown from '@clayui/drop-down';
 import {HTMLAttributes, useState} from 'react';
 
-import {BLOCK_DIRECTIONS} from '../../context/SolutionContext';
+import {BlockDirections} from '../../context/SolutionContext';
 
 interface SectionWithControllersProps extends HTMLAttributes<HTMLDivElement> {
 	dropdownItems: {
@@ -20,7 +20,7 @@ interface SectionWithControllersProps extends HTMLAttributes<HTMLDivElement> {
 	}[];
 	index: number;
 	name: string;
-	onArrowClick: (direction: BLOCK_DIRECTIONS) => void;
+	onArrowClick: (direction: BlockDirections) => void;
 	position: number;
 }
 
@@ -40,23 +40,23 @@ export function SectionWithControllers({
 			<div className="controllers d-flex justify-content-between">
 				<div className="d-flex inline-item justify-content-start">
 					<div className="arrow-container ml-4">
-						<ClayButtonWithIcon
+						<ButtonWithIcon
 							aria-label="arrow-up"
 							disabled={index === 0}
 							displayType="unstyled"
 							onClick={() =>
-								onArrowClick(BLOCK_DIRECTIONS.MOVE_UP)
+								onArrowClick(BlockDirections.MOVE_UP)
 							}
 							size="sm"
 							symbol="order-arrow-up"
 						/>
 
-						<ClayButtonWithIcon
+						<ButtonWithIcon
 							aria-label="arrow-down"
 							disabled={index === position - 1}
 							displayType="unstyled"
 							onClick={() =>
-								onArrowClick(BLOCK_DIRECTIONS.MOVE_DOWN)
+								onArrowClick(BlockDirections.MOVE_DOWN)
 							}
 							size="sm"
 							symbol="order-arrow-down"
@@ -70,7 +70,7 @@ export function SectionWithControllers({
 					<ClayDropDown
 						closeOnClick
 						trigger={
-							<ClayButtonWithIcon
+							<ButtonWithIcon
 								aria-label="Menu"
 								displayType={null}
 								symbol="ellipsis-v"
@@ -91,7 +91,7 @@ export function SectionWithControllers({
 						</ClayDropDown.ItemList>
 					</ClayDropDown>
 
-					<ClayButtonWithIcon
+					<ButtonWithIcon
 						aria-labelledby="angle-right"
 						className="align-self-end d-flex"
 						displayType="unstyled"

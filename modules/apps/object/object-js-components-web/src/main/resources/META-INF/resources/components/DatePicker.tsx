@@ -5,6 +5,7 @@
 
 import ClayDatePicker from '@clayui/date-picker';
 import {FieldBase} from 'frontend-js-components-web';
+import {dateUtils} from 'frontend-js-web';
 
 // @ts-ignore
 
@@ -32,6 +33,7 @@ interface DatePickerProps
 	label?: string;
 	locale?: Liferay.Language.Locale;
 	name?: string;
+	onBlur?: () => void;
 	onChange: (value: string) => void;
 	range?: boolean;
 	required?: boolean;
@@ -79,6 +81,7 @@ export function DatePicker({
 	id,
 	label,
 	locale = Liferay.ThemeDisplay.getLanguageId(),
+	onBlur,
 	onChange,
 	name,
 	range,
@@ -88,15 +91,10 @@ export function DatePicker({
 }: DatePickerProps) {
 	const [expanded, setExpanded] = useState(false);
 
-	const momentLocale = moment().locale(locale ?? defaultLanguageId);
-	const months = momentLocale.localeData().months();
-	const weekdaysShort = momentLocale.localeData().weekdaysShort();
-
 	const inputRef = useRef(null);
 	const maskRef = useRef<null | MaskRef>(null);
 	const {
 		clayFormat,
-		firstDayOfWeek,
 		isDateTime = false,
 		momentFormat = '',
 		placeholder,
@@ -133,7 +131,7 @@ export function DatePicker({
 			name,
 			rawDate,
 			value,
-			years: {end: year + 5, start: year - 5},
+			years: {end: year + 25, start: year - 100},
 		};
 	}, [momentFormat, defaultLanguageId, locale, name, serverFormat, value]);
 
@@ -144,8 +142,8 @@ export function DatePicker({
 	 * but it keep user's input case theres no language change.
 	 */
 	useEffect(() => {
-		setDate(({formattedDate, name, rawDate, value}) =>
-			name === date.name && value === date.value && rawDate === ''
+		setDate(({formattedDate, name, rawDate}) =>
+			name === date.name && rawDate === ''
 				? {...date, formattedDate}
 				: date
 		);
@@ -180,8 +178,6 @@ export function DatePicker({
 		if (nextState.rawDate !== rawDate) {
 			onChange(nextState.rawDate as string);
 		}
-
-		setExpanded(false);
 	};
 
 	const onInputMask: React.FocusEventHandler<HTMLInputElement> = ({
@@ -207,10 +203,39 @@ export function DatePicker({
 			required={required}
 		>
 			<ClayDatePicker
+				ariaLabels={{
+					buttonChooseDate: `${Liferay.Language.get('select-date')}`,
+					buttonDot: `${Liferay.Language.get('select-current-date')}`,
+					buttonNextMonth: `${Liferay.Language.get(
+						'select-next-month'
+					)}`,
+					buttonPreviousMonth: `${Liferay.Language.get(
+						'select-previous-month'
+					)}`,
+					dialog: `${Liferay.Language.get('select-date')}`,
+					selectMonth: `${Liferay.Language.get('select-a-month')}`,
+					selectYear: `${Liferay.Language.get('select-a-year')}`,
+				}}
 				dateFormat={clayFormat}
+				disabled={disabled}
 				expanded={expanded}
-				firstDayOfWeek={firstDayOfWeek}
-				months={months}
+				firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
+				id={id}
+				months={[
+					`${Liferay.Language.get('january')}`,
+					`${Liferay.Language.get('february')}`,
+					`${Liferay.Language.get('march')}`,
+					`${Liferay.Language.get('april')}`,
+					`${Liferay.Language.get('may')}`,
+					`${Liferay.Language.get('june')}`,
+					`${Liferay.Language.get('july')}`,
+					`${Liferay.Language.get('august')}`,
+					`${Liferay.Language.get('september')}`,
+					`${Liferay.Language.get('october')}`,
+					`${Liferay.Language.get('november')}`,
+					`${Liferay.Language.get('december')}`,
+				]}
+				onBlur={onBlur}
 				onChange={handleValueChange}
 				onExpandedChange={() => {
 					setExpanded(!expanded);
@@ -222,7 +247,7 @@ export function DatePicker({
 				time={isDateTime}
 				use12Hours={use12Hours}
 				value={formattedDate}
-				weekdaysShort={weekdaysShort}
+				weekdaysShort={dateUtils.getWeekdaysShort()}
 				years={years}
 				yearsCheck={false}
 			/>

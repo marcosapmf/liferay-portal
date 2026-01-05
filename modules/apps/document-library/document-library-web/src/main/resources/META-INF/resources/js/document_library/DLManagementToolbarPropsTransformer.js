@@ -4,16 +4,13 @@
  */
 
 import {
-	addParams,
-	createPortletURL,
-	navigate,
 	openCategorySelectionModal,
 	openConfirmModal,
 	openSelectionModal,
 	openTagSelectionModal,
 	openToast,
-	sub,
-} from 'frontend-js-web';
+} from 'frontend-js-components-web';
+import {addParams, createPortletURL, navigate, sub} from 'frontend-js-web';
 
 import {collectDigitalSignature} from './digital-signature/DigitalSignatureUtil';
 
@@ -61,7 +58,7 @@ export default function propsTransformer({
 		form.setAttribute('method', 'post');
 
 		const actionInputElement = form.querySelector(
-			`#${portletNamespace}javax-portlet-action`
+			`#${portletNamespace}jakarta-portlet-action`
 		);
 
 		if (actionInputElement) {

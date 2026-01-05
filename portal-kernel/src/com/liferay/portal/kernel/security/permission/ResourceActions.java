@@ -11,10 +11,10 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.xml.Document;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -72,6 +72,8 @@ public interface ResourceActions {
 	public List<String> getPortletResourceGuestUnsupportedActions(String name);
 
 	public List<String> getPortletResourceLayoutManagerActions(String name);
+
+	public List<String> getPortletResourceOwnerDefaultActions(String name);
 
 	public String getPortletRootModelResource(String portletName);
 

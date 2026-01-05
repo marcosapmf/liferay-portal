@@ -9,11 +9,13 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.List;
@@ -22,10 +24,12 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Daniel Kocsis
+ * @author Roberto Díaz
  */
 @RunWith(Arquillian.class)
 public class AssetTagStagedModelDataHandlerTest
@@ -36,13 +40,37 @@ public class AssetTagStagedModelDataHandlerTest
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
+	@Test
+	public void testExportImportDuplicateTags() throws Exception {
+		int groupTagsCount = AssetTagLocalServiceUtil.getGroupTagsCount(
+			liveGroup.getGroupId());
+
+		String name = RandomTestUtil.randomString();
+
+		_exportImportDeletedTag(name);
+		_exportImportDeletedTag(name);
+		_exportImportDeletedTag(name);
+
+		Assert.assertEquals(
+			groupTagsCount + 3,
+			AssetTagLocalServiceUtil.getGroupTagsCount(liveGroup.getGroupId()));
+
+		AssetTagLocalServiceUtil.getTag(liveGroup.getGroupId(), name);
+		AssetTagLocalServiceUtil.getTag(
+			liveGroup.getGroupId(), name + " (Duplicate)");
+		AssetTagLocalServiceUtil.getTag(
+			liveGroup.getGroupId(), name + " (Duplicate 1)");
+	}
+
 	@Override
 	protected StagedModel addStagedModel(
 			Group group,
 			Map<String, List<StagedModel>> dependentStagedModelsMap)
 		throws Exception {
 
-		return AssetTestUtil.addTag(group.getGroupId());
+		return AssetTestUtil.addTag(
+			RandomTestUtil.randomString(), group.getGroupId(),
+			RandomTestUtil.randomString());
 	}
 
 	@Override
@@ -68,7 +96,28 @@ public class AssetTagStagedModelDataHandlerTest
 		AssetTag tag = (AssetTag)stagedModel;
 		AssetTag importedTag = (AssetTag)importedStagedModel;
 
+		Assert.assertEquals(
+			tag.getExternalReferenceCode(),
+			importedTag.getExternalReferenceCode());
 		Assert.assertEquals(tag.getName(), importedTag.getName());
+	}
+
+	private void _exportImportDeletedTag(String name) throws Exception {
+		AssetTag tag = AssetTestUtil.addTag(
+			RandomTestUtil.randomString(), stagingGroup.getGroupId(), name);
+
+		initExport();
+
+		StagedModelDataHandlerUtil.exportStagedModel(portletDataContext, tag);
+
+		AssetTagLocalServiceUtil.deleteTag(tag);
+
+		initImport();
+
+		StagedModel exportStagedModel = readExportedStagedModel(tag);
+
+		StagedModelDataHandlerUtil.importStagedModel(
+			portletDataContext, exportStagedModel);
 	}
 
 }

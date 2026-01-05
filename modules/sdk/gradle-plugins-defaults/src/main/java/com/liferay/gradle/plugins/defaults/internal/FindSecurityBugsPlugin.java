@@ -109,7 +109,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 			project, LifecycleBasePlugin.CHECK_TASK_NAME);
 		TaskProvider<Task> classesTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.CLASSES_TASK_NAME);
-		TaskProvider<JavaCompile> compileJSPTaskProivder =
+		TaskProvider<JavaCompile> compileJSPTaskProvider =
 			GradleUtil.getTaskProvider(
 				project, JspCPlugin.COMPILE_JSP_TASK_NAME, JavaCompile.class);
 		TaskProvider<CompileJSPTask> generateJSPJavaTaskProvider =
@@ -129,7 +129,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 			printFindSecurityBugsReportTaskProvider);
 		_configureTaskWriteFindBugsProjectProvider(
 			project, javaPluginConvention, classesTaskProvider,
-			compileJSPTaskProivder, generateJSPJavaTaskProvider,
+			compileJSPTaskProvider, generateJSPJavaTaskProvider,
 			writeFindBugsProjectTaskProvider);
 	}
 
@@ -146,7 +146,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 				public void execute(DependencySet dependencySet) {
 					GradleUtil.addDependency(
 						project, FIND_SECURITY_BUGS_CONFIGURATION_NAME,
-						"com.github.spotbugs", "spotbugs", "4.5.3");
+						"com.github.spotbugs", "spotbugs", "4.9.3");
 				}
 
 			});

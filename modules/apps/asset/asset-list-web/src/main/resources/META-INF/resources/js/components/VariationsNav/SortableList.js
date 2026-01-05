@@ -4,13 +4,14 @@
  */
 
 import ClayList from '@clayui/list';
-import {openConfirmModal, openToast, sub} from 'frontend-js-web';
+import {openConfirmModal, openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
-import {saveVariationsListPriorityService} from '../../api/index';
+import {saveVariationsListPriorityService} from '../../actions/index';
 import SortableListItem from './SortableListItem';
 import {buildItemsPriorityURL} from './utils/index';
 

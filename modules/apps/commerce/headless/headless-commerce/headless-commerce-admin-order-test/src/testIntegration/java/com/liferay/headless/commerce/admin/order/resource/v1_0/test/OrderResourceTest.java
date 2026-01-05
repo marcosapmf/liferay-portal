@@ -13,7 +13,9 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
@@ -21,48 +23,71 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.commerce.term.service.CommerceTermEntryLocalService;
+import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.expando.kernel.model.ExpandoColumnConstants;
+import com.liferay.expando.kernel.model.ExpandoTable;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
 import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.OrderResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.AddressLocalService;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import java.io.Serializable;
 
 import java.math.BigDecimal;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -74,6 +99,13 @@ import org.junit.runner.RunWith;
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class OrderResourceTest extends BaseOrderResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	@Override
@@ -87,8 +119,8 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -115,12 +147,12 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		_orderAddress = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), true, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, false, true,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		DateConfig displayDateConfig = DateConfig.toDisplayDateConfig(
 			RandomTestUtil.nextDate(), _user.getTimeZone());
@@ -144,11 +176,13 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 				_serviceContext);
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testGetOrdersPage() throws Exception {
 		super.testGetOrdersPage();
+
+		_testGetOrdersPageWithFilter();
+		_testGetOrdersPageWithSearch();
 	}
 
 	@Ignore
@@ -236,39 +270,18 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		super.testGetOrdersPageWithPagination();
 	}
 
-	@Ignore
-	@Override
-	@Test
-	public void testGetOrdersPageWithSortDateTime() throws Exception {
-		super.testGetOrdersPageWithSortDateTime();
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetOrdersPageWithSortInteger() throws Exception {
-		super.testGetOrdersPageWithSortInteger();
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetOrdersPageWithSortString() throws Exception {
-		super.testGetOrdersPageWithSortString();
-	}
-
 	@Test
 	public void testGetOrderWithNestedFields() throws Exception {
-		User omniAdminUser = UserTestUtil.addOmniadminUser();
+		User omniadminUser = UserTestUtil.addOmniadminUser();
 
 		String password = RandomTestUtil.randomString();
 
 		_userLocalService.updatePassword(
-			omniAdminUser.getUserId(), password, password, false, true);
+			omniadminUser.getUserId(), password, password, false, true);
 
 		OrderResource orderResource = OrderResource.builder(
 		).authentication(
-			omniAdminUser.getEmailAddress(), password
+			omniadminUser.getEmailAddress(), password
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
@@ -299,6 +312,15 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		super.testGraphQLDeleteOrder();
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLDeleteOrderByExternalReferenceCode()
+		throws Exception {
+
+		super.testGraphQLDeleteOrderByExternalReferenceCode();
+	}
+
 	@Override
 	@Test
 	public void testPatchOrder() throws Exception {
@@ -320,6 +342,7 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 	public void testPostOrder() throws Exception {
 		super.testPostOrder();
 
+		_testPostOrderWithDateCustomField();
 		_testPostOrderWithMoreExternalReferenceCodes();
 		_testPostOrderWithOrderItems(
 			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
@@ -356,6 +379,9 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 					RandomTestUtil.randomString());
 				createDate = RandomTestUtil.nextDate();
 				currencyCode = _commerceCurrency.getCode();
+				currencyExternalReferenceCode =
+					_commerceCurrency.getExternalReferenceCode();
+				currencyId = _commerceCurrency.getCommerceCurrencyId();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
@@ -367,7 +393,9 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 					RandomTestUtil.randomString());
 				purchaseOrderNumber = RandomTestUtil.randomString();
 				requestedDeliveryDate = RandomTestUtil.nextDate();
+				shippable = RandomTestUtil.randomBoolean();
 				shippingAddressId = _orderAddress.getAddressId();
+				total = new BigDecimal(RandomTestUtil.randomDouble());
 			}
 		};
 	}
@@ -423,6 +451,13 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		return orderResource.postOrder(order);
 	}
 
+	@Override
+	protected Order testPutOrderByExternalReferenceCode_addOrder()
+		throws Exception {
+
+		return orderResource.postOrder(randomOrder());
+	}
+
 	private OrderItem _randomOrderItem(boolean useUnitOfMeasure)
 		throws Exception {
 
@@ -443,8 +478,13 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 				printedNote = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				quantity = BigDecimal.valueOf(RandomTestUtil.randomInt());
+				replacedSkuExternalReferenceCode =
+					RandomTestUtil.randomString();
+				shippable = RandomTestUtil.randomBoolean();
 				shippedQuantity = BigDecimal.valueOf(
 					RandomTestUtil.randomInt());
+				shippingAddressExternalReferenceCode =
+					RandomTestUtil.randomString();
 				shippingAddressId = _orderAddress.getAddressId();
 				skuId = cpInstance.getCPInstanceId();
 				subscription = RandomTestUtil.randomBoolean();
@@ -482,6 +522,68 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		return order;
 	}
 
+	private void _testGetOrdersPageWithFilter() throws Exception {
+		Order randomOrder = randomOrder();
+
+		CommerceOrderType commerceOrderType =
+			_commerceOrderTypeLocalService.addCommerceOrderType(
+				StringUtil.toUpperCase(RandomTestUtil.randomString()),
+				TestPropsValues.getUserId(),
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(), true, 1, 1, 1970, 12, 0,
+				RandomTestUtil.nextInt(), 0, 0, 0, 0, 0, true, _serviceContext);
+
+		randomOrder.setOrderTypeId(commerceOrderType.getCommerceOrderTypeId());
+
+		Order order = testGetOrdersPage_addOrder(randomOrder);
+
+		Page<Order> page = orderResource.getOrdersPage(
+			null,
+			StringBundler.concat(
+				"(orderTypeExternalReferenceCode eq '",
+				commerceOrderType.getExternalReferenceCode(), "')"),
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertContains(order, (List<Order>)page.getItems());
+
+		order = orderResource.getOrder(order.getId());
+
+		page = orderResource.getOrdersPage(
+			null,
+			StringBundler.concat(
+				"(totalAmount eq ", order.getTotalAmount(), ")"),
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertContains(order, (List<Order>)page.getItems());
+	}
+
+	private void _testGetOrdersPageWithSearch() throws Exception {
+		Order randomOrder = randomOrder();
+
+		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString() + "1a2b3c",
+			RandomTestUtil.randomString(), null,
+			RandomTestUtil.randomString() + "@liferay.com", null, null,
+			"business", 1, _serviceContext);
+
+		randomOrder.setAccountExternalReferenceCode(
+			accountEntry.getExternalReferenceCode());
+		randomOrder.setAccountId(accountEntry.getAccountEntryId());
+
+		Order order = testGetOrdersPage_addOrder(randomOrder);
+
+		Page<Order> page = orderResource.getOrdersPage(
+			"1a2b3c", null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+		assertContains(order, (List<Order>)page.getItems());
+	}
+
 	private void _testPatchOrderByExternalReferenceCodeWithMoreExternalReferenceCodes()
 		throws Exception {
 
@@ -492,12 +594,12 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		Address randomAddress = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), true, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, false, true,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		randomPatchOrder.setBillingAddressExternalReferenceCode(
 			randomAddress.getExternalReferenceCode());
@@ -509,6 +611,7 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		randomPatchOrder.setPaymentTermExternalReferenceCode(
 			_commerceTermEntry.getExternalReferenceCode());
 		randomPatchOrder.setPaymentTermId(0L);
+		randomPatchOrder.setShippable(true);
 		randomPatchOrder.setShippingAddressExternalReferenceCode(
 			randomAddress.getExternalReferenceCode());
 		randomPatchOrder.setShippingAddressId(0L);
@@ -561,12 +664,12 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		Address randomAddress = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), true, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, false, true,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		randomPatchOrder.setBillingAddressExternalReferenceCode(
 			randomAddress.getExternalReferenceCode());
@@ -578,6 +681,7 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		randomPatchOrder.setPaymentTermExternalReferenceCode(
 			_commerceTermEntry.getExternalReferenceCode());
 		randomPatchOrder.setPaymentTermId(0L);
+		randomPatchOrder.setShippable(true);
 		randomPatchOrder.setShippingAddressExternalReferenceCode(
 			randomAddress.getExternalReferenceCode());
 		randomPatchOrder.setShippingAddressId(0L);
@@ -619,6 +723,47 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 			getOrder.getShippingAddressExternalReferenceCode());
 	}
 
+	private void _testPostOrderWithDateCustomField() throws Exception {
+		User adminUser = UserTestUtil.getAdminUser(testGroup.getCompanyId());
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(adminUser));
+
+		PrincipalThreadLocal.setName(adminUser.getUserId());
+
+		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
+			adminUser.getUserId(), _commerceChannel.getGroupId(),
+			_commerceCurrency);
+
+		ExpandoTable expandoTable = _expandoTableLocalService.addTable(
+			testGroup.getCompanyId(),
+			_classNameLocalService.getClassNameId(CommerceOrder.class),
+			"CUSTOM_FIELDS");
+
+		ExpandoColumn expandoColumn = _expandoColumnLocalService.addColumn(
+			expandoTable.getTableId(), "A" + RandomTestUtil.randomString(),
+			ExpandoColumnConstants.DATE);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId());
+
+		serviceContext.setExpandoBridgeAttributes(
+			HashMapBuilder.<String, Serializable>put(
+				expandoColumn.getName(), new Date()
+			).build());
+
+		commerceOrder.setExpandoBridgeAttributes(serviceContext);
+
+		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			commerceOrder);
+
+		Assert.assertNotNull(
+			_jsonFactory.createJSONObject(
+				String.valueOf(
+					orderResource.getOrder(
+						commerceOrder.getCommerceOrderId()))));
+	}
+
 	private void _testPostOrderWithMoreExternalReferenceCodes()
 		throws Exception {
 
@@ -633,6 +778,7 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 		randomOrder.setPaymentTermExternalReferenceCode(
 			_commerceTermEntry.getExternalReferenceCode());
 		randomOrder.setPaymentTermId(0L);
+		randomOrder.setShippable(true);
 		randomOrder.setShippingAddressExternalReferenceCode(
 			_orderAddress.getExternalReferenceCode());
 		randomOrder.setShippingAddressId(0L);
@@ -707,6 +853,9 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 	@Inject
 	private AddressLocalService _addressLocalService;
 
+	@Inject
+	private ClassNameLocalService _classNameLocalService;
+
 	private CommerceChannel _commerceChannel;
 
 	@Inject
@@ -720,6 +869,12 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 	@Inject
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
 
+	@Inject
+	private CommerceOrderLocalService _commerceOrderLocalService;
+
+	@Inject
+	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
+
 	private CommerceTermEntry _commerceTermEntry;
 
 	@Inject
@@ -729,6 +884,15 @@ public class OrderResourceTest extends BaseOrderResourceTestCase {
 
 	@Inject
 	private CountryLocalService _countryLocalService;
+
+	@Inject
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Inject
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Inject
+	private JSONFactory _jsonFactory;
 
 	private Address _orderAddress;
 	private Region _region;

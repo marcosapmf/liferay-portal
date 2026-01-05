@@ -3,11 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	ACTION_ITEMS,
-	ACTION_TYPE_ITEMS,
-	Action,
-} from '../../plugins/page_rules/components/Action';
+import {ACTION_TYPE_ITEMS} from '../../plugins/page_rules/components/Action';
+import {Action} from '../../types/Rule';
 
 type Item = {label: string; value: string};
 
@@ -16,17 +13,27 @@ type Props = {
 	items: Item[];
 };
 
-export default function useActionValues({actions, items}: Props) {
+export type ActionValues = {
+	description: string;
+	id: string;
+	item: string | undefined;
+	itemId?: string;
+	prefix: string;
+	type: string | undefined;
+};
+
+export default function useActionValues({
+	actions,
+	items,
+}: Props): ActionValues[] {
 	return actions.map((_action, index) => {
-		const action = getAction(_action.action);
 		const item = getItem(items, _action.itemId);
 		const prefix = getPrefix(index);
 		const type = getType(_action.type);
 
-		const description = getDescription(action, item, prefix, type);
+		const description = getDescription(item, prefix, type);
 
 		return {
-			action,
 			description,
 			id: _action.id,
 			item,
@@ -36,21 +43,10 @@ export default function useActionValues({actions, items}: Props) {
 	});
 }
 
-function getAction(action: Action['action']) {
-	if (!action) {
-		return '';
-	}
-
-	return ACTION_ITEMS.find(({value}) => value === action)?.label;
-}
-
-function getDescription(
-	action?: string,
-	item?: string,
-	prefix?: string,
-	type?: string
-) {
-	return [prefix, type, action, item].filter((item) => item).join(' ');
+function getDescription(item?: string, prefix?: string, type?: string) {
+	return [prefix, type, Liferay.Language.get('fragment'), item]
+		.filter((item) => item)
+		.join(' ');
 }
 
 function getItem(items: Item[], itemId?: Action['itemId']) {
@@ -70,5 +66,5 @@ function getType(type?: Action['type']) {
 		return '';
 	}
 
-	return ACTION_TYPE_ITEMS.find(({value}) => value === type)?.label;
+	return ACTION_TYPE_ITEMS[type].label;
 }

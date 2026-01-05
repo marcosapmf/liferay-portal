@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {LanguageId} from '../layout_data/BaseLayoutDataItem';
-
 export type LocalizedValue = {
-	[key in LanguageId]?: string;
+	[key in Liferay.Language.Locale]?: string;
 };
 
+export type EditableConfig = Record<string, unknown>;
+
 export type EditableValue = {
-	config?: Record<string, unknown>;
+	config?: EditableConfig;
 	defaultValue?: string;
 } & LocalizedValue;
+
+export type LinkEditableValue = {
+	href?: LocalizedValue;
+	rel?: string;
+	target?: string;
+};

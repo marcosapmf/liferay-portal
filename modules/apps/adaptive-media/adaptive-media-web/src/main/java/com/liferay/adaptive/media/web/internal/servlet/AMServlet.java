@@ -21,16 +21,16 @@ import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -90,7 +90,7 @@ public class AMServlet extends HttpServlet {
 						HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE;
 				}
 
-				httpServletResponse.addHeader(
+				httpServletResponse.setHeader(
 					HttpHeaders.CACHE_CONTROL,
 					FileEntryHttpHeaderCustomizerUtil.getHttpHeaderValue(
 						_dlAppLocalService.getFileEntry(fileEntryId),

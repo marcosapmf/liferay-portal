@@ -23,9 +23,9 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerChoice;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.Repository;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+	property = "jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 	service = PortletDataHandler.class
 )
 public class DLPortletDataHandler extends BasePortletDataHandler {
@@ -110,7 +110,6 @@ public class DLPortletDataHandler extends BasePortletDataHandler {
 	protected void activate() {
 		setDataLevel(DataLevel.PORTLET_INSTANCE);
 		setDataLocalized(true);
-		setDataPortletPreferences("rootFolderId", "selectedRepositoryId");
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(DLFileEntryType.class),
 			new StagedModelType(DLFileShortcut.class),
@@ -119,7 +118,7 @@ public class DLPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(
 				Repository.class.getName(),
 				StagedModelType.REFERRER_CLASS_NAME_ALL));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				getNamespace(), "repositories", true, false, null,
 				Repository.class.getName(),
@@ -156,11 +155,12 @@ public class DLPortletDataHandler extends BasePortletDataHandler {
 				DLFileShortcutConstants.getClassName()));
 		setPublishToLiveByDefault(PropsValues.DL_PUBLISH_TO_LIVE_BY_DEFAULT);
 		setRank(90);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN + ")"
+		target = "(jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN + ")"
 	)
 	private PortletDataHandler _dlAdminPortletDataHandler;
 

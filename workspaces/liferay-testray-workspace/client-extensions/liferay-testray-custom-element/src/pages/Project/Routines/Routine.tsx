@@ -3,23 +3,35 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {DisplayType as AlertDisplayType} from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
 import classNames from 'classnames';
-import {useParams} from 'react-router-dom';
+import {useOutletContext, useParams} from 'react-router-dom';
 import Container from '~/components/Layout/Container';
 import ListView from '~/components/ListView';
 import ProgressBar from '~/components/ProgressBar';
 import i18n from '~/i18n';
-import {TestrayBuild} from '~/services/rest';
+import {TestrayBuild, TestrayRoutine} from '~/services/rest';
+import {testrayBuildAlertProperties} from '~/util/constants';
 import dayjs from '~/util/date';
 import {filterStatuses} from '~/util/statuses';
 
 import BuildHistoryChart from './Builds/BuildHistoryChart';
 import useBuildActions from './Builds/useBuildActions';
 
+type OutletContext = {
+	testrayRoutine: TestrayRoutine;
+};
+
 const Routine = () => {
 	const {actions, formModal} = useBuildActions();
 	const {routineId} = useParams();
+	const {testrayRoutine}: OutletContext = useOutletContext();
+
+	const filter = testrayRoutine.r_teamToRoutines_c_teamId
+		? `?filter=%7B"testrayTeamIds"%3A%5B${testrayRoutine.r_teamToRoutines_c_teamId}%5D%7D&filterSchema=buildResults`
+		: '';
 
 	return (
 		<Container>
@@ -86,7 +98,7 @@ const Routine = () => {
 									)}
 								</>
 							),
-							value: i18n.translate('status'),
+							value: i18n.translate('build-status'),
 						},
 						{
 							clickable: true,
@@ -95,6 +107,15 @@ const Routine = () => {
 								dayjs(testrayBuildDueDate).format('lll'),
 							size: 'sm',
 							value: i18n.translate('execution-date'),
+						},
+						{
+							clickable: true,
+							key: 'testrayBuildCPUUseTime',
+							render: (testrayBuildCPUUseTime) =>
+								testrayBuildCPUUseTime === 'null' || ''
+									? '-'
+									: testrayBuildCPUUseTime,
+							value: i18n.translate('cpu-use-time'),
 						},
 						{
 							clickable: true,
@@ -114,6 +135,35 @@ const Routine = () => {
 							key: 'testrayBuildName',
 							selectable: true,
 							value: i18n.translate('build'),
+						},
+						{
+							key: 'testrayBuildImportStatus',
+							render: (
+								_,
+								{testrayBuildImportStatus}: TestrayBuild
+							) => (
+								<>
+									{testrayBuildImportStatus && (
+										<>
+											<ClayLabel
+												displayType={
+													testrayBuildAlertProperties[
+														testrayBuildImportStatus
+													]
+														.displayType as AlertDisplayType
+												}
+											>
+												{
+													testrayBuildAlertProperties[
+														testrayBuildImportStatus
+													].label
+												}
+											</ClayLabel>
+										</>
+									)}
+								</>
+							),
+							value: i18n.translate('import-status'),
 						},
 						{
 							clickable: true,
@@ -180,8 +230,8 @@ const Routine = () => {
 										blocked: testrayStatusMetric?.blocked,
 										failed: testrayStatusMetric?.failed,
 										incomplete:
-											testrayStatusMetric?.untested +
-											testrayStatusMetric?.inProgress,
+											testrayStatusMetric?.incomplete +
+											testrayStatusMetric?.untested,
 										passed: testrayStatusMetric?.passed,
 										test_fix: testrayStatusMetric?.testfix,
 									}}
@@ -191,7 +241,8 @@ const Routine = () => {
 							value: i18n.translate('metrics'),
 						},
 					],
-					navigateTo: ({testrayBuildId}) => `build/${testrayBuildId}`,
+					navigateTo: ({testrayBuildId}) =>
+						`build/${testrayBuildId}${filter}`,
 				}}
 			>
 				{({items, totalCount}) =>

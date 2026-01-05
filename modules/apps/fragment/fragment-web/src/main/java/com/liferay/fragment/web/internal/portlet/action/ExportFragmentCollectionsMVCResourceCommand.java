@@ -8,6 +8,7 @@ package com.liferay.fragment.web.internal.portlet.action;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.service.FragmentCollectionService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -16,14 +17,13 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
 import java.io.FileInputStream;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.PortletException;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
+		"jakarta.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"mvc.command.name=/fragment/export_fragment_collections"
 	},
 	service = MVCResourceCommand.class
@@ -60,15 +60,22 @@ public class ExportFragmentCollectionsMVCResourceCommand
 		}
 
 		try {
-			List<FragmentCollection> fragmentCollections = new ArrayList<>();
+			List<FragmentCollection> fragmentCollections =
+				TransformUtil.transformToList(
+					exportFragmentCollectionIds,
+					exportFragmentCollectionId -> {
+						FragmentCollection fragmentCollection =
+							_fragmentCollectionService.fetchFragmentCollection(
+								exportFragmentCollectionId);
 
-			for (long exportFragmentCollectionId :
-					exportFragmentCollectionIds) {
+						if ((fragmentCollection != null) &&
+							!fragmentCollection.isMarketplace()) {
 
-				fragmentCollections.add(
-					_fragmentCollectionService.fetchFragmentCollection(
-						exportFragmentCollectionId));
-			}
+							return fragmentCollection;
+						}
+
+						return null;
+					});
 
 			ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
 

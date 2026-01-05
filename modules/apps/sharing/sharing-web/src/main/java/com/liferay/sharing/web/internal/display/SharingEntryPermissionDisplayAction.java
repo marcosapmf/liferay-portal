@@ -5,11 +5,14 @@
 
 package com.liferay.sharing.web.internal.display;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.sharing.security.permission.SharingEntryAction;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.ResourceBundle;
 
 /**
  * @author Sergio González
@@ -17,14 +20,14 @@ import java.util.Objects;
 public enum SharingEntryPermissionDisplayAction {
 
 	COMMENTS(
-		"COMMENTS", "comment", "collaborators-can-comment-on-the-item",
+		"COMMENTS", "comment", "collaborators-can-comment-on-the-item[",
 		"comment", SharingEntryAction.ADD_DISCUSSION, SharingEntryAction.VIEW),
 	UPDATE(
-		"UPDATE", "update", "collaborators-can-view-comment-update-the-item",
+		"UPDATE", "update", "collaborators-can-view-comment-update-the-item[",
 		"update", SharingEntryAction.ADD_DISCUSSION, SharingEntryAction.UPDATE,
 		SharingEntryAction.VIEW),
 	VIEW(
-		"VIEW", "view", "collaborators-can-only-view-the-item", "view",
+		"VIEW", "view", "collaborators-can-only-view-the-item[", "view",
 		SharingEntryAction.VIEW);
 
 	public static SharingEntryPermissionDisplayAction parseFromActionId(
@@ -47,8 +50,12 @@ public enum SharingEntryPermissionDisplayAction {
 		return _actionId;
 	}
 
-	public String getDescriptionKey() {
-		return _descriptionKey;
+	public String getDescription(
+		String className, ResourceBundle resourceBundle) {
+
+		return LanguageUtil.get(
+			resourceBundle,
+			StringBundler.concat(_descriptionKey, className, "]"));
 	}
 
 	public List<SharingEntryAction> getSharingEntryActions() {

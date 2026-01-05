@@ -8,7 +8,6 @@ package com.liferay.login.web.internal.servlet.taglib.include;
 import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.kernel.provider.LayoutUtilityPageEntryLayoutProvider;
 import com.liferay.login.web.constants.LoginPortletKeys;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -23,18 +22,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.include.PageInclude;
 import com.liferay.taglib.ui.IconTag;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.Objects;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,24 +59,14 @@ public class SignInNavigationPrePageInclude implements PageInclude {
 
 		PortletConfig portletConfig =
 			(PortletConfig)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_CONFIG);
+				JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		String portletName = portletConfig.getPortletName();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-6378")) {
-			if (portletName.equals(LoginPortletKeys.LOGIN) &&
-				Validator.isNull(mvcRenderCommandName)) {
+		if ((portletName.equals(LoginPortletKeys.LOGIN) &&
+			 Validator.isNull(mvcRenderCommandName)) ||
+			Objects.equals(mvcRenderCommandName, "/login/login")) {
 
-				return;
-			}
-		}
-		else {
-			if (Validator.isNull(mvcRenderCommandName)) {
-				return;
-			}
-		}
-
-		if (Objects.equals(mvcRenderCommandName, "/login/login")) {
 			return;
 		}
 
@@ -88,22 +77,17 @@ public class SignInNavigationPrePageInclude implements PageInclude {
 		String signInURL = null;
 
 		try {
-			if (FeatureFlagManagerUtil.isEnabled("LPD-6378")) {
-				Layout layout =
-					_layoutUtilityPageEntryLayoutProvider.
-						getDefaultLayoutUtilityPageEntryLayout(
-							themeDisplay.getScopeGroupId(),
-							LayoutUtilityPageEntryConstants.TYPE_LOGIN);
+			Layout layout =
+				_layoutUtilityPageEntryLayoutProvider.
+					getDefaultLayoutUtilityPageEntryLayout(
+						themeDisplay.getScopeGroupId(),
+						LayoutUtilityPageEntryConstants.TYPE_LOGIN);
 
-				if (layout != null) {
-					signInURL = _portal.getLayoutURL(layout, themeDisplay);
-				}
-				else {
-					signInURL = _getSignInURL(httpServletRequest, themeDisplay);
-				}
+			if (layout != null) {
+				signInURL = _portal.getLayoutURL(layout, themeDisplay);
 			}
 			else {
-				signInURL = themeDisplay.getURLSignIn();
+				signInURL = _getSignInURL(httpServletRequest, themeDisplay);
 			}
 		}
 		catch (Exception exception) {
@@ -156,7 +140,7 @@ public class SignInNavigationPrePageInclude implements PageInclude {
 
 		PortletConfig portletConfig =
 			(PortletConfig)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_CONFIG);
+				JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		return PortletURLBuilder.create(
 			PortletURLFactoryUtil.create(

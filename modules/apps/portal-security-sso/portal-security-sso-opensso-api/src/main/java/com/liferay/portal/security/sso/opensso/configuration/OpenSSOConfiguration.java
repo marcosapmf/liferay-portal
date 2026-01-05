@@ -23,7 +23,9 @@ import org.osgi.annotation.versioning.ProviderType;
  *
  * @author Michael C. Han
  */
-@ExtendedObjectClassDefinition(category = "sso")
+@ExtendedObjectClassDefinition(
+	category = "sso", deprecated = true, featureFlagKey = "LPD-36719"
+)
 @Meta.OCD(
 	id = "com.liferay.portal.security.sso.opensso.configuration.OpenSSOConfiguration",
 	localization = "content/Language", name = "opensso-configuration-name"
@@ -75,16 +77,18 @@ public interface OpenSSOConfiguration {
 	)
 	public String serviceURL();
 
-	@Meta.AD(deflt = "uid", name = "screen-name-attr", required = false)
+	@Meta.AD(deflt = "uid", name = "screen-name-attribute", required = false)
 	public String screenNameAttr();
 
-	@Meta.AD(deflt = "mail", name = "email-address-attr", required = false)
+	@Meta.AD(deflt = "mail", name = "email-address-attribute", required = false)
 	public String emailAddressAttr();
 
-	@Meta.AD(deflt = "givenName", name = "first-name-attr", required = false)
+	@Meta.AD(
+		deflt = "givenName", name = "first-name-attribute", required = false
+	)
 	public String firstNameAttr();
 
-	@Meta.AD(deflt = "sn", name = "last-name-attr", required = false)
+	@Meta.AD(deflt = "sn", name = "last-name-attribute", required = false)
 	public String lastNameAttr();
 
 }

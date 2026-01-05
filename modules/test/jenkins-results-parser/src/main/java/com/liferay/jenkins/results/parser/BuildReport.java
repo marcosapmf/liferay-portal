@@ -8,6 +8,8 @@ package com.liferay.jenkins.results.parser;
 import java.net.URL;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -18,20 +20,28 @@ public interface BuildReport {
 
 	public int getBuildNumber();
 
+	public Map<String, String> getBuildParameters();
+
 	public JSONObject getBuildReportJSONObject();
 
 	public URL getBuildURL();
 
 	public long getDuration();
 
-	public String getJobName();
+	public String getFailureMessage();
 
-	public JobReport getJobReport();
+	public JenkinsMaster getJenkinsMaster();
+
+	public String getJobName();
 
 	public String getResult();
 
 	public Date getStartDate();
 
 	public StopWatchRecordsGroup getStopWatchRecordsGroup();
+
+	public List<URL> getTestrayAttachmentURLs();
+
+	public boolean isFailing();
 
 }

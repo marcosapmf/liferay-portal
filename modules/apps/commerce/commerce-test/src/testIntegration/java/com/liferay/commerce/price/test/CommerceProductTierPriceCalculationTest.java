@@ -25,10 +25,12 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
+import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringPool;
@@ -39,6 +41,7 @@ import com.liferay.portal.kernel.scheduler.SchedulerJobConfiguration;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -97,14 +100,18 @@ public class CommerceProductTierPriceCalculationTest {
 					CommercePriceListConstants.TYPE_PRICE_LIST);
 
 		_group = GroupTestUtil.addGroup();
+
+		_commerceChannel = CommerceTestUtil.addCommerceChannel(
+			_group.getGroupId(), _commerceCurrency.getCode());
+
 		_user = UserTestUtil.addUser(_company);
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_company.getCompanyId(), _group.getGroupId(), _user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 	}
@@ -141,7 +148,8 @@ public class CommerceProductTierPriceCalculationTest {
 			false, BigDecimal.ZERO, StringPool.BLANK, _serviceContext);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_accountEntry, _commerceCurrency, null, _user, _group, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
@@ -160,7 +168,8 @@ public class CommerceProductTierPriceCalculationTest {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
 				).build(),
-				2, false, 0.0, BigDecimal.ONE, cpInstance.getSku());
+				2, BigDecimal.ZERO, false, 0.0, BigDecimal.ONE,
+				cpInstance.getSku());
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryLocalService.addCommercePriceEntry(
@@ -238,6 +247,195 @@ public class CommerceProductTierPriceCalculationTest {
 	}
 
 	@Test
+	public void testCanAssertExpirationDateForBulkPricing() throws Exception {
+		frutillaRule.scenario(
+			"The price of a product is calculated correctly"
+		).given(
+			"A product"
+		).and(
+			"A bulk price applied"
+		).when(
+			"The bulk price expired"
+		).then(
+			"The correct price is returned"
+		);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, true,
+			true);
+
+		List<CPInstance> cpInstances = cpDefinition.getCPInstances();
+
+		CPInstance cpInstance = cpInstances.get(0);
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.addCommercePriceEntry(
+				RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				_commercePriceList.getCommercePriceListId(), new BigDecimal(20),
+				false, BigDecimal.ZERO, StringPool.BLANK, _serviceContext);
+
+		CommerceContext commerceContext = new TestCommerceContext(
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
+
+		CommerceProductPrice commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, true,
+				StringPool.BLANK, commerceContext);
+
+		CommerceMoney commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(20), commerceMoney.getPrice()));
+
+		CommerceTierPriceEntry commerceTierPriceEntry =
+			_commerceTierPriceEntryLocalService.addCommerceTierPriceEntry(
+				commercePriceEntry.getCommercePriceEntryId(), BigDecimal.TEN,
+				BigDecimal.ZERO, true, new BigDecimal(10), _serviceContext);
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(10), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(100), commerceMoney.getPrice()));
+
+		commerceTierPriceEntry.setExpirationDate(RandomTestUtil.nextDate());
+
+		_commerceTierPriceEntryLocalService.updateCommerceTierPriceEntry(
+			commerceTierPriceEntry);
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(10), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(100), commerceMoney.getPrice()));
+
+		UnsafeRunnable<Exception> unsafeRunnable =
+			_schedulerJobConfiguration.getJobExecutorUnsafeRunnable();
+
+		unsafeRunnable.run();
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(10), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(200), commerceMoney.getPrice()));
+	}
+
+	@Test
+	public void testCanAssertExpirationDateForTieredPricing() throws Exception {
+		frutillaRule.scenario(
+			"The price of a product is calculated correctly"
+		).given(
+			"A product"
+		).and(
+			"A tier price applied"
+		).when(
+			"The tier price expired"
+		).then(
+			"The correct price is returned"
+		);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, true,
+			true);
+
+		List<CPInstance> cpInstances = cpDefinition.getCPInstances();
+
+		CPInstance cpInstance = cpInstances.get(0);
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.addCommercePriceEntry(
+				RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				_commercePriceList.getCommercePriceListId(), new BigDecimal(20),
+				false, BigDecimal.ZERO, StringPool.BLANK, _serviceContext);
+
+		CommerceContext commerceContext = new TestCommerceContext(
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
+
+		CommerceProductPrice commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), BigDecimal.ONE, true,
+				StringPool.BLANK, commerceContext);
+
+		CommerceMoney commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(20), commerceMoney.getPrice()));
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(20), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(400), commerceMoney.getPrice()));
+
+		CommerceTierPriceEntry commerceTierPriceEntry =
+			_commerceTierPriceEntryLocalService.addCommerceTierPriceEntry(
+				commercePriceEntry.getCommercePriceEntryId(),
+				new BigDecimal(15), BigDecimal.ZERO, false, new BigDecimal(5),
+				_serviceContext);
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(5), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(95), commerceMoney.getPrice()));
+
+		commerceTierPriceEntry.setExpirationDate(RandomTestUtil.nextDate());
+
+		_commerceTierPriceEntryLocalService.updateCommerceTierPriceEntry(
+			commerceTierPriceEntry);
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(10), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(170), commerceMoney.getPrice()));
+
+		UnsafeRunnable<Exception> unsafeRunnable =
+			_schedulerJobConfiguration.getJobExecutorUnsafeRunnable();
+
+		unsafeRunnable.run();
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				cpInstance.getCPInstanceId(), new BigDecimal(20), true,
+				StringPool.BLANK, commerceContext);
+
+		commerceMoney = commerceProductPrice.getFinalPrice();
+
+		Assert.assertTrue(
+			BigDecimalUtil.eq(new BigDecimal(400), commerceMoney.getPrice()));
+	}
+
+	@Test
 	public void testTierPriceExpirationDateWithCPInstanceUnitOfMeasure()
 		throws Exception {
 
@@ -269,7 +467,8 @@ public class CommerceProductTierPriceCalculationTest {
 			false, BigDecimal.ZERO, StringPool.BLANK, _serviceContext);
 
 		CommerceContext commerceContext = new TestCommerceContext(
-			_accountEntry, _commerceCurrency, null, _user, _group, null);
+			_accountEntry, _commerceCurrency, _commerceChannel, _user, _group,
+			null);
 
 		CommerceProductPrice commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
@@ -288,7 +487,8 @@ public class CommerceProductTierPriceCalculationTest {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
 				).build(),
-				2, false, 0.0, BigDecimal.ONE, cpInstance.getSku());
+				2, BigDecimal.ZERO, false, 0.0, BigDecimal.ONE,
+				cpInstance.getSku());
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryLocalService.addCommercePriceEntry(
@@ -374,6 +574,10 @@ public class CommerceProductTierPriceCalculationTest {
 	private AccountEntryLocalService _accountEntryLocalService;
 
 	private CommerceCatalog _commerceCatalog;
+
+	@DeleteAfterTestRun
+	private CommerceChannel _commerceChannel;
+
 	private CommerceCurrency _commerceCurrency;
 
 	@Inject

@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.inventory.web.internal.portlet.action;
 
+import com.liferay.commerce.inventory.exception.CommerceInventoryReplenishmentQuantityException;
 import com.liferay.commerce.inventory.exception.MVCCException;
 import com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryReplenishmentItemService;
@@ -20,10 +21,10 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.util.Calendar;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.Calendar;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY,
+		"jakarta.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY,
 		"mvc.command.name=/commerce_inventory/edit_commerce_inventory_replenishment_item"
 	},
 	service = MVCActionCommand.class
@@ -61,7 +62,9 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof MVCCException ||
+			if (exception instanceof
+					CommerceInventoryReplenishmentQuantityException ||
+				exception instanceof MVCCException ||
 				exception instanceof PrincipalException.MustHavePermission) {
 
 				SessionErrors.add(actionRequest, exception.getClass());
@@ -96,7 +99,9 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 			addCommerceInventoryReplenishmentItem(
 				null, commerceInventoryWarehouseId, calendar.getTime(),
 				_commerceOrderItemQuantityFormatter.parse(
-					actionRequest, "quantity"),
+					actionRequest,
+					CommerceInventoryReplenishmentItem.class.getName(),
+					"quantity"),
 				ParamUtil.getString(actionRequest, "sku"),
 				ParamUtil.getString(actionRequest, "unitOfMeasureKey"));
 	}
@@ -140,7 +145,9 @@ public class EditCommerceInventoryReplenishmentItemMVCActionCommand
 				commerceInventoryReplenishmentItem.getExternalReferenceCode(),
 				commerceInventoryReplenishmentItemId, calendar.getTime(),
 				_commerceOrderItemQuantityFormatter.parse(
-					actionRequest, "quantity"),
+					actionRequest,
+					CommerceInventoryReplenishmentItem.class.getName(),
+					"quantity"),
 				mvccVersion);
 	}
 

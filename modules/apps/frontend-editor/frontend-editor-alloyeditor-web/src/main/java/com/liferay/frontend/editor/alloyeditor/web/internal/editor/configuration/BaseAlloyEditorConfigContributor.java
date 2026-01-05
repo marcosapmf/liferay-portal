@@ -10,7 +10,7 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
@@ -52,7 +52,7 @@ public abstract class BaseAlloyEditorConfigContributor
 		).put(
 			"extraPlugins",
 			"addimages,ae_dragresize,ae_imagealignment,ae_placeholder," +
-				"ae_selectionregion,ae_tableresize,ae_tabletools,ae_uicore"
+				"ae_selectionregion,ae_tableresize,ae_uicore,tableselection"
 		).put(
 			"imageScaleResize", "scale"
 		).put(
@@ -60,8 +60,8 @@ public abstract class BaseAlloyEditorConfigContributor
 			StringUtil.replace(getLanguageId(themeDisplay), "iw_", "he_")
 		).put(
 			"removePlugins",
-			"autolink,contextmenu,elementspath,floatingspace,image2,link," +
-				"liststyle,resize,table,tabletools,toolbar"
+			"autolink,elementspath,floatingspace,image2,link," +
+				"liststyle,resize,toolbar"
 		).put(
 			"skin", "moono-lisa"
 		);

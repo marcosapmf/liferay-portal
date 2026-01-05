@@ -8,7 +8,7 @@ import React from 'react';
 
 import DefaultPageHeader from './components/DefaultPageHeader';
 
-const FormView: React.FC<IProps> = ({
+const FormView: React.FC<{children?: React.ReactNode | undefined} & IProps> = ({
 	description,
 	portletNamespace,
 	title,
@@ -25,7 +25,11 @@ const FormView: React.FC<IProps> = ({
 				/>
 			)}
 
-			<DataEngineFormView {...{...otherProps, portletNamespace, title}} />
+			<DataEngineFormView
+				{...otherProps}
+				portletNamespace={portletNamespace}
+				title={title}
+			/>
 		</>
 	);
 };

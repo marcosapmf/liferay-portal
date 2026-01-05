@@ -17,12 +17,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.plugin.PluginUtil;
 
-import java.util.List;
-import java.util.TreeMap;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import java.util.List;
+import java.util.NavigableMap;
 
 /**
  * @author Juergen Kappler
@@ -150,7 +150,7 @@ public class NestedPortletsDisplayContext {
 			WebKeys.VIRTUAL_HOST_LAYOUT_SET);
 
 		if (layoutSet != null) {
-			TreeMap<String, String> virtualHostnames =
+			NavigableMap<String, String> virtualHostnames =
 				layoutSet.getVirtualHostnames();
 
 			if (!virtualHostnames.isEmpty()) {

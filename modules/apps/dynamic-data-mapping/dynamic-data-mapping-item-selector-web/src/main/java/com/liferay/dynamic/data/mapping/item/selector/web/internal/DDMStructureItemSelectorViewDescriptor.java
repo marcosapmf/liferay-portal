@@ -6,8 +6,8 @@
 package com.liferay.dynamic.data.mapping.item.selector.web.internal;
 
 import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
+import com.liferay.dynamic.data.mapping.item.selector.DDMStructureItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.item.selector.DDMStructureItemSelectorReturnType;
-import com.liferay.dynamic.data.mapping.item.selector.criterion.DDMStructureItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -114,7 +114,7 @@ public class DDMStructureItemSelectorViewDescriptor
 		SearchContainer<DDMStructure> ddmStructureSearchContainer =
 			new SearchContainer<>(
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST),
+					JavaConstants.JAKARTA_PORTLET_REQUEST),
 				_portletURL, null, emptyResultsMessage);
 
 		ddmStructureSearchContainer.setOrderByCol(getOrderByCol());
@@ -129,7 +129,7 @@ public class DDMStructureItemSelectorViewDescriptor
 			groupIds =
 				SiteConnectedGroupGroupProviderUtil.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId(), true);
+						_themeDisplay.getScopeGroupId(), false, true);
 		}
 		else {
 			groupIds = new long[] {_themeDisplay.getScopeGroupId()};

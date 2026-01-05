@@ -53,7 +53,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -84,7 +84,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -102,7 +102,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -129,7 +129,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -144,8 +144,8 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
-			Map<java.util.Locale, String> nameMap,
+			String externalReferenceCode, long userId, long cpDefinitionId,
+			long groupId, Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
 			Map<java.util.Locale, String> urlTitleMap,
@@ -175,7 +175,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, cpDefinitionId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -193,7 +193,7 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> shortDescriptionMap,
 			Map<java.util.Locale, String> descriptionMap,
@@ -220,7 +220,7 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -444,6 +444,13 @@ public class CPDefinitionLocalServiceUtil {
 		return getService().fetchCPDefinitionByCProductId(cProductId);
 	}
 
+	public static CPDefinition fetchCPDefinitionByFriendlyURL(
+		long groupId, String friendlyURL) {
+
+		return getService().fetchCPDefinitionByFriendlyURL(
+			groupId, friendlyURL);
+	}
+
 	/**
 	 * Returns the cp definition matching the UUID and group.
 	 *
@@ -464,6 +471,15 @@ public class CPDefinitionLocalServiceUtil {
 			CPDefinitionId, languageId);
 	}
 
+	public static List<CPDefinition> findByExpirationDate(
+		java.util.Date expirationDate,
+		com.liferay.portal.kernel.dao.orm.QueryDefinition<CPDefinition>
+			queryDefinition) {
+
+		return getService().findByExpirationDate(
+			expirationDate, queryDefinition);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -481,6 +497,12 @@ public class CPDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getCPDefinition(CPDefinitionId);
+	}
+
+	public static CPDefinition getCPDefinitionByCProductId(long cProductId)
+		throws PortalException {
+
+		return getService().getCPDefinitionByCProductId(cProductId);
 	}
 
 	/**
@@ -585,15 +607,6 @@ public class CPDefinitionLocalServiceUtil {
 			groupId, status, start, end, orderByComparator);
 	}
 
-	public static List<CPDefinition> getCPDefinitions(
-		long groupId, String productTypeName, String languageId, int status,
-		int start, int end, OrderByComparator<CPDefinition> orderByComparator) {
-
-		return getService().getCPDefinitions(
-			groupId, productTypeName, languageId, status, start, end,
-			orderByComparator);
-	}
-
 	/**
 	 * Returns all the cp definitions matching the UUID and company.
 	 *
@@ -642,13 +655,6 @@ public class CPDefinitionLocalServiceUtil {
 
 	public static int getCPDefinitionsCount(long groupId, int status) {
 		return getService().getCPDefinitionsCount(groupId, status);
-	}
-
-	public static int getCPDefinitionsCount(
-		long groupId, String productTypeName, String languageId, int status) {
-
-		return getService().getCPDefinitionsCount(
-			groupId, productTypeName, languageId, status);
 	}
 
 	public static Map<java.util.Locale, String>
@@ -773,15 +779,15 @@ public class CPDefinitionLocalServiceUtil {
 
 	public static boolean isVersionable(
 		long cpDefinitionId,
-		javax.servlet.http.HttpServletRequest httpServletRequest) {
+		jakarta.servlet.http.HttpServletRequest httpServletRequest) {
 
 		return getService().isVersionable(cpDefinitionId, httpServletRequest);
 	}
 
-	public static void maintainVersionThreshold(long cProductId)
+	public static void maintainVersionThreshold(long companyId, long cProductId)
 		throws PortalException {
 
-		getService().maintainVersionThreshold(cProductId);
+		getService().maintainVersionThreshold(companyId, cProductId);
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult

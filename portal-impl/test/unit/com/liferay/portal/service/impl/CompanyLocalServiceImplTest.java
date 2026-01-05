@@ -8,12 +8,14 @@ package com.liferay.portal.service.impl;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.model.impl.CompanyImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -47,11 +49,24 @@ public class CompanyLocalServiceImplTest {
 		).thenReturn(
 			bundleContext
 		);
+
+		VirtualHost virtualHost = Mockito.mock(VirtualHost.class);
+
+		_virtualHostLocalServiceUtilMockedStatic = Mockito.mockStatic(
+			VirtualHostLocalServiceUtil.class);
+
+		_virtualHostLocalServiceUtilMockedStatic.when(
+			() -> VirtualHostLocalServiceUtil.fetchCompanyDefaultVirtualHost(
+				Mockito.anyLong())
+		).thenReturn(
+			virtualHost
+		);
 	}
 
 	@After
 	public void tearDown() {
 		_systemBundleUtilMockedStatic.close();
+		_virtualHostLocalServiceUtilMockedStatic.close();
 	}
 
 	@Test
@@ -115,5 +130,7 @@ public class CompanyLocalServiceImplTest {
 	}
 
 	private MockedStatic<SystemBundleUtil> _systemBundleUtilMockedStatic;
+	private MockedStatic<VirtualHostLocalServiceUtil>
+		_virtualHostLocalServiceUtilMockedStatic;
 
 }

@@ -16,19 +16,16 @@ import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.Collections;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -69,7 +66,6 @@ public class TrackbackMVCActionCommandTest {
 		_setUpBlogsEntry();
 		_setUpPortalUtil();
 		_setUpPortletPreferencesFactoryUtil();
-		_setUpPropsUtil();
 	}
 
 	@Test
@@ -278,10 +274,6 @@ public class TrackbackMVCActionCommandTest {
 
 		portletPreferencesFactoryUtil.setPortletPreferencesFactory(
 			portletPreferencesFactory);
-	}
-
-	private void _setUpPropsUtil() {
-		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	private void _whenGetEntryThenReturn(BlogsEntry blogsEntry)

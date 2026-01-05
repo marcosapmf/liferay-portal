@@ -55,8 +55,8 @@ DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 </p>
 
 <c:choose>
-	<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11228") %>'>
-		<p class="article-version-status <%= (article != null) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />articleVersionStatusWrapper">
+	<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11228") && !JournalUtil.isEditDefaultValues(article) %>'>
+		<p class="article-version-status <%= ((article == null) || article.isNew()) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />articleVersionStatusWrapper">
 			<b><liferay-ui:message key="version" /></b>: <span id="<portlet:namespace />displayedVersion"><%= (article != null) ? article.getVersion() : "" %></span>
 
 			<c:if test="<%= article != null %>">
@@ -93,42 +93,51 @@ DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 
 <c:choose>
 	<c:when test="<%= !journalWebConfiguration.journalArticleForceAutogenerateId() && (journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASS_NAME_ID_DEFAULT) %>">
-		<div class="article-id">
-			<label for="<portlet:namespace />newArticleId"><liferay-ui:message key="id" /></label>
 
-			<aui:input label="" name="newArticleId" type="text" value="<%= (article != null) ? article.getArticleId() : StringPool.BLANK %>" wrapperCssClass="mb-1" />
+		<%
+		boolean newArticle = (article != null) && !article.isNew();
+		%>
+
+		<div class="article-id">
+			<label for="<portlet:namespace />newArticleId">
+				<liferay-ui:message key="id" />
+			</label>
+
+			<aui:input disabled="<%= newArticle %>" label="" name="newArticleId" type="text" value="<%= (article != null) ? article.getArticleId() : StringPool.BLANK %>" wrapperCssClass="mb-1" />
 
 			<%
 			String taglibOnChange = "Liferay.Util.toggleDisabled('#" + liferayPortletResponse.getNamespace() + "newArticleId', event.target.checked);";
 			%>
 
-			<aui:input checked="<%= false %>" label="autogenerate-id" name="autoArticleId" onChange="<%= taglibOnChange %>" type="checkbox" value="<%= false %>" wrapperCssClass="mb-3" />
+			<aui:input checked="<%= false %>" disabled="<%= newArticle %>" label="autogenerate-id" name="autoArticleId" onChange="<%= taglibOnChange %>" type="checkbox" value="<%= false %>" wrapperCssClass="mb-3" />
 		</div>
 
-		<aui:script>
-			var autoArticleInput = document.getElementById(
-				'<portlet:namespace />autoArticleId'
-			);
-			var newArticleInput = document.getElementById(
-				'<portlet:namespace />newArticleId'
-			);
+		<c:if test="<%= !newArticle %>">
+			<aui:script>
+				var autoArticleInput = document.getElementById(
+					'<portlet:namespace />autoArticleId'
+				);
+				var newArticleInput = document.getElementById(
+					'<portlet:namespace />newArticleId'
+				);
 
-			if (autoArticleInput && newArticleInput) {
-				newArticleInput.disabled = autoArticleInput.checked;
+				if (autoArticleInput && newArticleInput) {
+					newArticleInput.disabled = autoArticleInput.checked;
 
-				autoArticleInput.addEventListener('click', () => {
-					Liferay.Util.toggleDisabled(newArticleInput, !newArticleInput.disabled);
-				});
-			}
-		</aui:script>
+					autoArticleInput.addEventListener('click', () => {
+						Liferay.Util.toggleDisabled(newArticleInput, !newArticleInput.disabled);
+					});
+				}
+			</aui:script>
+		</c:if>
 	</c:when>
 	<c:otherwise>
 		<aui:input name="newArticleId" type="hidden" />
 		<aui:input name="autoArticleId" type="hidden" value="<%= true %>" />
 
 		<c:choose>
-			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11228") %>'>
-				<p class="article-id <%= (article != null) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />articleIdWrapper">
+			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11228") && !JournalUtil.isEditDefaultValues(article) %>'>
+				<p class="article-id <%= ((article == null) || article.isNew()) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />articleIdWrapper">
 					<b><liferay-ui:message key="id" /></b>: <span id="<portlet:namespace />displayedArticleId"><%= (article != null) ? article.getArticleId() : "" %></span>
 				</p>
 			</c:when>
@@ -142,22 +151,3 @@ DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 		</c:choose>
 	</c:otherwise>
 </c:choose>
-
-<c:if test='<%= !FeatureFlagManagerUtil.isEnabled("LPS-114700") %>'>
-	<div>
-		<label for="<portlet:namespace />descriptionMapAsXML" id="<portlet:namespace />Aria"><liferay-ui:message key="description" /></label>
-
-		<liferay-ui:input-localized
-			availableLocales="<%= journalEditArticleDisplayContext.getAvailableLocales() %>"
-			cssClass="form-control"
-			defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>"
-			editorName="ckeditor"
-			formName="fm"
-			ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>"
-			name="descriptionMapAsXML"
-			selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>"
-			type="editor"
-			xml="<%= (article != null) ? article.getDescriptionMapAsXML() : StringPool.BLANK %>"
-		/>
-	</div>
-</c:if>

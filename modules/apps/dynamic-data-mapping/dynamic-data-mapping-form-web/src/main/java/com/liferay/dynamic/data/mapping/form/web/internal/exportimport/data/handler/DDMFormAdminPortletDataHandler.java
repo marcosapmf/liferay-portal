@@ -25,9 +25,9 @@ import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.List;
+import jakarta.portlet.PortletPreferences;
 
-import javax.portlet.PortletPreferences;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Leonardo Barros
  */
 @Component(
-	property = "javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
+	property = "jakarta.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
 	service = PortletDataHandler.class
 )
 public class DDMFormAdminPortletDataHandler extends BasePortletDataHandler {
@@ -58,23 +58,20 @@ public class DDMFormAdminPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(DDMDataProviderInstance.class),
 			new StagedModelType(DDMFormInstanceRecord.class),
 			new StagedModelType(DDMFormInstance.class));
-
-		PortletDataHandlerControl[] formsPortletDataHandlerControlChildren = {
-			new PortletDataHandlerBoolean(
-				NAMESPACE, "form-entries", true, false, null,
-				DDMFormInstanceRecord.class.getName())
-		};
-
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "ddm-data-provider", true, false, null,
 				DDMDataProviderInstance.class.getName()),
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "forms", true, false,
-				formsPortletDataHandlerControlChildren,
+				new PortletDataHandlerControl[] {
+					new PortletDataHandlerBoolean(
+						NAMESPACE, "form-entries", true, false, null,
+						DDMFormInstanceRecord.class.getName())
+				},
 				DDMFormInstance.class.getName()));
-
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override

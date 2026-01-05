@@ -6,8 +6,6 @@
 package com.liferay.object.admin.rest.resource.v1_0;
 
 import com.liferay.object.admin.rest.dto.v1_0.ObjectFolder;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -21,18 +19,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -48,13 +46,23 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ObjectFolderResource {
 
+	public void deleteObjectFolder(Long objectFolderId) throws Exception;
+
+	public Response deleteObjectFolderBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public ObjectFolder getObjectFolder(Long objectFolderId) throws Exception;
+
+	public ObjectFolder getObjectFolderByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Page<ObjectFolder> getObjectFoldersPage(
 			String search, Pagination pagination)
 		throws Exception;
 
-	public Response postObjectFoldersPageExportBatch(
-			String search, String callbackURL, String contentType,
-			String fieldNames)
+	public ObjectFolder patchObjectFolder(
+			Long objectFolderId, ObjectFolder objectFolder)
 		throws Exception;
 
 	public ObjectFolder postObjectFolder(ObjectFolder objectFolder)
@@ -63,23 +71,9 @@ public interface ObjectFolderResource {
 	public Response postObjectFolderBatch(String callbackURL, Object object)
 		throws Exception;
 
-	public ObjectFolder getObjectFolderByExternalReferenceCode(
-			String externalReferenceCode)
-		throws Exception;
-
-	public ObjectFolder putObjectFolderByExternalReferenceCode(
-			String externalReferenceCode, ObjectFolder objectFolder)
-		throws Exception;
-
-	public void deleteObjectFolder(Long objectFolderId) throws Exception;
-
-	public Response deleteObjectFolderBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public ObjectFolder getObjectFolder(Long objectFolderId) throws Exception;
-
-	public ObjectFolder patchObjectFolder(
-			Long objectFolderId, ObjectFolder objectFolder)
+	public Response postObjectFoldersPageExportBatch(
+			String search, String callbackURL, String contentType,
+			String fieldNames)
 		throws Exception;
 
 	public ObjectFolder putObjectFolder(
@@ -87,6 +81,10 @@ public interface ObjectFolderResource {
 		throws Exception;
 
 	public Response putObjectFolderBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public ObjectFolder putObjectFolderByExternalReferenceCode(
+			String externalReferenceCode, ObjectFolder objectFolder)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -111,7 +109,8 @@ public interface ObjectFolderResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -136,19 +135,23 @@ public interface ObjectFolderResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

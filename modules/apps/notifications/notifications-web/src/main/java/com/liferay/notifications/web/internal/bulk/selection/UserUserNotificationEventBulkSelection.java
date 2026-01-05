@@ -18,10 +18,10 @@ import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
 
+import jakarta.portlet.ActionRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
 
 /**
  * @author Roberto Díaz
@@ -55,8 +55,8 @@ public class UserUserNotificationEventBulkSelection
 						_userNotificationEventLocalService.
 							getUserNotificationEvents(
 								_userId, start, end,
-								new UserNotificationEventUserNotificationEventIdOrderByComparator(
-									true));
+								UserNotificationEventUserNotificationEventIdOrderByComparator.
+									getInstance(true));
 
 					for (UserNotificationEvent userNotificationEvent :
 							userNotificationEvents) {

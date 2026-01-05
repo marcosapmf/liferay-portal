@@ -69,7 +69,16 @@ public class SiteNavigationMenuTestUtil {
 	}
 
 	public static SiteNavigationMenu addSiteNavigationMenu(
-			Group group, long userId)
+			Group group, String name)
+		throws PortalException {
+
+		return SiteNavigationMenuLocalServiceUtil.addSiteNavigationMenu(
+			null, TestPropsValues.getUserId(), group.getGroupId(), name,
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+	}
+
+	public static SiteNavigationMenu addSiteNavigationMenu(
+			long userId, Group group)
 		throws PortalException {
 
 		ServiceContext serviceContext =
@@ -82,11 +91,12 @@ public class SiteNavigationMenuTestUtil {
 	}
 
 	public static SiteNavigationMenu addSiteNavigationMenu(
-			Group group, String name)
+			String externalReferenceCode, Group group, String name)
 		throws PortalException {
 
 		return SiteNavigationMenuLocalServiceUtil.addSiteNavigationMenu(
-			null, TestPropsValues.getUserId(), group.getGroupId(), name,
+			externalReferenceCode, TestPropsValues.getUserId(),
+			group.getGroupId(), name,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
 

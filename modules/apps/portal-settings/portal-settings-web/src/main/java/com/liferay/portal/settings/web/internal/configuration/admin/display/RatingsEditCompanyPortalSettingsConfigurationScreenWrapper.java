@@ -12,10 +12,10 @@ import com.liferay.portal.settings.configuration.admin.display.PortalSettingsCon
 import com.liferay.ratings.kernel.definition.PortletRatingsDefinitionUtil;
 import com.liferay.ratings.kernel.definition.PortletRatingsDefinitionValues;
 
+import jakarta.servlet.ServletContext;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,11 +82,7 @@ public class RatingsEditCompanyPortalSettingsConfigurationScreenWrapper
 					PortletRatingsDefinitionUtil.
 						getPortletRatingsDefinitionValuesMap();
 
-			if (portletRatingsDefinitionValuesMap.isEmpty()) {
-				return false;
-			}
-
-			return true;
+			return !portletRatingsDefinitionValuesMap.isEmpty();
 		}
 
 	}

@@ -15,6 +15,7 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
@@ -23,7 +24,6 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -173,7 +173,8 @@ public class CommerceOrderImporter {
 			User user = _userLocalService.getUser(userId);
 
 			accountEntry = _accountEntryLocalService.addAccountEntry(
-				userId, AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
+				StringPool.BLANK, userId,
+				AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT,
 				user.getFullName(), null, null, user.getEmailAddress(), null,
 				StringPool.BLANK, AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
@@ -186,7 +187,7 @@ public class CommerceOrderImporter {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				userId, serviceContext.getScopeGroupId(),
-				accountEntry.getAccountEntryId(), 0, 0);
+				accountEntry.getAccountEntryId(), null, 0);
 
 		// We update the order create date to the one in the data set
 
@@ -202,9 +203,8 @@ public class CommerceOrderImporter {
 		// Create CommerceContext
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			serviceContext.getCompanyId(), commerceOrder.getGroupId(),
-			serviceContext.getUserId(), commerceOrder.getCommerceOrderId(),
-			accountEntry.getAccountEntryId());
+			accountEntry.getAccountEntryId(), commerceOrder.getGroupId(), null,
+			commerceOrder.getCommerceOrderId(), serviceContext.getCompanyId());
 
 		// Create CommerceOrderItem
 

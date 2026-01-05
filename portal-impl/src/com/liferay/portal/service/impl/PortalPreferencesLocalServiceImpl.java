@@ -27,14 +27,14 @@ import com.liferay.portlet.PortalPreferenceKey;
 import com.liferay.portlet.PortalPreferencesImpl;
 import com.liferay.portlet.PortalPreferencesWrapper;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * @author Alexander Chow
@@ -166,9 +166,18 @@ public class PortalPreferencesLocalServiceImpl
 			ownerId, ownerType);
 
 		if (portalPreferences == null) {
-			portalPreferences =
-				portalPreferencesLocalService.addPortalPreferences(
-					ownerId, ownerType, defaultPreferences);
+			try {
+				portalPreferences =
+					portalPreferencesLocalService.addPortalPreferences(
+						ownerId, ownerType, defaultPreferences);
+			}
+			catch (Throwable throwable) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable);
+				}
+
+				portalPreferences = fetchPortalPreferences(ownerId, ownerType);
+			}
 		}
 
 		PortalPreferencesImpl portalPreferencesImpl =
@@ -334,6 +343,13 @@ public class PortalPreferencesLocalServiceImpl
 					PortalPreferenceValue portalPreferenceValue =
 						_portalPreferenceValuePersistence.create(
 							++batchCounter);
+
+					if (portalPreferences.getOwnerType() ==
+							PortletKeys.PREFS_OWNER_TYPE_COMPANY) {
+
+						portalPreferenceValue.setCompanyId(
+							portalPreferences.getOwnerId());
+					}
 
 					portalPreferenceValue.setPortalPreferencesId(
 						portalPreferences.getPortalPreferencesId());

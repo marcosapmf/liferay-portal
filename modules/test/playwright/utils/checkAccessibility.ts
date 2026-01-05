@@ -4,6 +4,9 @@
  */
 
 import AxeBuilder from '@axe-core/playwright';
+
+// eslint-disable-next-line
+import {formatAccessibility} from '@liferay/layout-js-components-web/test/__lib__/index';
 import {Page, expect} from '@playwright/test';
 
 interface Params {
@@ -38,20 +41,26 @@ export async function checkAccessibility({
 }: Params) {
 	const tags = bestPractices ? [...TAGS, 'best-practice'] : TAGS;
 
+	const axeBuilder = new AxeBuilder({page});
+
 	if (selectors) {
 		for (const selector of selectors) {
-			page.locator(selector).waitFor();
+			await page.locator(selector).waitFor();
+
+			axeBuilder.include(selector);
 		}
 	}
 
-	const results = await new AxeBuilder({page})
-		.withTags(tags)
-		.include(selectors)
-		.exclude(selectorsToExclude)
-		.analyze();
+	if (selectorsToExclude) {
+		for (const selector of selectorsToExclude) {
+			axeBuilder.exclude(selector);
+		}
+	}
 
-	await (soft ? expect.soft : expect)(
-		results.violations,
-		'Accessibility issues'
-	).toEqual([]);
+	const {violations} = await axeBuilder.withTags(tags).analyze();
+
+	(soft ? expect.soft : expect)(
+		violations.length,
+		formatAccessibility(violations)
+	).toBe(0);
 }

@@ -49,12 +49,12 @@ public class CPSpecificationOptionWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("CPOptionCategoryId", getCPOptionCategoryId());
-		attributes.put("listTypeDefinitionId", getListTypeDefinitionId());
 		attributes.put("title", getTitle());
 		attributes.put("description", getDescription());
 		attributes.put("facetable", isFacetable());
 		attributes.put("key", getKey());
 		attributes.put("priority", getPriority());
+		attributes.put("visible", isVisible());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
@@ -130,13 +130,6 @@ public class CPSpecificationOptionWrapper
 			setCPOptionCategoryId(CPOptionCategoryId);
 		}
 
-		Long listTypeDefinitionId = (Long)attributes.get(
-			"listTypeDefinitionId");
-
-		if (listTypeDefinitionId != null) {
-			setListTypeDefinitionId(listTypeDefinitionId);
-		}
-
 		String title = (String)attributes.get("title");
 
 		if (title != null) {
@@ -165,6 +158,12 @@ public class CPSpecificationOptionWrapper
 
 		if (priority != null) {
 			setPriority(priority);
+		}
+
+		Boolean visible = (Boolean)attributes.get("visible");
+
+		if (visible != null) {
+			setVisible(visible);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -362,14 +361,19 @@ public class CPSpecificationOptionWrapper
 		return model.getLastPublishDate();
 	}
 
-	/**
-	 * Returns the list type definition ID of this cp specification option.
-	 *
-	 * @return the list type definition ID of this cp specification option
-	 */
 	@Override
-	public long getListTypeDefinitionId() {
-		return model.getListTypeDefinitionId();
+	public java.util.List<com.liferay.list.type.model.ListTypeDefinition>
+			getListTypeDefinitions()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getListTypeDefinitions();
+	}
+
+	@Override
+	public long getListTypeDefinitionsCount()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getListTypeDefinitionsCount();
 	}
 
 	/**
@@ -529,6 +533,16 @@ public class CPSpecificationOptionWrapper
 	}
 
 	/**
+	 * Returns the visible of this cp specification option.
+	 *
+	 * @return the visible of this cp specification option
+	 */
+	@Override
+	public boolean getVisible() {
+		return model.getVisible();
+	}
+
+	/**
 	 * Returns <code>true</code> if this cp specification option is facetable.
 	 *
 	 * @return <code>true</code> if this cp specification option is facetable; <code>false</code> otherwise
@@ -536,6 +550,16 @@ public class CPSpecificationOptionWrapper
 	@Override
 	public boolean isFacetable() {
 		return model.isFacetable();
+	}
+
+	/**
+	 * Returns <code>true</code> if this cp specification option is visible.
+	 *
+	 * @return <code>true</code> if this cp specification option is visible; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isVisible() {
+		return model.isVisible();
 	}
 
 	@Override
@@ -716,16 +740,6 @@ public class CPSpecificationOptionWrapper
 	}
 
 	/**
-	 * Sets the list type definition ID of this cp specification option.
-	 *
-	 * @param listTypeDefinitionId the list type definition ID of this cp specification option
-	 */
-	@Override
-	public void setListTypeDefinitionId(long listTypeDefinitionId) {
-		model.setListTypeDefinitionId(listTypeDefinitionId);
-	}
-
-	/**
 	 * Sets the modified date of this cp specification option.
 	 *
 	 * @param modifiedDate the modified date of this cp specification option
@@ -867,6 +881,16 @@ public class CPSpecificationOptionWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	/**
+	 * Sets whether this cp specification option is visible.
+	 *
+	 * @param visible the visible of this cp specification option
+	 */
+	@Override
+	public void setVisible(boolean visible) {
+		model.setVisible(visible);
 	}
 
 	@Override

@@ -17,6 +17,10 @@ import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../app/config/
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../../app/config/constants/layoutDataItemTypes';
 import {config} from '../../../../../../app/config/index';
 import {
+	useObjectFields,
+	useObjectLabel,
+} from '../../../../../../app/contexts/ObjectDataContext';
+import {
 	useDispatch,
 	useSelector,
 	useSelectorCallback,
@@ -27,11 +31,11 @@ import selectFragmentEntryLink from '../../../../../../app/selectors/selectFragm
 import selectLanguageId from '../../../../../../app/selectors/selectLanguageId';
 import FormService from '../../../../../../app/services/FormService';
 import InfoItemService from '../../../../../../app/services/InfoItemService';
-import updateEditableValues from '../../../../../../app/thunks/updateEditableValues';
+import updateFragmentConfiguration from '../../../../../../app/thunks/updateFragmentConfiguration';
 import {CACHE_KEYS} from '../../../../../../app/utils/cache';
 import getMappedRelationship from '../../../../../../app/utils/editable_value/getMappedRelationship';
+import {hasLocalizableFields} from '../../../../../../app/utils/hasLocalizableFields';
 import {isRequiredFormField} from '../../../../../../app/utils/isRequiredFormField';
-import {setIn} from '../../../../../../app/utils/setIn';
 import useCache from '../../../../../../app/utils/useCache';
 import MappingFieldSelector from '../../../../../../common/components/MappingFieldSelector';
 import {FieldSet} from './FieldSet';
@@ -56,8 +60,49 @@ const NOT_SELECTED_OPTION = {
 	value: '',
 };
 
-function getInputCommonConfiguration(configurationValues, formFields) {
+function getInputCommonFields(
+	configurationValues,
+	formFields,
+	allowedInputTypes
+) {
 	const fields = [];
+
+	const baseFields = {
+		helpText: {
+			cssClass: 'mb-4',
+			defaultValue: Liferay.Language.get('add-your-help-text-here'),
+			label: Liferay.Language.get('help-text'),
+			localizable: true,
+			name: HELP_TEXT_CONFIGURATION_KEY,
+			type: 'text',
+		},
+		label: {
+			cssClass: 'mb-4',
+			defaultValue: '',
+			label: Liferay.Language.get('label'),
+			localizable: true,
+			name: LABEL_CONFIGURATION_KEY,
+			type: 'text',
+		},
+		showHelpText: {
+			defaultValue: false,
+			label: Liferay.Language.get('show-help-text'),
+			name: SHOW_HELP_TEXT_CONFIGURATION_KEY,
+			type: 'checkbox',
+			typeOptions: {displayType: 'toggle'},
+		},
+		showLabel: {
+			defaultValue: true,
+			label: Liferay.Language.get('show-label'),
+			name: 'inputShowLabel',
+			type: 'checkbox',
+			typeOptions: {displayType: 'toggle'},
+		},
+	};
+
+	if (allowedInputTypes?.includes('friendly-url')) {
+		return [baseFields.label];
+	}
 
 	if (configurationValues[FIELD_ID_CONFIGURATION_KEY]) {
 		const isRequiredField = isRequiredFormField(
@@ -76,36 +121,10 @@ function getInputCommonConfiguration(configurationValues, formFields) {
 	}
 
 	fields.push(
-		{
-			defaultValue: true,
-			label: Liferay.Language.get('show-label'),
-			name: 'inputShowLabel',
-			type: 'checkbox',
-			typeOptions: {displayType: 'toggle'},
-		},
-		{
-			cssClass: 'mb-4',
-			defaultValue: '',
-			label: Liferay.Language.get('label'),
-			localizable: true,
-			name: LABEL_CONFIGURATION_KEY,
-			type: 'text',
-		},
-		{
-			defaultValue: false,
-			label: Liferay.Language.get('show-help-text'),
-			name: SHOW_HELP_TEXT_CONFIGURATION_KEY,
-			type: 'checkbox',
-			typeOptions: {displayType: 'toggle'},
-		},
-		{
-			cssClass: 'mb-4',
-			defaultValue: Liferay.Language.get('add-your-help-text-here'),
-			label: Liferay.Language.get('help-text'),
-			localizable: true,
-			name: HELP_TEXT_CONFIGURATION_KEY,
-			type: 'text',
-		}
+		baseFields.showLabel,
+		baseFields.label,
+		baseFields.showHelpText,
+		baseFields.helpText
 	);
 
 	return fields;
@@ -154,17 +173,17 @@ export function FormInputGeneralPanel({item}) {
 		[item.itemId]
 	);
 
-	const {classNameId, classTypeId, formId} = useSelectorCallback(
-		(state) =>
-			selectFormConfiguration(item, state.layoutData) ||
-			DEFAULT_FORM_CONFIGURATION,
-		[item.itemId]
-	);
+	const {classNameId, classTypeId, fieldSetName, formId} =
+		useSelectorCallback(
+			(state) =>
+				selectFormConfiguration(item, state.layoutData) ||
+				DEFAULT_FORM_CONFIGURATION,
+			[item.itemId, item.parentId]
+		);
 
-	const formFields = useCache({
-		fetcher: () => FormService.getFormFields({classNameId, classTypeId}),
-		key: [CACHE_KEYS.formFields, classNameId, classTypeId],
-	});
+	const formFields = useObjectFields(
+		fieldSetName ? {name: fieldSetName} : {classNameId, classTypeId}
+	);
 
 	const {fragmentEntryKey, groupId} = fragmentEntryLinkRef.current;
 
@@ -193,7 +212,10 @@ export function FormInputGeneralPanel({item}) {
 	const isSpecialInput = useMemo(
 		() =>
 			allowedInputTypes?.includes('captcha') ||
-			allowedInputTypes?.includes('categorization'),
+			allowedInputTypes?.includes('categorization') ||
+			allowedInputTypes?.includes('formButton') ||
+			allowedInputTypes?.includes('localizationSelect') ||
+			allowedInputTypes?.includes('stepper'),
 		[allowedInputTypes]
 	);
 
@@ -213,11 +235,7 @@ export function FormInputGeneralPanel({item}) {
 				);
 			}
 
-			if (
-				Liferay.FeatureFlags['LPD-20213'] &&
-				relationships &&
-				!selectedRelationship
-			) {
+			if (relationships && !selectedRelationship) {
 				fields = fields.filter(
 					(fieldSet) =>
 						!relationships
@@ -230,14 +248,14 @@ export function FormInputGeneralPanel({item}) {
 				const selectedFields = [];
 
 				const findSelectedFields = (itemId) => {
-					const inputItem = state.layoutData.items[itemId];
+					const layoutDataItem = state.layoutData.items[itemId];
 
 					if (
-						inputItem?.itemId !== item.itemId &&
-						inputItem?.type === LAYOUT_DATA_ITEM_TYPES.fragment
+						layoutDataItem?.itemId !== item.itemId &&
+						layoutDataItem?.type === LAYOUT_DATA_ITEM_TYPES.fragment
 					) {
 						const {editableValues, fragmentEntryType} =
-							selectFragmentEntryLink(state, inputItem);
+							selectFragmentEntryLink(state, layoutDataItem);
 
 						if (
 							fragmentEntryType === FRAGMENT_ENTRY_TYPES.input &&
@@ -253,7 +271,7 @@ export function FormInputGeneralPanel({item}) {
 						}
 					}
 
-					inputItem?.children.forEach(findSelectedFields);
+					layoutDataItem?.children.forEach(findSelectedFields);
 				};
 
 				findSelectedFields(formId);
@@ -262,21 +280,41 @@ export function FormInputGeneralPanel({item}) {
 			})();
 
 			fields = fields
-				.map((fieldset) => ({
-					...fieldset,
-					fields: fieldset.fields
-						.filter(
-							(field) =>
-								allowedInputTypes.includes(field.type) &&
-								!selectedFields.includes(field.key)
-						)
-						.map((field) =>
-							field.required
-								? {...field, label: `${field.label}*`}
-								: field
-						),
-				}))
-				.filter((fieldset) => fieldset.fields.length);
+				.map((field) => {
+					const isFieldSet = 'fields' in field;
+
+					if (isFieldSet && !field.relationship) {
+						return {
+							...field,
+							fields: field.fields
+								.filter(
+									(field) =>
+										allowedInputTypes.includes(
+											field.type
+										) && !selectedFields.includes(field.key)
+								)
+								.map((field) =>
+									field.required
+										? {...field, label: `${field.label}*`}
+										: field
+								),
+						};
+					}
+
+					if (
+						allowedInputTypes.includes(field.type) &&
+						!selectedFields.includes(field.key)
+					) {
+						return field.required
+							? {...field, label: `${field.label}*`}
+							: field;
+					}
+
+					return null;
+				})
+				.filter(
+					(field) => field && (!field.fields || field.fields.length)
+				);
 
 			return fields;
 		},
@@ -291,50 +329,87 @@ export function FormInputGeneralPanel({item}) {
 				)
 				.flatMap((fieldSet) => fieldSet.fields) ?? [];
 
+		if (allowedInputTypes?.includes('stepper')) {
+			return fieldSetsWithoutLabel.filter(
+				(field) => field.name !== 'numberOfSteps'
+			);
+		}
+
 		if (isSpecialInput) {
 			return fieldSetsWithoutLabel;
 		}
 
-		const inputCommonFields = getInputCommonConfiguration(
+		const inputCommonFields = getInputCommonFields(
 			configurationValues,
-			formFields
+			formFields,
+			allowedInputTypes
 		);
 
 		return [...inputCommonFields, ...fieldSetsWithoutLabel];
-	}, [configurationValues, fragmentEntryLinkRef, formFields, isSpecialInput]);
+	}, [
+		allowedInputTypes,
+		configurationValues,
+		fragmentEntryLinkRef,
+		formFields,
+		isSpecialInput,
+	]);
 
 	const handleValueSelect = (key, value) => {
-		const keyPath = [FREEMARKER_FRAGMENT_ENTRY_PROCESSOR, key];
+		let configurationValues =
+			fragmentEntryLinkRef.current?.editableValues?.[
+				FREEMARKER_FRAGMENT_ENTRY_PROCESSOR
+			] ?? DEFAULT_CONFIGURATION_VALUES;
 
 		const localizable =
 			configFields.find((field) => field.name === key)?.localizable ||
 			false;
 
 		if (localizable) {
-			keyPath.push(languageId);
+			let nextValue = configurationValues[key];
+
+			if (!nextValue || typeof nextValue !== 'object') {
+				nextValue = {};
+			}
+
+			nextValue = {
+				...nextValue,
+				[languageId]: value,
+			};
+
+			configurationValues = {
+				...configurationValues,
+				[key]: nextValue,
+			};
+		}
+		else {
+			configurationValues = {
+				...configurationValues,
+				[key]: value,
+			};
 		}
 
-		let editableValues = fragmentEntryLinkRef.current.editableValues;
-
 		if (key === FIELD_ID_CONFIGURATION_KEY) {
-			editableValues = setIn(
-				fragmentEntryLinkRef.current.editableValues,
-				[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR],
-				DEFAULT_CONFIGURATION_VALUES
-			);
+			configurationValues = {[key]: value};
 		}
 
 		return dispatch(
-			updateEditableValues({
-				editableValues: setIn(editableValues, keyPath, value),
-				fragmentEntryLinkId:
-					fragmentEntryLinkRef.current.fragmentEntryLinkId,
+			updateFragmentConfiguration({
+				configurationValues,
+				fragmentEntryLink: fragmentEntryLinkRef.current,
 			})
 		);
 	};
 
-	if (isSpecialInput && !configFields.length) {
-		return <FragmentGeneralPanel item={item} />;
+	if (isSpecialInput) {
+		return (
+			<SpecialFormInputGeneralPanel
+				allowedInputTypes={allowedInputTypes}
+				fields={configFields}
+				handleValueSelect={handleValueSelect}
+				item={item}
+				values={configurationValues}
+			/>
+		);
 	}
 
 	return (
@@ -351,22 +426,20 @@ export function FormInputGeneralPanel({item}) {
 					showCollapseIcon
 				>
 					<ClayPanel.Body>
-						{!isSpecialInput && (
-							<FormInputMappingOptions
-								configurationValues={configurationValues}
-								filterFields={filterFields}
-								form={{
-									classNameId,
-									classTypeId,
-									fields: formFields,
-								}}
-								item={item}
-								onValueSelect={handleValueSelect}
-							/>
-						)}
+						<FormInputMappingOptions
+							configurationValues={configurationValues}
+							filterFields={filterFields}
+							form={{
+								classNameId,
+								classTypeId,
+								fieldSetName,
+								fields: formFields,
+							}}
+							item={item}
+							onValueSelect={handleValueSelect}
+						/>
 
-						{(configurationValues[FIELD_ID_CONFIGURATION_KEY] ||
-							isSpecialInput) && (
+						{configurationValues[FIELD_ID_CONFIGURATION_KEY] && (
 							<>
 								<span className="sr-only">
 									{sub(
@@ -398,17 +471,129 @@ export function FormInputGeneralPanel({item}) {
 	);
 }
 
+function SpecialFormInputGeneralPanel({
+	allowedInputTypes,
+	fields,
+	fragmentName,
+	handleValueSelect,
+	item,
+	values,
+}) {
+	const languageId = useSelector(selectLanguageId);
+
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
+
+	const fragmentEntryLinksRef = useSelectorRef(
+		(state) => state.fragmentEntryLinks
+	);
+
+	const [loading, setLoading] = useState(true);
+	const [containsLocalizableFields, setContainsLocalizableFields] =
+		useState(false);
+	const state = useSelector((state) => state);
+
+	useEffect(() => {
+		const compute = async () => {
+			for (const item of Object.values(state.layoutData.items)) {
+				if (item.type === LAYOUT_DATA_ITEM_TYPES.form) {
+					if (await hasLocalizableFields(state, item.itemId)) {
+						return true;
+					}
+				}
+			}
+
+			return false;
+		};
+
+		compute().then((result) => {
+			setContainsLocalizableFields(result);
+			setLoading(false);
+		});
+	}, [state]);
+
+	const isLocalizationSelect =
+		allowedInputTypes?.includes('localizationSelect');
+
+	if (!fields.length || loading) {
+		return <FragmentGeneralPanel item={item} />;
+	}
+
+	return (
+		<>
+			{isLocalizationSelect ? (
+				<ClayAlert
+					displayType="info"
+					title={Liferay.Language.get('info')}
+				>
+					{containsLocalizableFields
+						? Liferay.Language.get(
+								'localization-applies-to-all-form-fields-on-the-page-defined-as-localizable'
+							)
+						: Liferay.Language.get(
+								'display-at-least-one-localizable-form-field-on-the-page-to-activate-this-configuration'
+							)}
+				</ClayAlert>
+			) : null}
+
+			{!isLocalizationSelect || containsLocalizableFields ? (
+				<div className="mb-3 panel-group-sm">
+					<ClayPanel
+						collapsable
+						defaultExpanded
+						displayTitle={sub(
+							Liferay.Language.get('x-options'),
+							fragmentName
+						)}
+						displayType="unstyled"
+						showCollapseIcon
+					>
+						<ClayPanel.Body>
+							<span className="sr-only">
+								{sub(
+									Liferay.Language.get('x-configuration'),
+									fragmentName
+								)}
+							</span>
+
+							<FieldSet
+								fields={fields}
+								fragmentEntryLinks={
+									fragmentEntryLinksRef.current
+								}
+								item={item}
+								label=""
+								languageId={languageId}
+								onValueSelect={handleValueSelect}
+								selectedViewportSize={selectedViewportSize}
+								values={values}
+							/>
+						</ClayPanel.Body>
+					</ClayPanel>
+				</div>
+			) : null}
+
+			<FragmentGeneralPanel item={item} />
+		</>
+	);
+}
+
 function FormInputMappingOptions({
 	configurationValues,
 	filterFields,
 	form,
 	onValueSelect,
 }) {
-	const {classNameId, classTypeId, fields: formFields} = form;
+	const {classNameId, classTypeId, fieldSetName, fields: formFields} = form;
 
 	const {subtype, type} = useMemo(
 		() => getTypeLabels(classNameId, classTypeId),
 		[classNameId, classTypeId]
+	);
+
+	const label = useObjectLabel(
+		fieldSetName ? {name: fieldSetName} : {classNameId, classTypeId}
 	);
 
 	const relationshipSelectId = useId();
@@ -430,9 +615,11 @@ function FormInputMappingOptions({
 	);
 
 	const [sourceType, setSourceType] = useState(
-		selectedRelationship
-			? SOURCE_TYPES.relationship
-			: SOURCE_TYPES.mainObject
+		!Liferay.FeatureFlags['LPD-60546']
+			? SOURCE_TYPES.mainObject
+			: selectedRelationship
+				? SOURCE_TYPES.relationship
+				: SOURCE_TYPES.mainObject
 	);
 
 	useEffect(() => {
@@ -462,37 +649,44 @@ function FormInputMappingOptions({
 
 	return (
 		<>
-			{relationships?.length && Liferay.FeatureFlags['LPD-20213'] ? (
+			{relationships?.length ? (
 				<>
-					<ClayForm.Group small>
-						<label htmlFor={sourceSelectId}>
-							{Liferay.Language.get('source')}
-						</label>
+					{Liferay.FeatureFlags['LPD-60546'] ? (
+						<ClayForm.Group small>
+							<label htmlFor={sourceSelectId}>
+								{Liferay.Language.get('source')}
+							</label>
 
-						<ClaySelectWithOption
-							className="pr-4 text-truncate"
-							id={sourceSelectId}
-							onChange={(event) => {
-								setSourceType(event.target.value);
-								setSelectedRelationship(null);
-								onValueSelect(FIELD_ID_CONFIGURATION_KEY, null);
-							}}
-							options={[
-								{
-									label: sub(
-										Liferay.Language.get('x-default'),
-										type
-									),
-									value: SOURCE_TYPES.mainObject,
-								},
-								{
-									label: Liferay.Language.get('relationship'),
-									value: SOURCE_TYPES.relationship,
-								},
-							]}
-							value={sourceType}
-						/>
-					</ClayForm.Group>
+							<ClaySelectWithOption
+								className="pr-4 text-truncate"
+								id={sourceSelectId}
+								onChange={(event) => {
+									setSourceType(event.target.value);
+									setSelectedRelationship(null);
+									onValueSelect(
+										FIELD_ID_CONFIGURATION_KEY,
+										null
+									);
+								}}
+								options={[
+									{
+										label: sub(
+											Liferay.Language.get('x-default'),
+											type
+										),
+										value: SOURCE_TYPES.mainObject,
+									},
+									{
+										label: Liferay.Language.get(
+											'relationship'
+										),
+										value: SOURCE_TYPES.relationship,
+									},
+								]}
+								value={sourceType}
+							/>
+						</ClayForm.Group>
+					) : null}
 
 					{sourceType === SOURCE_TYPES.relationship ? (
 						<ClayForm.Group small>
@@ -527,7 +721,9 @@ function FormInputMappingOptions({
 				</>
 			) : null}
 
-			{fields.flatMap((fieldSet) => fieldSet.fields).length ? (
+			{fields.flatMap((field) =>
+				'fields' in field ? field.fields : [field]
+			).length ? (
 				<>
 					<MappingFieldSelector
 						fields={fields}
@@ -564,7 +760,7 @@ function FormInputMappingOptions({
 										({name}) =>
 											name === selectedRelationship
 									).label
-								: type}
+								: label || type}
 						</p>
 					)}
 

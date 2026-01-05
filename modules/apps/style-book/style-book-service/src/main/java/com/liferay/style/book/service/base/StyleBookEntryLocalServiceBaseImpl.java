@@ -15,8 +15,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -49,6 +48,8 @@ import com.liferay.style.book.service.persistence.StyleBookEntryPersistence;
 import com.liferay.style.book.service.persistence.StyleBookEntryVersionPersistence;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.Collections;
 import java.util.List;
@@ -268,6 +269,40 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	@Override
 	public StyleBookEntry fetchStyleBookEntry(long styleBookEntryId) {
 		return styleBookEntryPersistence.fetchByPrimaryKey(styleBookEntryId);
+	}
+
+	@Override
+	public StyleBookEntry fetchStyleBookEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return styleBookEntryPersistence.fetchByERC_G_Head(
+			externalReferenceCode, groupId, true);
+	}
+
+	@Override
+	public StyleBookEntry fetchStyleBookEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId, boolean head) {
+
+		return styleBookEntryPersistence.fetchByERC_G_Head(
+			externalReferenceCode, groupId, head);
+	}
+
+	@Override
+	public StyleBookEntry getStyleBookEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return styleBookEntryPersistence.findByERC_G_Head(
+			externalReferenceCode, groupId, true);
+	}
+
+	@Override
+	public StyleBookEntry getStyleBookEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId, boolean head)
+		throws PortalException {
+
+		return styleBookEntryPersistence.findByERC_G_Head(
+			externalReferenceCode, groupId, head);
 	}
 
 	/**
@@ -896,6 +931,7 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 			publishedStyleBookEntry.getPreviewFileEntryId());
 		draftStyleBookEntry.setStyleBookEntryKey(
 			publishedStyleBookEntry.getStyleBookEntryKey());
+		draftStyleBookEntry.setThemeId(publishedStyleBookEntry.getThemeId());
 
 		draftStyleBookEntry.resetOriginalValues();
 
@@ -949,18 +985,23 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = styleBookEntryPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource = styleBookEntryPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

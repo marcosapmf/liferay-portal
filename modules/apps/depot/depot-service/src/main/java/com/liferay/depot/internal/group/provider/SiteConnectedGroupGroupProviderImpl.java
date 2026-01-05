@@ -5,6 +5,7 @@
 
 package com.liferay.depot.internal.group.provider;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
@@ -35,7 +36,8 @@ public class SiteConnectedGroupGroupProviderImpl
 			_portal.getAncestorSiteGroupIds(groupId),
 			ListUtil.toLongArray(
 				_depotEntryLocalService.getGroupConnectedDepotEntries(
-					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+					groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS),
 				DepotEntry::getGroupId));
 	}
 
@@ -57,21 +59,33 @@ public class SiteConnectedGroupGroupProviderImpl
 	public long[] getCurrentAndAncestorSiteAndDepotGroupIds(long groupId)
 		throws PortalException {
 
+		return getCurrentAndAncestorSiteAndDepotGroupIds(groupId, false);
+	}
+
+	@Override
+	public long[] getCurrentAndAncestorSiteAndDepotGroupIds(
+			long groupId, boolean checkContentSharingWithChildrenEnabled)
+		throws PortalException {
+
 		return ArrayUtil.append(
-			_portal.getCurrentAndAncestorSiteGroupIds(groupId),
+			_portal.getCurrentAndAncestorSiteGroupIds(
+				groupId, checkContentSharingWithChildrenEnabled),
 			ListUtil.toLongArray(
 				_depotEntryLocalService.getGroupConnectedDepotEntries(
-					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+					groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS),
 				DepotEntry::getGroupId));
 	}
 
 	@Override
 	public long[] getCurrentAndAncestorSiteAndDepotGroupIds(
-			long groupId, boolean ddmStructuresAvailable)
+			long groupId, boolean checkContentSharingWithChildrenEnabled,
+			boolean ddmStructuresAvailable)
 		throws PortalException {
 
 		return ArrayUtil.append(
-			_portal.getCurrentAndAncestorSiteGroupIds(groupId),
+			_portal.getCurrentAndAncestorSiteGroupIds(
+				groupId, checkContentSharingWithChildrenEnabled),
 			ListUtil.toLongArray(
 				_depotEntryLocalService.getGroupConnectedDepotEntries(
 					groupId, ddmStructuresAvailable, QueryUtil.ALL_POS,
@@ -83,16 +97,26 @@ public class SiteConnectedGroupGroupProviderImpl
 	public long[] getCurrentAndAncestorSiteAndDepotGroupIds(long[] groupIds)
 		throws PortalException {
 
+		return getCurrentAndAncestorSiteAndDepotGroupIds(groupIds, false);
+	}
+
+	@Override
+	public long[] getCurrentAndAncestorSiteAndDepotGroupIds(
+			long[] groupIds, boolean checkContentSharingWithChildrenEnabled)
+		throws PortalException {
+
 		List<DepotEntry> depotEntries = new ArrayList<>();
 
 		for (long groupId : groupIds) {
 			depotEntries.addAll(
 				_depotEntryLocalService.getGroupConnectedDepotEntries(
-					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS));
+					groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS));
 		}
 
 		return ArrayUtil.append(
-			_portal.getCurrentAndAncestorSiteGroupIds(groupIds),
+			_portal.getCurrentAndAncestorSiteGroupIds(
+				groupIds, checkContentSharingWithChildrenEnabled),
 			ListUtil.toLongArray(depotEntries, DepotEntry::getGroupId));
 	}
 

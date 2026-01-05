@@ -15,11 +15,11 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Diego Hu
@@ -51,19 +51,19 @@ public class RelatedInfoItemCollectionProviderItemDescriptor
 		return JSONUtil.put(
 			"itemSubtype",
 			() -> {
-				if (_relatedInfoItemCollectionProvider instanceof
-						SingleFormVariationInfoCollectionProvider) {
+				if (!(_relatedInfoItemCollectionProvider instanceof
+						SingleFormVariationInfoCollectionProvider)) {
 
-					SingleFormVariationInfoCollectionProvider<?>
-						singleFormVariationInfoCollectionProvider =
-							(SingleFormVariationInfoCollectionProvider<?>)
-								_relatedInfoItemCollectionProvider;
-
-					return singleFormVariationInfoCollectionProvider.
-						getFormVariationKey();
+					return null;
 				}
 
-				return null;
+				SingleFormVariationInfoCollectionProvider<?>
+					singleFormVariationInfoCollectionProvider =
+						(SingleFormVariationInfoCollectionProvider<?>)
+							_relatedInfoItemCollectionProvider;
+
+				return singleFormVariationInfoCollectionProvider.
+					getFormVariationKey();
 			}
 		).put(
 			"itemType",

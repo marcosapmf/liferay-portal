@@ -14,17 +14,19 @@ import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Víctor Galán
@@ -170,7 +172,15 @@ public class EditVocabularySettingsDisplayContext {
 
 	public long[] getSelectedClassNameIds() {
 		if (_vocabulary != null) {
-			return _vocabulary.getSelectedClassNameIds();
+			long[] selectedClassNameIds = ArrayUtil.filter(
+				_vocabulary.getSelectedClassNameIds(),
+				classNameId ->
+					ClassNameLocalServiceUtil.fetchClassName(classNameId) !=
+						null);
+
+			if (ArrayUtil.isNotEmpty(selectedClassNameIds)) {
+				return selectedClassNameIds;
+			}
 		}
 
 		return AssetVocabularySettingsHelper.DEFAULT_SELECTED_CLASS_NAME_IDS;

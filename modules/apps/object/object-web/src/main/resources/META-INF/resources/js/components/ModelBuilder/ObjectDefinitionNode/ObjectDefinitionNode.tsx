@@ -34,6 +34,7 @@ export function ObjectDefinitionNode({
 		label,
 		linkedObjectDefinition,
 		name,
+		objectDefinitionSettings,
 		objectFields,
 		selected,
 		showAllObjectFields,
@@ -81,6 +82,20 @@ export function ObjectDefinitionNode({
 		}
 	};
 
+	const rootObjectDefinitionExternalReferenceCodes =
+		objectDefinitionSettings?.find(
+			(setting) =>
+				setting.name === 'rootObjectDefinitionExternalReferenceCodes'
+		)?.value;
+
+	const isRootNode = !!rootObjectDefinitionExternalReferenceCodes
+		?.split(',')
+		.includes(externalReferenceCode);
+
+	const isTreeStructure = !!rootObjectDefinitionExternalReferenceCodes;
+
+	const isRootDescendantNode = isTreeStructure && !isRootNode;
+
 	const handleSelectObjectDefinitionNode = () => {
 		const {edges, nodes} = store.getState();
 
@@ -104,6 +119,8 @@ export function ObjectDefinitionNode({
 							linkedObjectDefinition,
 						'lfr-objects__model-builder-node-container--selected':
 							selected,
+						'lfr-objects__model-builder-node-container--treeItem':
+							isTreeStructure,
 					}
 				)}
 				onMouseEnter={() => {
@@ -121,21 +138,24 @@ export function ObjectDefinitionNode({
 						hasObjectDefinitionDeleteResourcePermission,
 						hasObjectDefinitionManagePermissionsResourcePermission,
 						hasObjectDefinitionUpdateResourcePermission,
+						isTreeStructure,
 						objectDefinitionId: id,
 						objectDefinitionName: name,
 						objectDefinitionPermissionsURL,
-						objectFoldersLenght: objectFolders.length,
+						objectFoldersLength: objectFolders.length,
 						status,
 					})}
 					handleSelectObjectDefinitionNode={
 						handleSelectObjectDefinitionNode
 					}
 					isLinkedObjectDefinition={linkedObjectDefinition}
-					objectDefinitionLabel={stringUtils.getLocalizableLabel(
-						defaultLanguageId,
-						label,
-						name
-					)}
+					isRootDescendantNode={isRootDescendantNode}
+					isRootNode={isRootNode}
+					objectDefinitionLabel={stringUtils.getLocalizableLabel({
+						fallbackLabel: name,
+						fallbackLanguageId: defaultLanguageId,
+						labels: label,
+					})}
 					status={status!}
 					system={system}
 				/>

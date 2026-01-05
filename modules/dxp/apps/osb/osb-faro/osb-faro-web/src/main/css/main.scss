@@ -1,6 +1,6 @@
 @import 'custom_clay';
 
-@import 'atlas';
+@import '@clayui/css/src/scss/cadmin-variables';
 
 @import 'variables';
 
@@ -117,7 +117,6 @@
 @import 'liferay_data_source';
 @import 'list';
 @import 'list_card';
-@import 'list_group';
 @import 'loading';
 @import 'loading_modal';
 @import 'locations_card';
@@ -209,6 +208,7 @@
 @import 'ui_kit';
 @import 'unassigned_segments_modal';
 @import 'upload_csv_root';
+@import 'usage_overview';
 @import 'user_list';
 @import 'user_menu';
 @import 'users_metric';
@@ -216,6 +216,7 @@
 @import 'vertical_timeline';
 @import 'vertical_timeline_deprecated';
 @import 'with_sidebar';
+@import 'wizard_page';
 @import 'workspace_list';
 @import 'workspace_not_found';
 @import 'workspaces_base_page';

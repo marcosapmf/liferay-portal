@@ -148,11 +148,11 @@ export function ModalAddObjectLayoutTab({
 		objectRelationships.forEach(({id, inLayout, label, name, reverse}) => {
 			if (!inLayout) {
 				availableObjectRelationships.push({
-					label: stringUtils.getLocalizableLabel(
-						creationLanguageId,
-						label,
-						name
-					),
+					label: stringUtils.getLocalizableLabel({
+						fallbackLabel: name,
+						fallbackLanguageId: creationLanguageId,
+						labels: label,
+					}),
 					reverse,
 					value: id.toString(),
 				});
@@ -179,7 +179,12 @@ export function ModalAddObjectLayoutTab({
 	const onValidate = (values: Partial<TObjectLayoutTab>) => {
 		const errors: FormError<TObjectLayoutTab> = {};
 
-		if (!stringUtils.getLocalizableLabel(creationLanguageId, values.name)) {
+		if (
+			!stringUtils.getLocalizableLabel({
+				fallbackLanguageId: creationLanguageId,
+				labels: values.name,
+			})
+		) {
 			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
@@ -204,7 +209,9 @@ export function ModalAddObjectLayoutTab({
 	return (
 		<ClayModal observer={observer}>
 			<ClayForm onSubmit={handleSubmit}>
-				<ClayModal.Header>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
 					{Liferay.Language.get('add-tab')}
 				</ClayModal.Header>
 
@@ -222,10 +229,10 @@ export function ModalAddObjectLayoutTab({
 							});
 						}}
 						required
-						value={stringUtils.getLocalizableLabel(
-							creationLanguageId,
-							values.name
-						)}
+						value={stringUtils.getLocalizableLabel({
+							fallbackLanguageId: creationLanguageId,
+							labels: values.name,
+						})}
 					/>
 
 					<ClayForm.Group>

@@ -53,15 +53,16 @@ public class FragmentEntryLocalServiceWrapper
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			boolean readOnly, int type, String typeOptions, int status,
+			boolean marketplace, boolean readOnly, int type, String typeOptions,
+			int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentEntryLocalService.addFragmentEntry(
 			externalReferenceCode, userId, groupId, fragmentCollectionId,
 			fragmentEntryKey, name, css, html, js, cacheable, configuration,
-			icon, previewFileEntryId, readOnly, type, typeOptions, status,
-			serviceContext);
+			icon, previewFileEntryId, marketplace, readOnly, type, typeOptions,
+			status, serviceContext);
 	}
 
 	@Override
@@ -317,6 +318,24 @@ public class FragmentEntryLocalServiceWrapper
 	}
 
 	@Override
+	public FragmentEntry fetchFragmentEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return _fragmentEntryLocalService.
+			fetchFragmentEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+	}
+
+	@Override
+	public FragmentEntry fetchFragmentEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId, boolean head) {
+
+		return _fragmentEntryLocalService.
+			fetchFragmentEntryByExternalReferenceCode(
+				externalReferenceCode, groupId, head);
+	}
+
+	@Override
 	public FragmentEntry fetchFragmentEntryByUuidAndGroupId(
 		String uuid, long groupId) {
 
@@ -510,6 +529,26 @@ public class FragmentEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentEntryLocalService.getFragmentEntry(fragmentEntryId);
+	}
+
+	@Override
+	public FragmentEntry getFragmentEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _fragmentEntryLocalService.
+			getFragmentEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+	}
+
+	@Override
+	public FragmentEntry getFragmentEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId, boolean head)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _fragmentEntryLocalService.
+			getFragmentEntryByExternalReferenceCode(
+				externalReferenceCode, groupId, head);
 	}
 
 	@Override

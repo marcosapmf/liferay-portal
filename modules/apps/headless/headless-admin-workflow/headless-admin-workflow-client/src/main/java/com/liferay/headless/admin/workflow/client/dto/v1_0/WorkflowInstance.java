@@ -8,13 +8,13 @@ package com.liferay.headless.admin.workflow.client.dto.v1_0;
 import com.liferay.headless.admin.workflow.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.workflow.client.serdes.v1_0.WorkflowInstanceSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -69,6 +69,27 @@ public class WorkflowInstance implements Cloneable, Serializable {
 	}
 
 	protected Boolean completed;
+
+	public Map<String, ?> getContext() {
+		return context;
+	}
+
+	public void setContext(Map<String, ?> context) {
+		this.context = context;
+	}
+
+	public void setContext(
+		UnsafeSupplier<Map<String, ?>, Exception> contextUnsafeSupplier) {
+
+		try {
+			context = contextUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, ?> context;
 
 	public String[] getCurrentNodeNames() {
 		return currentNodeNames;

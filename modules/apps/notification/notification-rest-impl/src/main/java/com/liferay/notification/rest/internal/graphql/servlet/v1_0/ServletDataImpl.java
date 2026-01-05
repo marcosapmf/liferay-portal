@@ -14,10 +14,10 @@ import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -82,6 +82,16 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#deleteNotificationQueueEntry",
+						new ObjectValuePair<>(
+							NotificationQueueEntryResourceImpl.class,
+							"deleteNotificationQueueEntry"));
+					put(
+						"mutation#deleteNotificationQueueEntryBatch",
+						new ObjectValuePair<>(
+							NotificationQueueEntryResourceImpl.class,
+							"deleteNotificationQueueEntryBatch"));
+					put(
 						"mutation#createNotificationQueueEntriesPageExportBatch",
 						new ObjectValuePair<>(
 							NotificationQueueEntryResourceImpl.class,
@@ -97,40 +107,10 @@ public class ServletDataImpl implements ServletData {
 							NotificationQueueEntryResourceImpl.class,
 							"postNotificationQueueEntryBatch"));
 					put(
-						"mutation#deleteNotificationQueueEntry",
-						new ObjectValuePair<>(
-							NotificationQueueEntryResourceImpl.class,
-							"deleteNotificationQueueEntry"));
-					put(
-						"mutation#deleteNotificationQueueEntryBatch",
-						new ObjectValuePair<>(
-							NotificationQueueEntryResourceImpl.class,
-							"deleteNotificationQueueEntryBatch"));
-					put(
 						"mutation#updateNotificationQueueEntryResend",
 						new ObjectValuePair<>(
 							NotificationQueueEntryResourceImpl.class,
 							"putNotificationQueueEntryResend"));
-					put(
-						"mutation#createNotificationTemplatesPageExportBatch",
-						new ObjectValuePair<>(
-							NotificationTemplateResourceImpl.class,
-							"postNotificationTemplatesPageExportBatch"));
-					put(
-						"mutation#createNotificationTemplate",
-						new ObjectValuePair<>(
-							NotificationTemplateResourceImpl.class,
-							"postNotificationTemplate"));
-					put(
-						"mutation#createNotificationTemplateBatch",
-						new ObjectValuePair<>(
-							NotificationTemplateResourceImpl.class,
-							"postNotificationTemplateBatch"));
-					put(
-						"mutation#updateNotificationTemplateByExternalReferenceCode",
-						new ObjectValuePair<>(
-							NotificationTemplateResourceImpl.class,
-							"putNotificationTemplateByExternalReferenceCode"));
 					put(
 						"mutation#deleteNotificationTemplate",
 						new ObjectValuePair<>(
@@ -147,6 +127,26 @@ public class ServletDataImpl implements ServletData {
 							NotificationTemplateResourceImpl.class,
 							"patchNotificationTemplate"));
 					put(
+						"mutation#createNotificationTemplate",
+						new ObjectValuePair<>(
+							NotificationTemplateResourceImpl.class,
+							"postNotificationTemplate"));
+					put(
+						"mutation#createNotificationTemplateBatch",
+						new ObjectValuePair<>(
+							NotificationTemplateResourceImpl.class,
+							"postNotificationTemplateBatch"));
+					put(
+						"mutation#createNotificationTemplateCopy",
+						new ObjectValuePair<>(
+							NotificationTemplateResourceImpl.class,
+							"postNotificationTemplateCopy"));
+					put(
+						"mutation#createNotificationTemplatesPageExportBatch",
+						new ObjectValuePair<>(
+							NotificationTemplateResourceImpl.class,
+							"postNotificationTemplatesPageExportBatch"));
+					put(
 						"mutation#updateNotificationTemplate",
 						new ObjectValuePair<>(
 							NotificationTemplateResourceImpl.class,
@@ -157,10 +157,10 @@ public class ServletDataImpl implements ServletData {
 							NotificationTemplateResourceImpl.class,
 							"putNotificationTemplateBatch"));
 					put(
-						"mutation#createNotificationTemplateCopy",
+						"mutation#updateNotificationTemplateByExternalReferenceCode",
 						new ObjectValuePair<>(
 							NotificationTemplateResourceImpl.class,
-							"postNotificationTemplateCopy"));
+							"putNotificationTemplateByExternalReferenceCode"));
 
 					put(
 						"query#notificationQueueEntries",
@@ -173,20 +173,20 @@ public class ServletDataImpl implements ServletData {
 							NotificationQueueEntryResourceImpl.class,
 							"getNotificationQueueEntry"));
 					put(
-						"query#notificationTemplates",
+						"query#notificationTemplate",
 						new ObjectValuePair<>(
 							NotificationTemplateResourceImpl.class,
-							"getNotificationTemplatesPage"));
+							"getNotificationTemplate"));
 					put(
 						"query#notificationTemplateByExternalReferenceCode",
 						new ObjectValuePair<>(
 							NotificationTemplateResourceImpl.class,
 							"getNotificationTemplateByExternalReferenceCode"));
 					put(
-						"query#notificationTemplate",
+						"query#notificationTemplates",
 						new ObjectValuePair<>(
 							NotificationTemplateResourceImpl.class,
-							"getNotificationTemplate"));
+							"getNotificationTemplatesPage"));
 				}
 			};
 

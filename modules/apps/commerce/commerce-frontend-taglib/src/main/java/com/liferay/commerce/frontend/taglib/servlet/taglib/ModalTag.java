@@ -12,12 +12,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
 
 /**
- * @author Fabio Diego Mastrorilli
+ * @author     Fabio Diego Mastrorilli
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public class ModalTag extends IncludeTag {
 
 	public String getId() {

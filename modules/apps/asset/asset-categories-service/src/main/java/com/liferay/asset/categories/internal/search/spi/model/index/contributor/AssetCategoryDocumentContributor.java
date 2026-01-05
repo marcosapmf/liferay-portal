@@ -5,12 +5,17 @@
 
 package com.liferay.asset.categories.internal.search.spi.model.index.contributor;
 
+import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRelTable;
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetCategoryTable;
+import com.liferay.asset.kernel.model.AssetEntryTable;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -21,7 +26,11 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentContributor;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.ReindexCacheThreadLocal;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -29,11 +38,16 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,6 +63,13 @@ public class AssetCategoryDocumentContributor
 	public void contribute(
 		Document document, BaseModel<AssetCategory> baseModel) {
 
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if ((serviceContext != null) && serviceContext.isStrictAdd()) {
+			return;
+		}
+
 		String className = document.get(Field.ENTRY_CLASS_NAME);
 		long classPK = GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK));
 
@@ -56,8 +77,12 @@ public class AssetCategoryDocumentContributor
 			return;
 		}
 
-		List<AssetCategory> assetCategories =
-			_assetCategoryLocalService.getCategories(className, classPK);
+		Collection<AssetCategory> assetCategories = _getAssetCategories(
+			_classNameLocalService.getClassNameId(className), classPK);
+
+		if ((assetCategories == null) || assetCategories.isEmpty()) {
+			return;
+		}
 
 		Map<Integer, Map<Long, List<AssetCategory>>>
 			assetVocabularyVisibilityTypeMap =
@@ -201,12 +226,92 @@ public class AssetCategoryDocumentContributor
 			assetVocabularyCategoryExternalReferenceCodes);
 	}
 
+	private Collection<AssetCategory> _getAssetCategories(
+		long classNameId, long classPK) {
+
+		Map<Long, Map<Long, Set<Serializable>>> assetCategoryIdsMaps =
+			ReindexCacheThreadLocal.getGlobalReindexCache(
+				() -> _assetCategoryLocalService.dslQueryCount(
+					DSLQueryFactoryUtil.count(
+					).from(
+						AssetCategoryTable.INSTANCE
+					),
+					false),
+				AssetCategoryDocumentContributor.class.getName(),
+				count -> {
+					Map<Long, Map<Long, Set<Serializable>>>
+						localAssetCategoryIdsMap = new HashMap<>();
+
+					if (count == 0) {
+						return localAssetCategoryIdsMap;
+					}
+
+					DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+						AssetEntryTable.INSTANCE.classNameId,
+						AssetEntryTable.INSTANCE.classPK,
+						AssetCategoryTable.INSTANCE.categoryId
+					).from(
+						AssetCategoryTable.INSTANCE
+					).innerJoinON(
+						AssetEntryAssetCategoryRelTable.INSTANCE,
+						AssetCategoryTable.INSTANCE.categoryId.eq(
+							AssetEntryAssetCategoryRelTable.INSTANCE.
+								assetCategoryId)
+					).innerJoinON(
+						AssetEntryTable.INSTANCE,
+						AssetEntryAssetCategoryRelTable.INSTANCE.assetEntryId.
+							eq(AssetEntryTable.INSTANCE.entryId)
+					);
+
+					for (Object[] values :
+							(List<Object[]>)_assetCategoryLocalService.dslQuery(
+								dslQuery, false)) {
+
+						Map<Long, Set<Serializable>> assetCategoryIdsMap =
+							localAssetCategoryIdsMap.computeIfAbsent(
+								(Long)values[0], key -> new HashMap<>());
+
+						Set<Serializable> assetCategoryIds =
+							assetCategoryIdsMap.computeIfAbsent(
+								(Long)values[1], key -> new HashSet<>());
+
+						assetCategoryIds.add((Serializable)values[2]);
+					}
+
+					return localAssetCategoryIdsMap;
+				});
+
+		if (assetCategoryIdsMaps == null) {
+			return _assetCategoryLocalService.getCategories(
+				classNameId, classPK);
+		}
+
+		Map<Long, Set<Serializable>> assetCategoryIdsMap =
+			assetCategoryIdsMaps.get(classNameId);
+
+		if (assetCategoryIdsMap == null) {
+			return null;
+		}
+
+		Set<Serializable> assetCategoryIds = assetCategoryIdsMap.get(classPK);
+
+		if (assetCategoryIds == null) {
+			return null;
+		}
+
+		Map<Serializable, AssetCategory> assetCategories =
+			_assetCategoryLocalService.fetchPersistedModels(assetCategoryIds);
+
+		return assetCategories.values();
+	}
+
 	private Map<Integer, Map<Long, List<AssetCategory>>>
 		_getAssetVocabularyVisibilityTypeMap(
-			List<AssetCategory> assetCategories) {
+			Collection<AssetCategory> assetCategories) {
 
 		Map<Integer, Map<Long, List<AssetCategory>>>
 			assetVocabularyVisibilityTypeMap = new HashMap<>();
+
 		Map<Long, Integer> assetVocabularyMap = new HashMap<>();
 
 		for (AssetCategory assetCategory : assetCategories) {
@@ -216,6 +321,10 @@ public class AssetCategoryDocumentContributor
 					AssetVocabulary assetVocabulary =
 						_assetVocabularyLocalService.fetchAssetVocabulary(
 							assetCategory.getVocabularyId());
+
+					if (assetVocabulary == null) {
+						return AssetVocabularyConstants.VISIBILITY_TYPE_EMPTY;
+					}
 
 					return assetVocabulary.getVisibilityType();
 				});
@@ -302,6 +411,9 @@ public class AssetCategoryDocumentContributor
 
 	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Zsolt Berentey
  */
 @Component(
-	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+	property = "jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = SocialActivityInterpreter.class
 )
 public class JournalArticleActivityInterpreter
@@ -86,16 +86,15 @@ public class JournalArticleActivityInterpreter
 
 			Layout layout = article.getLayout();
 
-			if (layout != null) {
-				ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
-
-				return _journalHelper.createURLPattern(
-					article, themeDisplay.getLocale(), layout.isPrivateLayout(),
-					JournalArticleConstants.CANONICAL_URL_SEPARATOR,
-					themeDisplay);
+			if (layout == null) {
+				return null;
 			}
 
-			return null;
+			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+			return _journalHelper.createURLPattern(
+				article, themeDisplay.getLocale(), layout.isPrivateLayout(),
+				JournalArticleConstants.CANONICAL_URL_SEPARATOR, themeDisplay);
 		}
 		catch (NoSuchArticleException noSuchArticleException) {
 			if (_log.isDebugEnabled()) {

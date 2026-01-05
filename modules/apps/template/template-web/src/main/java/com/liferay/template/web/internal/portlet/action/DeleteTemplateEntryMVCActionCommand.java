@@ -5,16 +5,20 @@
 
 package com.liferay.template.web.internal.portlet.action;
 
+import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.template.constants.TemplatePortletKeys;
 import com.liferay.template.model.TemplateEntry;
 import com.liferay.template.service.TemplateEntryLocalService;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -24,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + TemplatePortletKeys.TEMPLATE,
+		"jakarta.portlet.name=" + TemplatePortletKeys.TEMPLATE,
 		"mvc.command.name=/template/delete_template_entry"
 	},
 	service = MVCActionCommand.class
@@ -51,8 +55,15 @@ public class DeleteTemplateEntryMVCActionCommand
 
 		for (long deleteTemplateEntryId : templateEntryIds) {
 			TemplateEntry templateEntry =
-				_templateEntryLocalService.deleteTemplateEntry(
+				_templateEntryLocalService.getTemplateEntry(
 					deleteTemplateEntryId);
+
+			_ddmTemplateModelResourcePermission.check(
+				PermissionThreadLocal.getPermissionChecker(),
+				templateEntry.getDDMTemplateId(), ActionKeys.DELETE);
+
+			templateEntry = _templateEntryLocalService.deleteTemplateEntry(
+				deleteTemplateEntryId);
 
 			_ddmTemplateLocalService.deleteTemplate(
 				templateEntry.getDDMTemplateId());
@@ -61,6 +72,12 @@ public class DeleteTemplateEntryMVCActionCommand
 
 	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
+	)
+	private ModelResourcePermission<DDMTemplate>
+		_ddmTemplateModelResourcePermission;
 
 	@Reference
 	private TemplateEntryLocalService _templateEntryLocalService;

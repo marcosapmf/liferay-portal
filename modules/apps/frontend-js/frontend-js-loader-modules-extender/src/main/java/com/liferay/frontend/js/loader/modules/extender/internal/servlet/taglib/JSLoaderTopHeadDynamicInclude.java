@@ -10,7 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProvider;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
-import com.liferay.portal.kernel.frontend.esm.FrontendESMUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
@@ -22,13 +22,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.frontend.js.loader.modules.extender.internal.configuration.Details",
-	property = "service.ranking:Integer=" + Integer.MAX_VALUE,
+	property = "service.ranking:Integer=" + (Integer.MAX_VALUE - 3),
 	service = DynamicInclude.class
 )
 public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
@@ -53,6 +53,16 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-48372")) {
+
+			return;
+		}
+
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		printWriter.write("<script");
@@ -61,13 +71,7 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 				httpServletRequest));
 		printWriter.write(" data-senna-track=\"temporary\" type=\"");
 		printWriter.write(ContentTypes.TEXT_JAVASCRIPT);
-		printWriter.write("\">window.__CONFIG__= {basePath: '',");
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		printWriter.write("combine: ");
+		printWriter.write("\">window.__CONFIG__= {basePath: '', combine: ");
 		printWriter.write(Boolean.toString(themeDisplay.isThemeJsFastLoad()));
 		printWriter.write(", defaultURLParams: ");
 		printWriter.write(_getDefaultURLParams(themeDisplay));
@@ -77,9 +81,8 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 		printWriter.write(Boolean.toString(_details.exposeGlobal()));
 		printWriter.write(", logLevel: '");
 		printWriter.write(_details.logLevel());
-		printWriter.write("', moduleType: '");
-		printWriter.write(FrontendESMUtil.getScriptType());
-		printWriter.write("', namespace:'Liferay', nonce: '");
+		printWriter.write("', moduleType: 'module', namespace:'Liferay', ");
+		printWriter.write("nonce: '");
 		printWriter.write(
 			_contentSecurityPolicyNonceProvider.getNonce(httpServletRequest));
 		printWriter.write(
@@ -100,8 +103,8 @@ public class JSLoaderTopHeadDynamicInclude extends BaseDynamicInclude {
 				httpServletRequest);
 
 		printWriter.write(
-			absolutePortalURLBuilder.forBundleScript(
-				_bundle, "/loader.js"
+			absolutePortalURLBuilder.forWebContextScript(
+				"frontend-js-loader-modules-extender", "/loader.js"
 			).build());
 
 		printWriter.write("\" type=\"");

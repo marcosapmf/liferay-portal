@@ -26,11 +26,11 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.wiki.configuration.WikiFileUploadConfiguration;
 import com.liferay.wiki.constants.WikiPortletKeys;
-import com.liferay.wiki.item.selector.criterion.WikiAttachmentItemSelectorCriterion;
+import com.liferay.wiki.item.selector.WikiAttachmentItemSelectorCriterion;
 
 import java.util.ArrayList;
 import java.util.List;

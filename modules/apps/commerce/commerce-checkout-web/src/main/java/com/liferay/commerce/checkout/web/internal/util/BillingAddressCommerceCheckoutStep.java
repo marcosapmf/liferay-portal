@@ -43,19 +43,20 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUti
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.CountryLocalService;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -105,32 +106,29 @@ public class BillingAddressCommerceCheckoutStep
 
 		AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
-		if (!commerceOrder.isGuestOrder() &&
+		if (!commerceOrder.isGuestOrder() && (accountEntry != null) &&
 			!accountEntry.isPersonalAccount()) {
 
 			CommerceAddress defaultBillingCommerceAddress = null;
 
-			if (accountEntry != null) {
-				CommerceChannel commerceChannel =
-					_commerceChannelLocalService.
-						getCommerceChannelByOrderGroupId(
-							commerceOrder.getGroupId());
+			CommerceChannel commerceChannel =
+				_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
+					commerceOrder.getGroupId());
 
-				CommerceChannelAccountEntryRel
-					billingAddressCommerceChannelAccountEntryRel =
-						_commerceChannelAccountEntryRelLocalService.
-							fetchCommerceChannelAccountEntryRel(
-								accountEntry.getAccountEntryId(),
-								commerceChannel.getCommerceChannelId(),
-								CommerceChannelAccountEntryRelConstants.
-									TYPE_BILLING_ADDRESS);
+			CommerceChannelAccountEntryRel
+				billingAddressCommerceChannelAccountEntryRel =
+					_commerceChannelAccountEntryRelLocalService.
+						fetchCommerceChannelAccountEntryRel(
+							accountEntry.getAccountEntryId(),
+							commerceChannel.getCommerceChannelId(),
+							CommerceChannelAccountEntryRelConstants.
+								TYPE_BILLING_ADDRESS);
 
-				if (billingAddressCommerceChannelAccountEntryRel != null) {
-					defaultBillingCommerceAddress =
-						_commerceAddressService.getCommerceAddress(
-							billingAddressCommerceChannelAccountEntryRel.
-								getClassPK());
-				}
+			if (billingAddressCommerceChannelAccountEntryRel != null) {
+				defaultBillingCommerceAddress =
+					_commerceAddressService.getCommerceAddress(
+						billingAddressCommerceChannelAccountEntryRel.
+							getClassPK());
 			}
 
 			long defaultBillingCommerceAddressId = 0;
@@ -248,7 +246,7 @@ public class BillingAddressCommerceCheckoutStep
 					_commerceAddressService,
 					_commerceChannelAccountEntryRelLocalService,
 					_commerceChannelLocalService, httpServletRequest,
-					_portletResourcePermission);
+					_listTypeLocalService, _portletResourcePermission);
 
 		CommerceOrder commerceOrder =
 			billingAddressCheckoutStepDisplayContext.getCommerceOrder();
@@ -470,6 +468,9 @@ public class BillingAddressCommerceCheckoutStep
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
 	private Portal _portal;

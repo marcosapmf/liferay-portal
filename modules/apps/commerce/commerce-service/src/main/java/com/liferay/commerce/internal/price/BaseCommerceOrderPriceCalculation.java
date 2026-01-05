@@ -484,10 +484,7 @@ public abstract class BaseCommerceOrderPriceCalculation
 						parentQuantity));
 			}
 
-			unitPrice = unitPrice.add(
-				_getPricePerUnit(
-					commerceCurrency, incrementalOrderQuantity, childUnitPrice,
-					childCommerceOrderItem.getQuantity(), parentQuantity));
+			unitPrice = unitPrice.add(childUnitPrice);
 
 			promoPrice = promoPrice.add(
 				_getPricePerUnit(
@@ -502,7 +499,9 @@ public abstract class BaseCommerceOrderPriceCalculation
 		BigDecimal unitOfMeasureIncrementalOrderQuantity =
 			commerceOrderItem.getUnitOfMeasureIncrementalOrderQuantity();
 
-		if (unitOfMeasureIncrementalOrderQuantity == null) {
+		if ((unitOfMeasureIncrementalOrderQuantity == null) ||
+			unitOfMeasureIncrementalOrderQuantity.equals(BigDecimal.ZERO)) {
+
 			unitOfMeasureIncrementalOrderQuantity = BigDecimal.ONE;
 		}
 

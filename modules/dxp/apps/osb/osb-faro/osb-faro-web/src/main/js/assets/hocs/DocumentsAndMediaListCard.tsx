@@ -59,7 +59,7 @@ const DocumentsAndMediaListCard: React.FC = () => {
 						route: Routes.ASSETS_DOCUMENTS_AND_MEDIA_OVERVIEW
 					}),
 					metricsListColumns.downloadsMetric,
-					metricsListColumns.previewsMetric,
+					metricsListColumns.impressionMadeMetric,
 					metricsListColumns.commentsMetric,
 					metricsListColumns.ratingsMetric
 				]}
@@ -92,7 +92,7 @@ const DocumentsAndMediaListCard: React.FC = () => {
 						icon={{
 							border: false,
 							size: Sizes.XXXLarge,
-							symbol: 'ac-satellite'
+							symbol: 'ac_satellite'
 						}}
 						title={Liferay.Language.get(
 							'there-are-no-visitors-data-found'

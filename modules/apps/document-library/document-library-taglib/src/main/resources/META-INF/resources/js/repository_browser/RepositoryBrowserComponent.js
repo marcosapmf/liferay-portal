@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {fetch, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 
 export default function RepositoryBrowserComponent({
+	includeExtension,
 	namespace,
 	parentFolderId,
 	repositoryBrowserURL,
@@ -19,7 +21,7 @@ export default function RepositoryBrowserComponent({
 
 		formData.append('file', fileInput.files[0]);
 
-		const uploadFileURL = `${repositoryBrowserURL}?repositoryId=${repositoryId}&parentFolderId=${parentFolderId}&viewableByGuest=${viewableByGuest}`;
+		const uploadFileURL = `${repositoryBrowserURL}?includeExtension=${includeExtension}&repositoryId=${repositoryId}&parentFolderId=${parentFolderId}&viewableByGuest=${viewableByGuest}`;
 
 		fetch(uploadFileURL, {
 			body: formData,

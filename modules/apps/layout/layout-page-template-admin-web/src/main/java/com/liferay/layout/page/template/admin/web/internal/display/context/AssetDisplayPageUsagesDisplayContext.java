@@ -29,14 +29,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Rubén Pulido
@@ -201,7 +201,7 @@ public class AssetDisplayPageUsagesDisplayContext {
 		InfoItemObjectProvider<?> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemObjectProvider.class,
-				_portal.getClassName(getClassNameId()),
+				_portal.fetchClassName(getClassNameId()),
 				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
 
 		if (infoItemObjectProvider == null) {
@@ -211,7 +211,7 @@ public class AssetDisplayPageUsagesDisplayContext {
 		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemFieldValuesProvider.class,
-				_portal.getClassName(getClassNameId()));
+				_portal.fetchClassName(getClassNameId()));
 
 		if (infoItemFieldValuesProvider == null) {
 			return StringPool.BLANK;

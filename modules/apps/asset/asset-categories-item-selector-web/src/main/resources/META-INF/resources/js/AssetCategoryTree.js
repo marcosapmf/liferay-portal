@@ -71,7 +71,7 @@ export function AssetCategoryTree({
 		selectedKeys.forEach((key) => {
 			const item = itemsById[key];
 
-			if (item.disabled) {
+			if (!item || item.disabled) {
 				return;
 			}
 
@@ -81,7 +81,9 @@ export function AssetCategoryTree({
 				className: item.className,
 				classNameId: item.classNameId,
 				classPK: item.id,
+				externalReferenceCode: item.externalReferenceCode,
 				nodePath: item.nodePath,
+				scopeExternalReferenceCode: item.scopeExternalReferenceCode,
 				title: item.name,
 				value: item.name,
 				vocabularyId: item.vocabulary ? item.id : 0,
@@ -93,11 +95,9 @@ export function AssetCategoryTree({
 		}
 
 		requestAnimationFrame(() => {
-			if (Object.keys(selectedItems).length) {
-				getOpener().Liferay.fire(itemSelectedEventName, {
-					data: selectedItems,
-				});
-			}
+			getOpener().Liferay.fire(itemSelectedEventName, {
+				data: selectedItems,
+			});
 		});
 	}, [
 		selectedKeys,

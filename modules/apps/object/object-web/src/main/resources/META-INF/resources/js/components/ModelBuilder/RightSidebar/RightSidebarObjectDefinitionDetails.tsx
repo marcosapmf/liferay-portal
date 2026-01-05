@@ -8,12 +8,14 @@ import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {useStore} from 'react-flow-renderer';
 
+import {Error, handleErrors} from '../../../utils/errors';
 import {AccountRestrictionContainer} from '../../ObjectDetails/AccountRestrictionContainer';
 import {ConfigurationContainer} from '../../ObjectDetails/ConfigurationContainer';
 import {Scope} from '../../ObjectDetails/EditObjectDetails';
 import {EntryDisplayContainer} from '../../ObjectDetails/EntryDisplayContainer';
 import {ObjectDataContainer} from '../../ObjectDetails/ObjectDataContainer';
 import {ScopeContainer} from '../../ObjectDetails/ScopeContainer';
+import {SeoContainer} from '../../ObjectDetails/SeoContainer';
 import {TranslationsContainer} from '../../ObjectDetails/TranslationsContainer';
 import {useObjectDetailsForm} from '../../ObjectDetails/useObjectDetailsForm';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
@@ -21,6 +23,8 @@ import {TYPES} from '../ModelBuilderContext/typesEnum';
 import {nonRelationshipObjectFieldsInfo} from '../types';
 
 import './RightSidebarObjectDefinitionDetails.scss';
+import {InheritanceObjectDefinitionAlert} from '../../ObjectDetails/InheritanceObjectDefinitionAlert';
+import {SubscriptionsContainer} from '../../ObjectDetails/SubscriptionsContainer';
 
 interface RightSidebarObjectDefinitionDetailsProps {
 	companies: Scope[];
@@ -58,8 +62,16 @@ export function RightSidebarObjectDefinitionDetails({
 		setNonRelationshipObjectFieldsInfo,
 	] = useState<nonRelationshipObjectFieldsInfo[]>();
 
-	const [{selectedObjectDefinitionNode, selectedObjectFolder}, dispatch] =
-		useObjectFolderContext();
+	const [
+		{
+			learnResourceContext,
+			selectedObjectDefinitionNode,
+			selectedObjectFolder,
+		},
+		dispatch,
+	] = useObjectFolderContext();
+
+	const [backEndErrors, setBackEndErrors] = useState<Error>({});
 
 	const store = useStore();
 
@@ -76,11 +88,6 @@ export function RightSidebarObjectDefinitionDetails({
 			},
 			onSubmit: () => {},
 		});
-
-	const isRootDescendantNode =
-		!!values.rootObjectDefinitionExternalReferenceCode &&
-		values.externalReferenceCode !==
-			values.rootObjectDefinitionExternalReferenceCode;
 
 	useEffect(() => {
 		const makeFetch = async () => {
@@ -122,7 +129,7 @@ export function RightSidebarObjectDefinitionDetails({
 		);
 
 		if (!Object.keys(validationErrors).length) {
-			let objectDefinition = editedObjectDefinition ?? values;
+			let objectDefinition = editedObjectDefinition ?? {...values};
 
 			delete objectDefinition.objectRelationships;
 			delete objectDefinition.objectActions;
@@ -138,44 +145,79 @@ export function RightSidebarObjectDefinitionDetails({
 				const updatedObjectDefinitionResponse =
 					await API.patchObjectDefinitionById(objectDefinition);
 
-				const updatedObjectDefinition =
-					(await updatedObjectDefinitionResponse.json()) as ObjectDefinition;
+				if (!updatedObjectDefinitionResponse.ok) {
+					const errorDetails =
+						await updatedObjectDefinitionResponse.json();
 
-				const {edges, nodes} = store.getState();
+					throw errorDetails;
+				}
+				else {
+					const updatedObjectDefinition =
+						(await updatedObjectDefinitionResponse.json()) as ObjectDefinition;
 
-				dispatch({
-					payload: {
-						currentObjectFolderName: selectedObjectFolder.name,
-						objectDefinitionNodes: nodes,
-						objectDefinitionRelationshipEdges: edges,
-						updatedObjectDefinition,
-					},
-					type: TYPES.UPDATE_OBJECT_DEFINITION_NODE,
-				});
+					const {edges, nodes} = store.getState();
 
-				dispatch({
-					payload: {
-						updatedShowChangesSaved: true,
-					},
-					type: TYPES.SET_SHOW_CHANGES_SAVED,
-				});
+					dispatch({
+						payload: {
+							currentObjectFolderName: selectedObjectFolder.name,
+							objectDefinitionNodes: nodes,
+							objectDefinitionRelationshipEdges: edges,
+							updatedObjectDefinition,
+						},
+						type: TYPES.UPDATE_OBJECT_DEFINITION_NODE,
+					});
+
+					dispatch({
+						payload: {
+							updatedShowChangesSaved: true,
+						},
+						type: TYPES.SET_SHOW_CHANGES_SAVED,
+					});
+
+					openToast({
+						message: Liferay.Language.get(
+							'the-object-was-saved-successfully'
+						),
+						type: 'success',
+					});
+				}
 			}
-			catch (error: unknown) {
-				const {message} = error as Error;
+			catch (error) {
+				const {detail, title} = error as Error;
 
-				openToast({message, type: 'danger'});
+				handleErrors({detail, title}, setBackEndErrors);
+
+				return;
 			}
 		}
 	};
 
+	const isRootDescendantNode =
+		!!values.rootObjectDefinitionExternalReferenceCode &&
+		values.externalReferenceCode !==
+			values.rootObjectDefinitionExternalReferenceCode;
+
 	const objectDefinitionNodeDetailsTitle = sub(
 		Liferay.Language.get('x-details'),
-		stringUtils.getLocalizableLabel(
-			values.defaultLanguageId as Liferay.Language.Locale,
-			values?.label,
-			values?.name
-		)
+		stringUtils.getLocalizableLabel({
+			fallbackLabel: values?.name,
+			fallbackLanguageId:
+				values.defaultLanguageId as Liferay.Language.Locale,
+			labels: values?.label,
+		})
 	);
+
+	const showSeoSection =
+		values.friendlyURLSeparator !== undefined &&
+		!(
+			(Liferay.FeatureFlags['LPS-135430'] &&
+				values.storageType !== 'default') ||
+			(!values.modifiable && values.system)
+		);
+
+	const showSubscriptionSection =
+		Liferay.FeatureFlags['LPD-17564'] &&
+		!(!values.modifiable && values.system);
 
 	return (
 		<>
@@ -187,8 +229,13 @@ export function RightSidebarObjectDefinitionDetails({
 					<span>{objectDefinitionNodeDetailsTitle}</span>
 				</div>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
+				{isRootDescendantNode && (
+					<InheritanceObjectDefinitionAlert
+						learnResources={learnResourceContext}
+					/>
+				)}
+
 				<ObjectDataContainer
 					dbTableName={
 						selectedObjectDefinitionNode?.data?.dbTableName
@@ -208,7 +255,6 @@ export function RightSidebarObjectDefinitionDetails({
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<EntryDisplayContainer
 					className="lfr-objects__model-builder-right-sidebar-object-definition-entry-display-container"
@@ -236,14 +282,12 @@ export function RightSidebarObjectDefinitionDetails({
 						selectedObjectDefinitionNode?.data
 							?.linkedObjectDefinition ?? false
 					}
-					isRootDescendantNode={isRootDescendantNode}
 					onSubmit={onSubmit}
 					setValues={setValues}
 					sites={sites}
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			{values?.modifiable && (
 				<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 					<AccountRestrictionContainer
@@ -253,7 +297,6 @@ export function RightSidebarObjectDefinitionDetails({
 							selectedObjectDefinitionNode?.data
 								?.linkedObjectDefinition ?? false
 						}
-						isRootDescendantNode={isRootDescendantNode}
 						objectFields={
 							(values?.objectFields as ObjectField[]) ?? []
 						}
@@ -263,30 +306,62 @@ export function RightSidebarObjectDefinitionDetails({
 					/>
 				</div>
 			)}
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
 				<ConfigurationContainer
 					hasUpdateObjectDefinitionPermission={
 						!!values.actions?.update
 					}
+					isApproved={values?.status?.label === 'approved'}
+					isEnableObjectEntrySchedule={
+						!!values.enableObjectEntrySchedule
+					}
 					isLinkedObjectDefinition={
 						selectedObjectDefinitionNode?.data
 							?.linkedObjectDefinition ?? false
 					}
-					isRootDescendantNode={isRootDescendantNode}
 					onSubmit={onSubmit}
 					setValues={setValues}
 					values={values as ObjectDefinition}
 				/>
 			</div>
-
 			<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
-				<TranslationsContainer
-					onSubmit={onSubmit}
-					setValues={setValues}
-					values={values}
-				/>
+				<TranslationsContainer />
 			</div>
+			{showSeoSection && (
+				<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
+					<SeoContainer
+						errors={backEndErrors}
+						hasUpdateObjectDefinitionPermission={
+							!!values.actions?.update
+						}
+						isLinkedObjectDefinition={
+							selectedObjectDefinitionNode?.data
+								?.linkedObjectDefinition ?? false
+						}
+						onSubmit={onSubmit}
+						setErrors={setBackEndErrors}
+						setValues={setValues}
+						values={values}
+					/>
+				</div>
+			)}
+
+			{showSubscriptionSection && (
+				<div className="lfr-objects__model-builder-right-sidebar-object-definition-node-content">
+					<SubscriptionsContainer
+						hasUpdateObjectDefinitionPermission={
+							!!values.actions?.update
+						}
+						isLinkedObjectDefinition={
+							selectedObjectDefinitionNode?.data
+								?.linkedObjectDefinition ?? false
+						}
+						onSubmit={onSubmit}
+						setValues={setValues}
+						values={values}
+					/>
+				</div>
+			)}
 		</>
 	);
 }

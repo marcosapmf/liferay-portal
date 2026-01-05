@@ -6,7 +6,6 @@
 package com.liferay.portal.security.permission.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourcePermission;
@@ -24,6 +23,7 @@ import com.liferay.portal.kernel.test.randomizerbumpers.UniqueStringRandomizerBu
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.service.impl.ResourcePermissionLocalServiceImpl;
 import com.liferay.portal.spring.aop.AopInvocationHandler;
@@ -35,7 +35,6 @@ import com.liferay.portal.test.rule.ExpectedMultipleLogs;
 import com.liferay.portal.test.rule.ExpectedType;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,7 +44,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 import org.junit.Assert;
@@ -87,8 +85,6 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 		_resourceAction = _resourceActionLocalService.addResourceAction(
 			_name, _actionId, RandomTestUtil.randomLong());
 
-		_resourceActionLocalService.checkResourceActions();
-
 		AopInvocationHandler aopInvocationHandler =
 			ProxyUtil.fetchInvocationHandler(
 				_resourcePermissionLocalService, AopInvocationHandler.class);
@@ -98,14 +94,10 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 				(ServiceWrapper<ResourcePermissionLocalService>)
 					aopInvocationHandler.getTarget();
 
-		ClassLoaderBeanHandler classLoaderBeanHandler =
-			(ClassLoaderBeanHandler)ProxyUtil.getInvocationHandler(
-				resourcePermissionLocalServiceWrapper.getWrappedService());
-
 		final ResourcePermissionLocalServiceImpl
 			resourcePermissionLocalServiceImpl =
 				(ResourcePermissionLocalServiceImpl)
-					classLoaderBeanHandler.getBean();
+					resourcePermissionLocalServiceWrapper.getWrappedService();
 
 		final ResourcePermissionPersistence resourcePermissionPersistence =
 			resourcePermissionLocalServiceImpl.
@@ -165,7 +157,7 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 					@ExpectedLog(
 						expectedDBType = ExpectedDBType.MARIADB,
 						expectedLog = "Duplicate entry '",
-						expectedType = ExpectedType.PREFIX
+						expectedType = ExpectedType.CONTAINS
 					),
 					@ExpectedLog(
 						expectedDBType = ExpectedDBType.MYSQL,
@@ -191,24 +183,9 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 						expectedDBType = ExpectedDBType.SQLSERVER,
 						expectedLog = "Cannot insert duplicate key row",
 						expectedType = ExpectedType.PREFIX
-					),
-					@ExpectedLog(
-						expectedDBType = ExpectedDBType.SYBASE,
-						expectedLog = "Attempt to insert duplicate key row",
-						expectedType = ExpectedType.CONTAINS
 					)
 				},
 				level = "ERROR", loggerClass = SqlExceptionHelper.class
-			),
-			@ExpectedLogs(
-				expectedLogs = {
-					@ExpectedLog(
-						expectedDBType = ExpectedDBType.NONE,
-						expectedLog = "HHH000315: Exception executing batch [java.sql.BatchUpdateException",
-						expectedType = ExpectedType.PREFIX
-					)
-				},
-				level = "ERROR", loggerClass = BatchingBatch.class
 			)
 		}
 	)

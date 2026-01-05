@@ -21,9 +21,9 @@ public class PortalReleasePortalTopLevelBuild
 	extends PortalTopLevelBuild implements PortalWorkspaceBuild {
 
 	public PortalReleasePortalTopLevelBuild(
-		String url, TopLevelBuild topLevelBuild) {
+		String buildURL, TopLevelBuild topLevelBuild) {
 
-		super(url, topLevelBuild);
+		super(buildURL, topLevelBuild);
 	}
 
 	@Override
@@ -86,7 +86,8 @@ public class PortalReleasePortalTopLevelBuild
 			else {
 				URL portalReleaseTomcatURL = new URL(tomcatURLString);
 
-				_portalRelease = new PortalRelease(portalReleaseTomcatURL);
+				_portalRelease = PortalReleaseFactory.newPortalRelease(
+					portalReleaseTomcatURL);
 
 				_portalRelease.setPortalBundleTomcatURL(portalReleaseTomcatURL);
 			}

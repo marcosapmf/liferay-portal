@@ -102,7 +102,16 @@ else {
 	<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(latestFileVersion.getUserName())} %>" key="modified-x-ago-by-x" />
 </span>
 <span>
-	<%= DLUtil.getAbsolutePath(liferayPortletRequest, dlAdminDisplayContext.getRootFolderId(), fileEntry.getFolderId()).replace(StringPool.RAQUO_CHAR, StringPool.GREATER_THAN) %>
+
+	<%
+	long folderId = fileEntry.getFolderId();
+
+	if (fileShortcut != null) {
+		folderId = fileShortcut.getFolderId();
+	}
+	%>
+
+	<%= DLUtil.getAbsolutePath(liferayPortletRequest, dlAdminDisplayContext.getRootFolderId(), folderId).replace(StringPool.RAQUO_CHAR, StringPool.GREATER_THAN) %>
 </span>
 
 <c:if test="<%= latestFileVersion.getModel() instanceof DLFileVersion %>">
@@ -119,7 +128,7 @@ else {
 </c:if>
 
 <span class="file-entry-status">
-	<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && !latestFileVersion.isApproved() && dlViewFileVersionDisplayContext.hasApprovedVersion() %>'>
+	<c:if test="<%= !latestFileVersion.isApproved() && dlViewFileVersionDisplayContext.hasApprovedVersion() %>">
 		<liferay-portal-workflow:status
 			showStatusLabel="<%= false %>"
 			status="<%= WorkflowConstants.STATUS_APPROVED %>"
@@ -131,7 +140,7 @@ else {
 		status="<%= latestFileVersion.getStatus() %>"
 	/>
 
-	<c:if test='<%= FeatureFlagManagerUtil.isEnabled(latestFileVersion.getCompanyId(), "LPD-10701") && latestFileVersion.isScheduled() %>'>
+	<c:if test="<%= latestFileVersion.isScheduled() %>">
 
 		<%
 		String displayDateString = StringPool.BLANK;

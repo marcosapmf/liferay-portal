@@ -11,20 +11,24 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.exception.NoSuchInfoItemException;
+import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemDetails;
+import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
+import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
-import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.info.item.renderer.InfoItemTemplatedRenderer;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -37,11 +41,13 @@ import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.PrintWriter;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,7 +64,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		return JSONUtil.put(
@@ -82,8 +88,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 					_language.format(
 						fragmentRendererContext.getLocale(), "x-options",
 						"content-display", true)
-				))
-		).toString();
+				)));
 	}
 
 	@Override
@@ -120,9 +125,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			className = jsonObject.getString("className");
 
 			displayObject = _getDisplayObject(
-				className, jsonObject.getLong("classPK"),
-				jsonObject.getString("externalReferenceCode"),
-				infoItemReference);
+				httpServletRequest, infoItemReference, jsonObject);
 		}
 		else {
 			displayObject = _getInfoItem(infoItemReference);
@@ -172,16 +175,11 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			return;
 		}
 
-		String className = StringPool.BLANK;
 		Object displayObject = null;
 
 		if (jsonObject != null) {
-			className = jsonObject.getString("className");
-
 			displayObject = _getDisplayObject(
-				className, jsonObject.getLong("classPK"),
-				jsonObject.getString("externalReferenceCode"),
-				infoItemReference);
+				httpServletRequest, infoItemReference, jsonObject);
 		}
 		else {
 			displayObject = _getInfoItem(infoItemReference);
@@ -196,6 +194,12 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			}
 
 			return;
+		}
+
+		String className = StringPool.BLANK;
+
+		if (jsonObject != null) {
+			className = jsonObject.getString("className");
 		}
 
 		if (Validator.isNull(className) && (infoItemReference != null)) {
@@ -225,79 +229,169 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			return;
 		}
 
-		InfoItemRenderer<Object> infoItemRenderer =
-			(InfoItemRenderer<Object>)tuple.getObject(0);
+		long classPK = _getClassPK(infoItemReference, jsonObject);
 
-		if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
-			InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
-				(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
+		if (!fragmentRendererContext.isViewMode() || (classPK <= 0)) {
+			_render(
+				displayObject, httpServletRequest, httpServletResponse,
+				(InfoItemRenderer<Object>)tuple.getObject(0), tuple);
 
-			if (tuple.getSize() > 1) {
-				infoItemTemplatedRenderer.render(
-					displayObject, (String)tuple.getObject(1),
-					httpServletRequest, httpServletResponse);
-			}
-			else {
-				infoItemTemplatedRenderer.render(
-					displayObject, httpServletRequest, httpServletResponse);
-			}
+			return;
 		}
-		else {
-			infoItemRenderer.render(
-				displayObject, httpServletRequest, httpServletResponse);
+
+		try {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			StringBundler sb = new StringBundler(10);
+
+			sb.append("<div data-analytics-asset-action=\"view\" ");
+			sb.append("data-analytics-asset-id=\"");
+			sb.append(classPK);
+			sb.append("\" data-analytics-asset-subtype=\"");
+			sb.append(_getAnalyticsAssetSubtype(className, displayObject));
+			sb.append("\" data-analytics-asset-title=\"");
+			sb.append(
+				_getAnalyticsAssetTitle(
+					className, fragmentRendererContext.getLocale(),
+					displayObject));
+			sb.append("\" data-analytics-asset-type=\"");
+			sb.append(className);
+			sb.append("\">");
+
+			printWriter.write(sb.toString());
+
+			_render(
+				displayObject, httpServletRequest, httpServletResponse,
+				(InfoItemRenderer<Object>)tuple.getObject(0), tuple);
+
+			printWriter.write("</div>");
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 	}
 
-	private Object _getDisplayObject(
-		String className, long classPK, String externalReferenceCode,
-		InfoItemReference infoItemReference) {
+	private String _getAnalyticsAssetSubtype(String className, Object object) {
+		InfoItemObjectVariationProvider infoItemObjectVariationProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemObjectVariationProvider.class, className);
 
-		InfoItemServiceFilter infoItemServiceFilter = null;
-
-		if (classPK > 0) {
-			infoItemServiceFilter =
-				ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER;
+		if (infoItemObjectVariationProvider == null) {
+			return StringPool.BLANK;
 		}
-		else {
-			infoItemServiceFilter =
-				ERCInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER;
+
+		return infoItemObjectVariationProvider.getInfoItemFormVariationKey(
+			object);
+	}
+
+	private String _getAnalyticsAssetTitle(
+		String className, Locale locale, Object object) {
+
+		InfoItemFieldValuesProvider infoItemFieldValuesProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemFieldValuesProvider.class, className);
+
+		InfoItemFieldValues infoItemFieldValues =
+			infoItemFieldValuesProvider.getInfoItemFieldValues(object);
+
+		if (infoItemFieldValues == null) {
+			return StringPool.BLANK;
+		}
+
+		InfoFieldValue<?> infoFieldValue =
+			infoItemFieldValues.getInfoFieldValue("title");
+
+		if (infoFieldValue == null) {
+			return StringPool.BLANK;
+		}
+
+		return String.valueOf(infoFieldValue.getValue(locale));
+	}
+
+	private long _getClassPK(
+		InfoItemReference infoItemReference, JSONObject jsonObject) {
+
+		if (jsonObject != null) {
+			long classPK = jsonObject.getLong("classPK");
+
+			if (classPK > 0) {
+				return classPK;
+			}
 		}
 
 		if (infoItemReference != null) {
 			InfoItemIdentifier infoItemIdentifier =
 				infoItemReference.getInfoItemIdentifier();
 
-			infoItemServiceFilter =
-				infoItemIdentifier.getInfoItemServiceFilter();
+			if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
+				ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+					(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+				return classPKInfoItemIdentifier.getClassPK();
+			}
 		}
 
-		InfoItemObjectProvider<?> infoItemObjectProvider =
-			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className, infoItemServiceFilter);
+		return 0;
+	}
 
-		if (infoItemObjectProvider == null) {
+	private Object _getDisplayObject(
+		HttpServletRequest httpServletRequest,
+		InfoItemReference infoItemReference, JSONObject jsonObject) {
+
+		long classPK = jsonObject.getLong("classPK");
+
+		InfoItemDetails infoItemDetails =
+			(InfoItemDetails)httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM_DETAILS);
+
+		if ((classPK <= 0) && (infoItemDetails != null) &&
+			(infoItemReference != null) &&
+			infoItemReference.equals(infoItemDetails.getInfoItemReference())) {
+
+			Object infoItem = httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM);
+
+			if (infoItem != null) {
+				return infoItem;
+			}
+		}
+
+		String externalReferenceCode = jsonObject.getString(
+			"externalReferenceCode");
+
+		if ((classPK <= 0) && Validator.isNull(externalReferenceCode)) {
 			return _getInfoItem(infoItemReference);
 		}
 
+		String className = jsonObject.getString("className");
+		InfoItemIdentifier infoItemIdentifier = null;
+		InfoItemObjectProvider<?> infoItemObjectProvider = null;
+
+		if (classPK > 0) {
+			infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
+			infoItemObjectProvider =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemObjectProvider.class, className,
+					ClassPKInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+		}
+		else {
+			infoItemIdentifier = new ERCInfoItemIdentifier(
+				externalReferenceCode,
+				jsonObject.getString("scopeExternalReferenceCode", null));
+			infoItemObjectProvider =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemObjectProvider.class, className,
+					ERCInfoItemIdentifier.INFO_ITEM_SERVICE_FILTER);
+		}
+
+		if (infoItemObjectProvider == null) {
+			return null;
+		}
+
 		try {
-			InfoItemIdentifier infoItemIdentifier = null;
-
-			if (classPK > 0) {
-				infoItemIdentifier = new ClassPKInfoItemIdentifier(classPK);
-			}
-			else {
-				infoItemIdentifier = new ERCInfoItemIdentifier(
-					externalReferenceCode);
-			}
-
-			Object infoItem = infoItemObjectProvider.getInfoItem(
-				infoItemIdentifier);
-
-			if (infoItem == null) {
-				return _getInfoItem(infoItemReference);
-			}
-
-			return infoItem;
+			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -305,7 +399,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			}
 		}
 
-		return _getInfoItem(infoItemReference);
+		return null;
 	}
 
 	private JSONObject _getFieldValueJSONObject(
@@ -315,8 +409,8 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			fragmentRendererContext.getFragmentEntryLink();
 
 		return (JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
-			getConfiguration(fragmentRendererContext),
-			fragmentEntryLink.getEditableValues(),
+			getConfigurationJSONObject(fragmentRendererContext),
+			fragmentEntryLink.getEditableValuesJSONObject(),
 			fragmentRendererContext.getLocale(), "itemSelector");
 	}
 
@@ -332,6 +426,10 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			_infoItemServiceRegistry.getFirstInfoItemService(
 				InfoItemObjectProvider.class, infoItemReference.getClassName(),
 				infoItemIdentifier.getInfoItemServiceFilter());
+
+		if (infoItemObjectProvider == null) {
+			return null;
+		}
 
 		try {
 			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
@@ -445,6 +543,31 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		return true;
+	}
+
+	private void _render(
+		Object displayObject, HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
+		InfoItemRenderer<Object> infoItemRenderer, Tuple tuple) {
+
+		if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
+			InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
+				(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
+
+			if (tuple.getSize() > 1) {
+				infoItemTemplatedRenderer.render(
+					displayObject, (String)tuple.getObject(1),
+					httpServletRequest, httpServletResponse);
+			}
+			else {
+				infoItemTemplatedRenderer.render(
+					displayObject, httpServletRequest, httpServletResponse);
+			}
+		}
+		else {
+			infoItemRenderer.render(
+				displayObject, httpServletRequest, httpServletResponse);
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

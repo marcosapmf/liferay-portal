@@ -1,11 +1,12 @@
-apiDir: "../data-engine-rest-api/src/main/java"
-apiPackagePath: "com.liferay.data.engine.rest"
+apiDir: ../data-engine-rest-api/src/main/java
+apiPackagePath: com.liferay.data.engine.rest
 application:
-    baseURI: "/data-engine"
-    className: "DataEngineRESTApplication"
-    name: "Liferay.Data.Engine.REST"
-author: "Jeyvison Nascimento"
-clientDir: "../data-engine-rest-client/src/main/java"
-compatibilityVersion: 6
+    baseURI: /data-engine
+    className: DataEngineRESTApplication
+    name: Liferay.Data.Engine.REST
+author: Jeyvison Nascimento
+clientDir: ../data-engine-rest-client/src/main/java
+compatibilityVersion: 14
 forcePredictableOperationId: true
-testDir: "../data-engine-rest-test/src/testIntegration/java"
+javaEEPackage: jakarta
+testDir: ../data-engine-rest-test/src/testIntegration/java

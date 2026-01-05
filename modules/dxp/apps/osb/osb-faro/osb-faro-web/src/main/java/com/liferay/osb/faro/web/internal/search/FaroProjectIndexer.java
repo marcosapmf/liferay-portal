@@ -6,10 +6,9 @@
 package com.liferay.osb.faro.web.internal.search;
 
 import com.liferay.osb.faro.constants.FaroProjectConstants;
-import com.liferay.osb.faro.engine.client.CerebroEngineClient;
-import com.liferay.osb.faro.engine.client.ContactsEngineClient;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.service.FaroProjectLocalService;
+import com.liferay.osb.faro.service.FaroProjectUsageLocalService;
 import com.liferay.osb.faro.web.internal.model.display.main.FaroSubscriptionDisplay;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
 import com.liferay.petra.string.StringPool;
@@ -33,11 +32,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.util.Date;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,9 +54,9 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 			Field.COMPANY_ID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK,
 			Field.GROUP_ID, Field.NAME, Field.UID, Field.USER_ID,
 			"corpProjectName", "corpProjectUuid", "createDate",
-			"individualsLimit", "individualsUsage", "lastAccessDate", "offline",
-			"pageViewsLimit", "pageViewsUsage", "subscription",
-			"subscriptionName");
+			"dataSourceConnected", "individualsLimit", "individualsUsage",
+			"lastAccessDate", "offline", "pageViewsLimit", "pageViewsUsage",
+			"subscription", "subscriptionName");
 	}
 
 	@Override
@@ -162,9 +161,26 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 		document.addKeyword(
 			"corpProjectUuid", faroProject.getCorpProjectUuid());
 		document.addDate("createDate", new Date(faroProject.getCreateTime()));
+		document.addKeyword(
+			"dataSourceConnected", faroProject.isDataSourceConnected());
 
 		FaroSubscriptionDisplay faroSubscriptionDisplay = JSONUtil.readValue(
 			faroProject.getSubscription(), FaroSubscriptionDisplay.class);
+
+		document.addNumber(
+			"individualsLimit", faroSubscriptionDisplay.getIndividualsLimit());
+		document.addNumber(
+			"individualsUsage",
+			_getUsage(
+				faroSubscriptionDisplay.
+					getIndividualsCountSinceLastAnniversary(),
+				faroSubscriptionDisplay.getIndividualsLimit()));
+		document.addDate(
+			"lastAnniversaryDate",
+			faroSubscriptionDisplay.getLastAnniversaryDate());
+
+		document.addDate(
+			"lastAccessDate", new Date(faroProject.getLastAccessTime()));
 
 		try {
 			if (!StringUtil.equals(
@@ -174,7 +190,7 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 			}
 			else {
 				faroSubscriptionDisplay.setCounts(
-					faroProject, _cerebroEngineClient, _contactsEngineClient);
+					faroProject, _faroProjectUsageLocalService);
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
@@ -188,15 +204,13 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 			_log.error(exception);
 		}
 
-		document.addDate(
-			"lastAnniversaryDate",
-			faroSubscriptionDisplay.getLastAnniversaryDate());
-		document.addNumber(
-			"individualsLimit", faroSubscriptionDisplay.getIndividualsLimit());
-		document.addDate(
-			"lastAccessDate", new Date(faroProject.getLastAccessTime()));
 		document.addNumber(
 			"pageViewsLimit", faroSubscriptionDisplay.getPageViewsLimit());
+		document.addNumber(
+			"pageViewsUsage",
+			_getUsage(
+				faroSubscriptionDisplay.getPageViewsCountSinceLastAnniversary(),
+				faroSubscriptionDisplay.getPageViewsLimit()));
 		document.addKeyword(
 			"subscription",
 			JSONUtil.writeValueAsString(faroSubscriptionDisplay));
@@ -269,17 +283,24 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 		indexableActionableDynamicQuery.performActions();
 	}
 
+	private double _getUsage(long count, long limit) {
+		if ((count == 0) || (limit == 0)) {
+			return 0.0;
+		}
+
+		double usage = 100.0 * count / limit;
+
+		return Math.round(usage * 100) / 100.0;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		FaroProjectIndexer.class);
 
 	@Reference
-	private CerebroEngineClient _cerebroEngineClient;
-
-	@Reference
-	private ContactsEngineClient _contactsEngineClient;
-
-	@Reference
 	private FaroProjectLocalService _faroProjectLocalService;
+
+	@Reference
+	private FaroProjectUsageLocalService _faroProjectUsageLocalService;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

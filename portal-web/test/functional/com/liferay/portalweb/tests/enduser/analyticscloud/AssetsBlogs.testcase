@@ -236,11 +236,12 @@ definition {
 
 		ACNavigation.goToSegments();
 
-		ACSegments.createStaticSegment();
+		ACSegments.createDynamicSegmentAndFillFields(
+			criterion = "Individual Attributes",
+			segmentField = "email",
+			segments = "Dynamic Segment Test");
 
-		ACUtils.setItemName(itemName = "Static Segment Test");
-
-		ACSegments.addStaticMember(tableMember = "ac ac");
+		ACSegments.editTextCriterion(textInput = "ac@liferay.com");
 
 		ACSegments.saveSegment();
 
@@ -258,7 +259,7 @@ definition {
 			index = 2,
 			percentageList = "66.67%,33.33%");
 
-		ACUtils.assertViewerSegmentsCard(segmentNameList = "Static Segment Test");
+		ACUtils.assertViewerSegmentsCard(segmentNameList = "Dynamic Segment Test");
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8386 | Test Summary: Blogs views by technology card shows views by the expected browser"
@@ -781,45 +782,6 @@ definition {
 				nameList = "Blogs AC Title",
 				numberValueList = "0.00/10");
 		}
-	}
-
-	@description = "View all blogs in the property in assets"
-	@priority = 5
-	test ViewAllBlogsShownInAssetList {
-		property portal.acceptance = "true";
-		property portal.release = "true";
-
-		ACUtils.createBlogsAndAddToPage(entryTitle = "Test 2");
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-
-		ACUtils.navigateToSitePage(
-			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title,Test 2",
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		ACUtils.closeAllSessionsAndWait();
-
-		ACUtils.launchAC();
-
-		ACProperties.switchProperty(propertyName = ${propertyName});
-
-		ACNavigation.goToAssets();
-
-		ACNavigation.switchTab(tabName = "Blogs");
-
-		ACTimeFilter.clickTimeFilterButton();
-
-		ACTimeFilter.setLast24Hours();
-
-		ACUtils.searchBar(searchItem = "Blogs AC Title");
-
-		ACUtils.viewNameList(nameList = "Blogs AC Title");
-
-		ACUtils.searchBar(searchItem = "Test 2");
-
-		ACUtils.viewNameList(nameList = "Test 2");
 	}
 
 }

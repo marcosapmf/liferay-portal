@@ -12,11 +12,16 @@ import com.liferay.list.type.service.ListTypeEntryLocalServiceUtil;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.LongTextObjectFieldBuilder;
+import com.liferay.object.field.builder.MultiselectPicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.RichTextObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.field.setting.builder.ObjectFieldSettingBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -28,8 +33,11 @@ import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
@@ -124,7 +132,7 @@ public class ObjectDefinitionGraphQLTest {
 			ListTypeDefinitionLocalServiceUtil.addListTypeDefinition(
 				null, TestPropsValues.getUserId(),
 				LocalizedMapUtil.getLocalizedMap(_LIST_FIELD_NAME), false,
-				Collections.emptyList());
+				Collections.emptyList(), new ServiceContext());
 
 		_addListTypeEntry(listTypeDefinition, StringUtil.randomId());
 		_addListTypeEntry(listTypeDefinition, StringUtil.randomId());
@@ -161,7 +169,7 @@ public class ObjectDefinitionGraphQLTest {
 			null, TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
 			childObjectDefinition.getObjectDefinitionId(), 0,
-			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			_RELATIONSHIP_NAME, false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -177,8 +185,10 @@ public class ObjectDefinitionGraphQLTest {
 				childObjectDefinition.getObjectDefinitionId());
 
 		_parentObjectEntry = ObjectEntryLocalServiceUtil.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				_LIST_FIELD_NAME, _LIST_FIELD_VALUE_KEY
 			).put(
@@ -187,8 +197,10 @@ public class ObjectDefinitionGraphQLTest {
 			ServiceContextTestUtil.getServiceContext());
 
 		_childObjectEntry = ObjectEntryLocalServiceUtil.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			childObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				StringBundler.concat(
 					"r_", _RELATIONSHIP_NAME, "_",
@@ -330,6 +342,104 @@ public class ObjectDefinitionGraphQLTest {
 	}
 
 	@Test
+	@TestInfo("LPD-49283")
+	public void testAddObjectEntryWithMultiselectPicklistObjectField()
+		throws Exception {
+
+		ListTypeDefinition listTypeDefinition =
+			ListTypeDefinitionLocalServiceUtil.addListTypeDefinition(
+				null, TestPropsValues.getUserId(),
+				LocalizedMapUtil.getLocalizedMap(StringUtil.randomId()), false,
+				Collections.emptyList(), new ServiceContext());
+		String listTypeEntryKey1 = StringUtil.randomId();
+
+		_addListTypeEntry(listTypeDefinition, listTypeEntryKey1);
+
+		String listTypeEntryKey2 = StringUtil.randomId();
+
+		_addListTypeEntry(listTypeDefinition, listTypeEntryKey2);
+
+		String listTypeEntryKey3 = StringUtil.randomId();
+
+		_addListTypeEntry(listTypeDefinition, listTypeEntryKey3);
+
+		String multiselectPicklistObjectFieldName = StringUtil.randomId();
+		String picklistObjectFieldName = StringUtil.randomId();
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				ObjectDefinitionTestUtil.getRandomName(),
+				Arrays.asList(
+					new MultiselectPicklistObjectFieldBuilder(
+					).userId(
+						TestPropsValues.getUserId()
+					).listTypeDefinitionId(
+						listTypeDefinition.getListTypeDefinitionId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).indexedAsKeyword(
+						true
+					).name(
+						multiselectPicklistObjectFieldName
+					).required(
+						true
+					).build(),
+					new PicklistObjectFieldBuilder(
+					).userId(
+						TestPropsValues.getUserId()
+					).listTypeDefinitionId(
+						listTypeDefinition.getListTypeDefinitionId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).indexedAsKeyword(
+						true
+					).name(
+						picklistObjectFieldName
+					).required(
+						true
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				TestPropsValues.getUserId());
+
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				multiselectPicklistObjectFieldName,
+				JSONUtil.putAll(
+					JSONUtil.put("key", listTypeEntryKey1),
+					JSONUtil.put("key", listTypeEntryKey2))
+			).put(
+				picklistObjectFieldName, JSONUtil.put("key", listTypeEntryKey3)
+			).toString(),
+			JSONUtil.getValueAsString(
+				_invoke(
+					new GraphQLField(
+						"mutation",
+						new GraphQLField(
+							"c",
+							new GraphQLField(
+								"create" + objectDefinition.getShortName(),
+								HashMapBuilder.<String, Object>put(
+									objectDefinition.getShortName(),
+									StringBundler.concat(
+										"{", multiselectPicklistObjectFieldName,
+										": [{key: \"", listTypeEntryKey1,
+										"\"}, {key: \"", listTypeEntryKey2,
+										"\"}], ", picklistObjectFieldName,
+										": {key: \"", listTypeEntryKey3, "\"}}")
+								).build(),
+								new GraphQLField(
+									multiselectPicklistObjectFieldName +
+										" {key}"),
+								new GraphQLField(
+									picklistObjectFieldName + " {key}"))))),
+				"JSONObject/data", "JSONObject/c",
+				"JSONObject/create" + objectDefinition.getShortName()),
+			JSONCompareMode.STRICT);
+	}
+
+	@Test
 	public void testDeleteObjectEntry() throws Exception {
 		GraphQLField graphQLField = new GraphQLField(
 			"mutation",
@@ -432,6 +542,68 @@ public class ObjectDefinitionGraphQLTest {
 	}
 
 	@Test
+	@TestInfo("LPD-65949")
+	public void testGetListObjectEntryWithAttachmentField() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Arrays.asList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT,
+						ObjectFieldConstants.DB_TYPE_LONG, true, false, null,
+						"x" + RandomTestUtil.randomString(),
+						"x" + RandomTestUtil.randomString(),
+						Arrays.asList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.
+									NAME_ACCEPTED_FILE_EXTENSIONS
+							).value(
+								"jpg, txt"
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_FILE_SOURCE
+							).value(
+								ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+							).value(
+								String.valueOf(1)
+							).build()),
+						false),
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING, true, true, null,
+						RandomTestUtil.randomString(), _OBJECT_FIELD_NAME_TEXT,
+						false)),
+				false);
+
+		String pluralName = TextFormatter.formatPlural(
+			StringUtil.lowerCaseFirstLetter(objectDefinition.getShortName()));
+
+		JSONAssert.assertEquals(
+			JSONFactoryUtil.createJSONArray(
+			).toString(),
+			JSONUtil.getValueAsString(
+				_invoke(
+					new GraphQLField(
+						"query",
+						new GraphQLField(
+							"c",
+							new GraphQLField(
+								pluralName,
+								new GraphQLField(
+									"items",
+									new GraphQLField(
+										_OBJECT_FIELD_NAME_TEXT)))))),
+				"JSONObject/data", "JSONObject/c", "JSONObject/" + pluralName,
+				"JSONArray/items"),
+			JSONCompareMode.LENIENT);
+	}
+
+	@Test
 	public void testGetObjectEntry() throws Exception {
 		String key = StringUtil.lowerCaseFirstLetter(
 			_parentObjectDefinitionName);
@@ -501,8 +673,10 @@ public class ObjectDefinitionGraphQLTest {
 				});
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
+			0, TestPropsValues.getUserId(),
 			_parentObjectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				_LIST_FIELD_NAME, _LIST_FIELD_VALUE_KEY
 			).put(
@@ -558,7 +732,7 @@ public class ObjectDefinitionGraphQLTest {
 
 		try {
 			objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
-				true, ObjectDefinitionTestUtil.getRandomName(),
+				ObjectDefinitionTestUtil.getRandomName(),
 				Arrays.asList(
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -1060,7 +1234,8 @@ public class ObjectDefinitionGraphQLTest {
 		ListTypeEntryLocalServiceUtil.addListTypeEntry(
 			null, TestPropsValues.getUserId(),
 			listTypeDefinition.getListTypeDefinitionId(), key,
-			LocalizedMapUtil.getLocalizedMap(key));
+			LocalizedMapUtil.getLocalizedMap(key),
+			listTypeDefinition.isSystem());
 	}
 
 	private ObjectDefinition _addObjectDefinition(
@@ -1069,14 +1244,15 @@ public class ObjectDefinitionGraphQLTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, true, false,
-				enableObjectEntryDraft,
+				null, TestPropsValues.getUserId(), 0, null, false, true, false,
+				true, enableObjectEntryDraft, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				Collections.emptyList());
+				Collections.emptyList(), Collections.emptyList(),
+				Collections.emptyList(), new ServiceContext());
 
 		ObjectFieldUtil.addCustomObjectField(
 			new TextObjectFieldBuilder(

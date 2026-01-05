@@ -44,7 +44,9 @@ public class CommerceReturnPanelApp extends BasePanelApp {
 	public boolean isShow(PermissionChecker permissionChecker, Group group)
 		throws PortalException {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-10562")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-10562")) {
+
 			return false;
 		}
 
@@ -52,7 +54,7 @@ public class CommerceReturnPanelApp extends BasePanelApp {
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + CommercePortletKeys.COMMERCE_RETURN + ")"
+		target = "(jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_RETURN + ")"
 	)
 	private Portlet _portlet;
 

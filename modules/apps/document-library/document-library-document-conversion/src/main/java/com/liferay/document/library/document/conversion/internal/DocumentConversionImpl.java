@@ -17,10 +17,12 @@ import com.liferay.document.library.document.conversion.internal.background.task
 import com.liferay.document.library.document.conversion.internal.configuration.OpenOfficeConfiguration;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
 import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -28,7 +30,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -36,19 +37,18 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SortedArrayList;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +60,6 @@ import java.util.concurrent.TimeoutException;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -160,8 +159,8 @@ public class DocumentConversionImpl implements DocumentConversion {
 						PortalUUIDUtil.generate());
 
 					_backgroundTaskManager.addBackgroundTask(
-						UserConstants.USER_ID_DEFAULT, CompanyConstants.SYSTEM,
-						jobName,
+						UserConstants.USER_ID_DEFAULT,
+						BackgroundTaskConstants.GROUP_ID_DEFAULT, jobName,
 						OpenOfficeConversionPreviewBackgroundTaskExecutor.class.
 							getName(),
 						HashMapBuilder.<String, Serializable>put(
@@ -180,28 +179,28 @@ public class DocumentConversionImpl implements DocumentConversion {
 
 	@Override
 	public String[] getConversions(String extension) {
-		extension = _fixExtension(extension);
+		String fixedExtension = _fixExtension(extension);
 
-		String[] conversions = ConversionsHolder.getConversions(extension);
+		String[] conversions = ConversionsHolder.getConversions(fixedExtension);
 
 		if (conversions == null) {
-			conversions = _DEFAULT_CONVERSIONS;
+			return _DEFAULT_CONVERSIONS;
 		}
-		else {
-			if (ArrayUtil.contains(conversions, extension)) {
-				List<String> conversionsList = new ArrayList<>();
 
-				for (String conversion : conversions) {
-					if (!conversion.equals(extension)) {
-						conversionsList.add(conversion);
-					}
+		if (!ArrayUtil.contains(conversions, fixedExtension)) {
+			return conversions;
+		}
+
+		return TransformUtil.transform(
+			conversions,
+			conversion -> {
+				if (conversion.equals(fixedExtension)) {
+					return null;
 				}
 
-				conversions = conversionsList.toArray(new String[0]);
-			}
-		}
-
-		return conversions;
+				return conversion;
+			},
+			String.class);
 	}
 
 	@Override
@@ -272,7 +271,6 @@ public class DocumentConversionImpl implements DocumentConversion {
 	}
 
 	@Activate
-	@Modified
 	protected void activate(Map<String, Object> properties) {
 		_executorService = _portalExecutorManager.getPortalExecutor(
 			DocumentConversionImpl.class.getName());
@@ -472,27 +470,32 @@ public class DocumentConversionImpl implements DocumentConversion {
 
 				List<String> conversions = new SortedArrayList<>();
 
-				for (String targetExtension : targetExtensions) {
-					DocumentFormat targetDocumentFormat =
-						documentFormatRegistry.getFormatByFileExtension(
-							targetExtension);
+				conversions.addAll(
+					TransformUtil.transformToList(
+						targetExtensions,
+						targetExtension -> {
+							DocumentFormat targetDocumentFormat =
+								documentFormatRegistry.getFormatByFileExtension(
+									targetExtension);
 
-					if (targetDocumentFormat == null) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Invalid target extension " +
-									targetDocumentFormat);
-						}
+							if (targetDocumentFormat == null) {
+								if (_log.isWarnEnabled()) {
+									_log.warn(
+										"Invalid target extension " +
+											targetDocumentFormat);
+								}
 
-						continue;
-					}
+								return null;
+							}
 
-					if (sourceDocumentFormat.isExportableTo(
-							targetDocumentFormat)) {
+							if (sourceDocumentFormat.isExportableTo(
+									targetDocumentFormat)) {
 
-						conversions.add(targetExtension);
-					}
-				}
+								return targetExtension;
+							}
+
+							return null;
+						}));
 
 				if (conversions.isEmpty()) {
 					if (_log.isInfoEnabled()) {

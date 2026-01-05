@@ -8,6 +8,7 @@ package com.liferay.search.experiences.web.internal.display.context;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
+import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
 import com.liferay.learn.LearnMessageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -19,12 +20,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eudaldo Alonso
@@ -56,6 +57,17 @@ public class EditSXPBlueprintDisplayContext {
 				"/sxp_blueprint_admin/get_sites"
 			).buildString()
 		).put(
+			"getAssetSubtypesURL",
+			ResourceURLBuilder.createResourceURL(
+				_renderResponse
+			).setParameter(
+				"companyId", _themeDisplay.getCompanyId()
+			).setParameter(
+				"languageId", _themeDisplay.getLanguageId()
+			).setResourceID(
+				"/search_experiences/get_asset_subtypes"
+			).buildString()
+		).put(
 			"isCompanyAdmin",
 			() -> {
 				PermissionChecker permissionChecker =
@@ -72,6 +84,23 @@ public class EditSXPBlueprintDisplayContext {
 			"namespace", _renderResponse.getNamespace()
 		).put(
 			"redirectURL", getRedirect()
+		).put(
+			"selectScopeURL",
+			() -> {
+				ItemSelectorCriterion itemSelectorCriterion =
+					new GroupItemSelectorCriterion();
+
+				itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+					new GroupItemSelectorReturnType());
+
+				return PortletURLBuilder.create(
+					_itemSelector.getItemSelectorURL(
+						RequestBackedPortletURLFactoryUtil.create(
+							_renderRequest),
+						_renderResponse.getNamespace() + "selectSite",
+						itemSelectorCriterion)
+				).buildString();
+			}
 		).put(
 			"selectSitesURL",
 			() -> {

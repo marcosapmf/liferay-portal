@@ -473,6 +473,21 @@ public interface AddressModel
 	public void setStreet3(String street3);
 
 	/**
+	 * Returns the subtype of this address.
+	 *
+	 * @return the subtype of this address
+	 */
+	@AutoEscape
+	public String getSubtype();
+
+	/**
+	 * Sets the subtype of this address.
+	 *
+	 * @param subtype the subtype of this address
+	 */
+	public void setSubtype(String subtype);
+
+	/**
 	 * Returns the validation date of this address.
 	 *
 	 * @return the validation date of this address
@@ -514,6 +529,20 @@ public interface AddressModel
 	 * @param zip the zip of this address
 	 */
 	public void setZip(String zip);
+
+	/**
+	 * Returns the status of this address.
+	 *
+	 * @return the status of this address
+	 */
+	public int getStatus();
+
+	/**
+	 * Sets the status of this address.
+	 *
+	 * @param status the status of this address
+	 */
+	public void setStatus(int status);
 
 	@Override
 	public Address cloneWithOriginalValues();

@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.math.BigDecimal;
 
@@ -82,12 +83,12 @@ public interface CommerceOrderItemService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CommerceOrderItem fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public CommerceOrderItem fetchCommerceOrderItem(long commerceOrderItemId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CommerceOrderItem fetchCommerceOrderItem(long commerceOrderItemId)
+	public CommerceOrderItem fetchCommerceOrderItemByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -146,6 +147,17 @@ public interface CommerceOrderItemService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceOrderItem> getParentCommerceOrderItems(
+			long commerceOrderId, long parentCommerceOrderItemId, int start,
+			int end, OrderByComparator<CommerceOrderItem> orderByComparator)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getParentCommerceOrderItemsCount(
+			long commerceOrderId, long parentCommerceOrderItemId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceOrderItem> getSupplierCommerceOrderItems(
 			long customerCommerceOrderItemId, int start, int end)
 		throws PortalException;
@@ -153,7 +165,7 @@ public interface CommerceOrderItemService extends BaseService {
 	public CommerceOrderItem importCommerceOrderItem(
 			String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, BigDecimal quantity,
+			String cpMeasurementUnitKey, String json, BigDecimal quantity,
 			BigDecimal shippedQuantity,
 			BigDecimal unitOfMeasureIncrementalOrderQuantity,
 			String unitOfMeasureKey, ServiceContext serviceContext)
@@ -194,8 +206,9 @@ public interface CommerceOrderItemService extends BaseService {
 		throws PortalException;
 
 	public CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, String json, BigDecimal quantity,
-			CommerceContext commerceContext, ServiceContext serviceContext)
+			String externalReferenceCode, long commerceOrderItemId, String json,
+			BigDecimal quantity, CommerceContext commerceContext,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommerceOrderItem updateCommerceOrderItemDeliveryDate(
@@ -204,12 +217,12 @@ public interface CommerceOrderItemService extends BaseService {
 
 	public CommerceOrderItem updateCommerceOrderItemInfo(
 			long commerceOrderItemId, long shippingAddressId,
-			String deliveryGroup, String printedNote)
+			String deliveryGroupName, String printedNote)
 		throws PortalException;
 
 	public CommerceOrderItem updateCommerceOrderItemInfo(
 			long commerceOrderItemId, long shippingAddressId,
-			String deliveryGroup, String printedNote,
+			String deliveryGroupName, String printedNote,
 			int requestedDeliveryDateMonth, int requestedDeliveryDateDay,
 			int requestedDeliveryDateYear)
 		throws PortalException;
@@ -219,7 +232,7 @@ public interface CommerceOrderItemService extends BaseService {
 	 */
 	@Deprecated
 	public CommerceOrderItem updateCommerceOrderItemInfo(
-			long commerceOrderItemId, String deliveryGroup,
+			long commerceOrderItemId, String deliveryGroupName,
 			long shippingAddressId, String printedNote,
 			int requestedDeliveryDateMonth, int requestedDeliveryDateDay,
 			int requestedDeliveryDateYear, int requestedDeliveryDateHour,

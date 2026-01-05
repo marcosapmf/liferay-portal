@@ -55,6 +55,7 @@ import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
@@ -77,7 +78,7 @@ import com.liferay.portal.kernel.zip.ZipReaderFactory;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.staging.configuration.StagingConfiguration;
@@ -135,11 +136,9 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		exportImportJournalArticle(true);
 	}
 
-	/**
-	 * LPD-6808: AC15-AC16
-	 */
-	@FeatureFlags("LPS-199086")
+	@FeatureFlag("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC15-AC16")
 	public void testExportImportJournalArticleWithLayoutURLLayoutDoesNotExistOnImportSide()
 		throws Exception {
 
@@ -188,11 +187,9 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		}
 	}
 
-	/**
-	 * LPD-6808: AC15-AC17
-	 */
-	@FeatureFlags("LPS-199086")
+	@FeatureFlag("LPS-199086")
 	@Test
+	@TestInfo("LPD-6808: AC15-AC17")
 	public void testExportImportJournalArticleWithLayoutURLLayoutExistOnImportSide()
 		throws Exception {
 
@@ -266,8 +263,6 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 		JournalArticle importedArticle = (JournalArticle)getStagedModel(
 			article.getUuid(), importedGroup.getGroupId());
-
-		Assert.assertNotNull(importedArticle);
 
 		Assert.assertEquals(
 			1,
@@ -814,8 +809,6 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 			JournalArticle importedArticle = (JournalArticle)getStagedModel(
 				article.getUuid(), importedGroup.getGroupId());
 
-			Assert.assertNotNull(importedArticle);
-
 			validateImportedStagedModel(article, importedArticle);
 		}
 	}
@@ -826,8 +819,6 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		JournalArticle importedArticle =
 			JournalArticleLocalServiceUtil.fetchJournalArticleByUuidAndGroupId(
 				uuid, importedGroup.getGroupId());
-
-		Assert.assertNotNull(importedArticle);
 
 		List<AssetCategory> assetCategories =
 			_assetCategoryLocalService.getCategories(
@@ -899,7 +890,7 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 	@Inject
 	private JournalContent _journalContent;
 
-	@Inject(filter = "javax.portlet.name=" + JournalPortletKeys.JOURNAL)
+	@Inject(filter = "jakarta.portlet.name=" + JournalPortletKeys.JOURNAL)
 	private PortletDataHandler _journalPortletDataHandler;
 
 	@Inject

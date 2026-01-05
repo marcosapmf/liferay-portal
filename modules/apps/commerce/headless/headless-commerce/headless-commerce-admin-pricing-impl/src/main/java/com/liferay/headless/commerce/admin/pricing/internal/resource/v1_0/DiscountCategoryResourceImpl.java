@@ -15,16 +15,15 @@ import com.liferay.commerce.discount.service.CommerceDiscountService;
 import com.liferay.headless.commerce.admin.pricing.dto.v1_0.DiscountCategory;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v1_0.DiscountCategoryUtil;
 import com.liferay.headless.commerce.admin.pricing.resource.v1_0.DiscountCategoryResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,8 +55,9 @@ public class DiscountCategoryResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -71,14 +71,14 @@ public class DiscountCategoryResourceImpl
 				AssetCategory.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCommerceDiscountRelsCount(
 				commerceDiscount.getCommerceDiscountId(),
 				AssetCategory.class.getName());
 
 		return Page.of(
 			_toDiscountCategories(commerceDiscountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -92,13 +92,13 @@ public class DiscountCategoryResourceImpl
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountRelService.getCommerceDiscountRelsCount(
 				id, AssetCategory.class.getName());
 
 		return Page.of(
 			_toDiscountCategories(commerceDiscountRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -107,8 +107,9 @@ public class DiscountCategoryResourceImpl
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -146,15 +147,10 @@ public class DiscountCategoryResourceImpl
 			List<CommerceDiscountRel> commerceDiscountRels)
 		throws Exception {
 
-		List<DiscountCategory> discountCategories = new ArrayList<>();
-
-		for (CommerceDiscountRel commerceDiscountRel : commerceDiscountRels) {
-			discountCategories.add(
-				_toDiscountCategory(
-					commerceDiscountRel.getCommerceDiscountRelId()));
-		}
-
-		return discountCategories;
+		return transform(
+			commerceDiscountRels,
+			commerceDiscountRel -> _toDiscountCategory(
+				commerceDiscountRel.getCommerceDiscountRelId()));
 	}
 
 	private DiscountCategory _toDiscountCategory(Long commerceDiscountRelId)

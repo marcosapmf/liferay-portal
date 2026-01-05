@@ -76,10 +76,26 @@ public class AssetCategoryServiceUtil {
 		getService().deleteCategory(categoryId);
 	}
 
+	public static AssetCategory deleteCategoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteCategoryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static AssetCategory fetchCategory(long categoryId)
 		throws PortalException {
 
 		return getService().fetchCategory(categoryId);
+	}
+
+	public static AssetCategory fetchCategoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchCategoryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static AssetCategory getAssetCategoryByExternalReferenceCode(
@@ -173,6 +189,14 @@ public class AssetCategoryServiceUtil {
 		throws PortalException {
 
 		return getService().getChildCategoriesCount(parentCategoryId);
+	}
+
+	public static AssetCategory getOrAddEmptyCategory(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getOrAddEmptyCategory(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -372,16 +396,16 @@ public class AssetCategoryServiceUtil {
 	}
 
 	public static AssetCategory updateCategory(
-			long categoryId, long parentCategoryId,
-			Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long categoryId,
+			long parentCategoryId, Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap, long vocabularyId,
 			String[] categoryProperties,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateCategory(
-			categoryId, parentCategoryId, titleMap, descriptionMap,
-			vocabularyId, categoryProperties, serviceContext);
+			externalReferenceCode, categoryId, parentCategoryId, titleMap,
+			descriptionMap, vocabularyId, categoryProperties, serviceContext);
 	}
 
 	public static AssetCategoryService getService() {

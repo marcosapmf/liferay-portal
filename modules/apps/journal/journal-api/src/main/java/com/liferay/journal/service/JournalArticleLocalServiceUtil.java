@@ -881,6 +881,21 @@ public class JournalArticleLocalServiceUtil {
 			groupId, externalReferenceCode);
 	}
 
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, statuses);
+	}
+
 	public static JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -901,6 +916,12 @@ public class JournalArticleLocalServiceUtil {
 		long resourcePrimKey) {
 
 		return getService().fetchLatestIndexableArticle(resourcePrimKey);
+	}
+
+	public static PersistedModel fetchPersistedModel(
+		Serializable primaryKeyObj) {
+
+		return getService().fetchPersistedModel(primaryKeyObj);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
@@ -1082,21 +1103,22 @@ public class JournalArticleLocalServiceUtil {
 	}
 
 	public static String getArticleDescription(
-		long articlePK, java.util.Locale locale) {
+		long companyId, long articlePK, java.util.Locale locale) {
 
-		return getService().getArticleDescription(articlePK, locale);
+		return getService().getArticleDescription(companyId, articlePK, locale);
 	}
 
 	public static String getArticleDescription(
-		long articlePK, String languageId) {
+		long companyId, long articlePK, String languageId) {
 
-		return getService().getArticleDescription(articlePK, languageId);
+		return getService().getArticleDescription(
+			companyId, articlePK, languageId);
 	}
 
 	public static Map<java.util.Locale, String> getArticleDescriptionMap(
-		long articlePK) {
+		long companyId, long articlePK) {
 
-		return getService().getArticleDescriptionMap(articlePK);
+		return getService().getArticleDescriptionMap(companyId, articlePK);
 	}
 
 	/**
@@ -1323,9 +1345,10 @@ public class JournalArticleLocalServiceUtil {
 	}
 
 	public static List<String> getArticleLocalizationLanguageIds(
-		long articlePK) {
+		long companyId, long articlePK) {
 
-		return getService().getArticleLocalizationLanguageIds(articlePK);
+		return getService().getArticleLocalizationLanguageIds(
+			companyId, articlePK);
 	}
 
 	/**
@@ -1538,10 +1561,11 @@ public class JournalArticleLocalServiceUtil {
 	}
 
 	public static List<JournalArticle> getArticlesByReviewDate(
-		java.util.Date previousCheckDate, java.util.Date reviewDate) {
+		long companyId, java.util.Date previousCheckDate,
+		java.util.Date reviewDate) {
 
 		return getService().getArticlesByReviewDate(
-			previousCheckDate, reviewDate);
+			companyId, previousCheckDate, reviewDate);
 	}
 
 	/**
@@ -1657,19 +1681,21 @@ public class JournalArticleLocalServiceUtil {
 	}
 
 	public static String getArticleTitle(
-		long articlePK, java.util.Locale locale) {
+		long companyId, long articlePK, java.util.Locale locale) {
 
-		return getService().getArticleTitle(articlePK, locale);
+		return getService().getArticleTitle(companyId, articlePK, locale);
 	}
 
-	public static String getArticleTitle(long articlePK, String languageId) {
-		return getService().getArticleTitle(articlePK, languageId);
+	public static String getArticleTitle(
+		long companyId, long articlePK, String languageId) {
+
+		return getService().getArticleTitle(companyId, articlePK, languageId);
 	}
 
 	public static Map<java.util.Locale, String> getArticleTitleMap(
-		long articlePK) {
+		long companyId, long articlePK) {
 
-		return getService().getArticleTitleMap(articlePK);
+		return getService().getArticleTitleMap(companyId, articlePK);
 	}
 
 	/**
@@ -2052,6 +2078,15 @@ public class JournalArticleLocalServiceUtil {
 
 		return getService().getLatestArticleByExternalReferenceCode(
 			groupId, externalReferenceCode);
+	}
+
+	public static JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws PortalException {
+
+		return getService().getLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**
@@ -2571,6 +2606,13 @@ public class JournalArticleLocalServiceUtil {
 		throws PortalException {
 
 		return getService().restoreArticleFromTrash(userId, article);
+	}
+
+	public static JournalArticle revertArticle(
+			long userId, long groupId, String articleId, double version)
+		throws PortalException {
+
+		return getService().revertArticle(userId, groupId, articleId, version);
 	}
 
 	public static void setTreePaths(

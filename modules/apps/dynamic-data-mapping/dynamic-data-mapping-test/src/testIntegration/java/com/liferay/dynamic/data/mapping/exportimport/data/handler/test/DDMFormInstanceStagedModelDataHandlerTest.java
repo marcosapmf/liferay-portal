@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -118,7 +119,7 @@ public class DDMFormInstanceStagedModelDataHandlerTest
 		Company company = CompanyTestUtil.addCompany();
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 					company.getCompanyId())) {
 
 			User user = UserTestUtil.getAdminUser(company.getCompanyId());
@@ -264,7 +265,7 @@ public class DDMFormInstanceStagedModelDataHandlerTest
 					).toString())));
 
 		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.addStructure(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(), 0,
 			PortalUtil.getClassNameId(DDMFormInstance.class.getName()), null,
 			HashMapBuilder.put(
 				LocaleUtil.getSiteDefault(), RandomTestUtil.randomString()
@@ -287,17 +288,20 @@ public class DDMFormInstanceStagedModelDataHandlerTest
 
 		ObjectDefinition objectDefinition =
 			ObjectDefinitionLocalServiceUtil.addCustomObjectDefinition(
-				userId, 0, false, true, false, false,
+				null, userId, 0, null, false, true, false, true, false, false,
+				false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING,
-						RandomTestUtil.randomString(), "text")));
+						RandomTestUtil.randomString(), "text")),
+				Collections.emptyList(), new ServiceContext());
 
 		objectDefinition.setExternalReferenceCode(externalReferenceCode);
 

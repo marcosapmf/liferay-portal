@@ -10,9 +10,14 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.tools.GitUtil;
+import com.liferay.source.formatter.SourceFormatterArgs;
 import com.liferay.source.formatter.check.util.SourceUtil;
 
 import java.io.IOException;
+
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Alan Huang
@@ -40,8 +45,9 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 					StringBundler.concat(
 						message,
 						"Each breaking change should have one, and only one ",
-						"'# breaking', '## What', '## Why' and ## (Optional). ",
-						"Use '----' to split each breaking change."));
+						"\"# breaking\", \"## What\", \"## Why\" and ## ",
+						"(Optional). Use \"----\" to split each breaking ",
+						"change."));
 
 				return;
 			}
@@ -58,8 +64,8 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					message +
-						"The correct order of headers should be '## What' | '" +
-							"## Why' | '## Alternatives'");
+						"The correct order of headers should be \"## What\" " +
+							"| \"## Why\" | \"## Alternatives\"");
 
 				return;
 			}
@@ -77,7 +83,8 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 			if (trimmedLine.length() == 7) {
 				addMessage(
 					fileName,
-					message + "There should be one file path after '## What'");
+					message +
+						"There should be one file path after \"## What\"");
 
 				return;
 			}
@@ -93,12 +100,60 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 					fileName,
 					StringBundler.concat(
 						message, StringUtil.quote(filePath),
-						" points to nonexistent file. '## What' should be ",
+						" points to nonexistent file. \"## What\" should be ",
 						"followed by only one path, which is from ",
 						_LIFERAY_PORTAL_MASTER_URL, "."));
 
 				return;
 			}
+		}
+	}
+
+	protected void checkCommitMessages(
+			String fileName, String absolutePath,
+			SourceFormatterArgs sourceFormatterArgs, String additionalMessage)
+		throws Exception {
+
+		List<String> commitMessages = GitUtil.getCurrentBranchCommitMessages(
+			sourceFormatterArgs.getBaseDirName(),
+			sourceFormatterArgs.getGitWorkingBranchName());
+
+		Iterator<String> iterator = commitMessages.iterator();
+
+		while (iterator.hasNext()) {
+			String commitMessage = iterator.next();
+
+			String[] parts = commitMessage.split(":", 2);
+
+			if (!parts[1].contains("# breaking")) {
+				iterator.remove();
+			}
+		}
+
+		if (commitMessages.isEmpty()) {
+			addMessage(
+				fileName,
+				"Incorrect commit message: Missing breaking change in commit " +
+					"messages when " + additionalMessage);
+
+			return;
+		}
+
+		for (String commitMessage : commitMessages) {
+			String[] parts = commitMessage.split(":", 2);
+
+			if (!parts[1].contains("# breaking")) {
+				continue;
+			}
+
+			String message =
+				"Incorrect commit message in SHA " + parts[0] + ": ";
+
+			checkMissingEmptyLinesAroundHeaders(fileName, parts[1], message);
+
+			checkBreakingChanges(
+				fileName, absolutePath, parts[1].split("\n----"), message,
+				true);
 		}
 	}
 
@@ -108,8 +163,8 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 		if (!breakingChanges.endsWith("\n\n----")) {
 			addMessage(
 				fileName,
-				message + "The commit message contains '# breaking' should " +
-					"end with '\\n\\n----'");
+				message + "The commit message contains \"# breaking\" should " +
+					"end with \"\\n\\n----\"");
 		}
 
 		for (String header : _BREAKING_CHANGE_HEADER_NAMES) {
@@ -126,8 +181,8 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 					addMessage(
 						fileName,
 						StringBundler.concat(
-							message, "There should be a line break after ' ",
-							header, "'"));
+							message, "There should be a line break after \" ",
+							header, "\""));
 				}
 			}
 
@@ -145,11 +200,26 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 					fileName,
 					StringBundler.concat(
 						message,
-						"There should be an empty line after/before '----', ",
-						"'# breaking', '## What', '## Why' and '## ",
-						"Alternatives'"));
+						"There should be an empty line after/before \"----\", ",
+						"\"# breaking\", \"## What\", \"## Why\" and \"## ",
+						"Alternatives\""));
 			}
 		}
+	}
+
+	protected synchronized List<String> getCurrentBranchFileNames(
+			SourceFormatterArgs sourceFormatterArgs)
+		throws Exception {
+
+		if (_currentBranchFileNames != null) {
+			return _currentBranchFileNames;
+		}
+
+		_currentBranchFileNames = GitUtil.getCurrentBranchFileNames(
+			sourceFormatterArgs.getBaseDirName(),
+			sourceFormatterArgs.getGitWorkingBranchName());
+
+		return _currentBranchFileNames;
 	}
 
 	private void _checkMissingExplanation(
@@ -176,8 +246,8 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 					StringBundler.concat(
 						message,
 						"There should be at least a line containing an ",
-						"explanation after '## What', '## Why' and '## ",
-						"Alternatives'"));
+						"explanation after \"## What\", \"## Why\" and \"## ",
+						"Alternatives\""));
 			}
 		}
 	}
@@ -188,5 +258,7 @@ public abstract class BaseBreakingChangesCheck extends BaseFileCheck {
 
 	private static final String _LIFERAY_PORTAL_MASTER_URL =
 		"https://github.com/liferay/liferay-portal/blob/master/";
+
+	private static List<String> _currentBranchFileNames;
 
 }

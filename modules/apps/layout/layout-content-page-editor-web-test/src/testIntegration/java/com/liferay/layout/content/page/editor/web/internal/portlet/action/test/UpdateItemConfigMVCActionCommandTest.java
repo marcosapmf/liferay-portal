@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -35,13 +36,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.io.InputStream;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.io.InputStream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -113,8 +113,8 @@ public class UpdateItemConfigMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(), layoutStructure.toString());
 
 		mockActionRequest.setParameter(
 			"itemConfig", "{\"styles\":{\"display\":\"none\"}}");
@@ -240,8 +240,8 @@ public class UpdateItemConfigMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(), layoutStructure.toString());
 
 		JSONObject jsonObject = layoutStructureItem.getItemConfigJSONObject();
 
@@ -283,8 +283,8 @@ public class UpdateItemConfigMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_layout.getGroupId(), _layout.getPlid(),
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _layout.getGroupId(),
+				_layout.getPlid(), layoutStructure.toString());
 
 		JSONObject jsonObject = layoutStructureItem.getItemConfigJSONObject();
 

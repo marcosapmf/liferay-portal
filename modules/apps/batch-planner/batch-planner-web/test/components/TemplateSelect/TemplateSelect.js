@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {act, fireEvent, render, waitFor} from '@testing-library/react';
 import fetchMock from 'fetch-mock';
 import React from 'react';
@@ -40,6 +40,10 @@ const initialTemplate = {
 const mockPlanId = 106902;
 
 const getPlanInfoURL = `${HEADLESS_BATCH_PLANNER_URL}/plans/${mockPlanId}`;
+
+jest.mock('frontend-js-components-web', () => {
+	jest.fn();
+});
 
 describe('TemplateSelect', () => {
 	beforeEach(() => {

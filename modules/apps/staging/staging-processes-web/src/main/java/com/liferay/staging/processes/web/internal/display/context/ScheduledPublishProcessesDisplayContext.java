@@ -18,9 +18,9 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -60,7 +60,7 @@ public class ScheduledPublishProcessesDisplayContext {
 
 		_searchContainer = new SearchContainer(
 			(PortletRequest)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST),
+				JavaConstants.JAKARTA_PORTLET_REQUEST),
 			_liferayPortletResponse.createRenderURL(), null,
 			"no-scheduled-publish-processes-were-found");
 

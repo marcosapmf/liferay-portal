@@ -6,22 +6,62 @@
 import {Liferay} from '../../liferay/liferay';
 import fetcher from '../fetcher';
 
-class HeadlessAdminTaxonomy {
-	async getTaxonomyVocabularies() {
-		return fetcher(
-			`/o/headless-admin-taxonomy/v1.0/sites/${Liferay.ThemeDisplay.getCompanyGroupId()}/taxonomy-vocabularies`
-		);
+export default class HeadlessAdminTaxonomy {
+	static async getSiteTaxonomyVocabulariesGraphQL() {
+		const response = await fetcher.post<{
+			data: {
+				headlessAdminTaxonomy_v1_0: {
+					taxonomyVocabularies: APIResponse<TaxonomyVocabulary>;
+				};
+			};
+		}>('/o/graphql', {
+			query: `{
+				headlessAdminTaxonomy_v1_0 {
+					taxonomyVocabularies: siteTaxonomyVocabularies(siteKey: "${Liferay.ThemeDisplay.getScopeGroupId()}") {
+						items {
+							id
+							name
+							taxonomyCategories {
+								items {
+									id
+									name
+								}
+							}
+						}
+					}
+				}
+			}`,
+		});
+
+		return response.data?.headlessAdminTaxonomy_v1_0?.taxonomyVocabularies;
 	}
-	async getTaxonomyCategories(
-		vocabularyId: number,
-		searchParams = new URLSearchParams()
-	) {
-		return fetcher(
-			`/o/headless-admin-taxonomy/v1.0/taxonomy-vocabularies/${vocabularyId}/taxonomy-categories?${searchParams.toString()}`
-		);
+
+	static async getTaxonomyVocabulariesGraphQL() {
+		const response = await fetcher.post<{
+			data: {
+				headlessAdminTaxonomy_v1_0: {
+					taxonomyVocabularies: APIResponse<TaxonomyVocabulary>;
+				};
+			};
+		}>('/o/graphql', {
+			query: `{
+				headlessAdminTaxonomy_v1_0 {
+					taxonomyVocabularies(siteKey: "${Liferay.ThemeDisplay.getScopeGroupId()}") {
+						items {
+							id
+							name
+							taxonomyCategories {
+								items {
+									id
+									name
+								}
+							}
+						}
+					}
+				}
+			}`,
+		});
+
+		return response.data?.headlessAdminTaxonomy_v1_0?.taxonomyVocabularies;
 	}
 }
-
-const HeadlessAdminTaxonomyImpl = new HeadlessAdminTaxonomy();
-
-export default HeadlessAdminTaxonomyImpl;

@@ -1,17 +1,22 @@
 @component-name = "portal-search"
 definition {
 
-	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property browser.chrome.version = "139.0";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property minimum.slave.ram = "24";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.component.names = "Frontend Data Set";
-	property testray.main.component.name = "Search Experiences";
+	property testray.main.component.name = "Search Blueprints";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -393,10 +398,9 @@ definition {
 
 		UserNavigator.gotoUser(userScreenName = "usersn");
 
-		Select(
-			locator1 = "Select#SELECT_ID",
-			selectFieldId = "employee",
-			value1 = "False");
+		Uncheck.uncheckToggleSwitch(
+			key_titleName = "employee",
+			locator1 = "TextInput#INPUT_CONTAINS_TITLE");
 
 		PortletEntry.save();
 
@@ -726,6 +730,10 @@ definition {
 				groupName = "Global",
 				title = "Test Category",
 				vocabularyName = "Test Vocabulary");
+
+			var categoryERC = JSONCategory.getCategoryFieldValueById(
+				categoryId = ${categoryID},
+				fieldName = "externalReferenceCode");
 		}
 
 		task ("Create a blueprint and add the 'Hide Contents in a Category' element") {
@@ -741,12 +749,12 @@ definition {
 		task ("Assert that the global category is present when searching in the text field") {
 			Type(
 				key_elementName = "Hide Contents in a Category",
-				key_fieldLabel = "Asset Category Name (ID)",
+				key_fieldLabel = "Asset Category External Reference Codes",
 				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 				value1 = "Test");
 
 			AssertElementPresent(
-				key_assetCategory = "Test Category (ID: ${categoryID})",
+				key_assetCategory = "Test Category (ERC: ${categoryERC})",
 				locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
 		}
 
@@ -769,8 +777,8 @@ definition {
 				locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM");
 
 			AssertElementPresent(
-				key_treeItem = "Test Category (ID: ${categoryID})",
-				locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM_SELECT");
+				key_treeItem = "Test Category (ERC: ${categoryERC})",
+				locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM_CHECKBOX");
 		}
 	}
 
@@ -2149,6 +2157,8 @@ definition {
 
 	@priority = 3
 	test PaginateBlueprintsAdmin {
+		property custom.properties = "search.container.page.delta.values=4,8,20,40,60";
+
 		Blueprints.openBlueprintsAdmin();
 
 		for (var index : list "One,Two,Three,Four,Five") {
@@ -2292,6 +2302,8 @@ definition {
 
 	@priority = 3
 	test PaginateElementsAdmin {
+		property custom.properties = "search.container.page.delta.values=4,8,20,40,60";
+
 		Blueprints.openBlueprintsAdmin();
 
 		Navigator.gotoNavItem(navItem = "Elements");
@@ -2568,78 +2580,6 @@ definition {
 	}
 
 	@priority = 3
-	test SearchViaBlueprintsPreviewWithAttributes {
-		JSONCategory.addVocabulary(
-			groupName = "Guest",
-			title = "Test Vocabulary");
-
-		var categoryId = JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "Test Category",
-			vocabularyName = "Test Vocabulary");
-
-		var webContentserviceContext = '''{"assetCategoryIds": ["${categoryId}"]}''';
-
-		JSONWebcontent.addWebContent(
-			content = "apple",
-			groupName = "Guest",
-			serviceContext = ${webContentserviceContext},
-			title = "gala");
-
-		JSONWebcontent.addWebContent(
-			content = "",
-			groupName = "Guest",
-			title = "apple apple apple");
-
-		JSONSegmentsentry.addSegment(
-			fieldName = "First Name",
-			groupName = "Guest",
-			operator = "equals",
-			segmentName = "Test Segment",
-			text = "test");
-
-		Blueprints.openBlueprintsAdmin();
-
-		Blueprints.createBlueprint(title = "Test Blueprint");
-
-		Blueprints.addElement(element = "Boost Contents in a Category for User Segments");
-
-		Type(
-			key_elementName = "Boost Contents in a Category for User Segments",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = ${categoryId});
-
-		var segmentId = JSONSegmentsentry.getSegmentId(segmentName = "Test Segment");
-
-		Type(
-			key_elementName = "Boost Contents in a Category for User Segments",
-			key_fieldLabel = "User Segment IDs",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = ${segmentId});
-
-		Type(
-			key_elementName = "Boost Contents in a Category for User Segments",
-			key_fieldLabel = "Boost",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = 2000);
-
-		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = "Guest",
-			site = "true");
-
-		Blueprints.searchBlueprintsPreview(
-			attributesKey = "search.experiences.scope.group.id",
-			attributesValue = ${groupId},
-			searchTerm = "apple");
-
-		AssertTextEquals.assertPartialText(
-			key_resultRanking = 1,
-			locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_SPECIFIC_RANKING",
-			value1 = "gala");
-	}
-
-	@priority = 3
 	test SearchViaBlueprintsPreviewWithNoResults {
 		Blueprints.openBlueprintsAdmin();
 
@@ -2832,19 +2772,27 @@ definition {
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 3,Test Blueprint 2,Test Blueprint 1");
 
-		Button.click(button = "Title");
+		Click(
+			columnName = "Title",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 1,Test Blueprint 2,Test Blueprint 3");
 
-		Button.click(button = "Title");
+		Click(
+			columnName = "Title",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 3,Test Blueprint 2,Test Blueprint 1");
 
-		Button.click(button = "Created");
+		Click(
+			columnName = "Created",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 1,Test Blueprint 2,Test Blueprint 3");
 
-		Button.click(button = "Created");
+		Click(
+			columnName = "Created",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 3,Test Blueprint 2,Test Blueprint 1");
 
@@ -2856,11 +2804,15 @@ definition {
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 2,Test Blueprint 3,Test Blueprint 1");
 
-		Button.click(button = "Modified");
+		Click(
+			columnName = "Modified",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 1,Test Blueprint 3,Test Blueprint 2");
 
-		Button.click(button = "Modified");
+		Click(
+			columnName = "Modified",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Blueprint 2,Test Blueprint 3,Test Blueprint 1");
 	}
@@ -3116,19 +3068,27 @@ definition {
 
 		Search.searchCP(searchTerm = "Test Element");
 
-		Button.click(button = "Title");
+		Click(
+			columnName = "Title",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 1,Test Element 2,Test Element 3");
 
-		Button.click(button = "Title");
+		Click(
+			columnName = "Title",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 3,Test Element 2,Test Element 1");
 
-		Button.click(button = "Created");
+		Click(
+			columnName = "Created",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 1,Test Element 2,Test Element 3");
 
-		Button.click(button = "Created");
+		Click(
+			columnName = "Created",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 3,Test Element 2,Test Element 1");
 
@@ -3156,120 +3116,17 @@ definition {
 
 		Search.searchCP(searchTerm = "Test Element");
 
-		Button.click(button = "Modified");
+		Click(
+			columnName = "Modified",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 1,Test Element 3,Test Element 2");
 
-		Button.click(button = "Modified");
+		Click(
+			columnName = "Modified",
+			locator1 = "ClayTable#TABLE_COLUMN_NAME");
 
 		Blueprints.viewEntriesSpecificOrder(entryList = "Test Element 2,Test Element 3,Test Element 1");
-	}
-
-	@description = "This is a use case for LPS-181689."
-	@priority = 3
-	test UseBlueprintsAsCollectionProviders {
-		property custom.properties = "feature.flag.LPS-129412=true";
-
-		task ("Create a Blueprint with Pages as the only searchable asset type") {
-			Blueprints.openBlueprintsAdmin();
-
-			Blueprints.createBlueprint(title = "Pages Blueprint");
-
-			Navigator.gotoNavNested(navNested = "Query Settings");
-
-			Check.checkNotVisible(
-				locator1 = "Radio#ANY",
-				radioLabel = "Selected Types");
-
-			Button.click(button = "Select Asset Types");
-
-			Check.checkNotVisible(
-				key_assetType = "Page",
-				locator1 = "Blueprints#BLUEPRINTS_SEARCHABLE_ASSET_TYPE_CHECKBOX");
-
-			Button.clickDone();
-
-			PortletEntry.save();
-		}
-
-		task ("Create a Blueprint with Web Content Articles as the only searchable asset type") {
-			Blueprints.openBlueprintsAdmin();
-
-			Blueprints.createBlueprint(title = "Web Content Articles Blueprint");
-
-			Navigator.gotoNavNested(navNested = "Query Settings");
-
-			Check.checkNotVisible(
-				locator1 = "Radio#ANY",
-				radioLabel = "Selected Types");
-
-			Button.click(button = "Select Asset Types");
-
-			Check.checkNotVisible(
-				key_assetType = "Web Content Article",
-				locator1 = "Blueprints#BLUEPRINTS_SEARCHABLE_ASSET_TYPE_CHECKBOX");
-
-			Button.clickDone();
-
-			PortletEntry.save();
-		}
-
-		task ("Create a Web Content Article") {
-			JSONWebcontent.addWebContent(
-				content = "WC WebContent Content",
-				groupName = "Guest",
-				title = "WC WebContent Title");
-		}
-
-		task ("Create two content pages with Collection Displays configured with the previously created Blueprints as Collection Providers") {
-			for (var assetType : list "Pages,Web Content Articles") {
-				JSONLayout.addPublicLayout(
-					groupName = "Guest",
-					layoutName = "${assetType} Collection Display Page",
-					type = "content");
-
-				JSONLayout.publishLayout(
-					groupName = "Guest",
-					layoutName = "${assetType} Collection Display Page");
-
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "${assetType} Collection Display Page",
-					siteName = "Guest");
-
-				PageEditor.addFragment(
-					collectionName = "Content Display",
-					fragmentName = "Collection Display");
-
-				PageEditor.editCollectionDisplay(
-					fragmentName = "Collection Display",
-					infoListProviderName = "${assetType} Blueprint",
-					styleDisplay = "Bulleted List");
-
-				PageEditor.publish();
-			}
-		}
-
-		task ("Assert the Collection Display configured with the Pages Collection Provider blueprint is displaying page assets") {
-			Navigator.openSitePage(
-				pageName = "Pages Collection Display Page",
-				siteName = "Guest");
-
-			for (var title : list "Pages Collection Display Page,Web Content Articles Collection Display Page,Search,Home,My Profile,My Dashboard") {
-				AssertElementPresent(
-					locator1 = "Fragment#CONTENT_DISPLAY_ASSET_BULLET_LIST_ITEM",
-					text = ${title});
-			}
-		}
-
-		task ("Assert the Collection Display configured with the Web Content Articles Collection Provider blueprint is displaying Web Content Articles") {
-			Navigator.openSitePage(
-				pageName = "Web Content Articles Collection Display Page",
-				siteName = "Guest");
-
-			AssertElementPresent(
-				locator1 = "Fragment#CONTENT_DISPLAY_ASSET_BULLET_LIST_ITEM",
-				text = "WC WebContent Title");
-		}
 	}
 
 	@priority = 3
@@ -3344,7 +3201,9 @@ definition {
 			key_entryTitle = "Test Blueprint 1",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Blueprints.viewNoEntry(title = "Test Blueprint 1");
 
@@ -3357,6 +3216,14 @@ definition {
 		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
 		for (var count : list "2,3,4") {
+			AssertNotChecked.assertNotCheckedNotVisible(
+				key_entryTitle = "Test Blueprint ${count}",
+				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
+		}
+
+		Check.checkNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
+
+		for (var count : list "2,3,4") {
 			AssertChecked.assertCheckedNotVisible(
 				key_entryTitle = "Test Blueprint ${count}",
 				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
@@ -3364,17 +3231,13 @@ definition {
 
 		Uncheck.uncheckNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
-		for (var count : list "2,3,4") {
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_entryTitle = "Test Blueprint ${count}",
-				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
-		}
-
 		Search.searchCP(searchTerm = 2);
 
 		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Blueprints.viewNoEntry(title = "Test Blueprint 2");
 
@@ -3382,13 +3245,7 @@ definition {
 
 		Blueprints.viewEntryTitle(title = "Test Blueprint 4");
 
-		Check.checkNotVisible(
-			key_entryTitle = "Test Blueprint 3",
-			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
-
-		Click(
-			key_text = "Select All",
-			locator1 = "Link#ANY");
+		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
 		AssertChecked.assertCheckedNotVisible(
 			key_entryTitle = "Test Blueprint 3",
@@ -3398,7 +3255,9 @@ definition {
 			key_entryTitle = "Test Blueprint 4",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Blueprints.viewNoEntry(title = "Test Blueprint 3");
 
@@ -4461,6 +4320,10 @@ definition {
 			locale = "de-DE",
 			title = "Titel auf Deutsch");
 
+		Click(
+			key_text = "Done",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
+
 		PortletEntry.save();
 
 		Blueprints.viewEntryTitle(title = "Title in English");
@@ -4579,7 +4442,9 @@ definition {
 			key_entryTitle = "Test Element 1",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Blueprints.viewNoEntry(title = "Test Element 1");
 
@@ -4592,6 +4457,14 @@ definition {
 		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
 		for (var count : list "2,3,4") {
+			AssertNotChecked.assertNotCheckedNotVisible(
+				key_entryTitle = "Test Element ${count}",
+				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
+		}
+
+		Check.checkNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
+
+		for (var count : list "2,3,4") {
 			AssertChecked.assertCheckedNotVisible(
 				key_entryTitle = "Test Element ${count}",
 				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
@@ -4599,17 +4472,13 @@ definition {
 
 		Uncheck.uncheckNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
-		for (var count : list "2,3,4") {
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_entryTitle = "Test Element ${count}",
-				locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
-		}
-
 		Search.searchCP(searchTerm = 2);
 
 		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Blueprints.viewNoEntry(title = "Test Element 2");
 
@@ -4617,13 +4486,7 @@ definition {
 
 		Blueprints.viewEntryTitle(title = "Test Element 4");
 
-		Check.checkNotVisible(
-			key_entryTitle = "Test Element 3",
-			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
-
-		Click(
-			key_text = "Select All",
-			locator1 = "Link#ANY");
+		Click.clickAtNotVisible(locator1 = "Checkbox#FDS_SELECT_ALL");
 
 		AssertChecked.assertCheckedNotVisible(
 			key_entryTitle = "Test Element 3",
@@ -4633,7 +4496,9 @@ definition {
 			key_entryTitle = "Test Element 4",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_CHECKBOX");
 
-		Button.clickTrash();
+		Click(locator1 = "Icon#NAVBAR_ELLIPSIS");
+
+		DropdownMenuItem.click(menuItem = "Delete");
 
 		Alert.viewErrorMessage(errorMessage = "System read only elements cannot be deleted.");
 
@@ -4740,365 +4605,6 @@ definition {
 			key_fieldName = "entryClassName",
 			locator1 = "Blueprints#BLUEPRINTS_PREVIEW_RESULT_FIELD_VALUE",
 			value1 = "com.liferay.journal.model.JournalArticle");
-	}
-
-	@description = "This is a use case for LPS-147066."
-	@priority = 3
-	test ViewLinksToLiferayDocumentation {
-		Blueprints.openBlueprintsAdmin();
-
-		Blueprints.createBlueprint(title = "Test Blueprint");
-
-		Click(
-			key_linkContext = "element-sidebar",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Elements Reference - Liferay Learn");
-
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Navigator.gotoNavNested(navNested = "Query Settings");
-
-		Click(locator1 = "Blueprints#BLUEPRINTS_SEARCH_FRAMEWORK_INDEXER_CLAUSES_INFO_BUTTON");
-
-		Click(
-			key_linkContext = "The search framework indexer clauses",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Creating and Managing Search Blueprints - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Check.checkNotVisible(
-			locator1 = "Radio#ANY",
-			radioLabel = "Customize");
-
-		Button.click(button = "Customize Contributors");
-
-		Click(
-			key_linkContext = "clause-contributors-sidebar",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Creating and Managing Search Blueprints - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Check.checkNotVisible(
-			locator1 = "Radio#ANY",
-			radioLabel = "Enable All");
-
-		Navigator.gotoNavTab(navTab = "Configuration");
-
-		Click(
-			key_linkContext = "Enter additional blueprints configuration settings",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Click(
-			key_linkContext = "Add aggregations to those already present",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Click(
-			key_linkContext = "Override the default search highlight configuration",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Click(
-			key_linkContext = "Add sorts to those already present in the search request",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Click(
-			key_linkContext = "Declare new template variables from search context attributes",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		Click(
-			key_linkContext = "Add source includes and excludes as search request parameters",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Search Blueprints Configuration Reference - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "Edit Blueprint - ${siteName}");
-
-		ClickNoError(
-			key_text = "Cancel",
-			locator1 = "Link#ANY");
-
-		Blueprints.gotoElement(element = "Text Match Over Multiple Fields");
-
-		Click(locator1 = "Blueprints#INFO_BUTTON");
-
-		Click(
-			key_linkContext = "info-sidebar",
-			key_linkText = "Learn more",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Creating Elements - Liferay Learn");
-
-		Close.closeAndSelectWindow(value1 = "View Element - ${siteName}");
-
-		SearchPage.addWidgets(searchPortletList = "Blueprints Options");
-
-		SearchPage.openSearchPage();
-
-		Portlet.gotoPortletOptions(
-			portletName = "Blueprints Options",
-			portletOption = "Configuration");
-
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
-
-		Click(
-			key_linkContext = "portlet-configuration",
-			key_linkText = "Learn how",
-			locator1 = "Blueprints#DOC_LINK_GENERIC");
-
-		SelectWindow(value1 = "Using a Search Blueprint on a Search Page - Liferay Learn");
-	}
-
-	@priority = 3
-	test ViewMappedAssetInBlueprintCollectionProvider {
-		property custom.properties = "feature.flag.LPS-129412=true${line.separator}feature.flag.LPS-193551=true";
-
-		task ("Create a test structure and a few sample web contents with the structure") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-			NavItem.gotoStructures();
-
-			WebContentStructures.addCP(structureName = "Test Structure");
-
-			DEBuilder.addField(
-				fieldLabel = "Custom Title",
-				fieldName = "Text");
-
-			DEBuilder.addField(
-				fieldLabel = "Custom Content",
-				fieldName = "Rich Text");
-
-			WebContentStructures.saveCP();
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-			for (var count : list "1,2,3") {
-				WebContentNavigator.gotoAddWithStructureCP(structureName = "Test Structure");
-
-				WebContent.addWithStructureCP(
-					structureName = "Test Structure",
-					webContentRichText = "Some HTML ${count}",
-					webContentRichTextFieldLabel = "Custom Content",
-					webContentText = "Test Web Content ${count}",
-					webContentTextFieldLabel = "Custom Title",
-					webContentTitle = "Test Web Content ${count}");
-
-				PortletEntry.publish();
-			}
-		}
-
-		task ("Create a blueprint and configure to only search for Web Content Articles") {
-			Blueprints.openBlueprintsAdmin();
-
-			Blueprints.createBlueprint(title = "Test Blueprint");
-
-			Navigator.gotoNavNested(navNested = "Query Settings");
-
-			Check.checkNotVisible(
-				locator1 = "Radio#ANY",
-				radioLabel = "Selected Types");
-
-			Button.click(button = "Select Asset Types");
-
-			Check.checkNotVisible(
-				key_assetType = "Web Content Article",
-				locator1 = "Blueprints#BLUEPRINTS_SEARCHABLE_ASSET_TYPE_CHECKBOX");
-
-			Button.clickDone();
-		}
-
-		task ("Fetch the ddmStructureKey of the created test structure") {
-			Navigator.gotoNavTab(navTab = "Configuration");
-
-			var customJson = '''
-	{
-		"source": {
-			"fetchSource": true
-		}
-	}
-		''';
-
-			Type.typeCodeMirrorEditorNoError(
-				key_configurationField = "Advanced Configuration",
-				locator1 = "Blueprints#BLUEPRINTS_CONFIGURATION_EDITOR",
-				value1 = ${customJson});
-
-			Navigator.gotoNavTab(navTab = "Query Builder");
-
-			Blueprints.searchBlueprintsPreview(searchTerm = "Test Web Content 1");
-
-			Click(locator1 = "Blueprints#BLUEPRINTS_PREVIEW_EXPAND_RESULT_BUTTON");
-
-			var ddmStructureKey = selenium.getText("//div[contains(@class,'preview-results-list')]//*[contains(@class,'row')]//*[contains(.,'ddmStructureKey')]/following-sibling::div");
-		}
-
-		task ("Add a Filter by Exact Terms Mtach element to the blueprint with the ddmStructureKey") {
-			Click(
-				ariaLabel = "Add Query Element",
-				locator1 = "Button#ANY_WITH_ARIA_LABEL");
-
-			Blueprints.addElement(element = "Filter by Exact Terms Match");
-
-			Type(
-				key_elementName = "Filter by Exact Terms Match",
-				key_fieldLabel = "Field",
-				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-				value1 = "ddmStructureKey");
-
-			Type(
-				key_elementName = "Filter by Exact Terms Match",
-				key_fieldLabel = "Values",
-				locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-				value1 = ${ddmStructureKey});
-		}
-
-		task ("Assert in the preview sidebar that the test web contents appear as the only results") {
-			Blueprints.searchBlueprintsPreview(searchTerm = "");
-
-			Click(locator1 = "Blueprints#BLUEPRINTS_PREVIEW_EXPAND_RESULT_BUTTON");
-
-			AssertElementPresent(
-				key_resultTitle = "Test Web Content 1",
-				locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_TITLE");
-
-			AssertElementPresent(
-				key_resultTitle = "Test Web Content 2",
-				locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_TITLE");
-
-			AssertElementPresent(
-				key_resultTitle = "Test Web Content 3",
-				locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_TITLE");
-
-			AssertElementPresent(
-				key_resultTotal = "3 Results",
-				locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_TOTAL_HITS");
-
-			PortletEntry.save();
-		}
-
-		task ("Create a test content page with a collection display fragment") {
-			JSONLayout.addPublicLayout(
-				groupName = "Guest",
-				layoutName = "Test Content Page",
-				type = "content");
-
-			JSONLayout.publishLayout(
-				groupName = "Guest",
-				layoutName = "Test Content Page");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page",
-				siteName = "Guest");
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("Select the collection provider for 'Web Content Article - Test Structure'") {
-			PageEditor.clickConfigurableField(
-				fragmentName = "Collection Display",
-				index = 1);
-
-			PageEditor.gotoTab(tabName = "Browser");
-
-			AssertVisible(
-				key_sidebarButton = "Browser",
-				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
-
-			Navigator.gotoNavTab(navTab = "General");
-
-			Click(
-				key_fieldLabel = "Collection",
-				key_text = "plus",
-				locator1 = "Icon#ANY_ITEM_SELECTOR");
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-			NavItem.click(navItem = "Collection Providers");
-
-			ManagementBar.setFilterAndOrder(filterBy = "Web Content Article");
-
-			LexiconCard.clickCard(card = "Test Blueprint");
-
-			SelectFrameTop();
-
-			PageEditor.waitForAutoSave();
-		}
-
-		task ("Add Heading and HTML fragment to collection display and map them to Custom Title and Content respectively") {
-			PageEditor.addFragmentToCollectionDisplay(
-				collectionName = "Basic Components",
-				entryTitle = "Test Web Content 1",
-				fragmentName = "Heading");
-
-			PageEditorMapping.mapEditableTextToField(
-				field = "Custom Title",
-				fragmentName = "Heading",
-				id = "element-text");
-
-			PageEditor.addFragmentToCollectionDisplay(
-				collectionName = "Basic Components",
-				fragmentName = "HTML",
-				targetFragmentName = "Heading");
-
-			PageEditorMapping.gotoEditableFieldMapping(
-				fragmentName = "HTML",
-				id = "element-html");
-
-			Select(
-				key_fieldLabel = "Field",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Custom Content");
-		}
-
-		task ("Publish and assert that only the sample test structure contents are shown") {
-			PageEditor.publish();
-
-			for (var count : list "1,2,3") {
-				AssertElementPresent(
-					key_text = "Test Web Content ${count}",
-					locator1 = "PageEditor#COLLECTION_ITEM_CONTENT");
-
-				AssertElementPresent(
-					key_text = "Some HTML ${count}",
-					locator1 = "PageEditor#COLLECTION_ITEM_CONTENT");
-			}
-		}
 	}
 
 	@priority = 3
@@ -5235,6 +4741,10 @@ definition {
 			title = "Test Category",
 			vocabularyName = "Test Vocabulary");
 
+		var categoryERC = JSONCategory.getCategoryFieldValueById(
+			categoryId = ${categoryId},
+			fieldName = "externalReferenceCode");
+
 		Blueprints.openBlueprintsAdmin();
 
 		Blueprints.createBlueprint(title = "Test Blueprint");
@@ -5243,32 +4753,32 @@ definition {
 
 		Type(
 			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 			value1 = "Test Category");
 
 		Click(
-			key_assetCategory = "Test Category (ID: ${categoryId})",
+			key_assetCategory = "Test Category (ERC: ${categoryERC})",
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
 
 		AssertTextEquals.assertPartialText(
 			key_element = "Boost Contents in a Category",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
-			value1 = "Test Category (ID: ${categoryId})");
+			value1 = "Test Category (ERC: ${categoryERC})");
 
 		Blueprints.selectAddedElementMenuItem(
 			element = "Boost Contents in a Category",
 			menuItem = "View Element JSON");
 
 		AssertVisible(
-			key_jsonText = ${categoryId},
+			key_jsonText = ${categoryERC},
 			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
 
 		Click.clickNoMouseOver(
 			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD_CLEAR_ALL_BUTTON");
 
 		AssertTextNotEquals.assertNotPartialMatch(
@@ -5281,59 +4791,39 @@ definition {
 			menuItem = "View Element JSON");
 
 		AssertElementNotPresent(
-			key_jsonText = ${categoryId},
+			key_jsonText = ${categoryERC},
 			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
 
 		Type(
 			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 			value1 = "Test");
 
 		Click(
-			key_assetCategory = "Test Category (ID: ${categoryId})",
+			key_assetCategory = "Test Category (ERC: ${categoryERC})",
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
 
 		AssertTextEquals.assertPartialText(
 			key_element = "Boost Contents in a Category",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
-			value1 = "Test Category (ID: ${categoryId})");
+			value1 = "Test Category (ERC: ${categoryERC})");
 
 		Blueprints.selectAddedElementMenuItem(
 			element = "Boost Contents in a Category",
 			menuItem = "View Element JSON");
 
 		AssertVisible(
-			key_jsonText = ${categoryId},
+			key_jsonText = ${categoryERC},
 			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
 
 		Click.clickNoMouseOver(
 			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD_CLEAR_ALL_BUTTON");
-
-		Type(
-			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = ${categoryId});
-
-		Click(
-			key_assetCategory = "Test Category (ID: ${categoryId})",
-			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
-
-		AssertTextEquals.assertPartialText(
-			key_element = "Boost Contents in a Category",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
-			value1 = "Test Category (ID: ${categoryId})");
-
-		Click.clickNoMouseOver(
-			key_elementName = "Boost Contents in a Category",
-			key_fieldLabel = "Asset Category Name (IDs)",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD_CLEAR_ALL_BUTTON");
 
 		Button.clickSelect();
@@ -5350,7 +4840,7 @@ definition {
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM");
 
 		Check.checkNotVisible(
-			key_treeItem = "Test Category (ID: ${categoryId})",
+			key_treeItem = "Test Category (ERC: ${categoryERC})",
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM_CHECKBOX");
 
 		Click(locator1 = "Modal#SAVE_BUTTON");
@@ -5358,14 +4848,14 @@ definition {
 		AssertTextEquals.assertPartialText(
 			key_element = "Boost Contents in a Category",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
-			value1 = "Test Category (ID: ${categoryId})");
+			value1 = "Test Category (ERC: ${categoryERC})");
 
 		Blueprints.selectAddedElementMenuItem(
 			element = "Boost Contents in a Category",
 			menuItem = "View Element JSON");
 
 		AssertVisible(
-			key_jsonText = ${categoryId},
+			key_jsonText = ${categoryERC},
 			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		PortletEntry.save();
@@ -5384,77 +4874,104 @@ definition {
 			title = "Test Category",
 			vocabularyName = "Test Vocabulary");
 
+		var categoryERC = JSONCategory.getCategoryFieldValueById(
+			categoryId = ${categoryId},
+			fieldName = "externalReferenceCode");
+
+		Blueprints.openBlueprintsAdmin();
+
+		var elementSourceJson = '''
+	{
+	"description_i18n": {},
+	"elementDefinition": {
+		"category": "conditional",
+		"configuration": {
+			"queryConfiguration": {
+				"queryEntries": [
+					{
+						"clauses": [
+							{
+								"context": "query",
+								"occur": "filter",
+								"query": {
+									"bool": {
+										"must_not": [
+											{
+												"terms": {
+													"groupAssetCategoryExternalReferenceCode": "${configuration.group_asset_category_external_reference_code}"
+												}
+											}
+										]
+									}
+								}
+							}
+						]
+					}
+				]
+			}
+		},
+		"icon": "hidden",
+		"uiConfiguration": {
+			"fieldSets": [
+				{
+					"fields": [
+						{
+							"label": "Asset Category External Reference Codes",
+							"name": "group_asset_category_external_reference_code",
+							"type": "text"
+						}
+					]
+				}
+			]
+		}
+	},
+	"title_i18n": {
+		"en_US": "Test Element"
+	}
+	}
+		''';
+
+		Blueprints.createElement(
+			elementSourceJson = ${elementSourceJson},
+			title = "Test Element");
+
 		Blueprints.openBlueprintsAdmin();
 
 		Blueprints.createBlueprint(title = "Test Blueprint");
 
-		Blueprints.addElement(element = "Hide Contents in a Category for Guest Users");
+		Blueprints.addElement(element = "Test Element");
 
 		Type(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
+			key_elementName = "Test Element",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 			value1 = "Test Category");
 
 		Click(
-			key_assetCategory = "Test Category (ID: ${categoryId})",
+			key_assetCategory = "Test Category (ERC: ${categoryERC})",
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
 
-		AssertValue(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "Test Category (ID: ${categoryId})");
-
 		Blueprints.selectAddedElementMenuItem(
-			element = "Hide Contents in a Category for Guest Users",
+			element = "Test Element",
 			menuItem = "View Element JSON");
 
 		AssertVisible(
-			key_jsonNumber = ${categoryId},
-			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_NUMBER");
+			key_jsonText = ${categoryERC},
+			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		Click(locator1 = "Modal#CLOSE_BUTTON");
 
 		Type(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
+			key_elementName = "Test Element",
+			key_fieldLabel = "Asset Category External Reference Codes",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 			value1 = "");
 
-		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is required. Please select from the dropdown list or type in an ID number.");
+		Button.clickSave();
 
-		Type(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "Test");
+		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is required.");
 
-		Click(
-			key_assetCategory = "Test Category (ID: ${categoryId})",
-			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_FIELD_AUTOCOMPLETE_DROPDOWN_ITEM");
-
-		AssertValue(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "Test Category (ID: ${categoryId})");
-
-		Blueprints.selectAddedElementMenuItem(
-			element = "Hide Contents in a Category for Guest Users",
-			menuItem = "View Element JSON");
-
-		AssertVisible(
-			key_jsonNumber = ${categoryId},
-			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_NUMBER");
-
-		Click(locator1 = "Modal#CLOSE_BUTTON");
-
-		Type(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "");
+		Alert.viewErrorMessage(errorMessage = "Unable to save due to invalid or missing configuration values.");
 
 		Button.clickSelect();
 
@@ -5470,40 +4987,20 @@ definition {
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM");
 
 		Click.clickAtNotVisible(
-			key_treeItem = "Test Category (ID: ${categoryId})",
+			key_treeItem = "Test Category (ERC: ${categoryERC})",
 			locator1 = "Blueprints#BLUEPRINTS_ASSET_CATEGORY_TREE_VIEW_ITEM_SELECT");
 
-		AssertValue(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "Test Category (ID: ${categoryId})");
-
 		Blueprints.selectAddedElementMenuItem(
-			element = "Hide Contents in a Category for Guest Users",
+			element = "Test Element",
 			menuItem = "View Element JSON");
 
 		AssertVisible(
-			key_jsonNumber = ${categoryId},
-			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_NUMBER");
+			key_jsonText = ${categoryERC},
+			locator1 = "Blueprints#BLUEPRINTS_EDIT_PAGE_VIEW_ELEMENT_JSON_TEXT");
 
 		PortletEntry.save();
 
 		AssertElementNotPresent(locator1 = "Message#ERROR");
-
-		Blueprints.gotoBlueprint(title = "Test Blueprint");
-
-		Type(
-			key_elementName = "Hide Contents in a Category for Guest Users",
-			key_fieldLabel = "Asset Category Name (ID)",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "Test Category");
-
-		Button.clickSave();
-
-		FormPortlet.viewValidationErrorMessage(validationErrorMessage = "This field is required. Please select from the dropdown list or type in an ID number.");
-
-		Alert.viewErrorMessage(errorMessage = "Unable to save due to invalid or missing configuration values.");
 	}
 
 	@priority = 3
@@ -5727,6 +5224,8 @@ definition {
 
 	@priority = 3
 	test ViewSelectedAssetTypesUI {
+		property custom.properties = "feature.flag.LPD-35013=true";
+
 		task ("Create a test blueprint and navigate to the 'Query Settings' tab") {
 			Blueprints.openBlueprintsAdmin();
 
@@ -5799,6 +5298,8 @@ definition {
 			AssertNotChecked.assertNotCheckedNotVisible(
 				key_assetType = "Wiki Page",
 				locator1 = "Blueprints#BLUEPRINTS_SEARCHABLE_ASSET_TYPE_CHECKBOX");
+
+			Click(locator1 = "Modal#CLOSE_BUTTON");
 		}
 
 		task ("Save the blueprint, open it again, and navigate back to the 'Query Settings' tab") {

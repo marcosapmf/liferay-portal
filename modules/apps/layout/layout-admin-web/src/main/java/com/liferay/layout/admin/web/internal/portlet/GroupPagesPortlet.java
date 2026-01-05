@@ -11,7 +11,6 @@ import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
-import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.admin.web.internal.configuration.LayoutUtilityPageThumbnailConfiguration;
@@ -19,7 +18,6 @@ import com.liferay.layout.admin.web.internal.constants.LayoutAdminWebKeys;
 import com.liferay.layout.admin.web.internal.display.context.LayoutUtilityPageEntryDisplayContext;
 import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
 import com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext;
-import com.liferay.layout.admin.web.internal.display.context.SelectLayoutCollectionDisplayContext;
 import com.liferay.layout.admin.web.internal.helper.LayoutActionsHelper;
 import com.liferay.layout.admin.web.internal.servlet.taglib.util.LayoutActionDropdownItemsProvider;
 import com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException;
@@ -37,8 +35,10 @@ import com.liferay.portal.kernel.exception.GroupInheritContentException;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.LayoutFriendlyURLException;
 import com.liferay.portal.kernel.exception.LayoutFriendlyURLsException;
+import com.liferay.portal.kernel.exception.LayoutJavaScriptException;
 import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.exception.LayoutParentLayoutIdException;
+import com.liferay.portal.kernel.exception.LayoutSetJavaScriptException;
 import com.liferay.portal.kernel.exception.LayoutSetVirtualHostException;
 import com.liferay.portal.kernel.exception.LayoutTypeException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
@@ -66,18 +66,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.translation.security.permission.TranslationPermission;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.MutableRenderParameters;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.io.IOException;
 
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.MutableRenderParameters;
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -101,15 +101,15 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.system=true",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Group Pages",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/view.jsp",
-		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.supported-public-render-parameter=layoutSetBranchId",
-		"javax.portlet.supported-public-render-parameter=selPlid",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Group Pages",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/view.jsp",
+		"jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.supported-public-render-parameter=layoutSetBranchId",
+		"jakarta.portlet.supported-public-render-parameter=selPlid",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -237,12 +237,6 @@ public class GroupPagesPortlet extends MVCPortlet {
 					_portal.getLiferayPortletRequest(renderRequest),
 					_portal.getLiferayPortletResponse(renderResponse)));
 			renderRequest.setAttribute(
-				LayoutAdminWebKeys.SELECT_LAYOUT_COLLECTION_DISPLAY_CONTEXT,
-				new SelectLayoutCollectionDisplayContext(
-					_infoItemServiceRegistry,
-					_portal.getLiferayPortletRequest(renderRequest),
-					_portal.getLiferayPortletResponse(renderResponse)));
-			renderRequest.setAttribute(
 				LayoutUtilityPageEntryDisplayContext.class.getName(),
 				new LayoutUtilityPageEntryDisplayContext(
 					renderRequest, renderResponse));
@@ -271,9 +265,11 @@ public class GroupPagesPortlet extends MVCPortlet {
 			throwable instanceof ImageTypeException ||
 			throwable instanceof LayoutFriendlyURLException ||
 			throwable instanceof LayoutFriendlyURLsException ||
+			throwable instanceof LayoutJavaScriptException ||
 			throwable instanceof LayoutNameException ||
 			throwable instanceof LayoutPageTemplateCollectionNameException ||
 			throwable instanceof LayoutParentLayoutIdException ||
+			throwable instanceof LayoutSetJavaScriptException ||
 			throwable instanceof LayoutSetVirtualHostException ||
 			throwable instanceof LayoutTypeException ||
 			throwable instanceof NoSuchGroupException ||
@@ -299,9 +295,6 @@ public class GroupPagesPortlet extends MVCPortlet {
 
 	@Reference
 	private GroupProvider _groupProvider;
-
-	@Reference
-	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
 	private ItemSelector _itemSelector;

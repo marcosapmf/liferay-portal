@@ -17,6 +17,7 @@ import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -35,12 +36,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -300,6 +301,7 @@ public class EditAssetListDisplayContextTest {
 		).thenReturn(
 			classTypeId
 		);
+
 		Mockito.when(
 			classType.getName()
 		).thenReturn(
@@ -358,7 +360,8 @@ public class EditAssetListDisplayContextTest {
 		return new EditAssetListDisplayContext(
 			assetRendererFactoryClassProvider,
 			Mockito.mock(InfoSearchClassMapperRegistry.class),
-			Mockito.mock(ItemSelector.class), _portletRequest,
+			Mockito.mock(ItemSelector.class),
+			Mockito.mock(ObjectDefinitionLocalService.class), _portletRequest,
 			Mockito.mock(PortletResponse.class),
 			Mockito.mock(SegmentsConfigurationProvider.class),
 			unicodeProperties);
@@ -374,11 +377,13 @@ public class EditAssetListDisplayContextTest {
 		).thenReturn(
 			assetEntrySubtype
 		);
+
 		Mockito.when(
 			assetListEntry.getAssetEntryType()
 		).thenReturn(
 			assetEntryType
 		);
+
 		Mockito.when(
 			assetListEntry.getTypeSettings(Mockito.anyLong())
 		).thenReturn(

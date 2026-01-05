@@ -8,14 +8,14 @@ package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ProductOptionValueSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -170,6 +170,29 @@ public class ProductOptionValue implements Cloneable, Serializable {
 	}
 
 	protected BigDecimal quantity;
+
+	public String getSkuExternalReferenceCode() {
+		return skuExternalReferenceCode;
+	}
+
+	public void setSkuExternalReferenceCode(String skuExternalReferenceCode) {
+		this.skuExternalReferenceCode = skuExternalReferenceCode;
+	}
+
+	public void setSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			skuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			skuExternalReferenceCode =
+				skuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String skuExternalReferenceCode;
 
 	public Long getSkuId() {
 		return skuId;

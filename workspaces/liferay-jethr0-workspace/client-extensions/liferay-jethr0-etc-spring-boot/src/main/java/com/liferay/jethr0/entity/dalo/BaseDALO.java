@@ -5,7 +5,8 @@
 
 package com.liferay.jethr0.entity.dalo;
 
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -14,18 +15,18 @@ import org.springframework.context.annotation.Configuration;
  * @author Michael Hashimoto
  */
 @Configuration
-public abstract class BaseDALO implements DALO {
+public abstract class BaseDALO extends BaseRestController implements DALO {
 
 	@Override
 	public String getAuthorization() {
 		return _liferayOAuth2AccessTokenManager.getAuthorization(
-			"liferay-jethr0-etc-spring-boot-oauth-application-headless-server");
+			"liferay-jethr0-etc-spring-boot-oahs");
 	}
 
 	@Override
 	public void refresh() {
 		_liferayOAuth2AccessTokenManager.refresh(
-			"liferay-jethr0-etc-spring-boot-oauth-application-headless-server");
+			"liferay-jethr0-etc-spring-boot-oahs");
 	}
 
 	@Autowired

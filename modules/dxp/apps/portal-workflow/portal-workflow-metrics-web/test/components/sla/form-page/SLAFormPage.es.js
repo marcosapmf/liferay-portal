@@ -6,7 +6,7 @@
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import {SLAContext} from '../../../../src/main/resources/META-INF/resources/js/components/sla/SLAContainer.es';
 import SLAFormPage from '../../../../src/main/resources/META-INF/resources/js/components/sla/form-page/SLAFormPage.es';
@@ -191,7 +191,9 @@ describe('The SLAFormPage component should', () => {
 				'define-the-sla-duration-and-calendar-format'
 			);
 			const durationLabel = getByText('DURATION');
-			const pauseDescription = getByText('time-wont-be-considered-when');
+			const pauseDescription = getByText(
+				'time-will-not-be-considered-when'
+			);
 			const pauseField = getByText('pause');
 			const startDescription = getByText('time-will-begin-counting-when');
 			const stopDescription = getByText('time-will-stop-counting-when');

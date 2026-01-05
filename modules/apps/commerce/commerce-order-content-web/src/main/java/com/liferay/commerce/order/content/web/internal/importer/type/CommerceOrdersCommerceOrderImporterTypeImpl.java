@@ -15,12 +15,12 @@ import com.liferay.commerce.order.importer.item.CommerceOrderImporterItemImpl;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterType;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.availability.CPAvailabilityChecker;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
@@ -35,14 +35,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -67,12 +67,11 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 		long selectedCommerceOrderId = ParamUtil.getLong(
 			httpServletRequest, getCommerceOrderImporterItemParamName());
 
-		if (selectedCommerceOrderId > 0) {
-			return _commerceOrderService.getCommerceOrder(
-				selectedCommerceOrderId);
+		if (selectedCommerceOrderId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _commerceOrderService.getCommerceOrder(selectedCommerceOrderId);
 	}
 
 	@Override
@@ -166,12 +165,14 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 			_commerceOrderItemService.getCommerceOrderItems(
 				commerceOrder.getCommerceOrderId(), start, end),
 			commerceOrderItem -> _toCommerceOrderImporterItemImpl(
-				commerceChannelGroupId, commerceOrderItem),
+				commerceOrder.getCommerceAccountId(), commerceChannelGroupId,
+				commerceOrder.getCommerceOrderTypeId(), commerceOrderItem),
 			CommerceOrderImporterItemImpl.class);
 	}
 
 	private CommerceOrderImporterItemImpl _toCommerceOrderImporterItemImpl(
-			long commerceChannelGroupId, CommerceOrderItem commerceOrderItem)
+			long accountEntryId, long commerceChannelGroupId,
+			long commerceOrderTypeId, CommerceOrderItem commerceOrderItem)
 		throws Exception {
 
 		CommerceOrderImporterItemImpl commerceOrderImporterItemImpl =
@@ -189,12 +190,13 @@ public class CommerceOrdersCommerceOrderImporterTypeImpl
 		else {
 			CPInstance firstAvailableReplacementCPInstance =
 				_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
-					commerceChannelGroupId, cpInstance.getCPInstanceId());
+					accountEntryId, commerceChannelGroupId, commerceOrderTypeId,
+					cpInstance.getCPInstanceId());
 
 			if ((firstAvailableReplacementCPInstance != null) &&
 				!_cpAvailabilityChecker.check(
-					commerceChannelGroupId, cpInstance, StringPool.BLANK,
-					commerceOrderItem.getQuantity())) {
+					accountEntryId, commerceChannelGroupId, cpInstance,
+					StringPool.BLANK, commerceOrderItem.getQuantity())) {
 
 				commerceOrderImporterItemImpl.setReplacingSKU(
 					cpInstance.getSku());

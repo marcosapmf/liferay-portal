@@ -17,19 +17,20 @@ CalendarNotificationTemplate calendarNotificationTemplate = CalendarNotification
 
 long calendarNotificationTemplateId = BeanPropertiesUtil.getLong(calendarNotificationTemplate, "calendarNotificationTemplateId");
 
-String fromAddress = NotificationUtil.getTemplatePropertyValue(calendarNotificationTemplate, CalendarNotificationTemplateConstants.PROPERTY_FROM_ADDRESS, PrefsPropsUtil.getString(PropsKeys.ADMIN_EMAIL_FROM_ADDRESS));
 String fromName = NotificationUtil.getTemplatePropertyValue(calendarNotificationTemplate, CalendarNotificationTemplateConstants.PROPERTY_FROM_NAME, PrefsPropsUtil.getString(PropsKeys.ADMIN_EMAIL_FROM_NAME));
-String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificationTemplate, "body", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.BODY));
+String fromAddress = NotificationUtil.getTemplatePropertyValue(calendarNotificationTemplate, CalendarNotificationTemplateConstants.PROPERTY_FROM_ADDRESS, PrefsPropsUtil.getString(PropsKeys.ADMIN_EMAIL_FROM_ADDRESS));
+String body = BeanPropertiesUtil.getString(calendarNotificationTemplate, "body", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.BODY));
 %>
 
 <liferay-ui:header
 	backURL="<%= backURL %>"
-	cssClass="container-fluid container-fluid-max-xl"
+	cssClass="container-fluid container-fluid-max-xxxl"
 	localizeTitle="<%= false %>"
 	title="<%= calendarName %>"
 />
 
 <clay:navigation-bar
+	cssClass="container-fluid-max-xxxl"
 	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
@@ -77,14 +78,32 @@ String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificat
 
 		<aui:input name="subject" value='<%= BeanPropertiesUtil.getString(calendarNotificationTemplate, "subject", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.SUBJECT)) %>' />
 
-		<aui:field-wrapper label="body">
-			<liferay-editor:editor
-				contents="<%= notificationTemplateBody %>"
-				editorName="ckeditor"
-			/>
+		<c:choose>
+			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-11235") %>'>
+				<div data-testid="bodyEditorContainer">
+					<label for="<portlet:namespace />body">
+						<liferay-ui:message key="body" />
+					</label>
 
-			<aui:input name="body" type="hidden" value="<%= notificationTemplateBody %>" />
-		</aui:field-wrapper>
+					<liferay-editor:editor
+						contents="<%= body %>"
+						editorName="ckeditor5_classic"
+						formInputEnabled="<%= true %>"
+						formInputName="body"
+					/>
+				</div>
+			</c:when>
+			<c:otherwise>
+				<aui:field-wrapper label="body">
+					<liferay-editor:editor
+						contents="<%= body %>"
+						editorName="ckeditor"
+					/>
+
+					<aui:input name="body" type="hidden" value="<%= body %>" />
+				</aui:field-wrapper>
+			</c:otherwise>
+		</c:choose>
 	</aui:fieldset>
 
 	<div class="definition-of-terms">
@@ -107,19 +126,19 @@ String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificat
 				[$EVENT_LOCATION$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-location" />
+				<liferay-ui:message key="the-event-location" />
 			</dd>
 			<dt>
 				[$EVENT_START_DATE$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-start-date" />
+				<liferay-ui:message key="the-event-start-date" />
 			</dd>
 			<dt>
 				[$EVENT_TITLE$]
 			</dt>
 			<dd>
-				<liferay-ui:message key="the-calendar-booking-title" />
+				<liferay-ui:message key="the-event-title" />
 			</dd>
 
 			<c:if test="<%= notificationTemplateType == NotificationTemplateType.INVITE %>">
@@ -187,13 +206,15 @@ String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificat
 
 <aui:script>
 	function <portlet:namespace />updateCalendarNotificationTemplate() {
-		var notificationTemplateContentBody = document.getElementById(
-			'<portlet:namespace />body'
-		);
+		if (!Liferay.FeatureFlags['LPD-11235']) {
+			var notificationTemplateContentBody = document.getElementById(
+				'<portlet:namespace />body'
+			);
 
-		if (notificationTemplateContentBody) {
-			notificationTemplateContentBody.value =
-				window.<portlet:namespace />editor.getHTML();
+			if (notificationTemplateContentBody) {
+				notificationTemplateContentBody.value =
+					window.<portlet:namespace />editor.getHTML();
+			}
 		}
 
 		submitForm(document.<portlet:namespace />fm);

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderTypeChannel;
 import com.liferay.headless.commerce.admin.order.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
@@ -30,22 +33,27 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,7 +88,7 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -98,11 +102,25 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 		_orderTypeChannelResource.setContextCompany(testCompany);
 
-		OrderTypeChannelResource.Builder builder =
-			OrderTypeChannelResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		orderTypeChannelResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		orderTypeChannelResource = OrderTypeChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +134,32 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		OrderTypeChannel orderTypeChannel1 = randomOrderTypeChannel();
+
+		String json = objectMapper.writeValueAsString(orderTypeChannel1);
+
+		OrderTypeChannel orderTypeChannel2 = OrderTypeChannelSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(orderTypeChannel1, orderTypeChannel2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		OrderTypeChannel orderTypeChannel = randomOrderTypeChannel();
+
+		String json1 = objectMapper.writeValueAsString(orderTypeChannel);
+		String json2 = OrderTypeChannelSerDes.toJSON(orderTypeChannel);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +174,6 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		OrderTypeChannel orderTypeChannel1 = randomOrderTypeChannel();
-
-		String json = objectMapper.writeValueAsString(orderTypeChannel1);
-
-		OrderTypeChannel orderTypeChannel2 = OrderTypeChannelSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(orderTypeChannel1, orderTypeChannel2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		OrderTypeChannel orderTypeChannel = randomOrderTypeChannel();
-
-		String json1 = objectMapper.writeValueAsString(orderTypeChannel);
-		String json2 = OrderTypeChannelSerDes.toJSON(orderTypeChannel);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -190,12 +199,111 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 	@Test
 	public void testDeleteOrderTypeChannel() throws Exception {
-		Assert.assertTrue(false);
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderTypeChannel orderTypeChannel =
+			testDeleteOrderTypeChannel_addOrderTypeChannel();
+
+		assertHttpResponseStatusCode(
+			204,
+			orderTypeChannelResource.deleteOrderTypeChannelHttpResponse(
+				orderTypeChannel.getOrderTypeChannelId()));
+	}
+
+	protected OrderTypeChannel testDeleteOrderTypeChannel_addOrderTypeChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
 	public void testGraphQLDeleteOrderTypeChannel() throws Exception {
-		Assert.assertTrue(false);
+
+		// No namespace
+
+		OrderTypeChannel orderTypeChannel1 =
+			testGraphQLDeleteOrderTypeChannel_addOrderTypeChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteOrderTypeChannel",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"orderTypeChannelId",
+									orderTypeChannel1.getOrderTypeChannelId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteOrderTypeChannel"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		OrderTypeChannel orderTypeChannel2 =
+			testGraphQLDeleteOrderTypeChannel_addOrderTypeChannel();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteOrderTypeChannel",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"orderTypeChannelId",
+										orderTypeChannel2.
+											getOrderTypeChannelId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteOrderTypeChannel"));
+	}
+
+	protected OrderTypeChannel
+			testGraphQLDeleteOrderTypeChannel_addOrderTypeChannel()
+		throws Exception {
+
+		return testGraphQLOrderTypeChannel_addOrderTypeChannel();
+	}
+
+	@Test
+	public void testDeleteOrderTypeChannelBatch() throws Exception {
+		OrderTypeChannel orderTypeChannel1 =
+			testDeleteOrderTypeChannelBatch_addOrderTypeChannel();
+
+		testDeleteOrderTypeChannelBatch_deleteOrderTypeChannel(
+			202, null, orderTypeChannel1.getOrderTypeChannelId());
+	}
+
+	protected OrderTypeChannel
+			testDeleteOrderTypeChannelBatch_addOrderTypeChannel()
+		throws Exception {
+
+		return testDeleteOrderTypeChannel_addOrderTypeChannel();
+	}
+
+	protected void testDeleteOrderTypeChannelBatch_deleteOrderTypeChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			orderTypeChannelResource.deleteOrderTypeChannelBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"orderTypeChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
 	}
 
 	@Test
@@ -260,6 +368,12 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 			page,
 			testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_getExpectedActions(
 				externalReferenceCode));
+
+		orderTypeChannelResource.deleteOrderTypeChannel(
+			orderTypeChannel1.getOrderTypeChannelId());
+
+		orderTypeChannelResource.deleteOrderTypeChannel(
+			orderTypeChannel2.getOrderTypeChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -279,13 +393,13 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_getExternalReferenceCode();
 
-		Page<OrderTypeChannel> orderTypeChannelPage =
+		Page<OrderTypeChannel> orderTypeChannelsPage =
 			orderTypeChannelResource.
 				getOrderTypeByExternalReferenceCodeOrderTypeChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderTypeChannelPage.getTotalCount());
+			orderTypeChannelsPage.getTotalCount());
 
 		OrderTypeChannel orderTypeChannel1 =
 			testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_addOrderTypeChannel(
@@ -407,29 +521,6 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	}
 
 	@Test
-	public void testPostOrderTypeByExternalReferenceCodeOrderTypeChannel()
-		throws Exception {
-
-		OrderTypeChannel randomOrderTypeChannel = randomOrderTypeChannel();
-
-		OrderTypeChannel postOrderTypeChannel =
-			testPostOrderTypeByExternalReferenceCodeOrderTypeChannel_addOrderTypeChannel(
-				randomOrderTypeChannel);
-
-		assertEquals(randomOrderTypeChannel, postOrderTypeChannel);
-		assertValid(postOrderTypeChannel);
-	}
-
-	protected OrderTypeChannel
-			testPostOrderTypeByExternalReferenceCodeOrderTypeChannel_addOrderTypeChannel(
-				OrderTypeChannel orderTypeChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
 	public void testGetOrderTypeIdOrderTypeChannelsPage() throws Exception {
 		Long id = testGetOrderTypeIdOrderTypeChannelsPage_getId();
 		Long irrelevantId =
@@ -481,6 +572,12 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		assertValid(
 			page,
 			testGetOrderTypeIdOrderTypeChannelsPage_getExpectedActions(id));
+
+		orderTypeChannelResource.deleteOrderTypeChannel(
+			orderTypeChannel1.getOrderTypeChannelId());
+
+		orderTypeChannelResource.deleteOrderTypeChannel(
+			orderTypeChannel2.getOrderTypeChannelId());
 	}
 
 	protected Map<String, Map<String, String>>
@@ -498,12 +595,12 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 		Long id = testGetOrderTypeIdOrderTypeChannelsPage_getId();
 
-		Page<OrderTypeChannel> orderTypeChannelPage =
+		Page<OrderTypeChannel> orderTypeChannelsPage =
 			orderTypeChannelResource.getOrderTypeIdOrderTypeChannelsPage(
 				id, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			orderTypeChannelPage.getTotalCount());
+			orderTypeChannelsPage.getTotalCount());
 
 		OrderTypeChannel orderTypeChannel1 =
 			testGetOrderTypeIdOrderTypeChannelsPage_addOrderTypeChannel(
@@ -769,6 +866,29 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	}
 
 	@Test
+	public void testPostOrderTypeByExternalReferenceCodeOrderTypeChannel()
+		throws Exception {
+
+		OrderTypeChannel randomOrderTypeChannel = randomOrderTypeChannel();
+
+		OrderTypeChannel postOrderTypeChannel =
+			testPostOrderTypeByExternalReferenceCodeOrderTypeChannel_addOrderTypeChannel(
+				randomOrderTypeChannel);
+
+		assertEquals(randomOrderTypeChannel, postOrderTypeChannel);
+		assertValid(postOrderTypeChannel);
+	}
+
+	protected OrderTypeChannel
+			testPostOrderTypeByExternalReferenceCodeOrderTypeChannel_addOrderTypeChannel(
+				OrderTypeChannel orderTypeChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostOrderTypeIdOrderTypeChannel() throws Exception {
 		OrderTypeChannel randomOrderTypeChannel = randomOrderTypeChannel();
 
@@ -783,6 +903,64 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	protected OrderTypeChannel
 			testPostOrderTypeIdOrderTypeChannel_addOrderTypeChannel(
 				OrderTypeChannel orderTypeChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		OrderTypeChannel orderTypeChannel1 =
+			testBatchEngineDeleteImportTask_addOrderTypeChannel();
+
+		testBatchEngineDeleteImportTask_deleteOrderTypeChannel(
+			200, null, orderTypeChannel1.getOrderTypeChannelId());
+	}
+
+	protected OrderTypeChannel
+			testBatchEngineDeleteImportTask_addOrderTypeChannel()
+		throws Exception {
+
+		return testDeleteOrderTypeChannel_addOrderTypeChannel();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteOrderTypeChannel(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.order.dto.v1_0.OrderTypeChannel",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"orderTypeChannelId", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
+	}
+
+	protected OrderTypeChannel testGraphQLOrderTypeChannel_addOrderTypeChannel()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -868,6 +1046,10 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		throws Exception {
 
 		boolean valid = true;
+
+		if (orderTypeChannel.getOrderTypeChannelId() == null) {
+			valid = false;
+		}
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
@@ -998,6 +1180,8 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("orderTypeChannelId"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1442,7 +1626,30 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		return randomOrderTypeChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected OrderTypeChannelResource orderTypeChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1452,12 +1659,12 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1466,11 +1673,16 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1502,6 +1714,24 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1523,16 +1753,6 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1630,7 +1850,9 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseOrderTypeChannelResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.order.resource.v1_0.

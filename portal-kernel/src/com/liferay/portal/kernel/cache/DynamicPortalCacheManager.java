@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.cache;
 
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyFactory;
 
 import java.io.Serializable;
@@ -70,7 +71,8 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 			String portalCacheName, boolean mvcc)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, mvcc, false);
+		return getPortalCache(
+			portalCacheName, mvcc, PropsValues.DATABASE_PARTITION_ENABLED);
 	}
 
 	@Override

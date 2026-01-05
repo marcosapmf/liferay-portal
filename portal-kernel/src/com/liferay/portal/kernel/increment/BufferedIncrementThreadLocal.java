@@ -17,13 +17,15 @@ public class BufferedIncrementThreadLocal {
 		return _forceSync.get();
 	}
 
-	public static SafeCloseable setWithSafeCloseable(boolean forceSync) {
+	public static SafeCloseable setForceSyncWithSafeCloseable(
+		boolean forceSync) {
+
 		return _forceSync.setWithSafeCloseable(forceSync);
 	}
 
 	private static final CentralizedThreadLocal<Boolean> _forceSync =
 		new CentralizedThreadLocal<>(
-			BufferedIncrementThreadLocal.class + "_forceSync",
+			BufferedIncrementThreadLocal.class + "._forceSync",
 			() -> Boolean.FALSE);
 
 }

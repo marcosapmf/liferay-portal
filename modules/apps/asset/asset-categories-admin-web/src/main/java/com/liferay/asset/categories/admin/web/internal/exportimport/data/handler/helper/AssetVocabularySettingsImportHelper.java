@@ -52,6 +52,10 @@ public class AssetVocabularySettingsImportHelper
 
 		JSONObject metadataJSONObject = _getMetadataJSONObject(classNameId);
 
+		if (metadataJSONObject == null) {
+			return false;
+		}
+
 		String className = metadataJSONObject.getString("className");
 
 		if (_classNameLocalService.fetchClassName(className) != null) {
@@ -67,7 +71,9 @@ public class AssetVocabularySettingsImportHelper
 
 	private void _fillClassNameIdsAndClassTypePKs(
 		String[] classNameIdsAndClassTypePKs, List<Long> classNameIds,
-		List<Long> classTypePKs, List<Boolean> requireds, boolean required) {
+		List<Long> classTypePKs, boolean depotRequired,
+		List<Boolean> depotRequireds, boolean required,
+		List<Boolean> requireds) {
 
 		for (String classNameIdAndClassTypePK : classNameIdsAndClassTypePKs) {
 			long oldClassNameId = getClassNameId(classNameIdAndClassTypePK);
@@ -86,6 +92,7 @@ public class AssetVocabularySettingsImportHelper
 				_getNewClassTypePK(
 					oldClassNameId, newClassNameId, oldClassTypePK));
 
+			depotRequireds.add(depotRequired);
 			requireds.add(required);
 		}
 	}
@@ -150,19 +157,25 @@ public class AssetVocabularySettingsImportHelper
 	private void _updateSettings() {
 		List<Long> classNameIds = new ArrayList<>();
 		List<Long> classTypePKs = new ArrayList<>();
+		List<Boolean> depotRequireds = new ArrayList<>();
 		List<Boolean> requireds = new ArrayList<>();
 
 		_fillClassNameIdsAndClassTypePKs(
-			getClassNameIdsAndClassTypePKs(), classNameIds, classTypePKs,
-			requireds, false);
+			getClassNameIdsAndClassTypePKs(), classNameIds, classTypePKs, false,
+			depotRequireds, false, requireds);
+
+		_fillClassNameIdsAndClassTypePKs(
+			getDepotRequiredClassNameIdsAndClassTypePKs(), classNameIds,
+			classTypePKs, true, depotRequireds, false, requireds);
 
 		_fillClassNameIdsAndClassTypePKs(
 			getRequiredClassNameIdsAndClassTypePKs(), classNameIds,
-			classTypePKs, requireds, true);
+			classTypePKs, false, depotRequireds, true, requireds);
 
 		setClassNameIdsAndClassTypePKs(
 			ArrayUtil.toLongArray(classNameIds),
 			ArrayUtil.toLongArray(classTypePKs),
+			ArrayUtil.toBooleanArray(depotRequireds),
 			ArrayUtil.toBooleanArray(requireds));
 	}
 

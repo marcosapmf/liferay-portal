@@ -7,7 +7,9 @@ package com.liferay.commerce.pricing.web.internal.portlet.action;
 
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.price.list.exception.NoSuchPriceListException;
+import com.liferay.commerce.pricing.constants.CommercePriceModifierConstants;
 import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
+import com.liferay.commerce.pricing.exception.CommercePriceModifierAmountException;
 import com.liferay.commerce.pricing.exception.NoSuchPriceModifierException;
 import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.CommercePriceModifierService;
@@ -22,13 +24,13 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.math.BigDecimal;
 
 import java.util.Calendar;
 import java.util.Date;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,8 +40,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
-		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
+		"jakarta.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
+		"jakarta.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
 		"mvc.command.name=/commerce_price_list/edit_commerce_price_modifier"
 	},
 	service = MVCActionCommand.class
@@ -68,9 +70,20 @@ public class EditCommercePriceModifierMVCActionCommand
 			}
 		}
 		catch (Exception exception) {
-			if (exception instanceof NoSuchPriceListException ||
-				exception instanceof NoSuchPriceModifierException ||
-				exception instanceof PrincipalException) {
+			if (exception instanceof CommercePriceModifierAmountException) {
+				hideDefaultErrorMessage(actionRequest);
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
+			else if (exception instanceof NoSuchPriceListException ||
+					 exception instanceof NoSuchPriceModifierException ||
+					 exception instanceof PrincipalException) {
 
 				SessionErrors.add(actionRequest, exception.getClass());
 
@@ -116,10 +129,16 @@ public class EditCommercePriceModifierMVCActionCommand
 		String target = ParamUtil.getString(actionRequest, "target");
 		long commercePriceListId = ParamUtil.getLong(
 			actionRequest, "commercePriceListId");
+
 		String modifierType = ParamUtil.getString(
 			actionRequest, "modifierType");
+
 		BigDecimal modifierAmount = _commercePriceFormatter.parse(
-			actionRequest, "modifierAmount");
+			actionRequest,
+			!modifierType.equals(
+				CommercePriceModifierConstants.MODIFIER_TYPE_REPLACE),
+			CommercePriceModifier.class.getName(), "modifierAmount");
+
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 

@@ -6,7 +6,7 @@
 package com.liferay.commerce.order.web.internal.portlet.action;
 
 import com.liferay.commerce.constants.CommercePortletKeys;
-import com.liferay.commerce.order.CommerceReturnThreadLocal;
+import com.liferay.commerce.util.CommerceReturnThreadLocal;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -17,12 +17,12 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.io.Serializable;
 
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_RETURN,
+		"jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_RETURN,
 		"mvc.command.name=/commerce_return/edit_commerce_return"
 	},
 	service = MVCActionCommand.class
@@ -56,7 +56,8 @@ public class EditCommerceReturnMVCActionCommand extends BaseMVCActionCommand {
 				CommerceReturnThreadLocal.setMarkAsCompleted(true);
 
 				_objectEntryService.updateObjectEntry(
-					objectEntry.getObjectEntryId(), values,
+					objectEntry.getObjectEntryId(),
+					objectEntry.getObjectEntryFolderId(), values,
 					new ServiceContext());
 			}
 		}

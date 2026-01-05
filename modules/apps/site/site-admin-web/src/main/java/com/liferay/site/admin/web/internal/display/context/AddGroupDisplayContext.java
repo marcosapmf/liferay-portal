@@ -16,12 +16,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.admin.web.internal.constants.SiteAdminConstants;
 
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Lourdes Fernández Besada
@@ -128,14 +128,9 @@ public class AddGroupDisplayContext {
 			return false;
 		}
 
-		if (Objects.equals(
-				ParamUtil.getString(_httpServletRequest, "creationType"),
-				SiteAdminConstants.CREATION_TYPE_SITE_TEMPLATE)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			ParamUtil.getString(_httpServletRequest, "creationType"),
+			SiteAdminConstants.CREATION_TYPE_SITE_TEMPLATE);
 	}
 
 	private long _getParentGroupId() {

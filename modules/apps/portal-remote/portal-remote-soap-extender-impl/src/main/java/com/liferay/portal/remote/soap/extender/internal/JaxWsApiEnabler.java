@@ -10,11 +10,11 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.remote.soap.extender.internal.configuration.JaxWsApiConfiguration;
 
+import jakarta.xml.ws.spi.Provider;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
-
-import javax.xml.ws.spi.Provider;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
@@ -55,9 +55,8 @@ public class JaxWsApiEnabler {
 		_serviceTracker = ServiceTrackerFactory.open(
 			bundleContext,
 			StringBundler.concat(
-				"(&(objectClass=org.apache.cxf.Bus)(",
-				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH, "=",
-				_contextPath, "))"),
+				"(&(", HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH,
+				"=", _contextPath, ")(objectClass=org.apache.cxf.Bus))"),
 			new CXFBusServiceTrackerCustomizer());
 	}
 
@@ -77,27 +76,26 @@ public class JaxWsApiEnabler {
 
 		@Override
 		public Bus addingService(ServiceReference<Bus> serviceReference) {
-			if (_bus == null) {
-				_bus = _bundleContext.getService(serviceReference);
-
-				BusFactory.setDefaultBus(_bus);
-
-				ProviderImpl providerImpl = new ProviderImpl();
-
-				Dictionary<String, Object> providerProperties =
-					new Hashtable<>();
-
-				providerProperties.put(
-					HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH,
-					_contextPath);
-
-				_serviceRegistration = _bundleContext.registerService(
-					Provider.class, providerImpl, providerProperties);
-
-				return _bus;
+			if (_bus != null) {
+				return null;
 			}
 
-			return null;
+			_bus = _bundleContext.getService(serviceReference);
+
+			BusFactory.setDefaultBus(_bus);
+
+			ProviderImpl providerImpl = new ProviderImpl();
+
+			Dictionary<String, Object> providerProperties = new Hashtable<>();
+
+			providerProperties.put(
+				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_PATH,
+				_contextPath);
+
+			_serviceRegistration = _bundleContext.registerService(
+				Provider.class, providerImpl, providerProperties);
+
+			return _bus;
 		}
 
 		@Override

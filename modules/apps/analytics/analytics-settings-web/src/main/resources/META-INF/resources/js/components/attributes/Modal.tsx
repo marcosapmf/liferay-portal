@@ -56,18 +56,18 @@ const columns: TColumn[] = [
 	},
 ];
 
-const Modal: React.FC<IModalProps> = ({
-	observer,
-	onCancel,
-	onSubmit,
-	requestFn,
-	title,
-}) => {
+const Modal: React.FC<
+	{children?: React.ReactNode | undefined} & IModalProps
+> = ({observer, onCancel, onSubmit, requestFn, title}) => {
 	const [items, setItems] = useState<TFormattedItems>({});
 
 	return (
 		<ClayModal center observer={observer} size="lg">
-			<ClayModal.Header>{title}</ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
+				{title}
+			</ClayModal.Header>
 
 			<ClayModal.Body>
 				<Table<TRawItem>

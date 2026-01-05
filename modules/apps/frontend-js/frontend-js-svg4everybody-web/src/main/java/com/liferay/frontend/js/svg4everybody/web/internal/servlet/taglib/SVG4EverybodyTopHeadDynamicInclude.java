@@ -24,13 +24,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
-import com.liferay.portal.url.builder.BundleScriptAbsolutePortalURLBuilder;
+import com.liferay.portal.url.builder.WebContextScriptAbsolutePortalURLBuilder;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -107,16 +109,16 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 					httpServletRequest));
 			printWriter.print(" data-senna-track=\"permanent\" src=\"");
 
-			BundleScriptAbsolutePortalURLBuilder
-				bundleScriptAbsolutePortalURLBuilder =
-					absolutePortalURLBuilder.forBundleScript(
-						_bundleContext.getBundle(), jsFileName);
+			WebContextScriptAbsolutePortalURLBuilder
+				webContextScriptAbsolutePortalURLBuilder =
+					absolutePortalURLBuilder.forWebContextScript(
+						"frontend-js-svg4everybody-web", jsFileName);
 
 			if (!cdnDynamicResourcesEnabled) {
-				bundleScriptAbsolutePortalURLBuilder.ignoreCDNHost();
+				webContextScriptAbsolutePortalURLBuilder.ignoreCDNHost();
 			}
 
-			printWriter.print(bundleScriptAbsolutePortalURLBuilder.build());
+			printWriter.print(webContextScriptAbsolutePortalURLBuilder.build());
 
 			printWriter.println("\" type=\"text/javascript\"></script>");
 		}
@@ -134,31 +136,42 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 	}
 
 	private CET _getCET(
-		long classNameId, long classPK, long companyId, String type) {
+		long classNameId, long classPK, long companyId,
+		List<ClientExtensionEntryRel> clientExtensionEntryRels) {
 
-		ClientExtensionEntryRel clientExtensionEntryRel =
-			_clientExtensionEntryRelLocalService.fetchClientExtensionEntryRel(
-				classNameId, classPK, type);
+		for (ClientExtensionEntryRel clientExtensionEntryRel :
+				clientExtensionEntryRels) {
 
-		if (clientExtensionEntryRel == null) {
-			return null;
+			if ((clientExtensionEntryRel.getClassNameId() == classNameId) &&
+				(clientExtensionEntryRel.getClassPK() == classPK)) {
+
+				return _cetManager.getCET(
+					companyId,
+					clientExtensionEntryRel.getCETExternalReferenceCode());
+			}
 		}
 
-		return _cetManager.getCET(
-			companyId, clientExtensionEntryRel.getCETExternalReferenceCode());
+		return null;
 	}
 
 	private ThemeSpritemapCET _getThemeSpritemapCET(Layout layout) {
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+
+		if (clientExtensionEntryRels.isEmpty()) {
+			return null;
+		}
+
 		CET cet = _getCET(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
-			layout.getCompanyId(),
-			ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+			layout.getCompanyId(), clientExtensionEntryRels);
 
 		if (cet == null) {
 			cet = _getCET(
 				_portal.getClassNameId(Layout.class),
 				layout.getMasterLayoutPlid(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+				clientExtensionEntryRels);
 		}
 
 		if (cet == null) {
@@ -167,7 +180,7 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 			cet = _getCET(
 				_portal.getClassNameId(LayoutSet.class),
 				layoutSet.getLayoutSetId(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+				clientExtensionEntryRels);
 		}
 
 		if (cet != null) {

@@ -5,17 +5,21 @@
 
 import ClayPanel from '@clayui/panel';
 import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
-import {FeatureIndicator} from 'frontend-js-components-web';
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
+import {Error, handleErrors} from '../../utils/errors';
 import ObjectManagementToolbar from '../ObjectManagementToolbar';
 import {AccountRestrictionContainer} from './AccountRestrictionContainer';
 import {ConfigurationContainer} from './ConfigurationContainer';
 import {EntryDisplayContainer} from './EntryDisplayContainer';
 import {ExternalDataSourceContainer} from './ExternalDataSourceContainer';
+import {InheritanceObjectDefinitionAlert} from './InheritanceObjectDefinitionAlert';
 import {ObjectDataContainer} from './ObjectDataContainer';
 import {ScopeContainer} from './ScopeContainer';
+import {SeoContainer} from './SeoContainer';
 import Sheet from './Sheet';
+import {SubscriptionsContainer} from './SubscriptionsContainer';
 import {TranslationsContainer} from './TranslationsContainer';
 import {useObjectDetailsForm} from './useObjectDetailsForm';
 
@@ -25,6 +29,7 @@ export type Scope = {
 	items: LabelValueObject[];
 	label: string;
 };
+
 interface EditObjectDetailsProps {
 	backURL: string;
 	companies: Scope[];
@@ -32,9 +37,11 @@ interface EditObjectDetailsProps {
 	hasPublishObjectPermission: boolean;
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
+	isEnableObjectEntrySchedule: boolean;
 	isRootDescendantNode: boolean;
+	isRootNode: boolean;
 	label: LocalizedValue<string>;
-	learnResourceContext: any;
+	learnResources: ILearnResourceContext;
 	nonRelationshipObjectFieldsInfo: {
 		label: LocalizedValue<string>;
 		name: string;
@@ -77,9 +84,11 @@ export default function EditObjectDetails({
 	hasPublishObjectPermission,
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
+	isEnableObjectEntrySchedule,
 	isRootDescendantNode,
+	isRootNode,
 	label,
-	learnResourceContext,
+	learnResources,
 	nonRelationshipObjectFieldsInfo,
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
@@ -89,8 +98,9 @@ export default function EditObjectDetails({
 	sites,
 	storageTypes,
 }: EditObjectDetailsProps) {
+	const [backEndErrors, setBackEndErrors] = useState<Error>({});
+	const [loading, setLoading] = useState(true);
 	const [objectFields, setObjectFields] = useState<ObjectField[]>([]);
-
 	const {errors, handleChange, handleValidate, setValues, values} =
 		useObjectDetailsForm({
 			initialValues: {
@@ -108,60 +118,64 @@ export default function EditObjectDetails({
 		const validationErrors = handleValidate();
 
 		if (!Object.keys(validationErrors).length) {
+			setLoading(true);
 			let objectDefinition = values;
 
 			if (values.accountEntryRestricted) {
 				objectDefinition = setAccountRelationshipFieldMandatory(values);
 			}
 
-			const saveResponse =
-				await API.putObjectDefinitionByExternalReferenceCode(
-					objectDefinition
-				);
-
-			if (!saveResponse.ok) {
-				const {title} = (await saveResponse.json()) as {
-					status: string;
-					title: string;
-				};
-
-				openToast({
-					message: title,
-					type: 'danger',
+			try {
+				await API.save({
+					item: objectDefinition,
+					method: 'PUT',
+					url: `/o/object-admin/v1.0/object-definitions/by-external-reference-code/${objectDefinition.externalReferenceCode}`,
 				});
+			}
+			catch (error) {
+				const {detail, title} = error as Error;
+
+				handleErrors({detail, title}, setBackEndErrors);
+
+				setLoading(false);
 
 				return;
 			}
 
 			if (!draft) {
-				const publishResponse = await API.postObjectDefinitionPublish(
-					values.id as number
-				);
+				try {
+					const publishResponse: any =
+						await API.postObjectDefinitionPublish(
+							values.id as number
+						);
 
-				if (!publishResponse.ok) {
-					const {title} = (await publishResponse.json()) as {
-						status: string;
-						title: string;
-					};
+					if (!publishResponse.ok) {
+						const errorDetails = await publishResponse.json();
 
-					openToast({
-						message: title,
-						type: 'danger',
-					});
+						throw errorDetails;
+					}
+					else {
+						openToast({
+							message: Liferay.Language.get(
+								'the-object-was-published-successfully'
+							),
+							type: 'success',
+						});
+
+						setTimeout(() => window.location.reload(), 1000);
+
+						return;
+					}
+				}
+				catch (error) {
+					const {detail, title} = error as Error;
+
+					handleErrors({detail, title}, setBackEndErrors);
+
+					setLoading(false);
 
 					return;
 				}
-
-				openToast({
-					message: Liferay.Language.get(
-						'the-object-was-published-successfully'
-					),
-					type: 'success',
-				});
-
-				setTimeout(() => window.location.reload(), 1000);
-
-				return;
 			}
 
 			openToast({
@@ -188,12 +202,25 @@ export default function EditObjectDetails({
 
 			setValues(objectDefinitionResponse);
 			setObjectFields(objectFieldsResponse);
+			setLoading(false);
 		};
 
 		makeFetch();
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionId]);
+
+	const showSeoSection =
+		values.friendlyURLSeparator !== undefined &&
+		!(
+			(Liferay.FeatureFlags['LPS-135430'] &&
+				values.storageType !== 'default') ||
+			(!values.modifiable && values.system)
+		);
+
+	const showSubscriptionSection =
+		Liferay.FeatureFlags['LPD-17564'] &&
+		!(!values.modifiable && values.system);
 
 	return (
 		<>
@@ -206,11 +233,14 @@ export default function EditObjectDetails({
 					}
 					isApproved={isApproved}
 					isRootDescendantNode={isRootDescendantNode}
-					label={stringUtils.getLocalizableLabel(
-						values.defaultLanguageId as Liferay.Language.Locale,
-						values.label,
-						values.name
-					)}
+					isRootNode={isRootNode}
+					label={stringUtils.getLocalizableLabel({
+						fallbackLabel: values.name,
+						fallbackLanguageId:
+							values.defaultLanguageId as Liferay.Language.Locale,
+						labels: values.label,
+					})}
+					loading={loading}
 					objectDefinitionExternalReferenceCode={
 						objectDefinitionExternalReferenceCode
 					}
@@ -224,6 +254,12 @@ export default function EditObjectDetails({
 
 			<div className="lfr-objects__object-definition-details">
 				<Sheet title={Liferay.Language.get('basic-information')}>
+					{isRootDescendantNode && (
+						<InheritanceObjectDefinitionAlert
+							learnResources={learnResources}
+						/>
+					)}
+
 					<ClayPanel
 						displayTitle={Liferay.Language.get(
 							'object-definition-data'
@@ -275,18 +311,6 @@ export default function EditObjectDetails({
 											'external-data-source'
 										)}
 									</span>
-
-									{values.storageType === 'salesforce' && (
-										<div className="lfr__object-web-edit-object-details-external-data-source-panel-container-beta">
-											<FeatureIndicator
-												interactive
-												learnResourceContext={
-													learnResourceContext
-												}
-												type="beta"
-											/>
-										</div>
-									)}
 								</div>
 							}
 							displayType="unstyled"
@@ -317,7 +341,6 @@ export default function EditObjectDetails({
 									hasUpdateObjectDefinitionPermission
 								}
 								isApproved={isApproved}
-								isRootDescendantNode={isRootDescendantNode}
 								setValues={setValues}
 								sites={sites}
 								values={values}
@@ -338,7 +361,6 @@ export default function EditObjectDetails({
 								<AccountRestrictionContainer
 									errors={errors}
 									isApproved={isApproved}
-									isRootDescendantNode={isRootDescendantNode}
 									objectFields={objectFields}
 									setValues={setValues}
 									values={values}
@@ -358,7 +380,10 @@ export default function EditObjectDetails({
 								hasUpdateObjectDefinitionPermission={
 									hasUpdateObjectDefinitionPermission
 								}
-								isRootDescendantNode={isRootDescendantNode}
+								isApproved={isApproved}
+								isEnableObjectEntrySchedule={
+									isEnableObjectEntrySchedule
+								}
 								setValues={setValues}
 								values={values}
 							/>
@@ -372,12 +397,48 @@ export default function EditObjectDetails({
 						displayType="unstyled"
 					>
 						<ClayPanel.Body>
-							<TranslationsContainer
-								setValues={setValues}
-								values={values}
-							/>
+							<TranslationsContainer />
 						</ClayPanel.Body>
 					</ClayPanel>
+
+					{showSeoSection && (
+						<ClayPanel
+							collapsable
+							defaultExpanded
+							displayTitle={Liferay.Language.get('seo')}
+							displayType="unstyled"
+						>
+							<ClayPanel.Body>
+								<SeoContainer
+									errors={backEndErrors}
+									hasUpdateObjectDefinitionPermission={
+										hasUpdateObjectDefinitionPermission
+									}
+									setValues={setValues}
+									values={values}
+								/>
+							</ClayPanel.Body>
+						</ClayPanel>
+					)}
+
+					{showSubscriptionSection && (
+						<ClayPanel
+							collapsable
+							defaultExpanded
+							displayTitle={Liferay.Language.get('subscriptions')}
+							displayType="unstyled"
+						>
+							<ClayPanel.Body>
+								<SubscriptionsContainer
+									hasUpdateObjectDefinitionPermission={
+										hasUpdateObjectDefinitionPermission
+									}
+									setValues={setValues}
+									values={values}
+								/>
+							</ClayPanel.Body>
+						</ClayPanel>
+					)}
 				</Sheet>
 			</div>
 		</>

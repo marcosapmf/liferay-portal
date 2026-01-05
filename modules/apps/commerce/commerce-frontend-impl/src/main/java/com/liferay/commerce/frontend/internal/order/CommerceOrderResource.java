@@ -10,6 +10,7 @@ import com.liferay.commerce.frontend.internal.account.model.OrderList;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -18,13 +19,12 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,24 +81,22 @@ public class CommerceOrderResource {
 			int pageSize, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		List<Order> orders = new ArrayList<>();
-
 		int start = (page - 1) * pageSize;
 		int end = page * pageSize;
 
-		List<CommerceOrder> userCommerceOrders =
+		return TransformUtil.transform(
 			_commerceOrderService.getUserCommerceOrders(
-				companyId, groupId, keywords, start, end);
+				companyId, groupId, keywords, start, end),
+			commerceOrder -> {
+				Date modifiedDate = commerceOrder.getModifiedDate();
 
-		for (CommerceOrder commerceOrder : userCommerceOrders) {
-			Date modifiedDate = commerceOrder.getModifiedDate();
+				String modifiedDateTimeDescription =
+					_language.getTimeDescription(
+						httpServletRequest,
+						System.currentTimeMillis() - modifiedDate.getTime(),
+						true);
 
-			String modifiedDateTimeDescription = _language.getTimeDescription(
-				httpServletRequest,
-				System.currentTimeMillis() - modifiedDate.getTime(), true);
-
-			orders.add(
-				new Order(
+				return new Order(
 					commerceOrder.getCommerceOrderId(),
 					commerceOrder.getCommerceAccountId(),
 					commerceOrder.getCommerceAccountName(),
@@ -109,10 +107,8 @@ public class CommerceOrderResource {
 					WorkflowConstants.getStatusLabel(commerceOrder.getStatus()),
 					_getOrderLinkURL(
 						commerceOrder.getCommerceOrderId(),
-						httpServletRequest)));
-		}
-
-		return orders;
+						httpServletRequest));
+			});
 	}
 
 	private int _getOrdersCount(long companyId, long groupId, String keywords)

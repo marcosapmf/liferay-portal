@@ -24,14 +24,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+
 import java.util.Collections;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Adolfo Pérez
@@ -55,6 +55,10 @@ public class RepositoryBrowserTag extends IncludeTag {
 		return _repositoryId;
 	}
 
+	public boolean isIncludeExtension() {
+		return _includeExtension;
+	}
+
 	public boolean isViewableByGuest() {
 		return _viewableByGuest;
 	}
@@ -65,6 +69,10 @@ public class RepositoryBrowserTag extends IncludeTag {
 
 	public void setFolderId(long folderId) {
 		_folderId = folderId;
+	}
+
+	public void setIncludeExtension(boolean includeExtension) {
+		_includeExtension = includeExtension;
 	}
 
 	@Override
@@ -88,6 +96,7 @@ public class RepositoryBrowserTag extends IncludeTag {
 
 		_actions = StringPool.BLANK;
 		_folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+		_includeExtension = false;
 		_repositoryId = 0;
 		_viewableByGuest = false;
 	}
@@ -101,11 +110,11 @@ public class RepositoryBrowserTag extends IncludeTag {
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		httpServletRequest.setAttribute(
 			RepositoryBrowserTagDisplayContext.class.getName(),
@@ -117,7 +126,7 @@ public class RepositoryBrowserTag extends IncludeTag {
 					FileShortcut.class.getName()),
 				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
 					Folder.class.getName()),
-				_getFolderId(), httpServletRequest,
+				_getFolderId(), httpServletRequest, isIncludeExtension(),
 				PortalUtil.getLiferayPortletRequest(portletRequest),
 				PortalUtil.getLiferayPortletResponse(portletResponse),
 				portletRequest, _getRepositoryId(), getFolderId(),
@@ -129,19 +138,20 @@ public class RepositoryBrowserTag extends IncludeTag {
 			return _allActions;
 		}
 
-		String actions = StringUtil.trim(getActions());
+		String trimmedActions = StringUtil.trim(getActions());
 
-		Set<String> actionsSet = SetUtil.fromArray(actions.split("\\s*,\\s*"));
+		Set<String> actions = SetUtil.fromArray(
+			trimmedActions.split("\\s*,\\s*"));
 
-		if (actionsSet.contains("none")) {
+		if (actions.contains("none")) {
 			return Collections.emptySet();
 		}
 
-		if (actionsSet.contains("all")) {
+		if (actions.contains("all")) {
 			return _allActions;
 		}
 
-		return actionsSet;
+		return actions;
 	}
 
 	private long _getFolderId() {
@@ -169,6 +179,7 @@ public class RepositoryBrowserTag extends IncludeTag {
 
 	private String _actions = StringPool.BLANK;
 	private long _folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+	private boolean _includeExtension;
 	private long _repositoryId;
 	private boolean _viewableByGuest;
 

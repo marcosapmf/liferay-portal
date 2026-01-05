@@ -15,12 +15,12 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.search.experiences.SXPBlueprintTitleProvider;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import java.util.Map;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eudaldo Alonso
@@ -82,7 +82,7 @@ public class AddRankingDisplayContext {
 
 	private static final Snapshot<SXPBlueprintTitleProvider>
 		_sxpBlueprintTitleProviderSnapshot = new Snapshot<>(
-			RankingPortletDisplayBuilder.class, SXPBlueprintTitleProvider.class,
+			AddRankingDisplayContext.class, SXPBlueprintTitleProvider.class,
 			null, true);
 
 	private final ItemSelector _itemSelector;

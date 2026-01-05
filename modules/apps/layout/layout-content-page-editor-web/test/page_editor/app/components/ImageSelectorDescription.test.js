@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
-import {render, screen} from '@testing-library/react';
+import '@testing-library/jest-dom';
+import {fireEvent, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {ImageSelectorDescription} from '../../../../src/main/resources/META-INF/resources/page_editor/common/components/ImageSelectorDescription';
@@ -28,7 +29,7 @@ describe('ImageSelectorDescription', () => {
 		).toBe('Random description');
 	});
 
-	it('call onImageDescriptionChanged on blur', () => {
+	it('call onImageDescriptionChanged on blur', async () => {
 		const onImageDescriptionChanged = jest.fn();
 
 		render(
@@ -44,8 +45,10 @@ describe('ImageSelectorDescription', () => {
 			selector: 'input',
 		});
 
-		input.value = 'Some other thing';
-		input.dispatchEvent(new FocusEvent('blur'));
+		await userEvent.clear(input);
+		await userEvent.type(input, 'Some other thing');
+
+		fireEvent.blur(input);
 
 		expect(onImageDescriptionChanged).toHaveBeenCalledWith(
 			'Some other thing'

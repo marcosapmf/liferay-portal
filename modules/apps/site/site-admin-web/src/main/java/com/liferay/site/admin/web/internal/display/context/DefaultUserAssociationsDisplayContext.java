@@ -25,11 +25,11 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.site.teams.item.selector.criterion.SiteTeamsItemSelectorCriterion;
+import com.liferay.site.teams.item.selector.SiteTeamsItemSelectorCriterion;
 
-import javax.portlet.PortletResponse;
+import jakarta.portlet.PortletResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -47,7 +47,7 @@ public class DefaultUserAssociationsDisplayContext {
 				"site.groupTypeSettings");
 		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE));
+				JavaConstants.JAKARTA_PORTLET_RESPONSE));
 		_liveGroupId = (long)httpServletRequest.getAttribute(
 			"site.liveGroupId");
 	}

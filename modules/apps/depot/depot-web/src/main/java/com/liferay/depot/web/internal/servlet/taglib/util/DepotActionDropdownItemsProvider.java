@@ -21,11 +21,11 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.ActionURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alicia García
@@ -97,14 +97,9 @@ public class DepotActionDropdownItemsProvider {
 
 	private boolean _hasDeletePermission() {
 		try {
-			if (!DepotEntryPermission.contains(
-					_themeDisplay.getPermissionChecker(),
-					_depotEntry.getDepotEntryId(), ActionKeys.DELETE)) {
-
-				return false;
-			}
-
-			return true;
+			return DepotEntryPermission.contains(
+				_themeDisplay.getPermissionChecker(),
+				_depotEntry.getDepotEntryId(), ActionKeys.DELETE);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
@@ -113,14 +108,9 @@ public class DepotActionDropdownItemsProvider {
 
 	private boolean _hasPermissionsPermission() {
 		try {
-			if (!DepotEntryPermission.contains(
-					_themeDisplay.getPermissionChecker(),
-					_depotEntry.getDepotEntryId(), ActionKeys.PERMISSIONS)) {
-
-				return false;
-			}
-
-			return true;
+			return DepotEntryPermission.contains(
+				_themeDisplay.getPermissionChecker(),
+				_depotEntry.getDepotEntryId(), ActionKeys.PERMISSIONS);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);

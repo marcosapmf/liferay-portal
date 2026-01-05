@@ -16,6 +16,7 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngineRegistry;
 import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
@@ -30,18 +31,18 @@ import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPQuery;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
 import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
-import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.commerce.util.CommerceContextThreadLocal;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.commerce.util.comparator.CommerceShippingMethodPriorityComparator;
 import com.liferay.petra.string.StringPool;
@@ -165,15 +166,16 @@ public class CommerceOrderGenerator {
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				accountEntryUserRel.getAccountEntryId(),
-				commerceCurrency.getCommerceCurrencyId(), 0);
+				commerceCurrency.getCode(), 0);
 
 		// Commerce order items
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			commerceOrder.getCompanyId(), commerceOrder.getGroupId(),
-			accountEntryUserRel.getAccountUserId(),
-			commerceOrder.getCommerceOrderId(),
-			accountEntryUserRel.getAccountEntryId());
+			accountEntryUserRel.getAccountEntryId(), commerceOrder.getGroupId(),
+			null, commerceOrder.getCommerceOrderId(),
+			commerceOrder.getCompanyId());
+
+		CommerceContextThreadLocal.set(commerceContext);
 
 		ServiceContext serviceContext = _getServiceContext(commerceOrder);
 
@@ -263,6 +265,8 @@ public class CommerceOrderGenerator {
 					getCPDefinitionInventoryEngine(cpDefinitionInventory);
 
 			BigDecimal maxOrderQuantity = _getMaxOrderQuantity(
+				commerceContext.getCPConfigurationListId(
+					cpInstance.getGroupId()),
 				cpInstance, cpDefinitionInventoryEngine);
 
 			if (BigDecimalUtil.lt(maxOrderQuantity, BigDecimal.ZERO)) {
@@ -273,7 +277,10 @@ public class CommerceOrderGenerator {
 
 			try {
 				BigDecimal minOrderQuantity =
-					cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance);
+					cpDefinitionInventoryEngine.getMinOrderQuantity(
+						commerceContext.getCPConfigurationListId(
+							cpInstance.getGroupId()),
+						cpInstance);
 
 				if (BigDecimalUtil.lt(maxOrderQuantity, minOrderQuantity)) {
 					continue;
@@ -441,7 +448,7 @@ public class CommerceOrderGenerator {
 	}
 
 	private BigDecimal _getMaxOrderQuantity(
-			CPInstance cpInstance,
+			long cpConfigurationListId, CPInstance cpInstance,
 			CPDefinitionInventoryEngine cpDefinitionInventoryEngine)
 		throws PortalException {
 
@@ -450,7 +457,8 @@ public class CommerceOrderGenerator {
 			cpInstance.getSku(), StringPool.BLANK);
 
 		BigDecimal maxOrderQuantity =
-			cpDefinitionInventoryEngine.getMaxOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMaxOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (BigDecimalUtil.lt(stockQuantity, maxOrderQuantity)) {
 			return stockQuantity;

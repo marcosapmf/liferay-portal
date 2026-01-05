@@ -50,6 +50,51 @@ import org.json.JSONObject;
  */
 public abstract class BaseJob implements Job {
 
+	public Set<String> getAnalyticsCloudBatchNames() {
+		Set<String> batchNames = new TreeSet<>();
+
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			if (batchTestClassGroup.isTestAnalyticsCloud()) {
+				batchNames.add(batchTestClassGroup.getBatchName());
+			}
+		}
+
+		return batchNames;
+	}
+
+	public Set<String> getAnalyticsCloudSegmentNames() {
+		Set<String> segmentNames = new TreeSet<>();
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (segmentTestClassGroup.isTestAnalyticsCloud()) {
+				segmentNames.add(segmentTestClassGroup.getSegmentName());
+			}
+		}
+
+		return segmentNames;
+	}
+
+	@Override
+	public Set<String> getAppServerTypes() {
+		JobProperty jobProperty = getJobProperty("test.batch.dist.app.servers");
+
+		return getSetFromString(jobProperty.getValue());
+	}
+
+	@Override
+	public Set<String> getAppServerTypesExcludingTomcat() {
+		Set<String> appServerTypesExcludingTomcat = new TreeSet<>(
+			getAppServerTypes());
+
+		appServerTypesExcludingTomcat.remove("tomcat");
+
+		return appServerTypesExcludingTomcat;
+	}
+
 	@Override
 	public int getAxisCount() {
 		List<AxisTestClassGroup> axisTestClassGroups = getAxisTestClassGroups();
@@ -95,15 +140,19 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public Set<String> getBatchNames() {
-		Set<String> batchNames = new TreeSet<>();
+		if (_batchNames != null) {
+			return _batchNames;
+		}
+
+		_batchNames = Collections.synchronizedSet(new TreeSet<String>());
 
 		for (BatchTestClassGroup batchTestClassGroup :
 				getBatchTestClassGroups()) {
 
-			batchNames.add(batchTestClassGroup.getBatchName());
+			_batchNames.add(batchTestClassGroup.getBatchName());
 		}
 
-		return batchNames;
+		return _batchNames;
 	}
 
 	@Override
@@ -352,24 +401,64 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public Set<String> getDistRequiredBatchNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return getBatchNames();
+		}
+
+		Set<String> batchNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			String batchName = batchTestClassGroup.getBatchName();
+
+			if (!standaloneTestBatchNames.contains(batchName)) {
+				batchNames.add(batchName);
+			}
+		}
+
+		return batchNames;
+	}
+
+	@Override
+	public Set<String> getDistRequiredSegmentNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return getSegmentNames();
+		}
+
+		Set<String> segmentNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (standaloneTestBatchNames.contains(
+					segmentTestClassGroup.getBatchName()) ||
+				(segmentTestClassGroup.isTestAnalyticsCloud() &&
+				 JenkinsResultsParserUtil.isCloudCINode())) {
+
+				continue;
+			}
+
+			segmentNames.add(segmentTestClassGroup.getSegmentName());
+		}
+
+		return segmentNames;
+	}
+
+	@Override
 	public DistType getDistType() {
 		return DistType.CI;
-	}
-
-	@Override
-	public Set<String> getDistTypes() {
-		JobProperty jobProperty = getJobProperty("test.batch.dist.app.servers");
-
-		return getSetFromString(jobProperty.getValue());
-	}
-
-	@Override
-	public Set<String> getDistTypesExcludingTomcat() {
-		Set<String> distTypesExcludingTomcat = new TreeSet<>(getDistTypes());
-
-		distTypesExcludingTomcat.remove("tomcat");
-
-		return distTypesExcludingTomcat;
 	}
 
 	@Override
@@ -531,6 +620,58 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
+	public Set<String> getStandaloneBatchNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return Collections.emptySet();
+		}
+
+		Set<String> batchNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (BatchTestClassGroup batchTestClassGroup :
+				getBatchTestClassGroups()) {
+
+			String batchName = batchTestClassGroup.getBatchName();
+
+			if (standaloneTestBatchNames.contains(batchName)) {
+				batchNames.add(batchName);
+			}
+		}
+
+		return batchNames;
+	}
+
+	@Override
+	public Set<String> getStandaloneSegmentNames() {
+		if (!isStandaloneBatchEnabled()) {
+			return Collections.emptySet();
+		}
+
+		Set<String> segmentNames = new TreeSet<>();
+
+		JobProperty jobProperty = getJobProperty("test.batch.names.standalone");
+
+		Set<String> standaloneTestBatchNames = getSetFromString(
+			jobProperty.getValue());
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (standaloneTestBatchNames.contains(
+					segmentTestClassGroup.getBatchName())) {
+
+				segmentNames.add(segmentTestClassGroup.getSegmentName());
+			}
+		}
+
+		return segmentNames;
+	}
+
+	@Override
 	public String getTestPropertiesContent() {
 		Map<String, Properties> propertiesMap = new HashMap<>();
 
@@ -552,6 +693,9 @@ public abstract class BaseJob implements Job {
 			batchProperties.setProperty(
 				"test.batch.minimum.slave.ram",
 				String.valueOf(batchTestClassGroup.getMinimumSlaveRAM()));
+			batchProperties.setProperty(
+				"test.batch.os.architecture",
+				batchTestClassGroup.getOSArchitecture());
 			batchProperties.setProperty(
 				"test.batch.slave.label", batchTestClassGroup.getSlaveLabel());
 
@@ -606,6 +750,9 @@ public abstract class BaseJob implements Job {
 				segmentProperties.setProperty(
 					"test.batch.name", segmentTestClassGroup.getBatchName());
 				segmentProperties.setProperty(
+					"test.batch.os.architecture",
+					segmentTestClassGroup.getOSArchitecture());
+				segmentProperties.setProperty(
 					"test.batch.size",
 					String.valueOf(segmentTestClassGroup.getAxisCount()));
 				segmentProperties.setProperty(
@@ -642,6 +789,18 @@ public abstract class BaseJob implements Job {
 			}
 		}
 
+		for (AxisTestClassGroup axisTestClassGroup : getAxisTestClassGroups()) {
+			Properties axisProperties = new Properties();
+
+			axisProperties.setProperty(
+				"test.batch.os.architecture",
+				axisTestClassGroup.getOSArchitecture());
+			axisProperties.setProperty(
+				"test.batch.slave.label", axisTestClassGroup.getSlaveLabel());
+
+			propertiesMap.put(axisTestClassGroup.getAxisName(), axisProperties);
+		}
+
 		StringBuilder sb = new StringBuilder();
 
 		for (Map.Entry<String, Properties> propertiesEntry :
@@ -676,6 +835,29 @@ public abstract class BaseJob implements Job {
 	public int getTimeoutMinutes(JenkinsMaster jenkinsMaster) {
 		return JenkinsResultsParserUtil.getJobTimeoutMinutes(
 			jenkinsMaster, getJobName());
+	}
+
+	@Override
+	public boolean isBuildCachingEnabled() {
+		String buildCachingEnabled = System.getenv("BUILD_CACHING_ENABLED");
+
+		if (Objects.equals(buildCachingEnabled, "true")) {
+			return true;
+		}
+
+		try {
+			buildCachingEnabled = JenkinsResultsParserUtil.getBuildProperty(
+				"build.caching.enabled", getJobName(), getTestSuiteName());
+
+			if (Objects.equals(buildCachingEnabled, "true")) {
+				return true;
+			}
+		}
+		catch (IOException ioException) {
+			return false;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -756,16 +938,16 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean isValidationRequired() {
+	public boolean isStandaloneBatchEnabled() {
 		return false;
 	}
 
 	@Override
-	public boolean testAnalyticsCloud() {
+	public boolean isTestAnalyticsCloud() {
 		for (BatchTestClassGroup batchTestClassGroup :
 				getBatchTestClassGroups()) {
 
-			if (batchTestClassGroup.testAnalyticsCloud()) {
+			if (batchTestClassGroup.isTestAnalyticsCloud()) {
 				_testAnalyticsCloud = true;
 
 				return _testAnalyticsCloud;
@@ -778,7 +960,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean testHotfixChanges() {
+	public boolean isTestHotfixChanges() {
 		JobProperty jobProperty = getJobProperty("test.hotfix.changes");
 
 		if (jobProperty != null) {
@@ -791,7 +973,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean testJaCoCoCodeCoverage() {
+	public boolean isTestJaCoCoCodeCoverage() {
 		JobProperty jobProperty = getJobProperty("test.jacoco.code.coverage");
 
 		if (jobProperty != null) {
@@ -804,7 +986,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean testReleaseBundle() {
+	public boolean isTestReleaseBundle() {
 		JobProperty jobProperty = getJobProperty("test.release.bundle");
 
 		if (jobProperty != null) {
@@ -817,7 +999,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean testRelevantChanges() {
+	public boolean isTestRelevantChanges() {
 		JobProperty jobProperty = getJobProperty("test.relevant.changes");
 
 		if (jobProperty != null) {
@@ -830,7 +1012,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	@Override
-	public boolean testRelevantChangesInStable() {
+	public boolean isTestRelevantChangesInStable() {
 		JobProperty jobProperty = getJobProperty(
 			"test.relevant.changes.in.stable");
 
@@ -840,6 +1022,11 @@ public abstract class BaseJob implements Job {
 			return Boolean.parseBoolean(jobProperty.getValue());
 		}
 
+		return false;
+	}
+
+	@Override
+	public boolean isValidationRequired() {
 		return false;
 	}
 
@@ -1468,8 +1655,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	private static final String[] _JUNIT_BATCH_NAMES = {
-		"integration-jdk8", "modules-integration-jdk8", "modules-unit-jdk8",
-		"unit-jdk8"
+		"integration-jdk8", "modules-integration", "modules-unit", "unit"
 	};
 
 	private static final Integer _THREAD_COUNT = 10;
@@ -1477,6 +1663,7 @@ public abstract class BaseJob implements Job {
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(_THREAD_COUNT, true);
 
+	private Set<String> _batchNames;
 	private final BuildProfile _buildProfile;
 	private String _companyDefaultLocale;
 	private Document _configDocument;

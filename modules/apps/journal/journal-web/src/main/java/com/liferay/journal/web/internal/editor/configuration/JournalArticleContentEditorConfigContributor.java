@@ -28,8 +28,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"editor.config.key=rich_text",
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL
+		"editor.config.key=rich_text", "editor.name=ckeditor_classic",
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL
 	},
 	service = EditorConfigContributor.class
 )

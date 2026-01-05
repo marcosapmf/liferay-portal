@@ -11,7 +11,7 @@ type TChannel = {
 	currencyCode?: string;
 	id?: number;
 	name?: string;
-	siteGroupId: number | string;
+	siteGroupId?: number | string;
 	type?: string;
 };
 
@@ -39,6 +39,12 @@ export class HeadlessCommerceAdminChannelApiHelper {
 	async getChannelsPage(search: string) {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/channels?search=${search}`
+		);
+	}
+
+	async getTaxCategories() {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/tax-categories`
 		);
 	}
 
@@ -71,5 +77,21 @@ export class HeadlessCommerceAdminChannelApiHelper {
 		}
 
 		return channel;
+	}
+
+	async putChannel(channelId: number, channel: TChannel) {
+		await this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}`,
+			{
+				data: {
+					accountId: 0,
+					currencyCode: 'USD',
+					name: 'Channel' + getRandomInt(),
+					siteGroupId: 0,
+					type: 'site',
+					...channel,
+				},
+			}
+		);
 	}
 }

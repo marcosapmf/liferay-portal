@@ -24,11 +24,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -46,8 +46,8 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 
 		JSONObject jsonObject =
 			(JSONObject)fragmentEntryConfigurationParser.getFieldValue(
-				getConfiguration(fragmentRendererContext),
-				fragmentEntryLink.getEditableValues(),
+				getConfigurationJSONObject(fragmentRendererContext),
+				fragmentEntryLink.getEditableValuesJSONObject(),
 				fragmentRendererContext.getLocale(), "itemSelector");
 
 		if ((jsonObject != null) && jsonObject.has("className") &&
@@ -56,6 +56,14 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 			return new Tuple(
 				jsonObject.getString("className"),
 				jsonObject.getLong("classPK"));
+		}
+
+		AssetEntry assetEntry = (AssetEntry)httpServletRequest.getAttribute(
+			WebKeys.LAYOUT_ASSET_ENTRY);
+
+		if (assetEntry != null) {
+			return new Tuple(
+				assetEntry.getClassName(), assetEntry.getClassPK());
 		}
 
 		InfoItemReference infoItemReference =
@@ -89,13 +97,12 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 							classedModel.getModelClassName(), primaryKeyObj);
 					}
 
-					AssetEntry assetEntry =
-						assetEntryLocalService.fetchAssetEntry(
-							(Long)primaryKeyObj);
+					assetEntry = assetEntryLocalService.fetchAssetEntry(
+						(Long)primaryKeyObj);
 
 					if (assetEntry != null) {
 						return new Tuple(
-							portal.getClassName(assetEntry.getClassNameId()),
+							portal.fetchClassName(assetEntry.getClassNameId()),
 							assetEntry.getClassPK());
 					}
 				}
@@ -105,14 +112,6 @@ public abstract class BaseContentFragmentRenderer implements FragmentRenderer {
 					_log.debug(noSuchInfoItemException);
 				}
 			}
-		}
-
-		AssetEntry assetEntry = (AssetEntry)httpServletRequest.getAttribute(
-			WebKeys.LAYOUT_ASSET_ENTRY);
-
-		if (assetEntry != null) {
-			return new Tuple(
-				assetEntry.getClassName(), assetEntry.getClassPK());
 		}
 
 		return new Tuple(

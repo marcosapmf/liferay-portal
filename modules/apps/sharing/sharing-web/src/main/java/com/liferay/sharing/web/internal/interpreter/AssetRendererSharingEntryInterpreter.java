@@ -21,7 +21,9 @@ import com.liferay.sharing.web.internal.renderer.AssetRendererSharingEntryEditRe
 import com.liferay.sharing.web.internal.renderer.AssetRendererSharingEntryViewRenderer;
 import com.liferay.sharing.web.internal.util.AssetRendererSharingUtil;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Alejandro Tardín
@@ -71,29 +73,25 @@ public class AssetRendererSharingEntryInterpreter
 	}
 
 	@Override
-	public String getTitle(SharingEntry sharingEntry) {
-		try {
-			AssetRenderer<?> assetRenderer =
-				AssetRendererSharingUtil.getAssetRenderer(sharingEntry);
+	public String getTitle(SharingEntry sharingEntry, Locale locale) {
+		AssetEntry assetEntry = _getAssetEntry(sharingEntry);
 
-			if (assetRenderer == null) {
-				return StringPool.BLANK;
-			}
-
-			AssetRendererFactory<?> assetRendererFactory =
-				assetRenderer.getAssetRendererFactory();
-
-			AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
-				assetRendererFactory.getClassName(),
-				assetRenderer.getClassPK());
-
-			return assetEntry.getTitle();
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+		if (assetEntry == null) {
+			return StringPool.BLANK;
 		}
 
-		return StringPool.BLANK;
+		return assetEntry.getTitle(locale);
+	}
+
+	@Override
+	public Map<Locale, String> getTitleMap(SharingEntry sharingEntry) {
+		AssetEntry assetEntry = _getAssetEntry(sharingEntry);
+
+		if (assetEntry == null) {
+			return new HashMap<>();
+		}
+
+		return assetEntry.getTitleMap();
 	}
 
 	@Override
@@ -113,6 +111,29 @@ public class AssetRendererSharingEntryInterpreter
 		}
 
 		return true;
+	}
+
+	private AssetEntry _getAssetEntry(SharingEntry sharingEntry) {
+		try {
+			AssetRenderer<?> assetRenderer =
+				AssetRendererSharingUtil.getAssetRenderer(sharingEntry);
+
+			if (assetRenderer == null) {
+				return null;
+			}
+
+			AssetRendererFactory<?> assetRendererFactory =
+				assetRenderer.getAssetRendererFactory();
+
+			return assetRendererFactory.getAssetEntry(
+				assetRendererFactory.getClassName(),
+				assetRenderer.getClassPK());
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

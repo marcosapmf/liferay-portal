@@ -5,6 +5,7 @@
 
 package com.liferay.site.navigation.language.web.internal.display.context;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -23,13 +24,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.site.navigation.language.web.internal.configuration.SiteNavigationLanguagePortletInstanceConfiguration;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Julio Camarero
@@ -123,32 +124,27 @@ public class SiteNavigationLanguageDisplayContext {
 	}
 
 	public String getDisplayStyleGroupKey() {
-		if (Validator.isNotNull(_displayStyleGroupKey)) {
+		if (_displayStyleGroupKey != null) {
 			return _displayStyleGroupKey;
 		}
 
-		String displayStyleGroupKey =
+		String displayStyleGroupExternalReferenceCode =
 			_siteNavigationLanguagePortletInstanceConfiguration.
-				displayStyleGroupKey();
+				displayStyleGroupExternalReferenceCode();
 
-		if (Validator.isNotNull(displayStyleGroupKey)) {
-			_displayStyleGroupKey = displayStyleGroupKey;
+		Group group = _themeDisplay.getScopeGroup();
 
-			return _displayStyleGroupKey;
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				_themeDisplay.getCompanyId());
 		}
-
-		long displayStyleGroupId =
-			_siteNavigationLanguagePortletInstanceConfiguration.
-				displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			displayStyleGroupId = _themeDisplay.getSiteGroupId();
-		}
-
-		Group group = GroupLocalServiceUtil.fetchGroup(displayStyleGroupId);
 
 		if (group != null) {
 			_displayStyleGroupKey = group.getGroupKey();
+		}
+		else {
+			_displayStyleGroupKey = StringPool.BLANK;
 		}
 
 		return _displayStyleGroupKey;

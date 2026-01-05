@@ -8,16 +8,17 @@ package com.liferay.object.web.internal.object.definitions.frontend.taglib.servl
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.object.definitions.constants.ObjectDefinitionsScreenNavigationEntryConstants;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsLayoutsDisplayContext;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,7 +65,7 @@ public class LayoutsObjectDefinitionsScreenNavigationEntry
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			new ObjectDefinitionsLayoutsDisplayContext(
 				httpServletRequest, _objectDefinitionModelResourcePermission,
-				_objectFieldBusinessTypeRegistry));
+				_objectFieldBusinessTypeRegistry, _objectFolderLocalService));
 
 		super.render(httpServletRequest, httpServletResponse);
 	}
@@ -77,5 +78,8 @@ public class LayoutsObjectDefinitionsScreenNavigationEntry
 
 	@Reference
 	private ObjectFieldBusinessTypeRegistry _objectFieldBusinessTypeRegistry;
+
+	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 }

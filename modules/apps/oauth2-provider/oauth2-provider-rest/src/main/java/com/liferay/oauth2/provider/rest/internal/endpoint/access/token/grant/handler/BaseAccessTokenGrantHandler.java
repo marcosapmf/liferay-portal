@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
 
-import java.util.Objects;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Objects;
 
 import org.apache.cxf.rs.security.oauth2.common.Client;
 import org.apache.cxf.rs.security.oauth2.common.ServerAccessToken;
@@ -65,11 +65,7 @@ public abstract class BaseAccessTokenGrantHandler
 			client2.getProperties(),
 			OAuth2ProviderRESTEndpointConstants.PROPERTY_KEY_COMPANY_ID);
 
-		if (Objects.equals(companyId1, companyId2)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(companyId1, companyId2);
 	}
 
 	protected abstract ServerAccessToken doCreateAccessToken(

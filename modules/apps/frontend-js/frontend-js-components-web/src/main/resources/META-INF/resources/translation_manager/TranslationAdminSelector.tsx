@@ -44,7 +44,7 @@ export interface TranslationProgress {
 
 interface TriggerButtonProps {
 	displayType: DisplayType;
-	selectedItem: Locale;
+	selectedItem?: Locale;
 	small: boolean;
 }
 
@@ -58,13 +58,16 @@ const TriggerButton = React.forwardRef(
 		{displayType, selectedItem, small, ...props}: TriggerButtonProps,
 		ref: Ref<HTMLButtonElement>
 	) => {
-		const ariaLabelButton = sub(
-			Liferay.Language.get('select-a-language.-current-language-x'),
-			selectedItem.displayName
-		);
+		const ariaLabelButton = selectedItem?.displayName
+			? sub(
+					Liferay.Language.get(
+						'select-a-language.-current-language-x'
+					),
+					selectedItem?.displayName
+				)
+			: Liferay.Language.get('select-a-language');
 
-		return Liferay.FeatureFlags['LPS-114700'] &&
-			displayType === DISPLAY_TYPE.HORIZONTAL ? (
+		return displayType === DISPLAY_TYPE.HORIZONTAL ? (
 			<ClayButton
 				{...props}
 				aria-label={ariaLabelButton}
@@ -74,10 +77,10 @@ const TriggerButton = React.forwardRef(
 				size="sm"
 			>
 				<span className="inline-item-before">
-					<ClayIcon symbol={selectedItem.symbol} />
+					<ClayIcon symbol={selectedItem?.symbol ?? ''} />
 				</span>
 
-				<span aria-hidden="true">{selectedItem.label}</span>
+				<span aria-hidden="true">{selectedItem?.label}</span>
 			</ClayButton>
 		) : (
 			<ClayButton
@@ -91,11 +94,11 @@ const TriggerButton = React.forwardRef(
 				title={Liferay.Language.get('select-a-language')}
 			>
 				<span className="inline-item">
-					<ClayIcon symbol={selectedItem.symbol} />
+					<ClayIcon symbol={selectedItem?.symbol ?? ''} />
 				</span>
 
 				<span aria-hidden="true" className="btn-section">
-					{selectedItem.label}
+					{selectedItem?.label}
 				</span>
 			</ClayButton>
 		);
@@ -156,7 +159,7 @@ export default function TranslationAdminSelector({
 
 		return availableLocales.find(
 			(availableLocale) => availableLocale.id === id
-		) as Locale;
+		);
 	}, [availableLocales, defaultLanguageId, selectedLanguageId]);
 
 	useEffect(() => {
@@ -175,7 +178,25 @@ export default function TranslationAdminSelector({
 		setSelectedLanguageId(initialSelectedLanguageId);
 	}, [initialSelectedLanguageId]);
 
-	if (Liferay.FeatureFlags['LPS-114700'] && !adminMode) {
+	useEffect(() => {
+		const handleUpdateSelectedLanguage = (event: any) => {
+			const selectedLanguageId = event.item.getAttribute('data-value');
+			setSelectedLanguageId(selectedLanguageId);
+		};
+		Liferay.on(
+			'journal:updateSelectedLanguage',
+			handleUpdateSelectedLanguage
+		);
+
+		return () => {
+			Liferay.detach(
+				'journal:updateSelectedLanguage',
+				handleUpdateSelectedLanguage as () => void
+			);
+		};
+	}, [initialSelectedLanguageId]);
+
+	if (!adminMode) {
 		return (
 			<Picker
 				active={selectorDropdownActive}
@@ -183,6 +204,15 @@ export default function TranslationAdminSelector({
 				displayType={displayType}
 				id={selectorId}
 				items={activeLocales}
+				messages={{
+					itemDescribedby: Liferay.Language.get(
+						'you-are-currently-on-a-text-element,-inside-of-a-list-box'
+					),
+					itemSelected: Liferay.Language.get('x-selected'),
+					scrollToBottomAriaLabel:
+						Liferay.Language.get('scroll-to-bottom'),
+					scrollToTopAriaLabel: Liferay.Language.get('scroll-to-top'),
+				}}
 				onActiveChange={(active: any) => {
 					if (active) {
 						onSelectorActiveChange();
@@ -192,6 +222,12 @@ export default function TranslationAdminSelector({
 				}}
 				onSelectionChange={(id: React.Key) => {
 					setSelectedLanguageId(id as Liferay.Language.Locale);
+
+					Liferay.fire('journal:localeChanged', {
+						item: document.querySelector(
+							`[data-languageid="${id}"][data-value="${id}"]`
+						),
+					});
 				}}
 				selectedItem={activeLocales.find(
 					(locale) => locale.id === selectedLanguageId

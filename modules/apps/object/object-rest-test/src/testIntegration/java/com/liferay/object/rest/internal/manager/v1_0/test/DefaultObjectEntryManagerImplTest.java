@@ -7,6 +7,7 @@ package com.liferay.object.rest.internal.manager.v1_0.test;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountRoleConstants;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.service.AccountEntryLocalService;
@@ -14,6 +15,17 @@ import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalService;
+import com.liferay.asset.kernel.exception.NoSuchCategoryException;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolder;
@@ -23,22 +35,36 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryService;
 import com.liferay.document.library.kernel.service.DLFolderService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.list.type.entry.util.ListTypeEntryUtil;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.object.action.util.ObjectActionThreadLocal;
+import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectDefinitionSettingConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
 import com.liferay.object.constants.ObjectFilterConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
+import com.liferay.object.definition.tree.util.ObjectDefinitionTreeUtil;
 import com.liferay.object.exception.NoSuchObjectEntryException;
+import com.liferay.object.exception.NoSuchObjectEntryFolderException;
 import com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedException;
+import com.liferay.object.exception.ObjectDefinitionScopeException;
+import com.liferay.object.exception.ObjectEntryDefaultLanguageIdException;
+import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.exception.ObjectRelationshipDeletionTypeException;
+import com.liferay.object.exception.RequiredObjectEntryVersionException;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
 import com.liferay.object.field.builder.AggregationObjectFieldBuilder;
+import com.liferay.object.field.builder.AssigneeObjectFieldBuilder;
 import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
+import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
 import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
 import com.liferay.object.field.builder.DecimalObjectFieldBuilder;
@@ -51,37 +77,59 @@ import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
 import com.liferay.object.field.builder.PrecisionDecimalObjectFieldBuilder;
 import com.liferay.object.field.builder.RichTextObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.field.setting.builder.ObjectFieldSettingBuilder;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectDefinitionSetting;
+import com.liferay.object.model.ObjectEntryFolder;
+import com.liferay.object.model.ObjectEntryVersion;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.rest.dto.v1_0.Assignee;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
 import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.Status;
+import com.liferay.object.rest.dto.v1_0.SystemProperties;
+import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
+import com.liferay.object.rest.dto.v1_0.Version;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.test.util.BaseObjectEntryManagerImplTestCase;
+import com.liferay.object.rest.test.util.ObjectEntryTestUtil;
 import com.liferay.object.rest.test.util.ObjectRelationshipTestUtil;
+import com.liferay.object.service.ObjectActionLocalService;
+import com.liferay.object.service.ObjectDefinitionSettingLocalService;
+import com.liferay.object.service.ObjectEntryFolderLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectEntryVersionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectEntryFolderTestUtil;
 import com.liferay.object.test.util.TreeTestUtil;
 import com.liferay.object.tree.Edge;
 import com.liferay.object.tree.Node;
 import com.liferay.object.tree.Tree;
-import com.liferay.object.tree.TreeFactory;
 import com.liferay.object.tree.constants.TreeConstants;
+import com.liferay.petra.function.UnsafeBiFunction;
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.UnsafeTriFunction;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchRoleException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
@@ -91,6 +139,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -104,9 +153,13 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -120,24 +173,33 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlParserUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -149,13 +211,18 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsContextThreadLocal;
 import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.permission.Permission;
+import com.liferay.portal.vulcan.scope.Scope;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.subscription.service.SubscriptionLocalService;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
 import java.math.BigDecimal;
+
+import java.sql.Timestamp;
 
 import java.text.DateFormat;
 
@@ -171,9 +238,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
 
@@ -185,12 +255,18 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
 /**
  * @author Feliphe Marinho
  */
-@FeatureFlags({"LPS-164801", "LPS-172017", "LPS-187142"})
+@FeatureFlags(
+	featureFlags = {
+		@FeatureFlag(value = "LPD-34594"), @FeatureFlag(value = "LPS-164801"),
+		@FeatureFlag("LPS-172017")
+	}
+)
 @RunWith(Arquillian.class)
 public class DefaultObjectEntryManagerImplTest
 	extends BaseObjectEntryManagerImplTestCase {
@@ -200,11 +276,17 @@ public class DefaultObjectEntryManagerImplTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerMethodTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE,
+			ScriptManagementConfigurationTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		companyId = TestPropsValues.getCompanyId();
+
+		_accountEntryObjectDefinition =
+			objectDefinitionLocalService.fetchObjectDefinition(
+				companyId, "AccountEntry");
+
 		_defaultObjectEntryManager =
 			(DefaultObjectEntryManager)_objectEntryManager;
 		_group = GroupTestUtil.addGroup();
@@ -224,6 +306,103 @@ public class DefaultObjectEntryManagerImplTest
 			PermissionCheckerFactoryUtil.create(adminUser));
 
 		PrincipalThreadLocal.setName(adminUser.getUserId());
+
+		_companyObjectDefinitionA = _addObjectDefinition();
+		_companyObjectDefinitionAA = _addObjectDefinition();
+
+		_companyObjectRelationshipA_AA = TreeTestUtil.bind(
+			_companyObjectDefinitionA.getObjectDefinitionId(),
+			_companyObjectDefinitionAA.getObjectDefinitionId(),
+			_objectRelationshipLocalService);
+
+		_companyObjectDefinitionB = _addObjectDefinition();
+
+		_companyObjectRelationshipB_AA = TreeTestUtil.bind(
+			_companyObjectDefinitionB.getObjectDefinitionId(),
+			_companyObjectDefinitionAA.getObjectDefinitionId(),
+			_objectRelationshipLocalService);
+
+		_companyObjectEntryA = _addObjectEntry(
+			_companyObjectDefinitionA, Collections.emptyMap());
+		_companyObjectEntryB = _addObjectEntry(
+			_companyObjectDefinitionB, Collections.emptyMap());
+
+		_companyObjectRelationshipA_AAObjectField2 =
+			_objectFieldLocalService.getObjectField(
+				_companyObjectRelationshipA_AA.getObjectFieldId2());
+		_companyObjectRelationshipB_AAObjectField2 =
+			_objectFieldLocalService.getObjectField(
+				_companyObjectRelationshipB_AA.getObjectFieldId2());
+
+		_siteObjectDefinitionA =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).indexed(
+						true
+					).labelMap(
+						RandomTestUtil.randomLocaleStringMap()
+					).name(
+						"textObjectFieldName"
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE);
+		_siteObjectDefinitionAA =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).indexed(
+						true
+					).labelMap(
+						RandomTestUtil.randomLocaleStringMap()
+					).name(
+						"textObjectFieldName"
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		_siteObjectRelationshipA_AA = TreeTestUtil.bind(
+			_siteObjectDefinitionA.getObjectDefinitionId(),
+			_siteObjectDefinitionAA.getObjectDefinitionId(),
+			_objectRelationshipLocalService);
+
+		_siteObjectDefinitionB =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						RandomTestUtil.randomLocaleStringMap()
+					).name(
+						"textObjectFieldName"
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		_siteObjectRelationshipB_AA = TreeTestUtil.bind(
+			_siteObjectDefinitionB.getObjectDefinitionId(),
+			_siteObjectDefinitionAA.getObjectDefinitionId(),
+			_objectRelationshipLocalService);
+
+		_siteObjectEntryA = _addObjectEntry(
+			_siteObjectDefinitionA,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>(Collections.emptyMap());
+				}
+			},
+			_group.getGroupKey());
+		_siteObjectEntryB = _addObjectEntry(
+			_siteObjectDefinitionB,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>(Collections.emptyMap());
+				}
+			},
+			_group.getGroupKey());
+
+		_siteObjectRelationshipA_AAObjectField2 =
+			_objectFieldLocalService.getObjectField(
+				_siteObjectRelationshipA_AA.getObjectFieldId2());
+		_siteObjectRelationshipB_AAObjectField2 =
+			_objectFieldLocalService.getObjectField(
+				_siteObjectRelationshipB_AA.getObjectFieldId2());
 	}
 
 	@AfterClass
@@ -240,18 +419,98 @@ public class DefaultObjectEntryManagerImplTest
 	public void setUp() throws Exception {
 		super.setUp();
 
+		_depotEntry = _addDepotEntry();
+
 		listTypeDefinition =
 			listTypeDefinitionLocalService.addListTypeDefinition(
 				null, adminUser.getUserId(),
 				Collections.singletonMap(
 					LocaleUtil.US, RandomTestUtil.randomString()),
-				false, Collections.emptyList());
+				false, Collections.emptyList(), new ServiceContext());
+
+		_listTypeEntryKey1 = _addListTypeEntry();
+		_listTypeEntryKey2 = _addListTypeEntry();
+		_listTypeEntryKey3 = _addListTypeEntry();
+		_listTypeEntryKey4 = _addListTypeEntry();
+
+		_localizedMultiselectPicklistObjectFieldName =
+			"a" + RandomTestUtil.randomString();
+
 		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			_localizedMultiselectPicklistObjectFieldName + "_i18n",
+			HashMapBuilder.put(
+				"en_US", Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+			).put(
+				"pt_BR", Arrays.asList(_listTypeEntryKey4)
+			).build()
+		).put(
+			"localizedBooleanObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", true
+			).put(
+				"pt_BR", false
+			).build()
+		).put(
+			"localizedDateObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2024-01-01"
+			).put(
+				"pt_BR", "2025-01-01"
+			).build()
+		).put(
+			"localizedDateTimeObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2024-04-04T04:04:04.000Z"
+			).put(
+				"pt_BR", "2025-05-05T05:05:05.000Z"
+			).build()
+		).put(
+			"localizedDecimalObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 5.0
+			).put(
+				"pt_BR", 2.7
+			).build()
+		).put(
+			"localizedIntegerObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 50
+			).put(
+				"pt_BR", 27
+			).build()
+		).put(
+			"localizedLongIntegerObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 50L
+			).put(
+				"pt_BR", 27L
+			).build()
+		).put(
 			"localizedLongTextObjectFieldName_i18n",
 			HashMapBuilder.put(
 				"en_US", "en_US localizedLongTextObjectFieldValue"
 			).put(
 				"pt_BR", "pt_BR localizedLongTextObjectFieldValue"
+			).build()
+		).put(
+			"localizedPicklistObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US",
+				HashMapBuilder.put(
+					"key", _listTypeEntryKey1
+				).build()
+			).put(
+				"pt_BR",
+				HashMapBuilder.put(
+					"key", _listTypeEntryKey2
+				).build()
+			).build()
+		).put(
+			"localizedPrecisionDecimalObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", new BigDecimal("0.18775433729")
+			).put(
+				"pt_BR", new BigDecimal("0.03750624632")
 			).build()
 		).put(
 			"localizedRichTextObjectFieldName_i18n",
@@ -269,7 +528,7 @@ public class DefaultObjectEntryManagerImplTest
 			).build()
 		).build();
 
-		_objectDefinition1 = _createObjectDefinition(
+		_objectDefinition1 = _addObjectDefinition(
 			Arrays.asList(
 				new TextObjectFieldBuilder(
 				).indexed(
@@ -295,9 +554,11 @@ public class DefaultObjectEntryManagerImplTest
 				_objectDefinition1.getObjectDefinitionId()
 			).build());
 
-		_objectDefinition2 = _createObjectDefinition(
+		_objectDefinition2 = _addObjectDefinition(
 			Arrays.asList(
 				new AttachmentObjectFieldBuilder(
+				).indexed(
+					true
 				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
@@ -310,6 +571,19 @@ public class DefaultObjectEntryManagerImplTest
 						_createObjectFieldSetting(
 							"fileSource", "documentsAndMedia"),
 						_createObjectFieldSetting("maximumFileSize", "100"))
+				).readOnly(
+					"conditional"
+				).readOnlyConditionExpression(
+					"attachmentObjectFieldName != \"\" "
+				).build(),
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedBooleanObjectFieldName"
 				).build(),
 				new DateObjectFieldBuilder(
 				).labelMap(
@@ -317,6 +591,15 @@ public class DefaultObjectEntryManagerImplTest
 						RandomTestUtil.randomString())
 				).name(
 					"dateObjectFieldName"
+				).build(),
+				new DateObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedDateObjectFieldName"
 				).build(),
 				new DateTimeObjectFieldBuilder(
 				).labelMap(
@@ -343,12 +626,36 @@ public class DefaultObjectEntryManagerImplTest
 							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
 							ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC))
 				).build(),
+				new DateTimeObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedDateTimeObjectFieldName"
+				).objectFieldSettings(
+					Collections.singletonList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+							ObjectFieldSettingConstants.
+								VALUE_USE_INPUT_AS_ENTERED))
+				).build(),
 				new DecimalObjectFieldBuilder(
 				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
 				).name(
 					"decimalObjectFieldName"
+				).build(),
+				new DecimalObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedDecimalObjectFieldName"
 				).build(),
 				new FormulaObjectFieldBuilder(
 				).labelMap(
@@ -371,12 +678,30 @@ public class DefaultObjectEntryManagerImplTest
 				).name(
 					"integerObjectFieldName"
 				).build(),
+				new IntegerObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedIntegerObjectFieldName"
+				).build(),
 				new LongIntegerObjectFieldBuilder(
 				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
 				).name(
 					"longIntegerObjectFieldName"
+				).build(),
+				new LongIntegerObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedLongIntegerObjectFieldName"
 				).build(),
 				new LongTextObjectFieldBuilder(
 				).labelMap(
@@ -386,6 +711,17 @@ public class DefaultObjectEntryManagerImplTest
 					true
 				).name(
 					"localizedLongTextObjectFieldName"
+				).build(),
+				new MultiselectPicklistObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).listTypeDefinitionId(
+					listTypeDefinition.getListTypeDefinitionId()
+				).localized(
+					true
+				).name(
+					_localizedMultiselectPicklistObjectFieldName
 				).build(),
 				new MultiselectPicklistObjectFieldBuilder(
 				).labelMap(
@@ -404,8 +740,25 @@ public class DefaultObjectEntryManagerImplTest
 						RandomTestUtil.randomString())
 				).listTypeDefinitionId(
 					listTypeDefinition.getListTypeDefinitionId()
+				).localized(
+					true
+				).name(
+					"localizedPicklistObjectFieldName"
+				).build(),
+				new PicklistObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).listTypeDefinitionId(
+					listTypeDefinition.getListTypeDefinitionId()
 				).name(
 					"picklistObjectFieldName"
+				).readOnly(
+					"conditional"
+				).readOnlyConditionExpression(
+					"picklistObjectFieldName != \"\" "
 				).build(),
 				new PrecisionDecimalObjectFieldBuilder(
 				).labelMap(
@@ -413,6 +766,15 @@ public class DefaultObjectEntryManagerImplTest
 						RandomTestUtil.randomString())
 				).name(
 					"precisionDecimalObjectFieldName"
+				).build(),
+				new PrecisionDecimalObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedPrecisionDecimalObjectFieldName"
 				).build(),
 				new RichTextObjectFieldBuilder(
 				).labelMap(
@@ -456,48 +818,50 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				_objectDefinition1.getObjectDefinitionId(),
 				_objectDefinition2.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationshipName", false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
+		_objectRelationshipName = objectRelationship1.getName();
+
 		_addAggregationObjectField(
 			"precisionDecimalObjectFieldName", "AVERAGE",
 			_objectDefinition1.getObjectDefinitionId(),
-			"averageAggregationObjectFieldName", objectRelationship1.getName());
+			"averageAggregationObjectFieldName", _objectRelationshipName);
 		_addAggregationObjectField(
 			null, "COUNT", _objectDefinition1.getObjectDefinitionId(),
-			"countAggregationObjectFieldName1", objectRelationship1.getName());
+			"countAggregationObjectFieldName1", _objectRelationshipName);
 		_addAggregationObjectField(
 			"integerObjectFieldName", "MAX",
 			_objectDefinition1.getObjectDefinitionId(),
-			"maxAggregationObjectFieldName", objectRelationship1.getName());
+			"maxAggregationObjectFieldName", _objectRelationshipName);
 		_addAggregationObjectField(
 			"longIntegerObjectFieldName", "MIN",
 			_objectDefinition1.getObjectDefinitionId(),
-			"minAggregationObjectFieldName", objectRelationship1.getName());
+			"minAggregationObjectFieldName", _objectRelationshipName);
 		_addAggregationObjectField(
 			"decimalObjectFieldName", "SUM",
 			_objectDefinition1.getObjectDefinitionId(),
-			"sumAggregationObjectFieldName", objectRelationship1.getName());
+			"sumAggregationObjectFieldName", _objectRelationshipName);
 
 		ObjectField objectField = objectFieldLocalService.getObjectField(
 			objectRelationship1.getObjectFieldId2());
 
-		_objectRelationshipERCObjectFieldName = ObjectFieldSettingUtil.getValue(
-			ObjectFieldSettingConstants.
-				NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
-			objectField);
+		_objectRelationshipERCObjectFieldName =
+			_getObjectRelationshipERCObjectFieldName(objectField);
 		_objectRelationshipFieldName = objectField.getName();
 
 		_objectDefinition3 =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				adminUser.getUserId(), 0, false, true, false, false,
+				null, adminUser.getUserId(), 0, null, false, true, false, true,
+				false, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				ListUtil.fromArray(
 					new TextObjectFieldBuilder(
 					).indexed(
@@ -516,7 +880,8 @@ public class DefaultObjectEntryManagerImplTest
 							RandomTestUtil.randomString())
 					).name(
 						"textObjectFieldName2"
-					).build()));
+					).build()),
+				Collections.emptyList(), new ServiceContext());
 
 		ObjectDefinition accountEntryObjectDefinition =
 			objectDefinitionLocalService.fetchObjectDefinition(
@@ -527,7 +892,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				accountEntryObjectDefinition.getObjectDefinitionId(),
 				_objectDefinition3.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationshipName1", false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -546,6 +911,106 @@ public class DefaultObjectEntryManagerImplTest
 				adminUser.getUserId(),
 				_objectDefinition3.getObjectDefinitionId());
 
+		_objectDefinition4 = ObjectDefinitionTestUtil.publishObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		_objectDefinition4.setEnableObjectEntryVersioning(true);
+
+		_objectDefinition4 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition4);
+
+		_objectDefinition5 = _addObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).indexedLanguageId(
+					LanguageUtil.getLanguageId(LocaleUtil.getDefault())
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build(),
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).indexedLanguageId(
+					LanguageUtil.getLanguageId(LocaleUtil.getDefault())
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedTextObjectFieldName"
+				).build()));
+
+		_objectDefinition5.setEnableObjectEntryVersioning(true);
+
+		_objectDefinition5 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition5);
+
+		_objectDefinition6 = _addObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		_objectDefinition6.setEnableObjectEntryVersioning(true);
+
+		_objectDefinition6 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition6);
+
+		_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
+			TestPropsValues.getUserId(),
+			_objectDefinition6.getObjectDefinitionId(),
+			ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+			String.valueOf(_depotEntry.getGroupId()));
+
+		_objectDefinition7 = _addObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		_objectDefinition7.setEnableObjectEntryVersioning(true);
+
+		ObjectField titleObjectField = objectFieldLocalService.fetchObjectField(
+			_objectDefinition7.getObjectDefinitionId(), "textObjectFieldName");
+
+		_objectDefinition7.setTitleObjectFieldId(
+			titleObjectField.getObjectFieldId());
+
+		_objectDefinition7 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition7);
+
 		_accountAdministratorRole = _roleLocalService.getRole(
 			companyId,
 			AccountRoleConstants.REQUIRED_ROLE_NAME_ACCOUNT_ADMINISTRATOR);
@@ -558,17 +1023,27 @@ public class DefaultObjectEntryManagerImplTest
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
-				1,
+				1, null,
 				Arrays.asList(
 					StringUtil.removeLast(
 						StringUtil.removeFirst(
 							_objectDefinition1.getPKObjectFieldName(), "c_"),
 						"Id")),
-				null, null, null, null));
+				null, null, null));
 
 		_tree = TreeTestUtil.createObjectDefinitionTree(
-			objectDefinitionLocalService, _objectRelationshipLocalService,
-			_treeFactory);
+			objectDefinitionLocalService, _objectRelationshipLocalService, true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA", "AB"}
+			).put(
+				"AA", new String[] {"AAA", "AAB"}
+			).put(
+				"AB", new String[0]
+			).put(
+				"AAA", new String[0]
+			).put(
+				"AAB", new String[0]
+			).build());
 
 		Node rootNode = _tree.getRootNode();
 
@@ -578,14 +1053,11 @@ public class DefaultObjectEntryManagerImplTest
 					null, adminUser.getUserId(),
 					accountEntryObjectDefinition.getObjectDefinitionId(),
 					rootNode.getPrimaryKey(), 0,
-					ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+					ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"oneToManyRelationshipName2", false,
 					ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null));
-
-		objectDefinitionLocalService.publishCustomObjectDefinition(
-			adminUser.getUserId(), rootNode.getPrimaryKey());
 	}
 
 	@After
@@ -595,14 +1067,791 @@ public class DefaultObjectEntryManagerImplTest
 
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			objectDefinitionLocalService,
-			new String[] {"C_AAB", "C_AAA", "C_AB", "C_AA", "C_A"},
-			_objectEntryLocalService);
+			new String[] {"C_A", "C_AA", "C_AB", "C_AAA", "C_AAB"},
+			_objectEntryLocalService, _objectRelationshipLocalService);
+
+		ObjectDefinitionTreeUtil.invalidate();
 	}
 
 	@Test
-	public void testAddObjectEntry() throws Exception {
+	public void testAddObjectEntryWithAccountEntryRestricted1()
+		throws Exception {
+
+		// Account entry restricted scope
+
+		AccountEntry accountEntry1 = _addAccountEntry();
+
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
+
+		_addResourcePermission(ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
+
+		AccountEntry accountEntry2 = _addAccountEntry();
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" does not have access to account entry ",
+				accountEntry2.getAccountEntryId()),
+			() -> _addObjectEntry(accountEntry2));
+
+		// Account entry restricted with organization scope
+
+		Organization organization1 = OrganizationTestUtil.addOrganization();
+
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" does not have access to account entry ",
+				accountEntry2.getAccountEntryId()),
+			() -> _addObjectEntry(accountEntry2));
+
+		_deleteAccountEntryOrganizationRel(accountEntry1, organization1);
+
+		// Account entry restricted with suborganization scope
+
+		Organization suborganization1 = OrganizationTestUtil.addOrganization(
+			organization1.getOrganizationId(), RandomTestUtil.randomString(),
+			false);
+
+		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			ObjectDefinitionAccountEntryRestrictedException.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" does not have access to account entry ",
+				accountEntry2.getAccountEntryId()),
+			() -> _addObjectEntry(accountEntry2));
+
+		_deleteAccountEntryOrganizationRel(accountEntry1, suborganization1);
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		// Check account entry permission
+
+		_user = _addUser();
+
+		_testAddObjectEntryAccountEntryRestriction(accountEntry1);
+		_testAddObjectEntryAccountEntryRestriction(accountEntry2);
+
+		// Check account entry permission with organization
+
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry1));
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		// Check account entry permission with suborganization
+
+		Organization organization2 = OrganizationTestUtil.addOrganization();
+
+		Organization suborganization2 = OrganizationTestUtil.addOrganization(
+			organization2.getOrganizationId(), RandomTestUtil.randomString(),
+			false);
+
+		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
+
+		_user = _addUser();
+
+		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry1));
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		// Regular roles' company scope permissions should not be restricted by
+		// account entry
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY},
+			_objectDefinition3, _user);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			companyId, _objectDefinition3.getResourceName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry1));
+	}
+
+	@Test
+	public void testAddObjectEntryWithAccountEntryRestricted2()
+		throws Exception {
+
+		// Object definitions inherit account entry restricted from the root
+		// object definition
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _rootObjectDefinition,
+			_buyerRole);
+
+		AccountEntry accountEntry = _addAccountEntry();
+
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry, _buyerRole, _user);
+
+		Node rootNode = _tree.getRootNode();
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext,
+			objectDefinitionLocalService.getObjectDefinition(
+				rootNode.getPrimaryKey()),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"r_oneToManyRelationshipName2_accountEntryId",
+						accountEntry.getAccountEntryId()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectDefinition objectDefinition =
+			objectDefinitionLocalService.fetchObjectDefinition(
+				companyId, "C_AA");
+
+		Node childNode = _tree.getNode(
+			objectDefinition.getObjectDefinitionId());
+
+		Edge edge = childNode.getEdge();
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.getObjectRelationship(
+				edge.getObjectRelationshipId());
+
+		_defaultObjectEntryManager.addRelatedObjectEntry(
+			_simpleDTOConverterContext,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>();
+				}
+			},
+			objectEntry.getId(), objectRelationship);
+
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry, _buyerRole, _user);
+
+		_removeResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _rootObjectDefinition,
+			_buyerRole);
+
+		_addResourcePermission(
+			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
+
+		_defaultObjectEntryManager.addRelatedObjectEntry(
+			_simpleDTOConverterContext,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>();
+				}
+			},
+			objectEntry.getId(), objectRelationship);
+
+		_removeResourcePermission(
+			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_rootObjectDefinition.getResourceName(), StringPool.SPACE),
+			() -> _defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = new HashMap<>();
+					}
+				},
+				objectEntry.getId(), objectRelationship));
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_rootObjectDefinition.getResourceName(), StringPool.SPACE),
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext,
+				objectDefinitionLocalService.getObjectDefinition(
+					rootNode.getPrimaryKey()),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"r_oneToManyRelationshipName2_accountEntryId",
+							accountEntry.getAccountEntryId()
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY));
+	}
+
+	@Test
+	public void testAddObjectEntryWithAccountEntryRestricted3()
+		throws Exception {
+
+		// Account entry restricted with implicit role Organization User
+
+		AccountEntry accountEntry = _addAccountEntry();
+
+		Organization organization = _addUserOrganization();
+
+		_addAccountEntryOrganizationRel(accountEntry, organization);
+
+		Role organizationUserRole = _roleLocalService.getRole(
+			companyId, RoleConstants.ORGANIZATION_USER);
+
+		_addResourcePermission(
+			ActionKeys.VIEW, _objectDefinition3, organizationUserRole);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have ADD_OBJECT_ENTRY permission for ",
+				_objectDefinition3.getResourceName(), StringPool.SPACE),
+			() -> _addObjectEntry(accountEntry));
+
+		_addResourcePermission(
+			ObjectActionKeys.ADD_OBJECT_ENTRY, _objectDefinition3,
+			organizationUserRole);
+
+		_addObjectEntry(accountEntry);
+	}
+
+	@Test
+	public void testAddObjectEntryWithAssigneeObjectField() throws Exception {
+		ObjectFieldUtil.addCustomObjectField(
+			new AssigneeObjectFieldBuilder(
+			).labelMap(
+				RandomTestUtil.randomLocaleStringMap()
+			).name(
+				"assignee"
+			).objectDefinitionId(
+				_objectDefinition1.getObjectDefinitionId()
+			).required(
+				true
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			String externalReferenceCode = RandomTestUtil.randomString();
+			String name = RandomTestUtil.randomString();
+
+			_addObjectEntryWithAssigneeObjectField(
+				HashMapBuilder.put(
+					"externalReferenceCode", externalReferenceCode
+				).put(
+					"name", name
+				).put(
+					"type", "Role"
+				).build());
+
+			Role role = _roleLocalService.fetchRoleByExternalReferenceCode(
+				externalReferenceCode, TestPropsValues.getCompanyId());
+
+			Assert.assertEquals(name, role.getName());
+		}
+
+		Role guestRole = _roleLocalService.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.InvalidValue.class,
+			"The value is invalid for object field \"assignee\"",
+			() -> _addObjectEntryWithAssigneeObjectField(
+				HashMapBuilder.put(
+					"externalReferenceCode",
+					guestRole.getExternalReferenceCode()
+				).put(
+					"type", "Role"
+				).build()));
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.InvalidValue.class,
+			"The value is invalid for object field \"assignee\"",
+			() -> _addObjectEntryWithAssigneeObjectField(
+				HashMapBuilder.put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"type", "Role"
+				).build()));
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.InvalidValue.class,
+			"The value is invalid for object field \"assignee\"",
+			() -> _addObjectEntryWithAssigneeObjectField(
+				HashMapBuilder.put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"type", "User"
+				).build()));
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.Required.class,
+			"No value was provided for required object field \"assignee\"",
+			() -> _addObjectEntryWithAssigneeObjectField(
+				Collections.emptyMap()));
+	}
+
+	@Test
+	public void testAddObjectEntryWithAttachmentObjectField() throws Exception {
+		String dlFolderName = RandomTestUtil.randomString();
+
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new AttachmentObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"attachmentObjectFieldName"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.
+								NAME_ACCEPTED_FILE_EXTENSIONS,
+							"txt"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+							ObjectFieldSettingConstants.VALUE_USER_COMPUTER),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE,
+							"100"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.
+								NAME_SHOW_FILES_IN_DOCS_AND_MEDIA,
+							"true"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.
+								NAME_STORAGE_DL_FOLDER_PATH,
+							"/" + dlFolderName))
+				).build()),
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		_user = _addUser();
+
+		_addRoleUser(
+			new String[] {
+				ObjectActionKeys.ADD_OBJECT_ENTRY, ActionKeys.PERMISSIONS
+			},
+			objectDefinition, _user);
+
+		String fileName = RandomTestUtil.randomString() + ".txt";
+
+		Group group = _groupLocalService.getGroup(
+			companyId, GroupConstants.GUEST);
+
+		_defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"attachmentObjectFieldName",
+						() -> {
+							com.liferay.portal.kernel.repository.model.FileEntry
+								fileEntry = TempFileEntryUtil.addTempFileEntry(
+									group.getGroupId(),
+									TestPropsValues.getUserId(),
+									objectDefinition.getPortletId(),
+									TempFileEntryUtil.getTempFileName(fileName),
+									FileUtil.createTempFile(
+										RandomTestUtil.randomString(
+										).getBytes()),
+									ContentTypes.TEXT_PLAIN);
+
+							return fileEntry.getFileEntryId();
+						}
+					).put(
+						"externalReferenceCode", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			String.valueOf(group.getGroupId()));
+
+		DLFolder dlFolder = _dlFolderService.getFolder(
+			group.getGroupId(), 0, dlFolderName);
+
+		Assert.assertNotNull(
+			_dlFileEntryService.getFileEntryByFileName(
+				group.getGroupId(), dlFolder.getFolderId(), fileName));
+
+		objectDefinitionLocalService.deleteObjectDefinition(
+			objectDefinition.getObjectDefinitionId());
+	}
+
+	@Test
+	public void testAddObjectEntryWithBooleanObjectField() throws Exception {
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Arrays.asList(
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"booleanObjectFieldName1"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+							"false"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+							ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE))
+				).build(),
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"booleanObjectFieldName2"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+							"false"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+							ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE))
+				).build(),
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"booleanObjectFieldName3"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+							"true"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+							ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE))
+				).build(),
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"booleanObjectFieldName4"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+							"isEmailAddress(textObjectFieldName)"),
+						_createObjectFieldSetting(
+							ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+							ObjectFieldSettingConstants.
+								VALUE_EXPRESSION_BUILDER))
+				).build(),
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		try {
+			ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"booleanObjectFieldName1", true
+						).put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build();
+					}
+				},
+				null);
+
+			Assert.assertTrue(
+				MapUtil.getBoolean(
+					objectEntry.getProperties(), "booleanObjectFieldName1"));
+			Assert.assertFalse(
+				MapUtil.getBoolean(
+					objectEntry.getProperties(), "booleanObjectFieldName2"));
+			Assert.assertTrue(
+				MapUtil.getBoolean(
+					objectEntry.getProperties(), "booleanObjectFieldName3"));
+			Assert.assertFalse(
+				MapUtil.getBoolean(
+					objectEntry.getProperties(), "booleanObjectFieldName4"));
+		}
+		finally {
+			objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition);
+		}
+	}
+
+	@Test
+	public void testAddObjectEntryWithDefaultLanguageId() throws Exception {
+		_testAddObjectEntryWithDefaultLanguageId(
+			ObjectDefinitionTestUtil.publishObjectDefinition());
+		_testAddObjectEntryWithDefaultLanguageId(
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"a" + RandomTestUtil.randomString()
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE));
+	}
+
+	@Test
+	public void testAddObjectEntryWithDefaultValue() throws Exception {
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Arrays.asList(
+				new BooleanObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).localized(
+					true
+				).name(
+					"localizedBooleanObjectFieldName"
+				).build(),
+				new PicklistObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).listTypeDefinitionId(
+					listTypeDefinition.getListTypeDefinitionId()
+				).localized(
+					true
+				).name(
+					"localizedPicklistObjectFieldName"
+				).build()));
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectDefinition,
+			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName_i18n", () -> null
+			).put(
+				"localizedPicklistObjectFieldName_i18n", () -> null
+			).build());
+
+		Map<String, Object> properties = objectEntry.getProperties();
+
+		Assert.assertNull(
+			properties.get("localizedBooleanObjectFieldName_i18n"));
+		Assert.assertNull(
+			properties.get("localizedPicklistObjectFieldName_i18n"));
+
+		Map<String, Object> localizedObjectFieldI18nValues =
+			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName_i18n",
+				HashMapBuilder.<String, Object>put(
+					"en_US", RandomTestUtil.randomBoolean()
+				).put(
+					"pt_BR", RandomTestUtil.randomBoolean()
+				).build()
+			).put(
+				"localizedPicklistObjectFieldName_i18n",
+				HashMapBuilder.<String, Object>put(
+					"en_US", _listTypeEntryKey1
+				).put(
+					"pt_BR", _listTypeEntryKey2
+				).build()
+			).build();
+
+		assertEquals(
+			_addObjectEntry(objectDefinition, localizedObjectFieldI18nValues),
+			new ObjectEntry() {
+				{
+					properties = localizedObjectFieldI18nValues;
+				}
+			});
+
+		_addObjectFieldSettingWithDefaultValue(
+			StringPool.TRUE, objectDefinition,
+			"localizedBooleanObjectFieldName");
+		_addObjectFieldSettingWithDefaultValue(
+			_listTypeEntryKey1, objectDefinition,
+			"localizedPicklistObjectFieldName");
+
+		assertEquals(
+			_addObjectEntry(
+				objectDefinition,
+				HashMapBuilder.<String, Object>put(
+					"localizedBooleanObjectFieldName_i18n", () -> null
+				).put(
+					"localizedPicklistObjectFieldName_i18n", () -> null
+				).build()),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedBooleanObjectFieldName_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US", true
+						).build()
+					).put(
+						"localizedPicklistObjectFieldName_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US", _listTypeEntryKey1
+						).build()
+					).build();
+				}
+			});
+		assertEquals(
+			_addObjectEntry(
+				objectDefinition,
+				HashMapBuilder.<String, Object>put(
+					"localizedBooleanObjectFieldName_i18n",
+					HashMapBuilder.<String, Object>put(
+						"pt_BR", true
+					).build()
+				).put(
+					"localizedPicklistObjectFieldName_i18n",
+					HashMapBuilder.<String, Object>put(
+						"pt_BR", _listTypeEntryKey2
+					).build()
+				).build()),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedBooleanObjectFieldName_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US", true
+						).put(
+							"pt_BR", true
+						).build()
+					).put(
+						"localizedPicklistObjectFieldName_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US", _listTypeEntryKey1
+						).put(
+							"pt_BR", _listTypeEntryKey2
+						).build()
+					).build();
+				}
+			});
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+	}
+
+	@Test
+	public void testAddObjectEntryWithDynamicObjectFieldValues()
+		throws Exception {
 
 		// Aggregation field with filters
+
+		String objectFieldName1 = "a" + RandomTestUtil.randomString();
+		String objectFieldName2 = "a" + RandomTestUtil.randomString();
+
+		_addAggregationObjectField(
+			objectFieldName2, "MAX", _objectDefinition1.getObjectDefinitionId(),
+			objectFieldName1, _objectRelationshipName);
+
+		ObjectField objectField1 = objectFieldLocalService.getObjectField(
+			_objectDefinition1.getObjectDefinitionId(), objectFieldName1);
+
+		_objectFilterLocalService.addObjectFilter(
+			adminUser.getUserId(), objectField1.getObjectFieldId(),
+			objectFieldName2, ObjectFilterConstants.TYPE_NOT_EQUALS,
+			"{\"ne\": \"25\"}");
+
+		_addCustomObjectField(
+			new IntegerObjectFieldBuilder(
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				objectFieldName2
+			).objectDefinitionId(
+				_objectDefinition2.getObjectDefinitionId()
+			).build());
 
 		ObjectEntry parentObjectEntry1 =
 			_defaultObjectEntryManager.addObjectEntry(
@@ -627,11 +1876,11 @@ public class DefaultObjectEntryManagerImplTest
 							_objectRelationshipERCObjectFieldName,
 							"newExternalReferenceCode"
 						).put(
+							objectFieldName2, 15
+						).put(
 							"dateObjectFieldName", "2020-01-02"
 						).put(
 							"decimalObjectFieldName", 15.7
-						).put(
-							"integerObjectFieldName", 15
 						).put(
 							"longIntegerObjectFieldName", 100L
 						).put(
@@ -655,14 +1904,14 @@ public class DefaultObjectEntryManagerImplTest
 							_objectRelationshipERCObjectFieldName,
 							"newExternalReferenceCode"
 						).put(
+							objectFieldName2, 10
+						).put(
 							"attachmentObjectFieldName",
 							_getAttachmentObjectFieldValue()
 						).put(
 							"dateObjectFieldName", "2022-01-01"
 						).put(
 							"decimalObjectFieldName", 15.5
-						).put(
-							"integerObjectFieldName", 10
 						).put(
 							"longIntegerObjectFieldName", 50000L
 						).put(
@@ -683,20 +1932,19 @@ public class DefaultObjectEntryManagerImplTest
 
 		// Aggregation field with filter (date range with date and time)
 
-		ObjectField objectField = objectFieldLocalService.getObjectField(
+		String currentDateString = _simpleDateFormat.format(new Date());
+		ObjectField objectField2 = objectFieldLocalService.getObjectField(
 			_objectDefinition1.getObjectDefinitionId(),
 			"countAggregationObjectFieldName1");
 
-		String currentDateString = _simpleDateFormat.format(new Date());
-
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(), "createDate",
-			ObjectFilterConstants.TYPE_DATE_RANGE,
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
+			"createDate", ObjectFilterConstants.TYPE_DATE_RANGE,
 			StringBundler.concat(
 				"{\"le\": \"", currentDateString, "\", \"ge\": \"",
 				currentDateString, "\"}"));
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
 			"modifiedDate", ObjectFilterConstants.TYPE_DATE_RANGE,
 			StringBundler.concat(
 				"{\"le\": \"", currentDateString, "\", \"ge\": \"",
@@ -707,7 +1955,7 @@ public class DefaultObjectEntryManagerImplTest
 		// Aggregation field with filter (date range with date only)
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
 			"dateObjectFieldName", ObjectFilterConstants.TYPE_DATE_RANGE,
 			"{\"le\": \"2020-01-02\", \"ge\": \"2020-01-02\"}");
 
@@ -716,62 +1964,94 @@ public class DefaultObjectEntryManagerImplTest
 		// Aggregation field with filter (equals and not equals)
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
-			"integerObjectFieldName", ObjectFilterConstants.TYPE_EQUALS,
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
+			objectFieldName2, ObjectFilterConstants.TYPE_EQUALS,
 			"{\"eq\": \"15\"}");
 
 		_assertCountAggregationObjectFieldValue(1, parentObjectEntry1);
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
-			"integerObjectFieldName", ObjectFilterConstants.TYPE_NOT_EQUALS,
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
+			objectFieldName2, ObjectFilterConstants.TYPE_NOT_EQUALS,
 			"{\"ne\":\"15\"}");
 
 		_assertCountAggregationObjectFieldValue(0, parentObjectEntry1);
 
 		_objectFilterLocalService.deleteObjectFieldObjectFilter(
-			objectField.getObjectFieldId());
+			objectField2.getObjectFieldId());
+
+		ObjectEntry childObjectEntry3 =
+			_defaultObjectEntryManager.addObjectEntry(
+				dtoConverterContext, _objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							_objectRelationshipERCObjectFieldName,
+							"newExternalReferenceCode"
+						).put(
+							objectFieldName2, 25
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		assertEquals(
+			_defaultObjectEntryManager.getObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1,
+				parentObjectEntry1.getId()),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName1, "15"
+					).build();
+				}
+			});
+
+		_objectEntryLocalService.deleteObjectEntry(childObjectEntry3.getId());
+
+		_objectFilterLocalService.deleteObjectFieldObjectFilter(
+			objectField1.getObjectFieldId());
 
 		// Aggregation field with filter (excludes and includes with a string)
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
 			"picklistObjectFieldName", ObjectFilterConstants.TYPE_EXCLUDES,
 			"{\"not\":{\"in\":[\"" + listTypeEntryKey + "\"]}}");
 
 		_assertCountAggregationObjectFieldValue(1, parentObjectEntry1);
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(),
+			adminUser.getUserId(), objectField2.getObjectFieldId(),
 			"picklistObjectFieldName", ObjectFilterConstants.TYPE_INCLUDES,
 			"{\"in\":[\"" + listTypeEntryKey + "\"]}");
 
 		_assertCountAggregationObjectFieldValue(0, parentObjectEntry1);
 
 		_objectFilterLocalService.deleteObjectFieldObjectFilter(
-			objectField.getObjectFieldId());
+			objectField2.getObjectFieldId());
 
 		// Aggregation field with filter (excludes and includes with an int)
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(), "status",
+			adminUser.getUserId(), objectField2.getObjectFieldId(), "status",
 			ObjectFilterConstants.TYPE_EXCLUDES,
 			"{\"not\":{\"in\": [" + WorkflowConstants.STATUS_APPROVED + "]}}");
 
 		_assertCountAggregationObjectFieldValue(0, parentObjectEntry1);
 
 		_objectFilterLocalService.deleteObjectFieldObjectFilter(
-			objectField.getObjectFieldId());
+			objectField2.getObjectFieldId());
 
 		_objectFilterLocalService.addObjectFilter(
-			adminUser.getUserId(), objectField.getObjectFieldId(), "status",
+			adminUser.getUserId(), objectField2.getObjectFieldId(), "status",
 			ObjectFilterConstants.TYPE_INCLUDES,
 			"{\"in\": [" + WorkflowConstants.STATUS_APPROVED + "]}");
 
 		_assertCountAggregationObjectFieldValue(2, parentObjectEntry1);
 
 		_objectFilterLocalService.deleteObjectFieldObjectFilter(
-			objectField.getObjectFieldId());
+			objectField2.getObjectFieldId());
 
 		// Aggregation field without filters
 
@@ -782,12 +2062,12 @@ public class DefaultObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName1, "15"
+					).put(
 						"averageAggregationObjectFieldName",
 						"0.5555555554444444"
 					).put(
 						"countAggregationObjectFieldName1", "2"
-					).put(
-						"maxAggregationObjectFieldName", "15"
 					).put(
 						"minAggregationObjectFieldName", "100"
 					).put(
@@ -811,12 +2091,12 @@ public class DefaultObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName1, "10"
+					).put(
 						"averageAggregationObjectFieldName",
 						"0.1234567891234567"
 					).put(
 						"countAggregationObjectFieldName1", "1"
-					).put(
-						"maxAggregationObjectFieldName", "10"
 					).put(
 						"minAggregationObjectFieldName", "50000"
 					).put(
@@ -840,11 +2120,11 @@ public class DefaultObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName1, "0"
+					).put(
 						"averageAggregationObjectFieldName", "0"
 					).put(
 						"countAggregationObjectFieldName1", "0"
-					).put(
-						"maxAggregationObjectFieldName", "0"
 					).put(
 						"minAggregationObjectFieldName", "0"
 					).put(
@@ -865,7 +2145,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				_objectDefinition1.getObjectDefinitionId(),
 				_objectDefinition1.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
@@ -886,22 +2166,6 @@ public class DefaultObjectEntryManagerImplTest
 				},
 				ObjectDefinitionConstants.SCOPE_COMPANY);
 
-		ObjectEntry childObjectEntry3 =
-			_defaultObjectEntryManager.addObjectEntry(
-				_simpleDTOConverterContext, _objectDefinition1,
-				new ObjectEntry() {
-					{
-						properties = HashMapBuilder.<String, Object>put(
-							"textObjectFieldName", RandomTestUtil.randomString()
-						).build();
-					}
-				},
-				ObjectDefinitionConstants.SCOPE_COMPANY);
-
-		ObjectRelationshipTestUtil.relateObjectEntries(
-			parentObjectEntry2.getId(), childObjectEntry3.getId(),
-			objectRelationship, adminUser.getUserId());
-
 		ObjectEntry childObjectEntry4 =
 			_defaultObjectEntryManager.addObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition1,
@@ -918,6 +2182,22 @@ public class DefaultObjectEntryManagerImplTest
 			parentObjectEntry2.getId(), childObjectEntry4.getId(),
 			objectRelationship, adminUser.getUserId());
 
+		ObjectEntry childObjectEntry5 =
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectRelationshipTestUtil.relateObjectEntries(
+			parentObjectEntry2.getId(), childObjectEntry5.getId(),
+			objectRelationship, adminUser.getUserId());
+
 		assertEquals(
 			_defaultObjectEntryManager.getObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition1,
@@ -931,7 +2211,7 @@ public class DefaultObjectEntryManagerImplTest
 			});
 
 		_defaultObjectEntryManager.deleteObjectEntry(
-			_objectDefinition1, childObjectEntry3.getId());
+			_objectDefinition1, childObjectEntry4.getId());
 
 		assertEquals(
 			_defaultObjectEntryManager.getObjectEntry(
@@ -946,7 +2226,7 @@ public class DefaultObjectEntryManagerImplTest
 			});
 
 		_defaultObjectEntryManager.deleteObjectEntry(
-			_objectDefinition1, childObjectEntry4.getId());
+			_objectDefinition1, childObjectEntry5.getId());
 
 		assertEquals(
 			_defaultObjectEntryManager.getObjectEntry(
@@ -1103,7 +2383,8 @@ public class DefaultObjectEntryManagerImplTest
 				listTypeDefinition.getListTypeDefinitionId(),
 				RandomTestUtil.randomString(),
 				Collections.singletonMap(
-					LocaleUtil.US, RandomTestUtil.randomString()));
+					LocaleUtil.US, RandomTestUtil.randomString()),
+				listTypeDefinition.isSystem());
 
 		ListEntry listEntry = new ListEntry() {
 			{
@@ -1132,396 +2413,560 @@ public class DefaultObjectEntryManagerImplTest
 
 		String newExternalReferenceCode = RandomTestUtil.randomString();
 
-		_defaultObjectEntryManager.addObjectEntry(
-			dtoConverterContext, _objectDefinition2,
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key ",
+				"{externalReferenceCode=", newExternalReferenceCode,
+				", groupId=0, companyId=", companyId, ", objectDefinitionId=",
+				_objectDefinition1.getObjectDefinitionId(), "}"),
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				dtoConverterContext, _objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							_objectRelationshipERCObjectFieldName,
+							newExternalReferenceCode
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testAddObjectEntryWithLocalizedAttachmentObjectField()
+		throws Exception {
+
+		_enableObjectEntryVersioning();
+
+		ObjectFieldUtil.addCustomObjectField(
+			new AttachmentObjectFieldBuilder(
+			).labelMap(
+				RandomTestUtil.randomLocaleStringMap()
+			).localized(
+				true
+			).name(
+				"localizedAttachment"
+			).objectDefinitionId(
+				_objectDefinition1.getObjectDefinitionId()
+			).objectFieldSettings(
+				Arrays.asList(
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.
+							NAME_ACCEPTED_FILE_EXTENSIONS
+					).value(
+						"txt"
+					).build(),
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_FILE_SOURCE
+					).value(
+						ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+					).build(),
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+					).value(
+						"100"
+					).build())
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition1,
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
-						_objectRelationshipERCObjectFieldName,
-						newExternalReferenceCode
+						"localizedAttachment_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US",
+							_addTempFileEntry(
+								_objectDefinition1.getPortletId(),
+								StringUtil.randomString())
+						).build()
 					).build();
 				}
 			},
-			ObjectDefinitionConstants.SCOPE_COMPANY);
+			null);
+
+		FileEntry fileEntry = (FileEntry)_getLocalizedPropertyValue(
+			"en_US", objectEntry, "localizedAttachment");
 
 		Assert.assertNotNull(
-			_defaultObjectEntryManager.getObjectEntry(
-				_objectDefinition1.getCompanyId(), _simpleDTOConverterContext,
-				newExternalReferenceCode, _objectDefinition1, null));
+			_dlAppLocalService.getFileEntry(fileEntry.getId()));
 	}
 
 	@Test
-	public void testAddObjectEntryWithAccountEntryRestricted1()
+	public void testAddObjectEntryWithLocalizedRichTextObjectField()
 		throws Exception {
 
-		// Account entry restricted scope
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedRichTextObjectFieldName_i18n",
+						HashMapBuilder.<String, Object>put(
+							"en_US",
+							"en_US <script>console.log('XSS');</script>"
+						).put(
+							"pt_BR",
+							"pt_BR <script>console.log('XSS');</script>"
+						).build()
+					).build();
+				}
+			},
+			null);
 
-		AccountEntry accountEntry1 = _addAccountEntry();
+		Assert.assertEquals(
+			"en_US",
+			_getLocalizedPropertyValue(
+				"en_US", objectEntry, "localizedRichTextObjectFieldName"));
+		Assert.assertEquals(
+			"pt_BR",
+			_getLocalizedPropertyValue(
+				"pt_BR", objectEntry, "localizedRichTextObjectFieldName"));
+	}
 
-		_user = _addUser();
+	@Test
+	@TestInfo("LPD-56833")
+	public void testAddObjectEntryWithMissingObjectEntryFolderReference()
+		throws Exception {
 
-		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
-
-		_addResourcePermission(ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
-
-		AccountEntry accountEntry2 = _addAccountEntry();
-
-		AssertUtils.assertFailure(
-			ObjectDefinitionAccountEntryRestrictedException.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" does not have access to account entry ",
-				accountEntry2.getAccountEntryId()),
-			() -> _addObjectEntry(accountEntry2));
-
-		// Account entry restricted with organization scope
-
-		Organization organization1 = OrganizationTestUtil.addOrganization();
-
-		_addAccountEntryOrganizationRel(accountEntry1, organization1);
-
-		_user = _addUser();
-
-		_assignOrganizationRole(organization1, _accountManagerRole, _user);
-
-		_addResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
-
-		AssertUtils.assertFailure(
-			ObjectDefinitionAccountEntryRestrictedException.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" does not have access to account entry ",
-				accountEntry2.getAccountEntryId()),
-			() -> _addObjectEntry(accountEntry2));
-
-		_deleteAccountEntryOrganizationRel(accountEntry1, organization1);
-
-		// Account entry restricted with suborganization scope
-
-		Organization suborganization1 = OrganizationTestUtil.addOrganization(
-			organization1.getOrganizationId(), RandomTestUtil.randomString(),
-			false);
-
-		_addAccountEntryOrganizationRel(accountEntry1, suborganization1);
-
-		_user = _addUser();
-
-		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+		String externalReferenceCode = RandomTestUtil.randomString();
 
 		AssertUtils.assertFailure(
-			ObjectDefinitionAccountEntryRestrictedException.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" does not have access to account entry ",
-				accountEntry2.getAccountEntryId()),
-			() -> _addObjectEntry(accountEntry2));
+			NoSuchObjectEntryFolderException.class,
+			String.format(
+				"No ObjectEntryFolder exists with the key {externalReference" +
+					"Code=%s, groupId=%s, companyId=%s}",
+				externalReferenceCode, 0, TestPropsValues.getCompanyId()),
+			() ->
+				_objectEntryFolderLocalService.
+					getObjectEntryFolderByExternalReferenceCode(
+						externalReferenceCode, 0,
+						TestPropsValues.getCompanyId()));
 
-		_deleteAccountEntryOrganizationRel(accountEntry1, suborganization1);
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
-		_removeResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+			ObjectEntry objectEntry = new ObjectEntry();
 
-		// Check account entry permission
+			objectEntry.setObjectEntryFolderExternalReferenceCode(
+				externalReferenceCode);
 
-		_user = _addUser();
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1, objectEntry,
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+		}
 
-		_testAddObjectEntryAccountEntryRestriction(accountEntry1);
-		_testAddObjectEntryAccountEntryRestriction(accountEntry2);
+		ObjectEntryFolder objectEntryFolder =
+			_objectEntryFolderLocalService.
+				getObjectEntryFolderByExternalReferenceCode(
+					externalReferenceCode, 0, TestPropsValues.getCompanyId());
 
-		// Check account entry permission with organization
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EMPTY, objectEntryFolder.getStatus());
 
-		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+		_objectEntryFolderLocalService.deleteObjectEntryFolder(
+			objectEntryFolder);
+	}
 
-		_user = _addUser();
+	@Test
+	@TestInfo("LPD-55658")
+	public void testAddObjectEntryWithMissingParentObjectEntryReference()
+		throws Throwable {
 
-		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		_testAddObjectEntryWithMissingParentObjectEntryReference(
+			_objectDefinition2,
+			HashMapBuilder.<String, Object>put(
+				_objectRelationshipERCObjectFieldName, externalReferenceCode
+			).build(),
+			0, externalReferenceCode, _objectDefinition1, new HashMap<>());
+
+		String requiredObjectFieldName = "a" + RandomTestUtil.randomString();
+
+		ObjectDefinition parentObjectDefinition = _addObjectDefinition(
+			Arrays.asList(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					requiredObjectFieldName
+				).required(
+					true
+				).build()));
+
+		String objectRelationshipName = "a" + RandomTestUtil.randomString();
+
+		_objectRelationshipLocalService.addObjectRelationship(
+			null, adminUser.getUserId(),
+			parentObjectDefinition.getObjectDefinitionId(),
+			_objectDefinition1.getObjectDefinitionId(), 0,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			objectRelationshipName, false,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		externalReferenceCode = RandomTestUtil.randomString();
+
+		_testAddObjectEntryWithMissingParentObjectEntryReference(
+			_objectDefinition1,
+			HashMapBuilder.<String, Object>put(
+				objectRelationshipName,
+				HashMapBuilder.put(
+					"externalReferenceCode", externalReferenceCode
+				).build()
+			).build(),
+			0, externalReferenceCode, parentObjectDefinition,
+			HashMapBuilder.<String, Object>put(
+				requiredObjectFieldName, RandomTestUtil.randomString()
+			).build());
+
+		ObjectField objectField = new TextObjectFieldBuilder(
+		).indexed(
+			true
+		).labelMap(
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+		).name(
+			"a" + RandomTestUtil.randomString()
+		).required(
+			false
+		).build();
+
+		parentObjectDefinition = _addObjectDefinition(
+			Collections.singletonList(objectField),
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectDefinition childObjectDefinition = _addObjectDefinition(
+			Collections.singletonList(objectField),
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				null, adminUser.getUserId(),
+				parentObjectDefinition.getObjectDefinitionId(),
+				childObjectDefinition.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				"a" + RandomTestUtil.randomString(), false,
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		String objectRelationshipERCObjectFieldName =
+			_getObjectRelationshipERCObjectFieldName(
+				objectFieldLocalService.getObjectField(
+					objectRelationship.getObjectFieldId2()));
+
+		externalReferenceCode = RandomTestUtil.randomString();
+		Group group = GroupTestUtil.addGroup();
+
+		_testAddObjectEntryWithMissingParentObjectEntryReference(
+			childObjectDefinition,
+			HashMapBuilder.<String, Object>put(
+				objectRelationshipERCObjectFieldName, externalReferenceCode
+			).build(),
+			group.getGroupId(), externalReferenceCode, parentObjectDefinition,
+			Collections.emptyMap());
+	}
+
+	@Test
+	@TestInfo("LPD-58490")
+	public void testAddObjectEntryWithMissingRoleReference() throws Exception {
+
+		// Lazy referencing disabled
+
+		Permission permission = new Permission() {
+			{
+				actionIds = new String[] {ActionKeys.UPDATE};
+				roleExternalReferenceCode = RandomTestUtil.randomString();
+				roleName = RandomTestUtil.randomString();
+			}
+		};
 
 		AssertUtils.assertFailure(
-			PrincipalException.MustHavePermission.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry1));
+			NoSuchRoleException.class,
+			String.format(
+				"No Role exists with the key {externalReferenceCode=%s, " +
+					"companyId=%s}",
+				permission.getRoleExternalReferenceCode(),
+				_objectDefinition1.getCompanyId()),
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1,
+				new ObjectEntry() {
+					{
+						setPermissions(new Permission[] {permission});
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY));
 
-		_addResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+		// Lazy referencing enabled
 
-		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
-		_removeResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+			ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1,
+				new ObjectEntry() {
+					{
+						setPermissions(new Permission[] {permission});
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY);
 
-		// Check account entry permission with suborganization
+			Role role = _roleLocalService.fetchRoleByExternalReferenceCode(
+				permission.getRoleExternalReferenceCode(),
+				_objectDefinition1.getCompanyId());
 
-		Organization organization2 = OrganizationTestUtil.addOrganization();
+			Assert.assertEquals(Role.class.getName(), role.getClassName());
+			Assert.assertEquals(permission.getRoleName(), role.getName());
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, role.getStatus());
 
-		Organization suborganization2 = OrganizationTestUtil.addOrganization(
-			organization2.getOrganizationId(), RandomTestUtil.randomString(),
-			false);
+			Assert.assertTrue(
+				_resourcePermissionLocalService.hasResourcePermission(
+					_objectDefinition1.getCompanyId(),
+					_objectDefinition1.getClassName(),
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(objectEntry.getId()), role.getRoleId(),
+					ActionKeys.UPDATE));
+		}
+	}
 
-		_addAccountEntryOrganizationRel(accountEntry2, suborganization2);
+	@Test
+	public void testAddObjectEntryWithMissingTaxonomyCategoryBriefReference()
+		throws Exception {
 
-		_user = _addUser();
+		// Lazy referencing disabled
 
-		_assignOrganizationRole(organization1, _accountManagerRole, _user);
+		String taxonomyCategoryExternalReferenceCode1 =
+			RandomTestUtil.randomString();
+		String taxonomyCategoryExternalReferenceCode2 =
+			RandomTestUtil.randomString();
 
-		AssertUtils.assertFailure(
-			PrincipalException.MustHavePermission.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry1));
+		ObjectEntry objectEntry = new ObjectEntry() {
+			{
+				setTaxonomyCategoryBriefs(
+					new TaxonomyCategoryBrief[] {
+						new TaxonomyCategoryBrief() {
+							{
+								scope = Scope.of(
+									_group, LocaleUtil.getDefault());
+								taxonomyCategoryExternalReferenceCode =
+									taxonomyCategoryExternalReferenceCode1;
+							}
+						},
+						new TaxonomyCategoryBrief() {
+							{
+								scope = Scope.of(
+									_group, LocaleUtil.getDefault());
+								taxonomyCategoryExternalReferenceCode =
+									taxonomyCategoryExternalReferenceCode2;
+							}
+						}
+					});
+			}
+		};
 
-		_addResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _accountManagerRole);
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.object.rest.internal.util.ServiceContextUtil",
+				LoggerTestUtil.ERROR)) {
 
-		Assert.assertNotNull(_addObjectEntry(accountEntry1));
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1, objectEntry,
+				ObjectDefinitionConstants.SCOPE_COMPANY);
 
-		// Regular roles' company scope permissions should not be restricted by
-		// account entry
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(
+				exception.getCause() instanceof NoSuchCategoryException);
+		}
+
+		// Lazy referencing enabled
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			objectEntry = _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1, objectEntry,
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+			AssetCategory assetCategory1 =
+				_assetCategoryLocalService.
+					fetchAssetCategoryByExternalReferenceCode(
+						taxonomyCategoryExternalReferenceCode1,
+						_group.getGroupId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, assetCategory1.getStatus());
+
+			AssetCategory assetCategory2 =
+				_assetCategoryLocalService.
+					fetchAssetCategoryByExternalReferenceCode(
+						taxonomyCategoryExternalReferenceCode2,
+						_group.getGroupId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_EMPTY, assetCategory2.getStatus());
+
+			AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+				_objectDefinition1.getClassName(), objectEntry.getId());
+
+			Assert.assertArrayEquals(
+				ArrayUtil.sortedUnique(
+					new long[] {
+						assetCategory1.getCategoryId(),
+						assetCategory2.getCategoryId()
+					}),
+				ArrayUtil.sortedUnique(
+					_assetEntryAssetCategoryRelLocalService.
+						getAssetCategoryPrimaryKeys(assetEntry.getEntryId())));
+		}
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testAddObjectEntryWithPortletImportInProcess()
+		throws Exception {
+
+		ExportImportThreadLocal.setPortletImportInProcess(true);
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition();
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_APPROVED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(objectDefinition, WorkflowConstants.STATUS_DRAFT));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_EXPIRED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_PENDING));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_SCHEDULED));
+
+		objectDefinition.setEnableObjectEntryDraft(true);
+
+		objectDefinition = objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_APPROVED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_EXPIRED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_SCHEDULED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_DRAFT,
+			_addObjectEntry(objectDefinition, WorkflowConstants.STATUS_DRAFT));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_DRAFT,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_PENDING));
+
+		objectDefinition.setEnableObjectEntrySchedule(true);
+
+		objectDefinition = objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_APPROVED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_DRAFT,
+			_addObjectEntry(objectDefinition, WorkflowConstants.STATUS_DRAFT));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_DRAFT,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_PENDING));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_EXPIRED));
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_SCHEDULED,
+			_addObjectEntry(
+				objectDefinition, WorkflowConstants.STATUS_SCHEDULED));
+
+		ExportImportThreadLocal.setPortletImportInProcess(false);
+	}
+
+	@Test
+	public void testAddObjectEntryWithRelationshipObjectField()
+		throws Exception {
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			_objectDefinition1,
+			HashMapBuilder.<String, Object>put(
+				"textObjectFieldName", RandomTestUtil.randomString()
+			).build());
 
 		_user = _addUser();
 
 		Role role = _addRoleUser(
 			new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY},
-			_objectDefinition3, _user);
-
-		Assert.assertNotNull(_addObjectEntry(accountEntry1));
-
-		_resourcePermissionLocalService.removeResourcePermission(
-			companyId, _objectDefinition3.getResourceName(),
-			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-			role.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY);
+			_objectDefinition2, _user);
 
 		AssertUtils.assertFailure(
 			PrincipalException.MustHavePermission.class,
 			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_objectDefinition3.getResourceName(), StringPool.SPACE),
-			() -> _addObjectEntry(accountEntry1));
-	}
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				_objectDefinition1.getClassName(), StringPool.SPACE,
+				objectEntry.getId()),
+			() -> _addObjectEntry(
+				_objectDefinition2,
+				HashMapBuilder.<String, Object>put(
+					_objectRelationshipFieldName, objectEntry.getId()
+				).build()));
 
-	@Test
-	public void testAddObjectEntryWithAccountEntryRestricted2()
-		throws Exception {
+		_resourcePermissionLocalService.setResourcePermissions(
+			companyId, _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntry.getId()), role.getRoleId(),
+			new String[] {ActionKeys.VIEW});
 
-		// Object definitions inherit account entry restricted from the root
-		// object definition
-
-		_addResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _rootObjectDefinition,
-			_buyerRole);
-
-		AccountEntry accountEntry = _addAccountEntry();
-
-		_user = _addUser();
-
-		_assignAccountEntryRole(accountEntry, _buyerRole, _user);
-
-		Node rootNode = _tree.getRootNode();
-
-		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
-			_simpleDTOConverterContext,
-			objectDefinitionLocalService.getObjectDefinition(
-				rootNode.getPrimaryKey()),
-			new ObjectEntry() {
-				{
-					properties = HashMapBuilder.<String, Object>put(
-						"r_oneToManyRelationshipName2_accountEntryId",
-						accountEntry.getAccountEntryId()
-					).build();
-				}
-			},
-			ObjectDefinitionConstants.SCOPE_COMPANY);
-
-		ObjectDefinition objectDefinition =
-			objectDefinitionLocalService.fetchObjectDefinition(
-				companyId, "C_AA");
-
-		Node childNode = _tree.getNode(
-			objectDefinition.getObjectDefinitionId());
-
-		Edge edge = childNode.getEdge();
-
-		ObjectRelationship objectRelationship =
-			_objectRelationshipLocalService.getObjectRelationship(
-				edge.getObjectRelationshipId());
-
-		ObjectField objectField = objectFieldLocalService.getObjectField(
-			objectRelationship.getObjectFieldId2());
-
-		_defaultObjectEntryManager.addObjectEntry(
-			_simpleDTOConverterContext,
-			objectDefinitionLocalService.getObjectDefinition(
-				childNode.getPrimaryKey()),
-			new ObjectEntry() {
-				{
-					properties = HashMapBuilder.<String, Object>put(
-						objectField.getName(), objectEntry.getId()
-					).build();
-				}
-			},
-			ObjectDefinitionConstants.SCOPE_COMPANY);
-
-		_user = _addUser();
-
-		_assignAccountEntryRole(accountEntry, _buyerRole, _user);
-
-		_removeResourcePermission(
-			ObjectActionKeys.ADD_OBJECT_ENTRY, _rootObjectDefinition,
-			_buyerRole);
-
-		_addResourcePermission(
-			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
-
-		_defaultObjectEntryManager.addObjectEntry(
-			_simpleDTOConverterContext,
-			objectDefinitionLocalService.getObjectDefinition(
-				childNode.getPrimaryKey()),
-			new ObjectEntry() {
-				{
-					properties = HashMapBuilder.<String, Object>put(
-						objectField.getName(), objectEntry.getId()
-					).build();
-				}
-			},
-			ObjectDefinitionConstants.SCOPE_COMPANY);
-
-		_removeResourcePermission(
-			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
-
-		AssertUtils.assertFailure(
-			PrincipalException.MustHavePermission.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_rootObjectDefinition.getResourceName(), StringPool.SPACE),
-			() -> _defaultObjectEntryManager.addObjectEntry(
-				_simpleDTOConverterContext,
-				objectDefinitionLocalService.getObjectDefinition(
-					childNode.getPrimaryKey()),
-				new ObjectEntry() {
-					{
-						properties = HashMapBuilder.<String, Object>put(
-							objectField.getName(), objectEntry.getId()
-						).build();
-					}
-				},
-				ObjectDefinitionConstants.SCOPE_COMPANY));
-		AssertUtils.assertFailure(
-			PrincipalException.MustHavePermission.class,
-			StringBundler.concat(
-				"User ", _user.getUserId(),
-				" must have ADD_OBJECT_ENTRY permission for ",
-				_rootObjectDefinition.getResourceName(), StringPool.SPACE),
-			() -> _defaultObjectEntryManager.addObjectEntry(
-				_simpleDTOConverterContext,
-				objectDefinitionLocalService.getObjectDefinition(
-					rootNode.getPrimaryKey()),
-				new ObjectEntry() {
-					{
-						properties = HashMapBuilder.<String, Object>put(
-							"r_oneToManyRelationshipName2_accountEntryId",
-							accountEntry.getAccountEntryId()
-						).build();
-					}
-				},
-				ObjectDefinitionConstants.SCOPE_COMPANY));
-	}
-
-	@Test
-	public void testAddObjectEntryWithAttachmentObjectField() throws Exception {
-		String dlFolderName = RandomTestUtil.randomString();
-
-		ObjectDefinition objectDefinition = _createObjectDefinition(
-			Collections.singletonList(
-				new AttachmentObjectFieldBuilder(
-				).labelMap(
-					LocalizedMapUtil.getLocalizedMap(
-						RandomTestUtil.randomString())
-				).name(
-					"attachmentObjectFieldName"
-				).objectFieldSettings(
-					Arrays.asList(
-						_createObjectFieldSetting(
-							ObjectFieldSettingConstants.
-								NAME_ACCEPTED_FILE_EXTENSIONS,
-							"txt"),
-						_createObjectFieldSetting(
-							ObjectFieldSettingConstants.NAME_FILE_SOURCE,
-							ObjectFieldSettingConstants.VALUE_USER_COMPUTER),
-						_createObjectFieldSetting(
-							ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE,
-							"100"),
-						_createObjectFieldSetting(
-							ObjectFieldSettingConstants.
-								NAME_SHOW_FILES_IN_DOCS_AND_MEDIA,
-							"true"),
-						_createObjectFieldSetting(
-							ObjectFieldSettingConstants.
-								NAME_STORAGE_DL_FOLDER_PATH,
-							"/" + dlFolderName))
+		assertEquals(
+			_addObjectEntry(
+				_objectDefinition2,
+				HashMapBuilder.<String, Object>put(
+					_objectRelationshipFieldName, objectEntry.getId()
 				).build()),
-			ObjectDefinitionConstants.SCOPE_SITE);
-
-		_user = _addUser();
-
-		_addRoleUser(
-			new String[] {
-				ObjectActionKeys.ADD_OBJECT_ENTRY, ActionKeys.PERMISSIONS
-			},
-			objectDefinition, _user);
-
-		String fileName = RandomTestUtil.randomString() + ".txt";
-
-		Group group = _groupLocalService.getGroup(
-			companyId, GroupConstants.GUEST);
-
-		_defaultObjectEntryManager.addObjectEntry(
-			_simpleDTOConverterContext, objectDefinition,
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
-						"attachmentObjectFieldName",
-						() -> {
-							com.liferay.portal.kernel.repository.model.FileEntry
-								fileEntry = TempFileEntryUtil.addTempFileEntry(
-									group.getGroupId(),
-									TestPropsValues.getUserId(),
-									objectDefinition.getPortletId(),
-									TempFileEntryUtil.getTempFileName(fileName),
-									FileUtil.createTempFile(
-										RandomTestUtil.randomString(
-										).getBytes()),
-									ContentTypes.TEXT_PLAIN);
-
-							return fileEntry.getFileEntryId();
-						}
-					).put(
-						"externalReferenceCode", RandomTestUtil.randomString()
+						_objectRelationshipFieldName, objectEntry.getId()
 					).build();
 				}
-			},
-			String.valueOf(group.getGroupId()));
-
-		DLFolder dlFolder = _dlFolderService.getFolder(
-			group.getGroupId(), 0, dlFolderName);
-
-		Assert.assertNotNull(
-			_dlFileEntryService.getFileEntryByFileName(
-				group.getGroupId(), dlFolder.getFolderId(), fileName));
-
-		objectDefinitionLocalService.deleteObjectDefinition(
-			objectDefinition.getObjectDefinitionId());
+			});
 	}
 
 	@Test
 	public void testAddObjectEntryWithRichTextObjectField() throws Exception {
-		ObjectDefinition objectDefinition = _createObjectDefinition(
+		ObjectDefinition objectDefinition = _addObjectDefinition(
 			Collections.singletonList(
 				new RichTextObjectFieldBuilder(
 				).labelMap(
@@ -1571,6 +3016,286 @@ public class DefaultObjectEntryManagerImplTest
 		}
 	}
 
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testAddObjectEntryWithScheduleDates() throws Exception {
+
+		// User non-UTC timezone
+
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()));
+
+		LocalDateTime localDateTime = LocalDateTime.now(
+		).plusDays(
+			1
+		).truncatedTo(
+			ChronoUnit.MINUTES
+		);
+
+		Timestamp timestamp = Timestamp.valueOf(localDateTime);
+
+		User user = UserTestUtil.addOmniadminUser();
+
+		user.setTimeZoneId("America/Sao_Paulo");
+
+		user = _userLocalService.updateUser(user);
+
+		ZonedDateTime zonedDateTime = localDateTime.atZone(
+			ZoneId.of(user.getTimeZoneId()));
+
+		Timestamp zonedTimestamp = Timestamp.from(zonedDateTime.toInstant());
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.addObjectEntry(
+			new DefaultDTOConverterContext(
+				false, Collections.emptyMap(), dtoConverterRegistry, null,
+				LocaleUtil.getDefault(), null, user),
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					setDisplayDate(zonedTimestamp);
+					setExpirationDate(zonedTimestamp);
+					setReviewDate(zonedTimestamp);
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		assertEquals(
+			objectEntry2,
+			new ObjectEntry() {
+				{
+					setDisplayDate(timestamp);
+					setExpirationDate(timestamp);
+					setReviewDate(timestamp);
+				}
+			});
+
+		Assert.assertNotEquals(
+			objectEntry2,
+			new ObjectEntry() {
+				{
+					setDisplayDate(zonedTimestamp);
+					setExpirationDate(zonedTimestamp);
+					setReviewDate(zonedTimestamp);
+				}
+			});
+
+		_userLocalService.deleteUser(user);
+
+		// User UTC Timezone
+
+		ObjectEntry objectEntry1 = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					setDisplayDate(timestamp);
+					setExpirationDate(timestamp);
+					setProperties(
+						HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build());
+					setReviewDate(timestamp);
+				}
+			},
+			null);
+
+		Assert.assertEquals(timestamp, objectEntry1.getDisplayDate());
+		Assert.assertEquals(timestamp, objectEntry1.getExpirationDate());
+		Assert.assertEquals(timestamp, objectEntry1.getReviewDate());
+	}
+
+	@Test
+	public void testAddObjectEntryWithStaticObjectFieldValues()
+		throws Exception {
+
+		assertEquals(
+			_defaultObjectEntryManager.addObjectEntry(
+				dtoConverterContext, _objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"dateObjectFieldName", "2020-01-02"
+						).put(
+							"decimalObjectFieldName", 15.7
+						).put(
+							"integerObjectFieldName", 15
+						).put(
+							"longIntegerObjectFieldName", 100L
+						).put(
+							"textObjectFieldName", "textObjectFieldValue"
+						).putAll(
+							_localizedObjectFieldI18nValues
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"dateObjectFieldName", "2020-01-02"
+					).put(
+						"decimalObjectFieldName", 15.7
+					).put(
+						"integerObjectFieldName", 15
+					).put(
+						"longIntegerObjectFieldName", 100L
+					).put(
+						"textObjectFieldName", "textObjectFieldValue"
+					).putAll(
+						_localizedObjectFieldI18nValues
+					).build();
+				}
+			});
+	}
+
+	@Test
+	public void testAddOrUpdateObjectEntryWithFriendlyURL() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition();
+
+		objectDefinition.setFriendlyURLSeparator("test");
+
+		objectDefinition = objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					setFriendlyUrlPath(RandomTestUtil.randomString());
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Assert.assertEquals(
+			objectEntry.getExternalReferenceCode(),
+			objectEntry.getFriendlyUrlPath());
+
+		objectDefinition.setEnableFriendlyURLCustomization(true);
+
+		objectDefinition = objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					setFriendlyUrlPath("Test URL");
+				}
+			});
+
+		Assert.assertEquals("test-url", objectEntry.getFriendlyUrlPath());
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					setFriendlyUrlPath("Accès aux crédits");
+				}
+			});
+
+		Assert.assertEquals(
+			"accès-aux-crédits", objectEntry.getFriendlyUrlPath());
+
+		objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					setFriendlyUrlPath_i18n(
+						HashMapBuilder.put(
+							"en_US", "Test URL"
+						).put(
+							"es_ES", "Test URL Spanish"
+						).put(
+							"fr_FR", "Accès aux crédits"
+						).put(
+							"pt_BR", ""
+						).build());
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		AssertUtils.assertEquals(
+			HashMapBuilder.put(
+				"en_US", "test-url-1"
+			).put(
+				"es_ES", "test-url-spanish"
+			).put(
+				"fr_FR", "accès-aux-crédits-1"
+			).build(),
+			objectEntry.getFriendlyUrlPath_i18n());
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+	}
+
+	@Test
+	public void testAddOrUpdateObjectEntryWithObjectAction() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new IntegerObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"integerObjectField"
+					).build()),
+				false);
+
+		_addObjectAction(
+			objectDefinition, ObjectActionTriggerConstants.KEY_ON_AFTER_ADD);
+		_addObjectAction(
+			objectDefinition, ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE);
+
+		int randomInt1 = RandomTestUtil.randomInt();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectDefinition,
+			HashMapBuilder.<String, Object>put(
+				"integerObjectField", randomInt1
+			).build());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId());
+
+		Assert.assertEquals(
+			randomInt1 + 2,
+			MapUtil.getInteger(
+				objectEntry.getProperties(), "integerObjectField"));
+
+		ThreadLocal<Map<Long, Set<Long>>> threadLocal =
+			ReflectionTestUtil.getFieldValue(
+				ObjectActionThreadLocal.class, "_objectEntryIdsMap");
+
+		threadLocal.set(new HashMap<>());
+
+		int randomInt2 = RandomTestUtil.randomInt();
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					setProperties(
+						HashMapBuilder.<String, Object>put(
+							"integerObjectField", randomInt2
+						).build());
+				}
+			});
+
+		Assert.assertEquals(
+			randomInt2 + 1,
+			MapUtil.getInteger(
+				objectEntry.getProperties(), "integerObjectField"));
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+	}
+
 	@Test
 	public void testAddOrUpdateObjectEntryWithPicklistObjectField()
 		throws Exception {
@@ -1589,9 +3314,10 @@ public class DefaultObjectEntryManagerImplTest
 					ListTypeEntryUtil.createListTypeEntry(
 						"listTypeEntryKey2",
 						Collections.singletonMap(
-							LocaleUtil.US, RandomTestUtil.randomString()))));
+							LocaleUtil.US, RandomTestUtil.randomString()))),
+				new ServiceContext());
 
-		ObjectDefinition objectDefinition = _createObjectDefinition(
+		ObjectDefinition objectDefinition = _addObjectDefinition(
 			Collections.singletonList(
 				new PicklistObjectFieldBuilder(
 				).indexed(
@@ -1619,28 +3345,21 @@ public class DefaultObjectEntryManagerImplTest
 				_addAndAssertObjectEntryWithPicklistObjectField(
 					"listTypeEntryKey2", "listTypeEntryKey2", objectDefinition);
 
-			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
-				objectDefinition.getObjectDefinitionId(),
+			_addObjectFieldSettingWithDefaultValue(
+				"listTypeEntryKey1", objectDefinition,
 				"picklistObjectFieldName");
 
-			_objectFieldSettingLocalService.addObjectFieldSetting(
-				TestPropsValues.getUserId(), objectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
-				"listTypeEntryKey1");
-			_objectFieldSettingLocalService.addObjectFieldSetting(
-				TestPropsValues.getUserId(), objectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
-				ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE);
+			ListEntry listEntry = _getListEntry(
+				_defaultObjectEntryManager.getObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					objectEntryId2));
 
-			Assert.assertEquals(
-				StringPool.BLANK,
-				_getListEntryKey(
-					_defaultObjectEntryManager.getObjectEntry(
-						_simpleDTOConverterContext, objectDefinition,
-						objectEntryId2)));
+			Assert.assertEquals(StringPool.BLANK, listEntry.getKey());
+			Assert.assertEquals(StringPool.BLANK, listEntry.getName());
 
 			_updateAndAssertObjectEntryWithPicklistObjectField(
-				null, null, objectDefinition, objectEntryId1);
+				StringPool.BLANK, StringPool.BLANK, objectDefinition,
+				objectEntryId1);
 			_updateAndAssertObjectEntryWithPicklistObjectField(
 				StringPool.BLANK, StringPool.BLANK, objectDefinition,
 				objectEntryId2);
@@ -1650,6 +3369,13 @@ public class DefaultObjectEntryManagerImplTest
 			_updateAndAssertObjectEntryWithPicklistObjectField(
 				"listTypeEntryKey2", "listTypeEntryKey2", objectDefinition,
 				objectEntryId4);
+
+			Assert.assertEquals(
+				StringPool.BLANK,
+				_getListEntryName(
+					_defaultObjectEntryManager.getObjectEntry(
+						_simpleDTOConverterContext, objectDefinition,
+						objectEntryId1)));
 
 			_addAndAssertObjectEntryWithPicklistObjectField(
 				null, "listTypeEntryKey1", objectDefinition);
@@ -1667,8 +3393,276 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
+	public void testAddRelatedObjectEntry() throws Exception {
+		_testAddRelatedObjectEntry(
+			_companyObjectDefinitionAA, _companyObjectEntryA,
+			_companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.addRelatedObjectEntry(
+					_createDTOConverterContext(),
+					objectEntry1.getExternalReferenceCode(), objectEntry2,
+					objectRelationship, null));
+		_testAddRelatedObjectEntry(
+			_companyObjectDefinitionAA, _companyObjectEntryA,
+			_companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.addRelatedObjectEntry(
+					_createDTOConverterContext(), objectEntry2,
+					objectEntry1.getId(), objectRelationship));
+		_testAddRelatedObjectEntry(
+			_siteObjectDefinitionAA, _siteObjectEntryA,
+			_siteObjectRelationshipA_AA,
+			_siteObjectRelationshipA_AAObjectField2,
+			_siteObjectRelationshipB_AAObjectField2, _group.getGroupKey(),
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.addRelatedObjectEntry(
+					_createDTOConverterContext(),
+					objectEntry1.getExternalReferenceCode(), objectEntry2,
+					objectRelationship, _group.getGroupKey()));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testCopyObjectEntry() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry();
+
+		ObjectDefinitionSetting objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
+				TestPropsValues.getUserId(),
+				_objectDefinition7.getObjectDefinitionId(),
+				ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+				String.valueOf(depotEntry.getGroupId()));
+
+		ObjectEntryFolder objectEntryFolder1 =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, null, RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		ObjectEntryFolder objectEntryFolder2 =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				objectEntryFolder1.getObjectEntryFolderId(), null, null,
+				RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		_testCopyObjectEntry(
+			depotEntry.getGroupId(), objectEntryFolder1, objectEntryFolder2);
+
+		_testCopyObjectEntryDuplicateName(
+			depotEntry.getGroupId(), objectEntryFolder1);
+		_testCopyObjectEntryReplace(
+			depotEntry.getGroupId(), objectEntryFolder1, objectEntryFolder2);
+
+		_testCopyObjectEntryGroup(
+			depotEntry.getGroupId(), objectDefinitionSetting);
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testCopyObjectEntryByVersion() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		ObjectEntry copyObjectEntry1 =
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				_createDTOConverterContext(adminUser), _objectDefinition1,
+				objectEntry.getId(), 2);
+
+		assertEquals(
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				objectEntry.getExternalReferenceCode(), _objectDefinition1,
+				null, 2),
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				copyObjectEntry1.getExternalReferenceCode(), _objectDefinition1,
+				null, 1));
+
+		// Site scope
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition4,
+			_addObjectEntry(
+				_objectDefinition4,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				_group.getGroupKey(), 1),
+			2);
+
+		ObjectEntry copyObjectEntry2 =
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				objectEntry.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 2);
+
+		assertEquals(
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				objectEntry.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 2),
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				copyObjectEntry2.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 1));
+
+		// Status draft
+
+		_objectDefinition4.setEnableObjectEntryDraft(true);
+
+		_objectDefinition4 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition4);
+
+		ObjectEntry copyObjectEntry3 =
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				_createDTOConverterContext(adminUser), _objectDefinition4,
+				objectEntry.getId(), 1);
+
+		Status status = copyObjectEntry3.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_DRAFT, status.getCode());
+
+		// Status expired
+
+		_objectDefinition4.setEnableObjectEntryDraft(false);
+
+		_objectDefinition4 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition4);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_defaultObjectEntryManager.expireObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				objectEntry.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 2));
+
+		ObjectEntry copyObjectEntry4 =
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				_createDTOConverterContext(adminUser),
+				objectEntry.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 2);
+
+		status = copyObjectEntry4.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, status.getCode());
+
+		// Status in trash
+
+		_assertFailureWithStatusInTrash(
+			objectEntryId ->
+				_defaultObjectEntryManager.copyObjectEntryByVersion(
+					dtoConverterContext, _objectDefinition4, objectEntryId, 1));
+	}
+
+	@Test
+	public void testCopyObjectEntryByVersionWithTextObjectField()
+		throws Exception {
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			dtoConverterContext, _objectDefinition5,
+			new ObjectEntry() {
+				{
+					externalReferenceCode = RandomTestUtil.randomString();
+					keywords = new String[] {RandomTestUtil.randomString()};
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedTextObjectFieldName_i18n",
+						HashMapBuilder.put(
+							"en_US", "en_US localizedTextObjectFieldValue1"
+						).put(
+							"pt_BR", "pt_BR localizedTextObjectFieldValue1"
+						).build()
+					).put(
+						"textObjectFieldName", "textObjectFieldValue"
+					).build();
+					systemProperties = new SystemProperties() {
+						{
+							version = new Version() {
+								{
+									number = 1;
+								}
+							};
+						}
+					};
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectField objectField = objectFieldLocalService.fetchObjectField(
+			_objectDefinition5.getObjectDefinitionId(),
+			"localizedTextObjectFieldName");
+
+		_objectDefinition5.setTitleObjectFieldId(
+			objectField.getObjectFieldId());
+
+		_objectDefinition5 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition5);
+
+		_assertLocalizedTextObjectFieldValueCopy(
+			"en_US localizedTextObjectFieldValue1 (Copy)",
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition5, objectEntry.getId(),
+				1),
+			objectField);
+
+		_assertLocalizedTextObjectFieldValueCopy(
+			"en_US localizedTextObjectFieldValue1 (Copy 1)",
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition5, objectEntry.getId(),
+				1),
+			objectField);
+
+		objectField = objectFieldLocalService.fetchObjectField(
+			_objectDefinition5.getObjectDefinitionId(), "textObjectFieldName");
+
+		_objectDefinition5.setTitleObjectFieldId(
+			objectField.getObjectFieldId());
+
+		_objectDefinition5 =
+			objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition5);
+
+		_assertTextObjectFieldValueCopy(
+			"textObjectFieldValue (Copy)",
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition5, objectEntry.getId(),
+				1));
+
+		_assertTextObjectFieldValueCopy(
+			"textObjectFieldValue (Copy 1)",
+			_defaultObjectEntryManager.copyObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition5, objectEntry.getId(),
+				1));
+	}
+
+	@Test
 	public void testDeleteObjectEntry() throws Exception {
-		ObjectDefinition objectDefinition1 = _createObjectDefinition(
+		ObjectDefinition objectDefinition1 = _addObjectDefinition(
 			Collections.singletonList(
 				new TextObjectFieldBuilder(
 				).labelMap(
@@ -1677,7 +3671,7 @@ public class DefaultObjectEntryManagerImplTest
 				).name(
 					"textObjectFieldName"
 				).build()));
-		ObjectDefinition objectDefinition2 = _createObjectDefinition(
+		ObjectDefinition objectDefinition2 = _addObjectDefinition(
 			Collections.singletonList(
 				new TextObjectFieldBuilder(
 				).labelMap(
@@ -1694,7 +3688,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				objectDefinition1.getObjectDefinitionId(),
 				objectDefinition2.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationship", false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -1808,6 +3802,105 @@ public class DefaultObjectEntryManagerImplTest
 			objectDefinition1.getObjectDefinitionId());
 		objectDefinitionLocalService.deleteObjectDefinition(
 			objectDefinition2.getObjectDefinitionId());
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testDeleteObjectEntryByVersion() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, 1);
+
+		AssertUtils.assertFailure(
+			RequiredObjectEntryVersionException.MustHaveOneVersion.class,
+			"At least one version must remain",
+			() -> _defaultObjectEntryManager.deleteObjectEntryByVersion(
+				_objectDefinition1, objectEntry1.getId(), 1));
+
+		_updateObjectEntryVersion(_objectDefinition1, objectEntry1, 2);
+
+		Assert.assertEquals(
+			2,
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry1.getExternalReferenceCode(),
+				_objectDefinition1, null, null, null
+			).getItems(
+			).size());
+
+		AssertUtils.assertFailure(
+			RequiredObjectEntryVersionException.MustNotDeleteLatestVersion.
+				class,
+			"The latest version cannot be deleted",
+			() -> _defaultObjectEntryManager.deleteObjectEntryByVersion(
+				_objectDefinition1, objectEntry1.getId(), 2));
+
+		_defaultObjectEntryManager.deleteObjectEntryByVersion(
+			_objectDefinition1, objectEntry1.getId(), 1);
+
+		Assert.assertEquals(
+			1,
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry1.getExternalReferenceCode(),
+				_objectDefinition1, null, null, null
+			).getItems(
+			).size());
+
+		// Site scope
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			_objectDefinition4,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			_group.getGroupKey(), 1);
+
+		AssertUtils.assertFailure(
+			RequiredObjectEntryVersionException.MustHaveOneVersion.class,
+			"At least one version must remain",
+			() -> _defaultObjectEntryManager.deleteObjectEntryByVersion(
+				objectEntry2.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 1));
+
+		_updateObjectEntryVersion(_objectDefinition4, objectEntry2, 2);
+
+		Assert.assertEquals(
+			2,
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), null, null
+			).getItems(
+			).size());
+
+		AssertUtils.assertFailure(
+			RequiredObjectEntryVersionException.MustNotDeleteLatestVersion.
+				class,
+			"The latest version cannot be deleted",
+			() -> _defaultObjectEntryManager.deleteObjectEntryByVersion(
+				objectEntry2.getExternalReferenceCode(), _objectDefinition4,
+				_group.getGroupKey(), 2));
+
+		_defaultObjectEntryManager.deleteObjectEntryByVersion(
+			objectEntry2.getExternalReferenceCode(), _objectDefinition4,
+			_group.getGroupKey(), 1);
+
+		Assert.assertEquals(
+			1,
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), null, null
+			).getItems(
+			).size());
+
+		// Status in trash
+
+		_assertFailureWithStatusInTrash(
+			objectEntryId ->
+				_defaultObjectEntryManager.deleteObjectEntryByVersion(
+					_objectDefinition4, objectEntryId, 2));
 	}
 
 	@Test
@@ -2044,48 +4137,737 @@ public class DefaultObjectEntryManagerImplTest
 
 		Tree tree = _createObjectEntryTree(accountEntry1, StringPool.BLANK);
 
-		_addResourcePermission(
-			ActionKeys.VIEW, _rootObjectDefinition, _buyerRole);
-
 		_user = _addUser();
 
 		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
 
-		Node rootNode = tree.getRootNode();
+		_testDeleteObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.DELETE, tree);
 
-		TreeTestUtil.forEachNodeObjectEntry(
-			tree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
-			_objectEntryLocalService,
-			objectEntry -> {
-				ObjectDefinition objectDefinition =
-					objectDefinitionLocalService.fetchObjectDefinition(
-						objectEntry.getObjectDefinitionId());
-
-				AssertUtils.assertFailure(
-					PrincipalException.MustHavePermission.class,
-					StringBundler.concat(
-						"User ", _user.getUserId(),
-						" must have DELETE permission for ",
-						_rootObjectDefinition.getClassName(), StringPool.SPACE,
-						rootNode.getPrimaryKey()),
-					() -> _defaultObjectEntryManager.deleteObjectEntry(
-						objectDefinition, objectEntry.getObjectEntryId()));
-			});
+		// Users can delete object entries from accounts that they belong to
 
 		_addResourcePermission(
 			ActionKeys.DELETE, _rootObjectDefinition, _buyerRole);
 
-		TreeTestUtil.forEachNodeObjectEntry(
-			tree.iterator(TreeConstants.ITERATOR_TYPE_POST_ORDER),
-			_objectEntryLocalService,
-			objectEntry -> {
-				ObjectDefinition objectDefinition =
-					objectDefinitionLocalService.fetchObjectDefinition(
-						objectEntry.getObjectDefinitionId());
+		Node rootNode = tree.getRootNode();
+
+		Iterator<Node> iterator = tree.iterator(
+			TreeConstants.ITERATOR_TYPE_POST_ORDER);
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			Node parentNode = node.getParentNode();
+
+			if (parentNode == null) {
+				com.liferay.object.model.ObjectEntry rootObjectEntry =
+					_objectEntryLocalService.getObjectEntry(
+						rootNode.getPrimaryKey());
 
 				_defaultObjectEntryManager.deleteObjectEntry(
-					objectDefinition, objectEntry.getObjectEntryId());
-			});
+					objectDefinitionLocalService.fetchObjectDefinition(
+						rootObjectEntry.getObjectDefinitionId()),
+					rootNode.getPrimaryKey());
+
+				continue;
+			}
+
+			Edge edge = node.getEdge();
+
+			_defaultObjectEntryManager.deleteRelatedObjectEntry(
+				node.getPrimaryKey(),
+				_objectRelationshipLocalService.getObjectRelationship(
+					edge.getObjectRelationshipId()),
+				parentNode.getPrimaryKey());
+		}
+
+		// Users cannot delete object entries from accounts that they do not
+		// belong to
+
+		tree = _createObjectEntryTree(accountEntry1, StringPool.BLANK);
+
+		AccountEntry accountEntry2 = _addAccountEntry();
+
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry2, _accountManagerRole, _user);
+
+		_addResourcePermission(
+			ActionKeys.DELETE, _rootObjectDefinition, _accountManagerRole);
+
+		_testDeleteObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.VIEW, tree);
+
+		_addResourcePermission(
+			ActionKeys.VIEW, _rootObjectDefinition, _accountManagerRole);
+
+		_testDeleteObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.VIEW, tree);
+	}
+
+	@Test
+	public void testDeleteObjectEntryWithAccountEntryRestricted3()
+		throws Exception {
+
+		// Account entry restricted with implicit role Organization User
+
+		AccountEntry accountEntry = _addAccountEntry();
+
+		ObjectEntry objectEntry = _addObjectEntry(accountEntry);
+
+		Organization organization = _addUserOrganization();
+
+		_addAccountEntryOrganizationRel(accountEntry, organization);
+
+		Role organizationUserRole = _roleLocalService.getRole(
+			companyId, RoleConstants.ORGANIZATION_USER);
+
+		_addResourcePermission(
+			ActionKeys.VIEW, _objectDefinition3, organizationUserRole);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have DELETE permission for ",
+				_objectDefinition3.getClassName(), StringPool.SPACE,
+				objectEntry.getId()),
+			() -> _defaultObjectEntryManager.deleteObjectEntry(
+				_objectDefinition3, objectEntry.getId()));
+
+		_addResourcePermission(
+			ActionKeys.DELETE, _objectDefinition3, organizationUserRole);
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			_objectDefinition3, objectEntry.getId());
+	}
+
+	@Test
+	public void testDeleteObjectEntryWithRelatedObjectEntries()
+		throws Exception {
+
+		ObjectDefinition objectDefinition1 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			objectDefinition1, Collections.emptyMap());
+
+		ObjectDefinition objectDefinition2 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectRelationship objectRelationship1 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				objectDefinition1, objectDefinition2,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField1 = objectFieldLocalService.getObjectField(
+			objectRelationship1.getObjectFieldId2());
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			objectDefinition2,
+			HashMapBuilder.<String, Object>put(
+				objectField1.getName(), objectEntry1.getId()
+			).build());
+
+		ObjectDefinition objectDefinition3 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectEntry objectEntry3 = _addObjectEntry(
+			objectDefinition3,
+			new ObjectEntry() {
+				{
+					properties = Collections.emptyMap();
+					scopeId = _group.getGroupId();
+				}
+			},
+			_group.getGroupKey());
+
+		ObjectDefinition objectDefinition4 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectRelationship objectRelationship2 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				objectDefinition1, objectDefinition4,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField2 = objectFieldLocalService.getObjectField(
+			objectRelationship2.getObjectFieldId2());
+
+		ObjectRelationship objectRelationship3 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				objectDefinition3, objectDefinition4,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField3 = objectFieldLocalService.getObjectField(
+			objectRelationship3.getObjectFieldId2());
+
+		ObjectEntry objectEntry4 = _addObjectEntry(
+			objectDefinition4,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectField2.getName(), objectEntry1.getId()
+					).put(
+						objectField3.getName(), objectEntry3.getId()
+					).build();
+					scopeId = _group.getGroupId();
+				}
+			},
+			_group.getGroupKey());
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			companyId, _simpleDTOConverterContext,
+			objectEntry1.getExternalReferenceCode(), objectDefinition1, null);
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry1.getId()));
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry2.getId()));
+		Assert.assertNotNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry3.getId()));
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry4.getId()));
+	}
+
+	@Test
+	public void testDeleteRelatedObjectEntry() throws Exception {
+		_testDeleteRelatedObjectEntry(
+			_companyObjectDefinitionAA, _companyObjectEntryA,
+			_companyObjectEntryB, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipB_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.deleteRelatedObjectEntry(
+					objectEntry2.getId(), objectRelationship,
+					objectEntry1.getId()));
+		_testDeleteRelatedObjectEntry(
+			_companyObjectDefinitionAA, _companyObjectEntryA,
+			_companyObjectEntryB, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipB_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.deleteRelatedObjectEntry(
+					objectEntry2.getExternalReferenceCode(), objectRelationship,
+					objectEntry1.getExternalReferenceCode(), null));
+		_testDeleteRelatedObjectEntry(
+			_siteObjectDefinitionAA, _siteObjectEntryA, _siteObjectEntryB,
+			_siteObjectRelationshipA_AA, _siteObjectRelationshipB_AA,
+			_siteObjectRelationshipA_AAObjectField2,
+			_siteObjectRelationshipB_AAObjectField2, _group.getGroupKey(),
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.deleteRelatedObjectEntry(
+					objectEntry2.getExternalReferenceCode(), objectRelationship,
+					objectEntry1.getExternalReferenceCode(),
+					_group.getGroupKey()));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testExpireObjectEntry() throws Exception {
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		objectEntry = _defaultObjectEntryManager.expireObjectEntry(
+			dtoConverterContext, objectEntry.getId());
+
+		Status status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, status.getCode());
+
+		ObjectEntryVersion objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 1);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, objectEntryVersion.getStatus());
+
+		objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 2);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, objectEntryVersion.getStatus());
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testExpireObjectEntryByVersion() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_defaultObjectEntryManager.expireObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition1, objectEntry.getId(),
+				1));
+
+		ObjectEntryVersion objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 2);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, objectEntryVersion.getStatus());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition1,
+			objectEntry.getId());
+
+		Status status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, status.getCode());
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_defaultObjectEntryManager.expireObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition1, objectEntry.getId(),
+				2));
+
+		objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 1);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, objectEntryVersion.getStatus());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition1,
+			objectEntry.getId());
+
+		status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, status.getCode());
+
+		// Site scope
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition4,
+			_addObjectEntry(
+				_objectDefinition4,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				_group.getGroupKey(), 1),
+			2);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_defaultObjectEntryManager.expireObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), 1));
+
+		objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 2);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, objectEntryVersion.getStatus());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			_objectDefinition4.getCompanyId(), _simpleDTOConverterContext,
+			objectEntry.getExternalReferenceCode(), _objectDefinition4,
+			_group.getGroupKey());
+
+		status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, status.getCode());
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition4,
+			_addObjectEntry(
+				_objectDefinition4,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				_group.getGroupKey(), 1),
+			2);
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_EXPIRED,
+			_defaultObjectEntryManager.expireObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), 2));
+
+		objectEntryVersion =
+			_objectEntryVersionLocalService.getObjectEntryVersion(
+				objectEntry.getId(), 1);
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, objectEntryVersion.getStatus());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			_objectDefinition4.getCompanyId(), _simpleDTOConverterContext,
+			objectEntry.getExternalReferenceCode(), _objectDefinition4,
+			_group.getGroupKey());
+
+		status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, status.getCode());
+
+		// Status in trash
+
+		_assertFailureWithStatusInTrash(
+			objectEntryId ->
+				_defaultObjectEntryManager.expireObjectEntryByVersion(
+					dtoConverterContext, _objectDefinition4, objectEntryId, 1));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetApprovedObjectEntries() throws Exception {
+		_assertApprovedObjectEntries();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1, Collections.emptyMap());
+
+		_assertApprovedObjectEntries(objectEntry1);
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			_objectDefinition1, Collections.emptyMap());
+
+		_assertApprovedObjectEntries(objectEntry1, objectEntry2);
+
+		_defaultObjectEntryManager.expireObjectEntry(
+			_createDTOConverterContext(), objectEntry1.getId());
+
+		_assertApprovedObjectEntries(objectEntry2);
+
+		_defaultObjectEntryManager.expireObjectEntry(
+			_createDTOConverterContext(), objectEntry2.getId());
+
+		_assertApprovedObjectEntries();
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry3 = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		_assertApprovedObjectEntries(objectEntry3);
+
+		_defaultObjectEntryManager.expireObjectEntryByVersion(
+			_createDTOConverterContext(), _objectDefinition1,
+			objectEntry3.getId(), 2);
+
+		_assertApprovedObjectEntries(
+			_getLatestApprovedObjectEntry(
+				objectEntry3.getId(), _objectDefinition1));
+
+		_defaultObjectEntryManager.expireObjectEntryByVersion(
+			_createDTOConverterContext(), _objectDefinition1,
+			objectEntry3.getId(), 1);
+
+		_assertApprovedObjectEntries();
+
+		ObjectEntry objectEntry4 = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		_defaultObjectEntryManager.expireObjectEntryByVersion(
+			_createDTOConverterContext(), _objectDefinition1,
+			objectEntry4.getId(), 2);
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {ActionKeys.VIEW}, _objectDefinition1, _user);
+
+		_assertApprovedObjectEntries(
+			_getLatestApprovedObjectEntry(
+				objectEntry4.getId(), _objectDefinition1));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			companyId, _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ActionKeys.VIEW);
+
+		_assertApprovedObjectEntries();
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			companyId, _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntry4.getId()), role.getRoleId(),
+			new String[] {ActionKeys.VIEW});
+
+		_assertApprovedObjectEntries(
+			_getLatestApprovedObjectEntry(
+				objectEntry4.getId(), _objectDefinition1));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetApprovedObjectEntriesWithNestedFields()
+		throws Exception {
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1, Collections.emptyMap());
+
+		ObjectDefinition objectDefinition2 =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				false, false, true,
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"a" + RandomTestUtil.randomString()
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectRelationship objectRelationship1 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				_objectDefinition1, objectDefinition2,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField1 = objectFieldLocalService.getObjectField(
+			objectRelationship1.getObjectFieldId2());
+
+		ObjectEntry objectEntry2 = _updateObjectEntryVersion(
+			objectDefinition2,
+			_addObjectEntry(
+				objectDefinition2,
+				HashMapBuilder.<String, Object>put(
+					objectField1.getName(), objectEntry1.getId()
+				).build()),
+			objectField1.getName(), objectEntry1.getId(), 2);
+
+		_defaultObjectEntryManager.expireObjectEntryByVersion(
+			_createDTOConverterContext(), objectDefinition2,
+			objectEntry2.getId(), 2);
+
+		ObjectDefinition objectDefinition3 =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				false, false, true,
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"a" + RandomTestUtil.randomString()
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectRelationship objectRelationship2 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				objectDefinition2, objectDefinition3,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField2 = objectFieldLocalService.getObjectField(
+			objectRelationship2.getObjectFieldId2());
+
+		ObjectEntry objectEntry3 = _updateObjectEntryVersion(
+			objectDefinition3,
+			_addObjectEntry(
+				objectDefinition3,
+				HashMapBuilder.<String, Object>put(
+					objectField2.getName(), objectEntry2.getId()
+				).build()),
+			objectField2.getName(), objectEntry2.getId(), 2);
+
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
+			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(), 0,
+			objectDefinition3.getClassName(), 0, 0, "Single Approver", 1);
+
+		objectEntry3 = _updateObjectEntryVersion(
+			objectDefinition3, objectEntry3, objectField2.getName(),
+			objectEntry2.getId(), 2);
+
+		NestedFieldsContext originalNestedFieldsContext =
+			NestedFieldsContextThreadLocal.getNestedFieldsContext();
+
+		try {
+			NestedFieldsContextThreadLocal.setNestedFieldsContext(
+				new NestedFieldsContext(
+					3, null,
+					Arrays.asList(
+						objectRelationship1.getName(),
+						objectRelationship2.getName()),
+					null, null, null));
+
+			Page<ObjectEntry> page =
+				_defaultObjectEntryManager.getApprovedObjectEntries(
+					companyId, _objectDefinition1, null, null,
+					dtoConverterContext, null, null, null, null);
+
+			List<ObjectEntry> approvedObjectEntries =
+				(List<ObjectEntry>)page.getItems();
+
+			Assert.assertEquals(
+				approvedObjectEntries.toString(), 1,
+				approvedObjectEntries.size());
+
+			ObjectEntry approvedObjectEntry = approvedObjectEntries.get(0);
+
+			ObjectEntry[] nestedApprovedObjectEntries =
+				(ObjectEntry[])approvedObjectEntry.getPropertyValue(
+					objectRelationship1.getName());
+
+			ObjectEntry nestedApprovedObjectEntry =
+				nestedApprovedObjectEntries[0];
+
+			assertEquals(
+				_getLatestApprovedObjectEntry(
+					objectEntry2.getId(), objectDefinition2),
+				nestedApprovedObjectEntry);
+
+			ObjectEntry[] nestedObjectEntries =
+				(ObjectEntry[])nestedApprovedObjectEntry.getPropertyValue(
+					objectRelationship2.getName());
+
+			assertEquals(
+				_getLatestApprovedObjectEntry(
+					objectEntry3.getId(), objectDefinition3),
+				nestedObjectEntries[0]);
+		}
+		finally {
+			NestedFieldsContextThreadLocal.setNestedFieldsContext(
+				originalNestedFieldsContext);
+		}
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetApprovedObjectEntry() throws Exception {
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1, Collections.emptyMap());
+
+		assertEquals(
+			objectEntry1,
+			_defaultObjectEntryManager.getApprovedObjectEntry(
+				companyId, dtoConverterContext,
+				objectEntry1.getExternalReferenceCode(), _objectDefinition1,
+				null));
+
+		_defaultObjectEntryManager.expireObjectEntry(
+			_createDTOConverterContext(), objectEntry1.getId());
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class, null,
+			() -> _defaultObjectEntryManager.getApprovedObjectEntry(
+				companyId, dtoConverterContext,
+				objectEntry1.getExternalReferenceCode(), _objectDefinition1,
+				null));
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry2 = _updateObjectEntryVersion(
+			_objectDefinition1,
+			_addObjectEntry(
+				_objectDefinition1,
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, 1),
+			2);
+
+		assertEquals(
+			objectEntry2,
+			_defaultObjectEntryManager.getApprovedObjectEntry(
+				companyId, dtoConverterContext,
+				objectEntry2.getExternalReferenceCode(), _objectDefinition1,
+				null));
+
+		_defaultObjectEntryManager.expireObjectEntryByVersion(
+			_createDTOConverterContext(), _objectDefinition1,
+			objectEntry2.getId(), 2);
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class, null,
+			() -> _defaultObjectEntryManager.getApprovedObjectEntry(
+				companyId, dtoConverterContext,
+				objectEntry2.getExternalReferenceCode(), _objectDefinition1,
+				null));
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {ActionKeys.VIEW}, _objectDefinition1, _user);
+
+		Assert.assertNotNull(
+			_getLatestApprovedObjectEntry(
+				objectEntry2.getId(), _objectDefinition1));
+
+		_resourcePermissionLocalService.removeResourcePermission(
+			companyId, _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ActionKeys.VIEW);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				_objectDefinition1.getClassName(), StringPool.SPACE,
+				objectEntry2.getId()),
+			() -> _getLatestApprovedObjectEntry(
+				objectEntry2.getId(), _objectDefinition1));
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			companyId, _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntry2.getId()), role.getRoleId(),
+			new String[] {ActionKeys.VIEW});
+
+		Assert.assertNotNull(
+			_getLatestApprovedObjectEntry(
+				objectEntry2.getId(), _objectDefinition1));
 	}
 
 	@Test
@@ -2117,6 +4899,11 @@ public class DefaultObjectEntryManagerImplTest
 							_objectRelationshipFieldName,
 							parentObjectEntry1.getId()
 						).put(
+							"attachmentObjectFieldName",
+							_getAttachmentObjectFieldValue()
+						).put(
+							"localizedDateObjectFieldName", "2024-01-01"
+						).put(
 							"longIntegerObjectFieldName", 21394167160L
 						).put(
 							"picklistObjectFieldName", picklistObjectFieldValue1
@@ -2134,10 +4921,34 @@ public class DefaultObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
+						_localizedMultiselectPicklistObjectFieldName,
+						Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+					).put(
 						_objectRelationshipFieldName, parentObjectEntry1.getId()
+					).put(
+						"attachmentObjectFieldName",
+						_getFileEntryId(childObjectEntry1)
+					).put(
+						"localizedBooleanObjectFieldName", true
+					).put(
+						"localizedDateObjectFieldName", "2024-01-01"
+					).put(
+						"localizedDateTimeObjectFieldName",
+						"2024-04-04T04:04:04.000"
+					).put(
+						"localizedDecimalObjectFieldName", 5.0
+					).put(
+						"localizedIntegerObjectFieldName", 50
+					).put(
+						"localizedLongIntegerObjectFieldName", 50L
 					).put(
 						"localizedLongTextObjectFieldName",
 						"en_US localizedLongTextObjectFieldValue"
+					).put(
+						"localizedPicklistObjectFieldName", _listTypeEntryKey1
+					).put(
+						"localizedPrecisionDecimalObjectFieldName",
+						new BigDecimal("0.18775433729")
 					).put(
 						"localizedRichTextObjectFieldName",
 						"en_US <i>localizedRichTextObjectFieldValue</i>"
@@ -2157,6 +4968,12 @@ public class DefaultObjectEntryManagerImplTest
 				}
 			});
 
+		// Sleep for 1 second to ensure that child object entry 1 and child
+		// object entry 2 are created 1 second apart to ensure that the
+		// tests with buildRangeExpression work
+
+		Thread.sleep(1000);
+
 		ObjectEntry parentObjectEntry2 =
 			_defaultObjectEntryManager.addObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition1,
@@ -2171,6 +4988,84 @@ public class DefaultObjectEntryManagerImplTest
 
 		String picklistObjectFieldValue2 = _addListTypeEntry();
 
+		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			_localizedMultiselectPicklistObjectFieldName + "_i18n",
+			HashMapBuilder.put(
+				"en_US", Arrays.asList(_listTypeEntryKey3)
+			).put(
+				"pt_BR", Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+			).build()
+		).put(
+			"localizedBooleanObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", false
+			).put(
+				"pt_BR", true
+			).build()
+		).put(
+			"localizedDateObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2022-01-01"
+			).put(
+				"pt_BR", "2023-01-01"
+			).build()
+		).put(
+			"localizedDateTimeObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2022-02-02T02:02:02.000"
+			).put(
+				"pt_BR", "2023-03-03T03:03:03.000"
+			).build()
+		).put(
+			"localizedDecimalObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 10.0
+			).put(
+				"pt_BR", 5.4
+			).build()
+		).put(
+			"localizedIntegerObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 100
+			).put(
+				"pt_BR", 54
+			).build()
+		).put(
+			"localizedLongIntegerObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", 100L
+			).put(
+				"pt_BR", 54L
+			).build()
+		).put(
+			"localizedPicklistObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US",
+				HashMapBuilder.put(
+					"key", _listTypeEntryKey2
+				).build()
+			).put(
+				"pt_BR",
+				HashMapBuilder.put(
+					"key", _listTypeEntryKey1
+				).build()
+			).build()
+		).put(
+			"localizedPrecisionDecimalObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", new BigDecimal("0.28775433729")
+			).put(
+				"pt_BR", new BigDecimal("0.33750624632")
+			).build()
+		).put(
+			"localizedTextObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "en_US localizedTextObjectFieldValue2"
+			).put(
+				"pt_BR", "pt_BR localizedTextObjectFieldValue2"
+			).build()
+		).build();
+
 		ObjectEntry childObjectEntry2 =
 			_defaultObjectEntryManager.addObjectEntry(
 				dtoConverterContext, _objectDefinition2,
@@ -2183,16 +5078,13 @@ public class DefaultObjectEntryManagerImplTest
 							"localizedLongTextObjectFieldName",
 							"en_US localizedLongTextObjectFieldValue"
 						).put(
-							"localizedTextObjectFieldName_i18n",
-							HashMapBuilder.put(
-								"en_US", "en_US localizedTextObjectFieldValue2"
-							).put(
-								"pt_BR", "pt_BR localizedTextObjectFieldValue2"
-							).build()
+							"longIntegerObjectFieldName", 200L
 						).put(
 							"picklistObjectFieldName", picklistObjectFieldValue2
 						).put(
 							"textObjectFieldName", "aab"
+						).putAll(
+							_localizedObjectFieldI18nValues
 						).build();
 					}
 				},
@@ -2208,24 +5100,14 @@ public class DefaultObjectEntryManagerImplTest
 						"localizedLongTextObjectFieldName",
 						"en_US localizedLongTextObjectFieldValue"
 					).put(
-						"localizedLongTextObjectFieldName_i18n",
-						HashMapBuilder.put(
-							"en_US", "en_US localizedLongTextObjectFieldValue"
-						).build()
-					).put(
 						"localizedTextObjectFieldName",
 						"en_US localizedTextObjectFieldValue2"
-					).put(
-						"localizedTextObjectFieldName_i18n",
-						HashMapBuilder.put(
-							"en_US", "en_US localizedTextObjectFieldValue2"
-						).put(
-							"pt_BR", "pt_BR localizedTextObjectFieldValue2"
-						).build()
 					).put(
 						"picklistObjectFieldName", picklistObjectFieldValue2
 					).put(
 						"textObjectFieldName", "aab"
+					).putAll(
+						_localizedObjectFieldI18nValues
 					).build();
 				}
 			});
@@ -2250,6 +5132,22 @@ public class DefaultObjectEntryManagerImplTest
 
 		// Contains expression
 
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					_objectRelationshipERCObjectFieldName,
+					parentObjectEntry1.getExternalReferenceCode())
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					_objectRelationshipERCObjectFieldName,
+					parentObjectEntry2.getExternalReferenceCode())
+			).build(),
+			childObjectEntry2);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
@@ -2297,6 +5195,13 @@ public class DefaultObjectEntryManagerImplTest
 				_buildContainsExpressionFilterString(
 					"textObjectFieldName", RandomTestUtil.randomString())
 			).build());
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildContainsExpressionFilterString(
+					"textObjectFieldName", "Aab")
+			).build(),
+			childObjectEntry2);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
@@ -2362,6 +5267,64 @@ public class DefaultObjectEntryManagerImplTest
 					parentObjectEntry2.getExternalReferenceCode())
 			).build(),
 			childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedBooleanObjectFieldName", true)
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedDateObjectFieldName", _getTimestamp("2024-01-01"))
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedDateTimeObjectFieldName",
+					_getLocalDateTime("2024-04-04T04:04:04.000"))
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedDecimalObjectFieldName", 5.0)
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedIntegerObjectFieldName", 50)
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedLongIntegerObjectFieldName", 50L)
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedPicklistObjectFieldName", _listTypeEntryKey1)
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString(
+					"localizedPrecisionDecimalObjectFieldName",
+					new BigDecimal("0.18775433729"))
+			).build(),
+			childObjectEntry1);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
@@ -2479,6 +5442,14 @@ public class DefaultObjectEntryManagerImplTest
 					"dateModified", pattern)
 			).build(),
 			childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildRangeExpression(
+					childObjectEntry2.getDateModified(), new Date(),
+					"dateModified", pattern)
+			).build(),
+			childObjectEntry2);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -2497,6 +5468,16 @@ public class DefaultObjectEntryManagerImplTest
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"search", String.valueOf(childObjectEntry2.getId())
+			).build(),
+			childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", _listTypeEntryKey1
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", _listTypeEntryKey2
 			).build(),
 			childObjectEntry2);
 		testGetObjectEntries(
@@ -2532,6 +5513,76 @@ public class DefaultObjectEntryManagerImplTest
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"sort", "id:desc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedBooleanObjectFieldName:asc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedBooleanObjectFieldName:desc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDateObjectFieldName:asc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDateObjectFieldName:desc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDateTimeObjectFieldName:asc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDateTimeObjectFieldName:desc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDecimalObjectFieldName:asc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedDecimalObjectFieldName:desc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedIntegerObjectFieldName:asc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedIntegerObjectFieldName:desc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedLongIntegerObjectFieldName:asc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedLongIntegerObjectFieldName:desc"
+			).build(),
+			childObjectEntry2, childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedPrecisionDecimalObjectFieldName:asc"
+			).build(),
+			childObjectEntry1, childObjectEntry2);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"sort", "localizedPrecisionDecimalObjectFieldName:desc"
 			).build(),
 			childObjectEntry2, childObjectEntry1);
 		testGetObjectEntries(
@@ -2613,8 +5664,47 @@ public class DefaultObjectEntryManagerImplTest
 			).build(),
 			childObjectEntry1);
 
+		objectField = objectFieldLocalService.fetchObjectField(
+			_objectDefinition2.getObjectDefinitionId(),
+			"attachmentObjectFieldName");
+
+		_objectDefinition2.setTitleObjectFieldId(
+			objectField.getObjectFieldId());
+
+		objectDefinitionLocalService.updateObjectDefinition(_objectDefinition2);
+
+		com.liferay.portal.kernel.repository.model.FileEntry fileEntry =
+			_dlAppLocalService.getFileEntry(_getFileEntryId(childObjectEntry1));
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", fileEntry.getTitle()
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", StringUtil.toLowerCase(fileEntry.getTitle())
+			).build(),
+			childObjectEntry1);
+
 		// "Starts with" expression
 
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					_objectRelationshipERCObjectFieldName,
+					parentObjectEntry1.getExternalReferenceCode())
+			).build(),
+			childObjectEntry1);
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				_buildStartsWithExpressionFilterString(
+					_objectRelationshipERCObjectFieldName,
+					parentObjectEntry2.getExternalReferenceCode())
+			).build(),
+			childObjectEntry2);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
@@ -2811,29 +5901,32 @@ public class DefaultObjectEntryManagerImplTest
 
 		AccountEntry accountEntry1 = _addAccountEntry();
 
-		_createObjectEntryTree(accountEntry1, "1");
+		Tree objectEntryTree1 = _createObjectEntryTree(accountEntry1, "1");
 
 		AccountEntry accountEntry2 = _addAccountEntry();
 
-		_createObjectEntryTree(accountEntry2, "2");
+		Tree objectEntryTree2 = _createObjectEntryTree(accountEntry2, "2");
 
 		_user = _addUser();
 
-		TreeTestUtil.forEachNodeObjectDefinition(
-			_tree.iterator(), objectDefinitionLocalService,
-			objectDefinition -> _assertObjectEntriesSize1(objectDefinition, 0));
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree1, 0, 0);
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree2, 0, 0);
 
 		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
 
-		TreeTestUtil.forEachNodeObjectDefinition(
-			_tree.iterator(), objectDefinitionLocalService,
-			objectDefinition -> _assertObjectEntriesSize1(objectDefinition, 1));
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree1, 1, 1);
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree2, 1, 0);
 
 		_assignAccountEntryRole(accountEntry2, _buyerRole, _user);
 
-		TreeTestUtil.forEachNodeObjectDefinition(
-			_tree.iterator(), objectDefinitionLocalService,
-			objectDefinition -> _assertObjectEntriesSize1(objectDefinition, 2));
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree1, 2, 1);
+		_testGetObjectEntriesWithAccountEntryRestricted2(
+			objectEntryTree2, 2, 1);
 	}
 
 	@Test
@@ -2902,13 +5995,13 @@ public class DefaultObjectEntryManagerImplTest
 
 		Organization organization1 = OrganizationTestUtil.addOrganization();
 
-		_addAccountEntryOrganizationRel(accountEntry1, organization1);
-		_addAccountEntryOrganizationRel(accountEntry2, organization1);
-
 		_user = _addUser();
 
 		_organizationLocalService.addUserOrganization(
 			_user.getUserId(), organization1.getOrganizationId());
+
+		_addAccountEntryOrganizationRel(accountEntry1, organization1);
+		_addAccountEntryOrganizationRel(accountEntry2, organization1);
 
 		_assertObjectEntriesSize2(2);
 
@@ -2985,7 +6078,12 @@ public class DefaultObjectEntryManagerImplTest
 			Collections.singletonMap("textObjectFieldName", StringPool.BLANK),
 			_objectDefinition1);
 
-		_assertAggregationFacetValue(2, textObjectFieldValue, page);
+		assertFacets(
+			List.of(
+				new Facet(
+					"textObjectFieldName",
+					List.of(new Facet.FacetValue(2, textObjectFieldValue)))),
+			page.getFacets());
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(adminUser));
@@ -3016,10 +6114,16 @@ public class DefaultObjectEntryManagerImplTest
 				_objectRelationshipFieldName, StringPool.BLANK),
 			_objectDefinition2);
 
-		_assertAggregationFacetValue(
-			1, String.valueOf(parentObjectEntry1.getId()), page);
-		_assertAggregationFacetValue(
-			2, String.valueOf(parentObjectEntry2.getId()), page);
+		assertFacets(
+			List.of(
+				new Facet(
+					_objectRelationshipFieldName,
+					List.of(
+						new Facet.FacetValue(
+							1, String.valueOf(parentObjectEntry1.getId())),
+						new Facet.FacetValue(
+							2, String.valueOf(parentObjectEntry2.getId()))))),
+			page.getFacets());
 
 		_defaultObjectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition2,
@@ -3037,10 +6141,16 @@ public class DefaultObjectEntryManagerImplTest
 				_objectRelationshipFieldName, StringPool.BLANK),
 			_objectDefinition2);
 
-		_assertAggregationFacetValue(
-			2, String.valueOf(parentObjectEntry1.getId()), page);
-		_assertAggregationFacetValue(
-			1, String.valueOf(parentObjectEntry2.getId()), page);
+		assertFacets(
+			List.of(
+				new Facet(
+					_objectRelationshipFieldName,
+					List.of(
+						new Facet.FacetValue(
+							2, String.valueOf(parentObjectEntry1.getId())),
+						new Facet.FacetValue(
+							1, String.valueOf(parentObjectEntry2.getId()))))),
+			page.getFacets());
 
 		_defaultObjectEntryManager.deleteObjectEntry(
 			_objectDefinition2, childObjectEntry.getId());
@@ -3050,17 +6160,339 @@ public class DefaultObjectEntryManagerImplTest
 				_objectRelationshipFieldName, StringPool.BLANK),
 			_objectDefinition2);
 
-		_assertAggregationFacetValue(
-			1, String.valueOf(parentObjectEntry1.getId()), page);
-		_assertAggregationFacetValue(
-			1, String.valueOf(parentObjectEntry2.getId()), page);
+		assertFacets(
+			List.of(
+				new Facet(
+					_objectRelationshipFieldName,
+					List.of(
+						new Facet.FacetValue(
+							1, String.valueOf(parentObjectEntry1.getId())),
+						new Facet.FacetValue(
+							1, String.valueOf(parentObjectEntry2.getId()))))),
+			page.getFacets());
+	}
+
+	@Test
+	public void testGetObjectEntriesWithRelatedObjectEntries()
+		throws Exception {
+
+		Group group1 = GroupTestUtil.addGroup();
+
+		ObjectDefinition objectDefinition1 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			objectDefinition1,
+			HashMapBuilder.<String, Object>put(
+				"textObjectFieldName", RandomTestUtil.randomString()
+			).build());
+
+		ObjectDefinition objectDefinition2 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = Collections.emptyMap();
+					scopeId = group1.getGroupId();
+				}
+			},
+			group1.getGroupKey());
+
+		ObjectDefinition objectDefinition3 = _addObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		ObjectRelationship objectRelationship1 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				objectDefinition1, objectDefinition3,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField1 = objectFieldLocalService.getObjectField(
+			objectRelationship1.getObjectFieldId2());
+
+		ObjectRelationship objectRelationship2 =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				objectDefinition2, objectDefinition3,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField objectField2 = objectFieldLocalService.getObjectField(
+			objectRelationship2.getObjectFieldId2());
+
+		ObjectEntry objectEntry3 = _addObjectEntry(
+			objectDefinition3,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectField1.getName(), objectEntry1.getId()
+					).put(
+						objectField2.getName(), objectEntry2.getId()
+					).put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+					scopeId = group1.getGroupId();
+				}
+			},
+			group1.getGroupKey());
+
+		Group group2 = GroupTestUtil.addGroup();
+
+		ObjectEntry objectEntry4 = _addObjectEntry(
+			objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = Collections.emptyMap();
+					scopeId = group2.getGroupId();
+				}
+			},
+			group2.getGroupKey());
+
+		ObjectEntry objectEntry5 = _addObjectEntry(
+			objectDefinition3,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectField1.getName(), objectEntry1.getId()
+					).put(
+						objectField2.getName(), objectEntry4.getId()
+					).put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+					scopeId = group2.getGroupId();
+				}
+			},
+			group2.getGroupKey());
+
+		Page<ObjectEntry> page = _objectEntryManager.getObjectEntries(
+			TestPropsValues.getCompanyId(), objectDefinition3,
+			group1.getGroupKey(), null, _createDTOConverterContext(),
+			(String)null, null, null, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			List.of(
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							_getObjectRelationshipERCObjectFieldName(
+								objectField1),
+							objectEntry1.getExternalReferenceCode()
+						).put(
+							_getObjectRelationshipERCObjectFieldName(
+								objectField2),
+							objectEntry2.getExternalReferenceCode()
+						).putAll(
+							objectEntry3.getProperties()
+						).build();
+					}
+				}));
+
+		page = _objectEntryManager.getObjectEntries(
+			TestPropsValues.getCompanyId(), objectDefinition3,
+			group2.getGroupKey(), null, _createDTOConverterContext(),
+			(String)null, null, null, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			List.of(
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							_getObjectRelationshipERCObjectFieldName(
+								objectField1),
+							objectEntry1.getExternalReferenceCode()
+						).put(
+							_getObjectRelationshipERCObjectFieldName(
+								objectField2),
+							objectEntry4.getExternalReferenceCode()
+						).putAll(
+							objectEntry5.getProperties()
+						).build();
+					}
+				}));
+	}
+
+	@Test
+	public void testGetObjectEntriesWithScopeDepot() throws Exception {
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		DepotEntry depotEntry1 = _addDepotEntry();
+		DepotEntry depotEntry2 = _addDepotEntry();
+
+		_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+			StringUtil.merge(
+				Arrays.asList(
+					depotEntry1.getGroupId(), depotEntry2.getGroupId())));
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			String.valueOf(depotEntry1.getGroupId()));
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			String.valueOf(depotEntry2.getGroupId()));
+
+		assertEquals(
+			_getObjectEntries(
+				objectDefinition, String.valueOf(depotEntry1.getGroupId())),
+			Collections.singletonList(objectEntry1));
+		assertEquals(
+			_getObjectEntries(
+				objectDefinition, String.valueOf(depotEntry2.getGroupId())),
+			Collections.singletonList(objectEntry2));
+
+		Group group = GroupTestUtil.addGroup();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry1.getDepotEntryId(), group.getGroupId());
+
+		assertEquals(
+			_getObjectEntries(objectDefinition, group.getGroupKey()),
+			Collections.singletonList(objectEntry1));
+
+		AssertUtils.assertFailure(
+			NoSuchGroupException.class, null,
+			() -> {
+				Group invalidGroup = GroupTestUtil.addGroup();
+
+				_getObjectEntries(objectDefinition, invalidGroup.getGroupKey());
+			});
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetObjectEntryByVersion() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			_objectDefinition1,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, 1);
+
+		_assertObjectEntry(
+			objectEntry,
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getId(), 1));
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition1, objectEntry, 2);
+
+		_assertObjectEntry(
+			objectEntry,
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getId(), 2));
+
+		// Site scope
+
+		objectEntry = _addObjectEntry(
+			_objectDefinition4,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			_group.getGroupKey(), 1);
+
+		_assertObjectEntry(
+			objectEntry,
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), 1));
+
+		objectEntry = _updateObjectEntryVersion(
+			_objectDefinition4, objectEntry, 2);
+
+		_assertObjectEntry(
+			objectEntry,
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), 2));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetObjectEntryByVersionWithAssigneeObjectField()
+		throws Exception {
+
+		_enableObjectEntryVersioning();
+
+		ObjectFieldUtil.addCustomObjectField(
+			new AssigneeObjectFieldBuilder(
+			).labelMap(
+				RandomTestUtil.randomLocaleStringMap()
+			).name(
+				"assignee"
+			).objectDefinitionId(
+				_objectDefinition1.getObjectDefinitionId()
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
+
+		User user = UserTestUtil.addUser();
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition1,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"assignee",
+						HashMapBuilder.put(
+							"externalReferenceCode",
+							user.getExternalReferenceCode()
+						).put(
+							"type", "User"
+						).build()
+					).build();
+				}
+			},
+			null);
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntryByVersion(
+			dtoConverterContext, objectEntry.getId(), 1);
+
+		Map<String, Object> properties = objectEntry.getProperties();
+
+		Assignee assignee = (Assignee)properties.get("assignee");
+
+		Assert.assertEquals(
+			user.getExternalReferenceCode(),
+			assignee.getExternalReferenceCode());
+		Assert.assertEquals(user.getFullName(), assignee.getName());
+		Assert.assertEquals("User", assignee.getTypeAsString());
 	}
 
 	@Test
 	public void testGetObjectEntryDocument() throws Exception {
 		_objectEntryLocalService.addObjectEntry(
-			adminUser.getUserId(), 0,
+			0, adminUser.getUserId(),
 			_objectDefinition1.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"textObjectFieldName", StringUtil.randomId()
 			).put(
@@ -3110,12 +6542,32 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
-	public void testGetObjectEntryRelatedObjectEntriesWithAccountEntryRestricted()
+	public void testGetRelatedObjectEntries() throws Exception {
+		_testGetRelatedObjectEntries(
+			_companyObjectEntryA, _companyObjectRelationshipA_AA, null,
+			(filter, search, sorts) ->
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					null, _createDTOConverterContext(),
+					_companyObjectEntryA.getExternalReferenceCode(), filter,
+					_companyObjectRelationshipA_AA, null, null, search, sorts));
+		_testGetRelatedObjectEntries(
+			_siteObjectEntryA, _siteObjectRelationshipA_AA,
+			_group.getGroupKey(),
+			(filter, search, sorts) ->
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					null, _createDTOConverterContext(),
+					_siteObjectEntryA.getExternalReferenceCode(), filter,
+					_siteObjectRelationshipA_AA, null, _group.getGroupKey(),
+					search, sorts));
+	}
+
+	@Test
+	public void testGetRelatedObjectEntriesWithAccountEntryRestricted()
 		throws Exception {
 
 		// Account entry restricted scope
 
-		ObjectDefinition childObjectDefinition = _createObjectDefinition(
+		ObjectDefinition childObjectDefinition = _addObjectDefinition(
 			Arrays.asList(
 				new TextObjectFieldBuilder(
 				).labelMap(
@@ -3130,7 +6582,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				_objectDefinition3.getObjectDefinitionId(),
 				childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -3144,7 +6596,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				accountEntryObjectDefinition.getObjectDefinitionId(),
 				childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -3210,9 +6662,9 @@ public class DefaultObjectEntryManagerImplTest
 			accountEntry.getAccountEntryId(), _user.getUserId());
 
 		Page<ObjectEntry> page =
-			_defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-				_simpleDTOConverterContext, _objectDefinition3,
-				objectEntry1.getId(), objectRelationship1.getName(), null);
+			_defaultObjectEntryManager.getRelatedObjectEntries(
+				_simpleDTOConverterContext, objectEntry1.getId(),
+				objectRelationship1, null);
 
 		Collection<ObjectEntry> objectEntries = page.getItems();
 
@@ -3276,9 +6728,9 @@ public class DefaultObjectEntryManagerImplTest
 		_organizationLocalService.addUserOrganization(
 			user.getUserId(), organization.getOrganizationId());
 
-		page = _defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-			_simpleDTOConverterContext, _objectDefinition3,
-			objectEntry2.getId(), objectRelationship1.getName(), null);
+		page = _defaultObjectEntryManager.getRelatedObjectEntries(
+			_simpleDTOConverterContext, objectEntry2.getId(),
+			objectRelationship1, null);
 
 		objectEntries = page.getItems();
 
@@ -3296,7 +6748,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				_objectDefinition3.getObjectDefinitionId(),
 				childObjectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
@@ -3349,9 +6801,9 @@ public class DefaultObjectEntryManagerImplTest
 
 		PrincipalThreadLocal.setName(user.getUserId());
 
-		page = _defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-			_simpleDTOConverterContext, _objectDefinition3,
-			objectEntry3.getId(), objectRelationship3.getName(), null);
+		page = _defaultObjectEntryManager.getRelatedObjectEntries(
+			_simpleDTOConverterContext, objectEntry3.getId(),
+			objectRelationship3, null);
 
 		objectEntries = page.getItems();
 
@@ -3359,10 +6811,303 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
+	public void testGetRelatedObjectEntriesWithAggregationFacets()
+		throws Exception {
+
+		String textObjectFieldValue = RandomTestUtil.randomString();
+
+		ObjectEntry objectEntryAA1 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", textObjectFieldValue
+						).build();
+					}
+				},
+				_companyObjectEntryA.getId(), _companyObjectRelationshipA_AA);
+		ObjectEntry objectEntryAA2 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", textObjectFieldValue
+						).build();
+					}
+				},
+				_companyObjectEntryA.getId(), _companyObjectRelationshipA_AA);
+
+		Page<ObjectEntry> page =
+			_defaultObjectEntryManager.getRelatedObjectEntries(
+				new Aggregation() {
+					{
+						setAggregationTerms(
+							Collections.singletonMap(
+								"textObjectFieldName", StringPool.BLANK));
+					}
+				},
+				_createDTOConverterContext(),
+				_companyObjectEntryA.getExternalReferenceCode(), null,
+				_companyObjectRelationshipA_AA, null, null, null, null);
+
+		assertFacets(
+			page.getFacets(),
+			List.of(
+				new Facet(
+					"textObjectFieldName",
+					List.of(new Facet.FacetValue(2, textObjectFieldValue)))));
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA1.getId());
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA2.getId());
+	}
+
+	@Test
+	public void testGetRelatedObjectEntriesWithRootObjectEntryId()
+		throws Exception {
+
+		_testGetRelatedObjectEntriesWithRootObjectEntryId(
+			_companyObjectDefinitionA, _companyObjectDefinitionAA,
+			_companyObjectDefinitionB, _companyObjectEntryA,
+			_companyObjectEntryB, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipB_AA,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, objectRelationship) ->
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					null, _createDTOConverterContext(),
+					objectEntry.getExternalReferenceCode(), null,
+					objectRelationship, null, null, null, null));
+		_testGetRelatedObjectEntriesWithRootObjectEntryId(
+			_companyObjectDefinitionA, _companyObjectDefinitionAA,
+			_companyObjectDefinitionB, _companyObjectEntryA,
+			_companyObjectEntryB, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipB_AA,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, objectRelationship) ->
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					_createDTOConverterContext(), objectEntry.getId(),
+					objectRelationship, null));
+		_testGetRelatedObjectEntriesWithRootObjectEntryId(
+			_siteObjectDefinitionA, _siteObjectDefinitionAA,
+			_siteObjectDefinitionB, _siteObjectEntryA, _siteObjectEntryB,
+			_siteObjectRelationshipA_AA, _siteObjectRelationshipB_AA,
+			_group.getGroupKey(),
+			(objectEntry, objectRelationship) ->
+				_defaultObjectEntryManager.getRelatedObjectEntries(
+					null, _createDTOConverterContext(),
+					objectEntry.getExternalReferenceCode(), null,
+					objectRelationship, null, _group.getGroupKey(), null,
+					null));
+	}
+
+	@Test
+	public void testGetRelatedObjectEntry() throws Exception {
+		_testGetRelatedObjectEntry(
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.getRelatedObjectEntry(
+					_simpleDTOConverterContext, objectEntry2.getId(),
+					objectRelationship, objectEntry1.getId()));
+		_testGetRelatedObjectEntry(
+			(objectEntry1, objectEntry2, objectRelationship) ->
+				_defaultObjectEntryManager.getRelatedObjectEntry(
+					_simpleDTOConverterContext,
+					objectEntry2.getExternalReferenceCode(), objectRelationship,
+					objectEntry1.getExternalReferenceCode(), null));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testGetVersionedObjectEntries() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, 1);
+
+		Page<ObjectEntry> page =
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, _objectDefinition1, objectEntry1.getId(),
+				null, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1)));
+
+		ObjectEntry objectEntry2 = _updateObjectEntryVersion(
+			_objectDefinition1, objectEntry1, 2);
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, _objectDefinition1, objectEntry2.getId(), null,
+			null);
+
+		objectEntry1 = _defaultObjectEntryManager.getObjectEntryByVersion(
+			dtoConverterContext, objectEntry1.getId(), 1);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1),
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry2.getId(), 2)));
+
+		Sort[] sorts = {new Sort("version", Sort.INT_TYPE, true)};
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, _objectDefinition1, objectEntry2.getId(), null,
+			sorts);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry2.getId(), 2),
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1)));
+
+		// Site scope
+
+		objectEntry1 = _addObjectEntry(
+			_objectDefinition4,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			_group.getGroupKey(), 1);
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, objectEntry1.getExternalReferenceCode(),
+			_objectDefinition4, _group.getGroupKey(), null, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1)));
+
+		objectEntry2 = _updateObjectEntryVersion(
+			_objectDefinition4, objectEntry1, 2);
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+			_objectDefinition4, _group.getGroupKey(), null, null);
+
+		objectEntry1 = _defaultObjectEntryManager.getObjectEntryByVersion(
+			dtoConverterContext, objectEntry1.getId(), 1);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1),
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry2.getId(), 2)));
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+			_objectDefinition4, _group.getGroupKey(), null, sorts);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry2.getId(), 2),
+				_defaultObjectEntryManager.getObjectEntryByVersion(
+					dtoConverterContext, objectEntry1.getId(), 1)));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testMoveObjectEntry() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry();
+
+		ObjectDefinitionSetting objectDefinitionSetting =
+			_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
+				TestPropsValues.getUserId(),
+				_objectDefinition7.getObjectDefinitionId(),
+				ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+				String.valueOf(depotEntry.getGroupId()));
+
+		ObjectEntryFolder objectEntryFolder1 =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, null, RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		ObjectEntryFolder objectEntryFolder2 =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				objectEntryFolder1.getObjectEntryFolderId(), null, null,
+				RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		_testMoveObjectEntry(
+			depotEntry.getGroupId(), objectEntryFolder1, objectEntryFolder2);
+		_testMoveObjectEntryDuplicateName(
+			depotEntry.getGroupId(), objectEntryFolder2, objectEntryFolder1);
+		_testMoveObjectEntryReplace(
+			depotEntry.getGroupId(), objectEntryFolder1, objectEntryFolder2);
+
+		_testMoveObjectEntryGroup(
+			depotEntry.getGroupId(), objectDefinitionSetting);
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testMoveObjectEntryToTrash() throws Exception {
+		ObjectEntry objectEntry = _addObjectEntry(
+			_objectDefinition6,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			String.valueOf(_depotEntry.getGroupId()), 1);
+
+		_updateObjectEntryVersion(_objectDefinition6, objectEntry, 2);
+
+		_assertObjectEntryVersions(
+			2, WorkflowConstants.STATUS_APPROVED, objectEntry);
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			_objectDefinition6, objectEntry.getId());
+
+		objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			dtoConverterContext, _objectDefinition6, objectEntry.getId());
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_IN_TRASH, objectEntry);
+
+		Assert.assertNotNull(objectEntry.getRemovedBy());
+		Assert.assertNotNull(objectEntry.getRemovedDate());
+
+		_assertObjectEntryVersions(
+			2, WorkflowConstants.STATUS_IN_TRASH, objectEntry);
+
+		_assertObjectEntriesSize3(
+			_objectDefinition6, String.valueOf(_depotEntry.getGroupId()), 0);
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			_objectDefinition6, objectEntry.getId());
+
+		Long objectEntryId = objectEntry.getId();
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			"No ObjectEntry exists with the primary key " + objectEntryId,
+			() -> _defaultObjectEntryManager.getObjectEntry(
+				dtoConverterContext, _objectDefinition6, objectEntryId));
+	}
+
+	@Test
 	public void testPartialUpdateObjectEntry() throws Exception {
 		LocalDateTime nowLocalDateTime = LocalDateTime.now();
 
-		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+		ObjectEntry objectEntry1 = _defaultObjectEntryManager.addObjectEntry(
 			dtoConverterContext, _objectDefinition2,
 			new ObjectEntry() {
 				{
@@ -3421,7 +7166,8 @@ public class DefaultObjectEntryManagerImplTest
 							listTypeDefinition.getListTypeDefinitionId(),
 							RandomTestUtil.randomString(),
 							Collections.singletonMap(
-								LocaleUtil.US, RandomTestUtil.randomString()));
+								LocaleUtil.US, RandomTestUtil.randomString()),
+							listTypeDefinition.isSystem());
 
 					return Collections.singletonList(
 						new ListEntry() {
@@ -3446,7 +7192,7 @@ public class DefaultObjectEntryManagerImplTest
 		assertEquals(
 			_defaultObjectEntryManager.partialUpdateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition2,
-				objectEntry.getId(),
+				objectEntry1.getId(),
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>putAll(
@@ -3481,12 +7227,15 @@ public class DefaultObjectEntryManagerImplTest
 		assertEquals(
 			_defaultObjectEntryManager.partialUpdateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition2,
-				objectEntry.getId(),
+				objectEntry1.getId(),
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
 							_objectRelationshipERCObjectFieldName,
 							parentObjectEntry2.getExternalReferenceCode()
+						).put(
+							_objectRelationshipFieldName,
+							parentObjectEntry2.getId()
 						).put(
 							"dateObjectFieldName", () -> null
 						).put(
@@ -3510,10 +7259,11 @@ public class DefaultObjectEntryManagerImplTest
 					).build();
 				}
 			});
+
 		assertEquals(
 			_defaultObjectEntryManager.partialUpdateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition2,
-				objectEntry.getId(),
+				objectEntry1.getId(),
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
@@ -3521,7 +7271,7 @@ public class DefaultObjectEntryManagerImplTest
 							parentObjectEntry1.getExternalReferenceCode()
 						).put(
 							_objectRelationshipFieldName,
-							parentObjectEntry2.getId()
+							parentObjectEntry1.getId()
 						).build();
 					}
 				}),
@@ -3540,7 +7290,7 @@ public class DefaultObjectEntryManagerImplTest
 		assertEquals(
 			_defaultObjectEntryManager.partialUpdateObjectEntry(
 				_simpleDTOConverterContext, _objectDefinition2,
-				objectEntry.getId(),
+				objectEntry1.getId(),
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
@@ -3548,7 +7298,7 @@ public class DefaultObjectEntryManagerImplTest
 							parentObjectEntry2.getExternalReferenceCode()
 						).put(
 							_objectRelationshipFieldName,
-							RandomTestUtil.randomLong()
+							parentObjectEntry2.getId()
 						).build();
 					}
 				}),
@@ -3565,41 +7315,53 @@ public class DefaultObjectEntryManagerImplTest
 				}
 			});
 
-		String newExternalReferenceCode = RandomTestUtil.randomString();
+		ObjectEntryFolder objectEntryFolder =
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(_group.getGroupId());
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			_objectDefinition4, objectEntryFolder.getObjectEntryFolderId(),
+			_group.getGroupKey(), 1);
+
+		String textObjectFieldValue = RandomTestUtil.randomString();
 
 		assertEquals(
 			_defaultObjectEntryManager.partialUpdateObjectEntry(
-				_simpleDTOConverterContext, _objectDefinition2,
-				objectEntry.getId(),
+				_simpleDTOConverterContext, _objectDefinition4,
+				objectEntry2.getId(),
 				new ObjectEntry() {
 					{
 						properties = HashMapBuilder.<String, Object>put(
-							_objectRelationshipERCObjectFieldName,
-							newExternalReferenceCode
-						).put(
-							_objectRelationshipFieldName,
-							parentObjectEntry1.getId()
+							"textObjectFieldName", textObjectFieldValue
 						).build();
 					}
 				}),
 			new ObjectEntry() {
 				{
-					properties = HashMapBuilder.<String, Object>putAll(
-						objectEntryProperties
-					).put(
-						_objectRelationshipERCObjectFieldName,
-						newExternalReferenceCode
-					).put(
-						_objectRelationshipFieldName,
-						() -> {
-							ObjectEntry objectEntry =
-								_defaultObjectEntryManager.getObjectEntry(
-									companyId, dtoConverterContext,
-									newExternalReferenceCode,
-									_objectDefinition1, null);
-
-							return objectEntry.getId();
-						}
+					objectEntryFolderId =
+						objectEntryFolder.getObjectEntryFolderId();
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", textObjectFieldValue
+					).build();
+				}
+			});
+		assertEquals(
+			_defaultObjectEntryManager.partialUpdateObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition4,
+				objectEntry2.getId(),
+				new ObjectEntry() {
+					{
+						objectEntryFolderId =
+							ObjectEntryFolderConstants.
+								PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT;
+					}
+				}),
+			new ObjectEntry() {
+				{
+					objectEntryFolderId =
+						ObjectEntryFolderConstants.
+							PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT;
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", textObjectFieldValue
 					).build();
 				}
 			});
@@ -3609,7 +7371,7 @@ public class DefaultObjectEntryManagerImplTest
 	public void testPartialUpdateObjectEntryWithAttachmentObjectField()
 		throws Exception {
 
-		ObjectDefinition objectDefinition = _createObjectDefinition(
+		ObjectDefinition objectDefinition = _addObjectDefinition(
 			Collections.singletonList(
 				new AttachmentObjectFieldBuilder(
 				).labelMap(
@@ -3667,14 +7429,329 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	@Test
+	public void testPartialUpdateObjectEntryWithLocalizedAttachmentObjectField()
+		throws Exception {
+
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new AttachmentObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap("localizedAttachment")
+				).localized(
+					true
+				).name(
+					"localizedAttachment"
+				).objectFieldSettings(
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.
+								NAME_ACCEPTED_FILE_EXTENSIONS
+						).value(
+							"txt"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_FILE_SOURCE
+						).value(
+							ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+						).value(
+							"100"
+						).build())
+				).build()));
+
+		long tempFileEntryId1 = _addTempFileEntry(
+			objectDefinition.getPortletId(), StringUtil.randomString());
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedAttachment_i18n",
+						HashMapBuilder.put(
+							"en_US", tempFileEntryId1
+						).put(
+							"pt_BR", tempFileEntryId1
+						).build()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		AssertUtils.assertFailure(
+			NoSuchFileEntryException.class,
+			StringBundler.concat(
+				"No FileEntry exists with the key {fileEntryId=",
+				tempFileEntryId1, "}"),
+			() -> _dlAppLocalService.getFileEntry(tempFileEntryId1));
+
+		FileEntry fileEntry1 = (FileEntry)_getLocalizedPropertyValue(
+			"en_US", objectEntry, "localizedAttachment");
+
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry1.getId()));
+
+		long tempFileEntryId2 = _addTempFileEntry(
+			objectDefinition.getPortletId(), StringUtil.randomString());
+
+		objectEntry = _defaultObjectEntryManager.partialUpdateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedAttachment_i18n",
+						HashMapBuilder.put(
+							"en_US", fileEntry1.getId()
+						).put(
+							"pt_BR", tempFileEntryId2
+						).build()
+					).build();
+				}
+			});
+
+		AssertUtils.assertFailure(
+			NoSuchFileEntryException.class,
+			StringBundler.concat(
+				"No FileEntry exists with the key {fileEntryId=",
+				tempFileEntryId2, "}"),
+			() -> _dlAppLocalService.getFileEntry(tempFileEntryId2));
+
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry1.getId()));
+
+		FileEntry fileEntry2 = (FileEntry)_getLocalizedPropertyValue(
+			"pt_BR", objectEntry, "localizedAttachment");
+
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry2.getId()));
+
+		objectEntry = _defaultObjectEntryManager.partialUpdateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					properties = Collections.emptyMap();
+				}
+			});
+
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry1.getId()));
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry2.getId()));
+
+		objectEntry = _defaultObjectEntryManager.partialUpdateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"localizedAttachment_i18n",
+						HashMapBuilder.put(
+							"en_US", 0L
+						).put(
+							"pt_BR", fileEntry2.getId()
+						).build()
+					).build();
+				}
+			});
+
+		AssertUtils.assertFailure(
+			NoSuchFileEntryException.class,
+			StringBundler.concat(
+				"No FileEntry exists with the key {fileEntryId=",
+				fileEntry1.getId(), "}"),
+			() -> _dlAppLocalService.getFileEntry(fileEntry1.getId()));
+		Assert.assertNotNull(
+			_dlAppLocalService.getFileEntry(fileEntry2.getId()));
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			objectDefinition, objectEntry.getId());
+
+		AssertUtils.assertFailure(
+			NoSuchFileEntryException.class,
+			StringBundler.concat(
+				"No FileEntry exists with the key {fileEntryId=",
+				fileEntry2.getId(), "}"),
+			() -> _dlAppLocalService.getFileEntry(fileEntry2.getId()));
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+	}
+
+	@Test
+	public void testPartialUpdateObjectEntryWithReadOnlyFields()
+		throws Exception {
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			dtoConverterContext, _objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"attachmentObjectFieldName",
+						_getAttachmentObjectFieldValue()
+					).put(
+						"picklistObjectFieldName", _addListTypeEntry()
+					).put(
+						"textObjectFieldName", "Foo"
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Object value1 = objectEntry.getPropertyValue(
+			"attachmentObjectFieldName");
+		Object value2 = objectEntry.getPropertyValue("picklistObjectFieldName");
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			TestPropsValues.getCompanyId(), dtoConverterContext,
+			objectEntry.getExternalReferenceCode(), _objectDefinition2,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.put(
+						"attachmentObjectFieldName", value1
+					).put(
+						"picklistObjectFieldName", value2
+					).put(
+						"textObjectFieldName", "Edited"
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Assert.assertEquals(
+			"Edited", objectEntry.getPropertyValue("textObjectFieldName"));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testRestoreObjectEntryByVersion() throws Exception {
+
+		// Company scope
+
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition1,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, 1);
+
+		_updateObjectEntryVersion(_objectDefinition1, objectEntry1, 2);
+
+		assertEquals(
+			_defaultObjectEntryManager.restoreObjectEntryByVersion(
+				dtoConverterContext, _objectDefinition1, objectEntry1.getId(),
+				1),
+			new ObjectEntry() {
+				{
+					setExternalReferenceCode(
+						objectEntry1::getExternalReferenceCode);
+					setKeywords(objectEntry1::getKeywords);
+					setProperties(objectEntry1::getProperties);
+					setSystemProperties(
+						() -> new SystemProperties() {
+							{
+								setVersion(
+									() -> new Version() {
+										{
+											number = 3;
+										}
+									});
+							}
+						});
+				}
+			});
+
+		// Site scope
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			_objectDefinition4,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			_group.getGroupKey(), 1);
+
+		_updateObjectEntryVersion(_objectDefinition4, objectEntry2, 2);
+
+		assertEquals(
+			_defaultObjectEntryManager.restoreObjectEntryByVersion(
+				dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+				_objectDefinition4, _group.getGroupKey(), 1),
+			new ObjectEntry() {
+				{
+					setExternalReferenceCode(
+						objectEntry2::getExternalReferenceCode);
+					setKeywords(objectEntry2::getKeywords);
+					setProperties(objectEntry2::getProperties);
+					setScopeKey(objectEntry2::getScopeKey);
+					setSystemProperties(
+						() -> new SystemProperties() {
+							{
+								setVersion(
+									() -> new Version() {
+										{
+											number = 3;
+										}
+									});
+							}
+						});
+				}
+			});
+
+		// Status in trash
+
+		_assertFailureWithStatusInTrash(
+			objectEntryId ->
+				_defaultObjectEntryManager.restoreObjectEntryByVersion(
+					dtoConverterContext, _objectDefinition4, objectEntryId, 1));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testRestoreObjectEntryFromTrash() throws Exception {
+		_enableObjectEntryVersioning();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			_objectDefinition6,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			String.valueOf(_depotEntry.getGroupId()), 1);
+
+		_updateObjectEntryVersion(_objectDefinition6, objectEntry, 2);
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			_objectDefinition6, objectEntry.getId());
+
+		_assertActions(
+			ListUtil.fromArray("delete", "restore"), null, _objectDefinition6,
+			objectEntry.getId());
+
+		objectEntry = _defaultObjectEntryManager.restoreObjectEntry(
+			dtoConverterContext, objectEntry.getExternalReferenceCode(),
+			_objectDefinition6, String.valueOf(_depotEntry.getGroupId()));
+
+		_assertActions(
+			ListUtil.fromArray("delete"), ListUtil.fromArray("restore"),
+			_objectDefinition6, objectEntry.getId());
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED, objectEntry);
+		_assertObjectEntryVersions(
+			2, WorkflowConstants.STATUS_APPROVED, objectEntry);
+
+		_assertObjectEntriesSize3(
+			_objectDefinition6, String.valueOf(_depotEntry.getGroupId()), 1);
+	}
+
+	@Test
 	public void testSearchObjectEntriesWithAccountEntryRestricted()
 		throws Exception {
 
 		AccountEntry accountEntry1 = _addAccountEntry();
 
 		_objectEntryLocalService.addObjectEntry(
-			adminUser.getUserId(), 0,
+			0, adminUser.getUserId(),
 			_objectDefinition3.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName1_accountEntryId",
 				accountEntry1.getAccountEntryId()
@@ -3688,8 +7765,10 @@ public class DefaultObjectEntryManagerImplTest
 		AccountEntry accountEntry2 = _addAccountEntry();
 
 		_objectEntryLocalService.addObjectEntry(
-			adminUser.getUserId(), 0,
+			0, adminUser.getUserId(),
 			_objectDefinition3.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName1_accountEntryId",
 				accountEntry2.getAccountEntryId()
@@ -3712,13 +7791,396 @@ public class DefaultObjectEntryManagerImplTest
 		_assertObjectEntriesSize1(_objectDefinition3, "Delta", 1);
 	}
 
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testSubscribeObjectEntry() throws Exception {
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			true,
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_SITE);
+		ObjectEntryFolder objectEntryFolder =
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(_group.getGroupId());
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					objectEntryFolderExternalReferenceCode =
+						objectEntryFolder.getExternalReferenceCode();
+					properties = Collections.emptyMap();
+				}
+			},
+			_group.getGroupKey());
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					objectEntryFolderExternalReferenceCode =
+						objectEntryFolder.getExternalReferenceCode();
+					properties = Collections.emptyMap();
+				}
+			},
+			_group.getGroupKey());
+
+		_objectEntryFolderLocalService.subscribeObjectEntryFolder(
+			adminUser.getUserId(), _group.getGroupId(),
+			objectEntryFolder.getObjectEntryFolderId());
+
+		_assertActions(
+			null, ListUtil.fromArray("subscribe", "unsubscribe"),
+			objectDefinition, objectEntry1.getId());
+		_assertActions(
+			null, ListUtil.fromArray("subscribe", "unsubscribe"),
+			objectDefinition, objectEntry2.getId());
+
+		_objectEntryFolderLocalService.unsubscribeObjectEntryFolder(
+			adminUser.getUserId(), _group.getGroupId(),
+			objectEntryFolder.getObjectEntryFolderId());
+
+		_assertActions(
+			ListUtil.fromArray("subscribe"), ListUtil.fromArray("unsubscribe"),
+			objectDefinition, objectEntry1.getId());
+		_assertActions(
+			ListUtil.fromArray("subscribe"), ListUtil.fromArray("unsubscribe"),
+			objectDefinition, objectEntry2.getId());
+
+		_defaultObjectEntryManager.subscribeObjectEntry(
+			objectEntry1.getExternalReferenceCode(), objectDefinition,
+			objectEntry1.getScopeKey());
+		_defaultObjectEntryManager.subscribeObjectEntry(
+			objectEntry2.getExternalReferenceCode(), objectDefinition,
+			objectEntry2.getScopeKey());
+
+		_assertActions(
+			ListUtil.fromArray("unsubscribe"), ListUtil.fromArray("subscribe"),
+			objectDefinition, objectEntry1.getId());
+		_assertActions(
+			ListUtil.fromArray("unsubscribe"), ListUtil.fromArray("subscribe"),
+			objectDefinition, objectEntry2.getId());
+
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), adminUser.getUserId(),
+				objectDefinition.getClassName(), objectEntry1.getId()));
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), adminUser.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+
+		_user = _addUser();
+
+		Role role = _addRoleUser(
+			new String[] {ActionKeys.VIEW}, objectDefinition, _user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(),
+				" must have SUBSCRIBE permission for ",
+				objectDefinition.getClassName(), StringPool.SPACE,
+				objectEntry1.getId()),
+			() -> _defaultObjectEntryManager.subscribeObjectEntry(
+				objectEntry1.getExternalReferenceCode(), objectDefinition,
+				objectEntry1.getScopeKey()));
+
+		_resourcePermissionLocalService.addResourcePermission(
+			companyId, objectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
+			role.getRoleId(), ActionKeys.SUBSCRIBE);
+
+		_defaultObjectEntryManager.subscribeObjectEntry(
+			objectEntry1.getExternalReferenceCode(), objectDefinition,
+			objectEntry1.getScopeKey());
+		_defaultObjectEntryManager.subscribeObjectEntry(
+			objectEntry2.getExternalReferenceCode(), objectDefinition,
+			objectEntry2.getScopeKey());
+
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), _user.getUserId(),
+				objectDefinition.getClassName(), objectEntry1.getId()));
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), _user.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry1.getId());
+
+		Assert.assertFalse(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), adminUser.getUserId(),
+				objectDefinition.getClassName(), objectEntry1.getId()));
+		Assert.assertFalse(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), _user.getUserId(),
+				objectDefinition.getClassName(), objectEntry1.getId()));
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), adminUser.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), _user.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+
+		Assert.assertFalse(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), adminUser.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+		Assert.assertFalse(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinition.getCompanyId(), _user.getUserId(),
+				objectDefinition.getClassName(), objectEntry2.getId()));
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testSubscribeObjectEntryWithHierarchy() throws Exception {
+		ObjectDefinition objectDefinitionA = _addObjectDefinition(
+			true,
+			List.of(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectEntry objectEntryA = _addObjectEntry(objectDefinitionA, Map.of());
+
+		_defaultObjectEntryManager.subscribeObjectEntry(
+			objectEntryA.getExternalReferenceCode(), objectDefinitionA,
+			objectEntryA.getScopeKey());
+
+		Assert.assertTrue(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinitionA.getCompanyId(), adminUser.getUserId(),
+				objectDefinitionA.getClassName(), objectEntryA.getId()));
+
+		_defaultObjectEntryManager.unsubscribeObjectEntry(
+			objectEntryA.getExternalReferenceCode(), objectDefinitionA,
+			objectEntryA.getScopeKey());
+
+		Assert.assertFalse(
+			_subscriptionLocalService.isSubscribed(
+				objectDefinitionA.getCompanyId(), adminUser.getUserId(),
+				objectDefinitionA.getClassName(), objectEntryA.getId()));
+
+		ObjectDefinition objectDefinitionAA = _addObjectDefinition(
+			true,
+			List.of(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		ObjectEntry objectEntryAA =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				new ObjectEntry() {
+					{
+						properties = new HashMap<>();
+					}
+				},
+				objectEntryA.getId(),
+				TreeTestUtil.bind(
+					objectDefinitionA.getObjectDefinitionId(),
+					objectDefinitionAA.getObjectDefinitionId(),
+					_objectRelationshipLocalService));
+
+		AssertUtils.assertFailure(
+			UnsupportedOperationException.class, null,
+			() -> _defaultObjectEntryManager.subscribeObjectEntry(
+				objectEntryAA.getExternalReferenceCode(), objectDefinitionAA,
+				objectEntryAA.getScopeKey()));
+	}
+
+	@Test
+	public void testToObjectEntry() throws Exception {
+
+		// Approved
+
+		String objectFieldName = "c" + RandomTestUtil.randomString();
+
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					objectFieldName
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		objectDefinition.setEnableObjectEntryDraft(true);
+
+		objectDefinition = objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		Map<String, Map<String, String>> objectEntryActions =
+			HashMapBuilder.<String, Map<String, String>>put(
+				"delete", Collections.emptyMap()
+			).put(
+				"expire", Collections.emptyMap()
+			).put(
+				"get", Collections.emptyMap()
+			).put(
+				"permissions", Collections.emptyMap()
+			).put(
+				"replace", Collections.emptyMap()
+			).put(
+				"update", Collections.emptyMap()
+			).put(
+				"versions", Collections.emptyMap()
+			).build();
+
+		String objectFieldValue = RandomTestUtil.randomString();
+
+		assertEquals(
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectFieldName, objectFieldValue
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY),
+			new ObjectEntry() {
+				{
+					actions = objectEntryActions;
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+					status = new Status() {
+						{
+							code = WorkflowConstants.STATUS_APPROVED;
+						}
+					};
+				}
+			});
+
+		// Draft
+
+		Map<String, Map<String, String>> objectEntryActionsWithoutExpire =
+			HashMapBuilder.<String, Map<String, String>>putAll(
+				objectEntryActions
+			).build();
+
+		objectEntryActionsWithoutExpire.remove("expire");
+
+		assertEquals(
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectFieldName, objectFieldValue
+						).build();
+						status = new Status() {
+							{
+								code = WorkflowConstants.STATUS_DRAFT;
+							}
+						};
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY),
+			new ObjectEntry() {
+				{
+					actions = objectEntryActionsWithoutExpire;
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+					status = new Status() {
+						{
+							code = WorkflowConstants.STATUS_DRAFT;
+						}
+					};
+				}
+			});
+
+		// Expired
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		assertEquals(
+			_defaultObjectEntryManager.expireObjectEntry(
+				_simpleDTOConverterContext, objectEntry.getId()),
+			new ObjectEntry() {
+				{
+					actions = objectEntryActionsWithoutExpire;
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+					status = new Status() {
+						{
+							code = WorkflowConstants.STATUS_EXPIRED;
+						}
+					};
+				}
+			});
+
+		// Pending
+
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
+			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(), 0,
+			objectDefinition.getClassName(), 0, 0, "Single Approver", 1);
+
+		assertEquals(
+			_defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectFieldName, objectFieldValue
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY),
+			new ObjectEntry() {
+				{
+					actions = objectEntryActionsWithoutExpire;
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+					status = new Status() {
+						{
+							code = WorkflowConstants.STATUS_PENDING;
+						}
+					};
+				}
+			});
+	}
+
 	@Test
 	public void testUpdateObjectEntry() throws Exception {
-		ObjectEntry objectEntry = _objectEntryManager.addObjectEntry(
+		ObjectEntry objectEntry1 = _objectEntryManager.addObjectEntry(
 			dtoConverterContext, _objectDefinition2,
 			new ObjectEntry() {
 				{
-					properties = _localizedObjectFieldI18nValues;
+					properties = new HashMap<>(_localizedObjectFieldI18nValues);
 				}
 			},
 			ObjectDefinitionConstants.SCOPE_COMPANY);
@@ -3732,8 +8194,19 @@ public class DefaultObjectEntryManagerImplTest
 
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				_localizedMultiselectPicklistObjectFieldName,
+				Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+			).put(
+				"localizedBooleanObjectFieldName", true
+			).put(
+				"localizedDateObjectFieldName", "2024-01-01"
+			).put(
+				"localizedDateTimeObjectFieldName", "2024-04-04T04:04:04.000"
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedPicklistObjectFieldName", _listTypeEntryKey1
 			).put(
 				"localizedRichTextObjectFieldName",
 				"en_US <i>localizedRichTextObjectFieldValue</i>"
@@ -3746,11 +8219,22 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"en_US", objectEntry.getId());
+			"en_US", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				_localizedMultiselectPicklistObjectFieldName,
+				Arrays.asList(_listTypeEntryKey4)
+			).put(
+				"localizedBooleanObjectFieldName", false
+			).put(
+				"localizedDateObjectFieldName", "2025-01-01"
+			).put(
+				"localizedDateTimeObjectFieldName", "2025-05-05T05:05:05.000"
+			).put(
 				"localizedLongTextObjectFieldName",
 				"pt_BR localizedLongTextObjectFieldValue"
+			).put(
+				"localizedPicklistObjectFieldName", _listTypeEntryKey2
 			).put(
 				"localizedRichTextObjectFieldName",
 				"pt_BR <i>localizedRichTextObjectFieldValue</i>"
@@ -3763,7 +8247,7 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"pt_BR", objectEntry.getId());
+			"pt_BR", objectEntry1.getId());
 
 		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
 			"localizedLongTextObjectFieldName_i18n",
@@ -3780,7 +8264,7 @@ public class DefaultObjectEntryManagerImplTest
 		).build();
 
 		_updateLocalizedObjectEntryValues(
-			_objectDefinition2, objectEntry.getId(),
+			_objectDefinition2, objectEntry1.getId(),
 			_localizedObjectFieldI18nValues);
 
 		_localizedObjectFieldI18nValues.putAll(
@@ -3795,6 +8279,8 @@ public class DefaultObjectEntryManagerImplTest
 
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName", false
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
 			).put(
@@ -3808,9 +8294,11 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"ar_SA", objectEntry.getId());
+			"ar_SA", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName", false
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
 			).put(
@@ -3822,9 +8310,11 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"en_US", objectEntry.getId());
+			"en_US", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName", false
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
 			).put(
@@ -3836,14 +8326,53 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"pt_BR", objectEntry.getId());
+			"pt_BR", objectEntry1.getId());
 
 		_localizedObjectFieldI18nValues = HashMapBuilder.<String, Object>put(
+			_localizedMultiselectPicklistObjectFieldName + "_i18n",
+			HashMapBuilder.put(
+				"en_US", Arrays.asList(_listTypeEntryKey3)
+			).put(
+				"pt_BR", Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+			).build()
+		).put(
+			"localizedBooleanObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"ar_SA", false
+			).put(
+				"ca_ES", false
+			).put(
+				"en_US", true
+			).put(
+				"pt_BR", true
+			).build()
+		).put(
+			"localizedDateObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2024-02-02"
+			).put(
+				"pt_BR", "2025-02-02"
+			).build()
+		).put(
+			"localizedDateTimeObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", "2022-02-02T02:02:02.000"
+			).put(
+				"pt_BR", "2023-03-03T03:03:03.000"
+			).build()
+		).put(
 			"localizedLongTextObjectFieldName_i18n",
 			HashMapBuilder.put(
 				"en_US", "en_US localizedLongTextObjectFieldValue"
 			).put(
 				"pt_BR", ""
+			).build()
+		).put(
+			"localizedPicklistObjectFieldName_i18n",
+			HashMapBuilder.put(
+				"en_US", _listTypeEntryKey2
+			).put(
+				"pt_BR", _listTypeEntryKey1
 			).build()
 		).put(
 			"localizedRichTextObjectFieldName_i18n",
@@ -3864,7 +8393,7 @@ public class DefaultObjectEntryManagerImplTest
 		).build();
 
 		_updateLocalizedObjectEntryValues(
-			_objectDefinition2, objectEntry.getId(),
+			_objectDefinition2, objectEntry1.getId(),
 			_localizedObjectFieldI18nValues);
 
 		_localizedObjectFieldI18nValues.put(
@@ -3875,6 +8404,8 @@ public class DefaultObjectEntryManagerImplTest
 
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName", false
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
 			).put(
@@ -3889,9 +8420,11 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"ar_SA", objectEntry.getId());
+			"ar_SA", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				"localizedBooleanObjectFieldName", false
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
 			).put(
@@ -3906,11 +8439,22 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"ca_ES", objectEntry.getId());
+			"ca_ES", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				_localizedMultiselectPicklistObjectFieldName,
+				Arrays.asList(_listTypeEntryKey3)
+			).put(
+				"localizedBooleanObjectFieldName", true
+			).put(
+				"localizedDateObjectFieldName", "2024-02-02"
+			).put(
+				"localizedDateTimeObjectFieldName", "2022-02-02T02:02:02.000"
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedPicklistObjectFieldName", _listTypeEntryKey2
 			).put(
 				"localizedRichTextObjectFieldName",
 				"en_US <i>localizedRichTextObjectFieldValue</i>"
@@ -3923,11 +8467,22 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"en_US", objectEntry.getId());
+			"en_US", objectEntry1.getId());
 		_assertLocalizedValues(
 			HashMapBuilder.<String, Object>put(
+				_localizedMultiselectPicklistObjectFieldName,
+				Arrays.asList(_listTypeEntryKey3, _listTypeEntryKey4)
+			).put(
+				"localizedBooleanObjectFieldName", true
+			).put(
+				"localizedDateObjectFieldName", "2025-02-02"
+			).put(
+				"localizedDateTimeObjectFieldName", "2023-03-03T03:03:03.000"
+			).put(
 				"localizedLongTextObjectFieldName",
 				"en_US localizedLongTextObjectFieldValue"
+			).put(
+				"localizedPicklistObjectFieldName", _listTypeEntryKey1
 			).put(
 				"localizedRichTextObjectFieldName",
 				"en_US <i>localizedRichTextObjectFieldValue</i>"
@@ -3940,7 +8495,41 @@ public class DefaultObjectEntryManagerImplTest
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
-			"pt_BR", objectEntry.getId());
+			"pt_BR", objectEntry1.getId());
+
+		ObjectEntry objectEntry2 = _addObjectEntry(
+			_objectDefinition4,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			_group.getGroupKey(), 1);
+
+		ObjectEntryFolder objectEntryFolder =
+			ObjectEntryFolderTestUtil.addObjectEntryFolder(
+				objectEntry2.getScopeId());
+
+		String textObjectFieldValue = RandomTestUtil.randomString();
+
+		assertEquals(
+			_defaultObjectEntryManager.updateObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition4,
+				objectEntry2.getId(),
+				new ObjectEntry() {
+					{
+						objectEntryFolderId =
+							objectEntryFolder.getObjectEntryFolderId();
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", textObjectFieldValue
+						).build();
+					}
+				}),
+			new ObjectEntry() {
+				{
+					objectEntryFolderId =
+						objectEntryFolder.getObjectEntryFolderId();
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", textObjectFieldValue
+					).build();
+				}
+			});
 	}
 
 	@Test
@@ -3963,6 +8552,10 @@ public class DefaultObjectEntryManagerImplTest
 		Role role = _addRoleUser(
 			new String[] {ActionKeys.UPDATE, ActionKeys.VIEW},
 			_objectDefinition3, _user);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
 
 		_defaultObjectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition3,
@@ -4125,47 +8718,72 @@ public class DefaultObjectEntryManagerImplTest
 
 		_assignAccountEntryRole(accountEntry1, _buyerRole, _user);
 
-		Node rootNode = tree.getRootNode();
+		_testUpdateObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.UPDATE, tree);
 
-		TreeTestUtil.forEachNodeObjectEntry(
-			tree.iterator(), _objectEntryLocalService,
-			objectEntry -> {
-				ObjectDefinition objectDefinition =
-					objectDefinitionLocalService.fetchObjectDefinition(
-						objectEntry.getObjectDefinitionId());
-
-				AssertUtils.assertFailure(
-					PrincipalException.MustHavePermission.class,
-					StringBundler.concat(
-						"User ", _user.getUserId(),
-						" must have UPDATE permission for ",
-						_rootObjectDefinition.getClassName(), StringPool.SPACE,
-						rootNode.getPrimaryKey()),
-					() -> _defaultObjectEntryManager.updateObjectEntry(
-						_simpleDTOConverterContext, objectDefinition,
-						objectEntry.getObjectEntryId(),
-						_defaultObjectEntryManager.getObjectEntry(
-							_simpleDTOConverterContext, objectDefinition,
-							objectEntry.getObjectEntryId())));
-			});
+		// Users can delete object entries from accounts that they belong to
 
 		_addResourcePermission(
 			ActionKeys.UPDATE, _rootObjectDefinition, _buyerRole);
 
-		TreeTestUtil.forEachNodeObjectEntry(
-			tree.iterator(), _objectEntryLocalService,
-			objectEntry -> {
-				ObjectDefinition objectDefinition =
-					objectDefinitionLocalService.fetchObjectDefinition(
-						objectEntry.getObjectDefinitionId());
+		Iterator<Node> iterator = tree.iterator();
 
-				_defaultObjectEntryManager.updateObjectEntry(
-					_simpleDTOConverterContext, objectDefinition,
-					objectEntry.getObjectEntryId(),
-					_defaultObjectEntryManager.getObjectEntry(
-						_simpleDTOConverterContext, objectDefinition,
-						objectEntry.getObjectEntryId()));
-			});
+		Node rootNode = iterator.next();
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.getObjectEntry(rootNode.getPrimaryKey());
+
+		ObjectDefinition rootObjectDefinition =
+			objectDefinitionLocalService.fetchObjectDefinition(
+				serviceBuilderObjectEntry.getObjectDefinitionId());
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, rootObjectDefinition,
+			rootNode.getPrimaryKey(),
+			_defaultObjectEntryManager.getObjectEntry(
+				_simpleDTOConverterContext, rootObjectDefinition,
+				rootNode.getPrimaryKey()));
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			Edge edge = node.getEdge();
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.getObjectRelationship(
+					edge.getObjectRelationshipId());
+
+			Node parentNode = node.getParentNode();
+
+			_defaultObjectEntryManager.updateRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				_defaultObjectEntryManager.getRelatedObjectEntry(
+					_simpleDTOConverterContext, node.getPrimaryKey(),
+					objectRelationship, parentNode.getPrimaryKey()),
+				node.getPrimaryKey(), objectRelationship,
+				parentNode.getPrimaryKey());
+		}
+
+		// Users cannot delete object entries from accounts that they do not
+		// belong to
+
+		AccountEntry accountEntry2 = _addAccountEntry();
+
+		_user = _addUser();
+
+		_assignAccountEntryRole(accountEntry2, _accountManagerRole, _user);
+
+		_addResourcePermission(
+			ActionKeys.UPDATE, _rootObjectDefinition, _accountManagerRole);
+
+		_testUpdateObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.VIEW, tree);
+
+		_addResourcePermission(
+			ActionKeys.VIEW, _rootObjectDefinition, _accountManagerRole);
+
+		_testUpdateObjectEntryWithAccountEntryRestricted2(
+			ActionKeys.VIEW, tree);
 	}
 
 	@Test
@@ -4174,7 +8792,7 @@ public class DefaultObjectEntryManagerImplTest
 
 		// Account roles' permissions should not be restricted by account entry
 
-		ObjectDefinition objectDefinition = _createObjectDefinition(
+		ObjectDefinition objectDefinition = _addObjectDefinition(
 			Arrays.asList(
 				new TextObjectFieldBuilder(
 				).labelMap(
@@ -4193,7 +8811,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				accountEntryObjectDefinition.getObjectDefinitionId(),
 				objectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationship", false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -4234,7 +8852,7 @@ public class DefaultObjectEntryManagerImplTest
 				null, adminUser.getUserId(),
 				_objectDefinition3.getObjectDefinitionId(),
 				objectDefinition.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
+				ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
 				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
@@ -4277,7 +8895,7 @@ public class DefaultObjectEntryManagerImplTest
 				objectEntry2.getId(),
 				new ObjectEntry() {
 					{
-						properties = customObjectEntryProperties;
+						properties = new HashMap<>(customObjectEntryProperties);
 					}
 				}),
 			new ObjectEntry() {
@@ -4289,6 +8907,258 @@ public class DefaultObjectEntryManagerImplTest
 			});
 	}
 
+	@Test
+	public void testUpdateObjectEntryWithAccountEntryRestricted4()
+		throws Exception {
+
+		// Account entry restricted with implicit role Organization User
+
+		AccountEntry accountEntry = _addAccountEntry();
+
+		ObjectEntry objectEntry = _addObjectEntry(accountEntry);
+
+		Organization organization = _addUserOrganization();
+
+		_addAccountEntryOrganizationRel(accountEntry, organization);
+
+		Role organizationUserRole = _roleLocalService.getRole(
+			companyId, RoleConstants.ORGANIZATION_USER);
+
+		_addResourcePermission(
+			ActionKeys.VIEW, _objectDefinition3, organizationUserRole);
+
+		_addRoleUser(
+			new String[] {ActionKeys.VIEW}, _accountEntryObjectDefinition,
+			_user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have UPDATE permission for ",
+				_objectDefinition3.getClassName(), StringPool.SPACE,
+				objectEntry.getId()),
+			() -> _defaultObjectEntryManager.updateObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition3,
+				objectEntry.getId(), objectEntry));
+
+		_addResourcePermission(
+			ActionKeys.UPDATE, _objectDefinition3, organizationUserRole);
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition3, objectEntry.getId(),
+			objectEntry);
+	}
+
+	@Test
+	public void testUpdateObjectEntryWithAssigneeObjectField()
+		throws Exception {
+
+		ObjectFieldUtil.addCustomObjectField(
+			new AssigneeObjectFieldBuilder(
+			).labelMap(
+				RandomTestUtil.randomLocaleStringMap()
+			).name(
+				"assignee"
+			).objectDefinitionId(
+				_objectDefinition1.getObjectDefinitionId()
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
+
+		User user = UserTestUtil.addUser();
+
+		ObjectEntry objectEntry = _addObjectEntryWithAssigneeObjectField(
+			HashMapBuilder.put(
+				"externalReferenceCode", user.getExternalReferenceCode()
+			).put(
+				"type", "User"
+			).build());
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
+		PrincipalThreadLocal.setName(user.getUserId());
+
+		_updateObjectEntryWithAssigneeObjectField(
+			HashMapBuilder.put(
+				"externalReferenceCode",
+				() -> {
+					Role role = _addRoleUser(
+						new String[] {ActionKeys.VIEW}, _objectDefinition1,
+						user);
+
+					return role.getExternalReferenceCode();
+				}
+			).put(
+				"type", "Role"
+			).build(),
+			objectEntry.getId());
+		_updateObjectEntryWithAssigneeObjectField(
+			HashMapBuilder.put(
+				"externalReferenceCode",
+				() -> {
+					Organization organization =
+						OrganizationTestUtil.addOrganization();
+
+					_assignOrganizationRole(
+						organization, _accountManagerRole, user);
+
+					return _accountManagerRole.getExternalReferenceCode();
+				}
+			).put(
+				"type", "Role"
+			).build(),
+			objectEntry.getId());
+		_updateObjectEntryWithAssigneeObjectField(
+			Collections.emptyMap(), objectEntry.getId());
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", user.getUserId(), " must have UPDATE permission for ",
+				_objectDefinition1.getClassName(), StringPool.SPACE,
+				objectEntry.getId()),
+			() -> _defaultObjectEntryManager.updateObjectEntry(
+				_simpleDTOConverterContext, _objectDefinition1,
+				objectEntry.getId(), objectEntry));
+
+		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+		PrincipalThreadLocal.setName(_originalName);
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testUpdateObjectEntryWithScheduleDates() throws Exception {
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()));
+
+		Timestamp timestamp = Timestamp.valueOf(
+			LocalDateTime.now(
+			).plusDays(
+				1
+			).truncatedTo(
+				ChronoUnit.MINUTES
+			));
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					setDisplayDate(timestamp);
+					setExpirationDate(timestamp);
+					setProperties(
+						HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build());
+					setReviewDate(timestamp);
+				}
+			},
+			null);
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					setDisplayDate((Date)null);
+					setExpirationDate((Date)null);
+					setProperties(
+						HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build());
+					setReviewDate((Date)null);
+				}
+			});
+
+		Assert.assertNull(objectEntry.getDisplayDate());
+		Assert.assertNull(objectEntry.getExpirationDate());
+		Assert.assertNull(objectEntry.getReviewDate());
+	}
+
+	@Test
+	public void testUpdateRelatedObjectEntry() throws Exception {
+
+		// Partial update
+
+		_testUpdateRelatedObjectEntry(
+			_companyObjectEntryA, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.partialUpdateRelatedObjectEntry(
+					_createDTOConverterContext(), objectEntry,
+					serviceBuilderObjectEntry.getObjectEntryId(),
+					_companyObjectRelationshipA_AA,
+					_companyObjectEntryA.getId()));
+		_testUpdateRelatedObjectEntry(
+			_companyObjectEntryA, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.partialUpdateRelatedObjectEntry(
+					_createDTOConverterContext(),
+					serviceBuilderObjectEntry.getExternalReferenceCode(),
+					objectEntry, _companyObjectRelationshipA_AA,
+					_companyObjectEntryA.getExternalReferenceCode(), null));
+		_testUpdateRelatedObjectEntry(
+			_siteObjectEntryA, _siteObjectRelationshipA_AA,
+			_siteObjectRelationshipA_AAObjectField2,
+			_siteObjectRelationshipB_AAObjectField2, _group.getGroupKey(),
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.partialUpdateRelatedObjectEntry(
+					_createDTOConverterContext(),
+					serviceBuilderObjectEntry.getExternalReferenceCode(),
+					objectEntry, _siteObjectRelationshipA_AA,
+					_siteObjectEntryA.getExternalReferenceCode(),
+					_group.getGroupKey()));
+
+		// Update
+
+		_testUpdateRelatedObjectEntry(
+			_companyObjectEntryA, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.updateRelatedObjectEntry(
+					_createDTOConverterContext(), objectEntry,
+					serviceBuilderObjectEntry.getObjectEntryId(),
+					_companyObjectRelationshipA_AA,
+					_companyObjectEntryA.getId()));
+		_testUpdateRelatedObjectEntry(
+			_companyObjectEntryA, _companyObjectRelationshipA_AA,
+			_companyObjectRelationshipA_AAObjectField2,
+			_companyObjectRelationshipB_AAObjectField2,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.updateRelatedObjectEntry(
+					_createDTOConverterContext(),
+					serviceBuilderObjectEntry.getExternalReferenceCode(),
+					objectEntry, _companyObjectRelationshipA_AA,
+					_companyObjectEntryA.getExternalReferenceCode(), null));
+		_testUpdateRelatedObjectEntry(
+			_siteObjectEntryA, _siteObjectRelationshipA_AA,
+			_siteObjectRelationshipA_AAObjectField2,
+			_siteObjectRelationshipB_AAObjectField2, _group.getGroupKey(),
+			(objectEntry, serviceBuilderObjectEntry) ->
+				_defaultObjectEntryManager.updateRelatedObjectEntry(
+					_createDTOConverterContext(),
+					serviceBuilderObjectEntry.getExternalReferenceCode(),
+					objectEntry, _siteObjectRelationshipA_AA,
+					_siteObjectEntryA.getExternalReferenceCode(),
+					_group.getGroupKey()));
+	}
+
+	@Rule
+	public TestName testName = new TestName();
+
 	@Override
 	protected void assertObjectEntryProperties(
 			ObjectEntry actualObjectEntry,
@@ -4296,13 +9166,82 @@ public class DefaultObjectEntryManagerImplTest
 			Map.Entry<String, Object> expectedEntry)
 		throws Exception {
 
-		if (Objects.equals(
-				expectedEntry.getKey(), "attachmentObjectFieldName")) {
+		NestedFieldsContext nestedFieldsContext =
+			NestedFieldsContextThreadLocal.getNestedFieldsContext();
 
+		if ((nestedFieldsContext != null) &&
+			(ListUtil.exists(
+				nestedFieldsContext.getNestedFields(),
+				nestedField -> Objects.equals(
+					nestedField, expectedEntry.getKey())) ||
+			 StringUtil.startsWith(expectedEntry.getKey(), "r_"))) {
+
+			return;
+		}
+
+		if (Objects.equals(
+				expectedEntry.getKey(),
+				_localizedMultiselectPicklistObjectFieldName)) {
+
+			_assertListEntries(
+				(List<ListEntry>)actualObjectEntryProperties.get(
+					expectedEntry.getKey()),
+				(List<Object>)expectedEntry.getValue());
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(),
+					_localizedMultiselectPicklistObjectFieldName + "_i18n")) {
+
+			Map<String, Object> actualValues =
+				(Map<String, Object>)actualObjectEntryProperties.get(
+					expectedEntry.getKey());
+			Map<String, Object> expectedValues =
+				(Map<String, Object>)expectedEntry.getValue();
+
+			for (Map.Entry<String, Object> entry : expectedValues.entrySet()) {
+				_assertListEntries(
+					(List<ListEntry>)actualValues.get(entry.getKey()),
+					(List<Object>)entry.getValue());
+			}
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(),
+					_objectRelationshipERCObjectFieldName)) {
+
+			Assert.assertEquals(
+				expectedEntry.getValue(),
+				actualObjectEntryProperties.get(expectedEntry.getKey()));
+
+			assertEquals(
+				_objectEntryManager.getObjectEntry(
+					_objectDefinition1.getCompanyId(),
+					_simpleDTOConverterContext,
+					GetterUtil.getString(expectedEntry.getValue()),
+					_objectDefinition1, null),
+				(ObjectEntry)actualObjectEntryProperties.get(
+					StringUtil.replaceLast(
+						_objectRelationshipFieldName, "Id", StringPool.BLANK)));
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(), "attachmentObjectFieldName")) {
+
+			Object expectedValue = expectedEntry.getValue();
 			FileEntry fileEntry = (FileEntry)actualObjectEntryProperties.get(
 				expectedEntry.getKey());
 
-			Assert.assertEquals(expectedEntry.getValue(), fileEntry.getId());
+			if ((expectedValue == null) && (fileEntry == null)) {
+				return;
+			}
+
+			if (Validator.isNumber(expectedValue.toString())) {
+				Assert.assertEquals(expectedValue, fileEntry.getId());
+			}
+			else {
+				FileEntry expectedEntryFileEntry = (FileEntry)expectedValue;
+
+				Assert.assertEquals(
+					expectedEntryFileEntry.getId(), fileEntry.getId());
+			}
 
 			DLFileEntry dlFileEntry = _dlFileEntryLocalService.getFileEntry(
 				fileEntry.getId());
@@ -4322,6 +9261,8 @@ public class DefaultObjectEntryManagerImplTest
 				StringPool.BLANK);
 
 			url = HttpComponentsUtil.addParameter(
+				url, "groupExternalReferenceCode", StringPool.BLANK);
+			url = HttpComponentsUtil.addParameter(
 				url, "objectDefinitionExternalReferenceCode",
 				_objectDefinition2.getExternalReferenceCode());
 			url = HttpComponentsUtil.addParameter(
@@ -4331,7 +9272,9 @@ public class DefaultObjectEntryManagerImplTest
 			Assert.assertEquals(url, link.getHref());
 		}
 		else if (Objects.equals(
-					expectedEntry.getKey(), "dateObjectFieldName")) {
+					expectedEntry.getKey(), "dateObjectFieldName") ||
+				 Objects.equals(
+					 expectedEntry.getKey(), "localizedDateObjectFieldName")) {
 
 			if ((expectedEntry.getValue() == null) &&
 				(actualObjectEntryProperties.get(expectedEntry.getKey()) ==
@@ -4340,24 +9283,85 @@ public class DefaultObjectEntryManagerImplTest
 				return;
 			}
 
+			String expectedEntryValue = String.valueOf(
+				expectedEntry.getValue());
+
+			if (!StringUtil.endsWith(expectedEntryValue, "T00:00:00.000Z")) {
+				expectedEntryValue += "T00:00:00.000Z";
+			}
+
 			Assert.assertEquals(
-				expectedEntry.getKey(),
-				expectedEntry.getValue() + "T00:00:00.000Z",
+				expectedEntry.getKey(), expectedEntryValue,
 				String.valueOf(
 					actualObjectEntryProperties.get(expectedEntry.getKey())));
 		}
 		else if (Objects.equals(
-					expectedEntry.getKey(), "picklistObjectFieldName")) {
+					expectedEntry.getKey(),
+					"localizedDateObjectFieldName_i18n")) {
 
-			ListEntry listEntry = (ListEntry)actualObjectEntryProperties.get(
-				expectedEntry.getKey());
+			Map<String, Object> actualValues =
+				(Map<String, Object>)actualObjectEntryProperties.get(
+					expectedEntry.getKey());
+			Map<String, Object> expectedValues =
+				(Map<String, Object>)expectedEntry.getValue();
 
-			if (expectedEntry.getValue() instanceof String) {
+			for (Map.Entry<String, Object> entry : expectedValues.entrySet()) {
 				Assert.assertEquals(
-					expectedEntry.getValue(), listEntry.getKey());
+					_getTimestamp(String.valueOf(entry.getValue())),
+					_getTimestamp(
+						String.valueOf(actualValues.get(entry.getKey()))));
 			}
-			else {
-				Assert.assertEquals(expectedEntry.getValue(), listEntry);
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(),
+					"localizedDateTimeObjectFieldName_i18n")) {
+
+			Map<String, Object> actualValues =
+				(Map<String, Object>)actualObjectEntryProperties.get(
+					expectedEntry.getKey());
+			Map<String, Object> expectedValues =
+				(Map<String, Object>)expectedEntry.getValue();
+
+			for (Map.Entry<String, Object> entry : expectedValues.entrySet()) {
+				Object expectedValue = entry.getValue();
+
+				if (expectedValue instanceof String) {
+					expectedValue = Timestamp.valueOf(
+						_getLocalDateTime(String.valueOf(expectedValue)));
+				}
+
+				Assert.assertEquals(
+					expectedValue,
+					Timestamp.valueOf(
+						_getLocalDateTime(
+							String.valueOf(actualValues.get(entry.getKey())))));
+			}
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(),
+					"localizedPicklistObjectFieldName") ||
+				 Objects.equals(
+					 expectedEntry.getKey(), "picklistObjectFieldName")) {
+
+			_assertListEntry(
+				(ListEntry)actualObjectEntryProperties.get(
+					expectedEntry.getKey()),
+				expectedEntry.getValue());
+		}
+		else if (Objects.equals(
+					expectedEntry.getKey(),
+					"localizedPicklistObjectFieldName_i18n")) {
+
+			Map<String, Object> actualValues =
+				(Map<String, Object>)actualObjectEntryProperties.get(
+					expectedEntry.getKey());
+			Map<String, Object> expectedValues =
+				(Map<String, Object>)expectedEntry.getValue();
+
+			for (Map.Entry<String, Object> entry : expectedValues.entrySet()) {
+				_assertListEntry(
+					(ListEntry)actualValues.get(entry.getKey()),
+					entry.getValue());
 			}
 		}
 		else if (Objects.equals(
@@ -4368,24 +9372,6 @@ public class DefaultObjectEntryManagerImplTest
 					String.valueOf(expectedEntry.getValue())),
 				String.valueOf(
 					actualObjectEntryProperties.get(expectedEntry.getKey())));
-		}
-		else if (Objects.equals(
-					expectedEntry.getKey(),
-					_objectRelationshipERCObjectFieldName)) {
-
-			Assert.assertEquals(
-				expectedEntry.getValue(),
-				actualObjectEntryProperties.get(expectedEntry.getKey()));
-
-			assertEquals(
-				(ObjectEntry)actualObjectEntryProperties.get(
-					StringUtil.replaceLast(
-						_objectRelationshipFieldName, "Id", StringPool.BLANK)),
-				_objectEntryManager.getObjectEntry(
-					_objectDefinition1.getCompanyId(),
-					_simpleDTOConverterContext,
-					GetterUtil.getString(expectedEntry.getValue()),
-					_objectDefinition1, null));
 		}
 		else {
 			super.assertObjectEntryProperties(
@@ -4403,11 +9389,76 @@ public class DefaultObjectEntryManagerImplTest
 			context.get("filter"), null, context.get("search"), sorts);
 	}
 
+	private static ObjectDefinition _addObjectDefinition() throws Exception {
+		return _addObjectDefinition(
+			List.of(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+	}
+
+	private static ObjectDefinition _addObjectDefinition(
+			boolean enableObjectEntrySubscription,
+			List<ObjectField> objectFields, String scope)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			objectDefinitionLocalService.addCustomObjectDefinition(
+				null, adminUser.getUserId(), 0, null, false, true, false, true,
+				false, false, enableObjectEntrySubscription, false, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(), objectFields, Collections.emptyList(),
+				new ServiceContext());
+
+		return objectDefinitionLocalService.publishCustomObjectDefinition(
+			adminUser.getUserId(), objectDefinition.getObjectDefinitionId());
+	}
+
+	private static ObjectDefinition _addObjectDefinition(
+			List<ObjectField> objectFields, String scope)
+		throws Exception {
+
+		return _addObjectDefinition(false, objectFields, scope);
+	}
+
+	private static ObjectEntry _addObjectEntry(
+			ObjectDefinition objectDefinition, Map<String, Object> values)
+		throws Exception {
+
+		return _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>(values);
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+	}
+
+	private static ObjectEntry _addObjectEntry(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			String scopeKey)
+		throws Exception {
+
+		return _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry,
+			scopeKey);
+	}
+
 	private AccountEntry _addAccountEntry() throws Exception {
 		return _accountEntryLocalService.addAccountEntry(
-			adminUser.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
+			StringPool.BLANK, adminUser.getUserId(), 0L,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, null, RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
 			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext());
@@ -4501,6 +9552,18 @@ public class DefaultObjectEntryManagerImplTest
 			objectField.getObjectFieldSettings());
 	}
 
+	private DepotEntry _addDepotEntry() throws Exception {
+		return _depotEntryLocalService.addDepotEntry(
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			DepotConstants.TYPE_ASSET_LIBRARY,
+			ServiceContextTestUtil.getServiceContext());
+	}
+
 	private String _addListTypeEntry() throws Exception {
 		ListTypeEntry listTypeEntry =
 			_listTypeEntryLocalService.addListTypeEntry(
@@ -4508,9 +9571,62 @@ public class DefaultObjectEntryManagerImplTest
 				listTypeDefinition.getListTypeDefinitionId(),
 				RandomTestUtil.randomString(),
 				Collections.singletonMap(
-					LocaleUtil.US, RandomTestUtil.randomString()));
+					LocaleUtil.US, RandomTestUtil.randomString()),
+				listTypeDefinition.isSystem());
 
 		return listTypeEntry.getKey();
+	}
+
+	private void _addObjectAction(
+			ObjectDefinition objectDefinition, String objectActionTriggerKey)
+		throws Exception {
+
+		Class<?> clazz = getClass();
+
+		_objectActionLocalService.addObjectAction(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(), true, null,
+			RandomTestUtil.randomString(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString(),
+			ObjectActionExecutorConstants.KEY_GROOVY, objectActionTriggerKey,
+			UnicodePropertiesBuilder.create(
+				true
+			).put(
+				"script",
+				StringUtil.read(
+					clazz,
+					StringBundler.concat(
+						"dependencies/", clazz.getSimpleName(),
+						StringPool.PERIOD, testName.getMethodName(), ".groovy"))
+			).build(),
+			false);
+	}
+
+	private ObjectDefinition _addObjectDefinition(
+			List<ObjectField> objectFields)
+		throws Exception {
+
+		return _addObjectDefinition(
+			objectFields, ObjectDefinitionConstants.SCOPE_COMPANY);
+	}
+
+	private ObjectDefinition _addObjectDefinition(String scope)
+		throws Exception {
+
+		return _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).indexed(
+					true
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"textObjectFieldName"
+				).build()),
+			scope);
 	}
 
 	private ObjectEntry _addObjectEntry(AccountEntry accountEntry)
@@ -4530,17 +9646,86 @@ public class DefaultObjectEntryManagerImplTest
 	}
 
 	private ObjectEntry _addObjectEntry(
-			ObjectDefinition objectDefinition, Map<String, Object> values)
+			ObjectDefinition objectDefinition, int statusCode)
+		throws Exception {
+
+		return _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = Collections.emptyMap();
+					status = new Status() {
+						{
+							code = statusCode;
+						}
+					};
+				}
+			},
+			null);
+	}
+
+	private ObjectEntry _addObjectEntry(
+			ObjectDefinition objectDefinition, long objectEntryFolderId,
+			String scopeKey, int versionNumber)
+		throws Exception {
+
+		ObjectEntry objectEntry = new ObjectEntry() {
+			{
+				externalReferenceCode = RandomTestUtil.randomString();
+				keywords = new String[] {RandomTestUtil.randomString()};
+				properties = HashMapBuilder.<String, Object>put(
+					"textObjectFieldName", RandomTestUtil.randomString()
+				).build();
+				systemProperties = new SystemProperties() {
+					{
+						version = new Version() {
+							{
+								number = versionNumber;
+							}
+						};
+					}
+				};
+			}
+		};
+
+		objectEntry.setObjectEntryFolderId(objectEntryFolderId);
+
+		return _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry,
+			scopeKey);
+	}
+
+	private ObjectEntry _addObjectEntryWithAssigneeObjectField(
+			Map<String, String> assigneeMap)
 		throws Exception {
 
 		return _defaultObjectEntryManager.addObjectEntry(
-			_simpleDTOConverterContext, objectDefinition,
+			_simpleDTOConverterContext, _objectDefinition1,
 			new ObjectEntry() {
 				{
-					properties = values;
+					properties = HashMapBuilder.<String, Object>put(
+						"assignee", assigneeMap
+					).build();
 				}
 			},
-			ObjectDefinitionConstants.SCOPE_COMPANY);
+			null);
+	}
+
+	private void _addObjectFieldSettingWithDefaultValue(
+			String defaultValue, ObjectDefinition objectDefinition,
+			String objectFieldName)
+		throws Exception {
+
+		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
+			objectDefinition.getObjectDefinitionId(), objectFieldName);
+
+		_objectFieldSettingLocalService.addObjectFieldSetting(
+			TestPropsValues.getUserId(), objectField.getObjectFieldId(),
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE, defaultValue);
+		_objectFieldSettingLocalService.addObjectFieldSetting(
+			TestPropsValues.getUserId(), objectField.getObjectFieldId(),
+			ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+			ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE);
 	}
 
 	private void _addRelatedObjectEntries(
@@ -4628,6 +9813,19 @@ public class DefaultObjectEntryManagerImplTest
 		return role;
 	}
 
+	private long _addTempFileEntry(String folderName, String title)
+		throws Exception {
+
+		com.liferay.portal.kernel.repository.model.FileEntry fileEntry =
+			TempFileEntryUtil.addTempFileEntry(
+				TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
+				folderName, TempFileEntryUtil.getTempFileName(title + ".txt"),
+				FileUtil.createTempFile(RandomTestUtil.randomBytes()),
+				ContentTypes.TEXT_PLAIN);
+
+		return fileEntry.getFileEntryId();
+	}
+
 	private User _addUser() throws Exception {
 		User user = UserTestUtil.addUser();
 
@@ -4639,26 +9837,49 @@ public class DefaultObjectEntryManagerImplTest
 		return user;
 	}
 
-	private void _assertAggregationFacetValue(
-		Integer expectedNumberOfOccurrences, String facetValueTerm,
-		Page<ObjectEntry> page) {
+	private Organization _addUserOrganization() throws Exception {
+		Organization organization = OrganizationTestUtil.addOrganization();
 
-		List<Facet> facets = page.getFacets();
+		_user = _addUser();
 
-		Assert.assertFalse(ListUtil.isEmpty(facets));
+		_organizationLocalService.addUserOrganization(
+			_user.getUserId(), organization.getOrganizationId());
 
-		Facet facet = facets.get(0);
+		return organization;
+	}
 
-		List<Facet.FacetValue> facetValues = ListUtil.filter(
-			facet.getFacetValues(),
-			facetValue -> Objects.equals(facetValue.getTerm(), facetValueTerm));
+	private void _assertActions(
+			List<String> actions1, List<String> actions2,
+			ObjectDefinition objectDefinition, long objectEntryId)
+		throws Exception {
 
-		Assert.assertFalse(ListUtil.isEmpty(facetValues));
+		ObjectEntry objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			dtoConverterContext, objectDefinition, objectEntryId);
 
-		Facet.FacetValue facetValue = facetValues.get(0);
+		Map<String, Map<String, String>> objectEntryActions =
+			objectEntry.getActions();
 
-		Assert.assertEquals(
-			expectedNumberOfOccurrences, facetValue.getNumberOfOccurrences());
+		ListUtil.isNotEmptyForEach(
+			actions1,
+			action1 -> Assert.assertTrue(
+				objectEntryActions.containsKey(action1)));
+		ListUtil.isNotEmptyForEach(
+			actions2,
+			action2 -> Assert.assertFalse(
+				objectEntryActions.containsKey(action2)));
+	}
+
+	private void _assertApprovedObjectEntries(
+			ObjectEntry... expectedObjectEntries)
+		throws Exception {
+
+		assertEquals(
+			_defaultObjectEntryManager.getApprovedObjectEntries(
+				companyId, _objectDefinition1, null, null,
+				_createDTOConverterContext(), null, null, null, null),
+			Page.of(
+				ListUtil.fromArray(expectedObjectEntries), null,
+				expectedObjectEntries.length));
 	}
 
 	private void _assertCountAggregationObjectFieldValue(
@@ -4679,21 +9900,89 @@ public class DefaultObjectEntryManagerImplTest
 			});
 	}
 
+	private void _assertFailureWithStatusInTrash(
+			UnsafeConsumer<Long, Exception> unsafeConsumer)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.moveObjectEntryToTrash(
+				TestPropsValues.getUserId(),
+				ObjectEntryTestUtil.addObjectEntry(
+					TestPropsValues.getGroupId(), _objectDefinition4,
+					Collections.emptyMap()),
+				ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_IN_TRASH,
+			serviceBuilderObjectEntry.getStatus());
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {objectEntryId=",
+				serviceBuilderObjectEntry.getObjectEntryId(), ", status=",
+				WorkflowConstants.STATUS_IN_TRASH, "}"),
+			() -> unsafeConsumer.accept(
+				serviceBuilderObjectEntry.getObjectEntryId()));
+	}
+
 	private void _assertFilteredObjectEntriesSize(
 			String filterString, ObjectDefinition objectDefinition, long size)
 		throws Exception {
 
 		Page<ObjectEntry> page = _defaultObjectEntryManager.getObjectEntries(
 			companyId, objectDefinition, null, null,
-			new DefaultDTOConverterContext(
-				false, Collections.emptyMap(), dtoConverterRegistry, null,
-				LocaleUtil.getDefault(), null, _user),
-			filterString, null, null, null);
+			_createDTOConverterContext(), filterString, null, null, null);
 
 		Collection<ObjectEntry> objectEntries = page.getItems();
 
 		Assert.assertEquals(
 			objectEntries.toString(), size, objectEntries.size());
+	}
+
+	private void _assertListEntries(
+		List<ListEntry> listEntries, List<Object> values) {
+
+		if (ListUtil.isEmpty(values)) {
+			return;
+		}
+
+		for (Object value : values) {
+			Assert.assertTrue(
+				ListUtil.exists(
+					listEntries,
+					listEntry -> {
+						if (value instanceof String) {
+							return Objects.equals(value, listEntry.getKey());
+						}
+
+						return Objects.equals(value, listEntry);
+					}));
+		}
+	}
+
+	private void _assertListEntry(ListEntry listEntry, Object value) {
+		if (value instanceof String) {
+			Assert.assertEquals(value, listEntry.getKey());
+		}
+		else {
+			Assert.assertEquals(value, listEntry);
+		}
+	}
+
+	private void _assertLocalizedTextObjectFieldValueCopy(
+		String expectedValue, ObjectEntry objectEntry,
+		ObjectField objectField) {
+
+		Map<String, Object> properties = objectEntry.getProperties();
+
+		Map<String, Object> i18nValues = (Map<String, Object>)properties.get(
+			objectField.getI18nObjectFieldName());
+
+		String language = LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault());
+
+		Assert.assertEquals(
+			expectedValue, String.valueOf(i18nValues.get(language)));
 	}
 
 	private void _assertLocalizedValues(
@@ -4711,7 +10000,7 @@ public class DefaultObjectEntryManagerImplTest
 				_objectDefinition2, objectEntryId),
 			new ObjectEntry() {
 				{
-					properties = expectedLocalizedValues;
+					properties = new HashMap<>(expectedLocalizedValues);
 				}
 			});
 
@@ -4732,7 +10021,7 @@ public class DefaultObjectEntryManagerImplTest
 					_objectDefinition2, objectEntryId),
 				new ObjectEntry() {
 					{
-						properties = expectedLocalizedValues;
+						properties = new HashMap<>(expectedLocalizedValues);
 					}
 				});
 		}
@@ -4785,6 +10074,60 @@ public class DefaultObjectEntryManagerImplTest
 			objectEntries.toString(), size, objectEntries.size());
 	}
 
+	private void _assertObjectEntriesSize3(
+			ObjectDefinition objectDefinition, String scopeKey, long size)
+		throws Exception {
+
+		Page<ObjectEntry> page = _defaultObjectEntryManager.getObjectEntries(
+			companyId, objectDefinition, scopeKey, null,
+			new DefaultDTOConverterContext(
+				false, Collections.emptyMap(), dtoConverterRegistry, null,
+				LocaleUtil.getDefault(), null, _user),
+			StringPool.BLANK, null, StringPool.BLANK, null);
+
+		Collection<ObjectEntry> objectEntries = page.getItems();
+
+		Assert.assertEquals(
+			objectEntries.toString(), size, objectEntries.size());
+	}
+
+	private void _assertObjectEntry(
+		ObjectEntry actualObjectEntry, ObjectEntry expectedObjectEntry) {
+
+		Assert.assertEquals(
+			expectedObjectEntry.getProperties(),
+			actualObjectEntry.getProperties());
+
+		Assert.assertEquals(
+			expectedObjectEntry.getStatus(), actualObjectEntry.getStatus());
+	}
+
+	private void _assertObjectEntryStatus(
+			int expectedStatusCode, ObjectEntry objectEntry)
+		throws Exception {
+
+		Status status = objectEntry.getStatus();
+
+		AssertUtils.assertEquals(expectedStatusCode, status.getCode());
+	}
+
+	private void _assertObjectEntryVersions(
+		int expectedSize, int expectedStatus, ObjectEntry objectEntry) {
+
+		List<ObjectEntryVersion> objectEntryVersions =
+			_objectEntryVersionLocalService.getObjectEntryVersions(
+				objectEntry.getId());
+
+		Assert.assertEquals(
+			objectEntryVersions.toString(), expectedSize,
+			objectEntryVersions.size());
+
+		ListUtil.isNotEmptyForEach(
+			objectEntryVersions,
+			objectEntryVersion -> Assert.assertEquals(
+				expectedStatus, objectEntryVersion.getStatus()));
+	}
+
 	private void _assertObjectEntryWithPicklistObjectField(
 		String expectedPicklistObjectFieldValue, ObjectEntry objectEntry) {
 
@@ -4822,6 +10165,15 @@ public class DefaultObjectEntryManagerImplTest
 					).build();
 				}
 			});
+	}
+
+	private void _assertTextObjectFieldValueCopy(
+		String expectedValue, ObjectEntry objectEntry) {
+
+		Map<String, Object> properties = objectEntry.getProperties();
+
+		Assert.assertEquals(
+			expectedValue, properties.get("textObjectFieldName"));
 	}
 
 	private void _assignAccountEntryRole(
@@ -4899,29 +10251,14 @@ public class DefaultObjectEntryManagerImplTest
 			"startswith( ", fieldName, ",'", value, "')");
 	}
 
-	private ObjectDefinition _createObjectDefinition(
-			List<ObjectField> objectFields)
-		throws Exception {
-
-		return _createObjectDefinition(
-			objectFields, ObjectDefinitionConstants.SCOPE_COMPANY);
+	private DTOConverterContext _createDTOConverterContext() {
+		return _createDTOConverterContext(_user);
 	}
 
-	private ObjectDefinition _createObjectDefinition(
-			List<ObjectField> objectFields, String scope)
-		throws Exception {
-
-		ObjectDefinition objectDefinition =
-			objectDefinitionLocalService.addCustomObjectDefinition(
-				adminUser.getUserId(), 0, false, true, true, false,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionTestUtil.getRandomName(), null, null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
-				objectFields);
-
-		return objectDefinitionLocalService.publishCustomObjectDefinition(
-			adminUser.getUserId(), objectDefinition.getObjectDefinitionId());
+	private DTOConverterContext _createDTOConverterContext(User user) {
+		return new DefaultDTOConverterContext(
+			false, Collections.emptyMap(), dtoConverterRegistry, null,
+			LocaleUtil.getDefault(), null, user);
 	}
 
 	private Tree _createObjectEntryTree(
@@ -4929,15 +10266,19 @@ public class DefaultObjectEntryManagerImplTest
 		throws Exception {
 
 		Tree tree = TreeTestUtil.createObjectEntryTree(
-			externalReferenceCodeSuffix, _objectEntryLocalService,
-			objectFieldLocalService,
-			_rootObjectDefinition.getObjectDefinitionId(),
-			_objectRelationshipLocalService, _treeFactory);
+			externalReferenceCodeSuffix, objectDefinitionLocalService,
+			_objectEntryLocalService, objectFieldLocalService,
+			_objectRelationshipLocalService,
+			_rootObjectDefinition.getObjectDefinitionId());
 
 		Node node = tree.getRootNode();
 
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.getObjectEntry(node.getPrimaryKey());
+
 		_objectEntryLocalService.updateObjectEntry(
-			adminUser.getUserId(), node.getPrimaryKey(),
+			adminUser.getUserId(), serviceBuilderObjectEntry.getPrimaryKey(),
+			serviceBuilderObjectEntry.getObjectEntryFolderId(),
 			HashMapBuilder.<String, Serializable>put(
 				() -> {
 					ObjectField objectField =
@@ -4976,6 +10317,13 @@ public class DefaultObjectEntryManagerImplTest
 				organization.getOrganizationId());
 	}
 
+	private ObjectDefinition _enableObjectEntryVersioning() {
+		_objectDefinition1.setEnableObjectEntryVersioning(true);
+
+		return objectDefinitionLocalService.updateObjectDefinition(
+			_objectDefinition1);
+	}
+
 	private Long _getAttachmentObjectFieldValue() throws Exception {
 		byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
@@ -5004,13 +10352,77 @@ public class DefaultObjectEntryManagerImplTest
 		return fileEntry.getId();
 	}
 
-	private String _getListEntryKey(ObjectEntry objectEntry) {
+	private ObjectEntry _getLatestApprovedObjectEntry(
+			long headObjectEntryId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.fetchObjectEntryByHeadObjectEntryId(
+				headObjectEntryId);
+
+		if (serviceBuilderObjectEntry == null) {
+			return null;
+		}
+
+		return _defaultObjectEntryManager.getApprovedObjectEntry(
+			companyId, _createDTOConverterContext(),
+			serviceBuilderObjectEntry.getExternalReferenceCode(),
+			objectDefinition, null);
+	}
+
+	private ListEntry _getListEntry(ObjectEntry objectEntry) {
 		Map<String, Object> properties = objectEntry.getProperties();
 
-		ListEntry listEntry = (ListEntry)properties.get(
-			"picklistObjectFieldName");
+		return (ListEntry)properties.get("picklistObjectFieldName");
+	}
+
+	private String _getListEntryKey(ObjectEntry objectEntry) {
+		ListEntry listEntry = _getListEntry(objectEntry);
 
 		return listEntry.getKey();
+	}
+
+	private String _getListEntryName(ObjectEntry objectEntry) {
+		ListEntry listEntry = _getListEntry(objectEntry);
+
+		return listEntry.getName();
+	}
+
+	private LocalDateTime _getLocalDateTime(String dateTimeString) {
+		return LocalDateTime.parse(
+			dateTimeString,
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+	}
+
+	private Object _getLocalizedPropertyValue(
+		String languageId, ObjectEntry objectEntry, String objectFieldName) {
+
+		Map<String, Serializable> localizedValues =
+			(Map<String, Serializable>)objectEntry.getPropertyValue(
+				objectFieldName + "_i18n");
+
+		return localizedValues.get(languageId);
+	}
+
+	private List<ObjectEntry> _getObjectEntries(
+			ObjectDefinition objectDefinition, String scopeKey)
+		throws Exception {
+
+		Page<ObjectEntry> page = _defaultObjectEntryManager.getObjectEntries(
+			companyId, objectDefinition, scopeKey, null, dtoConverterContext,
+			StringPool.BLANK, null, StringPool.BLANK,
+			new Sort[] {SortFactoryUtil.create("createDate", false)});
+
+		return (List<ObjectEntry>)page.getItems();
+	}
+
+	private String _getObjectRelationshipERCObjectFieldName(
+		ObjectField objectField) {
+
+		return ObjectFieldSettingUtil.getValue(
+			ObjectFieldSettingConstants.
+				NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
+			objectField);
 	}
 
 	private Page<ObjectEntry> _getPage(
@@ -5029,6 +10441,13 @@ public class DefaultObjectEntryManagerImplTest
 				false, Collections.emptyMap(), dtoConverterRegistry, null,
 				LocaleUtil.getDefault(), null, _user),
 			StringPool.BLANK, null, null, null);
+	}
+
+	private Timestamp _getTimestamp(String dateString) throws Exception {
+		Date date = DateUtil.parseDate(
+			"yyyy-MM-dd", dateString, LocaleUtil.getSiteDefault());
+
+		return new Timestamp(date.getTime());
 	}
 
 	private void _removeResourcePermission(
@@ -5082,6 +10501,1207 @@ public class DefaultObjectEntryManagerImplTest
 			ObjectActionKeys.ADD_OBJECT_ENTRY, _buyerRole);
 	}
 
+	private void _testAddObjectEntryWithDefaultLanguageId(
+			ObjectDefinition objectDefinition)
+		throws Exception {
+
+		String scopeKey;
+
+		if (StringUtil.equals(
+				objectDefinition.getScope(),
+				ObjectDefinitionConstants.SCOPE_COMPANY)) {
+
+			scopeKey = ObjectDefinitionConstants.SCOPE_COMPANY;
+		}
+		else {
+			Group group = GroupTestUtil.addGroup();
+
+			scopeKey = String.valueOf(group.getGroupId());
+		}
+
+		String invalidLanguageId = RandomTestUtil.randomString();
+
+		AssertUtils.assertFailure(
+			ObjectEntryDefaultLanguageIdException.class,
+			"Language ID " + invalidLanguageId + " is not available",
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						defaultLanguageId = invalidLanguageId;
+						properties = Collections.emptyMap();
+					}
+				},
+				scopeKey));
+
+		ObjectFieldUtil.addCustomObjectField(
+			new IntegerObjectFieldBuilder(
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).localized(
+				true
+			).name(
+				"requiredLocalizedLongInteger"
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).required(
+				true
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
+
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.RequiredLanguageId.class,
+			"No value was provided for the language ID \"pt_BR\" in the " +
+				"required object field \"requiredLocalizedLongInteger\".",
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						defaultLanguageId = "pt_BR";
+						properties = Collections.emptyMap();
+					}
+				},
+				scopeKey));
+		AssertUtils.assertFailure(
+			ObjectEntryValuesException.RequiredLanguageId.class,
+			"No value was provided for the language ID \"pt_BR\" in the " +
+				"required object field \"requiredLocalizedLongInteger\".",
+			() -> _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						defaultLanguageId = "pt_BR";
+						properties = HashMapBuilder.<String, Object>put(
+							"requiredLocalizedLongInteger_i18n",
+							HashMapBuilder.put(
+								"pt_BR", StringPool.BLANK
+							).build()
+						).build();
+					}
+				},
+				scopeKey));
+
+		Locale defaultLocale = LocaleUtil.getDefault();
+
+		try {
+			if (StringUtil.equals(
+					ObjectDefinitionConstants.SCOPE_COMPANY, scopeKey)) {
+
+				LocaleUtil.setDefault(
+					LocaleUtil.BRAZIL.getLanguage(),
+					LocaleUtil.BRAZIL.getCountry(),
+					LocaleUtil.BRAZIL.getVariant());
+			}
+			else {
+				GroupTestUtil.updateDisplaySettings(
+					GetterUtil.getLong(scopeKey),
+					Arrays.asList(LocaleUtil.BRAZIL, LocaleUtil.US),
+					LocaleUtil.BRAZIL);
+			}
+
+			// No value provided for the default language ID in the required
+			// object field of a draft object entry
+
+			objectDefinition.setEnableObjectEntryDraft(true);
+
+			objectDefinitionLocalService.updateObjectDefinition(
+				objectDefinition);
+
+			assertEquals(
+				_defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							properties = Collections.emptyMap();
+							status = new Status() {
+								{
+									code = WorkflowConstants.STATUS_DRAFT;
+								}
+							};
+						}
+					},
+					scopeKey),
+				new ObjectEntry() {
+					{
+						properties = Collections.emptyMap();
+					}
+				});
+
+			// No value provided for the default language ID in the required
+			// object field of a published object entry
+
+			AssertUtils.assertFailure(
+				ObjectEntryValuesException.RequiredLanguageId.class,
+				"No value was provided for the language ID \"pt_BR\" in the " +
+					"required object field \"requiredLocalizedLongInteger\".",
+				() -> _defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							properties = Collections.emptyMap();
+						}
+					},
+					scopeKey));
+			AssertUtils.assertFailure(
+				ObjectEntryValuesException.RequiredLanguageId.class,
+				"No value was provided for the language ID \"pt_BR\" in the " +
+					"required object field \"requiredLocalizedLongInteger\".",
+				() -> _defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							properties = HashMapBuilder.<String, Object>put(
+								"requiredLocalizedLongInteger_i18n",
+								HashMapBuilder.put(
+									"pt_BR", StringPool.BLANK
+								).build()
+							).build();
+						}
+					},
+					scopeKey));
+
+			assertEquals(
+				_defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							defaultLanguageId = "en_US";
+							properties = HashMapBuilder.<String, Object>put(
+								"requiredLocalizedLongInteger", 0
+							).build();
+						}
+					},
+					scopeKey),
+				new ObjectEntry() {
+					{
+						defaultLanguageId = "en_US";
+						properties = HashMapBuilder.<String, Object>put(
+							"requiredLocalizedLongInteger_i18n",
+							HashMapBuilder.<String, Object>put(
+								"en_US", 0
+							).build()
+						).build();
+					}
+				});
+			assertEquals(
+				_defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							properties = HashMapBuilder.<String, Object>put(
+								"requiredLocalizedLongInteger", 0
+							).build();
+						}
+					},
+					scopeKey),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"requiredLocalizedLongInteger_i18n",
+							HashMapBuilder.<String, Object>put(
+								"pt_BR", 0
+							).build()
+						).build();
+					}
+				});
+
+			// Value provided for the default language ID in the required
+			// object field of a published object entry
+
+			int randomInt = RandomTestUtil.randomInt();
+
+			assertEquals(
+				_defaultObjectEntryManager.addObjectEntry(
+					_simpleDTOConverterContext, objectDefinition,
+					new ObjectEntry() {
+						{
+							properties = HashMapBuilder.<String, Object>put(
+								"requiredLocalizedLongInteger_i18n",
+								HashMapBuilder.put(
+									"pt_BR", randomInt
+								).build()
+							).build();
+						}
+					},
+					scopeKey),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"requiredLocalizedLongInteger_i18n",
+							HashMapBuilder.<String, Object>put(
+								"pt_BR", randomInt
+							).build()
+						).build();
+					}
+				});
+		}
+		finally {
+			if (scopeKey.equals(ObjectDefinitionConstants.SCOPE_COMPANY)) {
+				LocaleUtil.setDefault(
+					defaultLocale.getLanguage(), defaultLocale.getCountry(),
+					defaultLocale.getVariant());
+			}
+			else {
+				_groupLocalService.deleteGroup(GetterUtil.getLong(scopeKey));
+			}
+
+			objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition);
+		}
+	}
+
+	private void _testAddObjectEntryWithMissingParentObjectEntryReference(
+			ObjectDefinition childObjectDefinition,
+			Map<String, Object> childValues, long groupId,
+			String parentExternalReferenceCode,
+			ObjectDefinition parentObjectDefinition,
+			Map<String, Object> parentValues)
+		throws Exception {
+
+		String scopeKey = String.valueOf(groupId);
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			String.format(
+				"No ObjectEntry exists with the key {externalReference" +
+					"Code=%s, groupId=%s, companyId=%s, objectDefinitionId=%s}",
+				parentExternalReferenceCode, groupId,
+				parentObjectDefinition.getCompanyId(),
+				parentObjectDefinition.getObjectDefinitionId()),
+			() -> _defaultObjectEntryManager.getObjectEntry(
+				parentObjectDefinition.getCompanyId(),
+				_simpleDTOConverterContext, parentExternalReferenceCode,
+				parentObjectDefinition, scopeKey));
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			_addObjectEntry(
+				childObjectDefinition,
+				new ObjectEntry() {
+					{
+						properties = new HashMap<>(childValues);
+						scopeId = groupId;
+					}
+				},
+				scopeKey);
+		}
+
+		ObjectEntry objectEntry = _defaultObjectEntryManager.getObjectEntry(
+			TestPropsValues.getCompanyId(), _simpleDTOConverterContext,
+			parentExternalReferenceCode, parentObjectDefinition, scopeKey);
+
+		AssertUtils.assertEquals(groupId, objectEntry.getScopeId());
+
+		_assertObjectEntryStatus(WorkflowConstants.STATUS_EMPTY, objectEntry);
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			parentObjectDefinition.getCompanyId(), _simpleDTOConverterContext,
+			parentExternalReferenceCode, parentObjectDefinition,
+			new ObjectEntry() {
+				{
+					properties = parentValues;
+				}
+			},
+			scopeKey);
+
+		AssertUtils.assertEquals(groupId, objectEntry.getScopeId());
+
+		_assertObjectEntryStatus(
+			WorkflowConstants.STATUS_APPROVED, objectEntry);
+	}
+
+	private void _testAddRelatedObjectEntry(
+			ObjectDefinition objectDefinitionAA, ObjectEntry objectEntryA,
+			ObjectRelationship objectRelationshipA_AA,
+			ObjectField objectRelationshipA_AAObjectField2,
+			ObjectField objectRelationshipB_AAObjectField2, String scopeKey,
+			UnsafeTriFunction
+				<ObjectEntry, ObjectEntry, ObjectRelationship, ObjectEntry,
+				 Exception> unsafeTriFunction)
+		throws Exception {
+
+		// Add object entry
+
+		ObjectEntry objectEntry = new ObjectEntry() {
+			{
+				properties = HashMapBuilder.<String, Object>put(
+					objectRelationshipA_AAObjectField2::getName,
+					RandomTestUtil.randomInt()
+				).put(
+					objectRelationshipB_AAObjectField2::getName,
+					RandomTestUtil.randomInt()
+				).build();
+			}
+		};
+
+		ObjectEntry objectEntryAA = _defaultObjectEntryManager.addObjectEntry(
+			_createDTOConverterContext(), objectDefinitionAA, objectEntry,
+			scopeKey);
+
+		Assert.assertNull(
+			objectEntryAA.getPropertyValue(
+				objectRelationshipA_AAObjectField2.getName()));
+		Assert.assertNull(
+			objectEntryAA.getPropertyValue(
+				objectRelationshipB_AAObjectField2.getName()));
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.getObjectEntry(objectEntryAA.getId());
+
+		Assert.assertEquals(
+			0L, serviceBuilderObjectEntry.getRootObjectEntryId());
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA.getId());
+
+		// Add related object entry
+
+		objectEntryAA = unsafeTriFunction.apply(
+			objectEntryA, objectEntry, objectRelationshipA_AA);
+
+		Assert.assertEquals(
+			objectEntryA.getId(),
+			objectEntryAA.getPropertyValue(
+				objectRelationshipA_AAObjectField2.getName()));
+		Assert.assertNull(
+			objectEntryAA.getPropertyValue(
+				objectRelationshipB_AAObjectField2.getName()));
+
+		serviceBuilderObjectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntryAA.getId());
+
+		Assert.assertEquals(
+			GetterUtil.getLong(objectEntryA.getId()),
+			serviceBuilderObjectEntry.getRootObjectEntryId());
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA.getId());
+	}
+
+	private void _testCopyObjectEntry(
+			long groupId, ObjectEntryFolder destinationObjectEntryFolder,
+			ObjectEntryFolder sourceObjectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			sourceObjectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName"),
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+		Assert.assertEquals(
+			String.valueOf(
+				destinationObjectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testCopyObjectEntryDuplicateName(
+			long groupId, ObjectEntryFolder objectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7, objectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			objectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName") + " (Copy)",
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+
+		Assert.assertEquals(
+			String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testCopyObjectEntryGroup(
+			long groupId, ObjectDefinitionSetting objectDefinitionSetting)
+		throws Exception {
+
+		DepotEntry depotEntry = _addDepotEntry();
+
+		ObjectEntryFolder objectEntryFolder =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, null, RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			String.valueOf(groupId), 1);
+
+		Assert.assertThrows(
+			ObjectDefinitionScopeException.class,
+			() -> _defaultObjectEntryManager.copyObjectEntry(
+				_createDTOConverterContext(adminUser), objectEntry1.getId(),
+				objectEntryFolder.getObjectEntryFolderId(), false));
+
+		objectDefinitionSetting.setValue(
+			StringBundler.concat(
+				groupId, StringPool.COMMA, depotEntry.getGroupId()));
+
+		_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+			objectDefinitionSetting);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			objectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testCopyObjectEntryReplace(
+			long groupId, ObjectEntryFolder destinationObjectEntryFolder,
+			ObjectEntryFolder sourceObjectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			sourceObjectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName"),
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+
+		ObjectEntry objectEntry3 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), true);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName"),
+			objectEntry3.getPropertyValue("textObjectFieldName"));
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry2.getId()));
+		Assert.assertEquals(
+			String.valueOf(
+				destinationObjectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry3.getObjectEntryFolderId()));
+	}
+
+	private void _testDeleteObjectEntryWithAccountEntryRestricted2(
+			String actionId, Tree tree)
+		throws Exception {
+
+		Node rootNode = tree.getRootNode();
+
+		Iterator<Node> iterator = tree.iterator(
+			TreeConstants.ITERATOR_TYPE_POST_ORDER);
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			Node parentNode = node.getParentNode();
+
+			if (parentNode == null) {
+				com.liferay.object.model.ObjectEntry rootObjectEntry =
+					_objectEntryLocalService.getObjectEntry(
+						rootNode.getPrimaryKey());
+
+				AssertUtils.assertFailure(
+					PrincipalException.MustHavePermission.class,
+					StringBundler.concat(
+						"User ", _user.getUserId(), " must have ", actionId,
+						" permission for ",
+						_rootObjectDefinition.getClassName(), StringPool.SPACE,
+						rootNode.getPrimaryKey()),
+					() -> _defaultObjectEntryManager.deleteObjectEntry(
+						objectDefinitionLocalService.fetchObjectDefinition(
+							rootObjectEntry.getObjectDefinitionId()),
+						rootNode.getPrimaryKey()));
+
+				continue;
+			}
+
+			Edge edge = node.getEdge();
+
+			AssertUtils.assertFailure(
+				PrincipalException.MustHavePermission.class,
+				StringBundler.concat(
+					"User ", _user.getUserId(), " must have ", actionId,
+					" permission for ", _rootObjectDefinition.getClassName(),
+					StringPool.SPACE, rootNode.getPrimaryKey()),
+				() -> _defaultObjectEntryManager.deleteRelatedObjectEntry(
+					node.getPrimaryKey(),
+					_objectRelationshipLocalService.getObjectRelationship(
+						edge.getObjectRelationshipId()),
+					parentNode.getPrimaryKey()));
+		}
+	}
+
+	private void _testDeleteRelatedObjectEntry(
+			ObjectDefinition objectDefinitionAA, ObjectEntry objectEntryA,
+			ObjectEntry objectEntryB, ObjectRelationship objectRelationshipA_AA,
+			ObjectRelationship objectRelationshipB_AA,
+			ObjectField objectRelationshipA_AAObjectField2,
+			ObjectField objectRelationshipB_AAObjectField2, String scopeKey,
+			UnsafeTriConsumer
+				<ObjectEntry, ObjectEntry, ObjectRelationship, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		ObjectEntry objectEntryAA1 = _addObjectEntry(
+			objectDefinitionAA,
+			new ObjectEntry() {
+				{
+					properties = new HashMap<>(Collections.emptyMap());
+				}
+			},
+			scopeKey);
+
+		_defaultObjectEntryManager.deleteObjectEntry(
+			objectDefinitionAA, objectEntryAA1.getId());
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntryAA1.getId()));
+
+		ObjectEntry objectEntryAA2 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_createDTOConverterContext(),
+				objectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectRelationshipA_AAObjectField2::getName,
+							objectEntryA.getId()
+						).build();
+					}
+				},
+				objectRelationshipA_AA, scopeKey);
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {",
+				objectRelationshipB_AAObjectField2.getName(), "=",
+				objectEntryB.getId(), ", objectEntryId=",
+				objectEntryAA2.getId(), "}"),
+			() -> unsafeTriConsumer.accept(
+				objectEntryB, objectEntryAA2, objectRelationshipB_AA));
+
+		unsafeTriConsumer.accept(
+			objectEntryA, objectEntryAA2, objectRelationshipA_AA);
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntryAA2.getId()));
+	}
+
+	private void _testGetObjectEntriesWithAccountEntryRestricted2(
+			Tree tree, int objectEntriesSize, int relatedObjectEntriesSize)
+		throws Exception {
+
+		Iterator<Node> iterator = tree.iterator();
+
+		Node rootNode = iterator.next();
+
+		com.liferay.object.model.ObjectEntry objectEntry =
+			_objectEntryLocalService.getObjectEntry(rootNode.getPrimaryKey());
+
+		ObjectDefinition rootObjectDefinition =
+			objectDefinitionLocalService.getObjectDefinition(
+				objectEntry.getObjectDefinitionId());
+
+		_assertObjectEntriesSize1(
+			objectDefinitionLocalService.getObjectDefinition(
+				objectEntry.getObjectDefinitionId()),
+			objectEntriesSize);
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			Node parentNode = node.getParentNode();
+
+			Edge edge = node.getEdge();
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.getObjectRelationship(
+					edge.getObjectRelationshipId());
+
+			if (relatedObjectEntriesSize == 0) {
+				AssertUtils.assertFailure(
+					PrincipalException.MustHavePermission.class,
+					StringBundler.concat(
+						"User ", _user.getUserId(),
+						" must have VIEW permission for ",
+						rootObjectDefinition.getClassName(), StringPool.SPACE,
+						rootNode.getPrimaryKey()),
+					() -> _defaultObjectEntryManager.getRelatedObjectEntries(
+						_createDTOConverterContext(),
+						parentNode.getPrimaryKey(), objectRelationship, null));
+			}
+			else {
+				Page<ObjectEntry> objectEntryPage =
+					_defaultObjectEntryManager.getRelatedObjectEntries(
+						_createDTOConverterContext(),
+						parentNode.getPrimaryKey(), objectRelationship, null);
+
+				Assert.assertEquals(
+					relatedObjectEntriesSize, objectEntryPage.getTotalCount());
+			}
+		}
+	}
+
+	private void _testGetRelatedObjectEntries(
+			ObjectEntry objectEntryA, ObjectRelationship objectRelationshipA_AA,
+			String scopeKey,
+			UnsafeTriFunction
+				<String, String, Sort[], Page<ObjectEntry>, Exception>
+					unsafeTriFunction)
+		throws Exception {
+
+		// Equals expression
+
+		ObjectEntry objectEntryAA1 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				objectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", "textObjectFieldValue1"
+						).build();
+					}
+				},
+				objectRelationshipA_AA, scopeKey);
+		ObjectEntry objectEntryAA2 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				objectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", "textObjectFieldValue2"
+						).build();
+					}
+				},
+				objectRelationshipA_AA, scopeKey);
+
+		assertEquals(
+			unsafeTriFunction.apply(
+				buildEqualsExpressionFilterString(
+					"textObjectFieldName", "textObjectFieldValue1"),
+				null, null),
+			Page.of(List.of(objectEntryAA1), null, 1));
+		assertEquals(
+			unsafeTriFunction.apply(
+				buildEqualsExpressionFilterString(
+					"textObjectFieldName", "textObjectFieldValue2"),
+				null, null),
+			Page.of(List.of(objectEntryAA2), null, 1));
+
+		// Search
+
+		assertEquals(
+			unsafeTriFunction.apply(null, "textObjectFieldValue", null),
+			Page.of(List.of(objectEntryAA1, objectEntryAA2), null, 2));
+		assertEquals(
+			unsafeTriFunction.apply(null, "textObjectFieldValue1", null),
+			Page.of(List.of(objectEntryAA1), null, 1));
+
+		// Sort
+
+		assertEquals(
+			unsafeTriFunction.apply(
+				null, null, getSorts("textObjectFieldName:asc")),
+			Page.of(List.of(objectEntryAA1, objectEntryAA2), null, 2));
+		assertEquals(
+			unsafeTriFunction.apply(
+				null, null, getSorts("textObjectFieldName:desc")),
+			Page.of(List.of(objectEntryAA2, objectEntryAA1), null, 2));
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA1.getId());
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA2.getId());
+	}
+
+	private void _testGetRelatedObjectEntriesWithRootObjectEntryId(
+			ObjectDefinition objectDefinitionA,
+			ObjectDefinition objectDefinitionAA,
+			ObjectDefinition objectDefinitionB, ObjectEntry objectEntryA,
+			ObjectEntry objectEntryB, ObjectRelationship objectRelationshipA_AA,
+			ObjectRelationship objectRelationshipB_AA, String scopeKey,
+			UnsafeBiFunction
+				<ObjectEntry, ObjectRelationship, Page<ObjectEntry>, Exception>
+					unsafeBiFunction)
+		throws Exception {
+
+		// User with permission to view object definition A
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(adminUser));
+
+		PrincipalThreadLocal.setName(adminUser.getUserId());
+
+		ObjectEntry objectEntryA_AA =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				objectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build();
+					}
+				},
+				objectRelationshipA_AA, scopeKey);
+
+		ObjectEntry objectEntryB_AA =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_simpleDTOConverterContext,
+				objectEntryB.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build();
+					}
+				},
+				objectRelationshipB_AA, scopeKey);
+
+		ObjectEntry objectEntryAA = _defaultObjectEntryManager.addObjectEntry(
+			_simpleDTOConverterContext, objectDefinitionAA,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			scopeKey);
+
+		_user = _addUser();
+
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionA, _user);
+
+		assertEquals(
+			unsafeBiFunction.apply(objectEntryA, objectRelationshipA_AA),
+			Page.of(List.of(objectEntryA_AA), null, 1));
+		assertEquals(
+			_objectEntryManager.getObjectEntries(
+				TestPropsValues.getCompanyId(), objectDefinitionAA, scopeKey,
+				null, _createDTOConverterContext(), (String)null, null, null,
+				null),
+			Page.of(Collections.emptyList(), null, 0));
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				objectDefinitionB.getClassName(), StringPool.SPACE,
+				objectEntryB.getId()),
+			() -> unsafeBiFunction.apply(objectEntryB, objectRelationshipB_AA));
+
+		// User with permission to view object definition AA
+
+		_user = _addUser();
+
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionAA, _user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				objectDefinitionA.getClassName(), StringPool.SPACE,
+				objectEntryA.getId()),
+			() -> unsafeBiFunction.apply(objectEntryA, objectRelationshipA_AA));
+
+		assertEquals(
+			_objectEntryManager.getObjectEntries(
+				TestPropsValues.getCompanyId(), objectDefinitionAA, scopeKey,
+				null, _createDTOConverterContext(), (String)null, null, null,
+				null),
+			Page.of(List.of(objectEntryAA), null, 1));
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				objectDefinitionB.getClassName(), StringPool.SPACE,
+				objectEntryB.getId()),
+			() -> unsafeBiFunction.apply(objectEntryB, objectRelationshipB_AA));
+
+		// User with permission to view object definition B
+
+		_user = _addUser();
+
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionB, _user);
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have VIEW permission for ",
+				objectDefinitionA.getClassName(), StringPool.SPACE,
+				objectEntryA.getId()),
+			() -> _defaultObjectEntryManager.getRelatedObjectEntries(
+				_createDTOConverterContext(), objectEntryA.getId(),
+				objectRelationshipA_AA, null));
+
+		assertEquals(
+			_objectEntryManager.getObjectEntries(
+				TestPropsValues.getCompanyId(), objectDefinitionAA, scopeKey,
+				null, _createDTOConverterContext(), (String)null, null, null,
+				null),
+			Page.of(Collections.emptyList(), null, 0));
+		assertEquals(
+			unsafeBiFunction.apply(objectEntryB, objectRelationshipB_AA),
+			Page.of(List.of(objectEntryB_AA), null, 1));
+
+		// User with permission to view object definitions A, AA, and B
+
+		_user = _addUser();
+
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionA, _user);
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionAA, _user);
+		_addRoleUser(new String[] {ActionKeys.VIEW}, objectDefinitionB, _user);
+
+		assertEquals(
+			unsafeBiFunction.apply(objectEntryA, objectRelationshipA_AA),
+			Page.of(List.of(objectEntryA_AA), null, 1));
+		assertEquals(
+			_objectEntryManager.getObjectEntries(
+				TestPropsValues.getCompanyId(), objectDefinitionAA, scopeKey,
+				null, _createDTOConverterContext(), (String)null, null, null,
+				null),
+			Page.of(List.of(objectEntryAA), null, 1));
+		assertEquals(
+			unsafeBiFunction.apply(objectEntryB, objectRelationshipB_AA),
+			Page.of(List.of(objectEntryB_AA), null, 1));
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA.getId());
+		_objectEntryLocalService.deleteObjectEntry(objectEntryA_AA.getId());
+		_objectEntryLocalService.deleteObjectEntry(objectEntryB_AA.getId());
+	}
+
+	private void _testGetRelatedObjectEntry(
+			UnsafeTriFunction
+				<ObjectEntry, ObjectEntry, ObjectRelationship, ObjectEntry,
+				 Exception> unsafeTriFunction)
+		throws Exception {
+
+		ObjectEntry objectEntryAA1 = _addObjectEntry(
+			_companyObjectDefinitionAA, Collections.emptyMap());
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {",
+				_companyObjectRelationshipA_AAObjectField2.getName(), "=",
+				_companyObjectEntryA.getId(), ", objectEntryId=",
+				objectEntryAA1.getId(), "}"),
+			() -> unsafeTriFunction.apply(
+				_companyObjectEntryA, objectEntryAA1,
+				_companyObjectRelationshipA_AA));
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {",
+				_companyObjectRelationshipB_AAObjectField2.getName(), "=",
+				_companyObjectEntryB.getId(), ", objectEntryId=",
+				objectEntryAA1.getId(), "}"),
+			() -> unsafeTriFunction.apply(
+				_companyObjectEntryB, objectEntryAA1,
+				_companyObjectRelationshipB_AA));
+
+		Assert.assertNotNull(
+			_defaultObjectEntryManager.getObjectEntry(
+				dtoConverterContext, _companyObjectDefinitionAA,
+				objectEntryAA1.getId()));
+
+		ObjectEntry objectEntryAA2 =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_createDTOConverterContext(),
+				_companyObjectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							_companyObjectRelationshipA_AAObjectField2::getName,
+							_companyObjectEntryA.getId()
+						).build();
+					}
+				},
+				_companyObjectRelationshipA_AA,
+				ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Assert.assertNotNull(
+			unsafeTriFunction.apply(
+				_companyObjectEntryA, objectEntryAA2,
+				_companyObjectRelationshipA_AA));
+
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {",
+				_companyObjectRelationshipB_AAObjectField2.getName(), "=",
+				_companyObjectEntryB.getId(), ", objectEntryId=",
+				objectEntryAA2.getId(), "}"),
+			() -> unsafeTriFunction.apply(
+				_companyObjectEntryB, objectEntryAA2,
+				_companyObjectRelationshipB_AA));
+		AssertUtils.assertFailure(
+			NoSuchObjectEntryException.class,
+			StringBundler.concat(
+				"No ObjectEntry exists with the key {objectEntryId=",
+				objectEntryAA2.getId(), ", rootObjectEntryId=0}"),
+			() -> _defaultObjectEntryManager.getObjectEntry(
+				dtoConverterContext, _companyObjectDefinitionAA,
+				objectEntryAA2.getId()));
+	}
+
+	private void _testMoveObjectEntry(
+			long groupId, ObjectEntryFolder sourceObjectEntryFolder,
+			ObjectEntryFolder destinationObjectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			sourceObjectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.moveObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName"),
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+		Assert.assertEquals(
+			String.valueOf(
+				destinationObjectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testMoveObjectEntryDuplicateName(
+			long groupId, ObjectEntryFolder destinationObjectEntryFolder,
+			ObjectEntryFolder sourceObjectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			destinationObjectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			sourceObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		objectEntry2 = _defaultObjectEntryManager.moveObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry2.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName") + " (Copy)",
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+		Assert.assertEquals(
+			String.valueOf(
+				destinationObjectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testMoveObjectEntryGroup(
+			long groupId, ObjectDefinitionSetting objectDefinitionSetting)
+		throws Exception {
+
+		DepotEntry depotEntry = _addDepotEntry();
+
+		ObjectEntryFolder objectEntryFolder =
+			_objectEntryFolderLocalService.addObjectEntryFolder(
+				RandomTestUtil.randomString(), depotEntry.getGroupId(),
+				adminUser.getUserId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null, null, RandomTestUtil.randomString(),
+				ServiceContextTestUtil.getServiceContext());
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			String.valueOf(groupId), 1);
+
+		Assert.assertThrows(
+			ObjectDefinitionScopeException.class,
+			() -> _defaultObjectEntryManager.moveObjectEntry(
+				_createDTOConverterContext(adminUser), objectEntry1.getId(),
+				objectEntryFolder.getObjectEntryFolderId(), false));
+
+		objectDefinitionSetting.setValue(
+			StringBundler.concat(
+				groupId, StringPool.COMMA, depotEntry.getGroupId()));
+
+		_objectDefinitionSettingLocalService.updateObjectDefinitionSetting(
+			objectDefinitionSetting);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.moveObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			objectEntryFolder.getObjectEntryFolderId(), false);
+
+		Assert.assertEquals(
+			String.valueOf(objectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testMoveObjectEntryReplace(
+			long groupId, ObjectEntryFolder sourceObjectEntryFolder,
+			ObjectEntryFolder destinationObjectEntryFolder)
+		throws Exception {
+
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			_objectDefinition7,
+			destinationObjectEntryFolder.getObjectEntryFolderId(),
+			String.valueOf(groupId), 1);
+
+		ObjectEntry objectEntry2 = _defaultObjectEntryManager.copyObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry1.getId(),
+			sourceObjectEntryFolder.getObjectEntryFolderId(), false);
+
+		objectEntry2 = _defaultObjectEntryManager.moveObjectEntry(
+			_createDTOConverterContext(adminUser), objectEntry2.getId(),
+			destinationObjectEntryFolder.getObjectEntryFolderId(), true);
+
+		Assert.assertEquals(
+			objectEntry1.getPropertyValue("textObjectFieldName"),
+			objectEntry2.getPropertyValue("textObjectFieldName"));
+
+		Assert.assertNull(
+			_objectEntryLocalService.fetchObjectEntry(objectEntry1.getId()));
+		Assert.assertEquals(
+			String.valueOf(
+				destinationObjectEntryFolder.getObjectEntryFolderId()),
+			String.valueOf(objectEntry2.getObjectEntryFolderId()));
+	}
+
+	private void _testUpdateObjectEntryWithAccountEntryRestricted2(
+			String actionId, Tree tree)
+		throws Exception {
+
+		Iterator<Node> iterator = tree.iterator();
+
+		Node rootNode = iterator.next();
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.getObjectEntry(rootNode.getPrimaryKey());
+
+		ObjectDefinition rootObjectDefinition =
+			objectDefinitionLocalService.fetchObjectDefinition(
+				serviceBuilderObjectEntry.getObjectDefinitionId());
+
+		AssertUtils.assertFailure(
+			PrincipalException.MustHavePermission.class,
+			StringBundler.concat(
+				"User ", _user.getUserId(), " must have ", actionId,
+				" permission for ", _rootObjectDefinition.getClassName(),
+				StringPool.SPACE, serviceBuilderObjectEntry.getObjectEntryId()),
+			() -> _defaultObjectEntryManager.updateObjectEntry(
+				_simpleDTOConverterContext, rootObjectDefinition,
+				rootNode.getPrimaryKey(),
+				_defaultObjectEntryManager.getObjectEntry(
+					_simpleDTOConverterContext, rootObjectDefinition,
+					rootNode.getPrimaryKey())));
+
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+
+			Edge edge = node.getEdge();
+
+			ObjectRelationship objectRelationship =
+				_objectRelationshipLocalService.getObjectRelationship(
+					edge.getObjectRelationshipId());
+
+			Node parentNode = node.getParentNode();
+
+			AssertUtils.assertFailure(
+				PrincipalException.MustHavePermission.class,
+				StringBundler.concat(
+					"User ", _user.getUserId(), " must have ", actionId,
+					" permission for ", _rootObjectDefinition.getClassName(),
+					StringPool.SPACE, rootNode.getPrimaryKey()),
+				() -> _defaultObjectEntryManager.updateRelatedObjectEntry(
+					_simpleDTOConverterContext,
+					_defaultObjectEntryManager.getRelatedObjectEntry(
+						_simpleDTOConverterContext, node.getPrimaryKey(),
+						objectRelationship, parentNode.getPrimaryKey()),
+					node.getPrimaryKey(), objectRelationship,
+					parentNode.getPrimaryKey()));
+		}
+	}
+
+	private void _testUpdateRelatedObjectEntry(
+			ObjectEntry objectEntryA, ObjectRelationship objectRelationshipA_AA,
+			ObjectField objectRelationshipA_AAObjectField2,
+			ObjectField objectRelationshipB_AAObjectField2, String scopeKey,
+			UnsafeBiFunction
+				<ObjectEntry, com.liferay.object.model.ObjectEntry, ObjectEntry,
+				 Exception> unsafeBiFunction)
+		throws Exception {
+
+		ObjectEntry objectEntryAA =
+			_defaultObjectEntryManager.addRelatedObjectEntry(
+				_createDTOConverterContext(),
+				objectEntryA.getExternalReferenceCode(),
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							objectRelationshipA_AAObjectField2::getName,
+							objectEntryA.getId()
+						).build();
+					}
+				},
+				objectRelationshipA_AA, scopeKey);
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryLocalService.getObjectEntry(objectEntryAA.getId());
+
+		ObjectEntry objectEntry = new ObjectEntry() {
+			{
+				properties = HashMapBuilder.<String, Object>put(
+					objectRelationshipA_AAObjectField2::getName,
+					RandomTestUtil.randomInt()
+				).put(
+					objectRelationshipB_AAObjectField2::getName,
+					RandomTestUtil.randomInt()
+				).build();
+			}
+		};
+
+		objectEntry = unsafeBiFunction.apply(
+			objectEntry, serviceBuilderObjectEntry);
+
+		Assert.assertEquals(
+			objectEntryA.getId(),
+			objectEntry.getPropertyValue(
+				objectRelationshipA_AAObjectField2.getName()));
+		Assert.assertNull(
+			objectEntry.getPropertyValue(
+				objectRelationshipB_AAObjectField2.getName()));
+
+		serviceBuilderObjectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntry.getId());
+
+		Assert.assertEquals(
+			GetterUtil.getLong(objectEntryA.getId()),
+			serviceBuilderObjectEntry.getRootObjectEntryId());
+
+		_objectEntryLocalService.deleteObjectEntry(
+			serviceBuilderObjectEntry.getObjectEntryId());
+	}
+
 	private void _updateAndAssertObjectEntryWithPicklistObjectField(
 			String actualPicklistObjectFieldValue,
 			String expectedPicklistObjectFieldValue,
@@ -5112,11 +11732,75 @@ public class DefaultObjectEntryManagerImplTest
 			_simpleDTOConverterContext, objectDefinition, objectEntryId,
 			new ObjectEntry() {
 				{
-					properties = values;
+					properties = new HashMap<>(values);
 				}
 			});
 	}
 
+	private ObjectEntry _updateObjectEntryVersion(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			int versionNumber)
+		throws Exception {
+
+		return _updateObjectEntryVersion(
+			objectDefinition, objectEntry, "textObjectFieldName",
+			RandomTestUtil.randomString(), versionNumber);
+	}
+
+	private ObjectEntry _updateObjectEntryVersion(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			String objectFieldName, Object objectFieldValue, int versionNumber)
+		throws Exception {
+
+		return _defaultObjectEntryManager.updateObjectEntry(
+			TestPropsValues.getCompanyId(),
+			_createDTOConverterContext(adminUser),
+			objectEntry.getExternalReferenceCode(), objectDefinition,
+			new ObjectEntry() {
+				{
+					keywords = new String[] {RandomTestUtil.randomString()};
+					properties = HashMapBuilder.<String, Object>put(
+						objectFieldName, objectFieldValue
+					).build();
+					systemProperties = new SystemProperties() {
+						{
+							version = new Version() {
+								{
+									number = versionNumber;
+								}
+							};
+						}
+					};
+				}
+			},
+			objectEntry.getScopeKey());
+	}
+
+	private void _updateObjectEntryWithAssigneeObjectField(
+			Map<String, String> assigneeMap, long objectEntryId)
+		throws Exception {
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, _objectDefinition1, objectEntryId,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"assignee", assigneeMap
+					).build();
+				}
+			});
+	}
+
+	private static ObjectDefinition _accountEntryObjectDefinition;
+	private static ObjectDefinition _companyObjectDefinitionA;
+	private static ObjectDefinition _companyObjectDefinitionAA;
+	private static ObjectDefinition _companyObjectDefinitionB;
+	private static ObjectEntry _companyObjectEntryA;
+	private static ObjectEntry _companyObjectEntryB;
+	private static ObjectRelationship _companyObjectRelationshipA_AA;
+	private static ObjectField _companyObjectRelationshipA_AAObjectField2;
+	private static ObjectRelationship _companyObjectRelationshipB_AA;
+	private static ObjectField _companyObjectRelationshipB_AAObjectField2;
 	private static DefaultObjectEntryManager _defaultObjectEntryManager;
 	private static Group _group;
 
@@ -5125,10 +11809,26 @@ public class DefaultObjectEntryManagerImplTest
 	)
 	private static ObjectEntryManager _objectEntryManager;
 
+	@Inject
+	private static ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
+	private static ObjectRelationshipLocalService
+		_objectRelationshipLocalService;
+
 	private static String _originalName;
 	private static PermissionChecker _originalPermissionChecker;
 	private static DateFormat _simpleDateFormat;
 	private static DTOConverterContext _simpleDTOConverterContext;
+	private static ObjectDefinition _siteObjectDefinitionA;
+	private static ObjectDefinition _siteObjectDefinitionAA;
+	private static ObjectDefinition _siteObjectDefinitionB;
+	private static ObjectEntry _siteObjectEntryA;
+	private static ObjectEntry _siteObjectEntryB;
+	private static ObjectRelationship _siteObjectRelationshipA_AA;
+	private static ObjectField _siteObjectRelationshipA_AAObjectField2;
+	private static ObjectRelationship _siteObjectRelationshipB_AA;
+	private static ObjectField _siteObjectRelationshipB_AAObjectField2;
 
 	private Role _accountAdministratorRole;
 
@@ -5147,7 +11847,29 @@ public class DefaultObjectEntryManagerImplTest
 	@Inject
 	private AccountRoleLocalService _accountRoleLocalService;
 
+	@Inject
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Inject
+	private AssetEntryAssetCategoryRelLocalService
+		_assetEntryAssetCategoryRelLocalService;
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
+
 	private Role _buyerRole;
+
+	@DeleteAfterTestRun
+	private DepotEntry _depotEntry;
+
+	@Inject
+	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
+
+	@Inject
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Inject
+	private DLAppService _dlAppLocalService;
 
 	@Inject
 	private DLAppService _dlAppService;
@@ -5167,10 +11889,19 @@ public class DefaultObjectEntryManagerImplTest
 	@Inject
 	private GroupLocalService _groupLocalService;
 
+	private String _listTypeEntryKey1;
+	private String _listTypeEntryKey2;
+	private String _listTypeEntryKey3;
+	private String _listTypeEntryKey4;
+
 	@Inject
 	private ListTypeEntryLocalService _listTypeEntryLocalService;
 
+	private String _localizedMultiselectPicklistObjectFieldName;
 	private Map<String, Object> _localizedObjectFieldI18nValues;
+
+	@Inject
+	private ObjectActionLocalService _objectActionLocalService;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition1;
@@ -5181,11 +11912,30 @@ public class DefaultObjectEntryManagerImplTest
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition3;
 
+	@DeleteAfterTestRun
+	private ObjectDefinition _objectDefinition4;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _objectDefinition5;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _objectDefinition6;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _objectDefinition7;
+
+	@Inject
+	private ObjectDefinitionSettingLocalService
+		_objectDefinitionSettingLocalService;
+
+	@Inject
+	private ObjectEntryFolderLocalService _objectEntryFolderLocalService;
+
 	@Inject
 	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Inject
-	private ObjectFieldLocalService _objectFieldLocalService;
+	private ObjectEntryVersionLocalService _objectEntryVersionLocalService;
 
 	@Inject
 	private ObjectFieldService _objectFieldService;
@@ -5198,9 +11948,7 @@ public class DefaultObjectEntryManagerImplTest
 
 	private String _objectRelationshipERCObjectFieldName;
 	private String _objectRelationshipFieldName;
-
-	@Inject
-	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+	private String _objectRelationshipName;
 
 	@Inject
 	private OrganizationLocalService _organizationLocalService;
@@ -5224,10 +11972,10 @@ public class DefaultObjectEntryManagerImplTest
 	@Inject
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
 
-	private Tree _tree;
-
 	@Inject
-	private TreeFactory _treeFactory;
+	private SubscriptionLocalService _subscriptionLocalService;
+
+	private Tree _tree;
 
 	@DeleteAfterTestRun
 	private User _user;
@@ -5237,5 +11985,12 @@ public class DefaultObjectEntryManagerImplTest
 
 	@Inject
 	private UserLocalService _userLocalService;
+
+	@Inject
+	private WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
+
+	@Inject
+	private WorkflowTaskManager _workflowTaskManager;
 
 }

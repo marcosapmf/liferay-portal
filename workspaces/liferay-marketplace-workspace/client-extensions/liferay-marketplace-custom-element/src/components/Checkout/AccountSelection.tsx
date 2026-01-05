@@ -9,7 +9,7 @@ import {ReactNode, useMemo} from 'react';
 import useSWR from 'swr';
 
 import {Liferay} from '../../liferay/liferay';
-import headlessCommerceAdminUser from '../../services/rest/HeadlessCommerceAdminUser';
+import HeadlessCommerceAdminUser from '../../services/rest/HeadlessCommerceAdminUser';
 import RadioCardList from '../RadioCardList/RadioCardList';
 
 type AccountSelectionProps = {
@@ -18,6 +18,7 @@ type AccountSelectionProps = {
 	enabledAccountRoles?: string[];
 	onSelectAccount: (account: Account) => void;
 	selectedAccount: Account | undefined;
+	showAccountsAvailableText?: boolean;
 	showContactSupport?: boolean;
 	userAccount?: UserAccount;
 };
@@ -28,6 +29,7 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 	enabledAccountRoles,
 	onSelectAccount,
 	selectedAccount,
+	showAccountsAvailableText = true,
 	showContactSupport = true,
 	userAccount,
 }) => {
@@ -43,7 +45,7 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 		() =>
 			Promise.all(
 				accountBriefIds.map((accountBriefId) =>
-					headlessCommerceAdminUser.getAccountInfo(accountBriefId)
+					HeadlessCommerceAdminUser.getAccountInfo(accountBriefId)
 				)
 			)
 	);
@@ -76,6 +78,7 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 							selectedAccount?.externalReferenceCode ===
 							accountInfo.externalReferenceCode,
 						title: accountInfo.name,
+						type: accountInfo.type,
 						value: accountInfo,
 					};
 				})
@@ -95,13 +98,17 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 
 	return (
 		<div>
-			<p className="mb-4 secondary-text">
-				{`Accounts available for `}
+			{showAccountsAvailableText && (
+				<p className="mb-4 secondary-text">
+					{`Accounts available for `}
 
-				<strong>{Liferay.ThemeDisplay.getUserEmailAddress()}</strong>
+					<strong>
+						{Liferay.ThemeDisplay.getUserEmailAddress()}
+					</strong>
 
-				{` (you)`}
-			</p>
+					{` (you)`}
+				</p>
+			)}
 
 			{isLoading ? (
 				<ClayLoadingIndicator />
@@ -110,7 +117,14 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 					contentList={accounts.map((account) => ({
 						...account,
 						selected: selectedAccount?.id === account?.id,
-						title: <span className="h5">{account.title}</span>,
+						title: (
+							<div className="pt-2">
+								<p className="h5 mb-1">{account.title}</p>
+								<p className="h5 mb-0 text-capitalize text-muted">
+									{account.type}
+								</p>
+							</div>
+						),
 					}))}
 					leftRadio
 					onSelect={handleSelectAccount}

@@ -42,9 +42,13 @@ export const IndividualsDistribution: React.FC<IIndividualsDistributionProps> = 
 			<StatesRenderer.Empty
 				description={
 					<>
-						{Liferay.Language.get(
-							'connect-a-data-source-to-get-started'
-						)}
+						{authorized
+							? Liferay.Language.get(
+									'connect-a-data-source-to-get-started'
+							  )
+							: Liferay.Language.get(
+									'please-contact-your-workspace-administrator-to-add-data-sources'
+							  )}
 
 						<ClayLink
 							className='d-block mb-3'
@@ -112,7 +116,7 @@ export const IndividualsDistribution: React.FC<IIndividualsDistributionProps> = 
 										icon={{
 											border: false,
 											size: Sizes.XXXLarge,
-											symbol: 'ac-satellite'
+											symbol: 'ac_satellite'
 										}}
 										title={Liferay.Language.get(
 											'there-are-no-results-found'

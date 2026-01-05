@@ -5,7 +5,7 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm from '@clayui/form';
-import {useLiferayState} from '@liferay/frontend-js-state-web';
+import {useLiferayState} from '@liferay/frontend-js-state-web/react';
 import classnames from 'classnames';
 import {fetch, sub} from 'frontend-js-web';
 import React, {
@@ -44,6 +44,8 @@ import MiniCartContext from './MiniCartContext';
 
 const MINI_CART_NAMESPACE = 'minicart_';
 
+const CartResource = ServiceProvider.DeliveryCartAPI('v1');
+
 const getProductOptionsURL = (channelId, productId) => {
 	const url = new URL(
 		`${themeDisplay.getPathContext()}${CHANNEL_RESOURCE_ENDPOINT}/${channelId}/products/${productId}/product-options`,
@@ -71,13 +73,15 @@ function EditItem() {
 
 	const {
 		cartState: {
-			cartItems,
 			channel: {channel},
+			id: cartId,
 		},
 		cartState,
 		closeCart,
 		editedItem,
+		isUpdating,
 		setEditedItem,
+		setIsUpdating,
 	} = useContext(MiniCartContext);
 
 	const backLabel = sub(
@@ -85,24 +89,173 @@ function EditItem() {
 		Liferay.Language.get('products')
 	);
 
-	const selectedItem = useMemo(
-		() => cartItems.find((item) => item.id === editedItem.cartItemId) || {},
-		[cartItems, editedItem]
+	const postChannelProductSkuBySkuOption = useCallback(
+		({
+			accountId,
+			channelId,
+			currencyCode,
+			options,
+			productId,
+			quantity,
+			unitOfMeasureKey,
+		}) => {
+			ServiceProvider.DeliveryCatalogAPI('v1')
+				.postChannelProductSkuBySkuOption(
+					channelId,
+					productId,
+					accountId,
+					currencyCode,
+					quantity,
+					unitOfMeasureKey,
+					options
+				)
+				.then((cpInstance) => {
+					cpInstance.skuId = parseInt(cpInstance.id, 10);
+
+					const dispatchedPayload = {
+						MINI_CART_NAMESPACE,
+						cpInstance,
+					};
+
+					Liferay.fire(
+						`${MINI_CART_NAMESPACE}${CP_INSTANCE_CHANGED}`,
+						dispatchedPayload
+					);
+				});
+		},
+		[]
+	);
+
+	const handleBack = useCallback(
+		(refreshDataSet = false) => {
+			setEditedItem(null);
+
+			setSkuOptionsAtomState((skuOptionsAtomState) => ({
+				...skuOptionsAtomState,
+				miniCartErrors: [],
+				miniCartSkuOptions: [],
+				updating: false,
+			}));
+
+			if (editedItem?.dataSetId) {
+				if (refreshDataSet) {
+					Liferay.fire(FDS_UPDATE_DISPLAY, {
+						id: editedItem.dataSetId,
+					});
+				}
+
+				closeCart();
+			}
+		},
+		[closeCart, editedItem, setEditedItem, setSkuOptionsAtomState]
+	);
+
+	const handleSave = useCallback(
+		async (event) => {
+			event.preventDefault();
+
+			if (disabled) {
+				return;
+			}
+
+			setIsUpdating(true);
+
+			try {
+				const didCPInstanceChange = editedItem.skuId !== cpInstance.id;
+
+				if (didCPInstanceChange) {
+					await CartResource.deleteItemById(editedItem.id);
+
+					await CartResource.createItemByCartId(
+						cartId,
+						formatCartItem(
+							cpInstance,
+							MINI_CART_NAMESPACE,
+							skuOptionsAtomState.miniCartSkuOptions,
+							MINI_CART_NAMESPACE
+						)
+					);
+				}
+				else {
+					const item = {...editedItem};
+
+					delete item.dataSetId;
+
+					await CartResource.updateItemById(editedItem.id, {
+						...item,
+						...formatCartItem(
+							cpInstance,
+							MINI_CART_NAMESPACE,
+							skuOptionsAtomState.miniCartSkuOptions,
+							MINI_CART_NAMESPACE
+						),
+					});
+				}
+
+				Liferay.fire(CURRENT_ORDER_UPDATED, {
+					order: {
+						currencyCode:
+							Liferay?.CommerceContext?.currency?.currencyCode,
+						id: cartId,
+					},
+					refreshItems: true,
+				});
+
+				handleBack(true);
+			}
+			catch (error) {
+				Liferay.Util.openToast({
+					message:
+						error.detail ||
+						error.errorDescription ||
+						Liferay.Language.get(
+							'an-unexpected-system-error-occurred'
+						),
+					type: 'danger',
+				});
+			}
+
+			setIsUpdating(false);
+		},
+		[
+			cartId,
+			cpInstance,
+			disabled,
+			editedItem,
+			handleBack,
+			setIsUpdating,
+			skuOptionsAtomState,
+		]
+	);
+
+	const [price, setPrice] = useState(editedItem ? editedItem.price : null);
+
+	const handleCPInstanceChanged = useCallback(
+		({cpInstance}) => {
+			setCPInstance((prevState) => ({
+				...cpInstance,
+				quantity: prevState?.quantity,
+				settings: prevState?.settings,
+				skuUnitOfMeasure: prevState?.skuUnitOfMeasure,
+			}));
+			setPrice(adaptLegacyPriceModel(cpInstance.price));
+		},
+		[setCPInstance, setPrice]
 	);
 
 	useEffect(() => {
 		setCPInstance({
-			id: selectedItem.skuId,
-			productId: selectedItem.productId,
-			quantity: selectedItem.quantity,
-			replacedSkuId: selectedItem.replacedSkuId,
-			settings: selectedItem.settings,
-			skuId: selectedItem.skuId,
-			skuOptions: JSON.parse(selectedItem.options || '[]') || [],
-			skuUnitOfMeasure: selectedItem.skuUnitOfMeasure,
+			id: editedItem.skuId,
+			productId: editedItem.productId,
+			quantity: editedItem.quantity,
+			replacedSkuId: editedItem.replacedSkuId,
+			settings: editedItem.settings,
+			skuId: editedItem.skuId,
+			skuOptions: JSON.parse(editedItem.options || '[]') || [],
+			skuUnitOfMeasure: editedItem.skuUnitOfMeasure,
 		});
-		setQuantity(selectedItem.quantity);
-	}, [selectedItem]);
+		setQuantity(editedItem.quantity);
+	}, [editedItem]);
 
 	useEffect(() => {
 		function handleUOMChanged({unitOfMeasure}) {
@@ -133,124 +286,7 @@ function EditItem() {
 				handleUOMChanged
 			);
 		};
-	}, []);
-
-	const postChannelProductSkuBySkuOption = useCallback(
-		({
-			accountId,
-			channelId,
-			options,
-			productId,
-			quantity,
-			unitOfMeasureKey,
-		}) => {
-			ServiceProvider.DeliveryCatalogAPI('v1')
-				.postChannelProductSkuBySkuOption(
-					channelId,
-					productId,
-					accountId,
-					quantity,
-					unitOfMeasureKey,
-					options
-				)
-				.then((cpInstance) => {
-					cpInstance.skuId = parseInt(cpInstance.id, 10);
-
-					const dispatchedPayload = {
-						MINI_CART_NAMESPACE,
-						cpInstance,
-					};
-
-					Liferay.fire(
-						`${MINI_CART_NAMESPACE}${CP_INSTANCE_CHANGED}`,
-						dispatchedPayload
-					);
-				});
-		},
-		[]
-	);
-
-	const handleBack = (refreshDataSet = false) => {
-		setEditedItem(null);
-
-		setSkuOptionsAtomState({
-			...skuOptionsAtomState,
-			miniCartErrors: [],
-			miniCartSkuOptions: [],
-			updating: false,
-		});
-
-		const dataSetId = editedItem.dataSetId;
-
-		if (dataSetId) {
-			if (refreshDataSet) {
-				Liferay.fire(FDS_UPDATE_DISPLAY, {
-					id: dataSetId,
-				});
-			}
-
-			closeCart();
-		}
-	};
-
-	const handleSave = () => {
-		if (disabled) {
-			return;
-		}
-
-		const {cartItems, id: cartId} = cartState;
-
-		const formattedCartItem = formatCartItem(
-			cpInstance,
-			MINI_CART_NAMESPACE,
-			skuOptionsAtomState.miniCartSkuOptions,
-			MINI_CART_NAMESPACE
-		);
-
-		const updatedCartItems = cartItems.map((cartItem) =>
-			cartItem.id === selectedItem.id
-				? {
-						...cartItem,
-						...formattedCartItem,
-					}
-				: cartItem
-		);
-
-		ServiceProvider.DeliveryCartAPI('v1')
-			.updateCartById(cartId, {
-				cartItems: updatedCartItems,
-			})
-			.then((updatedCart) => {
-				Liferay.fire(CURRENT_ORDER_UPDATED, {order: updatedCart});
-
-				handleBack(true);
-			})
-			.catch((error) => {
-				Liferay.Util.openToast({
-					message:
-						error.detail ||
-						error.errorDescription ||
-						Liferay.Language.get(
-							'an-unexpected-system-error-occurred'
-						),
-					type: 'danger',
-				});
-			});
-	};
-
-	const [price, setPrice] = useState(
-		selectedItem ? selectedItem.price : null
-	);
-
-	const handleCPInstanceChanged = ({cpInstance}) => {
-		setCPInstance((prevState) => ({
-			...cpInstance,
-			quantity: prevState?.quantity,
-			settings: prevState?.settings,
-			skuUnitOfMeasure: prevState?.skuUnitOfMeasure,
-		}));
-		setPrice(adaptLegacyPriceModel(cpInstance.price));
-	};
+	}, [handleCPInstanceChanged]);
 
 	useEffect(() => {
 		const productOptionsURL = getProductOptionsURL(
@@ -276,7 +312,7 @@ function EditItem() {
 				handleCPInstanceChanged
 			);
 		};
-	}, []);
+	}, [handleCPInstanceChanged]);
 
 	return (
 		<>
@@ -285,7 +321,11 @@ function EditItem() {
 					<ClayButtonWithIcon
 						aria-label={backLabel}
 						displayType="unstyled"
-						onClick={handleBack}
+						onClick={(event) => {
+							event.preventDefault();
+
+							handleBack();
+						}}
 						symbol="angle-left"
 						title={backLabel}
 					/>
@@ -308,12 +348,12 @@ function EditItem() {
 
 							<ClayForm>
 								<Options
-									cartItemId={editedItem.cartItemId}
+									cartItemId={editedItem.id}
 									channelId={channel.id}
 									namespace={MINI_CART_NAMESPACE}
 									productId={editedItem.productId}
 									productOptions={options.items}
-									selectedItem={selectedItem}
+									selectedItem={editedItem}
 								/>
 							</ClayForm>
 						</>
@@ -344,6 +384,7 @@ function EditItem() {
 									allowedQuantities={
 										cpInstance.settings?.allowedQuantities
 									}
+									disabled={isUpdating}
 									max={cpInstance.settings?.maxQuantity}
 									min={cpInstance.settings?.minQuantity}
 									name="minicart-quantity-selector"
@@ -366,6 +407,13 @@ function EditItem() {
 											postChannelProductSkuBySkuOption({
 												accountId: cartState.accountId,
 												channelId: channel.id,
+												currencyCode:
+													Liferay.CommerceContext
+														? Liferay
+																.CommerceContext
+																.currency
+																.currencyCode
+														: '',
 												options:
 													cpInstance?.skuOptions ||
 													[],
@@ -397,6 +445,7 @@ function EditItem() {
 									accountId={cartState.accountId}
 									channelId={channel.id}
 									cpInstanceId={cpInstance.id}
+									disabled={isUpdating}
 									label={Liferay.Language.get(
 										'unit-of-measure'
 									)}
@@ -410,6 +459,7 @@ function EditItem() {
 									)}
 									productId={cpInstance.productId}
 									resetQuantity={false}
+									useQuantity={true}
 									value={cpInstance.skuUnitOfMeasure?.key}
 								/>
 							</div>
@@ -446,7 +496,10 @@ function EditItem() {
 						{Liferay.Language.get('cancel')}
 					</ClayButton>
 
-					<ClayButton disabled={disabled} onClick={handleSave}>
+					<ClayButton
+						disabled={disabled || isUpdating}
+						onClick={handleSave}
+					>
 						{Liferay.Language.get('save')}
 					</ClayButton>
 				</div>
@@ -460,6 +513,7 @@ export default EditItem;
 const Options = ({
 	cartItemId,
 	channelId,
+	disabled,
 	productId,
 	productOptions,
 	selectedItem,
@@ -479,6 +533,9 @@ const Options = ({
 		}
 		else if (productOption.fieldType === FIELD_TYPE.date) {
 			Component = ProductOptionDate;
+		}
+		else if (productOption.fieldType === FIELD_TYPE.document_library) {
+			return;
 		}
 		else if (productOption.fieldType === FIELD_TYPE.numeric) {
 			Component = ProductOptionNumeric;
@@ -509,7 +566,9 @@ const Options = ({
 			Component = ProductOptionText;
 		}
 
-		return <Component key={productOption.id} {...props} />;
+		return (
+			<Component disabled={disabled} key={productOption.id} {...props} />
+		);
 	});
 
 const PriceRow = ({children, priceName}) => {

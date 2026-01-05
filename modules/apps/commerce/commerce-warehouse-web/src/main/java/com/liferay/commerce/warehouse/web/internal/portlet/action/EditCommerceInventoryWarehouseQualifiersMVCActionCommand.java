@@ -5,7 +5,10 @@
 
 package com.liferay.commerce.warehouse.web.internal.portlet.action;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseRelService;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -15,10 +18,10 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.util.Objects;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -28,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY_WAREHOUSE,
+		"jakarta.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY_WAREHOUSE,
 		"mvc.command.name=/commerce_inventory_warehouse/edit_commerce_inventory_warehouse_qualifiers"
 	},
 	service = MVCActionCommand.class
@@ -59,13 +62,35 @@ public class EditCommerceInventoryWarehouseQualifiersMVCActionCommand
 			ActionRequest actionRequest)
 		throws PortalException {
 
+		long commerceInventoryWarehouseId = ParamUtil.getLong(
+			actionRequest, "commerceInventoryWarehouseId");
+
+		String accountQualifiers = ParamUtil.getString(
+			actionRequest, "accountQualifiers");
+
+		if (Objects.equals(accountQualifiers, "all")) {
+			_commerceInventoryWarehouseRelService.
+				deleteCommerceInventoryWarehouseRels(
+					AccountEntry.class.getName(), commerceInventoryWarehouseId);
+			_commerceInventoryWarehouseRelService.
+				deleteCommerceInventoryWarehouseRels(
+					AccountGroup.class.getName(), commerceInventoryWarehouseId);
+		}
+		else if (Objects.equals(accountQualifiers, "accounts")) {
+			_commerceInventoryWarehouseRelService.
+				deleteCommerceInventoryWarehouseRels(
+					AccountGroup.class.getName(), commerceInventoryWarehouseId);
+		}
+		else {
+			_commerceInventoryWarehouseRelService.
+				deleteCommerceInventoryWarehouseRels(
+					AccountEntry.class.getName(), commerceInventoryWarehouseId);
+		}
+
 		String channelQualifiers = ParamUtil.getString(
 			actionRequest, "channelQualifiers");
 
 		if (Objects.equals(channelQualifiers, "none")) {
-			long commerceInventoryWarehouseId = ParamUtil.getLong(
-				actionRequest, "commerceInventoryWarehouseId");
-
 			_commerceChannelRelService.deleteCommerceChannelRels(
 				CommerceInventoryWarehouse.class.getName(),
 				commerceInventoryWarehouseId);
@@ -74,5 +99,9 @@ public class EditCommerceInventoryWarehouseQualifiersMVCActionCommand
 
 	@Reference
 	private CommerceChannelRelService _commerceChannelRelService;
+
+	@Reference
+	private CommerceInventoryWarehouseRelService
+		_commerceInventoryWarehouseRelService;
 
 }

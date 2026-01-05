@@ -942,6 +942,25 @@ public class JournalArticleLocalServiceWrapper
 	}
 
 	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, statuses);
+	}
+
+	@Override
 	public JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -962,6 +981,13 @@ public class JournalArticleLocalServiceWrapper
 	public JournalArticle fetchLatestIndexableArticle(long resourcePrimKey) {
 		return _journalArticleLocalService.fetchLatestIndexableArticle(
 			resourcePrimKey);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel fetchPersistedModel(
+		java.io.Serializable primaryKeyObj) {
+
+		return _journalArticleLocalService.fetchPersistedModel(primaryKeyObj);
 	}
 
 	@Override
@@ -1157,23 +1183,26 @@ public class JournalArticleLocalServiceWrapper
 
 	@Override
 	public String getArticleDescription(
-		long articlePK, java.util.Locale locale) {
+		long companyId, long articlePK, java.util.Locale locale) {
 
 		return _journalArticleLocalService.getArticleDescription(
-			articlePK, locale);
+			companyId, articlePK, locale);
 	}
 
 	@Override
-	public String getArticleDescription(long articlePK, String languageId) {
+	public String getArticleDescription(
+		long companyId, long articlePK, String languageId) {
+
 		return _journalArticleLocalService.getArticleDescription(
-			articlePK, languageId);
+			companyId, articlePK, languageId);
 	}
 
 	@Override
 	public java.util.Map<java.util.Locale, String> getArticleDescriptionMap(
-		long articlePK) {
+		long companyId, long articlePK) {
 
-		return _journalArticleLocalService.getArticleDescriptionMap(articlePK);
+		return _journalArticleLocalService.getArticleDescriptionMap(
+			companyId, articlePK);
 	}
 
 	/**
@@ -1399,10 +1428,10 @@ public class JournalArticleLocalServiceWrapper
 
 	@Override
 	public java.util.List<String> getArticleLocalizationLanguageIds(
-		long articlePK) {
+		long companyId, long articlePK) {
 
 		return _journalArticleLocalService.getArticleLocalizationLanguageIds(
-			articlePK);
+			companyId, articlePK);
 	}
 
 	/**
@@ -1634,10 +1663,11 @@ public class JournalArticleLocalServiceWrapper
 
 	@Override
 	public java.util.List<JournalArticle> getArticlesByReviewDate(
-		java.util.Date previousCheckDate, java.util.Date reviewDate) {
+		long companyId, java.util.Date previousCheckDate,
+		java.util.Date reviewDate) {
 
 		return _journalArticleLocalService.getArticlesByReviewDate(
-			previousCheckDate, reviewDate);
+			companyId, previousCheckDate, reviewDate);
 	}
 
 	/**
@@ -1771,21 +1801,27 @@ public class JournalArticleLocalServiceWrapper
 	}
 
 	@Override
-	public String getArticleTitle(long articlePK, java.util.Locale locale) {
-		return _journalArticleLocalService.getArticleTitle(articlePK, locale);
+	public String getArticleTitle(
+		long companyId, long articlePK, java.util.Locale locale) {
+
+		return _journalArticleLocalService.getArticleTitle(
+			companyId, articlePK, locale);
 	}
 
 	@Override
-	public String getArticleTitle(long articlePK, String languageId) {
+	public String getArticleTitle(
+		long companyId, long articlePK, String languageId) {
+
 		return _journalArticleLocalService.getArticleTitle(
-			articlePK, languageId);
+			companyId, articlePK, languageId);
 	}
 
 	@Override
 	public java.util.Map<java.util.Locale, String> getArticleTitleMap(
-		long articlePK) {
+		long companyId, long articlePK) {
 
-		return _journalArticleLocalService.getArticleTitleMap(articlePK);
+		return _journalArticleLocalService.getArticleTitleMap(
+			companyId, articlePK);
 	}
 
 	/**
@@ -2200,6 +2236,17 @@ public class JournalArticleLocalServiceWrapper
 		return _journalArticleLocalService.
 			getLatestArticleByExternalReferenceCode(
 				groupId, externalReferenceCode);
+	}
+
+	@Override
+	public JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalArticleLocalService.
+			getLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**
@@ -2760,6 +2807,15 @@ public class JournalArticleLocalServiceWrapper
 
 		return _journalArticleLocalService.restoreArticleFromTrash(
 			userId, article);
+	}
+
+	@Override
+	public JournalArticle revertArticle(
+			long userId, long groupId, String articleId, double version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalArticleLocalService.revertArticle(
+			userId, groupId, articleId, version);
 	}
 
 	@Override

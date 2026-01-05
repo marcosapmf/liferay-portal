@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render} from '@testing-library/react';
 import React from 'react';
 
@@ -16,10 +16,10 @@ describe('Connect Step', () => {
 		);
 
 		const connectStepDescription = getByText(
-			'use-the-token-genereted-in-your-analytics-cloud-to-connect-this-workspace'
+			'use-the-token-generated-in-your-analytics-cloud-to-connect-this-workspace'
 		);
 
-		const connectStepTitleLang = getByText('connect-analytics-cloud');
+		const connectStepTitleLang = getByText('connect-to-analytics-cloud');
 
 		expect(connectStepDescription).toBeInTheDocument();
 
@@ -33,10 +33,10 @@ describe('Connect Step', () => {
 			<ConnectStep onCancel={() => {}} onChangeStep={() => {}} />
 		);
 
-		const wizardCardTitle = getByText('connect-analytics-cloud');
+		const wizardCardTitle = getByText('connect-to-analytics-cloud');
 
 		const wizardCardDescription = getByText(
-			'use-the-token-genereted-in-your-analytics-cloud-to-connect-this-workspace'
+			'use-the-token-generated-in-your-analytics-cloud-to-connect-this-workspace'
 		);
 
 		const wizardInputTitle = getByText('analytics-cloud-token');

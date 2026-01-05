@@ -8,7 +8,10 @@ package com.liferay.commerce.product.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.product.exception.NoSuchCPSpecificationOptionException;
 import com.liferay.commerce.product.model.CPSpecificationOption;
+import com.liferay.commerce.product.service.CPSpecificationOptionListTypeDefinitionRelLocalService;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
+import com.liferay.list.type.model.ListTypeDefinition;
+import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -17,10 +20,15 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import java.util.Collections;
+import java.util.List;
 
 import org.frutilla.FrutillaRule;
 
@@ -62,7 +70,7 @@ public class CPSpecificationOptionLocalServiceTest {
 	}
 
 	@Test
-	public void testAddSpecficationOption() throws Exception {
+	public void testAddSpecificationOption() throws Exception {
 		frutillaRule.scenario(
 			"Add Specification option"
 		).given(
@@ -85,8 +93,97 @@ public class CPSpecificationOptionLocalServiceTest {
 			cpSpecificationOption1.getKey(), cpSpecificationOption2.getKey());
 	}
 
+	@Test
+	public void testAddSpecificationOptionWithMultiplePicklist()
+		throws Exception {
+
+		frutillaRule.scenario(
+			"Add Specification option with multiple picklist"
+		).given(
+			"A specification is created"
+		).when(
+			"Adding picklist to the specification"
+		).then(
+			"Multiple picklist can be added"
+		);
+
+		ListTypeDefinition listTypeDefinition1 =
+			_listTypeDefinitionLocalService.addListTypeDefinition(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				false, Collections.emptyList(), new ServiceContext());
+		ListTypeDefinition listTypeDefinition2 =
+			_listTypeDefinitionLocalService.addListTypeDefinition(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				false, Collections.emptyList(), new ServiceContext());
+
+		CPSpecificationOption cpSpecificationOption =
+			_cpSpecificationOptionLocalService.addCPSpecificationOption(
+				RandomTestUtil.randomString(), _serviceContext.getUserId(), 0L,
+				new long[] {
+					listTypeDefinition1.getListTypeDefinitionId(),
+					listTypeDefinition2.getListTypeDefinitionId()
+				},
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomBoolean(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomDouble(), true, _serviceContext);
+
+		List<ListTypeDefinition> listTypeDefinitions =
+			cpSpecificationOption.getListTypeDefinitions();
+
+		Assert.assertEquals(
+			listTypeDefinition1.toString(), 2, listTypeDefinitions.size());
+	}
+
+	@Test
+	public void testDeleteSpecificationOptionWithPicklist() throws Exception {
+		frutillaRule.scenario(
+			"Delete Specification option with a picklist"
+		).given(
+			"A specification is created with a picklist"
+		).when(
+			"Specification is deleted"
+		).then(
+			"Picklist relationship is deleted as well"
+		);
+
+		ListTypeDefinition listTypeDefinition =
+			_listTypeDefinitionLocalService.addListTypeDefinition(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				false, Collections.emptyList(), new ServiceContext());
+
+		CPSpecificationOption cpSpecificationOption =
+			_cpSpecificationOptionLocalService.addCPSpecificationOption(
+				RandomTestUtil.randomString(), _serviceContext.getUserId(), 0L,
+				new long[] {listTypeDefinition.getListTypeDefinitionId()},
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomBoolean(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomDouble(), true, _serviceContext);
+
+		Assert.assertEquals(
+			listTypeDefinition.toString(), 1,
+			_cpSpecificationOptionListTypeDefinitionRelLocalService.
+				getCPSpecificationOptionListTypeDefinitionRels(
+					cpSpecificationOption.getCPSpecificationOptionId()
+				).size());
+
+		_cpSpecificationOptionLocalService.deleteCPSpecificationOption(
+			cpSpecificationOption);
+
+		Assert.assertEquals(
+			listTypeDefinition.toString(), 0,
+			_cpSpecificationOptionListTypeDefinitionRelLocalService.
+				getCPSpecificationOptionListTypeDefinitionRels(
+					cpSpecificationOption.getCPSpecificationOptionId()
+				).size());
+	}
+
 	@Test(expected = NoSuchCPSpecificationOptionException.class)
-	public void testGetSpecficationOption() throws Exception {
+	public void testGetSpecificationOption() throws Exception {
 		frutillaRule.scenario(
 			"Get Specification option"
 		).given(
@@ -109,14 +206,18 @@ public class CPSpecificationOptionLocalServiceTest {
 		throws Exception {
 
 		return _cpSpecificationOptionLocalService.addCPSpecificationOption(
-			RandomTestUtil.randomString(), serviceContext.getUserId(), 0L, 0,
+			RandomTestUtil.randomString(), serviceContext.getUserId(), 0L, null,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomBoolean(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomDouble(), serviceContext);
+			RandomTestUtil.randomDouble(), true, serviceContext);
 	}
 
 	private static User _user;
+
+	@Inject
+	private CPSpecificationOptionListTypeDefinitionRelLocalService
+		_cpSpecificationOptionListTypeDefinitionRelLocalService;
 
 	@Inject
 	private CPSpecificationOptionLocalService
@@ -124,6 +225,9 @@ public class CPSpecificationOptionLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
 
 	private ServiceContext _serviceContext;
 

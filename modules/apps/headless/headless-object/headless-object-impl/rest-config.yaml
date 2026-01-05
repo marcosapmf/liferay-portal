@@ -1,0 +1,14 @@
+apiDir: ../headless-object-api/src/main/java
+apiPackagePath: com.liferay.headless.object
+application:
+    baseURI: /headless-object
+    className: HeadlessObjectApplication
+    name: Liferay.Headless.Object
+author: Alicia García
+changeTrackingEnabled: true
+clientDir: ../headless-object-client/src/main/java
+compatibilityVersion: 14
+forcePredictableOperationId: true
+generatePermissions: true
+javaEEPackage: jakarta
+testDir: ../headless-object-test/src/testIntegration/java

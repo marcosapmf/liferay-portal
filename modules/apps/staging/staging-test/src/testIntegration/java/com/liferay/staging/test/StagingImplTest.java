@@ -37,6 +37,7 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSetBranchConstants;
@@ -48,6 +49,7 @@ import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.GroupUtil;
+import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
@@ -76,8 +78,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.staging.configuration.StagingConfiguration;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.File;
 import java.io.Serializable;
+
+import java.net.ConnectException;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -89,8 +95,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -186,6 +190,20 @@ public class StagingImplTest {
 			"No Group exists with the primary key " +
 				(_remoteLiveGroup.getGroupId() + 1),
 			caughtThrowable.getMessage());
+	}
+
+	@Test
+	public void testGetExceptionMessagesJSONObject() throws Exception {
+		Exception exception = new Exception(new ConnectException());
+
+		JSONObject jsonObject = StagingUtil.getExceptionMessagesJSONObject(
+			LocaleUtil.getDefault(), exception, null);
+
+		Assert.assertEquals(
+			exception.getLocalizedMessage(), jsonObject.getString("message"));
+		Assert.assertEquals(
+			ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION,
+			jsonObject.getInt("status"));
 	}
 
 	@Test
@@ -759,8 +777,8 @@ public class StagingImplTest {
 		}
 
 		return AssetCategoryLocalServiceUtil.updateCategory(
-			TestPropsValues.getUserId(), category.getCategoryId(),
-			category.getParentCategoryId(), titleMap,
+			category.getExternalReferenceCode(), TestPropsValues.getUserId(),
+			category.getCategoryId(), category.getParentCategoryId(), titleMap,
 			category.getDescriptionMap(), category.getVocabularyId(), null,
 			ServiceContextTestUtil.getServiceContext());
 	}

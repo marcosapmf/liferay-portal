@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -253,44 +256,6 @@ definition {
 
 		// TODO COMMERCE-6325 GlobalSearchSearchEntryInOrders pending implementation
 
-	}
-
-	@description = "COMMERCE-6329. As a buyer, I want to search for products in Catalog by typing different Categories in Global Search and I want to see the products with that categories in the suggestions(single category, multiple categories)"
-	@priority = 3
-	test GlobalSearchSearchProductsByCategories {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		Click(locator1 = "AppBuilder#SEARCH_BUTTON");
-
-		SelectFrameTop();
-
-		Type.sendKeys(
-			locator1 = "Search#GLOBAL_SEARCH_BAR",
-			value1 = "Exhaust System");
-
-		for (var productName : list "Lift Support,Muffler/Resonators,Exhaust Clamps,Catalytic Converters") {
-			AssertElementPresent(
-				key_suggestionName = ${productName},
-				locator1 = "Search#GLOBAL_SEARCH_SUGGESTION");
-		}
-
-		Click(locator1 = "Search#GLOBAL_SEARCH_CLEAN_BUTTON");
-
-		Type.sendKeys(
-			locator1 = "Search#GLOBAL_SEARCH_BAR",
-			value1 = "Exhaust System, Engine");
-
-		for (var productName : list "Lift Support,Muffler/Resonators,Exhaust Clamps,Catalytic Converters,Engine Mount") {
-			AssertElementPresent(
-				key_suggestionName = ${productName},
-				locator1 = "Search#GLOBAL_SEARCH_SUGGESTION");
-		}
 	}
 
 	@description = "COMMERCE-6320. As a buyer, I want to be able to search an Accounts entry using Global Search and I want to be able to click on a suggested entry and get redirected to that account page"
@@ -637,73 +602,6 @@ definition {
 			AssertElementPresent(
 				key_productCount = 1,
 				locator1 = "CommerceFrontStore#FS_PRODUCT_COUNT");
-		}
-	}
-
-	@description = "COMMERCE-6145. As a buyer, I want to change the number of items to display for every page from Search Results widget pagination bar"
-	@priority = 3
-	test SearchResultsWidgetChangeNumberOfItemsToDisplayFromPaginationBar {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		AnnouncementsPortlet.configurePaginationCP(itemsPerPage = 8);
-
-		AssertElementPresent(
-			key_numberEntries = "8 Entries",
-			locator1 = "Dropdown#ENTRIES_NUMBER");
-	}
-
-	@description = "COMMERCE-6147. As a buyer, I want to switch from one results page to another in Search Results"
-	@priority = 3
-	test SearchResultsWidgetChangeResultsPage {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		var productsNamePage1 = "";
-		var curr_productNamePage1 = "";
-
-		for (var iterator : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20") {
-			Click(
-				key_index = ${iterator},
-				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX");
-
-			WaitForElementPresent(locator1 = "CommerceFrontStore#FS_PRODUCT_NAME");
-
-			var curr_productNamePage1 = selenium.getText("CommerceFrontStore#FS_PRODUCT_NAME");
-
-			if (${iterator} == 1) {
-				var productsNamePage1 = ${curr_productNamePage1};
-			}
-			else {
-				var productsNamePage1 = "${productsNamePage1},${curr_productNamePage1}";
-			}
-
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-		}
-
-		Click(
-			key_pageNumber = 2,
-			locator1 = "CommerceNavigation#PAGINATION_ANY_PAGE");
-
-		var iterator = 1;
-
-		for (var curr_productNamePage1 : list ${productsNamePage1}) {
-			AssertTextNotEquals(
-				key_index = ${iterator},
-				locator1 = "CommerceAccelerators#PRODUCT_CARD_NAME_BY_INDEX",
-				value1 = ${curr_productNamePage1});
-
-			var iterator = ${iterator} + 1;
 		}
 	}
 

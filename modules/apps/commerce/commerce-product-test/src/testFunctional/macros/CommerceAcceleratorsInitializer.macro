@@ -227,6 +227,8 @@ definition {
 		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
 		Button.click(button = "Create New Order");
+
+		WaitForVisible(locator1 = "CommerceOrders#PENDING_ORDERS_ORDER_ID");
 	}
 
 	@summary = "Default summary"
@@ -236,17 +238,13 @@ definition {
 		Button.click(button = "Add Order");
 
 		if (isSet(orderType)) {
-			SelectFrame.selectFrameNoLoading(
-				key_src = "mode",
-				locator1 = "IFrame#IFRAME_SRC");
-
 			Select(
 				locator1 = "Select#TYPE",
 				value1 = ${orderType});
 
-			Button.click(button = "Add Order");
-
-			SelectFrame.selectFrameTop();
+			Click(
+				key_text = "Add Order",
+				locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 			WaitForElementPresent(
 				key_orderType = ${orderType},
@@ -299,7 +297,7 @@ definition {
 
 		Click(locator1 = "Portlet#SPECIFIC_ELLIPSIS_ICON");
 
-		MenuItem.clickNoError(menuItem = "Remove");
+		MenuItem.clickNoError(menuItem = "Delete");
 
 		AssertConfirm(value1 = "Are you sure you want to remove this component?");
 	}

@@ -6,7 +6,6 @@
 package com.liferay.portal.search.elasticsearch7.internal.highlight;
 
 import com.liferay.portal.search.elasticsearch7.internal.query.ElasticsearchQueryTranslator;
-import com.liferay.portal.search.elasticsearch7.internal.query.ElasticsearchQueryTranslatorFixture;
 import com.liferay.portal.search.highlight.FieldConfig;
 import com.liferay.portal.search.highlight.Highlight;
 import com.liferay.portal.search.internal.highlight.FieldConfigImpl;
@@ -44,9 +43,7 @@ public class HighlightTranslatorTest {
 
 	@Before
 	public void setUp() {
-		_elasticsearchQueryTranslator =
-			_elasticsearchQueryTranslatorFixture.
-				getElasticsearchQueryTranslator();
+		_elasticsearchQueryTranslator = new ElasticsearchQueryTranslator();
 		_highlightPrototype = _createHighlightPrototype();
 	}
 
@@ -166,12 +163,12 @@ public class HighlightTranslatorTest {
 	protected HighlightBuilder.BoundaryScannerType getBoundaryScannerType(
 		String boundaryScannerType) {
 
-		if (boundaryScannerType != null) {
-			return HighlightBuilder.BoundaryScannerType.fromString(
-				boundaryScannerType);
+		if (boundaryScannerType == null) {
+			return null;
 		}
 
-		return null;
+		return HighlightBuilder.BoundaryScannerType.fromString(
+			boundaryScannerType);
 	}
 
 	protected HighlightBuilder.Order getOrder(String order) {
@@ -682,9 +679,6 @@ public class HighlightTranslatorTest {
 	}
 
 	private ElasticsearchQueryTranslator _elasticsearchQueryTranslator;
-	private final ElasticsearchQueryTranslatorFixture
-		_elasticsearchQueryTranslatorFixture =
-			new ElasticsearchQueryTranslatorFixture();
 	private HighlightPrototype _highlightPrototype;
 	private final HighlightTranslator _highlightTranslator =
 		new HighlightTranslator();

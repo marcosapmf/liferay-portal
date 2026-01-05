@@ -6,6 +6,7 @@
 package com.liferay.portal.model.impl;
 
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.Company;
@@ -15,6 +16,9 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 
 import java.util.Date;
 
@@ -253,9 +257,15 @@ public class CompanyCacheModel
 
 		companyImpl.resetOriginalValues();
 
-		companyImpl.setCompanySecurityBag(_companySecurityBag);
+		try {
+			_groupIdMethodHandle.invokeExact(companyImpl, groupId);
 
-		companyImpl.setVirtualHostname(_virtualHostname);
+			_virtualHostnameMethodHandle.invokeExact(
+				companyImpl, virtualHostname);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return companyImpl;
 	}
@@ -293,9 +303,9 @@ public class CompanyCacheModel
 		indexNameCurrent = objectInput.readUTF();
 		indexNameNext = objectInput.readUTF();
 
-		_companySecurityBag =
-			(CompanyImpl.CompanySecurityBag)objectInput.readObject();
-		_virtualHostname = (String)objectInput.readObject();
+		groupId = (long)objectInput.readObject();
+
+		virtualHostname = (String)objectInput.readObject();
 	}
 
 	@Override
@@ -420,8 +430,9 @@ public class CompanyCacheModel
 			objectOutput.writeUTF(indexNameNext);
 		}
 
-		objectOutput.writeObject(_companySecurityBag);
-		objectOutput.writeObject(_virtualHostname);
+		objectOutput.writeObject(groupId);
+
+		objectOutput.writeObject(virtualHostname);
 	}
 
 	public long mvccVersion;
@@ -447,7 +458,25 @@ public class CompanyCacheModel
 	public String size;
 	public String indexNameCurrent;
 	public String indexNameNext;
-	public CompanyImpl.CompanySecurityBag _companySecurityBag;
-	public String _virtualHostname;
+	public volatile long groupId;
+	public volatile String virtualHostname;
+
+	private static final MethodHandle _groupIdMethodHandle;
+	private static final MethodHandle _virtualHostnameMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_groupIdMethodHandle = lookup.findSetter(
+				CompanyImpl.class, "_groupId", long.class);
+
+			_virtualHostnameMethodHandle = lookup.findSetter(
+				CompanyImpl.class, "_virtualHostname", String.class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
 
 }

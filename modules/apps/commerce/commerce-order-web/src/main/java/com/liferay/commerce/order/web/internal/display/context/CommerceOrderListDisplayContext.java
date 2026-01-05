@@ -30,11 +30,11 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.List;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
+import java.util.List;
 
 /**
  * @author Andrea Di Giorgi
@@ -118,7 +118,7 @@ public class CommerceOrderListDisplayContext {
 				null, "trash", "delete",
 				LanguageUtil.get(
 					_commerceOrderRequestHelper.getRequest(), "delete"),
-				null, null, null));
+				"delete", "delete", "link"));
 	}
 
 	public FDSSortItemList getFDSSortItemList() {

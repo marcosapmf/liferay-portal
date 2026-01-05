@@ -43,7 +43,6 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -97,6 +96,23 @@ public class WelcomeSiteInitializerTest {
 	}
 
 	@Test
+	@TestInfo("LPS-177408")
+	public void test() throws Exception {
+		SiteInitializer siteInitializer =
+			_siteInitializerRegistry.getSiteInitializer(
+				"com.liferay.site.initializer.welcome");
+
+		siteInitializer.initialize(_group.getGroupId());
+
+		Assert.assertNotNull(
+			_layoutUtilityPageEntryLocalService.
+				fetchDefaultLayoutUtilityPageEntry(
+					_group.getGroupId(),
+					LayoutUtilityPageEntryConstants.
+						TYPE_SC_INTERNAL_SERVER_ERROR));
+	}
+
+	@Test
 	@TestInfo("LPS-188909")
 	public void testCannotViewPortalVersionInfoOnHomePage() throws Exception {
 		SiteInitializer siteInitializer =
@@ -117,7 +133,6 @@ public class WelcomeSiteInitializerTest {
 		Assert.assertTrue(html.contains("Enjoy using the best DXP on Earth!"));
 	}
 
-	@FeatureFlags("LPD-6378")
 	@Test
 	public void testCreateAccountLayoutUtilityPageEntryPageDefinition()
 		throws Exception {
@@ -126,7 +141,7 @@ public class WelcomeSiteInitializerTest {
 			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				null, _serviceContext.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
-				LayoutUtilityPageEntryConstants.TYPE_CREATE_ACCOUNT, 0,
+				LayoutUtilityPageEntryConstants.TYPE_CREATE_ACCOUNT, null,
 				_serviceContext);
 
 		Layout layout1 = _layoutLocalService.fetchLayout(
@@ -158,7 +173,6 @@ public class WelcomeSiteInitializerTest {
 			_removeUUIDs(pageDefinition2.toString()));
 	}
 
-	@FeatureFlags("LPD-6378")
 	@Test
 	public void testForgotPasswordLayoutUtilityPageEntryPageDefinition()
 		throws Exception {
@@ -167,7 +181,7 @@ public class WelcomeSiteInitializerTest {
 			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				null, _serviceContext.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
-				LayoutUtilityPageEntryConstants.TYPE_FORGOT_PASSWORD, 0,
+				LayoutUtilityPageEntryConstants.TYPE_FORGOT_PASSWORD, null,
 				_serviceContext);
 
 		Layout layout1 = _layoutLocalService.fetchLayout(
@@ -199,7 +213,6 @@ public class WelcomeSiteInitializerTest {
 			_removeUUIDs(pageDefinition2.toString()));
 	}
 
-	@FeatureFlags("LPD-6378")
 	@Test
 	public void testInitialize() throws PortalException {
 		SiteInitializer siteInitializer =
@@ -230,7 +243,6 @@ public class WelcomeSiteInitializerTest {
 					LayoutUtilityPageEntryConstants.TYPE_LOGIN));
 	}
 
-	@FeatureFlags("LPD-6378")
 	@Test
 	public void testLoginLayoutUtilityPageEntryPageDefinition()
 		throws Exception {
@@ -239,7 +251,8 @@ public class WelcomeSiteInitializerTest {
 			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				null, _serviceContext.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
-				LayoutUtilityPageEntryConstants.TYPE_LOGIN, 0, _serviceContext);
+				LayoutUtilityPageEntryConstants.TYPE_LOGIN, null,
+				_serviceContext);
 
 		Layout layout1 = _layoutLocalService.fetchLayout(
 			layoutUtilityPageEntry.getPlid());
@@ -276,7 +289,7 @@ public class WelcomeSiteInitializerTest {
 
 		JSONObject editableValueJSONObject =
 			_fragmentEntryProcessorRegistry.getDefaultEditableValuesJSONObject(
-				StringPool.BLANK, StringPool.BLANK);
+				StringPool.BLANK, null);
 
 		Portlet portlet = _portletLocalService.getPortletById(portletId);
 
@@ -291,7 +304,7 @@ public class WelcomeSiteInitializerTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				null, _serviceContext.getUserId(),
-				_serviceContext.getScopeGroupId(), 0, 0,
+				_serviceContext.getScopeGroupId(), null, null, null,
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(layout.getPlid()),
 				layout.getPlid(), StringPool.BLANK, StringPool.BLANK,

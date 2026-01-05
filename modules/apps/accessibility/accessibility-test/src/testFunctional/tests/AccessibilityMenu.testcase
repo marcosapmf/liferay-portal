@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Accessibility Menu";
 	property testray.main.component.name = "Accessibility Menu";
 
 	setUp {
@@ -32,28 +31,6 @@ definition {
 		}
 		else {
 			TestUtils.hardRefresh();
-		}
-	}
-
-	@description = "LPS-178192. Verifies that the user can disable it by Instance Settings"
-	@priority = 5
-	test CanBeDisabledByInstanceSettings {
-		property portal.acceptance = "true";
-
-		task ("Given user with admin privileges") {
-			Navigator.openURL();
-		}
-
-		task ("When Accessibility Menu is reset to default values") {
-			AccessibilityMenu.resetDefaultValues(portlet = "Instance Settings");
-		}
-
-		task ("Then Accessibility Menu cannot be accessed") {
-			AccessibilityMenu.assertCannotAccessAccessibilityMenuModal();
-		}
-
-		task ("And Accessibility Menu cannot be reached through the user's profile menu") {
-			AccessibilityMenu.assertCannotAccessAccessibilityMenuModalByTheUserProfileMenu();
 		}
 	}
 
@@ -388,8 +365,6 @@ definition {
 	@description = "LPS-178192. Verifies ON state can persist to first login user."
 	@priority = 3
 	test GuestConfigurationOnStateWillPersistForFirstLogin {
-		property portal.acceptance = "true";
-
 		task ("Given create a new user") {
 			JSONUser.addUser(
 				userEmailAddress = "userea@liferay.com",

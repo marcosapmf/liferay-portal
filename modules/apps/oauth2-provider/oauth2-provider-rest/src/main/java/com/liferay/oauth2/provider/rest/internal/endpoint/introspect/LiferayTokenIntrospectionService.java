@@ -13,18 +13,18 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.remote.cors.annotation.CORS;
 
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Encoded;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.apache.cxf.rs.security.oauth2.common.Client;
 import org.apache.cxf.rs.security.oauth2.common.OAuthPermission;
@@ -135,11 +135,7 @@ public class LiferayTokenIntrospectionService extends AbstractTokenService {
 			client2.getProperties(),
 			OAuth2ProviderRESTEndpointConstants.PROPERTY_KEY_COMPANY_ID);
 
-		if (Objects.equals(companyId1, companyId2)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(companyId1, companyId2);
 	}
 
 	private TokenIntrospection _createTokenIntrospection(
@@ -279,29 +275,18 @@ public class LiferayTokenIntrospectionService extends AbstractTokenService {
 
 		Map<String, String> properties = client.getProperties();
 
-		if (!properties.containsKey(
-				OAuth2ProviderRESTEndpointConstants.
-					PROPERTY_KEY_CLIENT_FEATURE_PREFIX +
-						OAuth2ProviderRESTEndpointConstants.
-							PROPERTY_KEY_CLIENT_FEATURE_TOKEN_INTROSPECTION)) {
-
-			return false;
-		}
-
-		return true;
+		return properties.containsKey(
+			OAuth2ProviderRESTEndpointConstants.
+				PROPERTY_KEY_CLIENT_FEATURE_PREFIX +
+					OAuth2ProviderRESTEndpointConstants.
+						PROPERTY_KEY_CLIENT_FEATURE_TOKEN_INTROSPECTION);
 	}
 
 	private boolean _verifyServerAccessToken(
 		ServerAccessToken serverAccessToken) {
 
-		if (OAuthUtils.isExpired(
-				serverAccessToken.getIssuedAt(),
-				serverAccessToken.getExpiresIn())) {
-
-			return false;
-		}
-
-		return true;
+		return !OAuthUtils.isExpired(
+			serverAccessToken.getIssuedAt(), serverAccessToken.getExpiresIn());
 	}
 
 	private final LiferayOAuthDataProvider _liferayOAuthDataProvider;

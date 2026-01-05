@@ -32,11 +32,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
+import jakarta.portlet.Portlet;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
-
-import javax.portlet.Portlet;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -61,7 +61,7 @@ public class UpgradePortletIdTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testDoUpgrade() throws Exception {
+	public void testUpgrade() throws Exception {
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		Group group = GroupTestUtil.addGroup();
@@ -181,7 +181,7 @@ public class UpgradePortletIdTest {
 			).put(
 				"com.liferay.portlet.preferences-unique-per-layout", true
 			).put(
-				"javax.portlet.name", oldPortletId
+				"jakarta.portlet.name", oldPortletId
 			).build());
 	}
 

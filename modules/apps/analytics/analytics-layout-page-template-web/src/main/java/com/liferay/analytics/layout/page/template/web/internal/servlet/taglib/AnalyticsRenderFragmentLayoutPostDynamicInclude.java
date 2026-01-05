@@ -16,20 +16,21 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.taglib.aui.ScriptTag;
+
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
 import java.util.Locale;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -103,9 +104,10 @@ public class AnalyticsRenderFragmentLayoutPostDynamicInclude
 		PageContext pageContext) {
 
 		try {
-			StringBundler sb = new StringBundler(9);
+			StringBundler sb = new StringBundler(10);
 
-			sb.append("window.onload = function() {Analytics.track(\"");
+			sb.append("window.onload = function() {window.Analytics && ");
+			sb.append("window.Analytics.track(\"");
 
 			InfoItemClassDetails infoItemClassDetails =
 				new InfoItemClassDetails(
@@ -123,7 +125,9 @@ public class AnalyticsRenderFragmentLayoutPostDynamicInclude
 			sb.append(
 				String.valueOf(layoutDisplayPageObjectProvider.getClassPK()));
 			sb.append(", 'title': '");
-			sb.append(layoutDisplayPageObjectProvider.getTitle(locale));
+			sb.append(
+				HtmlUtil.escapeJS(
+					layoutDisplayPageObjectProvider.getTitle(locale)));
 			sb.append("', 'type': '");
 			sb.append(label);
 			sb.append("'})};");

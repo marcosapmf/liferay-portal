@@ -15,17 +15,14 @@ import com.liferay.portal.kernel.model.Plugin;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.tools.deploy.BaseAutoDeployer;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 
@@ -86,17 +83,7 @@ public class PortletAutoDeployer
 			double webXmlVersion, File srcFile, String displayName)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(9);
-
-		if (ServerDetector.isWebSphere()) {
-			sb.append("<context-param>");
-			sb.append("<param-name>");
-			sb.append("com.ibm.websphere.portletcontainer.");
-			sb.append("PortletDeploymentEnabled");
-			sb.append("</param-name>");
-			sb.append("<param-value>false</param-value>");
-			sb.append("</context-param>");
-		}
+		StringBundler sb = new StringBundler(2);
 
 		File portletXML = new File(
 			srcFile + "/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_STANDARD);
@@ -117,7 +104,7 @@ public class PortletAutoDeployer
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler();
+		StringBundler sb = new StringBundler(13);
 
 		Document document = UnsecureSAXReaderUtil.read(portletXML);
 
@@ -133,60 +120,22 @@ public class PortletAutoDeployer
 
 			String servletName = portletName + " Servlet";
 
-			sb.append("<servlet>");
-			sb.append("<servlet-name>");
+			sb.append("<servlet><servlet-name>");
 			sb.append(servletName);
-			sb.append("</servlet-name>");
-			sb.append("<servlet-class>");
-			sb.append("com.liferay.portal.kernel.servlet.PortletServlet");
-			sb.append("</servlet-class>");
-			sb.append("<init-param>");
-			sb.append("<param-name>portlet-class</param-name>");
-			sb.append("<param-value>");
+			sb.append("</servlet-name><servlet-class>com.liferay.portal.");
+			sb.append("kernel.servlet.PortletServlet</servlet-class><init-");
+			sb.append("param><param-name>portlet-class</param-name><param-");
+			sb.append("value>");
 			sb.append(portletClassName);
-			sb.append("</param-value>");
-			sb.append("</init-param>");
-			sb.append("<load-on-startup>1</load-on-startup>");
-			sb.append("</servlet>");
-
-			sb.append("<servlet-mapping>");
-			sb.append("<servlet-name>");
+			sb.append("</param-value></init-param><load-on-startup>1</load-");
+			sb.append("on-startup></servlet><servlet-mapping><servlet-name>");
 			sb.append(servletName);
-			sb.append("</servlet-name>");
-			sb.append("<url-pattern>/");
+			sb.append("</servlet-name><url-pattern>/");
 			sb.append(portletName);
-			sb.append("/*</url-pattern>");
-			sb.append("</servlet-mapping>");
+			sb.append("/*</url-pattern></servlet-mapping>");
 		}
 
 		return sb.toString();
-	}
-
-	@Override
-	public void updateDeployDirectory(File srcFile) throws Exception {
-		boolean customPortletXML = PropsValues.AUTO_DEPLOY_CUSTOM_PORTLET_XML;
-
-		customPortletXML = GetterUtil.getBoolean(
-			System.getProperty("deployer.custom.portlet.xml"),
-			customPortletXML);
-
-		if (!customPortletXML) {
-			return;
-		}
-
-		File portletXML = new File(
-			srcFile + "/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_STANDARD);
-
-		if (portletXML.exists()) {
-			File portletCustomXML = new File(
-				srcFile + "/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_CUSTOM);
-
-			if (portletCustomXML.exists()) {
-				portletCustomXML.delete();
-			}
-
-			portletXML.renameTo(portletCustomXML);
-		}
 	}
 
 	public void updatePortletXML(File portletXML) throws Exception {

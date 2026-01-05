@@ -301,6 +301,8 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 						<clay:dropdown-actions
 							additionalProps='<%=
 								HashMapBuilder.<String, Object>put(
+									"contentPerformanceDataFetchURL", contentDashboardAdminDisplayContext.getContentPerformanceDataFetchURL(contentDashboardItem.getInfoItemReference())
+								).put(
 									"currentRowId", rowId
 								).put(
 									"namespace", liferayPortletResponse.getNamespace()
@@ -310,8 +312,6 @@ ContentDashboardAdminDisplayContext contentDashboardAdminDisplayContext = (Conte
 									"selectedItemFetchURL", contentDashboardAdminDisplayContext.getSelectedItemFetchURL(contentDashboardItem)
 								).put(
 									"selectedItemRowId", contentDashboardAdminDisplayContext.getSelectedItemRowId()
-								).put(
-									"singlePageApplicationEnabled", contentDashboardAdminDisplayContext.getSinglePageApplicationEnabled()
 								).build()
 							%>'
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'

@@ -36,11 +36,11 @@ import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
+		"jakarta.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
 		"mvc.command.name=/cp_definitions/edit_cp_definition_option_value_rel"
 	},
 	service = MVCActionCommand.class
@@ -108,12 +108,12 @@ public class EditCPDefinitionOptionValueRelMVCActionCommand
 		long cpDefinitionOptionValueRelId = ParamUtil.getLong(
 			actionRequest, "cpDefinitionOptionValueRelId");
 
-		if (cpDefinitionOptionValueRelId > 0) {
-			return _cpDefinitionOptionValueRelService.
-				deleteCPDefinitionOptionValueRel(cpDefinitionOptionValueRelId);
+		if (cpDefinitionOptionValueRelId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _cpDefinitionOptionValueRelService.
+			deleteCPDefinitionOptionValueRel(cpDefinitionOptionValueRelId);
 	}
 
 	private CPDefinitionOptionValueRel _resetCPInstanceAndQuantity(
@@ -214,9 +214,13 @@ public class EditCPDefinitionOptionValueRelMVCActionCommand
 			updateCPDefinitionOptionValueRel(
 				cpDefinitionOptionValueRelId, cpInstanceId, key, nameMap,
 				ParamUtil.getBoolean(actionRequest, "preselected"),
-				_commercePriceFormatter.parse(actionRequest, "price"), priority,
+				_commercePriceFormatter.parse(
+					actionRequest, false,
+					CPDefinitionOptionValueRel.class.getName(), "price"),
+				priority,
 				_commerceOrderItemQuantityFormatter.parse(
-					actionRequest, "quantity"),
+					actionRequest, CPDefinitionOptionValueRel.class.getName(),
+					"quantity"),
 				unitOfMeasureKey, serviceContext);
 	}
 

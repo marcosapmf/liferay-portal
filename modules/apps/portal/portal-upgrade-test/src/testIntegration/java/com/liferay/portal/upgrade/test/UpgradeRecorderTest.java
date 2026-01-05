@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.db.index.IndexUpdaterUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
@@ -17,6 +18,8 @@ import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.upgrade.ReleaseManager;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -28,13 +31,14 @@ import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portal.upgrade.test.component.UpgradeRecorderTestComponent;
 import com.liferay.portal.upgrade.test.reference.UpgradeRecorderTestReference;
-import com.liferay.portal.verify.VerifyProcessSuite;
+import com.liferay.portal.verify.PreupgradeVerifyProcessSuite;
+import com.liferay.portal.verify.VerifyException;
+import com.liferay.portal.verify.VerifyProcess;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +52,6 @@ import java.util.zip.ZipEntry;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.SimpleMessage;
 
@@ -66,6 +69,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Luis Ortiz
@@ -97,6 +101,10 @@ public class UpgradeRecorderTest {
 		ReflectionTestUtil.setFieldValue(
 			_upgradeRecorder, "_verifyProcessError",
 			_originalVerifyProcessError);
+
+		ReflectionTestUtil.invoke(
+			IndexUpdaterUtil.class, "_clearProcessedServletContextNames", null,
+			null);
 	}
 
 	@Before
@@ -109,7 +117,7 @@ public class UpgradeRecorderTest {
 	}
 
 	@Test
-	public void testFailureResultByPendingModuleUpgrade() throws Exception {
+	public void testFailureResultByPendingModuleUpgrade() {
 		BundleContext bundleContext = _bundle.getBundleContext();
 
 		_serviceRegistration = bundleContext.registerService(
@@ -120,13 +128,13 @@ public class UpgradeRecorderTest {
 			_bundle.getSymbolicName());
 
 		try {
-			StartupHelperUtil.setUpgrading(true);
+			_startUpgrade();
 
 			release.setSchemaVersion("0.0.0");
 
 			release = _releaseLocalService.updateRelease(release);
 
-			StartupHelperUtil.setUpgrading(false);
+			_stopUpgrade();
 		}
 		finally {
 			_releaseLocalService.deleteRelease(release);
@@ -136,36 +144,150 @@ public class UpgradeRecorderTest {
 			}
 		}
 
-		Assert.assertEquals("unresolved", _getResult());
+		Assert.assertEquals("failure", _getResult());
 	}
 
 	@Test
-	public void testFailureResultByVerifyException() throws Exception {
-		StartupHelperUtil.setUpgrading(true);
+	public void testFailureResultByPreupgradeVerifyExceptionWithoutReleaseManager() {
+		_startUpgrade();
+
+		ServiceTracker<ReleaseManager, ReleaseManager> originalServiceTracker =
+			ReflectionTestUtil.getFieldValue(
+				_upgradeRecorder, "_serviceTracker");
 
 		VerifyExceptionProcess verifyExceptionProcess =
 			new VerifyExceptionProcess();
 
-		verifyExceptionProcess.doVerify();
+		try {
+			ServiceTracker<ReleaseManager, ReleaseManager> serviceTracker =
+				new ServiceTracker<>(
+					_bundle.getBundleContext(), ReleaseManager.class, null) {
 
-		StartupHelperUtil.setUpgrading(false);
+					public ReleaseManager getService() {
+						return null;
+					}
+
+				};
+
+			ReflectionTestUtil.setFieldValue(
+				_upgradeRecorder, "_serviceTracker", serviceTracker);
+
+			_appender.start();
+
+			verifyExceptionProcess.verify();
+
+			Assert.fail();
+		}
+		catch (VerifyException verifyException) {
+			_appender.append(
+				Log4jLogEvent.newBuilder(
+				).setLoggerName(
+					PreupgradeVerifyProcessSuite.class.getName()
+				).setLevel(
+					Level.ERROR
+				).setMessage(
+					new SimpleMessage(RandomTestUtil.randomString())
+				).setThrown(
+					verifyException
+				).build());
+		}
+		finally {
+			_appender.stop();
+
+			_stopUpgrade();
+
+			ReflectionTestUtil.setFieldValue(
+				_upgradeRecorder, "_serviceTracker", originalServiceTracker);
+		}
+
+		Assert.assertEquals("preupgrade verification failure", _getResult());
+	}
+
+	@Test
+	public void testFailureResultByPreupgradeVerifyExceptionWithReleaseManager() {
+		_startUpgrade();
+
+		VerifyExceptionProcess verifyExceptionProcess =
+			new VerifyExceptionProcess();
+
+		try {
+			_appender.start();
+
+			verifyExceptionProcess.verify();
+
+			Assert.fail();
+		}
+		catch (VerifyException verifyException) {
+			_appender.append(
+				Log4jLogEvent.newBuilder(
+				).setLoggerName(
+					PreupgradeVerifyProcessSuite.class.getName()
+				).setLevel(
+					Level.ERROR
+				).setMessage(
+					new SimpleMessage(RandomTestUtil.randomString())
+				).setThrown(
+					verifyException
+				).build());
+		}
+		finally {
+			_appender.stop();
+
+			_stopUpgrade();
+		}
 
 		Assert.assertEquals("failure", _getResult());
 	}
 
 	@Test
-	public void testFailureStatusByPendingCoreUpgrade() throws SQLException {
+	public void testFailureResultByVerifyException() {
+		_startUpgrade();
+
+		VerifyExceptionProcess verifyExceptionProcess =
+			new VerifyExceptionProcess();
+
+		try {
+			_appender.start();
+
+			verifyExceptionProcess.verify();
+
+			Assert.fail();
+		}
+		catch (VerifyException verifyException) {
+			_appender.append(
+				Log4jLogEvent.newBuilder(
+				).setLoggerName(
+					UpgradeRecorderTest.class.getName()
+				).setLevel(
+					Level.ERROR
+				).setMessage(
+					new SimpleMessage(RandomTestUtil.randomString())
+				).setThrown(
+					verifyException
+				).build());
+		}
+		finally {
+			_appender.stop();
+
+			_stopUpgrade();
+		}
+
+		Assert.assertEquals("failure", _getResult());
+	}
+
+	@Test
+	public void testFailureStatusByPendingCoreUpgrade() throws Exception {
 		try (Connection connection = DataAccess.getConnection()) {
 			Version version = PortalUpgradeProcess.getCurrentSchemaVersion(
 				connection);
 
 			try {
-				StartupHelperUtil.setUpgrading(true);
+				_startUpgrade();
 
 				PortalUpgradeProcess.updateSchemaVersion(
 					connection, new Version(0, 0, 0));
 
-				StartupHelperUtil.setUpgrading(false);
+				_stopUpgrade();
 			}
 			finally {
 				PortalUpgradeProcess.updateSchemaVersion(connection, version);
@@ -205,39 +327,39 @@ public class UpgradeRecorderTest {
 
 	@Test
 	public void testSuccessResultByNoUpgrades() {
-		StartupHelperUtil.setUpgrading(true);
+		_startUpgrade();
 
-		StartupHelperUtil.setUpgrading(false);
+		_stopUpgrade();
 
 		Assert.assertEquals("success", _getResult());
 		Assert.assertEquals("no upgrade", _getType());
 	}
 
 	@Test
-	public void testSuccessResultWithUnrelatedError() throws Exception {
-		StartupHelperUtil.setUpgrading(true);
+	public void testSuccessResultWithUnrelatedError() {
+		_startUpgrade();
 
 		UnrelatedErrorUpgradeProcess unrelatedErrorUpgradeProcess =
 			new UnrelatedErrorUpgradeProcess();
 
 		unrelatedErrorUpgradeProcess.doUpgrade();
 
-		StartupHelperUtil.setUpgrading(false);
+		_stopUpgrade();
 
 		Assert.assertEquals("success", _getResult());
 		Assert.assertEquals("no upgrade", _getType());
 	}
 
 	@Test
-	public void testSuccessResultWithWarning() throws Exception {
-		StartupHelperUtil.setUpgrading(true);
+	public void testSuccessResultWithWarning() {
+		_startUpgrade();
 
 		WarningUpgradeProcess warningUpgradeProcess =
 			new WarningUpgradeProcess();
 
 		warningUpgradeProcess.doUpgrade();
 
-		StartupHelperUtil.setUpgrading(false);
+		_stopUpgrade();
 
 		Assert.assertEquals("success", _getResult());
 		Assert.assertEquals("no upgrade", _getType());
@@ -253,9 +375,9 @@ public class UpgradeRecorderTest {
 		bundle.start();
 
 		try {
-			StartupHelperUtil.setUpgrading(true);
+			_startUpgrade();
 
-			StartupHelperUtil.setUpgrading(false);
+			_stopUpgrade();
 		}
 		finally {
 			bundle.uninstall();
@@ -329,6 +451,18 @@ public class UpgradeRecorderTest {
 		return ReflectionTestUtil.getFieldValue(_upgradeRecorder, "_type");
 	}
 
+	private void _startUpgrade() {
+		StartupHelperUtil.setUpgrading(true);
+
+		DBUpgrader.startUpgradeLogAppender();
+	}
+
+	private void _stopUpgrade() {
+		StartupHelperUtil.setUpgrading(false);
+
+		DBUpgrader.stopUpgradeLogAppender();
+	}
+
 	private void _testUpgrade(String type) {
 		List<Release> releases = _releaseLocalService.getReleases(0, 4);
 
@@ -352,7 +486,7 @@ public class UpgradeRecorderTest {
 			qualifierRelease = _releaseLocalService.updateRelease(
 				qualifierRelease);
 
-			StartupHelperUtil.setUpgrading(true);
+			_startUpgrade();
 
 			if (type.equals("major")) {
 				majorRelease.setSchemaVersion(
@@ -390,7 +524,7 @@ public class UpgradeRecorderTest {
 
 			_releaseLocalService.updateRelease(qualifierRelease);
 
-			StartupHelperUtil.setUpgrading(false);
+			_stopUpgrade();
 		}
 		finally {
 			majorRelease.setSchemaVersion(majorSchemaVersion.toString());
@@ -481,24 +615,11 @@ public class UpgradeRecorderTest {
 
 	}
 
-	private class VerifyExceptionProcess extends VerifyProcessSuite {
+	private class VerifyExceptionProcess extends VerifyProcess {
 
 		@Override
-		protected void doVerify() {
-			_appender.start();
-
-			LogEvent logEvent = Log4jLogEvent.newBuilder(
-			).setLoggerName(
-				"Verify Exception Error"
-			).setLevel(
-				Level.ERROR
-			).setMessage(
-				new SimpleMessage("com.liferay.portal.verify.VerifyException")
-			).build();
-
-			_appender.append(logEvent);
-
-			_appender.stop();
+		protected void doVerify() throws Exception {
+			throw new Exception(RandomTestUtil.randomString());
 		}
 
 	}

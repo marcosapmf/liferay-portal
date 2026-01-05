@@ -9,14 +9,12 @@ import com.liferay.gradle.util.GradleUtil;
 
 import java.io.File;
 
-import java.util.Collections;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
@@ -79,13 +77,17 @@ public class JspCPlugin implements Plugin<Project> {
 	}
 
 	private void _addDependenciesJspC(Project project) {
-		ModuleDependency moduleDependency =
-			(ModuleDependency)GradleUtil.addDependency(
-				project, CONFIGURATION_NAME, "com.liferay",
-				"com.liferay.portal.servlet.jsp.compiler", "latest.release");
-
-		moduleDependency.exclude(
-			Collections.singletonMap("group", "com.liferay.portal"));
+		GradleUtil.addDependency(
+			project, CONFIGURATION_NAME, "jakarta.servlet.jsp.jstl",
+			"jakarta.servlet.jsp.jstl-api", "3.0.2");
+		GradleUtil.addDependency(
+			project, CONFIGURATION_NAME, "org.apache.tomcat", "tomcat-jasper",
+			"10.1.48");
+		GradleUtil.addDependency(
+			project, CONFIGURATION_NAME, "org.glassfish.web",
+			"jakarta.servlet.jsp.jstl", "3.0.1", false);
+		GradleUtil.addDependency(
+			project, CONFIGURATION_NAME, "org.osgi", "osgi.core", "6.0.0");
 
 		DependencyHandler dependencyHandler = project.getDependencies();
 

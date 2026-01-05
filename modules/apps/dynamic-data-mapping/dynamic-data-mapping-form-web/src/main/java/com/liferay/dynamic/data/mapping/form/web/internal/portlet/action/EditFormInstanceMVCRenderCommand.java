@@ -5,13 +5,16 @@
 
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.servlet.taglib.DynamicIncludeUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -21,7 +24,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
+		"jakarta.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
 		"mvc.command.name=/admin/edit_form_instance"
 	},
 	service = MVCRenderCommand.class
@@ -38,6 +41,14 @@ public class EditFormInstanceMVCRenderCommand implements MVCRenderCommand {
 			"com.liferay.dynamic.data.mapping.form.web#" +
 				"EditFormInstanceMVCRenderCommand#render",
 			true);
+
+		long formInstanceId = ParamUtil.getLong(
+			renderRequest, "formInstanceId");
+
+		if (formInstanceId > 0) {
+			CTTimelineUtil.setCTTimelineKeys(
+				renderRequest, DDMFormInstance.class, formInstanceId);
+		}
 
 		return "/admin/edit_form_instance.jsp";
 	}

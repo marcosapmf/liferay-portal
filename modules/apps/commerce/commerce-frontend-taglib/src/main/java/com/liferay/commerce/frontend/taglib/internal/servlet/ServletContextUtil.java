@@ -6,26 +6,27 @@
 package com.liferay.commerce.frontend.taglib.internal.servlet;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
-import com.liferay.commerce.frontend.util.ProductHelper;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.product.content.helper.CPContentHelper;
+import com.liferay.commerce.product.helper.CPCompareHelper;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
-import com.liferay.commerce.product.util.CPCompareHelper;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 /**
  * @author Marco Leo
@@ -49,6 +50,10 @@ public class ServletContextUtil {
 		getCommerceOrderItemLocalService() {
 
 		return _commerceOrderItemLocalServiceSnapshot.get();
+	}
+
+	public static CommerceOrderLocalService getCommerceOrderLocalService() {
+		return _commerceOrderLocalServiceSnapshot.get();
 	}
 
 	public static PortletResourcePermission
@@ -127,6 +132,9 @@ public class ServletContextUtil {
 	private static final Snapshot<CommerceOrderItemLocalService>
 		_commerceOrderItemLocalServiceSnapshot = new Snapshot<>(
 			ServletContextUtil.class, CommerceOrderItemLocalService.class);
+	private static final Snapshot<CommerceOrderLocalService>
+		_commerceOrderLocalServiceSnapshot = new Snapshot<>(
+			ServletContextUtil.class, CommerceOrderLocalService.class);
 	private static final Snapshot<PortletResourcePermission>
 		_commerceOrderPortletResourcePermissionSnapshot = new Snapshot<>(
 			ServletContextUtil.class, PortletResourcePermission.class,

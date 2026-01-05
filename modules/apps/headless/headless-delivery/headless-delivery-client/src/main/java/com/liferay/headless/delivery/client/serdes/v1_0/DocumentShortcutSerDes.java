@@ -8,6 +8,8 @@ package com.liferay.headless.delivery.client.serdes.v1_0;
 import com.liferay.headless.delivery.client.dto.v1_0.DocumentShortcut;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -16,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -108,6 +108,20 @@ public class DocumentShortcutSerDes {
 			sb.append("\"");
 		}
 
+		if (documentShortcut.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(documentShortcut.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (documentShortcut.getFolderId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -170,9 +184,7 @@ public class DocumentShortcutSerDes {
 			sb.append("\"viewableBy\": ");
 
 			sb.append("\"");
-
 			sb.append(documentShortcut.getViewableBy());
-
 			sb.append("\"");
 		}
 
@@ -232,6 +244,15 @@ public class DocumentShortcutSerDes {
 				"dateModified",
 				liferayToJSONDateFormat.format(
 					documentShortcut.getDateModified()));
+		}
+
+		if (documentShortcut.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(documentShortcut.getExternalReferenceCode()));
 		}
 
 		if (documentShortcut.getFolderId() == null) {
@@ -309,6 +330,11 @@ public class DocumentShortcutSerDes {
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "folderId")) {
 				return false;
 			}
@@ -358,6 +384,14 @@ public class DocumentShortcutSerDes {
 				if (jsonParserFieldValue != null) {
 					documentShortcut.setDateModified(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					documentShortcut.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "folderId")) {
@@ -441,6 +475,10 @@ public class DocumentShortcutSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

@@ -1,18 +1,20 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.116.0",
-		"@clayui/core": "3.118.0",
-		"@clayui/empty-state": "3.116.0",
-		"@clayui/form": "3.116.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/layout": "3.111.0",
-		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/pagination": "3.118.0",
-		"@clayui/table": "3.111.0",
+		"@clayui/button": "3.156.0",
+		"@clayui/core": "3.156.0",
+		"@clayui/empty-state": "3.144.1",
+		"@clayui/form": "3.156.0",
+		"@clayui/icon": "3.144.1",
+		"@clayui/layout": "3.144.1",
+		"@clayui/loading-indicator": "3.144.1",
+		"@clayui/pagination": "3.156.0",
+		"@clayui/table": "3.144.1",
 		"classnames": "2.3.1",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
+		"moment": "2.29.4",
 		"prop-types": "15.7.2",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
 	"main": "js/index.js",
 	"name": "layout-taglib",
@@ -22,5 +24,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "16.1.21"
+	"version": "17.2.4"
 }

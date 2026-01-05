@@ -10,6 +10,8 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ScopedServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
@@ -18,7 +20,6 @@ import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.pop.MessageListener;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.ControlPanelEntry;
-import com.liferay.portal.kernel.portlet.FriendlyURLMapperTracker;
 import com.liferay.portal.kernel.portlet.PortletBag;
 import com.liferay.portal.kernel.portlet.PortletConfigurationListener;
 import com.liferay.portal.kernel.portlet.PortletLayoutListener;
@@ -37,17 +38,17 @@ import com.liferay.portal.language.LanguageResources;
 import com.liferay.social.kernel.model.SocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialRequestInterpreter;
 
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PreferencesValidator;
+
+import jakarta.servlet.ServletContext;
+
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.Portlet;
-import javax.portlet.PreferencesValidator;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -64,19 +65,17 @@ public class PortletBagImpl implements PortletBag {
 	public PortletBagImpl(
 		String portletName, ServletContext servletContext,
 		Portlet portletInstance, String resourceBundleBaseName,
-		FriendlyURLMapperTracker friendlyURLMapperTracker,
 		List<ServiceRegistration<?>> serviceRegistrations) {
 
 		_portletName = portletName;
 		_servletContext = servletContext;
 		_portletInstance = portletInstance;
 		_resourceBundleBaseName = resourceBundleBaseName;
-		_friendlyURLMapperTracker = friendlyURLMapperTracker;
 		_serviceRegistrations = serviceRegistrations;
 
 		_filterString =
-			"(|(javax.portlet.name=" + portletName +
-				")(javax.portlet.name=ALL))";
+			"(|(jakarta.portlet.name=" + portletName +
+				")(jakarta.portlet.name=ALL))";
 		_resourceBundleLoaderSnapshot = new Snapshot<>(
 			PortletBagImpl.class, ResourceBundleLoader.class,
 			StringBundler.concat(
@@ -84,13 +83,46 @@ public class PortletBagImpl implements PortletBag {
 				")(servlet.context.name=",
 				servletContext.getServletContextName(), "))"),
 			true);
+
+		_configurationActionSnapshot = new Snapshot<>(
+			PortletBagImpl.class, ConfigurationAction.class, _filterString,
+			true);
+		_controlPanelEntrySnapshot = new Snapshot<>(
+			PortletBagImpl.class, ControlPanelEntry.class, _filterString, true);
+		_methodSnapshot = new Snapshot<>(
+			PortletBagImpl.class, Method.class, _filterString, true);
+		_messageListenerSnapshot = new Snapshot<>(
+			PortletBagImpl.class, MessageListener.class, _filterString, true);
+		_openSearchSnapshot = new Snapshot<>(
+			PortletBagImpl.class, OpenSearch.class, _filterString, true);
+		_permissionPropagatorSnapshot = new Snapshot<>(
+			PortletBagImpl.class, PermissionPropagator.class, _filterString,
+			true);
+		_portletConfigurationListenerSnapshot = new Snapshot<>(
+			PortletBagImpl.class, PortletConfigurationListener.class,
+			_filterString, true);
+		_portletLayoutListenerSnapshot = new Snapshot<>(
+			PortletBagImpl.class, PortletLayoutListener.class, _filterString,
+			true);
+		_preferencesValidatorSnapshot = new Snapshot<>(
+			PortletBagImpl.class, PreferencesValidator.class, _filterString,
+			true);
+		_socialRequestInterpreterSnapshot = new Snapshot<>(
+			PortletBagImpl.class, SocialRequestInterpreter.class, _filterString,
+			true);
+		_templateHandlerSnapshot = new Snapshot<>(
+			PortletBagImpl.class, TemplateHandler.class, _filterString, true);
+		_urlEncoderSnapshot = new Snapshot<>(
+			PortletBagImpl.class, URLEncoder.class, _filterString, true);
+		_webDAVStorageSnapshot = new Snapshot<>(
+			PortletBagImpl.class, WebDAVStorage.class, _filterString, true);
 	}
 
 	@Override
 	public Object clone() {
 		return new PortletBagImpl(
 			getPortletName(), getServletContext(), getPortletInstance(),
-			getResourceBundleBaseName(), getFriendlyURLMapperTracker(), null);
+			getResourceBundleBaseName(), null);
 	}
 
 	@Override
@@ -98,8 +130,6 @@ public class PortletBagImpl implements PortletBag {
 		if (_serviceRegistrations == null) {
 			return;
 		}
-
-		_friendlyURLMapperTracker.close();
 
 		for (ServiceRegistration<?> serviceRegistration :
 				_serviceRegistrations) {
@@ -117,10 +147,30 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public ConfigurationAction getConfigurationActionInstance() {
+		return _configurationActionSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getConfigurationActionInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<ConfigurationAction> getConfigurationActionInstances() {
 		return _getList(ConfigurationAction.class);
 	}
 
+	@Override
+	public ControlPanelEntry getControlPanelEntryInstance() {
+		return _controlPanelEntrySnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getControlPanelEntryInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<ControlPanelEntry> getControlPanelEntryInstances() {
 		return _getList(ControlPanelEntry.class);
@@ -132,30 +182,67 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
-	public FriendlyURLMapperTracker getFriendlyURLMapperTracker() {
-		return _friendlyURLMapperTracker;
-	}
-
-	@Override
 	public List<Indexer<?>> getIndexerInstances() {
 		return _getList(Indexer.class);
 	}
 
+	@Override
+	public OpenSearch getOpenSearchInstance() {
+		return _openSearchSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getOpenSearchInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<OpenSearch> getOpenSearchInstances() {
 		return _getList(OpenSearch.class);
 	}
 
 	@Override
+	public PermissionPropagator getPermissionPropagatorInstance() {
+		return _permissionPropagatorSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPermissionPropagatorInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<PermissionPropagator> getPermissionPropagatorInstances() {
 		return _getList(PermissionPropagator.class);
 	}
 
 	@Override
+	public MessageListener getPopMessageListenerInstance() {
+		return _messageListenerSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPopMessageListenerInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<MessageListener> getPopMessageListenerInstances() {
 		return _getList(MessageListener.class);
 	}
 
+	@Override
+	public PortletConfigurationListener
+		getPortletConfigurationListenerInstance() {
+
+		return _portletConfigurationListenerSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPortletConfigurationListenerInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<PortletConfigurationListener>
 		getPortletConfigurationListenerInstances() {
@@ -163,6 +250,23 @@ public class PortletBagImpl implements PortletBag {
 		return _getList(PortletConfigurationListener.class);
 	}
 
+	@Override
+	public PortletDataHandler getPortletDataHandlerInstance(long companyId) {
+		PortletDataHandler portletDataHandler = _serviceTrackerMap.getService(
+			companyId, getPortletName());
+
+		if (portletDataHandler != null) {
+			return portletDataHandler;
+		}
+
+		return _serviceTrackerMap.getService(companyId, "ALL");
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPortletDataHandlerInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<PortletDataHandler> getPortletDataHandlerInstances() {
 		return _getList(PortletDataHandler.class);
@@ -174,6 +278,16 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public PortletLayoutListener getPortletLayoutListenerInstance() {
+		return _portletLayoutListenerSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPortletLayoutListenerInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<PortletLayoutListener> getPortletLayoutListenerInstances() {
 		return _getList(PortletLayoutListener.class);
 	}
@@ -183,6 +297,16 @@ public class PortletBagImpl implements PortletBag {
 		return _portletName;
 	}
 
+	@Override
+	public PreferencesValidator getPreferencesValidatorInstance() {
+		return _preferencesValidatorSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getPreferencesValidatorInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<PreferencesValidator> getPreferencesValidatorInstances() {
 		return _getList(PreferencesValidator.class);
@@ -225,6 +349,16 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public SocialRequestInterpreter getSocialRequestInterpreterInstance() {
+		return _socialRequestInterpreterSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getSocialRequestInterpreterInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<SocialRequestInterpreter>
 		getSocialRequestInterpreterInstances() {
 
@@ -239,6 +373,16 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public TemplateHandler getTemplateHandlerInstance() {
+		return _templateHandlerSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getTemplateHandlerInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<TemplateHandler> getTemplateHandlerInstances() {
 		return _getList(TemplateHandler.class);
 	}
@@ -249,10 +393,24 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public URLEncoder getURLEncoderInstance() {
+		return _urlEncoderSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getURLEncoderInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<URLEncoder> getURLEncoderInstances() {
 		return _getList(URLEncoder.class);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public List<UserNotificationDefinition>
 		getUserNotificationDefinitionInstances() {
@@ -266,6 +424,16 @@ public class PortletBagImpl implements PortletBag {
 	}
 
 	@Override
+	public WebDAVStorage getWebDAVStorageInstance() {
+		return _webDAVStorageSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getWebDAVStorageInstance()}
+	 */
+	@Deprecated
+	@Override
 	public List<WebDAVStorage> getWebDAVStorageInstances() {
 		return _getList(WebDAVStorage.class);
 	}
@@ -275,6 +443,16 @@ public class PortletBagImpl implements PortletBag {
 		return _getList(WorkflowHandler.class);
 	}
 
+	@Override
+	public Method getXmlRpcMethodInstance() {
+		return _methodSnapshot.get();
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getXmlRpcMethodInstance()}
+	 */
+	@Deprecated
 	@Override
 	public List<Method> getXmlRpcMethodInstances() {
 		return _getList(Method.class);
@@ -304,17 +482,34 @@ public class PortletBagImpl implements PortletBag {
 
 	private static final BundleContext _bundleContext =
 		SystemBundleUtil.getBundleContext();
+	private static final ScopedServiceTrackerMap<PortletDataHandler>
+		_serviceTrackerMap;
 
+	private final Snapshot<ConfigurationAction> _configurationActionSnapshot;
+	private final Snapshot<ControlPanelEntry> _controlPanelEntrySnapshot;
 	private final String _filterString;
-	private final FriendlyURLMapperTracker _friendlyURLMapperTracker;
+	private final Snapshot<MessageListener> _messageListenerSnapshot;
+	private final Snapshot<Method> _methodSnapshot;
+	private final Snapshot<OpenSearch> _openSearchSnapshot;
+	private final Snapshot<PermissionPropagator> _permissionPropagatorSnapshot;
+	private final Snapshot<PortletConfigurationListener>
+		_portletConfigurationListenerSnapshot;
 	private Portlet _portletInstance;
+	private final Snapshot<PortletLayoutListener>
+		_portletLayoutListenerSnapshot;
 	private String _portletName;
+	private final Snapshot<PreferencesValidator> _preferencesValidatorSnapshot;
 	private final String _resourceBundleBaseName;
 	private final Snapshot<ResourceBundleLoader> _resourceBundleLoaderSnapshot;
 	private final List<ServiceRegistration<?>> _serviceRegistrations;
 	private final Map<Class<?>, ServiceTrackerList<Class<?>>>
 		_serviceTrackerListMap = new ConcurrentHashMap<>();
 	private final ServletContext _servletContext;
+	private final Snapshot<SocialRequestInterpreter>
+		_socialRequestInterpreterSnapshot;
+	private final Snapshot<TemplateHandler> _templateHandlerSnapshot;
+	private final Snapshot<URLEncoder> _urlEncoderSnapshot;
+	private final Snapshot<WebDAVStorage> _webDAVStorageSnapshot;
 
 	@SuppressWarnings("deprecation")
 	private static class PermissionPropagatorServiceTrackerCustomizer
@@ -380,6 +575,10 @@ public class PortletBagImpl implements PortletBag {
 			new PermissionPropagatorServiceTrackerCustomizer());
 
 		serviceTracker.open();
+
+		_serviceTrackerMap = ScopedServiceTrackerMapFactory.create(
+			_bundleContext, PortletDataHandler.class, "jakarta.portlet.name",
+			"", () -> null);
 	}
 
 }

@@ -8,6 +8,7 @@ package com.liferay.asset.categories.navigation.web.internal.display.context;
 import com.liferay.asset.categories.navigation.web.internal.configuration.AssetCategoriesNavigationPortletInstanceConfiguration;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
 import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -16,18 +17,27 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.KeyValuePairComparator;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.RenderRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -35,16 +45,19 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetCategoriesNavigationDisplayContext {
 
 	public AssetCategoriesNavigationDisplayContext(
-			HttpServletRequest httpServletRequest)
+			HttpServletRequest httpServletRequest, RenderRequest renderRequest)
 		throws ConfigurationException {
 
 		_httpServletRequest = httpServletRequest;
+		_renderRequest = renderRequest;
+
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		_assetCategoriesNavigationPortletInstanceConfiguration =
 			ConfigurationProviderUtil.getPortletInstanceConfiguration(
 				AssetCategoriesNavigationPortletInstanceConfiguration.class,
-				(ThemeDisplay)httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY));
+				_themeDisplay);
 	}
 
 	public AssetCategoriesNavigationPortletInstanceConfiguration
@@ -136,9 +149,7 @@ public class AssetCategoriesNavigationDisplayContext {
 			return _ddmTemplateAssetVocabularies;
 		}
 
-		String[] assetVocabularyIds =
-			_assetCategoriesNavigationPortletInstanceConfiguration.
-				assetVocabularyIds();
+		String[] assetVocabularyIds = _getAssetVocabularyIds();
 
 		if (_assetCategoriesNavigationPortletInstanceConfiguration.
 				allAssetVocabularies() ||
@@ -175,19 +186,128 @@ public class AssetCategoriesNavigationDisplayContext {
 			return _displayStyleGroupId;
 		}
 
-		_displayStyleGroupId =
+		long displayStyleGroupId =
 			_assetCategoriesNavigationPortletInstanceConfiguration.
 				displayStyleGroupId();
 
-		if (_displayStyleGroupId <= 0) {
+		PortletPreferences portletPreferences = _renderRequest.getPreferences();
+
+		String displayStyleGroupExternalReferenceCode =
+			portletPreferences.getValue(
+				"displayStyleGroupExternalReferenceCode",
+				_assetCategoriesNavigationPortletInstanceConfiguration.
+					displayStyleGroupExternalReferenceCode());
+
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			Group group =
+				GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+					displayStyleGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+
+			if (group != null) {
+				displayStyleGroupId = group.getGroupId();
+			}
+		}
+
+		if (displayStyleGroupId <= 0) {
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)_httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			_displayStyleGroupId = themeDisplay.getScopeGroupId();
+			displayStyleGroupId = themeDisplay.getScopeGroupId();
 		}
 
+		_displayStyleGroupId = displayStyleGroupId;
+
 		return _displayStyleGroupId;
+	}
+
+	private String[] _getAssetVocabularyIds() {
+		List<Long> assetVocabularyIds = new ArrayList<>();
+
+		PortletPreferences portletPreferences = _renderRequest.getPreferences();
+
+		assetVocabularyIds.addAll(
+			_getExternalAssetVocabularyIds(portletPreferences));
+		assetVocabularyIds.addAll(
+			_getLocalAssetVocabularyIds(portletPreferences));
+
+		return ArrayUtil.toStringArray(assetVocabularyIds);
+	}
+
+	private List<Long> _getExternalAssetVocabularyIds(
+		PortletPreferences portletPreferences) {
+
+		List<Long> assetVocabularyIds = new ArrayList<>();
+
+		String[] assetVocabularyGroupExternalReferenceCodes =
+			GetterUtil.getStringValues(
+				portletPreferences.getValues(
+					"assetVocabularyGroupExternalReferenceCodes", null));
+
+		for (String assetVocabularyGroupExternalReferenceCode :
+				assetVocabularyGroupExternalReferenceCodes) {
+
+			Group group =
+				GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+					assetVocabularyGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+
+			if (group == null) {
+				continue;
+			}
+
+			String[] assetVocabularyExternalReferenceCodes =
+				GetterUtil.getStringValues(
+					portletPreferences.getValues(
+						"assetVocabularyExternalReferenceCodes_" +
+							assetVocabularyGroupExternalReferenceCode,
+						null));
+
+			assetVocabularyIds.addAll(
+				(List<Long>)TransformUtil.transformToList(
+					assetVocabularyExternalReferenceCodes,
+					assetVocabularyExternalReferenceCode -> {
+						AssetVocabulary assetVocabulary =
+							AssetVocabularyLocalServiceUtil.
+								fetchAssetVocabularyByExternalReferenceCode(
+									assetVocabularyExternalReferenceCode,
+									group.getGroupId());
+
+						if (assetVocabulary == null) {
+							return null;
+						}
+
+						return assetVocabulary.getVocabularyId();
+					}));
+		}
+
+		return assetVocabularyIds;
+	}
+
+	private List<Long> _getLocalAssetVocabularyIds(
+		PortletPreferences portletPreferences) {
+
+		String[] assetVocabularyExternalReferenceCodes =
+			GetterUtil.getStringValues(
+				portletPreferences.getValues(
+					"assetVocabularyExternalReferenceCodes", null));
+
+		return TransformUtil.transformToList(
+			assetVocabularyExternalReferenceCodes,
+			assetVocabularyExternalReferenceCode -> {
+				AssetVocabulary assetVocabulary =
+					AssetVocabularyLocalServiceUtil.
+						fetchAssetVocabularyByExternalReferenceCode(
+							assetVocabularyExternalReferenceCode,
+							_themeDisplay.getScopeGroupId());
+
+				if (assetVocabulary == null) {
+					return null;
+				}
+
+				return assetVocabulary.getVocabularyId();
+			});
 	}
 
 	private String _getTitle(AssetVocabulary assetVocabulary) {
@@ -223,5 +343,7 @@ public class AssetCategoriesNavigationDisplayContext {
 	private List<AssetVocabulary> _ddmTemplateAssetVocabularies;
 	private long _displayStyleGroupId;
 	private final HttpServletRequest _httpServletRequest;
+	private final RenderRequest _renderRequest;
+	private final ThemeDisplay _themeDisplay;
 
 }

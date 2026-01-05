@@ -9,7 +9,13 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormTemplateContextFactory;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTemplateContext;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -35,6 +41,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -91,6 +99,15 @@ public class DDMFormTemplateContextFactoryTest {
 			).build();
 
 		Assert.assertEquals(0, ddmFormTemplateContext.get("activePage"));
+		JSONAssert.assertEquals(
+			JSONUtil.toJSONArray(
+				LanguageUtil.getAvailableLocales(),
+				locale -> _getLocaleJSONObject(locale), _log
+			).toString(),
+			ddmFormTemplateContext.get(
+				"availableLocales"
+			).toString(),
+			true);
 		Assert.assertEquals(
 			containerId, ddmFormTemplateContext.get("containerId"));
 		Assert.assertFalse((boolean)ddmFormTemplateContext.get("readOnly"));
@@ -162,14 +179,14 @@ public class DDMFormTemplateContextFactoryTest {
 		Assert.assertEquals(
 			"ddm.simple_form", ddmFormTemplateContext.get("templateNamespace"));
 
-		Map<String, Map<String, String>[]> validations =
-			(Map<String, Map<String, String>[]>)ddmFormTemplateContext.get(
-				"validations");
+		Map<String, Object[]> validations =
+			(Map<String, Object[]>)ddmFormTemplateContext.get("validations");
 
 		Assert.assertEquals(validations.toString(), 3, validations.size());
 
 		_assertValidations(
-			ListUtil.fromArray(validations.get("date")),
+			TransformUtil.transformToList(
+				validations.get("date"), object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "Range"
@@ -195,7 +212,9 @@ public class DDMFormTemplateContextFactoryTest {
 					"template", "pastDates({name}, \"{parameter}\")"
 				).build()));
 		_assertValidations(
-			ListUtil.fromArray(validations.get("numeric")),
+			TransformUtil.transformToList(
+				validations.get("numeric"),
+				object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "Is Equal To"
@@ -240,7 +259,9 @@ public class DDMFormTemplateContextFactoryTest {
 					"template", "{name} != {parameter}"
 				).build()));
 		_assertValidations(
-			ListUtil.fromArray(validations.get("string")),
+			TransformUtil.transformToList(
+				validations.get("string"),
+				object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "Contains"
@@ -288,14 +309,14 @@ public class DDMFormTemplateContextFactoryTest {
 			LocaleUtil.BRAZIL
 		).build();
 
-		validations =
-			(Map<String, Map<String, String>[]>)ddmFormTemplateContext.get(
-				"validations");
+		validations = (Map<String, Object[]>)ddmFormTemplateContext.get(
+			"validations");
 
 		Assert.assertEquals(validations.toString(), 3, validations.size());
 
 		_assertValidations(
-			ListUtil.fromArray(validations.get("date")),
+			TransformUtil.transformToList(
+				validations.get("date"), object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "Faixa"
@@ -321,7 +342,9 @@ public class DDMFormTemplateContextFactoryTest {
 					"template", "pastDates({name}, \"{parameter}\")"
 				).build()));
 		_assertValidations(
-			ListUtil.fromArray(validations.get("numeric")),
+			TransformUtil.transformToList(
+				validations.get("numeric"),
+				object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "É igual a"
@@ -366,7 +389,9 @@ public class DDMFormTemplateContextFactoryTest {
 					"template", "{name} != {parameter}"
 				).build()));
 		_assertValidations(
-			ListUtil.fromArray(validations.get("string")),
+			TransformUtil.transformToList(
+				validations.get("string"),
+				object -> (Map<String, String>)object),
 			ListUtil.fromArray(
 				HashMapBuilder.put(
 					"label", "Contêm"
@@ -470,6 +495,19 @@ public class DDMFormTemplateContextFactoryTest {
 		}
 	}
 
+	private JSONObject _getLocaleJSONObject(Locale locale) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		return JSONUtil.put(
+			"displayName", locale.getDisplayName(locale)
+		).put(
+			"icon",
+			StringUtil.toLowerCase(StringUtil.replace(languageId, '_', "-"))
+		).put(
+			"localeId", languageId
+		);
+	}
+
 	private MockHttpServletRequest _getMockHttpServletRequest()
 		throws Exception {
 
@@ -487,6 +525,9 @@ public class DDMFormTemplateContextFactoryTest {
 
 		return mockHttpServletRequest;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMFormTemplateContextFactoryTest.class);
 
 	@Inject
 	private static DDMFormTemplateContextFactory _ddmFormTemplateContextFactory;

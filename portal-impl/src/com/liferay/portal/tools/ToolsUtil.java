@@ -247,14 +247,14 @@ public class ToolsUtil {
 
 		pos -= start;
 
-		char delimeter = CharPool.SPACE;
+		char delimiter = CharPool.SPACE;
 		boolean insideQuotes = false;
 
 		for (int i = 0; i < line.length(); i++) {
 			char c = line.charAt(i);
 
 			if (insideQuotes) {
-				if (c == delimeter) {
+				if (c == delimiter) {
 					if (!allowEscapedQuotes) {
 						insideQuotes = false;
 					}
@@ -279,7 +279,7 @@ public class ToolsUtil {
 				}
 			}
 			else if ((c == CharPool.APOSTROPHE) || (c == CharPool.QUOTE)) {
-				delimeter = c;
+				delimiter = c;
 				insideQuotes = true;
 			}
 
@@ -768,7 +768,7 @@ public class ToolsUtil {
 	}
 
 	/**
-	 * @see com.liferay.portal.configuration.ClassLoaderAggregatePropertiesUtil#_getCharPoolChars
+	 * @see com.liferay.portal.kernel.util.EnvPropertiesUtil#_getCharPoolChars
 	 */
 	private static final Map<Character, String> _charPoolChars =
 		new HashMap<Character, String>() {

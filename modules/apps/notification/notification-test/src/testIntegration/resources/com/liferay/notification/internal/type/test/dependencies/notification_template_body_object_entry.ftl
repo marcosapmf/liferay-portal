@@ -1,0 +1,23 @@
+${ObjectEntry_author.getData()}
+${ObjectEntry_createDate.getData()}
+${ObjectEntry_externalReferenceCode.getData()}
+${ObjectEntry_modifiedDate.getData()}
+${ObjectEntry_objectEntryId.getData()}
+${ObjectEntry_publishDate.getData()}
+${ObjectEntry_status.getData()}
+${ObjectField_booleanObjectField.getData()}
+${ObjectField_dateObjectField.getData()}
+${ObjectField_dateTimeObjectField.getData()}
+${ObjectField_emailTextObjectField.getData()}
+${ObjectField_integerObjectField.getData()}
+${ObjectField_longIntegerObjectField.getData()}
+${ObjectField_multiselectPicklistObjectField.getData()}
+${ObjectField_picklistObjectField.getData()}
+${ObjectField_r_oneToManyObjectRelationship_c_parentObjectDefinitionId.getData()}
+${ObjectField_textObjectField.getData()}
+${locale}
+${portalURL}
+
+<#assign serviceContext = staticUtil["com.liferay.portal.kernel.service.ServiceContextThreadLocal"].getServiceContext() />
+
+${serviceContext.getCompanyId()}

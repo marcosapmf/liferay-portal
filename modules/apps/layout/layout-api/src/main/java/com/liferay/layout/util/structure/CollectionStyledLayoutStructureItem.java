@@ -66,8 +66,6 @@ public class CollectionStyledLayoutStructureItem
 			!Objects.equals(
 				_listStyle, collectionStyledLayoutStructureItem._listStyle) ||
 			!Objects.equals(
-				_namespace, collectionStyledLayoutStructureItem._namespace) ||
-			!Objects.equals(
 				_numberOfColumns,
 				collectionStyledLayoutStructureItem._numberOfColumns) ||
 			!Objects.equals(
@@ -164,8 +162,6 @@ public class CollectionStyledLayoutStructureItem
 		).put(
 			"listStyle", _listStyle
 		).put(
-			"namespace", _namespace
-		).put(
 			"numberOfColumns", _numberOfColumns
 		).put(
 			"numberOfItems", _numberOfItems
@@ -235,10 +231,6 @@ public class CollectionStyledLayoutStructureItem
 
 	public String getListStyle() {
 		return _listStyle;
-	}
-
-	public String getNamespace() {
-		return _namespace;
 	}
 
 	public int getNumberOfColumns() {
@@ -351,10 +343,6 @@ public class CollectionStyledLayoutStructureItem
 		_listStyle = listStyle;
 	}
 
-	public void setNamespace(String namespace) {
-		_namespace = namespace;
-	}
-
 	public void setNumberOfColumns(int numberOfColumns) {
 		_numberOfColumns = numberOfColumns;
 	}
@@ -405,14 +393,49 @@ public class CollectionStyledLayoutStructureItem
 			_viewportConfigurationJSONObjects.getOrDefault(
 				viewportSizeId, JSONFactoryUtil.createJSONObject()
 			).put(
-				"numberOfColumns",
+				"align",
 				() -> {
-					if (configurationJSONObject.has("numberOfColumns")) {
-						return configurationJSONObject.getInt(
-							"numberOfColumns");
+					if (!configurationJSONObject.has("align")) {
+						return null;
 					}
 
-					return null;
+					return configurationJSONObject.getString("align");
+				}
+			).put(
+				"flexWrap",
+				() -> {
+					if (!configurationJSONObject.has("flexWrap")) {
+						return null;
+					}
+
+					return configurationJSONObject.getString("flexWrap");
+				}
+			).put(
+				"styles",
+				() -> {
+					if (!configurationJSONObject.has("styles")) {
+						return null;
+					}
+
+					return configurationJSONObject.getJSONObject("styles");
+				}
+			).put(
+				"justify",
+				() -> {
+					if (!configurationJSONObject.has("justify")) {
+						return null;
+					}
+
+					return configurationJSONObject.getString("justify");
+				}
+			).put(
+				"numberOfColumns",
+				() -> {
+					if (!configurationJSONObject.has("numberOfColumns")) {
+						return null;
+					}
+
+					return configurationJSONObject.getInt("numberOfColumns");
 				}
 			));
 	}
@@ -465,10 +488,6 @@ public class CollectionStyledLayoutStructureItem
 
 		if (itemConfigJSONObject.has("listStyle")) {
 			setListStyle(itemConfigJSONObject.getString("listStyle"));
-		}
-
-		if (itemConfigJSONObject.has("namespace")) {
-			setNamespace(itemConfigJSONObject.getString("namespace"));
 		}
 
 		if (itemConfigJSONObject.has("numberOfColumns")) {
@@ -531,7 +550,6 @@ public class CollectionStyledLayoutStructureItem
 	private String _justify = "";
 	private String _listItemStyle;
 	private String _listStyle;
-	private String _namespace;
 	private int _numberOfColumns = 1;
 	private int _numberOfItems = 5;
 	private int _numberOfItemsPerPage = 20;

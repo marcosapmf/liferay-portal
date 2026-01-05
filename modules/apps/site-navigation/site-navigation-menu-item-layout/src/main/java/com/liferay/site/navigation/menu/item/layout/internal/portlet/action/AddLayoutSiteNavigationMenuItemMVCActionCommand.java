@@ -27,16 +27,18 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.admin.constants.SiteNavigationAdminPortletKeys;
 import com.liferay.site.navigation.exception.SiteNavigationMenuItemNameException;
+import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
+import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
+		"jakarta.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
 		"mvc.command.name=/navigation_menu/add_layout_site_navigation_menu_item"
 	},
 	service = MVCActionCommand.class
@@ -84,13 +86,16 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 			while (iterator.hasNext()) {
 				JSONObject itemJSONObject = iterator.next();
 
-				String layoutUuid = itemJSONObject.getString("id");
-				long groupId = itemJSONObject.getLong("groupId");
-				boolean privateLayout = itemJSONObject.getBoolean(
-					"privateLayout");
+				String externalReferenceCode = itemJSONObject.getString(
+					"externalReferenceCode");
 
-				Layout layout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
-					layoutUuid, groupId, privateLayout);
+				SiteNavigationMenu siteNavigationMenu =
+					_siteNavigationMenuLocalService.getSiteNavigationMenu(
+						siteNavigationMenuId);
+
+				Layout layout =
+					_layoutLocalService.fetchLayoutByExternalReferenceCode(
+						externalReferenceCode, siteNavigationMenu.getGroupId());
 
 				if (layout == null) {
 					continue;
@@ -107,11 +112,11 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 						UnicodePropertiesBuilder.create(
 							true
 						).put(
-							"groupId", String.valueOf(groupId)
+							"externalReferenceCode", externalReferenceCode
 						).put(
-							"layoutUuid", layoutUuid
-						).put(
-							"privateLayout", String.valueOf(privateLayout)
+							"privateLayout",
+							String.valueOf(
+								itemJSONObject.getBoolean("privateLayout"))
 						).put(
 							"title", layout.getName(themeDisplay.getLocale())
 						).buildString(),
@@ -228,5 +233,8 @@ public class AddLayoutSiteNavigationMenuItemMVCActionCommand
 
 	@Reference
 	private SiteNavigationMenuItemService _siteNavigationMenuItemService;
+
+	@Reference
+	private SiteNavigationMenuLocalService _siteNavigationMenuLocalService;
 
 }

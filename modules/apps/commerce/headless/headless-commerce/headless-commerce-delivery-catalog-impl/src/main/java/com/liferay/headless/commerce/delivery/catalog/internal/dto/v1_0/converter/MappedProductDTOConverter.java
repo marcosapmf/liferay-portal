@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -16,6 +17,7 @@ import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.price.CommerceProductPrice;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPInstance;
@@ -25,7 +27,6 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
-import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.product.util.CPJSONUtil;
 import com.liferay.commerce.shop.by.diagram.model.CSDiagramEntry;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryLocalService;
@@ -46,7 +47,6 @@ import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
-import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import java.math.BigDecimal;
@@ -83,6 +83,8 @@ public class MappedProductDTOConverter
 
 		CommerceContext commerceContext =
 			mappedProductDTOConverterContext.getCommerceContext();
+
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 		CSDiagramEntry csDiagramEntry =
 			_csDiagramEntryLocalService.getCSDiagramEntry(
@@ -121,7 +123,8 @@ public class MappedProductDTOConverter
 
 		CPInstance firstAvailableReplacementCPInstance =
 			_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
-				commerceContext.getCommerceChannelGroupId(), cpInstanceId);
+				accountEntry.getAccountEntryId(),
+				commerceContext.getCommerceChannelGroupId(), 0, cpInstanceId);
 
 		return new MappedProduct() {
 			{
@@ -133,8 +136,11 @@ public class MappedProductDTOConverter
 						}
 
 						return _getAvailability(
+							accountEntry.getAccountEntryId(),
 							commerceContext.getCommerceChannelGroupId(),
 							mappedProductDTOConverterContext.getCompanyId(),
+							commerceContext.getCPConfigurationListId(
+								cpInstance.getGroupId()),
 							cpInstance,
 							mappedProductDTOConverterContext.getLocale(),
 							cpInstance.getSku(), StringPool.BLANK);
@@ -187,11 +193,11 @@ public class MappedProductDTOConverter
 						}
 
 						return _productConfigurationDTOConverter.toDTO(
-							new DefaultDTOConverterContext(
-								_dtoConverterRegistry,
+							new ProductConfigurationDTOConverterContext(
+								mappedProductDTOConverterContext.
+									getCommerceContext(),
 								cpDefinition.getCPDefinitionId(),
-								mappedProductDTOConverterContext.getLocale(),
-								null, null));
+								mappedProductDTOConverterContext.getLocale()));
 					});
 				setProductExternalReferenceCode(
 					() -> {
@@ -290,22 +296,22 @@ public class MappedProductDTOConverter
 					});
 				setReplacementMessage(
 					() -> {
-						if ((cpInstance != null) &&
-							cpInstance.isDiscontinued() &&
-							(firstAvailableReplacementCPInstance != null) &&
-							(cpInstance.getCPInstanceId() ==
+						if ((cpInstance == null) ||
+							!cpInstance.isDiscontinued() ||
+							(firstAvailableReplacementCPInstance == null) ||
+							(cpInstance.getCPInstanceId() !=
 								csDiagramEntry.getCPInstanceId())) {
 
-							return _language.format(
-								mappedProductDTOConverterContext.getLocale(),
-								"x-has-been-replaced-by-x",
-								new String[] {
-									csDiagramEntry.getSku(),
-									firstAvailableReplacementCPInstance.getSku()
-								});
+							return null;
 						}
 
-						return null;
+						return _language.format(
+							mappedProductDTOConverterContext.getLocale(),
+							"x-has-been-replaced-by-x",
+							new String[] {
+								csDiagramEntry.getSku(),
+								firstAvailableReplacementCPInstance.getSku()
+							});
 					});
 				setSequence(csDiagramEntry::getSequence);
 				setSku(
@@ -389,19 +395,22 @@ public class MappedProductDTOConverter
 	}
 
 	private Availability _getAvailability(
-			long commerceChannelGroupId, long companyId, CPInstance cpInstance,
-			Locale locale, String sku, String unitOfMeasureKey)
+			long accountEntryId, long commerceChannelGroupId, long companyId,
+			long cpConfigurationListId, CPInstance cpInstance, Locale locale,
+			String sku, String unitOfMeasureKey)
 		throws Exception {
 
 		Availability availability = new Availability();
 
-		if (_cpDefinitionInventoryEngine.isDisplayAvailability(cpInstance)) {
+		if (_cpDefinitionInventoryEngine.isDisplayAvailability(
+				cpConfigurationListId, cpInstance)) {
+
 			if (Objects.equals(
 					_commerceInventoryEngine.getAvailabilityStatus(
-						cpInstance.getCompanyId(), cpInstance.getGroupId(),
-						commerceChannelGroupId,
+						cpInstance.getCompanyId(), accountEntryId,
+						cpInstance.getGroupId(), commerceChannelGroupId,
 						_cpDefinitionInventoryEngine.getMinStockQuantity(
-							cpInstance),
+							cpConfigurationListId, cpInstance),
 						cpInstance.getSku(), unitOfMeasureKey),
 					CommerceInventoryAvailabilityConstants.AVAILABLE)) {
 
@@ -416,11 +425,13 @@ public class MappedProductDTOConverter
 			}
 		}
 
-		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance)) {
+		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(
+				cpConfigurationListId, cpInstance)) {
+
 			availability.setStockQuantity(
 				() -> BigDecimalUtil.stripTrailingZeros(
 					_commerceInventoryEngine.getStockQuantity(
-						companyId, cpInstance.getGroupId(),
+						companyId, accountEntryId, cpInstance.getGroupId(),
 						commerceChannelGroupId, sku, unitOfMeasureKey)));
 		}
 
@@ -551,9 +562,6 @@ public class MappedProductDTOConverter
 
 	@Reference
 	private CSDiagramEntryLocalService _csDiagramEntryLocalService;
-
-	@Reference
-	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
 	private Language _language;

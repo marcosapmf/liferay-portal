@@ -5,6 +5,8 @@
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
@@ -29,11 +31,9 @@ import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
-import com.liferay.headless.delivery.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.dto.v1_0.Document;
 import com.liferay.headless.delivery.dto.v1_0.DocumentType;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
-import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.dto.v1_0.util.DDMFormValuesUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
@@ -47,10 +47,10 @@ import com.liferay.journal.service.JournalArticleService;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -65,48 +65,57 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.search.aggregation.Aggregations;
-import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.custom.field.CustomField;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.jackson.databind.ObjectMapperProviderUtil;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
-import java.util.ArrayList;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.core.MultivaluedMap;
+
+import java.io.Serializable;
+
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -127,7 +136,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			assetLibraryId, externalReferenceCode);
+			externalReferenceCode, assetLibraryId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -150,7 +159,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		FileEntry fileEntry = _dlAppService.getFileEntryByExternalReferenceCode(
-			siteId, externalReferenceCode);
+			externalReferenceCode, siteId);
 
 		_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
 	}
@@ -162,7 +171,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				assetLibraryId, externalReferenceCode));
+				externalReferenceCode, assetLibraryId));
 	}
 
 	@Override
@@ -281,7 +290,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			FileEntry.class.getName(), _getDDMStructureId(fileEntry),
 			displayPageKey, fileEntry.getGroupId(), contextHttpServletRequest,
 			contextHttpServletResponse, fileEntry, _infoItemServiceRegistry,
-			_layoutDisplayPageProviderRegistry, _layoutLocalService,
+			_layoutDisplayPageProviderRegistry, _layoutService,
 			_layoutPageTemplateEntryService);
 	}
 
@@ -290,8 +299,8 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		return new DocumentEntityModel(
 			EntityFieldsUtil.getEntityFields(
 				_portal.getClassNameId(DLFileEntry.class.getName()),
-				contextCompany.getCompanyId(), _expandoBridgeIndexer,
-				_expandoColumnLocalService, _expandoTableLocalService));
+				contextCompany.getCompanyId(), _expandoColumnLocalService,
+				_expandoTableLocalService));
 	}
 
 	@Override
@@ -301,7 +310,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		return _toDocument(
 			_dlAppService.getFileEntryByExternalReferenceCode(
-				siteId, externalReferenceCode));
+				externalReferenceCode, siteId));
 	}
 
 	@Override
@@ -354,6 +363,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	public Document patchDocument(Long documentId, MultipartBody multipartBody)
 		throws Exception {
 
+		multipartBody = _getMultipartBodyFromDocument(
+			documentId, multipartBody);
+
 		FileEntry existingFileEntry = _dlAppService.getFileEntry(documentId);
 
 		BinaryFile binaryFile = multipartBody.getBinaryFile("file");
@@ -374,6 +386,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		String fileName = null;
 		String title = null;
+		String urlTitle = null;
 		String description = null;
 		Date displayDate = null;
 		Date expirationDate = null;
@@ -381,14 +394,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		if (document != null) {
 			fileName = document.getFileName();
 			title = document.getTitle();
+			urlTitle = document.getFriendlyUrlPath();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 
@@ -401,21 +409,21 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		}
 
 		if (description == null) {
-			existingFileEntry.getDescription();
+			description = existingFileEntry.getDescription();
 		}
 
 		if (displayDate == null) {
-			existingFileEntry.getDisplayDate();
+			displayDate = existingFileEntry.getDisplayDate();
 		}
 
 		if (expirationDate == null) {
-			existingFileEntry.getExpirationDate();
+			expirationDate = existingFileEntry.getExpirationDate();
 		}
 
 		return _toDocument(
 			_dlAppService.updateFileEntry(
-				documentId, fileName, binaryFile.getContentType(), title, null,
-				description, null, DLVersionNumberIncrease.AUTOMATIC,
+				documentId, fileName, binaryFile.getContentType(), title,
+				urlTitle, description, null, DLVersionNumberIncrease.AUTOMATIC,
 				binaryFile.getInputStream(), binaryFile.getSize(), displayDate,
 				expirationDate, existingFileEntry.getReviewDate(),
 				_createServiceContext(
@@ -492,7 +500,8 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		throws Exception {
 
 		return _updateDocument(
-			_dlAppService.getFileEntry(documentId), multipartBody);
+			_dlAppService.getFileEntry(documentId),
+			_getMultipartBodyFromDocument(documentId, multipartBody));
 	}
 
 	@Override
@@ -524,6 +533,28 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	}
 
 	@Override
+	public void update(
+			Collection<Document> documents,
+			Map<String, Serializable> parameters)
+		throws Exception {
+
+		Map<Long, Document> documentsMap = new HashMap<>();
+
+		for (Document document : documents) {
+			documentsMap.put(document.getId(), document);
+		}
+
+		_documentsMap.set(documentsMap);
+
+		try {
+			super.update(documents, parameters);
+		}
+		finally {
+			_documentsMap.remove();
+		}
+	}
+
+	@Override
 	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
 		FileEntry fileEntry = _dlAppService.getFileEntry((Long)id);
 
@@ -552,6 +583,18 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			externalReferenceCode = document.getExternalReferenceCode();
 		}
 
+		if ((document != null) &&
+			(document.getDocumentFolderExternalReferenceCode() != null)) {
+
+			Folder folder =
+				_dlAppLocalService.fetchFolderByExternalReferenceCode(
+					document.getDocumentFolderExternalReferenceCode(), groupId);
+
+			if (folder != null) {
+				documentFolderId = folder.getFolderId();
+			}
+		}
+
 		if (documentFolderId == null) {
 			if (document != null) {
 				documentFolderId = document.getDocumentFolderId();
@@ -570,6 +613,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		String fileName = null;
 		String title = null;
+		String urlTitle = null;
 		String description = null;
 		Date displayDate = null;
 		Date expirationDate = null;
@@ -577,14 +621,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		if (document != null) {
 			fileName = document.getFileName();
 			title = document.getTitle();
+			urlTitle = document.getFriendlyUrlPath();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 
@@ -614,7 +653,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		return _toDocument(
 			_dlAppService.addFileEntry(
 				externalReferenceCode, repositoryId, documentFolderId, fileName,
-				contentType, title, null, description, null,
+				contentType, title, urlTitle, description, null,
 				binaryFile.getInputStream(), binaryFile.getSize(), displayDate,
 				expirationDate, null,
 				_createServiceContext(
@@ -656,12 +695,19 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		String[] assetTagNames = null;
 		String viewableBy = null;
 		CustomField[] customFields = null;
+		ModelPermissions modelPermissions = null;
 
 		if (document != null) {
 			assetCategoryIds = document.getTaxonomyCategoryIds();
 			assetTagNames = document.getKeywords();
 			viewableBy = document.getViewableByAsString();
 			customFields = document.getCustomFields();
+			modelPermissions = ModelPermissionsUtil.toModelPermissions(
+				contextCompany.getCompanyId(), document.getPermissions(),
+				getPermissionCheckerResourceId(document.getId()),
+				getPermissionCheckerResourceName(document.getId()),
+				resourceActionLocalService, resourcePermissionLocalService,
+				roleLocalService);
 		}
 
 		if (assetCategoryIds == null) {
@@ -686,6 +732,8 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 			CustomFieldsUtil.toMap(
 				DLFileEntry.class.getName(), contextCompany.getCompanyId(),
 				customFields, contextAcceptLanguage.getPreferredLocale())
+		).permissions(
+			modelPermissions
 		).build();
 
 		serviceContext.setCommand(command);
@@ -785,7 +833,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 					_dlFileEntryTypeLocalService.getFolderFileEntryTypes(
 						_siteConnectedGroupGroupProvider.
 							getCurrentAndAncestorSiteAndDepotGroupIds(
-								groupId, true),
+								groupId, false, true),
 						documentFolderId, true)) {
 
 				if (name.equals(
@@ -849,6 +897,34 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 					groupId, 0.1, pagination.getStartPosition(),
 					pagination.getEndPosition())),
 			pagination, _dlFileEntryService.getFileEntriesCount(groupId, 0.1));
+	}
+
+	private MultipartBody _getMultipartBodyFromDocument(
+			Long documentId, MultipartBody multipartBody)
+		throws Exception {
+
+		if (multipartBody != null) {
+			return multipartBody;
+		}
+
+		Map<Long, Document> documentsMap = _documentsMap.get();
+
+		if (MapUtil.isEmpty(documentsMap)) {
+			return null;
+		}
+
+		Document document = documentsMap.get(documentId);
+
+		if (document == null) {
+			return null;
+		}
+
+		ObjectMapper objectMapper = ObjectMapperProviderUtil.getObjectMapper();
+
+		String documentJSON = objectMapper.writeValueAsString(document);
+
+		return MultipartBody.of(
+			Map.of(), clazz -> objectMapper, Map.of("document", documentJSON));
 	}
 
 	private SPIRatingResource<Rating> _getSPIRatingResource() {
@@ -918,14 +994,31 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		Long folderId = null;
 
-		if ((document != null) && (document.getDocumentFolderId() != null) &&
-			(document.getDocumentFolderId() !=
-				existingFileEntry.getFolderId())) {
+		if (document != null) {
+			String documentFolderExternalReferenceCode =
+				document.getDocumentFolderExternalReferenceCode();
 
-			folderId = document.getDocumentFolderId();
+			if (documentFolderExternalReferenceCode != null) {
+				Folder folder =
+					_dlAppLocalService.fetchFolderByExternalReferenceCode(
+						documentFolderExternalReferenceCode,
+						existingFileEntry.getGroupId());
+
+				if (folder != null) {
+					folderId = folder.getFolderId();
+				}
+			}
+			else if ((document.getDocumentFolderId() != null) &&
+					 (document.getDocumentFolderId() !=
+						 existingFileEntry.getFolderId())) {
+
+				folderId = document.getDocumentFolderId();
+			}
 		}
 
-		if (folderId != null) {
+		if ((folderId != null) &&
+			(folderId != existingFileEntry.getFolderId())) {
+
 			return _dlAppService.moveFileEntry(
 				documentId, folderId, new ServiceContext());
 		}
@@ -977,13 +1070,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	private List<Document> _toDocuments(List<DLFileEntry> dlFileEntries)
 		throws Exception {
 
-		List<Document> documents = new ArrayList<>();
-
-		for (DLFileEntry dlFileEntry : dlFileEntries) {
-			documents.add(_toDocument(new LiferayFileEntry(dlFileEntry)));
-		}
-
-		return documents;
+		return transform(
+			dlFileEntries,
+			dlFileEntry -> _toDocument(new LiferayFileEntry(dlFileEntry)));
 	}
 
 	private Document _updateDocument(
@@ -1010,6 +1099,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 		String fileName = null;
 		String title = null;
+		String urlTitle = null;
 		String description = null;
 		Date displayDate = null;
 		Date expirationDate = null;
@@ -1017,14 +1107,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		if (document != null) {
 			fileName = document.getFileName();
 			title = document.getTitle();
+			urlTitle = document.getFriendlyUrlPath();
 			description = document.getDescription();
-
-			if (FeatureFlagManagerUtil.isEnabled(
-					contextCompany.getCompanyId(), "LPD-10701")) {
-
-				displayDate = document.getDatePublished();
-			}
-
+			displayDate = document.getDatePublished();
 			expirationDate = document.getDateExpired();
 		}
 
@@ -1039,7 +1124,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 		return _toDocument(
 			_dlAppService.updateFileEntry(
 				fileEntry.getFileEntryId(), fileName,
-				binaryFile.getContentType(), title, null, description, null,
+				binaryFile.getContentType(), title, urlTitle, description, null,
 				DLVersionNumberIncrease.AUTOMATIC, binaryFile.getInputStream(),
 				binaryFile.getSize(), displayDate, expirationDate,
 				fileEntry.getReviewDate(),
@@ -1053,6 +1138,10 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DocumentResourceImpl.class);
+
+	private static final ThreadLocal<Map<Long, Document>> _documentsMap =
+		new CentralizedThreadLocal<>(
+			DocumentResourceImpl.class + "._documentsMap", () -> null);
 
 	@Reference
 	private Aggregations _aggregations;
@@ -1093,9 +1182,6 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
-	private ExpandoBridgeIndexer _expandoBridgeIndexer;
-
-	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
 
 	@Reference
@@ -1121,6 +1207,9 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Reference
+	private LayoutService _layoutService;
 
 	@Reference
 	private Portal _portal;

@@ -14,18 +14,19 @@ import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Alberto Montero
@@ -86,8 +87,6 @@ public class GoogleGadgetServlet extends HttpServlet {
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(
 			PortalUtil.getCompanyId(httpServletRequest), portletId);
 
-		String title = portlet.getDisplayName();
-
 		String widgetURL = String.valueOf(httpServletRequest.getRequestURL());
 
 		widgetURL = widgetURL.replaceFirst(
@@ -99,12 +98,12 @@ public class GoogleGadgetServlet extends HttpServlet {
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		sb.append("<Module>");
 		sb.append("<ModulePrefs title=\"");
-		sb.append(title);
+		sb.append(HtmlUtil.escapeAttribute(portlet.getDisplayName()));
 		sb.append("\"/>");
 		sb.append("<Content type=\"html\">");
 		sb.append("<![CDATA[");
 		sb.append("<iframe frameborder=\"0\" height=\"100%\" src=\"");
-		sb.append(widgetURL);
+		sb.append(HtmlUtil.escapeAttribute(widgetURL));
 		sb.append("\" width=\"100%\">");
 		sb.append("</iframe>");
 		sb.append("]]>");

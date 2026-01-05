@@ -11,10 +11,10 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizer
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory.ServiceWrapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +28,16 @@ import org.osgi.service.component.annotations.Deactivate;
  */
 @Component(service = FDSViewRegistry.class)
 public class FDSViewRegistryImpl implements FDSViewRegistry {
+
+	public FDSViewRegistryImpl() {
+	}
+
+	public FDSViewRegistryImpl(
+		ServiceTrackerMap<String, List<ServiceWrapper<FDSView>>>
+			serviceTrackerMap) {
+
+		_serviceTrackerMap = serviceTrackerMap;
+	}
 
 	@Override
 	public List<FDSView> getFDSViews(String fdsName) {
@@ -43,15 +53,9 @@ public class FDSViewRegistryImpl implements FDSViewRegistry {
 			return Collections.emptyList();
 		}
 
-		List<FDSView> fdsViews = new ArrayList<>();
-
-		for (ServiceWrapper<FDSView> fdsViewServiceWrapper :
-				fdsViewServiceWrappers) {
-
-			fdsViews.add(fdsViewServiceWrapper.getService());
-		}
-
-		return fdsViews;
+		return TransformUtil.transform(
+			fdsViewServiceWrappers,
+			fdsViewServiceWrapper -> fdsViewServiceWrapper.getService());
 	}
 
 	@Activate

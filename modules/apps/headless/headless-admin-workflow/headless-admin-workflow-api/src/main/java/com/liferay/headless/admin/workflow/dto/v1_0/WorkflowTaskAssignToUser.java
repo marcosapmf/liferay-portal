@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,10 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -56,7 +54,9 @@ public class WorkflowTaskAssignToUser implements Serializable {
 			WorkflowTaskAssignToUser.class, json);
 	}
 
-	@Schema(description = "The ID of the user to assign the workflow task.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the user to assign the workflow task."
+	)
 	public Long getAssigneeId() {
 		if (_assigneeIdSupplier != null) {
 			assigneeId = _assigneeIdSupplier.get();
@@ -99,7 +99,7 @@ public class WorkflowTaskAssignToUser implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _assigneeIdSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "An optional comment to add when assigning the workflow task."
 	)
 	public String getComment() {
@@ -144,7 +144,7 @@ public class WorkflowTaskAssignToUser implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _commentSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The date on which the workflow task should be executed."
 	)
 	public Date getDueDate() {
@@ -189,7 +189,7 @@ public class WorkflowTaskAssignToUser implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dueDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getWorkflowTaskId() {
 		if (_workflowTaskIdSupplier != null) {
 			workflowTaskId = _workflowTaskIdSupplier.get();
@@ -322,8 +322,8 @@ public class WorkflowTaskAssignToUser implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskAssignToUser",
 		name = "x-class-name"
 	)

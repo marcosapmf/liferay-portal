@@ -21,12 +21,12 @@ import com.liferay.portal.layoutconfiguration.util.RuntimePageUtil;
 import com.liferay.portal.servlet.DynamicServletRequestUtil;
 import com.liferay.portlet.LiferayPortletUtil;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.Writer;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Adolfo Pérez
@@ -99,7 +99,7 @@ public class PanelAppContentHelper {
 		LiferayPortletRequest liferayPortletRequest =
 			LiferayPortletUtil.getLiferayPortletRequest(
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST));
+					JavaConstants.JAKARTA_PORTLET_REQUEST));
 
 		if (liferayPortletRequest != null) {
 			return liferayPortletRequest.getOriginalHttpServletRequest();

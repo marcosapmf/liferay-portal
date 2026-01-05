@@ -79,16 +79,17 @@ public class FragmentStyledLayoutStructureItemTest {
 				StringUtil.randomString(), StringUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), false, "{fieldSets: []}", null,
-				0, false, FragmentConstants.TYPE_COMPONENT, null,
+				0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 		long defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				_layout.getPlid());
 
 		_fragmentEntryLink = _fragmentEntryLinkService.addFragmentEntryLink(
-			null, _group.getGroupId(), 0, fragmentEntry.getFragmentEntryId(),
-			defaultSegmentsExperienceId, _layout.getPlid(),
-			fragmentEntry.getCss(), fragmentEntry.getHtml(),
+			null, _group.getGroupId(), null,
+			fragmentEntry.getExternalReferenceCode(),
+			fragmentEntry.getScopeERC(), defaultSegmentsExperienceId,
+			_layout.getPlid(), fragmentEntry.getCss(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
 			StringPool.BLANK, 0, null, fragmentEntry.getType(), serviceContext);
 
@@ -98,8 +99,9 @@ public class FragmentStyledLayoutStructureItemTest {
 
 		_contributedFragmentEntryLink =
 			_fragmentEntryLinkService.addFragmentEntryLink(
-				null, _group.getGroupId(), 0,
-				contributedFragmentEntry.getFragmentEntryId(),
+				null, _group.getGroupId(), null,
+				contributedFragmentEntry.getExternalReferenceCode(),
+				contributedFragmentEntry.getScopeERC(),
 				defaultSegmentsExperienceId, _layout.getPlid(),
 				contributedFragmentEntry.getCss(),
 				contributedFragmentEntry.getHtml(),

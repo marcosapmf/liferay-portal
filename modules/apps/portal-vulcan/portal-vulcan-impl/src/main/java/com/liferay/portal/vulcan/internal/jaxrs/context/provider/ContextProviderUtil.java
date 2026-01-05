@@ -10,16 +10,16 @@ import com.liferay.portal.vulcan.internal.jaxrs.lifecycle.SafeReleaseInstanceRes
 import com.liferay.portal.vulcan.jaxrs.constants.JaxRsConstants;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.container.ResourceContext;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.jaxrs.impl.ResourceContextImpl;
 import org.apache.cxf.jaxrs.impl.UriInfoImpl;
@@ -40,15 +40,14 @@ public class ContextProviderUtil {
 	public static EntityModel getEntityModel(Message message) throws Exception {
 		Object matchedResource = getMatchedResource(message);
 
-		if (matchedResource instanceof EntityModelResource) {
-			EntityModelResource entityModelResource =
-				(EntityModelResource)matchedResource;
-
-			return entityModelResource.getEntityModel(
-				_getPathParameters(message));
+		if (!(matchedResource instanceof EntityModelResource)) {
+			return null;
 		}
 
-		return null;
+		EntityModelResource entityModelResource =
+			(EntityModelResource)matchedResource;
+
+		return entityModelResource.getEntityModel(_getPathParameters(message));
 	}
 
 	public static HttpServletRequest getHttpServletRequest(Message message) {

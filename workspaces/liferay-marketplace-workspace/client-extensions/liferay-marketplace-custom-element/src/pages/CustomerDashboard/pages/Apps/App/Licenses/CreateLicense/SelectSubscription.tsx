@@ -9,9 +9,9 @@ import {useParams} from 'react-router-dom';
 import useSWR from 'swr';
 
 import RadioCardList from '../../../../../../../components/RadioCardList/RadioCardList';
-import useMarketplaceSpringBootOAuth2 from '../../../../../../../hooks/useMarketplaceSpringBootOAuth2';
 import i18n from '../../../../../../../i18n';
-import {formatDate} from '../../../../../../PublisherDashboard/PublisherDashboardPageUtil';
+import koroneikiOAuth2 from '../../../../../../../services/oauth/Koroneiki';
+import {formatDate} from '../../../../../../../utils/date';
 
 type SubscriptionSelectionProps = {
 	onSelectSubscription: (subscription: any) => void;
@@ -24,14 +24,13 @@ const SelectSubscription = ({
 }: SubscriptionSelectionProps) => {
 	const params = useParams();
 	const orderId = Number(params.orderId);
-	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
 
 	const {
 		data: subscriptions = [],
 		isLoading,
 		isValidating,
 	} = useSWR(`/subcriptions/${orderId}`, () =>
-		marketplaceSpringBootOAuth2.getSubscriptions(orderId)
+		koroneikiOAuth2.getSubscriptions(orderId)
 	);
 
 	return (

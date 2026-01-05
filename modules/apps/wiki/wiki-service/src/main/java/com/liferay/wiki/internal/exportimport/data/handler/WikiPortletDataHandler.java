@@ -13,12 +13,13 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
+	property = "jakarta.portlet.name=" + WikiPortletKeys.WIKI,
 	service = PortletDataHandler.class
 )
 public class WikiPortletDataHandler extends BasePortletDataHandler {
@@ -85,6 +86,11 @@ public class WikiPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Override
+	public boolean isEnabled(long companyId) {
+		return FeatureFlagManagerUtil.isEnabled(companyId, "LPD-35013");
+	}
+
+	@Override
 	public void prepareManifestSummary(
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences)
@@ -101,7 +107,7 @@ public class WikiPortletDataHandler extends BasePortletDataHandler {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(WikiNode.class),
 			new StagedModelType(WikiPage.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				getNamespace(), "wiki-nodes", false, true, null,
 				WikiNode.class.getName()),
@@ -112,14 +118,15 @@ public class WikiPortletDataHandler extends BasePortletDataHandler {
 						getNamespace(), "referenced-content")
 				},
 				WikiPage.class.getName()));
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference(
-		target = "(javax.portlet.name=" + WikiPortletKeys.WIKI_ADMIN + ")"
+		target = "(jakarta.portlet.name=" + WikiPortletKeys.WIKI_ADMIN + ")"
 	)
 	private PortletDataHandler _wikiAdminPortletDataHandler;
 

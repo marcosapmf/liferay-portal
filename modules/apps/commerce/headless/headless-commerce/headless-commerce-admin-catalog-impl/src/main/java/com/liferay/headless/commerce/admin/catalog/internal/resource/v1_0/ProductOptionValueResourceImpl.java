@@ -15,8 +15,8 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductOptionValue;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductOptionValueUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductOptionValueResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
@@ -104,9 +104,21 @@ public class ProductOptionValueResourceImpl
 
 		long cpInstanceId = 0;
 
-		CPInstance cpInstance = _cpInstanceService.fetchCProductInstance(
-			cpDefinitionOptionValueRel.getCProductId(),
-			cpDefinitionOptionValueRel.getCPInstanceUuid());
+		CPInstance cpInstance =
+			_cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+				productOptionValue.getSkuExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (cpInstance == null) {
+			cpInstance = _cpInstanceService.fetchCPInstance(
+				GetterUtil.getLong(productOptionValue.getSkuId()));
+		}
+
+		if (cpInstance == null) {
+			_cpInstanceService.fetchCProductInstance(
+				cpDefinitionOptionValueRel.getCProductId(),
+				cpDefinitionOptionValueRel.getCPInstanceUuid());
+		}
 
 		if (cpInstance != null) {
 			cpInstanceId = cpInstance.getCPInstanceId();
@@ -121,7 +133,7 @@ public class ProductOptionValueResourceImpl
 
 		return _toProductOptionValue(
 			_cpDefinitionOptionValueRelService.updateCPDefinitionOptionValueRel(
-				id, GetterUtil.get(productOptionValue.getSkuId(), cpInstanceId),
+				id, cpInstanceId,
 				GetterUtil.get(
 					productOptionValue.getKey(),
 					cpDefinitionOptionValueRel.getKey()),
@@ -163,7 +175,8 @@ public class ProductOptionValueResourceImpl
 
 		return _toProductOptionValue(
 			ProductOptionValueUtil.addOrUpdateCPDefinitionOptionValueRel(
-				_cpDefinitionOptionValueRelService, productOptionValue,
+				_cpDefinitionOptionValueRelService, _cpInstanceService,
+				productOptionValue,
 				cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
 				_serviceContextHelper.getServiceContext(
 					cpDefinitionOptionRel.getGroupId())));

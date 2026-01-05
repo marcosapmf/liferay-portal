@@ -1,5 +1,7 @@
 @import '../../styles/variables';
 
+@import 'guest_sign_in_modal';
+
 .mini-cart {
 	@import 'mini_cart_common';
 
@@ -34,6 +36,19 @@
 		top: 0;
 		transition: background-color 200ms ease-out;
 		width: 100%;
+	}
+
+	&-slow-connection-overlay {
+		align-items: center;
+		background-color: rgba(255, 255, 255, 0.7);
+		display: flex;
+		height: 100vh;
+		justify-content: center;
+		left: 0;
+		position: fixed;
+		top: 0;
+		width: 100vw;
+		z-index: 952;
 	}
 
 	&:not(.is-open) &-overlay {

@@ -15,16 +15,16 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -65,8 +65,8 @@ public abstract class BaseDLFileEntryConfigurationScreen
 					dlFileEntryConfigurationProvider, httpServletRequest,
 					portal.getLiferayPortletResponse(
 						(PortletResponse)httpServletRequest.getAttribute(
-							JavaConstants.JAVAX_PORTLET_RESPONSE)),
-					scope, _getScopePk(httpServletRequest, scope)));
+							JavaConstants.JAKARTA_PORTLET_RESPONSE)),
+					scope, _getScopePK(httpServletRequest, scope)));
 
 			RequestDispatcher requestDispatcher =
 				servletContext.getRequestDispatcher(
@@ -95,7 +95,7 @@ public abstract class BaseDLFileEntryConfigurationScreen
 	)
 	protected ServletContext servletContext;
 
-	private long _getScopePk(
+	private long _getScopePK(
 		HttpServletRequest httpServletRequest,
 		ExtendedObjectClassDefinition.Scope scope) {
 

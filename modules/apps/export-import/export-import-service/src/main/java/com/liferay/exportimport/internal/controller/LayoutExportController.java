@@ -8,7 +8,6 @@ package com.liferay.exportimport.internal.controller;
 import com.liferay.asset.link.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletExportController;
-import com.liferay.exportimport.internal.lar.DeletionSystemEventExporter;
 import com.liferay.exportimport.internal.lar.PermissionExporter;
 import com.liferay.exportimport.kernel.controller.ExportController;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
@@ -23,6 +22,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.lar.DeletionSystemEventExporter;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
@@ -233,6 +233,13 @@ public class LayoutExportController implements ExportController {
 		headerElement.addAttribute(
 			"company-group-id",
 			String.valueOf(portletDataContext.getCompanyGroupId()));
+
+		Group group = _groupLocalService.fetchGroup(
+			portletDataContext.getGroupId());
+
+		headerElement.addAttribute(
+			"group-friendly-url", group.getFriendlyURL());
+
 		headerElement.addAttribute(
 			"group-id", String.valueOf(portletDataContext.getGroupId()));
 		headerElement.addAttribute(
@@ -241,9 +248,6 @@ public class LayoutExportController implements ExportController {
 		headerElement.addAttribute(
 			"private-layout",
 			String.valueOf(portletDataContext.isPrivateLayout()));
-
-		Group group = _groupLocalService.fetchGroup(
-			portletDataContext.getGroupId());
 
 		String type = "layout-set";
 
@@ -408,8 +412,8 @@ public class LayoutExportController implements ExportController {
 	@Reference
 	private BackgroundTaskLocalService _backgroundTaskLocalService;
 
-	private final DeletionSystemEventExporter _deletionSystemEventExporter =
-		DeletionSystemEventExporter.getInstance();
+	@Reference
+	private DeletionSystemEventExporter _deletionSystemEventExporter;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;

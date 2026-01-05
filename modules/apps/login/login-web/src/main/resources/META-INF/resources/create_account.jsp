@@ -89,6 +89,24 @@ renderResponse.setTitle(LanguageUtil.get(request, "create-account"));
 		<liferay-ui:message arguments="<%= HtmlUtil.escape(upe.regex) %>" key="that-password-does-not-comply-with-the-regular-expression" translateArguments="<%= false %>" />
 	</liferay-ui:error>
 
+	<liferay-ui:error exception="<%= UserPasswordException.MustHaveMoreAlphanumeric.class %>">
+
+		<%
+		UserPasswordException.MustHaveMoreAlphanumeric upe = (UserPasswordException.MustHaveMoreAlphanumeric)errorException;
+		%>
+
+		<liferay-ui:message arguments="<%= String.valueOf(upe.minAlphanumeric) %>" key="that-password-must-contain-at-least-x-alphanumeric-characters" translateArguments="<%= false %>" />
+	</liferay-ui:error>
+
+	<liferay-ui:error exception="<%= UserPasswordException.MustHaveMoreLowercase.class %>">
+
+		<%
+		UserPasswordException.MustHaveMoreLowercase upe = (UserPasswordException.MustHaveMoreLowercase)errorException;
+		%>
+
+		<liferay-ui:message arguments="<%= String.valueOf(upe.minLowercase) %>" key="that-password-must-contain-at-least-x-lowercase-characters" translateArguments="<%= false %>" />
+	</liferay-ui:error>
+
 	<liferay-ui:error exception="<%= UserPasswordException.MustHaveMoreNumbers.class %>">
 
 		<%
@@ -126,6 +144,16 @@ renderResponse.setTitle(LanguageUtil.get(request, "create-account"));
 	<liferay-ui:error exception="<%= UserScreenNameException.MustNotBeReserved.class %>" message="the-screen-name-you-requested-is-reserved" />
 	<liferay-ui:error exception="<%= UserScreenNameException.MustNotBeReservedForAnonymous.class %>" focusField="screenName" message="the-screen-name-you-requested-is-reserved-for-the-anonymous-user" />
 	<liferay-ui:error exception="<%= UserScreenNameException.MustNotBeUsedByGroup.class %>" focusField="screenName" message="the-screen-name-you-requested-is-already-taken-by-a-site" />
+
+	<liferay-ui:error exception="<%= UserScreenNameException.MustNotExceedMaximumLength.class %>" focusField="screenName">
+
+		<%
+		int screenNameMaxLength = ModelHintsUtil.getMaxLength(User.class.getName(), "screenName");
+		%>
+
+		<liferay-ui:message arguments="<%= String.valueOf(screenNameMaxLength) %>" key="please-enter-a-screen-name-with-fewer-than-x-characters" />
+	</liferay-ui:error>
+
 	<liferay-ui:error exception="<%= UserScreenNameException.MustProduceValidFriendlyURL.class %>" focusField="screenName" message="the-screen-name-you-requested-must-produce-a-valid-friendly-url" />
 
 	<liferay-ui:error exception="<%= UserScreenNameException.MustValidate.class %>" focusField="screenName">
@@ -229,19 +257,19 @@ renderResponse.setTitle(LanguageUtil.get(request, "create-account"));
 				</div>
 			</c:if>
 
-			<div class="form-group">
-				<h3 class="mb-2 sheet-subtitle"><liferay-ui:message key="verification" /></h3>
+			<c:if test="<%= captchaConfiguration.createAccountCaptchaEnabled() %>">
+				<div class="form-group">
+					<h3 class="mb-2 sheet-subtitle"><liferay-ui:message key="verification" /></h3>
 
-				<clay:row>
-					<clay:col
-						md="6"
-					>
-						<c:if test="<%= captchaConfiguration.createAccountCaptchaEnabled() %>">
+					<clay:row>
+						<clay:col
+							md="6"
+						>
 							<liferay-captcha:captcha />
-						</c:if>
-					</clay:col>
-				</clay:row>
-			</div>
+						</clay:col>
+					</clay:row>
+				</div>
+			</c:if>
 
 			<div class="form-group">
 				<aui:button-row>

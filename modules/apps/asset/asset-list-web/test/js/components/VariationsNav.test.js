@@ -4,12 +4,12 @@
  */
 
 import {cleanup, fireEvent, render} from '@testing-library/react';
-import {openConfirmModal, openToast} from 'frontend-js-web';
+import {openConfirmModal, openToast} from 'frontend-js-components-web';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
-import {saveVariationsListPriorityService} from '../../../src/main/resources/META-INF/resources/js/api/index';
+import {saveVariationsListPriorityService} from '../../../src/main/resources/META-INF/resources/js/actions/index';
 import VariationsNav from '../../../src/main/resources/META-INF/resources/js/components/VariationsNav/index';
 import {
 	emptyStateNoSegments,
@@ -23,14 +23,17 @@ const _getComponent = (props) => {
 	return <VariationsNav {...props} />;
 };
 
-jest.mock('frontend-js-web', () => ({
+jest.mock('frontend-js-components-web', () => ({
 	openConfirmModal: jest.fn(({onConfirm}) => onConfirm(true)),
 	openToast: jest.fn(),
+}));
+
+jest.mock('frontend-js-web', () => ({
 	sub: jest.fn((str) => str),
 }));
 
 jest.mock(
-	'../../../src/main/resources/META-INF/resources/js/api/index.js',
+	'../../../src/main/resources/META-INF/resources/js/actions/index.js',
 	() => {
 		const moduleMock = jest.fn();
 		moduleMock.mockReturnValue({

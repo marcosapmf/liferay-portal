@@ -10,6 +10,8 @@ import com.liferay.headless.admin.workflow.client.dto.v1_0.Transition;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowDefinition;
 import com.liferay.headless.admin.workflow.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -18,8 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -140,6 +140,20 @@ public class WorkflowDefinitionSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(workflowDefinition.getDescription()));
+
+			sb.append("\"");
+		}
+
+		if (workflowDefinition.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(workflowDefinition.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -330,6 +344,15 @@ public class WorkflowDefinitionSerDes {
 				String.valueOf(workflowDefinition.getDescription()));
 		}
 
+		if (workflowDefinition.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(workflowDefinition.getExternalReferenceCode()));
+		}
+
 		if (workflowDefinition.getId() == null) {
 			map.put("id", null);
 		}
@@ -422,6 +445,11 @@ public class WorkflowDefinitionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "description")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -489,6 +517,14 @@ public class WorkflowDefinitionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					workflowDefinition.setDescription(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					workflowDefinition.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -595,6 +631,10 @@ public class WorkflowDefinitionSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

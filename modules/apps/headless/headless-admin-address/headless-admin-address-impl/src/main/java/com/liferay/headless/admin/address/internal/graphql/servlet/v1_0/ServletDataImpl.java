@@ -14,10 +14,10 @@ import com.liferay.headless.admin.address.resource.v1_0.RegionResource;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -82,6 +82,18 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#deleteCountry",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class, "deleteCountry"));
+					put(
+						"mutation#deleteCountryBatch",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class, "deleteCountryBatch"));
+					put(
+						"mutation#patchCountry",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class, "patchCountry"));
+					put(
 						"mutation#createCountriesPageExportBatch",
 						new ObjectValuePair<>(
 							CountryResourceImpl.class,
@@ -95,18 +107,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "postCountryBatch"));
 					put(
-						"mutation#deleteCountry",
-						new ObjectValuePair<>(
-							CountryResourceImpl.class, "deleteCountry"));
-					put(
-						"mutation#deleteCountryBatch",
-						new ObjectValuePair<>(
-							CountryResourceImpl.class, "deleteCountryBatch"));
-					put(
-						"mutation#patchCountry",
-						new ObjectValuePair<>(
-							CountryResourceImpl.class, "patchCountry"));
-					put(
 						"mutation#updateCountry",
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "putCountry"));
@@ -114,25 +114,6 @@ public class ServletDataImpl implements ServletData {
 						"mutation#updateCountryBatch",
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "putCountryBatch"));
-					put(
-						"mutation#createCountryRegionsPageExportBatch",
-						new ObjectValuePair<>(
-							RegionResourceImpl.class,
-							"postCountryRegionsPageExportBatch"));
-					put(
-						"mutation#createCountryRegion",
-						new ObjectValuePair<>(
-							RegionResourceImpl.class, "postCountryRegion"));
-					put(
-						"mutation#createCountryRegionBatch",
-						new ObjectValuePair<>(
-							RegionResourceImpl.class,
-							"postCountryRegionBatch"));
-					put(
-						"mutation#createRegionsPageExportBatch",
-						new ObjectValuePair<>(
-							RegionResourceImpl.class,
-							"postRegionsPageExportBatch"));
 					put(
 						"mutation#deleteRegion",
 						new ObjectValuePair<>(
@@ -146,6 +127,25 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							RegionResourceImpl.class, "patchRegion"));
 					put(
+						"mutation#createCountryRegion",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class, "postCountryRegion"));
+					put(
+						"mutation#createCountryRegionBatch",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"postCountryRegionBatch"));
+					put(
+						"mutation#createCountryRegionsPageExportBatch",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"postCountryRegionsPageExportBatch"));
+					put(
+						"mutation#createRegionsPageExportBatch",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class,
+							"postRegionsPageExportBatch"));
+					put(
 						"mutation#updateRegion",
 						new ObjectValuePair<>(
 							RegionResourceImpl.class, "putRegion"));
@@ -158,6 +158,10 @@ public class ServletDataImpl implements ServletData {
 						"query#countries",
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "getCountriesPage"));
+					put(
+						"query#country",
+						new ObjectValuePair<>(
+							CountryResourceImpl.class, "getCountry"));
 					put(
 						"query#countryByA2",
 						new ObjectValuePair<>(
@@ -175,26 +179,22 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CountryResourceImpl.class, "getCountryByNumber"));
 					put(
-						"query#country",
-						new ObjectValuePair<>(
-							CountryResourceImpl.class, "getCountry"));
-					put(
-						"query#countryRegions",
-						new ObjectValuePair<>(
-							RegionResourceImpl.class, "getCountryRegionsPage"));
-					put(
 						"query#countryRegionByRegionCode",
 						new ObjectValuePair<>(
 							RegionResourceImpl.class,
 							"getCountryRegionByRegionCode"));
 					put(
-						"query#regions",
+						"query#countryRegions",
 						new ObjectValuePair<>(
-							RegionResourceImpl.class, "getRegionsPage"));
+							RegionResourceImpl.class, "getCountryRegionsPage"));
 					put(
 						"query#region",
 						new ObjectValuePair<>(
 							RegionResourceImpl.class, "getRegion"));
+					put(
+						"query#regions",
+						new ObjectValuePair<>(
+							RegionResourceImpl.class, "getRegionsPage"));
 
 					put(
 						"query#Region.country",

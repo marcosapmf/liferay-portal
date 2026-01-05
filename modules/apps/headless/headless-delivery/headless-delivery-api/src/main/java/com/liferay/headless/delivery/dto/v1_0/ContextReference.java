@@ -19,7 +19,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,21 +34,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Javier Gamarra
  * @generated
  */
 @Generated("")
 @GraphQLName("ContextReference")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"contextSource"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"contextSource"})
 @XmlRootElement(name = "ContextReference")
 public class ContextReference implements Serializable {
 
@@ -55,8 +55,8 @@ public class ContextReference implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ContextReference.class, json);
 	}
 
+	@io.swagger.v3.oas.annotations.media.Schema
 	@JsonGetter("contextSource")
-	@Schema
 	@Valid
 	public ContextSource getContextSource() {
 		if (_contextSourceSupplier != null) {
@@ -147,9 +147,7 @@ public class ContextReference implements Serializable {
 			sb.append("\"contextSource\": ");
 
 			sb.append("\"");
-
 			sb.append(contextSource);
-
 			sb.append("\"");
 		}
 
@@ -158,8 +156,8 @@ public class ContextReference implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContextReference",
 		name = "x-class-name"
 	)

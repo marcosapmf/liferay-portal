@@ -11,8 +11,6 @@
 
 	const COMBINE = LiferayAUI.getCombine();
 
-	const PATH_EDITOR_CKEDITOR = LiferayAUI.getEditorCKEditorPath();
-
 	const PATH_JAVASCRIPT = '/o/frontend-js-aui-web';
 
 	window.YUI_config = {
@@ -25,17 +23,6 @@
 		comboBase: LiferayAUI.getComboPath(),
 		filter: 'min', // If you need to debug this file, replace this with 'raw'
 		groups: {
-			editor: {
-				base: PATH_EDITOR_CKEDITOR,
-				combine: COMBINE,
-				modules: {
-					'inline-editor-ckeditor': {
-						path: 'ckeditor/main.js',
-					},
-				},
-				root: PATH_EDITOR_CKEDITOR,
-			},
-
 			liferay: {
 				base:
 					Liferay.ThemeDisplay.getCDNBaseURL() +
@@ -55,38 +42,12 @@
 							'liferay-form',
 							'liferay-menu',
 							'liferay-portlet-base',
-							'liferay-undo-manager',
 							'sortable',
 						],
-					},
-					'liferay-autocomplete-input': {
-						path: 'autocomplete_input.js',
-						requires: [
-							'aui-base',
-							'autocomplete',
-							'autocomplete-filters',
-							'autocomplete-highlighters',
-						],
-					},
-					'liferay-dynamic-select': {
-						path: 'dynamic_select.js',
-						requires: ['aui-base'],
 					},
 					'liferay-form': {
 						path: 'form.js',
 						requires: ['aui-base', 'aui-form-validator'],
-					},
-					'liferay-fullscreen-source-editor': {
-						path: 'fullscreen_source_editor.js',
-						requires: ['liferay-source-editor'],
-					},
-					'liferay-icon': {
-						path: 'icon.js',
-						requires: ['aui-base'],
-					},
-					'liferay-inline-editor-base': {
-						path: 'inline_editor_base.js',
-						requires: ['aui-base', 'aui-overlay-base-deprecated'],
 					},
 					'liferay-input-localized': {
 						path: 'input_localized.js',
@@ -97,43 +58,6 @@
 							'aui-palette',
 							'aui-set',
 						],
-					},
-					'liferay-input-move-boxes': {
-						path: 'input_move_boxes.js',
-						plugins: {
-							'liferay-input-move-boxes-touch': {
-								condition: {
-									name: 'liferay-input-move-boxes-touch',
-									test(A) {
-										return (
-											A.UA.touchEnabled && !!A.UA.mobile
-										);
-									},
-									trigger: 'liferay-input-move-boxes',
-								},
-							},
-						},
-						requires: ['aui-base', 'aui-toolbar'],
-					},
-					'liferay-input-move-boxes-touch': {
-						path: 'input_move_boxes_touch.js',
-						requires: [
-							'aui-base',
-							'aui-template-deprecated',
-							'liferay-input-move-boxes',
-							'sortable',
-						],
-					},
-					'liferay-layout': {
-						path: 'layout.js',
-					},
-					'liferay-layout-column': {
-						path: 'layout_column.js',
-						requires: ['aui-sortable-layout', 'dd'],
-					},
-					'liferay-logo-editor': {
-						path: 'logo_editor.js',
-						requires: ['aui-image-cropper', 'liferay-portlet-base'],
 					},
 					'liferay-menu': {
 						path: 'menu.js',
@@ -147,59 +71,9 @@
 							'autocomplete-highlighters',
 						],
 					},
-					'liferay-menu-toggle': {
-						path: 'menu_toggle.js',
-						requires: [
-							'aui-node',
-							'event-outside',
-							'event-tap',
-							'liferay-menu-filter',
-						],
-					},
-					'liferay-navigation': {
-						path: 'navigation.js',
-						requires: ['aui-component', 'event-mouseenter'],
-					},
-					'liferay-navigation-interaction': {
-						path: 'navigation_interaction.js',
-						plugins: {
-							'liferay-navigation-interaction-touch': {
-								condition: {
-									name: 'liferay-navigation-interaction-touch',
-									test(A) {
-										return A.UA.touchEnabled;
-									},
-									trigger: 'liferay-navigation-interaction',
-								},
-							},
-						},
-						requires: [
-							'aui-base',
-							'aui-component',
-							'event-mouseenter',
-							'node-focusmanager',
-							'plugin',
-						],
-					},
-					'liferay-navigation-interaction-touch': {
-						path: 'navigation_interaction_touch.js',
-						requires: [
-							'event-tap',
-							'event-touch',
-							'liferay-navigation-interaction',
-						],
-					},
 					'liferay-portlet-base': {
 						path: 'portlet_base.js',
 						requires: ['aui-base'],
-					},
-					'liferay-portlet-url': {
-						path: 'portlet_url.js',
-						requires: ['aui-base'],
-					},
-					'liferay-progress': {
-						path: 'progress.js',
-						requires: ['aui-progressbar'],
 					},
 					'liferay-search-container': {
 						path: 'search_container.js',
@@ -221,31 +95,6 @@
 						path: 'search_container_select.js',
 						requires: ['aui-component', 'aui-url', 'plugin'],
 					},
-					'liferay-session': {
-						path: 'session.js',
-						requires: [
-							'aui-base',
-							'aui-component',
-							'aui-timer',
-							'cookie',
-							'plugin',
-						],
-					},
-					'liferay-source-editor': {
-						path: 'source_editor.js',
-						requires: ['aui-ace-editor'],
-					},
-					'liferay-store': {
-						path: 'store.js',
-					},
-					'liferay-translation-manager': {
-						path: 'translation_manager.js',
-						requires: ['aui-base'],
-					},
-					'liferay-undo-manager': {
-						path: 'undo_manager.js',
-						requires: ['aui-data-set-deprecated', 'base'],
-					},
 					'liferay-upload': {
 						path: 'upload.js',
 						requires: [
@@ -262,12 +111,7 @@
 							'aui-modal',
 							'aui-url',
 							'event-resize',
-							'liferay-widget-zindex',
 						],
-					},
-					'liferay-widget-zindex': {
-						path: 'widget_zindex.js',
-						requires: ['aui-modal', 'plugin'],
 					},
 				},
 				root: PATH_JAVASCRIPT + '/liferay/',

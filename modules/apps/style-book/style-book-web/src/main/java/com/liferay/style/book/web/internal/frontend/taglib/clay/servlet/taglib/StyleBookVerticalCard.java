@@ -20,14 +20,15 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.web.internal.security.permissions.resource.StyleBookPermission;
 import com.liferay.style.book.web.internal.servlet.taglib.util.StyleBookEntryActionDropdownItemsProvider;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Eudaldo Alonso
@@ -86,7 +87,9 @@ public class StyleBookVerticalCard
 				_themeDisplay.getPermissionChecker(),
 				_themeDisplay.getScopeGroupId(),
 				StyleBookActionKeys.MANAGE_STYLE_BOOK_ENTRIES) ||
-			(_styleBookEntry.getStyleBookEntryId() <= 0)) {
+			(_styleBookEntry.getStyleBookEntryId() <= 0) ||
+			StyleBookUtil.isThemeInactive(
+				_styleBookEntry.getCompanyId(), _styleBookEntry.getThemeId())) {
 
 			return null;
 		}
@@ -112,6 +115,18 @@ public class StyleBookVerticalCard
 
 	@Override
 	public List<LabelItem> getLabels() {
+		if ((_styleBookEntry.getStyleBookEntryId() > 0) &&
+			StyleBookUtil.isThemeInactive(
+				_styleBookEntry.getCompanyId(), _styleBookEntry.getThemeId())) {
+
+			return LabelItemListBuilder.add(
+				labelItem -> {
+					labelItem.setStatus(WorkflowConstants.STATUS_INACTIVE);
+					labelItem.setStyle("danger");
+				}
+			).build();
+		}
+
 		StyleBookEntry draftStyleBookEntry =
 			StyleBookEntryLocalServiceUtil.fetchDraft(_styleBookEntry);
 
@@ -153,12 +168,24 @@ public class StyleBookVerticalCard
 
 	@Override
 	public String getStickerTitle() {
-		if (_styleBookEntry.isDefaultStyleBookEntry()) {
-			return LanguageUtil.get(
-				_themeDisplay.getLocale(), "marked-as-default");
+		if (!_styleBookEntry.isDefaultStyleBookEntry()) {
+			return null;
 		}
 
-		return null;
+		return LanguageUtil.format(
+			_themeDisplay.getLocale(), "marked-as-default-for-x",
+			StyleBookUtil.getThemeName(
+				_themeDisplay.getCompanyId(), _themeDisplay.getLocale(),
+				_styleBookEntry.getThemeId()));
+	}
+
+	@Override
+	public String getSubtitle() {
+		return LanguageUtil.format(
+			_themeDisplay.getLocale(), "based-on-x",
+			StyleBookUtil.getThemeName(
+				_themeDisplay.getCompanyId(), _themeDisplay.getLocale(),
+				_styleBookEntry.getThemeId()));
 	}
 
 	@Override
@@ -168,11 +195,14 @@ public class StyleBookVerticalCard
 
 	@Override
 	public boolean isSelectable() {
-		if (_styleBookEntry.getStyleBookEntryId() > 0) {
-			return true;
+		if ((_styleBookEntry.getStyleBookEntryId() <= 0) ||
+			StyleBookUtil.isThemeInactive(
+				_styleBookEntry.getCompanyId(), _styleBookEntry.getThemeId())) {
+
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	private final RenderRequest _renderRequest;

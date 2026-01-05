@@ -46,16 +46,25 @@ public class AggregateTestRule implements TestRule {
 	@Override
 	public Statement apply(Statement statement, Description description) {
 		for (int i = _testRules.length - 1; i >= 0; i--) {
-			statement = _testRules[i].apply(statement, description);
+			TestRule testRule = _testRules[i];
+
+			if (!_skippedTestRules.contains(testRule)) {
+				statement = testRule.apply(statement, description);
+			}
 		}
 
 		return statement;
+	}
+
+	public void skipTestRule(TestRule testRule) {
+		_skippedTestRules.add(testRule);
 	}
 
 	private static final String[] _ORDERED_RULE_CLASS_NAMES = {
 		TimeoutTestRule.class.getName(), HeapDumpTestRule.class.getName(),
 		CodeCoverageAssertor.class.getName(), NewEnvTestRule.class.getName(),
 		AssumeTestRule.class.getName(),
+		"com.liferay.exportimport.test.rule.LazyReferencingTestRule",
 		"com.liferay.portal.test.rule.LiferayIntegrationTestRule",
 		LiferayUnitTestRule.class.getName(),
 		"com.liferay.portal.test.rule.PersistenceTestRule",
@@ -103,6 +112,7 @@ public class AggregateTestRule implements TestRule {
 
 		};
 
+	private final Set<TestRule> _skippedTestRules = new HashSet<>();
 	private final TestRule[] _testRules;
 
 }

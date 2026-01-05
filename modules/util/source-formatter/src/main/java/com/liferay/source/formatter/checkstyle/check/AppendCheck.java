@@ -23,11 +23,11 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		List<DetailAST> methodCallDetailASTList = getMethodCalls(
+		List<DetailAST> methodCallDetailASTs = getMethodCalls(
 			detailAST, "append");
 
-		for (int i = 0; i < methodCallDetailASTList.size(); i++) {
-			DetailAST methodCallDetailAST = methodCallDetailASTList.get(i);
+		for (int i = 0; i < methodCallDetailASTs.size(); i++) {
+			DetailAST methodCallDetailAST = methodCallDetailASTs.get(i);
 
 			String variableName = getVariableName(methodCallDetailAST);
 
@@ -38,24 +38,28 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 				continue;
 			}
 
-			DetailAST parameterDetailAST = getParameterDetailAST(
-				methodCallDetailAST);
+			DetailAST methodCallFirstParameterExprDetailAST =
+				getFirstParameterExprDetailAST(methodCallDetailAST);
 
-			if (parameterDetailAST == null) {
+			if (methodCallFirstParameterExprDetailAST == null) {
 				continue;
 			}
 
-			_checkPlusOperator(parameterDetailAST);
+			DetailAST methodCallFirstParameterDetailAST =
+				methodCallFirstParameterExprDetailAST.getFirstChild();
 
-			if ((parameterDetailAST.getType() != TokenTypes.STRING_LITERAL) ||
+			_checkPlusOperator(methodCallFirstParameterDetailAST);
+
+			if ((methodCallFirstParameterDetailAST.getType() !=
+					TokenTypes.STRING_LITERAL) ||
 				_containsMethodCall(
 					detailAST, variableName, "setIndex", "setStringAt")) {
 
 				continue;
 			}
 
-			if (i < (methodCallDetailASTList.size() - 1)) {
-				DetailAST nextMethodCallDetailAST = methodCallDetailASTList.get(
+			if (i < (methodCallDetailASTs.size() - 1)) {
+				DetailAST nextMethodCallDetailAST = methodCallDetailASTs.get(
 					i + 1);
 
 				if (!variableName.equals(
@@ -66,21 +70,26 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 					continue;
 				}
 
-				DetailAST nextParameterDetailAST = getParameterDetailAST(
-					nextMethodCallDetailAST);
+				DetailAST nextMethodCallFirstParameterExprDetailAST =
+					getFirstParameterExprDetailAST(nextMethodCallDetailAST);
 
-				if (nextParameterDetailAST != null) {
-					if (nextParameterDetailAST.getType() ==
+				if (nextMethodCallFirstParameterExprDetailAST != null) {
+					DetailAST nextMethodCallFirstParameterDetailAST =
+						nextMethodCallFirstParameterExprDetailAST.
+							getFirstChild();
+
+					if (nextMethodCallFirstParameterDetailAST.getType() ==
 							TokenTypes.STRING_LITERAL) {
 
 						_checkLiteralStrings(
 							methodCallDetailAST, nextMethodCallDetailAST,
-							parameterDetailAST.getText(),
-							nextParameterDetailAST.getText());
+							methodCallFirstParameterDetailAST.getText(),
+							nextMethodCallFirstParameterDetailAST.getText());
 					}
 					else {
 						checkCombineOperand(
-							parameterDetailAST, nextParameterDetailAST);
+							methodCallFirstParameterDetailAST,
+							nextMethodCallFirstParameterDetailAST);
 					}
 				}
 			}
@@ -89,7 +98,7 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 				continue;
 			}
 
-			DetailAST previousMethodCallDetailAST = methodCallDetailASTList.get(
+			DetailAST previousMethodCallDetailAST = methodCallDetailASTs.get(
 				i - 1);
 
 			if (!variableName.equals(
@@ -100,15 +109,22 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 				continue;
 			}
 
-			DetailAST previousParameterDetailAST = getParameterDetailAST(
-				previousMethodCallDetailAST);
+			DetailAST previousMethodCallFirstParameterExprDetailAST =
+				getFirstParameterExprDetailAST(previousMethodCallDetailAST);
 
-			if ((previousParameterDetailAST != null) &&
-				(previousParameterDetailAST.getType() !=
-					TokenTypes.STRING_LITERAL)) {
+			if (previousMethodCallFirstParameterExprDetailAST == null) {
+				continue;
+			}
+
+			DetailAST previousMethodCallFirstParameterDetailAST =
+				previousMethodCallFirstParameterExprDetailAST.getFirstChild();
+
+			if (previousMethodCallFirstParameterDetailAST.getType() !=
+					TokenTypes.STRING_LITERAL) {
 
 				checkCombineOperand(
-					parameterDetailAST, previousParameterDetailAST);
+					methodCallFirstParameterDetailAST,
+					previousMethodCallFirstParameterDetailAST);
 			}
 		}
 	}
@@ -176,10 +192,10 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 			return;
 		}
 
-		List<DetailAST> literalStringDetailASTList = getAllChildTokens(
+		List<DetailAST> literalStringDetailASTs = getAllChildTokens(
 			parameterDetailAST, true, TokenTypes.STRING_LITERAL);
 
-		if (!literalStringDetailASTList.isEmpty()) {
+		if (!literalStringDetailASTs.isEmpty()) {
 			log(parameterDetailAST, MSG_INCORRECT_PLUS);
 		}
 	}
@@ -188,10 +204,10 @@ public class AppendCheck extends BaseStringConcatenationCheck {
 		DetailAST detailAST, String variableName, String... methodNames) {
 
 		for (String methodName : methodNames) {
-			List<DetailAST> methodCallDetailASTList = getMethodCalls(
+			List<DetailAST> methodCallDetailASTs = getMethodCalls(
 				detailAST, variableName, methodName);
 
-			if (!methodCallDetailASTList.isEmpty()) {
+			if (!methodCallDetailASTs.isEmpty()) {
 				return true;
 			}
 		}

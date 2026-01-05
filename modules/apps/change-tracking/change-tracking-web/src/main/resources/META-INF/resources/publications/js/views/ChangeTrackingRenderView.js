@@ -14,14 +14,15 @@ import ClayLink from '@clayui/link';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
-import {FeatureIndicator} from 'frontend-js-components-web';
+import {
+	openConfirmModal,
+	openSimpleInputModal,
+	openToast,
+} from 'frontend-js-components-web';
 import {
 	createPortletURL,
 	fetch,
 	navigate as navigateUtil,
-	openConfirmModal,
-	openSimpleInputModal,
-	openToast,
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -763,9 +764,20 @@ export default function ChangeTrackingRenderView({
 	};
 
 	const navigate = (editURL, checkoutURL, confirmationMessage) => {
-		const editPortletURL = createPortletURL(editURL, {
-			redirect: window.location.pathname + window.location.search,
-		});
+		const url = new URL(editURL);
+
+		let editPortletURL;
+
+		if (url.searchParams.has('p_l_back_url')) {
+			url.searchParams.set('p_l_back_url', window.location.href);
+
+			editPortletURL = url.toString();
+		}
+		else {
+			editPortletURL = createPortletURL(editURL, {
+				redirect: window.location.pathname + window.location.search,
+			});
+		}
 
 		if (!checkoutURL) {
 			navigateUtil(editPortletURL);
@@ -819,16 +831,8 @@ export default function ChangeTrackingRenderView({
 
 		if (moveChangesURL !== null) {
 			dropdownItems.push({
-				label: (
-					<>
-						{Liferay.Language.get('move-changes')}
-
-						<div className="float-right">
-							<FeatureIndicator type="beta" />
-						</div>
-					</>
-				),
-				onClick: () => navigate(moveChangesURL),
+				label: Liferay.Language.get('move-changes'),
+				onClick: () => navigateUtil(moveChangesURL),
 				symbolLeft: 'move-folder',
 			});
 		}
@@ -882,7 +886,7 @@ export default function ChangeTrackingRenderView({
 							mainFieldName: 'comment',
 							mainFieldPlaceholder:
 								Liferay.Language.get('comment'),
-							namespace,
+							namespace: workflowAction.namespace,
 							onFormSuccess: () =>
 								setTimeout(
 									() => setShowWorkflowSuccessMessage(true),
@@ -1237,7 +1241,10 @@ export default function ChangeTrackingRenderView({
 					state.contentType === CONTENT_TYPE_PARENTS ||
 					state.contentType === CONTENT_TYPE_CHILDREN
 				}
-				striped={state.contentType !== CONTENT_TYPE_WORKFLOW}
+				striped={
+					state.contentType !== CONTENT_TYPE_WORKFLOW &&
+					state.view !== VIEW_SPLIT
+				}
 			>
 				<ClayTable.Head>{renderToolbar()}</ClayTable.Head>
 
@@ -1577,18 +1584,13 @@ export default function ChangeTrackingRenderView({
 						<div className="entry-description">
 							<span>{description} </span>
 
-							{Liferay.FeatureFlags['LPD-10703'] ? (
-								<>
-									<WorkflowStatusLabel
-										workflowStatus={
-											state.renderData.workflowData
-												? state.renderData.workflowData
-														.status
-												: workflowStatus
-										}
-									/>
-								</>
-							) : null}
+							<WorkflowStatusLabel
+								workflowStatus={
+									state.renderData.workflowData
+										? state.renderData.workflowData.status
+										: workflowStatus
+								}
+							/>
 						</div>
 					</div>
 

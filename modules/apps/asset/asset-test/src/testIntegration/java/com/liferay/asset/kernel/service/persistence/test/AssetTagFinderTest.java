@@ -68,17 +68,17 @@ public class AssetTagFinderTest {
 			_group.getGroupId(), TestPropsValues.getUserId());
 
 		_scopeGroup = GroupLocalServiceUtil.addGroup(
-			TestPropsValues.getUserId(), _group.getParentGroupId(),
-			Layout.class.getName(), layout.getPlid(),
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			_group.getParentGroupId(), Layout.class.getName(), layout.getPlid(),
 			GroupConstants.DEFAULT_LIVE_GROUP_ID,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), name
 			).build(),
 			RandomTestUtil.randomLocaleStringMap(),
-			GroupConstants.TYPE_SITE_OPEN, true,
+			GroupConstants.TYPE_SITE_OPEN, null, true,
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
 			StringPool.SLASH + FriendlyURLNormalizerUtil.normalize(name), false,
-			true, _serviceContext);
+			false, true, _serviceContext);
 	}
 
 	@After
@@ -91,7 +91,7 @@ public class AssetTagFinderTest {
 	@Test
 	public void testCountByG_C_N_WithCaseSensitiveTags() throws Exception {
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
 			_serviceContext);
 
 		_testCountByG_C_N("Tag1", _portal.getClassNameId(MBMessage.class));
@@ -120,7 +120,7 @@ public class AssetTagFinderTest {
 	@Test
 	public void testFindByG_C_N_WithCaseSensitiveTags() throws Exception {
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
+			null, TestPropsValues.getUserId(), _group.getGroupId(), "tag1",
 			_serviceContext);
 
 		_serviceContext.setAssetTagNames(new String[] {"tag1"});

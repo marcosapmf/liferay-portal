@@ -23,11 +23,13 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -36,9 +38,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.Collections;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -127,9 +129,10 @@ public abstract class BaseInputFragmentRendererTestCase {
 		FragmentRenderer fragmentRenderer = getFragmentRenderer();
 
 		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
 			false,
@@ -139,11 +142,12 @@ public abstract class BaseInputFragmentRendererTestCase {
 
 		return ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			StringPool.BLANK, StringPool.BLANK,
-			fragmentRenderer.getConfiguration(
-				new DefaultFragmentRendererContext(null)),
-			0, StringPool.BLANK, StringPool.BLANK, draftLayout, getRenderKey(),
-			fragmentRenderer.getType(), jsonObject.getString("addedItemId"), 0,
-			segmentsExperienceId);
+			JSONFactoryUtil.toString(
+				fragmentRenderer.getConfigurationJSONObject(
+					new DefaultFragmentRendererContext(null))),
+			null, null, StringPool.BLANK, StringPool.BLANK, draftLayout,
+			getRenderKey(), fragmentRenderer.getType(),
+			jsonObject.getString("addedItemId"), 0, segmentsExperienceId);
 	}
 
 	protected abstract ObjectEntry addObjectEntry() throws Exception;
@@ -211,17 +215,24 @@ public abstract class BaseInputFragmentRendererTestCase {
 			objectDefinition.getDescriptionObjectFieldId(), 0,
 			objectDefinition.getTitleObjectFieldId(),
 			objectDefinition.isAccountEntryRestricted(),
-			objectDefinition.isActive(), false,
+			objectDefinition.isActive(), objectDefinition.getClassName(), false,
 			objectDefinition.isEnableComments(),
+			objectDefinition.isEnableFormContainer(),
+			objectDefinition.isEnableFriendlyURLCustomization(),
 			objectDefinition.isEnableIndexSearch(),
-			objectDefinition.isEnableLocalization(),
 			objectDefinition.isEnableObjectEntryDraft(),
 			objectDefinition.isEnableObjectEntryHistory(),
+			objectDefinition.isEnableObjectEntrySchedule(),
+			objectDefinition.isEnableObjectEntrySubscription(),
+			objectDefinition.isEnableObjectEntryVersioning(),
+			objectDefinition.getFriendlyURLSeparator(),
 			objectDefinition.getLabelMap(), objectDefinition.getName(),
 			objectDefinition.getPanelAppOrder(),
 			objectDefinition.getPanelCategoryKey(),
 			objectDefinition.isPortlet(), objectDefinition.getPluralLabelMap(),
-			objectDefinition.getScope(), objectDefinition.getStatus());
+			objectDefinition.getScope(), objectDefinition.getStatus(),
+			Collections.emptyList(), Collections.emptyList(),
+			Collections.emptyList(), new ServiceContext());
 
 		FragmentRenderer fragmentRenderer = getFragmentRenderer();
 

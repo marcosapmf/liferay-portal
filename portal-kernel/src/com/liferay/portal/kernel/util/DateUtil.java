@@ -95,6 +95,8 @@ public class DateUtil {
 	public static int getDaysBetween(
 		Date date1, Date date2, TimeZone timeZone) {
 
+		int daysBetween = 0;
+
 		if (date1.after(date2)) {
 			Date tempDate = date1;
 
@@ -127,8 +129,6 @@ public class DateUtil {
 		endCal.setTime(date2);
 
 		endCal.add(Calendar.MILLISECOND, offsetDate2);
-
-		int daysBetween = 0;
 
 		while (CalendarUtil.beforeByDay(startCal.getTime(), endCal.getTime())) {
 			startCal.add(Calendar.DAY_OF_MONTH, 1);
@@ -173,6 +173,19 @@ public class DateUtil {
 		}
 
 		return DateFormatFactoryUtil.getSimpleDateFormat(pattern);
+	}
+
+	public static Date getTomorrowDate() {
+		Calendar calendar = Calendar.getInstance();
+
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+
+		calendar.add(Calendar.DATE, 1);
+
+		return calendar.getTime();
 	}
 
 	public static DateFormat getUTCFormat() {

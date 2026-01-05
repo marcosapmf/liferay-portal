@@ -7,7 +7,7 @@ package com.liferay.portal.servlet;
 
 import com.liferay.petra.lang.CentralizedThreadLocal;
 
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServlet;
 
 /**
  * @author Brian Wing Shun Chan
@@ -16,12 +16,12 @@ public class CleanUpServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		CentralizedThreadLocal.clearShortLivedThreadLocals();
+		CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
 	}
 
 	@Override
 	public void init() {
-		CentralizedThreadLocal.clearShortLivedThreadLocals();
+		CentralizedThreadLocal.clearShortLivedCentralizedThreadLocals();
 	}
 
 }

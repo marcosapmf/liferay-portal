@@ -8,7 +8,6 @@ package com.liferay.source.formatter.processor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.source.formatter.SourceFormatterArgs;
 import com.liferay.source.formatter.check.JSONUpgradeLiferayThemePackageJSONCheck;
-import com.liferay.source.formatter.check.UpgradeCatchAllCheck;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,15 +52,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeCatchAllCheck() throws Exception {
-		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testftl");
-		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjava");
-		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjsp");
-		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjspf");
-		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testscss");
-	}
-
-	@Test
 	public void testUpgradeGradleIncludeResourceCheck() throws Exception {
 		test(
 			SourceProcessorTestParameters.create(
@@ -69,6 +59,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			).addDependentFileName(
 				"upgrade/upgrade-include-resource-check/bnd.testbnd"
 			));
+	}
+
+	@Test
+	public void testUpgradeImportsCheck() throws Exception {
+		test("upgrade/UpgradeImportsCheck.testftl");
+		test("upgrade/UpgradeImportsCheck.testjava");
+		test("upgrade/UpgradeImportsCheck.testjsp");
 	}
 
 	@Test
@@ -90,23 +87,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJavaBaseModelListenerCheck() throws Exception {
 		test("upgrade/UpgradeJavaBaseModelListenerCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaBasePanelAppExtendedClassesCheck()
-		throws Exception {
-
-		test("upgrade/UpgradeJavaBasePanelAppExtendedClassesCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaCheck() throws Exception {
-		test("upgrade/UpgradeJavaCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaCommerceOrderValidatorCheck() throws Exception {
-		test("upgrade/UpgradeJavaCommerceOrderValidatorCheck.testjava");
 	}
 
 	@Test
@@ -135,7 +115,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testUpgradeJavaFDSDataProviderCheck() throws Exception {
-		test("upgrade/UpgradeJavaFDSDataProviderCheck.testjava");
+		test("upgrade/UpgradeJavaCommerceDataSetDataProviderCheck.testjava");
+		test("upgrade/UpgradeJavaClayDataSetDataProviderCheck.testjava");
 	}
 
 	@Test
@@ -166,8 +147,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 				"testjava",
 			StringBundler.concat(
 				"Unable to resolve variable className for new ",
-				"InfoItemReference(). Replace 'TO_BE_REPLACED_FOR_CLASSNAME' ",
-				"with the correct type"));
+				"InfoItemReference(). Replace \"TO_BE_REPLACED_FOR_",
+				"CLASSNAME\" with the correct type"));
 	}
 
 	@Test
@@ -190,14 +171,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaMultiVMPoolUtilCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaMultiVMPoolUtilCheck.testjava",
-			"Unable to resolve types for MultiVMPool.getPortalCache(). " +
-				"Replace 'TO_BE_REPLACED' with the correct type");
-	}
-
-	@Test
 	public void testUpgradeJavaPortletIdMethodCheck() throws Exception {
 		test("upgrade/UpgradeJavaPortletIdMethodCheck.testjava");
 	}
@@ -207,6 +180,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		throws Exception {
 
 		test("upgrade/UpgradeJavaPortletSharedSearchSettingsCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaProductDTOConverterReferenceCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaProductDTOConverterReferenceCheck.testjava");
 	}
 
 	@Test
@@ -234,6 +214,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaSortFieldNameTranslatorCheck() throws Exception {
+		test("upgrade/UpgradeJavaSortFieldNameTranslatorCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaStorageTypeAwareCheck() throws Exception {
 		test("upgrade/UpgradeJavaStorageTypeAwareCheck.testjava");
 	}
@@ -258,9 +243,9 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		test(
 			"upgrade/UpgradeSCSSMixinsCheck.testscss",
 			StringBundler.concat(
-				"Do not use 'media-query' mixing, replace with its equivalent ",
-				"(e.g., media-breakpoint-up, media-breakpoint-only, ",
-				"media-breakpoint-down, etc.), see LPS-194507."));
+				"Do not use \"media-query\" mixing, replace with its ",
+				"equivalent (e.g., media-breakpoint-up, media-breakpoint-",
+				"only, media-breakpoint-down, etc.), see LPS-194507."));
 	}
 
 	@Test
@@ -327,17 +312,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			sourceFormatterProperties);
 
 		return sourceFormatterArgs;
-	}
-
-	private void _testUpgradeCatchAllCheck(String fileName) throws Exception {
-		UpgradeCatchAllCheck.setTestMode(true);
-
-		if (fileName.endsWith(".testjava")) {
-			test(fileName, UpgradeCatchAllCheck.getExpectedMessages());
-		}
-		else {
-			test(fileName);
-		}
 	}
 
 	private static final String _UPGRADE_TO_LIFERAY_VERSION = "7.4.13.u27";

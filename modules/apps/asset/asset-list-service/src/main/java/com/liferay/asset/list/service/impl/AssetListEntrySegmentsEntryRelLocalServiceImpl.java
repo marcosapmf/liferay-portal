@@ -5,9 +5,13 @@
 
 package com.liferay.asset.list.service.impl;
 
+import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRel;
+import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRelTable;
+import com.liferay.asset.list.model.AssetListEntryTable;
 import com.liferay.asset.list.service.base.AssetListEntrySegmentsEntryRelLocalServiceBaseImpl;
 import com.liferay.asset.list.service.persistence.AssetListEntryAssetEntryRelPersistence;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -19,6 +23,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -162,6 +167,30 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 	}
 
 	@Override
+	public List<AssetListEntrySegmentsEntryRel>
+		fetchDynamicAssetListEntrySegmentsEntryRels(long companyId) {
+
+		return assetListEntrySegmentsEntryRelPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				AssetListEntrySegmentsEntryRelTable.INSTANCE
+			).from(
+				AssetListEntrySegmentsEntryRelTable.INSTANCE
+			).innerJoinON(
+				AssetListEntryTable.INSTANCE,
+				AssetListEntryTable.INSTANCE.assetListEntryId.eq(
+					AssetListEntrySegmentsEntryRelTable.INSTANCE.
+						assetListEntryId)
+			).where(
+				AssetListEntryTable.INSTANCE.type.eq(
+					AssetListEntryTypeConstants.TYPE_DYNAMIC
+				).and(
+					AssetListEntrySegmentsEntryRelTable.INSTANCE.companyId.eq(
+						companyId)
+				)
+			));
+	}
+
+	@Override
 	public AssetListEntrySegmentsEntryRel getAssetListEntrySegmentsEntryRel(
 			long assetListEntryId, long segmentsEntryId)
 		throws PortalException {
@@ -188,6 +217,30 @@ public class AssetListEntrySegmentsEntryRelLocalServiceImpl
 
 		return assetListEntrySegmentsEntryRelPersistence.findByA_S_C(
 			assetListEntryId, segmentsEntryIds, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<AssetListEntrySegmentsEntryRel>
+		getAssetListEntrySegmentsEntryRelsByClassNameId(
+			long companyId, long classNameId) {
+
+		if (classNameId <= 0) {
+			return Collections.emptyList();
+		}
+
+		return dslQuery(
+			DSLQueryFactoryUtil.select(
+				AssetListEntrySegmentsEntryRelTable.INSTANCE
+			).from(
+				AssetListEntrySegmentsEntryRelTable.INSTANCE
+			).where(
+				AssetListEntrySegmentsEntryRelTable.INSTANCE.companyId.eq(
+					companyId
+				).and(
+					AssetListEntrySegmentsEntryRelTable.INSTANCE.typeSettings.
+						like("%" + classNameId + "%")
+				)
+			));
 	}
 
 	@Override

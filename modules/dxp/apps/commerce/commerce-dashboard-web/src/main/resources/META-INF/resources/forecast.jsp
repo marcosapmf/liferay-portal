@@ -22,10 +22,14 @@ if (Validator.isNotNull(assetCategoryIdsString)) {
 
 String accountIds = "[]";
 
-AccountEntry accountEntry = commerceContext.getAccountEntry();
+AccountEntry accountEntry = null;
 
-if (accountEntry != null) {
-	accountIds = jsonSerializer.serializeDeep(new Long[] {accountEntry.getAccountEntryId()});
+if (commerceContext != null) {
+	accountEntry = commerceContext.getAccountEntry();
+
+	if (accountEntry != null) {
+		accountIds = jsonSerializer.serializeDeep(new Long[] {accountEntry.getAccountEntryId()});
+	}
 }
 %>
 
@@ -36,7 +40,7 @@ if (accountEntry != null) {
 			HashMapBuilder.<String, Object>put(
 				"accountIds", accountIds
 			).put(
-				"APIBaseUrl", "/o/headless-commerce-machine-learning/v1.0/accountCategoryForecasts/by-monthlyRevenue"
+				"apiURL", "/o/headless-commerce-machine-learning/v1.0/accountCategoryForecasts/by-monthlyRevenue"
 			).put(
 				"categoryIds", categoryIds
 			).put(

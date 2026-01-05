@@ -16,6 +16,18 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.internal.PortletRequestDispatcherImpl;
 
+import jakarta.portlet.ClientDataRequest;
+import jakarta.portlet.EventRequest;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -26,18 +38,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ClientDataRequest;
-import javax.portlet.EventRequest;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -79,7 +79,7 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 			return _httpServletRequest.getAttribute(name);
 		}
 
-		if (name.equals(JavaConstants.JAVAX_SERVLET_FORWARD_CONTEXT_PATH)) {
+		if (name.equals(JavaConstants.JAKARTA_SERVLET_FORWARD_CONTEXT_PATH)) {
 			if (_named) {
 				return null;
 			}
@@ -87,7 +87,7 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 			return _portletRequest.getContextPath();
 		}
 
-		if (name.equals(JavaConstants.JAVAX_SERVLET_FORWARD_PATH_INFO)) {
+		if (name.equals(JavaConstants.JAKARTA_SERVLET_FORWARD_PATH_INFO)) {
 			if (_named) {
 				return null;
 			}
@@ -95,7 +95,7 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 			return _pathInfo;
 		}
 
-		if (name.equals(JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING)) {
+		if (name.equals(JavaConstants.JAKARTA_SERVLET_FORWARD_QUERY_STRING)) {
 			if (_named) {
 				return null;
 			}
@@ -103,7 +103,7 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 			return _queryString;
 		}
 
-		if (name.equals(JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI)) {
+		if (name.equals(JavaConstants.JAKARTA_SERVLET_FORWARD_REQUEST_URI)) {
 			if (_named) {
 				return null;
 			}
@@ -111,7 +111,7 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 			return _requestURI;
 		}
 
-		if (name.equals(JavaConstants.JAVAX_SERVLET_FORWARD_SERVLET_PATH)) {
+		if (name.equals(JavaConstants.JAKARTA_SERVLET_FORWARD_SERVLET_PATH)) {
 			if (_named) {
 				return null;
 			}
@@ -353,7 +353,6 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
-	@Override
 	public String getRealPath(String path) {
 		return null;
 	}

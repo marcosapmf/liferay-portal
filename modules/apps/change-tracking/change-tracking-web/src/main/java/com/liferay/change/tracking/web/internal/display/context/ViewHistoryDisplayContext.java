@@ -12,15 +12,15 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -69,7 +69,14 @@ public class ViewHistoryDisplayContext {
 				).buildString(),
 				"list-ul", "review-changes",
 				_language.get(_httpServletRequest, "review-changes"), "get",
-				"get", null));
+				"get", null),
+			new FDSActionDropdownItem(
+				_language.get(
+					_httpServletRequest,
+					"are-you-sure-you-want-to-delete-this-publication-history"),
+				null, "times-circle", "delete",
+				_language.get(_httpServletRequest, "delete"), "post", "delete",
+				"headless"));
 	}
 
 	public List<NavigationItem> getViewNavigationItems() {

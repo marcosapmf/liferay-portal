@@ -8,7 +8,6 @@ package com.liferay.knowledge.base.web.internal.portlet.action;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.service.KBArticleService;
 import com.liferay.knowledge.base.service.KBFolderService;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -16,11 +15,11 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
 		"mvc.command.name=/knowledge_base/delete_kb_articles_and_folders"
 	},
 	service = MVCActionCommand.class
@@ -50,9 +49,7 @@ public class DeleteKBArticlesAndFoldersMVCActionCommand
 		long[] kbFolderIds = ParamUtil.getLongValues(
 			actionRequest, "rowIdsKBFolder");
 
-		if (cmd.equals(Constants.MOVE_TO_TRASH) &&
-			FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
-
+		if (cmd.equals(Constants.MOVE_TO_TRASH)) {
 			_moveToTrash(actionRequest, kbArticleResourcePrimKeys, kbFolderIds);
 		}
 		else {

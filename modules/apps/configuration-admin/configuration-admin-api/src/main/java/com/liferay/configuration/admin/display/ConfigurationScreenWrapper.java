@@ -7,18 +7,31 @@ package com.liferay.configuration.admin.display;
 
 import com.liferay.petra.concurrent.DCLSingleton;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
+import java.io.Serializable;
 
+import java.util.Dictionary;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Shuyang Zhou
  */
 public abstract class ConfigurationScreenWrapper
 	implements ConfigurationScreen {
+
+	@Override
+	public Dictionary<String, Object> exportProperties(Serializable scopePK)
+		throws Exception {
+
+		ConfigurationScreen configurationScreen =
+			_configurationScreenDCLSingleton.getSingleton(
+				this::getConfigurationScreen);
+
+		return configurationScreen.exportProperties(scopePK);
+	}
 
 	@Override
 	public String getCategoryKey() {
@@ -54,6 +67,18 @@ public abstract class ConfigurationScreenWrapper
 				this::getConfigurationScreen);
 
 		return configurationScreen.getScope();
+	}
+
+	@Override
+	public void importProperties(
+			Dictionary<String, Object> properties, Serializable scopePK)
+		throws Exception {
+
+		ConfigurationScreen configurationScreen =
+			_configurationScreenDCLSingleton.getSingleton(
+				this::getConfigurationScreen);
+
+		configurationScreen.importProperties(properties, scopePK);
 	}
 
 	@Override

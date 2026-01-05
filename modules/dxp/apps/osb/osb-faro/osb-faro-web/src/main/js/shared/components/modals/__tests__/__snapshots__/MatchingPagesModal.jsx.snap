@@ -11,7 +11,7 @@ exports[`MatchingPagesModal should render 1`] = `
       class="modal-content"
     >
       <div
-        class="modal-header"
+        class="modal-header has-title"
       >
         <div
           class="h4 modal-title"
@@ -39,7 +39,7 @@ exports[`MatchingPagesModal should render 1`] = `
                 role="tablist"
               />
               <div
-                class="navbar-form navbar-form-autofit"
+                class="navbar-form navbar-form-autofit mx-2"
               >
                 <div
                   class="input-group search"

@@ -27,13 +27,13 @@ import com.liferay.bulk.selection.BulkSelectionFactory;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.friendly.url.exception.FriendlyURLCategoryException;
+import com.liferay.friendly.url.exception.FriendlyURLLocalizationUrlTitleException;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.editor.constants.EditorConstants;
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -71,15 +71,15 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.trash.service.TrashEntryService;
 import com.liferay.upload.AttachmentContentUpdater;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -94,9 +94,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + BlogsPortletKeys.BLOGS,
-		"javax.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN,
-		"javax.portlet.name=" + BlogsPortletKeys.BLOGS_AGGREGATOR,
+		"jakarta.portlet.name=" + BlogsPortletKeys.BLOGS,
+		"jakarta.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN,
+		"jakarta.portlet.name=" + BlogsPortletKeys.BLOGS_AGGREGATOR,
 		"mvc.command.name=/blogs/edit_entry"
 	},
 	service = MVCActionCommand.class
@@ -243,9 +243,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			   EntryDisplayDateException | EntrySmallImageNameException |
 			   EntrySmallImageScaleException | EntryTitleException |
 			   EntryUrlTitleException | FileSizeException |
-			   FriendlyURLCategoryException | ImageResolutionException |
-			   LiferayFileItemException | SanitizerException |
-			   UploadRequestSizeException exception) {
+			   FriendlyURLCategoryException |
+			   FriendlyURLLocalizationUrlTitleException |
+			   ImageResolutionException | LiferayFileItemException |
+			   SanitizerException | UploadRequestSizeException exception) {
 
 			SessionErrors.add(actionRequest, exception.getClass());
 
@@ -330,7 +331,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		BlogsEntry entry, String redirect, String portletResource) {
 
 		PortletConfig portletConfig = (PortletConfig)actionRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+			JavaConstants.JAKARTA_PORTLET_CONFIG);
 
 		return PortletURLBuilder.createRenderURL(
 			_portal.getLiferayPortletResponse(actionResponse),
@@ -433,8 +434,9 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		return _attachmentContentUpdater.updateContent(
 			content, ContentTypes.TEXT_HTML,
 			tempFileEntry -> _blogsEntryLocalService.addAttachmentFileEntry(
-				entry, themeDisplay.getUserId(), tempFileEntry.getTitle(),
-				tempFileEntry.getMimeType(), tempFileEntry.getContentStream()));
+				null, themeDisplay.getUserId(), entry.getGroupId(),
+				tempFileEntry.getTitle(), tempFileEntry.getMimeType(),
+				tempFileEntry.getContentStream()));
 	}
 
 	private BlogsEntry _updateEntry(ActionRequest actionRequest)
@@ -537,15 +539,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			BlogsEntry.class.getName(), actionRequest);
 
-		if (FeatureFlagManagerUtil.isEnabled(
-				themeDisplay.getCompanyId(), "LPD-11147")) {
-
-			serviceContext.setAttribute(
-				"friendlyURLAssetCategoryIds",
-				ParamUtil.getLongValues(
-					actionRequest, "friendlyURLAssetCategoryIds"));
-		}
-
+		serviceContext.setAttribute(
+			"friendlyURLAssetCategoryIds",
+			ParamUtil.getLongValues(
+				actionRequest, "friendlyURLAssetCategoryIds"));
 		serviceContext.setAttribute(
 			"updateAutoTags",
 			ParamUtil.getBoolean(actionRequest, "updateAutoTags"));

@@ -8,6 +8,8 @@ package com.liferay.headless.commerce.delivery.order.client.serdes.v1_0;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Summary;
 import com.liferay.headless.commerce.delivery.order.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.math.BigDecimal;
 
 import java.util.Iterator;
@@ -15,8 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -58,6 +58,16 @@ public class SummarySerDes {
 			sb.append(_escape(summary.getCurrency()));
 
 			sb.append("\"");
+		}
+
+		if (summary.getItemsCount() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"itemsCount\": ");
+
+			sb.append(summary.getItemsCount());
 		}
 
 		if (summary.getItemsQuantity() != null) {
@@ -354,6 +364,13 @@ public class SummarySerDes {
 			map.put("currency", String.valueOf(summary.getCurrency()));
 		}
 
+		if (summary.getItemsCount() == null) {
+			map.put("itemsCount", null);
+		}
+		else {
+			map.put("itemsCount", String.valueOf(summary.getItemsCount()));
+		}
+
 		if (summary.getItemsQuantity() == null) {
 			map.put("itemsQuantity", null);
 		}
@@ -546,6 +563,9 @@ public class SummarySerDes {
 			if (Objects.equals(jsonParserFieldName, "currency")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "itemsCount")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "itemsQuantity")) {
 				return false;
 			}
@@ -645,6 +665,12 @@ public class SummarySerDes {
 			if (Objects.equals(jsonParserFieldName, "currency")) {
 				if (jsonParserFieldValue != null) {
 					summary.setCurrency((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "itemsCount")) {
+				if (jsonParserFieldValue != null) {
+					summary.setItemsCount(
+						Integer.valueOf((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "itemsQuantity")) {
@@ -836,6 +862,10 @@ public class SummarySerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

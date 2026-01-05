@@ -19,12 +19,12 @@ import com.liferay.trash.util.comparator.EntryCreateDateComparator;
 import com.liferay.trash.util.comparator.EntryTypeComparator;
 import com.liferay.trash.util.comparator.EntryUserNameComparator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 /**
  * Provides a <code>SearchContainer</code> (in
@@ -100,13 +100,14 @@ public class EntrySearch extends SearchContainer<TrashEntry> {
 		OrderByComparator<TrashEntry> orderByComparator = null;
 
 		if (orderByCol.equals("removed-by")) {
-			orderByComparator = new EntryUserNameComparator(orderByAsc);
+			orderByComparator = EntryUserNameComparator.getInstance(orderByAsc);
 		}
 		else if (orderByCol.equals("removed-date")) {
-			orderByComparator = new EntryCreateDateComparator(orderByAsc);
+			orderByComparator = EntryCreateDateComparator.getInstance(
+				orderByAsc);
 		}
 		else if (orderByCol.equals("type")) {
-			orderByComparator = new EntryTypeComparator(orderByAsc);
+			orderByComparator = EntryTypeComparator.getInstance(orderByAsc);
 		}
 
 		return orderByComparator;

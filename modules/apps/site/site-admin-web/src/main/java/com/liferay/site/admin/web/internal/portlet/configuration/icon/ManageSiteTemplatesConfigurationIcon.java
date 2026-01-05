@@ -21,9 +21,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.admin.web.internal.constants.SiteAdminPortletKeys;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
-	property = "javax.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
+	property = "jakarta.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
 	service = PortletConfigurationIcon.class
 )
 public class ManageSiteTemplatesConfigurationIcon
@@ -89,14 +89,9 @@ public class ManageSiteTemplatesConfigurationIcon
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (PortalPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(),
-				ActionKeys.ADD_LAYOUT_SET_PROTOTYPE)) {
-
-			return true;
-		}
-
-		return false;
+		return PortalPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(),
+			ActionKeys.ADD_LAYOUT_SET_PROTOTYPE);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -19,12 +19,12 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,7 +55,7 @@ public class CommerceWishListFDSDataProvider
 
 		return TransformUtil.transform(
 			_commerceWishListService.getCommerceWishLists(
-				themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
+				themeDisplay.getScopeGroupId(),
 				fdsPagination.getStartPosition(),
 				fdsPagination.getEndPosition(), null),
 			commerceWishList -> new WishList(
@@ -77,7 +77,7 @@ public class CommerceWishListFDSDataProvider
 				WebKeys.THEME_DISPLAY);
 
 		return _commerceWishListService.getCommerceWishListsCount(
-			themeDisplay.getScopeGroupId(), themeDisplay.getUserId());
+			themeDisplay.getScopeGroupId());
 	}
 
 	@Reference

@@ -13,14 +13,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.item.selector.criterion.SegmentsExperienceItemSelectorCriterion;
+import com.liferay.segments.item.selector.SegmentsExperienceItemSelectorCriterion;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -72,7 +72,7 @@ public class SegmentsExperienceItemSelectorViewDescriptor
 		SearchContainer<SegmentsExperience> searchContainer =
 			new SearchContainer<>(
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST),
+					JavaConstants.JAKARTA_PORTLET_REQUEST),
 				_portletURL, null, "there-are-no-items-to-display");
 
 		searchContainer.setResultsAndTotal(

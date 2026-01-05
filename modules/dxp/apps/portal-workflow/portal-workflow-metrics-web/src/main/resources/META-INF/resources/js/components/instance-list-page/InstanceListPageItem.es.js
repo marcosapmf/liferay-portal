@@ -25,7 +25,7 @@ import {InstanceListContext} from './InstanceListPageProvider.es';
 import {ModalContext} from './modal/ModalProvider.es';
 
 function Item({isAdmin, totalCount, ...instance}) {
-	const {userId} = useContext(AppContext);
+	const {baseResourceURL, userId} = useContext(AppContext);
 	const {
 		selectedItems = [],
 		setInstanceId,
@@ -184,12 +184,17 @@ function Item({isAdmin, totalCount, ...instance}) {
 
 			{showInstanceTrackerModal && (
 				<ClayModal observer={observer} size="full-screen">
-					<ClayModal.Header>
+					<ClayModal.Header
+						closeButtonAriaLabel={Liferay.Language.get('close')}
+					>
 						{Liferay.Language.get('track-workflow')}
 					</ClayModal.Header>
 
 					<ClayModal.Body>
-						<WorkflowInstanceTracker workflowInstanceId={id} />
+						<WorkflowInstanceTracker
+							baseResourceURL={baseResourceURL}
+							workflowInstanceId={id}
+						/>
 					</ClayModal.Body>
 				</ClayModal>
 			)}

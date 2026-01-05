@@ -11,6 +11,7 @@ import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfigurati
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
+import com.liferay.commerce.helper.CommerceRoleHelper;
 import com.liferay.commerce.initializer.util.AssetCategoriesImporter;
 import com.liferay.commerce.initializer.util.BlogsImporter;
 import com.liferay.commerce.initializer.util.CPDefinitionsImporter;
@@ -49,7 +50,6 @@ import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionLocalService;
 import com.liferay.commerce.theme.speedwell.site.initializer.internal.dependencies.resolver.SpeedwellDependencyResolverUtil;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
-import com.liferay.commerce.util.CommerceAccountRoleHelper;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -97,6 +97,8 @@ import com.liferay.portal.search.capabilities.SearchCapabilities;
 import com.liferay.site.exception.InitializationException;
 import com.liferay.site.initializer.SiteInitializer;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.File;
 import java.io.InputStream;
 
@@ -110,8 +112,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -301,7 +301,7 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 		_commerceCurrencyLocalService.importDefaultValues(true, serviceContext);
 		_cpMeasurementUnitLocalService.importDefaultValues(serviceContext);
 
-		_commerceAccountRoleHelper.checkCommerceAccountRoles(serviceContext);
+		_commerceRoleHelper.checkCommerceAccountRoles(serviceContext);
 
 		Settings settings = FallbackKeysSettingsUtil.getSettings(
 			new GroupServiceSettingsLocator(
@@ -1018,9 +1018,6 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 	private BlogsImporter _blogsImporter;
 
 	@Reference
-	private CommerceAccountRoleHelper _commerceAccountRoleHelper;
-
-	@Reference
 	private CommerceAccountsImporter _commerceAccountsImporter;
 
 	@Reference
@@ -1047,6 +1044,9 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 
 	@Reference
 	private CommercePriceListsImporter _commercePriceListsImporter;
+
+	@Reference
+	private CommerceRoleHelper _commerceRoleHelper;
 
 	@Reference
 	private CommerceShippingEngineRegistry _commerceShippingEngineRegistry;

@@ -5,13 +5,14 @@
 
 package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
 
-import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.DDMOption;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.Sku;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.TierPrice;
 import com.liferay.headless.commerce.delivery.catalog.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.math.BigDecimal;
 
@@ -23,8 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -127,7 +126,7 @@ public class SkuSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < sku.getCustomFields().length; i++) {
-				sb.append(String.valueOf(sku.getCustomFields()[i]));
+				sb.append(sku.getCustomFields()[i]);
 
 				if ((i + 1) < sku.getCustomFields().length) {
 					sb.append(", ");
@@ -961,12 +960,17 @@ public class SkuSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.commerce.delivery.catalog.client.
+						custom.field.CustomField[] customFieldsArray = new
+						com.liferay.headless.commerce.delivery.catalog.client.
+							custom.field.CustomField
+							[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.commerce.delivery.catalog.
+								client.custom.field.CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					sku.setCustomFields(customFieldsArray);
@@ -1220,6 +1224,10 @@ public class SkuSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

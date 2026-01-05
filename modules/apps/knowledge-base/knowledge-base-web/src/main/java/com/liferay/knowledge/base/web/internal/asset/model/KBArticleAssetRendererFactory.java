@@ -10,6 +10,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
@@ -27,10 +28,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.trash.TrashHelper;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Peter Shin
  */
 @Component(
-	property = "javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+	property = "jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
 	service = AssetRendererFactory.class
 )
 public class KBArticleAssetRendererFactory
@@ -53,17 +54,29 @@ public class KBArticleAssetRendererFactory
 	}
 
 	@Override
-	public AssetEntry getAssetEntry(KBArticle kbArticle)
-		throws PortalException {
-
-		return super.getAssetEntry(getClassName(), kbArticle.getClassPK());
-	}
-
-	@Override
 	public AssetEntry getAssetEntry(String className, long classPK)
 		throws PortalException {
 
-		return getAssetEntry(_getKBArticle(classPK, TYPE_LATEST));
+		KBArticle kbArticle = _getKBArticle(classPK, TYPE_LATEST);
+
+		return _assetEntryLocalService.getEntry(
+			getClassName(), kbArticle.getClassPK());
+	}
+
+	@Override
+	public long getAssetEntryClassPK(KBArticle kbArticle) {
+		if (kbArticle.isApproved() || kbArticle.isExpired()) {
+			return kbArticle.getResourcePrimKey();
+		}
+
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			getClassName(), kbArticle.getKbArticleId());
+
+		if (assetEntry == null) {
+			return kbArticle.getResourcePrimKey();
+		}
+
+		return assetEntry.getClassPK();
 	}
 
 	@Override
@@ -178,6 +191,9 @@ public class KBArticleAssetRendererFactory
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
 	private HtmlParser _htmlParser;

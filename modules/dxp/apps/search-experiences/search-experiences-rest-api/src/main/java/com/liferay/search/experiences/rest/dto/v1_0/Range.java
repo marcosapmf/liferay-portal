@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Brian Wing Shun Chan
@@ -51,7 +49,7 @@ public class Range implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Range.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getFormat() {
 		if (_formatSupplier != null) {
 			format = _formatSupplier.get();
@@ -92,7 +90,7 @@ public class Range implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _formatSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Object getGt() {
 		if (_gtSupplier != null) {
@@ -132,7 +130,7 @@ public class Range implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _gtSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Object getGte() {
 		if (_gteSupplier != null) {
@@ -172,7 +170,7 @@ public class Range implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _gteSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Object getLt() {
 		if (_ltSupplier != null) {
@@ -212,7 +210,7 @@ public class Range implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _ltSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Object getLte() {
 		if (_lteSupplier != null) {
@@ -252,7 +250,7 @@ public class Range implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _lteSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getParameterName() {
 		if (_parameterNameSupplier != null) {
 			parameterName = _parameterNameSupplier.get();
@@ -445,8 +443,8 @@ public class Range implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.search.experiences.rest.dto.v1_0.Range",
 		name = "x-class-name"
 	)

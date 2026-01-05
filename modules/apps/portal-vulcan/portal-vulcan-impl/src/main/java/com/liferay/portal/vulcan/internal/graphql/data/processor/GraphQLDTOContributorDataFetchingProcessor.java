@@ -28,12 +28,12 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
 import com.liferay.portal.vulcan.util.SortUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Carlos Correa
@@ -70,10 +70,13 @@ public class GraphQLDTOContributorDataFetchingProcessor {
 				).build()));
 	}
 
-	public boolean delete(GraphQLDTOContributor graphQLDTOContributor, long id)
+	public boolean delete(
+			GraphQLDTOContributor graphQLDTOContributor,
+			HttpServletRequest httpServletRequest, long id)
 		throws Exception {
 
-		return graphQLDTOContributor.deleteDTO(id);
+		return graphQLDTOContributor.deleteDTO(
+			_getDTOConverterContext(httpServletRequest, null), id);
 	}
 
 	public Object get(

@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.pop.MessageListener;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.ControlPanelEntry;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
-import com.liferay.portal.kernel.portlet.FriendlyURLMapperTracker;
 import com.liferay.portal.kernel.portlet.PortletBag;
 import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.portlet.PortletConfigurationListener;
@@ -51,6 +50,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -62,22 +62,20 @@ import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.kernel.xmlrpc.Method;
 import com.liferay.portal.notifications.UserNotificationHandlerImpl;
 import com.liferay.portal.util.JavaFieldsParser;
-import com.liferay.portal.util.PropsValues;
-import com.liferay.portlet.internal.FriendlyURLMapperTrackerImpl;
 import com.liferay.portlet.internal.PortletBagImpl;
 import com.liferay.social.kernel.model.SocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialRequestInterpreter;
 import com.liferay.social.kernel.model.impl.SocialActivityInterpreterImpl;
 import com.liferay.social.kernel.model.impl.SocialRequestInterpreterImpl;
 
+import jakarta.portlet.PreferencesValidator;
+
+import jakarta.servlet.ServletContext;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PreferencesValidator;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -99,20 +97,20 @@ public class PortletBagFactory {
 
 		_validate();
 
-		javax.portlet.Portlet portletInstance = _getPortletInstance(portlet);
+		jakarta.portlet.Portlet portletInstance = _getPortletInstance(portlet);
 
 		return create(portlet, portletInstance, destroyPrevious);
 	}
 
 	public PortletBag create(
-			Portlet portlet, javax.portlet.Portlet portletInstance,
+			Portlet portlet, jakarta.portlet.Portlet portletInstance,
 			boolean destroyPrevious)
 		throws Exception {
 
 		_validate();
 
 		Dictionary<String, Object> properties = MapUtil.singletonDictionary(
-			"javax.portlet.name", portlet.getPortletName());
+			"jakarta.portlet.name", portlet.getPortletName());
 
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -130,8 +128,8 @@ public class PortletBagFactory {
 		_registerSchedulerJobConfigurations(
 			bundleContext, portlet, properties, serviceRegistrations);
 
-		FriendlyURLMapperTracker friendlyURLMapperTracker =
-			_registerFriendlyURLMappers(portlet);
+		_registerFriendlyURLMappers(
+			bundleContext, portlet, serviceRegistrations);
 
 		_registerURLEncoders(
 			bundleContext, portlet, properties, serviceRegistrations);
@@ -194,8 +192,7 @@ public class PortletBagFactory {
 
 		PortletBag portletBag = new PortletBagImpl(
 			portlet.getPortletName(), _servletContext, portletInstance,
-			portlet.getResourceBundle(), friendlyURLMapperTracker,
-			serviceRegistrations);
+			portlet.getResourceBundle(), serviceRegistrations);
 
 		PortletBagPool.put(portlet.getRootPortletId(), portletBag);
 
@@ -222,9 +219,6 @@ public class PortletBagFactory {
 		_warFile = warFile;
 	}
 
-	/**
-	 * @see FriendlyURLMapperTrackerImpl#getContent(ClassLoader, String)
-	 */
 	private String _getContent(String fileName) throws Exception {
 		String queryString = HttpComponentsUtil.getQueryString(fileName);
 
@@ -269,7 +263,7 @@ public class PortletBagFactory {
 		return _configuration.get(propertyKey);
 	}
 
-	private javax.portlet.Portlet _getPortletInstance(Portlet portlet)
+	private jakarta.portlet.Portlet _getPortletInstance(Portlet portlet)
 		throws Exception {
 
 		Class<?> portletClass = null;
@@ -285,7 +279,7 @@ public class PortletBagFactory {
 			return null;
 		}
 
-		return (javax.portlet.Portlet)portletClass.newInstance();
+		return (jakarta.portlet.Portlet)portletClass.newInstance();
 	}
 
 	private <T> T _newInstance(
@@ -413,21 +407,21 @@ public class PortletBagFactory {
 		}
 	}
 
-	private FriendlyURLMapperTracker _registerFriendlyURLMappers(
-			Portlet portlet)
+	private void _registerFriendlyURLMappers(
+			BundleContext bundleContext, Portlet portlet,
+			List<ServiceRegistration<?>> serviceRegistrations)
 		throws Exception {
-
-		FriendlyURLMapperTracker friendlyURLMapperTracker =
-			new FriendlyURLMapperTrackerImpl(portlet);
 
 		if (Validator.isNotNull(portlet.getFriendlyURLMapperClass())) {
 			FriendlyURLMapper friendlyURLMapper = _newInstance(
 				FriendlyURLMapper.class, portlet.getFriendlyURLMapperClass());
 
-			friendlyURLMapperTracker.register(friendlyURLMapper);
+			serviceRegistrations.add(
+				bundleContext.registerService(
+					FriendlyURLMapper.class, friendlyURLMapper,
+					MapUtil.singletonDictionary(
+						"jakarta.portlet.name", portlet.getPortletId())));
 		}
-
-		return friendlyURLMapperTracker;
 	}
 
 	private void _registerIndexers(
@@ -850,7 +844,7 @@ public class PortletBagFactory {
 			bundleContext.registerService(
 				WebDAVStorage.class, webDAVStorageInstance,
 				HashMapDictionaryBuilder.<String, Object>put(
-					"javax.portlet.name", portlet.getPortletId()
+					"jakarta.portlet.name", portlet.getPortletId()
 				).put(
 					"webdav.storage.token", portlet.getWebDAVStorageToken()
 				).build());

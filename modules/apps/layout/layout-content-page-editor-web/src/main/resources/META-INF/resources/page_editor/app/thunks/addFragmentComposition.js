@@ -3,28 +3,29 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
 
 import addFragmentCompositionAction from '../actions/addFragmentComposition';
 import FragmentService from '../services/FragmentService';
 
 export default function addFragmentComposition({
 	description,
+	fileEntryId,
 	fragmentCollectionId,
 	itemId,
 	name,
-	previewImageURL,
 	saveInlineContent,
 	saveMappingConfiguration,
 }) {
 	return (dispatch, getState) => {
 		return FragmentService.addFragmentComposition({
 			description,
+			fileEntryId,
 			fragmentCollectionId,
 			itemId,
 			name,
 			onNetworkStatus: dispatch,
-			previewImageURL,
 			saveInlineContent,
 			saveMappingConfiguration,
 			segmentsExperienceId: getState().segmentsExperienceId,

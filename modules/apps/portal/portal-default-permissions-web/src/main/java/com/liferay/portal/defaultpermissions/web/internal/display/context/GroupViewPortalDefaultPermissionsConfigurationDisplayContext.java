@@ -9,11 +9,11 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
-import com.liferay.portal.defaultpermissions.resource.PortalDefaultPermissionsModelResourceRegistry;
 import com.liferay.portal.defaultpermissions.web.internal.search.PortalDefaultPermissionsSearch;
 import com.liferay.portal.defaultpermissions.web.internal.search.PortalDefaultPermissionsSearchEntry;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.defaultpermissions.resource.PortalDefaultPermissionsModelResourceRegistry;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -29,14 +29,14 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Stefano Motta
@@ -56,10 +56,10 @@ public class GroupViewPortalDefaultPermissionsConfigurationDisplayContext
 
 		_liferayPortletRequest = PortalUtil.getLiferayPortletRequest(
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST));
+				JavaConstants.JAKARTA_PORTLET_REQUEST));
 		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
 			(PortletResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE));
+				JavaConstants.JAKARTA_PORTLET_RESPONSE));
 	}
 
 	@Override
@@ -201,10 +201,9 @@ public class GroupViewPortalDefaultPermissionsConfigurationDisplayContext
 			_portalDefaultPermissionsModelResourceRegistry.
 				getPortalDefaultPermissionsModelResources(),
 			portalDefaultPermissionsModelResource -> {
-				ExtendedObjectClassDefinition.Scope scope =
-					portalDefaultPermissionsModelResource.getScope();
+				if (!ExtendedObjectClassDefinition.Scope.GROUP.equals(
+						portalDefaultPermissionsModelResource.getScope())) {
 
-				if (!scope.equals(ExtendedObjectClassDefinition.Scope.GROUP)) {
 					return null;
 				}
 

@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Document Management";
 	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
@@ -147,7 +146,7 @@ definition {
 
 	@priority = 3
 	test CanDeleteParentDocumentFolderByErc {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		task ("And Given with postDocumentFolderDocumentFolder and parentDocumentFolderId to create a new folder with a custom erc") {
 			var response = DocumentFolderAPI.addDocumentFolder(
@@ -184,18 +183,16 @@ definition {
 		task ("And Then the document in the document folder is deleted") {
 			var response = DocumentAPI.getDocumentsByDifferentParameters(documentId = ${documentId});
 
-			var actualMessage = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualMessage},
-				expected = "No FileEntry exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 
 	@disable-webdriver = "true"
 	@priority = 3
 	test CanGetDocumentFolderByErc {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		task ("When with GET request, siteId and external reference code to retrieve the document folder") {
 			var response = DocumentFolderAPI.getDocumentFolderBySiteIdAndErc(
@@ -310,7 +307,7 @@ definition {
 	@disable-webdriver = "true"
 	@priority = 3
 	test CanReturnErrorWithGetDocumentFolderByNonexistentErc {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		task ("When with GET request, siteId and nonexistent external reference code to retrieve the document folder") {
 			var response = DocumentFolderAPI.getDocumentFolderBySiteIdAndErc(
@@ -319,11 +316,9 @@ definition {
 		}
 
 		task ("Then I receive no DLFolder exists error message in response") {
-			var actualMessage = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualMessage},
-				expected = "No DLFolder exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 
@@ -359,7 +354,7 @@ definition {
 	@disable-webdriver = "true"
 	@priority = 3
 	test DocumentFolderDeletionImpossibleByNonexistentErc {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		task ("When I make a DELETE request by siteId and on-existent erc") {
 			DocumentFolderAPI.deleteDocumentFolderBySiteIdAndErc(

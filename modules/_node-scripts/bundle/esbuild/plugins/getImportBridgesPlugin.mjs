@@ -42,16 +42,11 @@ export default function getImportBridgesPlugin(
 
 					const {moduleName, type} = decodeBridgePath(loadPath);
 
-					const {external, webContextPath} =
-						globalImports[moduleName];
-
-					const contents = getImportBridgeCode(
-						globalImports,
+					const contents = await getImportBridgeCode(
 						overridenPackageSymbols,
 						type,
 						moduleName,
-						external,
-						webContextPath
+						globalImports[moduleName]
 					);
 
 					importBridgesCache[loadPath] = {
@@ -66,30 +61,43 @@ export default function getImportBridgesPlugin(
 	};
 }
 
-function getImportBridgeCode(
-	globalImports,
+async function getImportBridgeCode(
 	overridenPackageSymbols,
 	type,
 	moduleName,
-	external,
-	webContextPath
+	importConfig
 ) {
+	const {external, submodule, webContextPath} = importConfig;
+
 	let hasDefault;
 
-	if (globalImports[moduleName]?.external === false) {
+	if (external === false || submodule) {
 		hasDefault = false;
 	}
 	else {
-		const symbols = getExportedSymbols(overridenPackageSymbols, moduleName);
+		const symbols = await getExportedSymbols(
+			overridenPackageSymbols,
+			moduleName
+		);
 
 		hasDefault = !!symbols['default'];
 	}
 
-	const pathPrefix = getPathPrefix(type);
+	let modulePath = 'index.js';
 
-	const modulePath = external
-		? `exports/${getFlatName(moduleName)}.js`
-		: 'index.js';
+	if (submodule) {
+		if (moduleName.startsWith('@')) {
+			modulePath = `${moduleName.split('/')[2]}.js`;
+		}
+		else {
+			modulePath = `${moduleName.split('/')[1]}.js`;
+		}
+	}
+	else if (external) {
+		modulePath = `exports/${getFlatName(moduleName)}.js`;
+	}
+
+	const pathPrefix = getPathPrefix(type);
 
 	let source = `
 export * from '${pathPrefix}/${webContextPath}/__liferay__/${modulePath}';

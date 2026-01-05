@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {act, fireEvent, render, waitFor} from '@testing-library/react';
 import React from 'react';
 
@@ -31,15 +31,11 @@ describe('CompareCheckbox', () => {
 			detach: jest.fn(),
 			fire: jest.fn(),
 			on: jest.fn((eventName, callback) => {
-				switch (eventName) {
-					case PRODUCT_COMPARISON_TOGGLED:
-						toggleCompareTrigger = callback;
-						break;
-					case ITEM_REMOVED_FROM_COMPARE:
-						removeFromCompareTrigger = callback;
-						break;
-					default:
-						break;
+				if (eventName === ITEM_REMOVED_FROM_COMPARE) {
+					removeFromCompareTrigger = callback;
+				}
+				else if (eventName === PRODUCT_COMPARISON_TOGGLED) {
+					toggleCompareTrigger = callback;
 				}
 			}),
 		};

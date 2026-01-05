@@ -120,30 +120,35 @@ export const Dashboard: React.FC<IDashboardProps> = ({router}) => {
 				/>
 			</BasePage.Header>
 
-			{matchedRoute !== Routes.SITES_INTERESTS &&
-				matchedRoute !== Routes.SITES_SEARCH_TERMS && (
-					<BasePage.SubHeader>
-						<div className='d-flex justify-content-end w-100'>
-							{matchedRoute === Routes.SITES && (
-								<DownloadPDFReport
-									disabled={dataSourceStates.empty}
-									subtitle={selectedChannelName}
-									title={Liferay.Language.get(
-										'sites-dashboard'
-									)}
-								/>
-							)}
+			{matchedRoute !== Routes.SITES_INTERESTS && (
+				<BasePage.SubHeader>
+					<div className='d-flex justify-content-end w-100'>
+						{matchedRoute === Routes.SITES && (
+							<DownloadPDFReport
+								disabled={dataSourceStates.empty}
+								subtitle={selectedChannelName}
+								title={Liferay.Language.get('sites-dashboard')}
+							/>
+						)}
 
-							{matchedRoute === Routes.SITES_TOUCHPOINTS && (
-								<DownloadCSVReport
-									disabled={dataSourceStates.empty}
-									type={CSVType.Page}
-									typeLang={Liferay.Language.get('pages')}
-								/>
-							)}
-						</div>
-					</BasePage.SubHeader>
-				)}
+						{matchedRoute === Routes.SITES_SEARCH_TERMS && (
+							<DownloadCSVReport
+								disabled={dataSourceStates.empty}
+								type={CSVType.SearchTerms}
+								typeLang={Liferay.Language.get('search-terms')}
+							/>
+						)}
+
+						{matchedRoute === Routes.SITES_TOUCHPOINTS && (
+							<DownloadCSVReport
+								disabled={dataSourceStates.empty}
+								type={CSVType.Page}
+								typeLang={Liferay.Language.get('pages')}
+							/>
+						)}
+					</div>
+				</BasePage.SubHeader>
+			)}
 
 			<BasePage.Context.Provider
 				value={{
@@ -157,9 +162,13 @@ export const Dashboard: React.FC<IDashboardProps> = ({router}) => {
 							<StatesRenderer.Empty
 								description={
 									<>
-										{Liferay.Language.get(
-											'connect-a-data-source-with-sites-data'
-										)}
+										{authorized
+											? Liferay.Language.get(
+													'connect-a-data-source-with-sites-data'
+											  )
+											: Liferay.Language.get(
+													'please-contact-your-workspace-administrator-to-add-data-sources'
+											  )}
 
 										<ClayLink
 											className='d-block mb-3'

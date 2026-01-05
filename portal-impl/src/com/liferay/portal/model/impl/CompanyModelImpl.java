@@ -7,8 +7,10 @@ package com.liferay.portal.model.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -25,6 +27,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -149,23 +153,17 @@ public class CompanyModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long MX_COLUMN_BITMASK = 2L;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
-	 */
-	@Deprecated
-	public static final long WEBID_COLUMN_BITMASK = 4L;
+	public static final long WEBID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 8L;
+	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.portal.util.PropsUtil.get(
+		com.liferay.portal.kernel.util.PropsUtil.get(
 			"lock.expiration.time.com.liferay.portal.kernel.model.Company"));
 
 	public CompanyModelImpl() {
@@ -532,15 +530,6 @@ public class CompanyModelImpl
 		_mx = mx;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getColumnOriginalValue(String)}
-	 */
-	@Deprecated
-	public String getOriginalMx() {
-		return getColumnOriginalValue("mx");
-	}
-
 	@JSON
 	@Override
 	public String getHomeURL() {
@@ -841,12 +830,11 @@ public class CompanyModelImpl
 		_indexNameNext = indexNameNext;
 	}
 
-	public CompanyImpl.CompanySecurityBag getCompanySecurityBag() {
-		return null;
+	public long getGroupId() {
+		return 0;
 	}
 
-	public void setCompanySecurityBag(
-		CompanyImpl.CompanySecurityBag companySecurityBag) {
+	public void setGroupId(long groupId) {
 	}
 
 	public String getVirtualHostname() {
@@ -1050,8 +1038,6 @@ public class CompanyModelImpl
 
 		_setModifiedDate = false;
 
-		setCompanySecurityBag(null);
-
 		setVirtualHostname(null);
 
 		_columnBitmask = 0;
@@ -1211,13 +1197,19 @@ public class CompanyModelImpl
 			companyCacheModel.indexNameNext = null;
 		}
 
-		setCompanySecurityBag(null);
+		try {
+			companyCacheModel.groupId = (long)_groupIdMethodHandle.invokeExact(
+				(CompanyImpl)this);
 
-		companyCacheModel._companySecurityBag = getCompanySecurityBag();
+			setVirtualHostname(null);
 
-		setVirtualHostname(null);
-
-		companyCacheModel._virtualHostname = getVirtualHostname();
+			companyCacheModel.virtualHostname =
+				(String)_virtualHostnameMethodHandle.invokeExact(
+					(CompanyImpl)this);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return companyCacheModel;
 	}
@@ -1433,6 +1425,57 @@ public class CompanyModelImpl
 	}
 
 	private long _columnBitmask;
+
+	protected static final BiConsumer<Company, Long>
+		groupIdUpdateEntityCacheBiConsumer = (company, groupId) -> {
+			CompanyCacheModel companyCacheModel =
+				EntityCacheUtil.fetchCacheModel(
+					CompanyImpl.class, company.getPrimaryKey(),
+					CompanyCacheModel.class);
+
+			if ((companyCacheModel != null) &&
+				(companyCacheModel.getMvccVersion() ==
+					company.getMvccVersion())) {
+
+				companyCacheModel.groupId = groupId;
+			}
+		};
+
+	private static final MethodHandle _groupIdMethodHandle;
+
+	protected static final BiConsumer<Company, String>
+		virtualHostnameUpdateEntityCacheBiConsumer =
+			(company, virtualHostname) -> {
+				CompanyCacheModel companyCacheModel =
+					EntityCacheUtil.fetchCacheModel(
+						CompanyImpl.class, company.getPrimaryKey(),
+						CompanyCacheModel.class);
+
+				if ((companyCacheModel != null) &&
+					(companyCacheModel.getMvccVersion() ==
+						company.getMvccVersion())) {
+
+					companyCacheModel.virtualHostname = virtualHostname;
+				}
+			};
+
+	private static final MethodHandle _virtualHostnameMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_groupIdMethodHandle = lookup.findGetter(
+				CompanyImpl.class, "_groupId", long.class);
+
+			_virtualHostnameMethodHandle = lookup.findGetter(
+				CompanyImpl.class, "_virtualHostname", String.class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
+
 	private Company _escapedModel;
 
 }

@@ -16,6 +16,7 @@ export interface Config {
 	addPortletURL: string;
 	addRuleURL: string;
 	addSegmentsExperienceURL: string;
+	addStepperFragmentEntryLinkURL: string;
 
 	assetCategoryTreeNodeItemSelectorURL: string;
 
@@ -25,6 +26,7 @@ export interface Config {
 		[key: string]: {
 			languageIcon: string;
 			languageLabel: string;
+			w3cLanguageId: string;
 		};
 	};
 
@@ -47,6 +49,15 @@ export interface Config {
 
 	changeMasterLayoutURL: string;
 	changeStyleBookEntryURL: string;
+	codeEditorSidebarPanels: Array<{
+		items: Array<{
+			content: string;
+			helpText?: string;
+			label: string;
+			tooltip?: string;
+		}>;
+		label: string;
+	}>;
 	collectionSelectorURL: string;
 
 	commonStyles: Array<{
@@ -79,6 +90,7 @@ export interface Config {
 	>;
 
 	contentPagePersonalizationLearnURL: string;
+	copyItemsURL: string;
 	createLayoutPageTemplateEntryURL: string;
 
 	defaultEditorConfigurations: Record<
@@ -94,6 +106,7 @@ export interface Config {
 	defaultSegmentsExperienceId: string;
 	defaultStyleBookEntryImagePreviewURL: string;
 	defaultStyleBookEntryName: string;
+	deleteFormStepURL: string;
 	deleteFragmentEntryLinkCommentURL: string;
 	deleteRuleURL: string;
 	deleteSegmentsExperienceURL: string;
@@ -103,6 +116,15 @@ export interface Config {
 	editFragmentEntryLinkCommentURL: string;
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
+	formTypes: Array<{
+		className: string;
+		isRestricted: boolean;
+		label: string;
+		subtypes: Array<{label: string; value: string}>;
+		value: string;
+	}>;
+	fragmentPortletNamespace: string;
+	fragmentsImportURL: string;
 	frontendTokens: {
 		[key: string]:
 			| {
@@ -131,6 +153,7 @@ export interface Config {
 	getFormConfigURL: string;
 	getFormFieldsURL: string;
 	getFragmentEntryInputFieldTypesURL: string;
+	getFragmentEntryInputURL: string;
 	getIframeContentCssURL: string;
 	getIframeContentURL: string;
 	getInfoItemActionErrorMessageURL: string;
@@ -147,6 +170,7 @@ export interface Config {
 	infoFieldItemSelectorURL: string;
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
+	isCMS: boolean;
 	isConversionDraft: boolean;
 	isPrivateLayoutsEnabled: boolean;
 	layoutConversionWarningMessages: string[] | null;
@@ -157,11 +181,12 @@ export interface Config {
 	markItemForDeletionURL: string;
 	masterLayouts: Array<{
 		imagePreviewURL: string;
-		masterLayoutPlid: string;
+		masterLayoutPageTemplateEntryERC: string;
 		name: string;
 	}>;
 	masterUsed: boolean;
-	moveItemURL: string;
+	moveItemsURL: string;
+	moveStepperFragmentEntryLinkURL: string;
 	paddingOptions: Array<{
 		label: string;
 		value: string;
@@ -171,6 +196,7 @@ export interface Config {
 	portletNamespace: string;
 	publishURL: string;
 	redirectURL: string;
+	regenerateDisplayPageURL: string;
 	renderFragmentEntriesURL: string;
 	restoreCollectionDisplayConfigURL: string;
 	searchContainerPageMaxDelta: number;
@@ -179,7 +205,7 @@ export interface Config {
 		subtype: {
 			id: string;
 			label: string;
-		};
+		} | null;
 		type: {
 			id: string;
 			label: string;
@@ -194,15 +220,17 @@ export interface Config {
 	singleSegmentsExperienceMode: boolean;
 	siteNavigationMenuItemSelectorURL: string;
 	styleBookEnabled: boolean;
+	styleBookEntryERC: string;
 	styleBooks: Array<{
 		imagePreviewURL: string;
 		name: string;
-		styleBookEntryId: string;
+		styleBookEntryERC: string;
 	}>;
-	stylebookEntryId: string;
+	swapFragmentEntryLinkURL: string;
 	themeColorsCssClasses: string[];
 	toolbarId: string;
 
+	undoUpdateFormConfigURL: string;
 	unmarkItemsForDeletionURL: string;
 	updateCollectionDisplayConfigURL: string;
 	updateConfigurationValuesURL: string;
@@ -214,8 +242,10 @@ export interface Config {
 	updatePortletsHighlightedConfigurationURL: string;
 	updateRowColumnsURL: string;
 	updateRuleURL: string;
+	updateRulesURL: string;
 	updateSegmentsExperiencePriorityURL: string;
 	updateSegmentsExperienceURL: string;
+	validateExpressionURL: string;
 	videoItemSelectorURL: string;
 	workflowEnabled: boolean;
 }

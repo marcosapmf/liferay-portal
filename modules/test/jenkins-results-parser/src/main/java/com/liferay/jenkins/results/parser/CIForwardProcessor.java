@@ -138,7 +138,7 @@ public class CIForwardProcessor {
 
 						NotificationUtil.sendSlackNotification(
 							sb.toString(), "#ci-notifications",
-							"Pull Request Successfully Forwarded.");
+							"Pull request successfully forwarded");
 
 						return pullRequestURL;
 					}
@@ -178,7 +178,7 @@ public class CIForwardProcessor {
 
 				NotificationUtil.sendSlackNotification(
 					sb.toString(), "#ci-notifications", ":liferay-ci:",
-					"Unable to forward pull request. ", "Liferay CI");
+					"Unable to forward pull request", "Liferay CI");
 
 				throw new GitHubSecondaryRateLimitRuntimeException(
 					gitHubSecondaryRateLimitRuntimeException.getGitHubApiUrl(),
@@ -270,7 +270,7 @@ public class CIForwardProcessor {
 
 		String propertyValue = JenkinsResultsParserUtil.getProperty(
 			JenkinsResultsParserUtil.getBuildProperties(), propertyName,
-			_pullRequest.getGitRepositoryName());
+			_pullRequest.getGitRepositoryName(), _pullRequest.getRefName());
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(propertyValue)) {
 			return new String[0];
@@ -732,11 +732,7 @@ public class CIForwardProcessor {
 		List<String> failedRequiredPassingTestSuiteNames =
 			_getFailedRequiredPassingTestSuiteNames();
 
-		if (!failedRequiredPassingTestSuiteNames.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return failedRequiredPassingTestSuiteNames.isEmpty();
 	}
 
 	private static final long _RETRY_PERIOD = 1000L * 60L;

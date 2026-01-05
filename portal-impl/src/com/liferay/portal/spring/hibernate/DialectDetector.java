@@ -15,7 +15,6 @@ import com.liferay.portal.dao.orm.hibernate.MariaDBDialect;
 import com.liferay.portal.dao.orm.hibernate.Oracle10gDialect;
 import com.liferay.portal.dao.orm.hibernate.SQLServer2005Dialect;
 import com.liferay.portal.dao.orm.hibernate.SQLServer2008Dialect;
-import com.liferay.portal.dao.orm.hibernate.SybaseASE157Dialect;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -39,13 +38,14 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 public class DialectDetector {
 
 	public static Dialect getDialect(DataSource dataSource) {
+		Dialect dialect = null;
+
 		DBInfo dbInfo = DBInfoUtil.getDBInfo(dataSource);
 
 		int dbMajorVersion = dbInfo.getMajorVersion();
 		int dbMinorVersion = dbInfo.getMinorVersion();
 		String dbName = dbInfo.getName();
 
-		Dialect dialect = null;
 		String dialectKey = null;
 
 		try {
@@ -79,16 +79,6 @@ public class DialectDetector {
 							"database settings can be changed in ",
 							"portal-ext.properties."));
 				}
-			}
-			else if (dbName.equals("Adaptive Server Enterprise") &&
-					 (dbMajorVersion >= 15)) {
-
-				dialect = new SybaseASE157Dialect();
-			}
-			else if (dbName.equals("ASE")) {
-				throw new RuntimeException(
-					"jTDS is no longer suppported. Please use the Sybase " +
-						"JDBC driver to connect to Sybase.");
 			}
 			else if (dbName.startsWith("DB2") && (dbMajorVersion >= 9)) {
 				dialect = new DB2Dialect();

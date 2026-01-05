@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Catalog;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -76,6 +76,30 @@ public class CatalogSerDes {
 			sb.append(_escape(catalog.getCurrencyCode()));
 
 			sb.append("\"");
+		}
+
+		if (catalog.getCurrencyExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(catalog.getCurrencyExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (catalog.getCurrencyId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyId\": ");
+
+			sb.append(catalog.getCurrencyId());
 		}
 
 		if (catalog.getDefaultLanguageId() != null) {
@@ -179,6 +203,22 @@ public class CatalogSerDes {
 			map.put("currencyCode", String.valueOf(catalog.getCurrencyCode()));
 		}
 
+		if (catalog.getCurrencyExternalReferenceCode() == null) {
+			map.put("currencyExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"currencyExternalReferenceCode",
+				String.valueOf(catalog.getCurrencyExternalReferenceCode()));
+		}
+
+		if (catalog.getCurrencyId() == null) {
+			map.put("currencyId", null);
+		}
+		else {
+			map.put("currencyId", String.valueOf(catalog.getCurrencyId()));
+		}
+
 		if (catalog.getDefaultLanguageId() == null) {
 			map.put("defaultLanguageId", null);
 		}
@@ -244,6 +284,14 @@ public class CatalogSerDes {
 			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "currencyExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyId")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "defaultLanguageId")) {
 				return false;
 			}
@@ -285,6 +333,20 @@ public class CatalogSerDes {
 			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
 				if (jsonParserFieldValue != null) {
 					catalog.setCurrencyCode((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "currencyExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					catalog.setCurrencyExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyId")) {
+				if (jsonParserFieldValue != null) {
+					catalog.setCurrencyId(
+						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "defaultLanguageId")) {
@@ -360,6 +422,10 @@ public class CatalogSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

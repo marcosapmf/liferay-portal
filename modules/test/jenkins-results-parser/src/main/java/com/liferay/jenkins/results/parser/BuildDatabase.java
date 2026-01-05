@@ -21,7 +21,13 @@ import org.json.JSONObject;
  */
 public interface BuildDatabase {
 
-	public static final String FILE_NAME_BUILD_DATABASE = "build-database.json";
+	public static final String FILE_NAME_BUILD_DATABASE_JSON =
+		"build-database.json";
+
+	public static final String FILE_NAME_BUILD_DATABASE_JSON_SHA =
+		"build-database.json.sha512";
+
+	public File getBuildDatabaseFile();
 
 	public JSONObject getBuildDataJSONObject(String key);
 
@@ -29,7 +35,21 @@ public interface BuildDatabase {
 
 	public Job getJob(String key);
 
+	public List<Job> getJobs();
+
 	public JSONObject getJSONObject();
+
+	public PortalFixpackRelease getPortalFixpackRelease(String key);
+
+	public List<PortalFixpackRelease> getPortalFixpackReleases();
+
+	public PortalHotfixRelease getPortalHotfixRelease(String key);
+
+	public List<PortalHotfixRelease> getPortalHotfixReleases();
+
+	public PortalRelease getPortalRelease(String key);
+
+	public List<PortalRelease> getPortalReleases();
 
 	public Properties getProperties(String key);
 
@@ -37,13 +57,23 @@ public interface BuildDatabase {
 
 	public PullRequest getPullRequest(String key);
 
+	public List<PullRequest> getPullRequests();
+
 	public Workspace getWorkspace(String key);
 
 	public WorkspaceGitRepository getWorkspaceGitRepository(String key);
 
+	public List<Workspace> getWorkspaces();
+
 	public boolean hasBuildData(String key);
 
 	public boolean hasJob(String key);
+
+	public boolean hasPortalFixpackRelease(String key);
+
+	public boolean hasPortalHotfixRelease(String key);
+
+	public boolean hasPortalRelease(String key);
 
 	public boolean hasProperties(String key);
 
@@ -56,6 +86,14 @@ public interface BuildDatabase {
 	public void putBuildData(String key, BuildData buildData);
 
 	public void putJob(String key, Job job);
+
+	public void putPortalFixpackRelease(
+		String key, PortalFixpackRelease portalFixpackRelease);
+
+	public void putPortalHotfixRelease(
+		String key, PortalHotfixRelease portalHotfixRelease);
+
+	public void putPortalRelease(String key, PortalRelease portalRelease);
 
 	public void putProperties(String key, File propertiesFile);
 
@@ -84,6 +122,10 @@ public interface BuildDatabase {
 	public FilePropagator rsyncBuildDatabaseFile(
 		List<String> distNodes, String distPath, String preDistCommand,
 		String postDistCommand, int threadCount);
+
+	public void uploadBuildDatabaseFileToCloudBucket();
+
+	public void uploadBuildDatabaseFileToCloudBucket(String path);
 
 	public void writeFilteredPropertiesToFile(
 		String destFilePath, Pattern pattern, String key);

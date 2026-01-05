@@ -7,29 +7,40 @@ package com.liferay.analytics.settings.internal.configuration;
 
 import com.liferay.analytics.batch.exportimport.AnalyticsDXPEntityBatchExporter;
 import com.liferay.analytics.batch.exportimport.constants.AnalyticsDXPEntityBatchExporterConstants;
+import com.liferay.analytics.machine.learning.constants.AnalyticsMachineLearningConstants;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
+import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
@@ -40,8 +51,10 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -143,6 +156,20 @@ public class AnalyticsConfigurationRegistryImpl
 
 		modified(properties);
 
+		_companyLocalService.forEachCompany(
+			company -> {
+				if (GetterUtil.getBoolean(
+						PropsUtil.get(
+							PropsKeys.
+								ANALYTICS_CLOUD_CONFIGURATION_DELETE_ON_STARTUP)) ||
+					_isEnabled(company)) {
+
+					_activatedCompanyIds.put(company.getCompanyId(), true);
+				}
+			});
+
+		_executorService = _portalExecutorManager.getPortalExecutor(
+			AnalyticsConfigurationRegistryImpl.class.getName());
 		_serviceRegistration = bundleContext.registerService(
 			ManagedServiceFactory.class,
 			new AnalyticsConfigurationManagedServiceFactory(),
@@ -205,6 +232,47 @@ public class AnalyticsConfigurationRegistryImpl
 			new ServiceContext());
 	}
 
+	private void _clearConfiguration(long companyId) {
+		_companyLocalService.removePreferences(
+			companyId,
+			new String[] {
+				"liferayAnalyticsConnectionType",
+				"liferayAnalyticsDataSourceId", "liferayAnalyticsEndpointURL",
+				"liferayAnalyticsFaroBackendSecuritySignature",
+				"liferayAnalyticsFaroBackendURL", "liferayAnalyticsGroupIds",
+				"liferayAnalyticsProjectId", "liferayAnalyticsURL"
+			});
+
+		for (String groupId :
+				PrefsPropsUtil.getStringArray(
+					companyId, "liferayAnalyticsGroupIds", StringPool.COMMA)) {
+
+			Group group = _groupLocalService.fetchGroup(
+				GetterUtil.getLong(groupId));
+
+			if (group == null) {
+				continue;
+			}
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				group.getTypeSettingsProperties();
+
+			typeSettingsUnicodeProperties.remove("analyticsChannelId");
+
+			group.setTypeSettingsProperties(typeSettingsUnicodeProperties);
+
+			_groupLocalService.updateGroup(group);
+		}
+
+		try {
+			_configurationProvider.deleteCompanyConfiguration(
+				AnalyticsConfiguration.class, companyId);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+	}
+
 	private void _deleteAnalyticsAdmin(long companyId) throws Exception {
 		User user = _userLocalService.fetchUserByScreenName(
 			companyId, AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN);
@@ -234,11 +302,25 @@ public class AnalyticsConfigurationRegistryImpl
 						AnalyticsDXPEntityBatchExporterConstants.
 							DISPATCH_TRIGGER_NAME_ORDER,
 						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_PRODUCT
+							DISPATCH_TRIGGER_NAME_PRODUCT,
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_ASSET_ENTITIES,
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_MOST_VIEWED_RECOMMENDER,
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_USER_PERSONALIZATION_RECOMMENDER
 					});
 
-				_deleteAnalyticsAdmin(companyId);
-				_deleteSAPEntry(companyId);
+				_executorService.execute(
+					() -> {
+						try {
+							_deleteAnalyticsAdmin(companyId);
+							_deleteSAPEntry(companyId);
+						}
+						catch (Exception exception) {
+							_log.error(exception);
+						}
+					});
 			}
 
 			if (_active && !_hasConfiguration()) {
@@ -266,21 +348,39 @@ public class AnalyticsConfigurationRegistryImpl
 		try {
 			Set<String> dispatchTriggerNames = new HashSet<>();
 
-			if (_syncedAccountSettingsEnabled(dictionary) ||
-				_syncedContactSettingsEnabled(dictionary)) {
+			if (_isSyncedAccountSettingsEnabled(dictionary) ||
+				_isSyncedContactSettingsEnabled(dictionary)) {
 
 				dispatchTriggerNames.add(
 					AnalyticsDXPEntityBatchExporterConstants.
 						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
 			}
 
-			if (_syncedCommerceSettingsEnabled(dictionary)) {
+			if (_isSyncedCommerceSettingsEnabled(dictionary)) {
 				Collections.addAll(
 					dispatchTriggerNames,
 					AnalyticsDXPEntityBatchExporterConstants.
 						DISPATCH_TRIGGER_NAME_ORDER,
 					AnalyticsDXPEntityBatchExporterConstants.
 						DISPATCH_TRIGGER_NAME_PRODUCT);
+			}
+
+			if (_isContentRecommenderMostPopularItemsEnabled(dictionary)) {
+				Collections.addAll(
+					dispatchTriggerNames,
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_ASSET_ENTITIES,
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_MOST_VIEWED_RECOMMENDER);
+			}
+
+			if (_isContentRecommenderUserPersonalizationEnabled(dictionary)) {
+				Collections.addAll(
+					dispatchTriggerNames,
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_ASSET_ENTITIES,
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_USER_PERSONALIZATION_RECOMMENDER);
 			}
 
 			if (!dispatchTriggerNames.isEmpty()) {
@@ -329,91 +429,88 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private void _sync(long companyId, Dictionary<String, ?> dictionary) {
-		try {
-			Set<String> refreshDispatchTriggerNames = new HashSet<>();
-			Set<String> unscheduleDispatchTriggerNames = new HashSet<>();
+	private boolean _isContentRecommenderMostPopularItemsChanged(
+		Dictionary<String, ?> dictionary) {
 
-			if (_syncedCommerceSettingsChanged(dictionary)) {
-				if (_syncedCommerceSettingsEnabled(dictionary)) {
-					Collections.addAll(
-						refreshDispatchTriggerNames,
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_ORDER,
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_PRODUCT);
-				}
-				else {
-					Collections.addAll(
-						unscheduleDispatchTriggerNames,
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_ORDER,
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_PRODUCT);
-				}
-			}
+		boolean contentRecommenderMostPopularItemsEnabled =
+			GetterUtil.getBoolean(
+				dictionary.get("contentRecommenderMostPopularItemsEnabled"));
+		boolean previousContentRecommenderMostPopularItemsEnabled =
+			GetterUtil.getBoolean(
+				dictionary.get(
+					"previousContentRecommenderMostPopularItemsEnabled"));
 
-			if (_syncedCommerceSettingsEnabled(dictionary)) {
-				if (_syncedOrderFieldsChanged(dictionary)) {
-					refreshDispatchTriggerNames.add(
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_ORDER);
-				}
+		if (contentRecommenderMostPopularItemsEnabled !=
+				previousContentRecommenderMostPopularItemsEnabled) {
 
-				if (_syncedProductFieldsChanged(dictionary)) {
-					refreshDispatchTriggerNames.add(
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_PRODUCT);
-				}
-			}
-
-			if ((_syncedAccountSettingsChanged(dictionary) &&
-				 _syncedAccountSettingsEnabled(dictionary)) ||
-				(_syncedAccountSettingsEnabled(dictionary) &&
-				 _syncedAccountFieldsChanged(dictionary)) ||
-				(_syncedContactSettingsChanged(dictionary) &&
-				 _syncedContactSettingsEnabled(dictionary)) ||
-				(_syncedContactSettingsEnabled(dictionary) &&
-				 _syncedUserFieldsChanged(dictionary))) {
-
-				refreshDispatchTriggerNames.add(
-					AnalyticsDXPEntityBatchExporterConstants.
-						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
-			}
-
-			if (!refreshDispatchTriggerNames.isEmpty()) {
-				_analyticsDXPEntityBatchExporter.refreshExportTriggers(
-					companyId,
-					refreshDispatchTriggerNames.toArray(new String[0]));
-
-				_analyticsDXPEntityBatchExporter.export(
-					companyId,
-					new String[] {
-						AnalyticsDXPEntityBatchExporterConstants.
-							DISPATCH_TRIGGER_NAME_DXP_ENTITIES
-					});
-			}
-
-			if (!_syncedAccountSettingsEnabled(dictionary) &&
-				!_syncedContactSettingsEnabled(dictionary)) {
-
-				unscheduleDispatchTriggerNames.add(
-					AnalyticsDXPEntityBatchExporterConstants.
-						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
-			}
-
-			if (!unscheduleDispatchTriggerNames.isEmpty()) {
-				_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
-					companyId,
-					unscheduleDispatchTriggerNames.toArray(new String[0]));
-			}
+			return true;
 		}
-		catch (Exception exception) {
-			_log.error(exception);
-		}
+
+		return false;
 	}
 
-	private boolean _syncedAccountFieldsChanged(
+	private boolean _isContentRecommenderMostPopularItemsEnabled(
+		Dictionary<String, ?> dictionary) {
+
+		return GetterUtil.getBoolean(
+			dictionary.get("contentRecommenderMostPopularItemsEnabled"));
+	}
+
+	private boolean _isContentRecommenderUserPersonalizationChanged(
+		Dictionary<String, ?> dictionary) {
+
+		boolean contentRecommenderUserPersonalizationEnabled =
+			GetterUtil.getBoolean(
+				dictionary.get("contentRecommenderUserPersonalizationEnabled"));
+		boolean previousContentRecommenderUserPersonalizationEnabled =
+			GetterUtil.getBoolean(
+				dictionary.get(
+					"previousContentRecommenderUserPersonalizationEnabled"));
+
+		if (contentRecommenderUserPersonalizationEnabled !=
+				previousContentRecommenderUserPersonalizationEnabled) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isContentRecommenderUserPersonalizationEnabled(
+		Dictionary<String, ?> dictionary) {
+
+		return GetterUtil.getBoolean(
+			dictionary.get("contentRecommenderUserPersonalizationEnabled"));
+	}
+
+	private boolean _isEnabled(Company company) {
+		boolean hasEnabled = false;
+
+		Properties properties = PropsUtil.getProperties(
+			PropsKeys.ANALYTICS_CLOUD_CONFIGURATION_DELETE_ON_STARTUP, false);
+
+		properties.remove(
+			PropsKeys.ANALYTICS_CLOUD_CONFIGURATION_DELETE_ON_STARTUP);
+
+		for (Object deleteOnStartup : properties.values()) {
+			if (GetterUtil.getBoolean(deleteOnStartup)) {
+				hasEnabled = true;
+
+				break;
+			}
+		}
+
+		if (!hasEnabled) {
+			return false;
+		}
+
+		return GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.ANALYTICS_CLOUD_CONFIGURATION_DELETE_ON_STARTUP,
+				new Filter(company.getVirtualHostname())));
+	}
+
+	private boolean _isSyncedAccountFieldsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		String[] previousSyncedAccountFieldNames = GetterUtil.getStringValues(
@@ -436,7 +533,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedAccountSettingsChanged(
+	private boolean _isSyncedAccountSettingsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		if (GetterUtil.getBoolean(dictionary.get("previousSyncAllAccounts")) !=
@@ -465,7 +562,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedAccountSettingsEnabled(
+	private boolean _isSyncedAccountSettingsEnabled(
 		Dictionary<String, ?> dictionary) {
 
 		String[] previousSyncedAccountGroupIds = GetterUtil.getStringValues(
@@ -483,7 +580,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedCommerceSettingsChanged(
+	private boolean _isSyncedCommerceSettingsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		String[] commerceSyncEnabledAnalyticsChannelIds =
@@ -521,7 +618,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedCommerceSettingsEnabled(
+	private boolean _isSyncedCommerceSettingsEnabled(
 		Dictionary<String, ?> dictionary) {
 
 		String[] commerceSyncEnabledAnalyticsChannelIds =
@@ -539,7 +636,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedContactSettingsChanged(
+	private boolean _isSyncedContactSettingsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		if (GetterUtil.getBoolean(dictionary.get("previousSyncAllContacts")) !=
@@ -553,15 +650,15 @@ public class AnalyticsConfigurationRegistryImpl
 
 		Arrays.sort(previousSyncedOrganizationIds);
 
-		String[] previousSyncedUserGroupIds = GetterUtil.getStringValues(
-			dictionary.get("previousSyncedUserGroupIds"));
-
-		Arrays.sort(previousSyncedUserGroupIds);
-
 		String[] syncedOrganizationIds = GetterUtil.getStringValues(
 			dictionary.get("syncedOrganizationIds"));
 
 		Arrays.sort(syncedOrganizationIds);
+
+		String[] previousSyncedUserGroupIds = GetterUtil.getStringValues(
+			dictionary.get("previousSyncedUserGroupIds"));
+
+		Arrays.sort(previousSyncedUserGroupIds);
 
 		String[] syncedUserGroupIds = GetterUtil.getStringValues(
 			dictionary.get("syncedUserGroupIds"));
@@ -579,7 +676,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedContactSettingsEnabled(
+	private boolean _isSyncedContactSettingsEnabled(
 		Dictionary<String, ?> dictionary) {
 
 		String[] syncedOrganizationIds = GetterUtil.getStringValues(
@@ -597,7 +694,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedOrderFieldsChanged(
+	private boolean _isSyncedOrderFieldsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		String[] previousSyncedOrderFieldNames = GetterUtil.getStringValues(
@@ -620,7 +717,7 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedProductFieldsChanged(
+	private boolean _isSyncedProductFieldsChanged(
 		Dictionary<String, ?> dictionary) {
 
 		String[] previousSyncedProductFieldNames = GetterUtil.getStringValues(
@@ -643,7 +740,9 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private boolean _syncedUserFieldsChanged(Dictionary<String, ?> dictionary) {
+	private boolean _isSyncedUserFieldsChanged(
+		Dictionary<String, ?> dictionary) {
+
 		String[] previousSyncedContactFieldNames = GetterUtil.getStringValues(
 			dictionary.get("previousSyncedContactFieldNames"));
 
@@ -667,14 +766,167 @@ public class AnalyticsConfigurationRegistryImpl
 		if ((previousSyncedContactFieldNames.length != 0) &&
 			(previousSyncedUserFieldNames.length != 0) &&
 			(!Arrays.equals(
-				previousSyncedUserFieldNames, syncedUserFieldNames) ||
+				previousSyncedContactFieldNames, syncedContactFieldNames) ||
 			 !Arrays.equals(
-				 previousSyncedContactFieldNames, syncedContactFieldNames))) {
+				 previousSyncedUserFieldNames, syncedUserFieldNames))) {
 
 			return true;
 		}
 
 		return false;
+	}
+
+	private void _sync(long companyId, Dictionary<String, ?> dictionary) {
+		try {
+			Set<String> refreshDispatchTriggerNames = new HashSet<>();
+			Set<String> unscheduleDispatchTriggerNames = new HashSet<>();
+
+			if ((_isContentRecommenderMostPopularItemsChanged(dictionary) &&
+				 _isContentRecommenderMostPopularItemsEnabled(dictionary)) ||
+				(_isContentRecommenderUserPersonalizationChanged(dictionary) &&
+				 _isContentRecommenderUserPersonalizationEnabled(dictionary))) {
+
+				refreshDispatchTriggerNames.add(
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_ASSET_ENTITIES);
+
+				if (_isContentRecommenderMostPopularItemsChanged(dictionary) &&
+					_isContentRecommenderMostPopularItemsEnabled(dictionary)) {
+
+					refreshDispatchTriggerNames.add(
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_MOST_VIEWED_RECOMMENDER);
+				}
+
+				if (_isContentRecommenderUserPersonalizationChanged(
+						dictionary) &&
+					_isContentRecommenderUserPersonalizationEnabled(
+						dictionary)) {
+
+					refreshDispatchTriggerNames.add(
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_USER_PERSONALIZATION_RECOMMENDER);
+				}
+			}
+
+			if ((_isSyncedAccountSettingsChanged(dictionary) &&
+				 _isSyncedAccountSettingsEnabled(dictionary)) ||
+				(_isSyncedAccountSettingsEnabled(dictionary) &&
+				 _isSyncedAccountFieldsChanged(dictionary)) ||
+				(_isSyncedContactSettingsChanged(dictionary) &&
+				 _isSyncedContactSettingsEnabled(dictionary)) ||
+				(_isSyncedContactSettingsEnabled(dictionary) &&
+				 _isSyncedUserFieldsChanged(dictionary))) {
+
+				refreshDispatchTriggerNames.add(
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
+			}
+
+			if (_isSyncedCommerceSettingsChanged(dictionary)) {
+				if (_isSyncedCommerceSettingsEnabled(dictionary)) {
+					Collections.addAll(
+						refreshDispatchTriggerNames,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_ORDER,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_PRODUCT);
+				}
+				else {
+					Collections.addAll(
+						unscheduleDispatchTriggerNames,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_ORDER,
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_PRODUCT);
+				}
+			}
+
+			if (_isSyncedCommerceSettingsEnabled(dictionary)) {
+				if (_isSyncedOrderFieldsChanged(dictionary)) {
+					refreshDispatchTriggerNames.add(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_ORDER);
+				}
+
+				if (_isSyncedProductFieldsChanged(dictionary)) {
+					refreshDispatchTriggerNames.add(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_PRODUCT);
+				}
+			}
+
+			if (!refreshDispatchTriggerNames.isEmpty()) {
+				_analyticsDXPEntityBatchExporter.refreshExportTriggers(
+					companyId,
+					refreshDispatchTriggerNames.toArray(new String[0]));
+
+				if (refreshDispatchTriggerNames.contains(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_DXP_ENTITIES)) {
+
+					_analyticsDXPEntityBatchExporter.export(
+						companyId,
+						new String[] {
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_DXP_ENTITIES
+						});
+				}
+
+				if (refreshDispatchTriggerNames.contains(
+						AnalyticsMachineLearningConstants.
+							DISPATCH_TRIGGER_NAME_ASSET_ENTITIES)) {
+
+					_analyticsDXPEntityBatchExporter.export(
+						companyId,
+						new String[] {
+							AnalyticsMachineLearningConstants.
+								DISPATCH_TRIGGER_NAME_ASSET_ENTITIES
+						});
+				}
+			}
+
+			if (!_isContentRecommenderMostPopularItemsEnabled(dictionary) &&
+				!_isContentRecommenderUserPersonalizationEnabled(dictionary)) {
+
+				unscheduleDispatchTriggerNames.add(
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_ASSET_ENTITIES);
+			}
+
+			if (_isContentRecommenderMostPopularItemsChanged(dictionary) &&
+				!_isContentRecommenderMostPopularItemsEnabled(dictionary)) {
+
+				unscheduleDispatchTriggerNames.add(
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_MOST_VIEWED_RECOMMENDER);
+			}
+
+			if (_isContentRecommenderUserPersonalizationChanged(dictionary) &&
+				!_isContentRecommenderUserPersonalizationEnabled(dictionary)) {
+
+				unscheduleDispatchTriggerNames.add(
+					AnalyticsMachineLearningConstants.
+						DISPATCH_TRIGGER_NAME_USER_PERSONALIZATION_RECOMMENDER);
+			}
+
+			if (!_isSyncedAccountSettingsEnabled(dictionary) &&
+				!_isSyncedContactSettingsEnabled(dictionary)) {
+
+				unscheduleDispatchTriggerNames.add(
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_DXP_ENTITIES);
+			}
+
+			if (!unscheduleDispatchTriggerNames.isEmpty()) {
+				_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+					companyId,
+					unscheduleDispatchTriggerNames.toArray(new String[0]));
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 	}
 
 	private void _unmapPid(String pid) {
@@ -699,7 +951,14 @@ public class AnalyticsConfigurationRegistryImpl
 		if (!_initializedCompanyIds.contains(companyId)) {
 			_initializedCompanyIds.add(companyId);
 
-			if (Validator.isNotNull(dictionary.get("previousToken"))) {
+			if (Validator.isNull(dictionary.get("previousToken"))) {
+				_activatedCompanyIds.remove(companyId);
+			}
+			else if (_activatedCompanyIds.getOrDefault(companyId, false)) {
+				_activatedCompanyIds.remove(companyId);
+
+				_clearConfiguration(companyId);
+
 				return;
 			}
 		}
@@ -748,6 +1007,8 @@ public class AnalyticsConfigurationRegistryImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsConfigurationRegistryImpl.class);
 
+	private final Map<Long, Boolean> _activatedCompanyIds =
+		new ConcurrentHashMap<>();
 	private boolean _active;
 	private final Map<Long, AnalyticsConfiguration> _analyticsConfigurations =
 		new ConcurrentHashMap<>();
@@ -766,7 +1027,18 @@ public class AnalyticsConfigurationRegistryImpl
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
 
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	private ExecutorService _executorService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
 	private final Set<Long> _initializedCompanyIds = new HashSet<>();
+
+	@Reference
+	private PortalExecutorManager _portalExecutorManager;
 
 	@Reference
 	private RoleLocalService _roleLocalService;
@@ -789,16 +1061,11 @@ public class AnalyticsConfigurationRegistryImpl
 
 			_unmapPid(pid);
 
-			long companyThreadLocalCompanyId =
-				CompanyThreadLocal.getCompanyId();
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
-			CompanyThreadLocal.setCompanyId(companyId);
-
-			try {
 				_disable(companyId);
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
 			}
 		}
 
@@ -812,19 +1079,14 @@ public class AnalyticsConfigurationRegistryImpl
 		public void updated(String pid, Dictionary<String, ?> dictionary) {
 			_unmapPid(pid);
 
-			long companyThreadLocalCompanyId =
-				CompanyThreadLocal.getCompanyId();
-
 			long companyId = GetterUtil.getLong(
 				dictionary.get("companyId"), CompanyConstants.SYSTEM);
 
-			CompanyThreadLocal.setCompanyId(companyId);
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						companyId)) {
 
-			try {
 				_updated(companyId, pid, dictionary);
-			}
-			finally {
-				CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
 			}
 		}
 

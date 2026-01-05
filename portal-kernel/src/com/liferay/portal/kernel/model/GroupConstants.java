@@ -14,6 +14,10 @@ public class GroupConstants {
 
 	public static final String APP = "App";
 
+	public static final String CALENDAR = "Calendar";
+
+	public static final String CALENDAR_FRIENDLY_URL = "/calendar";
+
 	public static final String CMS = "CMS";
 
 	public static final String CMS_FRIENDLY_URL = "/cms";
@@ -40,10 +44,13 @@ public class GroupConstants {
 
 	public static final String GUEST = "Guest";
 
+	public static final String GUEST_FRIENDLY_URL = "/guest";
+
 	public static final int MEMBERSHIP_RESTRICTION_TO_PARENT_SITE_MEMBERS = 1;
 
 	public static final String[] SYSTEM_GROUPS = {
-		CMS, CONTROL_PANEL, FORMS, GUEST, GroupConstants.USER_PERSONAL_SITE
+		CALENDAR, CMS, CONTROL_PANEL, FORMS, GUEST,
+		GroupConstants.USER_PERSONAL_SITE
 	};
 
 	public static final int TYPE_DEPOT = 5;

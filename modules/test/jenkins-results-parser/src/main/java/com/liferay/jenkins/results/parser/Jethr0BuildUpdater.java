@@ -9,15 +9,15 @@ import com.liferay.jenkins.results.parser.jethr0.Jethr0Client;
 import com.liferay.jenkins.results.parser.jethr0.Jethr0ClientFactory;
 import com.liferay.jenkins.results.parser.jethr0.Jethr0MessageListener;
 
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,9 +64,14 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 
 	@Override
 	public void reinvoke() {
+		reinvoke(null);
+	}
+
+	@Override
+	public void reinvoke(Map<String, String> reinvokeBuildParameters) {
 		Build build = getBuild();
 
-		_invoke(build.getMaximumSlavesPerHost(), 24);
+		_invoke(build.getMaximumSlavesPerHost(), 24, reinvokeBuildParameters);
 	}
 
 	protected Jethr0BuildUpdater(Build build, long jethr0JobId) {
@@ -92,38 +97,22 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 
 	@Override
 	protected boolean isBuildCompleted() {
-		if (Objects.equals(_jethr0Status, "completed")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_jethr0Status, "completed");
 	}
 
 	@Override
 	protected boolean isBuildFailing() {
-		if (!Objects.equals(_jethr0Result, "passed")) {
-			return true;
-		}
-
-		return false;
+		return !Objects.equals(_jethr0Result, "passed");
 	}
 
 	@Override
 	protected boolean isBuildQueued() {
-		if (Objects.equals(_jethr0Status, "queued")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_jethr0Status, "queued");
 	}
 
 	@Override
 	protected boolean isBuildRunning() {
-		if (Objects.equals(_jethr0Status, "running")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_jethr0Status, "running");
 	}
 
 	@Override
@@ -145,7 +134,7 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		build.setStatus("queued");
 
 		if (isBuildRunning()) {
-			runRunning();
+			build.setStatus("running");
 		}
 	}
 
@@ -178,7 +167,14 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		return JenkinsMaster.getInstance(matcher.group("masterHostname"));
 	}
 
-	private void _invoke(int maximumSlavesPerHost, int minimumSlaveRAM) {
+	private void _invoke(int maxiumSlavesPerHost, int minimumSlaveRAM) {
+		_invoke(maxiumSlavesPerHost, minimumSlaveRAM, null);
+	}
+
+	private void _invoke(
+		int maximumSlavesPerHost, int minimumSlaveRAM,
+		Map<String, String> reinvokeBuildParameters) {
+
 		Build build = getBuild();
 
 		Map<String, String> buildParameters = new HashMap<>(
@@ -188,6 +184,10 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		buildParameters.put(
 			"MAX_NODE_COUNT", String.valueOf(maximumSlavesPerHost));
 		buildParameters.put("MIN_NODE_RAM", String.valueOf(minimumSlaveRAM));
+
+		if (reinvokeBuildParameters != null) {
+			buildParameters.putAll(reinvokeBuildParameters);
+		}
 
 		if (_jethr0BuildId > 0) {
 			_jethr0Client.createBuildRun(_jethr0BuildId);

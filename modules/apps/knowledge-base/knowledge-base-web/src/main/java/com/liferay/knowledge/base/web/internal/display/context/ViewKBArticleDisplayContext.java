@@ -20,8 +20,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
 
-import javax.portlet.ActionURL;
-import javax.portlet.PortletRequest;
+import jakarta.portlet.ActionURL;
+import jakarta.portlet.PortletRequest;
 
 /**
  * @author Ambrín Chaudhary
@@ -99,14 +99,9 @@ public class ViewKBArticleDisplayContext {
 	}
 
 	private boolean _hasSubscription(KBArticle kbArticle) {
-		if (SubscriptionLocalServiceUtil.isSubscribed(
-				_themeDisplay.getCompanyId(), _themeDisplay.getUserId(),
-				KBArticle.class.getName(), kbArticle.getResourcePrimKey())) {
-
-			return true;
-		}
-
-		return false;
+		return SubscriptionLocalServiceUtil.isSubscribed(
+			_themeDisplay.getCompanyId(), _themeDisplay.getUserId(),
+			KBArticle.class.getName(), kbArticle.getResourcePrimKey());
 	}
 
 	private boolean _hasSubscriptionPermission(KBArticle kbArticle)

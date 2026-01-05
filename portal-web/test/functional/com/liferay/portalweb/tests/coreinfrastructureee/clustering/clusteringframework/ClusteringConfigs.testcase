@@ -1,4 +1,4 @@
-@component-name = "portal-clustering"
+@component-name = "portal-core-infra"
 definition {
 
 	property app.server.bundles.size = "1";
@@ -63,7 +63,6 @@ definition {
 		property cluster.enabled = "true";
 		property cluster.tcp.jdbc.ping = "true";
 		property database.types = "mysql";
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

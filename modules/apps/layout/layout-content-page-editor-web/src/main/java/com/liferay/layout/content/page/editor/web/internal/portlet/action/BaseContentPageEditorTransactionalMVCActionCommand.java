@@ -7,6 +7,8 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.fragment.exception.FragmentCompositionDescriptionException;
 import com.liferay.fragment.exception.FragmentCompositionNameException;
+import com.liferay.layout.content.page.editor.web.internal.exception.FormContainerParentItemRequiredException;
+import com.liferay.layout.content.page.editor.web.internal.exception.NoninstanceablePortletException;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.PortletIdException;
@@ -24,10 +26,10 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.concurrent.Callable;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.util.concurrent.Callable;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -95,14 +97,27 @@ public abstract class BaseContentPageEditorTransactionalMVCActionCommand
 
 		String errorMessage = "an-unexpected-error-occurred";
 
-		if (exception instanceof FragmentCompositionDescriptionException) {
+		if (exception instanceof FormContainerParentItemRequiredException) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			errorMessage = LanguageUtil.get(
+				themeDisplay.getLocale(),
+				"this-form-component-can-only-be-placed-inside-a-mapped-form-" +
+					"container");
+		}
+		else if (exception instanceof FragmentCompositionDescriptionException) {
 			errorMessage =
 				"please-enter-a-valid-fragment-composition-description";
 		}
 		else if (exception instanceof FragmentCompositionNameException) {
 			errorMessage = "please-enter-a-valid-fragment-composition-name";
 		}
-		else if (exception instanceof PortletIdException) {
+		else if ((exception instanceof NoninstanceablePortletException) ||
+				 (exception.getCause() instanceof
+					 NoninstanceablePortletException) ||
+				 (exception instanceof PortletIdException)) {
+
 			errorMessage =
 				"noninstanceable-widgets-can-be-embedded-only-once-on-the-" +
 					"same-page";

@@ -45,34 +45,21 @@ public class GroupLocalServiceWrapper
 
 	@Override
 	public Group addGroup(
-			long userId, long parentGroupId, String className, long classPK,
-			long liveGroupId, java.util.Map<java.util.Locale, String> nameMap,
+			String externalReferenceCode, long userId, long parentGroupId,
+			String className, long classPK, long liveGroupId,
+			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> descriptionMap, int type,
-			boolean manualMembership, int membershipRestriction,
-			String friendlyURL, boolean site, boolean inheritContent,
-			boolean active, ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _groupLocalService.addGroup(
-			userId, parentGroupId, className, classPK, liveGroupId, nameMap,
-			descriptionMap, type, manualMembership, membershipRestriction,
-			friendlyURL, site, inheritContent, active, serviceContext);
-	}
-
-	@Override
-	public Group addGroup(
-			long userId, long parentGroupId, String className, long classPK,
-			long liveGroupId, java.util.Map<java.util.Locale, String> nameMap,
-			java.util.Map<java.util.Locale, String> descriptionMap, int type,
-			boolean manualMembership, int membershipRestriction,
-			String friendlyURL, boolean site, boolean active,
+			String typeSettings, boolean manualMembership,
+			int membershipRestriction, String friendlyURL, boolean site,
+			boolean inheritContent, boolean active,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _groupLocalService.addGroup(
-			userId, parentGroupId, className, classPK, liveGroupId, nameMap,
-			descriptionMap, type, manualMembership, membershipRestriction,
-			friendlyURL, site, active, serviceContext);
+			externalReferenceCode, userId, parentGroupId, className, classPK,
+			liveGroupId, nameMap, descriptionMap, type, typeSettings,
+			manualMembership, membershipRestriction, friendlyURL, site,
+			inheritContent, active, serviceContext);
 	}
 
 	@Override
@@ -176,20 +163,6 @@ public class GroupLocalServiceWrapper
 	@Override
 	public boolean addUserGroups(long userId, long[] groupIds) {
 		return _groupLocalService.addUserGroups(userId, groupIds);
-	}
-
-	/**
-	 * Adds a company group if it does not exist. This method is typically used
-	 * when a virtual host is added.
-	 *
-	 * @param companyId the primary key of the company
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	public void checkCompanyGroup(long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_groupLocalService.checkCompanyGroup(companyId);
 	}
 
 	@Override
@@ -1350,20 +1323,6 @@ public class GroupLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the staging group.
-	 *
-	 * @param liveGroupId the primary key of the live group
-	 * @return the staging group
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	public Group getStagingGroup(long liveGroupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _groupLocalService.getStagingGroup(liveGroupId);
-	}
-
-	/**
 	 * Returns the group directly associated with the user.
 	 *
 	 * @param companyId the primary key of the company
@@ -1642,18 +1601,6 @@ public class GroupLocalServiceWrapper
 	@Override
 	public boolean hasRoleGroups(long roleId) {
 		return _groupLocalService.hasRoleGroups(roleId);
-	}
-
-	/**
-	 * Returns <code>true</code> if the live group has a staging group.
-	 *
-	 * @param liveGroupId the primary key of the live group
-	 * @return <code>true</code> if the live group has a staging group;
-	 <code>false</code> otherwise
-	 */
-	@Override
-	public boolean hasStagingGroup(long liveGroupId) {
-		return _groupLocalService.hasStagingGroup(liveGroupId);
 	}
 
 	@Override
@@ -2829,13 +2776,14 @@ public class GroupLocalServiceWrapper
 			long groupId, long parentGroupId,
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> descriptionMap, int type,
-			boolean manualMembership, int membershipRestriction,
-			String friendlyURL, boolean inheritContent, boolean active,
+			String typeSettings, boolean manualMembership,
+			int membershipRestriction, String friendlyURL,
+			boolean inheritContent, boolean active,
 			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _groupLocalService.updateGroup(
-			groupId, parentGroupId, nameMap, descriptionMap, type,
+			groupId, parentGroupId, nameMap, descriptionMap, type, typeSettings,
 			manualMembership, membershipRestriction, friendlyURL,
 			inheritContent, active, serviceContext);
 	}

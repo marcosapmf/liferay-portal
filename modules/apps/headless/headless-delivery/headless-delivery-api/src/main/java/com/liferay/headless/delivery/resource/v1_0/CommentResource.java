@@ -7,8 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.portal.kernel.change.tracking.CTAware;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -22,18 +20,18 @@ import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTa
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -50,61 +48,9 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CommentResource {
 
-	public Page<Comment> getBlogPostingCommentsPage(
-			Long blogPostingId, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postBlogPostingCommentsPageExportBatch(
-			Long blogPostingId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public Comment postBlogPostingComment(Long blogPostingId, Comment comment)
-		throws Exception;
-
-	public Response postBlogPostingCommentBatch(
-			Long blogPostingId, String callbackURL, Object object)
-		throws Exception;
-
 	public void deleteComment(Long commentId) throws Exception;
 
 	public Response deleteCommentBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Comment getComment(Long commentId) throws Exception;
-
-	public Comment putComment(Long commentId, Comment comment) throws Exception;
-
-	public Response putCommentBatch(String callbackURL, Object object)
-		throws Exception;
-
-	public Page<Comment> getCommentCommentsPage(
-			Long parentCommentId, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Comment postCommentComment(Long parentCommentId, Comment comment)
-		throws Exception;
-
-	public Page<Comment> getDocumentCommentsPage(
-			Long documentId, String search,
-			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
-		throws Exception;
-
-	public Response postDocumentCommentsPageExportBatch(
-			Long documentId, String search, Filter filter, Sort[] sorts,
-			String callbackURL, String contentType, String fieldNames)
-		throws Exception;
-
-	public Comment postDocumentComment(Long documentId, Comment comment)
-		throws Exception;
-
-	public Response postDocumentCommentBatch(
-			Long documentId, String callbackURL, Object object)
 		throws Exception;
 
 	public void
@@ -113,21 +59,53 @@ public interface CommentResource {
 				String externalReferenceCode)
 		throws Exception;
 
-	public Comment
-			getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String blogPostingExternalReferenceCode,
-				String externalReferenceCode)
-		throws Exception;
-
-	public Comment
-			putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String blogPostingExternalReferenceCode,
-				String externalReferenceCode, Comment comment)
-		throws Exception;
-
 	public void
 			deleteSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
 				Long siteId, String parentCommentExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception;
+
+	public void
+			deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String documentExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception;
+
+	public void
+			deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String structuredContentExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception;
+
+	public Page<Comment> getBlogPostingCommentsPage(
+			Long blogPostingId, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Comment getComment(Long commentId) throws Exception;
+
+	public Page<Comment> getCommentCommentsPage(
+			Long parentCommentId, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Page<Comment> getDocumentCommentsPage(
+			Long documentId, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws Exception;
+
+	public Comment
+			getSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String blogPostingExternalReferenceCode,
 				String externalReferenceCode)
 		throws Exception;
 
@@ -138,32 +116,8 @@ public interface CommentResource {
 		throws Exception;
 
 	public Comment
-			putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String parentCommentExternalReferenceCode,
-				String externalReferenceCode, Comment comment)
-		throws Exception;
-
-	public void
-			deleteSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String documentExternalReferenceCode,
-				String externalReferenceCode)
-		throws Exception;
-
-	public Comment
 			getSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
 				Long siteId, String documentExternalReferenceCode,
-				String externalReferenceCode)
-		throws Exception;
-
-	public Comment
-			putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String documentExternalReferenceCode,
-				String externalReferenceCode, Comment comment)
-		throws Exception;
-
-	public void
-			deleteSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String structuredContentExternalReferenceCode,
 				String externalReferenceCode)
 		throws Exception;
 
@@ -173,22 +127,43 @@ public interface CommentResource {
 				String externalReferenceCode)
 		throws Exception;
 
-	public Comment
-			putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
-				Long siteId, String structuredContentExternalReferenceCode,
-				String externalReferenceCode, Comment comment)
-		throws Exception;
-
 	public Page<Comment> getStructuredContentCommentsPage(
 			Long structuredContentId, String search,
 			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			Pagination pagination,
+			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws Exception;
 
-	public Response postStructuredContentCommentsPageExportBatch(
-			Long structuredContentId, String search, Filter filter,
-			Sort[] sorts, String callbackURL, String contentType,
-			String fieldNames)
+	public Comment postBlogPostingComment(Long blogPostingId, Comment comment)
+		throws Exception;
+
+	public Response postBlogPostingCommentBatch(
+			Long blogPostingId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postBlogPostingCommentsPageExportBatch(
+			Long blogPostingId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Comment postCommentComment(Long parentCommentId, Comment comment)
+		throws Exception;
+
+	public Comment postDocumentComment(Long documentId, Comment comment)
+		throws Exception;
+
+	public Response postDocumentCommentBatch(
+			Long documentId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postDocumentCommentsPageExportBatch(
+			Long documentId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
 		throws Exception;
 
 	public Comment postStructuredContentComment(
@@ -197,6 +172,42 @@ public interface CommentResource {
 
 	public Response postStructuredContentCommentBatch(
 			Long structuredContentId, String callbackURL, Object object)
+		throws Exception;
+
+	public Response postStructuredContentCommentsPageExportBatch(
+			Long structuredContentId, String search,
+			com.liferay.portal.kernel.search.filter.Filter filter,
+			com.liferay.portal.kernel.search.Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
+	public Comment putComment(Long commentId, Comment comment) throws Exception;
+
+	public Response putCommentBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Comment
+			putSiteBlogPostingByExternalReferenceCodeBlogPostingExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String blogPostingExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
+		throws Exception;
+
+	public Comment
+			putSiteCommentByExternalReferenceCodeParentCommentExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String parentCommentExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
+		throws Exception;
+
+	public Comment
+			putSiteDocumentByExternalReferenceCodeDocumentExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String documentExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
+		throws Exception;
+
+	public Comment
+			putSiteStructuredContentByExternalReferenceCodeStructuredContentExternalReferenceCodeCommentByExternalReferenceCode(
+				Long siteId, String structuredContentExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -221,7 +232,8 @@ public interface CommentResource {
 		com.liferay.portal.kernel.model.User contextUser);
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert);
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert);
 
 	public void setFilterParserProvider(
 		FilterParserProvider filterParserProvider);
@@ -246,19 +258,23 @@ public interface CommentResource {
 		VulcanBatchEngineImportTaskResource
 			vulcanBatchEngineImportTaskResource);
 
-	public default Filter toFilter(String filterString) {
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
+		String filterString) {
+
 		return toFilter(
 			filterString, Collections.<String, List<String>>emptyMap());
 	}
 
-	public default Filter toFilter(
+	public default com.liferay.portal.kernel.search.filter.Filter toFilter(
 		String filterString, Map<String, List<String>> multivaluedMap) {
 
 		return null;
 	}
 
-	public default Sort[] toSorts(String sortsString) {
-		return new Sort[0];
+	public default com.liferay.portal.kernel.search.Sort[] toSorts(
+		String sortsString) {
+
+		return new com.liferay.portal.kernel.search.Sort[0];
 	}
 
 	@ProviderType

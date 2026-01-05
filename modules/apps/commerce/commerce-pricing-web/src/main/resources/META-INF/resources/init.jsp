@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -24,6 +24,7 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.commerce.constants.CommercePriceConstants" %><%@
 page import="com.liferay.commerce.currency.model.CommerceCurrency" %><%@
 page import="com.liferay.commerce.discount.constants.CommerceDiscountConstants" %><%@
+page import="com.liferay.commerce.discount.exception.CommerceDiscountAmountException" %><%@
 page import="com.liferay.commerce.discount.exception.CommerceDiscountCouponCodeException" %><%@
 page import="com.liferay.commerce.discount.exception.CommerceDiscountExpirationDateException" %><%@
 page import="com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException" %><%@
@@ -37,19 +38,25 @@ page import="com.liferay.commerce.discount.rule.type.CommerceDiscountRuleType" %
 page import="com.liferay.commerce.discount.rule.type.CommerceDiscountRuleTypeJSPContributor" %><%@
 page import="com.liferay.commerce.discount.target.CommerceDiscountTarget" %><%@
 page import="com.liferay.commerce.price.list.constants.CommercePriceListConstants" %><%@
+page import="com.liferay.commerce.price.list.exception.CommercePriceEntryPriceException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommercePriceListCurrencyException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommercePriceListExpirationDateException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommercePriceListMaxPriceValueException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommercePriceListMinPriceValueException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommercePriceListParentPriceListGroupIdException" %><%@
 page import="com.liferay.commerce.price.list.exception.CommerceTierPriceEntryMinQuantityException" %><%@
+page import="com.liferay.commerce.price.list.exception.CommerceTierPriceEntryPriceException" %><%@
+page import="com.liferay.commerce.price.list.exception.CommerceTierPriceEntryQuantityException" %><%@
 page import="com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryException" %><%@
+page import="com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.price.list.exception.DuplicateCommercePriceListExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.price.list.exception.DuplicateCommerceTierPriceEntryException" %><%@
+page import="com.liferay.commerce.price.list.exception.DuplicateCommerceTierPriceEntryExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.price.list.model.CommercePriceEntry" %><%@
 page import="com.liferay.commerce.price.list.model.CommercePriceList" %><%@
 page import="com.liferay.commerce.price.list.model.CommerceTierPriceEntry" %><%@
 page import="com.liferay.commerce.pricing.constants.CommercePriceModifierConstants" %><%@
+page import="com.liferay.commerce.pricing.exception.CommercePriceModifierAmountException" %><%@
 page import="com.liferay.commerce.pricing.exception.CommercePriceModifierExpirationDateException" %><%@
 page import="com.liferay.commerce.pricing.exception.DuplicateCommercePricingClassExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.pricing.exception.NoSuchPricingClassException" %><%@
@@ -98,6 +105,7 @@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
+page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
@@ -105,13 +113,13 @@ page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.taglib.servlet.PipingServletResponseFactory" %><%@
 page import="com.liferay.taglib.util.CustomAttributesUtil" %>
 
+<%@ page import="jakarta.portlet.PortletURL" %>
+
 <%@ page import="java.math.BigDecimal" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Locale" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

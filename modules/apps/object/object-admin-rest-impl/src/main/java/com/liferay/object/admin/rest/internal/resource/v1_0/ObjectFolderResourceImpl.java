@@ -37,9 +37,15 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.PermissionService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -142,7 +148,7 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 		com.liferay.object.model.ObjectFolder serviceBuilderObjectFolder =
 			_objectFolderService.addObjectFolder(
 				objectFolder.getExternalReferenceCode(),
-				LocalizedMapUtil.getLocalizedMap(objectFolder.getLabel()),
+				LocalizedMapUtil.populateLocalizedMap(objectFolder.getLabel()),
 				objectFolder.getName());
 
 		_addObjectFolderResources(
@@ -162,7 +168,7 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 		com.liferay.object.model.ObjectFolder serviceBuilderObjectFolder =
 			_objectFolderService.updateObjectFolder(
 				objectFolder.getExternalReferenceCode(), objectFolderId,
-				LocalizedMapUtil.getLocalizedMap(objectFolder.getLabel()));
+				LocalizedMapUtil.populateLocalizedMap(objectFolder.getLabel()));
 
 		_addObjectFolderResources(
 			objectFolder.getExternalReferenceCode(), objectFolderId,
@@ -442,6 +448,7 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 						}
 
 						return ObjectDefinitionUtil.toObjectDefinition(
+							_groupLocalService,
 							contextAcceptLanguage.getPreferredLocale(),
 							_notificationTemplateLocalService,
 							_objectActionLocalService,
@@ -453,8 +460,12 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 							_objectValidationRuleDTOConverter,
 							_objectValidationRuleLocalService,
 							_objectViewDTOConverter, _objectViewLocalService,
+							_permissionService, _portal,
+							_resourceActionLocalService,
 							serviceBuilderObjectDefinition,
-							_systemObjectDefinitionManagerRegistry);
+							_systemObjectDefinitionManagerRegistry, contextUser,
+							_userLocalService,
+							_workflowDefinitionLinkLocalService);
 					});
 				setObjectDefinitionExternalReferenceCode(
 					serviceBuilderObjectDefinition::getExternalReferenceCode);
@@ -466,6 +477,9 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectFolderResourceImpl.class);
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private NotificationTemplateLocalService _notificationTemplateLocalService;
@@ -527,7 +541,23 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 	private ObjectViewLocalService _objectViewLocalService;
 
 	@Reference
+	private PermissionService _permissionService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
 	private SystemObjectDefinitionManagerRegistry
 		_systemObjectDefinitionManagerRegistry;
+
+	@Reference
+	private UserLocalService _userLocalService;
+
+	@Reference
+	private WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
 
 }

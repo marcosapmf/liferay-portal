@@ -11,16 +11,9 @@ export default function ({namespace}) {
 		'change',
 		'input[type="checkbox"]',
 		(event) => {
-			const target = document.querySelector(
-				`input[type='hidden'][name='${event.delegateTarget.id}']`
+			const consentRenewalPeriod = document.querySelector(
+				`input[type='number'][name='${namespace}consentRenewalPeriod']`
 			);
-
-			if (event.delegateTarget.checked) {
-				target.setAttribute('disabled', '');
-			}
-			else {
-				target.removeAttribute('disabled');
-			}
 
 			const explicitConsentMode = document.querySelector(
 				`input[type='checkbox'][name='${namespace}explicitConsentMode']`
@@ -28,11 +21,21 @@ export default function ({namespace}) {
 
 			if (event.delegateTarget.id === `${namespace}enabled`) {
 				if (event.delegateTarget.checked) {
+					if (Liferay.FeatureFlags['LPD-65277']) {
+						consentRenewalPeriod.removeAttribute('disabled');
+						consentRenewalPeriod.required = true;
+					}
+
 					explicitConsentMode.removeAttribute('disabled');
 				}
 				else {
-					explicitConsentMode.checked = true;
+					if (Liferay.FeatureFlags['LPD-65277']) {
+						consentRenewalPeriod.required = false;
+						consentRenewalPeriod.setAttribute('disabled', '');
+						consentRenewalPeriod.value = 12;
+					}
 
+					explicitConsentMode.checked = true;
 					explicitConsentMode.setAttribute('disabled', '');
 				}
 			}

@@ -36,15 +36,15 @@ import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
+		"jakarta.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
 		"mvc.command.name=/navigation_menu/add_multiple_display_page_type_site_navigation_menu_item"
 	},
 	service = MVCActionCommand.class
@@ -129,6 +129,7 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 						infoItemReferences.get(i);
 
 					_addSiteNavigationMenuItem(
+						themeDisplay.getCompanyId(),
 						themeDisplay.getScopeGroupId(), infoItemReference,
 						jsonObjects, order + i, parentSiteNavigationMenuItemId,
 						serviceContext, siteNavigationMenuId,
@@ -194,7 +195,7 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 	}
 
 	private void _addSiteNavigationMenuItem(
-			long groupId, InfoItemReference infoItemReference,
+			long companyId, long groupId, InfoItemReference infoItemReference,
 			Map<Long, JSONObject> jsonObjects, int order,
 			long parentSiteNavigationMenuItemId, ServiceContext serviceContext,
 			long siteNavigationMenuId, String siteNavigationMenuItemType)
@@ -215,11 +216,11 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 				).put(
 					"className", jsonObject.getString("className")
 				).put(
-					"classNameId", jsonObject.getString("classNameId")
+					"externalReferenceCode",
+					jsonObject.getString("externalReferenceCode")
 				).put(
-					"classPK", jsonObject.getString("classPK")
-				).put(
-					"classTypeId", jsonObject.getString("classTypeId")
+					"scopeExternalReferenceCode",
+					jsonObject.getString("scopeExternalReferenceCode")
 				).put(
 					"title", jsonObject.getString("title")
 				).put(
@@ -245,7 +246,8 @@ public class AddMultipleDisplayPageTypeSiteNavigationMenuItemMVCActionCommand
 					getChildrenHierarchicalInfoItemReferences()) {
 
 			_addSiteNavigationMenuItem(
-				groupId, childHierarchicalInfoItemReference, jsonObjects, -1,
+				companyId, groupId, childHierarchicalInfoItemReference,
+				jsonObjects, -1,
 				siteNavigationMenuItem.getSiteNavigationMenuItemId(),
 				serviceContext, siteNavigationMenuId,
 				siteNavigationMenuItemType);

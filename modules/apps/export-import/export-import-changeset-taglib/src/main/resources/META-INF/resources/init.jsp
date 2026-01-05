@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -27,8 +27,8 @@ page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.JavaConstants" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %>
 
-<%@ page import="javax.portlet.PortletRequest" %><%@
-page import="javax.portlet.PortletResponse" %>
+<%@ page import="jakarta.portlet.PortletRequest" %><%@
+page import="jakarta.portlet.PortletResponse" %>
 
 <liferay-frontend:defineObjects />
 
@@ -39,9 +39,9 @@ page import="javax.portlet.PortletResponse" %>
 <portlet:defineObjects />
 
 <%
-PortletRequest portletRequest = (PortletRequest)request.getAttribute(JavaConstants.JAVAX_PORTLET_REQUEST);
+PortletRequest portletRequest = (PortletRequest)request.getAttribute(JavaConstants.JAKARTA_PORTLET_REQUEST);
 
-PortletResponse portletResponse = (PortletResponse)request.getAttribute(JavaConstants.JAVAX_PORTLET_RESPONSE);
+PortletResponse portletResponse = (PortletResponse)request.getAttribute(JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 if ((portletRequest == null) || (portletResponse == null)) {
 	currentURL = PortalUtil.getCurrentURL(request);

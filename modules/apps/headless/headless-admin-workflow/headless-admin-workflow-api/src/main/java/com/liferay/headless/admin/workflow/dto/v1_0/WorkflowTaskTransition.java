@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -51,7 +49,7 @@ public class WorkflowTaskTransition implements Serializable {
 			WorkflowTaskTransition.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Transition[] getTransitions() {
 		if (_transitionsSupplier != null) {
@@ -93,7 +91,7 @@ public class WorkflowTaskTransition implements Serializable {
 	@JsonIgnore
 	private Supplier<Transition[]> _transitionsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getWorkflowDefinitionVersion() {
 		if (_workflowDefinitionVersionSupplier != null) {
 			workflowDefinitionVersion =
@@ -136,7 +134,7 @@ public class WorkflowTaskTransition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _workflowDefinitionVersionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getWorkflowTaskLabel() {
 		if (_workflowTaskLabelSupplier != null) {
 			workflowTaskLabel = _workflowTaskLabelSupplier.get();
@@ -177,7 +175,7 @@ public class WorkflowTaskTransition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _workflowTaskLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getWorkflowTaskName() {
 		if (_workflowTaskNameSupplier != null) {
 			workflowTaskName = _workflowTaskNameSupplier.get();
@@ -321,8 +319,8 @@ public class WorkflowTaskTransition implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskTransition",
 		name = "x-class-name"
 	)

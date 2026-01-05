@@ -15,12 +15,12 @@ import com.liferay.bookmarks.util.comparator.EntryModifiedDateComparator;
 import com.liferay.bookmarks.util.comparator.EntryNameComparator;
 import com.liferay.bookmarks.util.comparator.EntryPriorityComparator;
 import com.liferay.bookmarks.util.comparator.EntryURLComparator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -33,16 +33,15 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -192,40 +191,40 @@ public class BookmarksUtil {
 	}
 
 	public static List<Object> getEntries(Hits hits) {
-		List<Object> entries = new ArrayList<>();
+		return TransformUtil.transformToList(
+			hits.getDocs(),
+			document -> {
+				String entryClassName = document.get(Field.ENTRY_CLASS_NAME);
+				long entryClassPK = GetterUtil.getLong(
+					document.get(Field.ENTRY_CLASS_PK));
 
-		for (Document document : hits.getDocs()) {
-			String entryClassName = document.get(Field.ENTRY_CLASS_NAME);
-			long entryClassPK = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
+				try {
+					Object object = null;
 
-			try {
-				Object object = null;
+					if (entryClassName.equals(BookmarksEntry.class.getName())) {
+						object = BookmarksEntryLocalServiceUtil.getEntry(
+							entryClassPK);
+					}
+					else if (entryClassName.equals(
+								BookmarksFolder.class.getName())) {
 
-				if (entryClassName.equals(BookmarksEntry.class.getName())) {
-					object = BookmarksEntryLocalServiceUtil.getEntry(
-						entryClassPK);
+						object = BookmarksFolderLocalServiceUtil.getFolder(
+							entryClassPK);
+					}
+
+					return object;
 				}
-				else if (entryClassName.equals(
-							BookmarksFolder.class.getName())) {
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Bookmarks search index is stale and contains " +
+								"entry " + entryClassPK,
+							exception);
+					}
 
-					object = BookmarksFolderLocalServiceUtil.getFolder(
-						entryClassPK);
+					return null;
 				}
-
-				entries.add(object);
-			}
-			catch (Exception exception) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Bookmarks search index is stale and contains entry " +
-							entryClassPK,
-						exception);
-				}
-			}
-		}
-
-		return entries;
+			});
 	}
 
 	public static OrderByComparator<BookmarksEntry> getEntryOrderByComparator(
@@ -240,19 +239,20 @@ public class BookmarksUtil {
 		OrderByComparator<BookmarksEntry> orderByComparator = null;
 
 		if (orderByCol.equals("create-date")) {
-			orderByComparator = new EntryCreateDateComparator(orderByAsc);
+			orderByComparator = EntryCreateDateComparator.getInstance(
+				orderByAsc);
 		}
 		else if (orderByCol.equals("modified-date")) {
 			orderByComparator = new EntryModifiedDateComparator(orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
-			orderByComparator = new EntryNameComparator(orderByAsc);
+			orderByComparator = EntryNameComparator.getInstance(orderByAsc);
 		}
 		else if (orderByCol.equals("priority")) {
-			orderByComparator = new EntryPriorityComparator(orderByAsc);
+			orderByComparator = EntryPriorityComparator.getInstance(orderByAsc);
 		}
 		else if (orderByCol.equals("url")) {
-			orderByComparator = new EntryURLComparator(orderByAsc);
+			orderByComparator = EntryURLComparator.getInstance(orderByAsc);
 		}
 
 		return orderByComparator;

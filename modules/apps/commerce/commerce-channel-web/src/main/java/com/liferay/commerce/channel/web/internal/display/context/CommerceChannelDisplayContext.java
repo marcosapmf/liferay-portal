@@ -11,6 +11,7 @@ import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.channel.web.internal.display.context.helper.CommerceChannelRequestHelper;
 import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
+import com.liferay.commerce.configuration.CommerceOrderConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
 import com.liferay.commerce.configuration.CommerceOrderImporterDateFormatConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
@@ -36,14 +37,13 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
+import com.liferay.marketplace.constants.MarketplaceActionKeys;
+import com.liferay.marketplace.constants.MarketplacePortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.exception.NoSuchWorkflowDefinitionLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -60,6 +60,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -71,15 +72,15 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alec Sloan
@@ -223,14 +224,14 @@ public class CommerceChannelDisplayContext
 	}
 
 	public CommerceChannel getCommerceChannel() throws PortalException {
-		long commerceChannelId = ParamUtil.getLong(
-			httpServletRequest, "commerceChannelId");
-
-		if (commerceChannelId == 0) {
-			return null;
+		if (_commerceChannel != null) {
+			return _commerceChannel;
 		}
 
-		return _commerceChannelService.fetchCommerceChannel(commerceChannelId);
+		_commerceChannel = _commerceChannelService.getCommerceChannel(
+			ParamUtil.getLong(httpServletRequest, "commerceChannelId"));
+
+		return _commerceChannel;
 	}
 
 	public long getCommerceChannelId() throws PortalException {
@@ -326,6 +327,19 @@ public class CommerceChannelDisplayContext
 				fileItemSelectorCriterion));
 	}
 
+	public String getOpenOrdersVisibilityScope() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.openOrdersVisibilityScope();
+	}
+
 	public String getOrderImporterDateFormat() throws PortalException {
 		CommerceChannel commerceChannel = getCommerceChannel();
 
@@ -340,6 +354,19 @@ public class CommerceChannelDisplayContext
 
 		return commerceOrderImporterDateFormatConfiguration.
 			orderImporterDateFormat();
+	}
+
+	public String getPlacedOrdersVisibilityScope() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.placedOrdersVisibilityScope();
 	}
 
 	@Override
@@ -396,26 +423,12 @@ public class CommerceChannelDisplayContext
 	public WorkflowDefinitionLink getWorkflowDefinitionLink(long typePK)
 		throws PortalException {
 
-		WorkflowDefinitionLink workflowDefinitionLink = null;
-
 		CommerceChannel commerceChannel = getCommerceChannel();
 
-		try {
-			workflowDefinitionLink =
-				_workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
-					_commerceChannelRequestHelper.getCompanyId(),
-					commerceChannel.getGroupId(), CommerceOrder.class.getName(),
-					0, typePK, true);
-		}
-		catch (NoSuchWorkflowDefinitionLinkException
-					noSuchWorkflowDefinitionLinkException) {
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchWorkflowDefinitionLinkException);
-			}
-		}
-
-		return workflowDefinitionLink;
+		return _workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
+			_commerceChannelRequestHelper.getCompanyId(),
+			commerceChannel.getGroupId(), CommerceOrder.class.getName(), 0,
+			typePK, true);
 	}
 
 	public boolean hasAddChannelPermission() {
@@ -438,6 +451,29 @@ public class CommerceChannelDisplayContext
 		return GroupPermissionUtil.contains(
 			PermissionThreadLocal.getPermissionChecker(),
 			commerceChannel.getSiteGroupId(), ActionKeys.ADD_LAYOUT);
+	}
+
+	public boolean hasAddPaymentMethodsPermission() throws PortalException {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (PortletPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(),
+				MarketplacePortletKeys.PAYMENT_METHODS,
+				MarketplaceActionKeys.PURCHASE_AND_INSTALL_PAID_APPS) ||
+			PortletPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(),
+				MarketplacePortletKeys.PAYMENT_METHODS,
+				MarketplaceActionKeys.INSTALL_FREE_BUNDLED_APPS)) {
+
+			return true;
+		}
+
+		return PortletPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(),
+			MarketplacePortletKeys.PAYMENT_METHODS,
+			MarketplaceActionKeys.VIEW_APPS);
 	}
 
 	public boolean hasManageLinkSupplierPermission() {
@@ -526,6 +562,45 @@ public class CommerceChannelDisplayContext
 		return commerceOrderCheckoutConfiguration.hideShippingPriceZero();
 	}
 
+	public boolean isMultishippingEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.multishippingEnabled();
+	}
+
+	public boolean isOrderSelectionDisabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.orderSelectionDisabled();
+	}
+
+	public boolean isQuickCheckoutEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.quickCheckoutEnabled();
+	}
+
 	public boolean isRequestQuoteEnabled() throws PortalException {
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_getCommerceOrderFieldsConfiguration();
@@ -557,6 +632,32 @@ public class CommerceChannelDisplayContext
 					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
 		return commerceOrderCheckoutConfiguration.showSeparateOrderItems();
+	}
+
+	public boolean isSlowConnectionOrderFlowEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.slowConnectionOrderFlowEnabled();
+	}
+
+	public boolean isUndoCartItemDeletionDisabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderConfiguration commerceOrderConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderConfiguration.undoCartItemDeletionDisabled();
 	}
 
 	private CommerceAccountGroupServiceConfiguration
@@ -599,12 +700,10 @@ public class CommerceChannelDisplayContext
 		return _commerceOrderFieldsConfiguration;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		CommerceChannelDisplayContext.class);
-
 	private final AccountEntryService _accountEntryService;
 	private CommerceAccountGroupServiceConfiguration
 		_commerceAccountGroupServiceConfiguration;
+	private CommerceChannel _commerceChannel;
 	private final CommerceChannelHealthStatusRegistry
 		_commerceChannelHealthStatusRegistry;
 	private final ModelResourcePermission<CommerceChannel>

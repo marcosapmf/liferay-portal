@@ -33,13 +33,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.mail.MailMessage;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -69,7 +68,6 @@ public class InviteUsersMVCResourceCommandTest {
 			0, RandomTestUtil.randomString(), null);
 	}
 
-	@FeatureFlags("LPD-11212")
 	@Test
 	public void testGetInviteUsersEmailNotificationBody() throws Exception {
 		_testGetInviteUsers(_ctCollection);
@@ -97,11 +95,10 @@ public class InviteUsersMVCResourceCommandTest {
 				StringBundler.concat(
 					"You have been invited to work on a publication. For ",
 					"further information, please visit:<br /><br />\n<a href=",
-					"\"", url, "\">", _ctCollection.getName(), "</a><br />",
-					"<br />")));
+					"\"", url, "\">", _ctCollection.getName(), "</a><br /><br ",
+					"/>")));
 	}
 
-	@FeatureFlags("LPD-11212")
 	@Test
 	public void testGetInviteUsersWithCustomEmailFromAddressAndEmailFromName()
 		throws Exception {
@@ -134,7 +131,6 @@ public class InviteUsersMVCResourceCommandTest {
 		}
 	}
 
-	@FeatureFlags("LPD-11212")
 	@Test
 	public void testGetInviteUsersWithCustomInvitationEmailBodyAndInvitationEmailSubject()
 		throws Exception {
@@ -175,7 +171,7 @@ public class InviteUsersMVCResourceCommandTest {
 			new MockLiferayResourceRequest();
 
 		mockLiferayResourceRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 		mockLiferayResourceRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay());
 		mockLiferayResourceRequest.setParameter(

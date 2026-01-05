@@ -165,7 +165,7 @@
 </tr>
 <tr>
 	<td>FACET_ITEMS_SPECIFIC_ORDER</td>
-	<td>xpath=(//header[contains(., '${key_facetName}')]/following-sibling::div//div[contains(@class, 'panel-body')]//span[not(descendant::span)])[${key_termOrderNumber}]</td>
+	<td>xpath=(//header[contains(., '${key_facetName}')]/following-sibling::div//div[contains(@class, 'panel-body')]//span[not(descendant::span) and not(contains(@class,'sr-only'))])[${key_termOrderNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -193,12 +193,12 @@
 </tr>
 <tr>
 	<td>SEARCH_INSIGHTS_WIDGET_REQUEST_QUERY</td>
-	<td>//*[span[contains(., 'Request String')]]/following-sibling::*//div[contains(@class,'CodeMirror cm-s-default')]//span[contains(.,'${key_text}') and not(child::span)]</td>
+	<td>//*[span[contains(., 'Request String')]]/following-sibling::*//div[contains(@class,'CodeMirror cm-s-default')]//span[contains(.,'${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SEARCH_INSIGHTS_WIDGET_RESPONSE_QUERY</td>
-	<td>//*[span[contains(., 'Response String')]]/following-sibling::*//div[contains(@class,'CodeMirror cm-s-default')]//span[contains(.,'${key_text}') and not(child::span)]</td>
+	<td>//*[span[contains(., 'Response String')]]/following-sibling::*//div[contains(@class,'CodeMirror cm-s-default')]//span[contains(.,'${key_text}')]</td>
 	<td></td>
 </tr>
 

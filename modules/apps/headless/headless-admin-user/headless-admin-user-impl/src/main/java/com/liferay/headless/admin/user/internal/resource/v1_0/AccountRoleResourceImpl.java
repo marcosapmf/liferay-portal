@@ -37,9 +37,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Collections;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Collections;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -164,8 +164,8 @@ public class AccountRoleResourceImpl extends BaseAccountRoleResourceImpl {
 		}
 
 		try (SafeCloseable safeCloseable =
-				AccountRolePermissionThreadLocal.setWithSafeCloseable(
-					accountId)) {
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(accountId)) {
 
 			return SearchUtil.search(
 				null,
@@ -251,7 +251,8 @@ public class AccountRoleResourceImpl extends BaseAccountRoleResourceImpl {
 
 		return _toAccountRole(
 			_accountRoleLocalService.addAccountRole(
-				null, contextUser.getUserId(), accountId, accountRole.getName(),
+				accountRole.getExternalReferenceCode(), contextUser.getUserId(),
+				accountId, accountRole.getName(),
 				Collections.singletonMap(
 					contextAcceptLanguage.getPreferredLocale(),
 					accountRole.getDisplayName()),
@@ -382,6 +383,9 @@ public class AccountRoleResourceImpl extends BaseAccountRoleResourceImpl {
 		};
 	}
 
+	private static final EntityModel _entityModel =
+		new AccountRoleEntityModel();
+
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
 
@@ -390,8 +394,6 @@ public class AccountRoleResourceImpl extends BaseAccountRoleResourceImpl {
 
 	@Reference
 	private AccountRoleLocalService _accountRoleLocalService;
-
-	private final EntityModel _entityModel = new AccountRoleEntityModel();
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -5,11 +5,12 @@
 
 package com.liferay.depot.web.internal.portlet.action;
 
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.exception.DepotEntryNameException;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.depot.web.internal.constants.DepotEntryConstants;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.util.DepotEntryURLUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -32,11 +33,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
+		"jakarta.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
 		"mvc.command.name=/depot/add_depot_entry"
 	},
 	service = MVCActionCommand.class
@@ -82,6 +83,7 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 						DepotEntry depotEntry =
 							_depotEntryService.addDepotEntry(
 								nameMap, descriptionMap,
+								DepotConstants.TYPE_ASSET_LIBRARY,
 								ServiceContextFactory.getInstance(
 									DepotEntry.class.getName(), actionRequest));
 

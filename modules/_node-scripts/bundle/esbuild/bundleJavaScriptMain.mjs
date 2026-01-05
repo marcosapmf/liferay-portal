@@ -5,17 +5,20 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import Sonda from 'sonda/esbuild';
 
 import {
 	BUILD_LANGUAGE_JSON_PATH,
 	BUILD_MAIN_EXPORTS_PATH,
+	BUNDLE_REPORTS_PATH,
 } from '../../util/constants.mjs';
 import objectSF from '../../util/objectSF.mjs';
-import getExternals from './getExternals.mjs';
 import getCssLoaderPlugin from './plugins/getCssLoaderPlugin.mjs';
 import getExactAliasPlugin from './plugins/getExactAliasPlugin.mjs';
+import getExternalsPlugin from './plugins/getExternalsPlugin.mjs';
 import getImportBridgesPlugin from './plugins/getImportBridgesPlugin.mjs';
 import getLiferayLanguageGetPlugin from './plugins/getLiferayLanguageGetPlugin.mjs';
+import getRuntimeLinkerPlugin from './plugins/getRuntimeLinkerPlugin.mjs';
 import getScssLoaderPlugin from './plugins/getScssLoaderPlugin.mjs';
 import relocateSourcemap from './relocateSourcemap.mjs';
 import runEsbuild from './runEsbuild.mjs';
@@ -24,20 +27,29 @@ export default async function bundleJavaScriptMain(
 	globalImports,
 	languageJSON,
 	overridenPackageSymbols,
+	projectAlias,
+	projectDescription,
 	projectEntryPoints,
 	projectWebContextPath
 ) {
-	const {main: mainEntryPoint} = projectEntryPoints;
+	const {main: mainEntryPoint, submodules = {}} = projectEntryPoints;
 
 	if (!mainEntryPoint) {
 		return;
 	}
 
 	const esbuildConfig = {
+		alias: projectAlias,
 		bundle: true,
-		entryNames: 'index',
-		entryPoints: [path.resolve(mainEntryPoint)],
-		external: getExternals(globalImports, projectWebContextPath, 'main'),
+		entryNames: '[dir]/[name].([hash])',
+		entryPoints: [
+			...Object.keys(submodules).map((submoduleName) => ({
+				in: path.resolve(submodules[submoduleName]),
+				out: submoduleName,
+			})),
+			{in: path.resolve(mainEntryPoint), out: 'index'},
+		],
+		external: ['ckeditor5'],
 		format: 'esm',
 		loader: {
 			'.js': 'jsx',
@@ -48,21 +60,56 @@ export default async function bundleJavaScriptMain(
 		plugins: [
 			getCssLoaderPlugin(globalImports, 'main'),
 			getExactAliasPlugin(globalImports, 'main'),
+			getExternalsPlugin(),
 			getImportBridgesPlugin(globalImports, overridenPackageSymbols),
 			getLiferayLanguageGetPlugin(projectWebContextPath, languageJSON),
+			getRuntimeLinkerPlugin(
+				mainEntryPoint,
+				projectDescription,
+				submodules
+			),
 			getScssLoaderPlugin(projectWebContextPath),
 		],
 		sourcemap: true,
 		target: ['es2022'],
 	};
 
-	await runEsbuild(esbuildConfig, 'main');
+	if (process.env.CREATE_BUNDLE_REPORTS) {
+		esbuildConfig.plugins.push(
+			Sonda({
+				brotli: false,
+				detailed: false,
+				enabled: true,
+				filename: path.join(BUNDLE_REPORTS_PATH, `index.js.html`),
+				format: 'html',
+				gzip: true,
+				open: false,
+				sources: false,
+			}),
+			Sonda({
+				brotli: false,
+				detailed: false,
+				enabled: true,
+				filename: path.join(BUNDLE_REPORTS_PATH, `index.js.json`),
+				format: 'json',
+				gzip: true,
+				open: false,
+			})
+		);
+	}
+
+	const {metafile} = await runEsbuild(esbuildConfig, 'main');
+	const {outputs} = metafile;
 
 	await Promise.all([
-		relocateSourcemap(
-			path.join(BUILD_MAIN_EXPORTS_PATH, 'index.js.map'),
-			projectWebContextPath
-		),
+		...Object.keys(outputs).map(async (output) => {
+			if (output.endsWith('.map')) {
+				return relocateSourcemap(
+					path.join(output),
+					projectWebContextPath
+				);
+			}
+		}),
 		writeLanguageJSON(languageJSON),
 	]);
 }

@@ -30,8 +30,17 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.jackson.databind.deser.JSONStringStdDeserializer;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+import ${configYAML.javaEEPackage}.annotation.Generated;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import ${configYAML.javaEEPackage}.validation.Valid;
+import ${configYAML.javaEEPackage}.validation.constraints.DecimalMax;
+import ${configYAML.javaEEPackage}.validation.constraints.DecimalMin;
+import ${configYAML.javaEEPackage}.validation.constraints.NotEmpty;
+import ${configYAML.javaEEPackage}.validation.constraints.NotNull;
+import ${configYAML.javaEEPackage}.validation.constraints.Size;
+
+import ${configYAML.javaEEPackage}.xml.bind.annotation.XmlElement;
+import ${configYAML.javaEEPackage}.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -42,52 +51,34 @@ import java.text.SimpleDateFormat;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author ${configYAML.author}
  * @generated
  */
 
-<#if schema.oneOfSchemas?has_content>
+<#if schema.discriminator?has_content>
 	@JsonSubTypes(
 		{
-			<#list schema.oneOfSchemas as oneOfSchema>
-				<#assign propertySchemaName = oneOfSchema.propertySchemas?keys[0] />
+			<#list schema.discriminator.mapping as mappingName, mappingSchema>
+				@JsonSubTypes.Type(name = "${mappingName}", value=${freeMarkerTool.getReferenceName(mappingSchema)}.class)
 
-				@JsonSubTypes.Type(name = "${propertySchemaName}", value=${propertySchemaName?cap_first}.class)
-
-				<#if oneOfSchema_has_next>
+				<#if mappingName_has_next>
 					,
 				</#if>
 			</#list>
 		}
 	)
-	@JsonTypeInfo(include = JsonTypeInfo.As.PROPERTY, property = "childType", use = JsonTypeInfo.Id.NAME)
-</#if>
 
-<#assign dtoParentClassName = freeMarkerTool.getDTOParentClassName(openAPIYAML, schemaName)! />
-
-<#if dtoParentClassName?has_content>
 	@JsonTypeInfo(
-		defaultImpl = ${schemaName}.class, include = JsonTypeInfo.As.PROPERTY, property = "childType", use = JsonTypeInfo.Id.NAME
+		include= JsonTypeInfo.As.EXISTING_PROPERTY, property="${schema.discriminator.propertyName}",
+		use= JsonTypeInfo.Id.NAME, visible = true
 	)
 </#if>
 
@@ -101,7 +92,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 )
 @JsonFilter("Liferay.Vulcan")
 <#if schema.requiredPropertySchemaNames?has_content>
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		<#if schema.deprecated>
 			deprecated = ${schema.deprecated?c},
 		</#if>
@@ -119,8 +110,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 		</#if>
 	)
 </#if>
+
 @XmlRootElement(name = "${schemaName}")
-public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoParentClassName}</#if> implements Serializable {
+
+<#assign dtoParentClassName = freeMarkerTool.getDTOParentClassName(openAPIYAML, schemaName)! />
+
+public <#if schema.discriminator?has_content>abstract</#if> class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoParentClassName}</#if> implements Serializable {
 
 	public static ${schemaName} toDTO(String json) {
 		return ObjectMapperUtil.readValue(${schemaName}.class, json);
@@ -163,7 +158,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 			@Size(${sizeParameters?join(", ")})
 		</#if>
 
-		@Schema(
+		@io.swagger.v3.oas.annotations.media.Schema(
 			<#if propertySchema.deprecated>
 				deprecated = ${propertySchema.deprecated?c}
 			</#if>
@@ -256,7 +251,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 					return;
 				}
 
-				${propertyType} ${propertyName}Map = new HashMap<>(${propertyName});
+				${propertyType} ${propertyName}Map = new LinkedHashMap<>(${propertyName});
 
 				${propertyName}Map.replaceAll(
 					(key, value) -> {
@@ -348,7 +343,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 		<#if propertySchema.jsonMap>
 			@JsonAnyGetter
-			protected ${propertyType} ${propertyName} = Collections.synchronizedMap(new HashMap<>());
+			protected ${propertyType} ${propertyName} = Collections.synchronizedMap(new LinkedHashMap<>());
 		<#else>
 			protected ${propertyType} ${propertyName};
 
@@ -454,8 +449,22 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 		sb.append("{");
 
-		<#list properties?keys as propertyName>
-			<#assign propertyType = properties[propertyName] />
+		<#assign
+			toStringEnumSchemas = enumSchemas
+			toStringProperties = properties
+		/>
+
+		<#if dtoParentClassName?has_content>
+			<#assign
+				dtoParentSchema = allSchemas[dtoParentClassName]
+
+				toStringEnumSchemas = toStringEnumSchemas + freeMarkerTool.getDTOEnumSchemas(configYAML, openAPIYAML, dtoParentSchema)
+				toStringProperties = toStringProperties + freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, dtoParentSchema, allSchemas)
+			/>
+		</#if>
+
+		<#list toStringProperties?keys as propertyName>
+			<#assign propertyType = toStringProperties[propertyName] />
 
 			<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "Date[]")>
 				DateFormat liferayToJSONDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -464,14 +473,19 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 			</#if>
 		</#list>
 
-		<#list properties?keys as propertyName>
+		<#list toStringProperties?keys as propertyName>
 			<#assign
 				capitalizedPropertyName = propertyName?cap_first
-				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)
-				propertyType = properties[propertyName]
+				propertyType = toStringProperties[propertyName]
+
+				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)!
 			/>
 
-			<#if enumSchemas?keys?seq_contains(propertyType)>
+			<#if dtoParentClassName?has_content && !propertySchema?has_content>
+				<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, dtoParentSchema, allSchemas) />
+			</#if>
+
+			<#if toStringEnumSchemas?keys?seq_contains(propertyType)>
 				<#assign capitalizedPropertyName = propertyType />
 			</#if>
 
@@ -490,7 +504,11 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 				sb.append("\"${key}\": ");
 
-				<#if allSchemas[propertyType]??>
+				<#if toStringEnumSchemas?keys?seq_contains(propertyType)>
+					sb.append("\"");
+					sb.append(${propertyName});
+					sb.append("\"");
+				<#elseif allSchemas[propertyType]??>
 					sb.append(String.valueOf(${propertyName}));
 				<#elseif stringUtil.equals(propertyType, "Object")>
 					if (${propertyName} instanceof Map) {
@@ -509,7 +527,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 						sb.append("[");
 
 						for (int i = 0; i < ${propertyName}.length; i++) {
-							<#if stringUtil.equals(propertyType, "Date[]") || stringUtil.equals(propertyType, "Object[]") || stringUtil.equals(propertyType, "String[]") || enumSchemas?keys?seq_contains(propertyType)>
+							<#if stringUtil.equals(propertyType, "Date[]") || stringUtil.equals(propertyType, "Object[]") || stringUtil.equals(propertyType, "String[]") || toStringEnumSchemas?keys?seq_contains(propertyType)>
 								sb.append("\"");
 
 								<#if stringUtil.equals(propertyType, "Date[]")>
@@ -536,15 +554,13 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 
 						sb.append("]");
 					<#else>
-						<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "String") || enumSchemas?keys?seq_contains(propertyType)>
+						<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "String")>
 							sb.append("\"");
 
 							<#if stringUtil.equals(propertyType, "Date")>
 								sb.append(liferayToJSONDateFormat.format(${propertyName}));
 							<#elseif stringUtil.equals(propertyType, "String")>
 								sb.append(_escape(${propertyName}));
-							<#else>
-								sb.append(${propertyName});
 							</#if>
 
 							sb.append("\"");
@@ -563,7 +579,7 @@ public class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoPare
 		return sb.toString();
 	}
 
-	@Schema(accessMode = Schema.AccessMode.READ_ONLY, defaultValue = "${configYAML.apiPackagePath}.dto.${escapedVersion}.${schemaName}", name = "x-class-name")
+	@io.swagger.v3.oas.annotations.media.Schema(accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY, defaultValue = "${configYAML.apiPackagePath}.dto.${escapedVersion}.${schemaName}", name = "x-class-name")
 	public String xClassName;
 
 	<#list enumSchemas?keys as enumName>

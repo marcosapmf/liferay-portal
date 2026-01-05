@@ -192,9 +192,6 @@ public interface WebKeys {
 
 	public static final String GOOGLE_GADGET = "GOOGLE_GADGET";
 
-	public static final String GOOGLE_INCOMPLETE_USER_ID =
-		"GOOGLE_INCOMPLETE_USER_ID";
-
 	public static final String GROUP = "GROUP";
 
 	public static final String HTTPS_INITIAL = "HTTPS_INITIAL";
@@ -684,6 +681,8 @@ public interface WebKeys {
 	public static final String UPLOAD_EXCEPTION = "UPLOAD_EXCEPTION";
 
 	public static final String USER = "USER";
+
+	public static final String USER_DIGEST = "USER_DIGEST";
 
 	public static final String USER_GROUP = "USER_GROUP";
 

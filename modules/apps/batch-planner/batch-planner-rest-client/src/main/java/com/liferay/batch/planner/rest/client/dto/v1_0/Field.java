@@ -8,11 +8,11 @@ package com.liferay.batch.planner.rest.client.dto.v1_0;
 import com.liferay.batch.planner.rest.client.function.UnsafeSupplier;
 import com.liferay.batch.planner.rest.client.serdes.v1_0.FieldSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Matija Petanjek
@@ -24,6 +24,27 @@ public class Field implements Cloneable, Serializable {
 	public static Field toDTO(String json) {
 		return FieldSerDes.toDTO(json);
 	}
+
+	public String getAnyOfGroup() {
+		return anyOfGroup;
+	}
+
+	public void setAnyOfGroup(String anyOfGroup) {
+		this.anyOfGroup = anyOfGroup;
+	}
+
+	public void setAnyOfGroup(
+		UnsafeSupplier<String, Exception> anyOfGroupUnsafeSupplier) {
+
+		try {
+			anyOfGroup = anyOfGroupUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String anyOfGroup;
 
 	public String getDescription() {
 		return description;

@@ -63,15 +63,15 @@ import com.liferay.portal.kernel.util.PrefsParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marcellus Tavares
@@ -426,10 +426,12 @@ public class DDLDisplayContext {
 	}
 
 	public JSONArray getRecordsJSONArray(
-			List<DDLRecord> records, boolean latestRecordVersion, Locale locale)
+			List<DDLRecord> ddlRecords, boolean latestRecordVersion,
+			Locale locale)
 		throws Exception {
 
-		return _ddl.getRecordsJSONArray(records, latestRecordVersion, locale);
+		return _ddl.getRecordsJSONArray(
+			ddlRecords, latestRecordVersion, locale);
 	}
 
 	public SearchContainer<?> getSearchContainer() {
@@ -585,11 +587,7 @@ public class DDLDisplayContext {
 	}
 
 	public boolean isShowCancelButton() {
-		if (isFormView()) {
-			return false;
-		}
-
-		return true;
+		return !isFormView();
 	}
 
 	public boolean isShowConfigurationIcon() throws PortalException {
@@ -763,11 +761,7 @@ public class DDLDisplayContext {
 	}
 
 	protected boolean isSearch() {
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(getKeywords());
 	}
 
 	private DDMTemplate _fetchDisplayDDMTemplate() {

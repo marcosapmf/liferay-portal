@@ -133,21 +133,21 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 							<portlet:param name="commerceReturnId" value="<%= String.valueOf(commerceReturn.getId()) %>" />
 						</liferay-portlet:renderURL>
 
-						<commerce-ui:modal
-							id="commerce-return-note-modal"
-							refreshPageOnClose="<%= true %>"
-							size="lg"
-							title='<%= LanguageUtil.get(request, "comment") %>'
-							url="<%= editCommerceReturnNoteURL %>"
-						/>
-
 						<%
 						String note = commerceReturn.getNote();
 						%>
 
 						<commerce-ui:info-box
+							actionContext='<%=
+								HashMapBuilder.<String, Object>put(
+									"namespace", liferayPortletResponse.getNamespace()
+								).put(
+									"refreshOnClose", true
+								).put(
+									"size", "lg"
+								).build()
+							%>'
 							actionLabel='<%= LanguageUtil.get(request, Validator.isNull(note) ? "add" : "edit") %>'
-							actionTargetId="commerce-return-note-modal"
 							actionUrl="<%= editCommerceReturnNoteURL %>"
 							elementClasses="py-3"
 							title='<%= LanguageUtil.get(request, "comment") %>'
@@ -179,7 +179,7 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 							"namespace", liferayPortletResponse.getNamespace()
 						).build()
 					%>'
-					apiURL='<%= "/o/commerce-return-items?filter=r_commerceReturnToCommerceReturnItems_c_commerceReturnId eq '" + commerceReturn.getId() + "'&nestedFields=commerceOrderItem" %>'
+					apiURL='<%= "/o/commerce/return-items?filter=r_commerceReturnToCommerceReturnItems_l_commerceReturnId eq '" + commerceReturn.getId() + "'&nestedFields=commerceOrderItem" %>'
 					fdsActionDropdownItems="<%= commerceReturnEditDisplayContext.getCommerceReturnItemFDSActionDropdownItems() %>"
 					id="<%= CommerceReturnFDSNames.RETURN_ITEMS %>"
 					propsTransformer="{commerceReturnItemsPropsTransformer} from commerce-order-web"
@@ -190,7 +190,7 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 
 		<div class="col-12">
 			<commerce-ui:panel
-				title='<%= LanguageUtil.get(request, "refund-summary") %>'
+				title='<%= LanguageUtil.get(request, "return-summary") %>'
 			>
 				<div class="row summary-table text-right">
 					<div class="col-6 col-md-9">
@@ -204,7 +204,15 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 					</div>
 
 					<div class="col-6 col-md-9">
-						<span class="summary-table-item"><liferay-ui:message key="refund-subtotal" /></span>
+						<span class="summary-table-item"><liferay-ui:message key="delivery" /></span>
+					</div>
+
+					<div class="col-6 col-md-3">
+						<span class="summary-table-item"><%= commerceReturnEditDisplayContext.getCommerceOrderShippingAmountFormatted() %></span>
+					</div>
+
+					<div class="col-6 col-md-9">
+						<span class="summary-table-item"><liferay-ui:message key="return-subtotal" /></span>
 					</div>
 
 					<div class="col-6 col-md-3">
@@ -216,7 +224,7 @@ CommerceOrder commerceOrder = commerceReturnEditDisplayContext.getCommerceReturn
 					</div>
 
 					<div class="col-6 col-md-9">
-						<div class="h4 my-2 summary-table-item-big"><liferay-ui:message key="total-estimated-refund" /></div>
+						<div class="h4 my-2 summary-table-item-big"><liferay-ui:message key="total-estimated-return" /></div>
 					</div>
 
 					<div class="col-6 col-md-3">

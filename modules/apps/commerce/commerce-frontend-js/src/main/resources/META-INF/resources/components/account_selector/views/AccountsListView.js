@@ -25,6 +25,7 @@ export default function AccountsListView({
 	currentAccount,
 	currentUser,
 	disabled,
+	orderSelectionDisabled,
 	setCurrentView,
 }) {
 	const [modalVisible, setModalVisible] = useState(false);
@@ -61,7 +62,7 @@ export default function AccountsListView({
 					</span>
 				</span>
 
-				{currentAccount && (
+				{!!currentAccount.id && !orderSelectionDisabled && (
 					<ClayButtonWithIcon
 						displayType="unstyled"
 						onClick={() => setCurrentView(VIEWS.ORDERS_LIST)}
@@ -138,7 +139,7 @@ export default function AccountsListView({
 
 			{modalVisible && (
 				<AccountCreationModal
-					accountTypes={accountEntryAllowedTypes}
+					accountEntryAllowedTypes={accountEntryAllowedTypes}
 					closeModal={onClose}
 					commerceChannelId={commerceChannelId}
 					handleAccountChange={changeAccount}

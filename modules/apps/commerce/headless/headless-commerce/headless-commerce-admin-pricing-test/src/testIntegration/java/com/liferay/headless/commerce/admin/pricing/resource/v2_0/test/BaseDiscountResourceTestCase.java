@@ -13,28 +13,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.http.HttpInvoker.HttpResponse;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.Discount;
 import com.liferay.headless.commerce.admin.pricing.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Page;
 import com.liferay.headless.commerce.admin.pricing.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.pricing.client.resource.v2_0.DiscountResource;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.DiscountSerDes;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
@@ -42,12 +56,27 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,13 +85,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -71,6 +98,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Zoltán Takács
@@ -81,12 +111,14 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -100,10 +132,25 @@ public abstract class BaseDiscountResourceTestCase {
 
 		_discountResource.setContextCompany(testCompany);
 
-		DiscountResource.Builder builder = DiscountResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		discountResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		discountResource = DiscountResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +164,32 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Discount discount1 = randomDiscount();
+
+		String json = objectMapper.writeValueAsString(discount1);
+
+		Discount discount2 = DiscountSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(discount1, discount2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Discount discount = randomDiscount();
+
+		String json1 = objectMapper.writeValueAsString(discount);
+		String json2 = DiscountSerDes.toJSON(discount);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +204,6 @@ public abstract class BaseDiscountResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Discount discount1 = randomDiscount();
-
-		String json = objectMapper.writeValueAsString(discount1);
-
-		Discount discount2 = DiscountSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(discount1, discount2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Discount discount = randomDiscount();
-
-		String json1 = objectMapper.writeValueAsString(discount);
-		String json2 = DiscountSerDes.toJSON(discount);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -195,6 +233,714 @@ public abstract class BaseDiscountResourceTestCase {
 		Assert.assertEquals(regex, discount.getLimitationType());
 		Assert.assertEquals(regex, discount.getTarget());
 		Assert.assertEquals(regex, discount.getTitle());
+	}
+
+	@Test
+	public void testDeleteDiscount() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Discount discount = testDeleteDiscount_addDiscount();
+
+		assertHttpResponseStatusCode(
+			204, discountResource.deleteDiscountHttpResponse(discount.getId()));
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount.getId()));
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(0L));
+	}
+
+	protected Discount testDeleteDiscount_addDiscount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDiscount() throws Exception {
+
+		// No namespace
+
+		Discount discount1 = testGraphQLDeleteDiscount_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDiscount",
+						new HashMap<String, Object>() {
+							{
+								put("id", discount1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteDiscount"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"discount",
+					new HashMap<String, Object>() {
+						{
+							put("id", discount1.getId());
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Discount discount2 = testGraphQLDeleteDiscount_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deleteDiscount",
+							new HashMap<String, Object>() {
+								{
+									put("id", discount2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deleteDiscount"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0",
+					new GraphQLField(
+						"discount",
+						new HashMap<String, Object>() {
+							{
+								put("id", discount2.getId());
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Discount testGraphQLDeleteDiscount_addDiscount()
+		throws Exception {
+
+		return testGraphQLDiscount_addDiscount();
+	}
+
+	@Test
+	public void testDeleteDiscountBatch() throws Exception {
+		Discount discount1 = testDeleteDiscountBatch_addDiscount();
+
+		testDeleteDiscountBatch_deleteDiscount(
+			202, discount1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+
+		discount1 = testDeleteDiscountBatch_addDiscount();
+
+		testDeleteDiscountBatch_deleteDiscount(202, null, discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+
+		discount1 = testDeleteDiscountBatch_addDiscount();
+		Discount discount2 = testDeleteDiscountBatch_addDiscount();
+
+		testDeleteDiscountBatch_deleteDiscount(
+			202, discount2.getExternalReferenceCode(), discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+		assertHttpResponseStatusCode(
+			200, discountResource.getDiscountHttpResponse(discount2.getId()));
+
+		testDeleteDiscountBatch_deleteDiscount(
+			202, discount2.getExternalReferenceCode(), discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount2.getId()));
+	}
+
+	protected Discount testDeleteDiscountBatch_addDiscount() throws Exception {
+		return testDeleteDiscount_addDiscount();
+	}
+
+	protected void testDeleteDiscountBatch_deleteDiscount(
+			int expectedStatusCode, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			discountResource.deleteDiscountBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		waitForFinish(
+			"COMPLETED",
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testDeleteDiscountByExternalReferenceCode() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Discount discount =
+			testDeleteDiscountByExternalReferenceCode_addDiscount();
+
+		assertHttpResponseStatusCode(
+			204,
+			discountResource.deleteDiscountByExternalReferenceCodeHttpResponse(
+				discount.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			discountResource.getDiscountByExternalReferenceCodeHttpResponse(
+				discount.getExternalReferenceCode()));
+		assertHttpResponseStatusCode(
+			404,
+			discountResource.getDiscountByExternalReferenceCodeHttpResponse(
+				"-"));
+	}
+
+	protected Discount testDeleteDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteDiscountByExternalReferenceCode()
+		throws Exception {
+
+		// No namespace
+
+		Discount discount1 =
+			testGraphQLDeleteDiscountByExternalReferenceCode_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDiscountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										discount1.getExternalReferenceCode() +
+											"\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteDiscountByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"discountByExternalReferenceCode",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"externalReferenceCode",
+								"\"" + discount1.getExternalReferenceCode() +
+									"\"");
+						}
+					},
+					getGraphQLFields())),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Discount discount2 =
+			testGraphQLDeleteDiscountByExternalReferenceCode_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"deleteDiscountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										"\"" +
+											discount2.
+												getExternalReferenceCode() +
+													"\"");
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v2_0",
+				"Object/deleteDiscountByExternalReferenceCode"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v2_0",
+					new GraphQLField(
+						"discountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										discount2.getExternalReferenceCode() +
+											"\"");
+							}
+						},
+						getGraphQLFields()))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected Discount
+			testGraphQLDeleteDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
+		return testGraphQLDiscount_addDiscount();
+	}
+
+	@Test
+	public void testGetDiscount() throws Exception {
+		Discount postDiscount = testGetDiscount_addDiscount();
+
+		Discount getDiscount = discountResource.getDiscount(
+			postDiscount.getId());
+
+		assertEquals(postDiscount, getDiscount);
+		assertValid(getDiscount);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		Discount postDiscount = testGetDiscount_addDiscount();
+
+		Discount getDiscount = discountResource.getDiscount(
+			postDiscount.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(postDiscount.getId());
+
+		assertEquals(getDiscount, DiscountSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected Discount testGetDiscount_addDiscount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetDiscount() throws Exception {
+		Discount discount = testGraphQLGetDiscount_addDiscount();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"discount",
+								new HashMap<String, Object>() {
+									{
+										put("id", discount.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/discount"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"discount",
+									new HashMap<String, Object>() {
+										{
+											put("id", discount.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/discount"))));
+	}
+
+	@Test
+	public void testGraphQLGetDiscountNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"discount",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"discount",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Discount testGraphQLGetDiscount_addDiscount() throws Exception {
+		return testGraphQLDiscount_addDiscount();
+	}
+
+	@Test
+	public void testGetDiscountByExternalReferenceCode() throws Exception {
+		Discount postDiscount =
+			testGetDiscountByExternalReferenceCode_addDiscount();
+
+		Discount getDiscount =
+			discountResource.getDiscountByExternalReferenceCode(
+				postDiscount.getExternalReferenceCode());
+
+		assertEquals(postDiscount, getDiscount);
+		assertValid(getDiscount);
+	}
+
+	protected Discount testGetDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetDiscountByExternalReferenceCode()
+		throws Exception {
+
+		Discount discount =
+			testGraphQLGetDiscountByExternalReferenceCode_addDiscount();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"discountByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												discount.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/discountByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v2_0",
+								new GraphQLField(
+									"discountByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													discount.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v2_0",
+						"Object/discountByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetDiscountByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"discountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v2_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v2_0",
+						new GraphQLField(
+							"discountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Discount
+			testGraphQLGetDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
+		return testGraphQLDiscount_addDiscount();
 	}
 
 	@Test
@@ -309,10 +1055,10 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testGetDiscountsPageWithPagination() throws Exception {
-		Page<Discount> discountPage = discountResource.getDiscountsPage(
+		Page<Discount> discountsPage = discountResource.getDiscountsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(discountPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(discountsPage.getTotalCount());
 
 		Discount discount1 = testGetDiscountsPage_addDiscount(randomDiscount());
 
@@ -519,6 +1265,7 @@ public abstract class BaseDiscountResourceTestCase {
 			"discounts",
 			new HashMap<String, Object>() {
 				{
+					put("search", null);
 					put("page", 1);
 					put("pageSize", 10);
 				}
@@ -534,8 +1281,9 @@ public abstract class BaseDiscountResourceTestCase {
 
 		long totalCount = discountsJSONObject.getLong("totalCount");
 
-		Discount discount1 = testGraphQLGetDiscountsPage_addDiscount();
-		Discount discount2 = testGraphQLGetDiscountsPage_addDiscount();
+		Discount discount1 = testGraphQLDiscount_addDiscount(randomDiscount());
+
+		Discount discount2 = testGraphQLDiscount_addDiscount(randomDiscount());
 
 		discountsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
@@ -575,190 +1323,30 @@ public abstract class BaseDiscountResourceTestCase {
 				DiscountSerDes.toDTOs(discountsJSONObject.getString("items"))));
 	}
 
-	protected Discount testGraphQLGetDiscountsPage_addDiscount()
-		throws Exception {
-
-		return testGraphQLDiscount_addDiscount();
-	}
-
 	@Test
-	public void testPostDiscount() throws Exception {
-		Discount randomDiscount = randomDiscount();
+	public void testPatchDiscount() throws Exception {
+		Discount postDiscount = testPatchDiscount_addDiscount();
 
-		Discount postDiscount = testPostDiscount_addDiscount(randomDiscount);
+		Discount randomPatchDiscount = randomPatchDiscount();
 
-		assertEquals(randomDiscount, postDiscount);
-		assertValid(postDiscount);
-	}
-
-	protected Discount testPostDiscount_addDiscount(Discount discount)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteDiscountByExternalReferenceCode() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Discount discount =
-			testDeleteDiscountByExternalReferenceCode_addDiscount();
+		Discount patchDiscount = discountResource.patchDiscount(
+			postDiscount.getId(), randomPatchDiscount);
 
-		assertHttpResponseStatusCode(
-			204,
-			discountResource.deleteDiscountByExternalReferenceCodeHttpResponse(
-				discount.getExternalReferenceCode()));
+		Discount expectedPatchDiscount = postDiscount.clone();
 
-		assertHttpResponseStatusCode(
-			404,
-			discountResource.getDiscountByExternalReferenceCodeHttpResponse(
-				discount.getExternalReferenceCode()));
+		BeanTestUtil.copyProperties(randomPatchDiscount, expectedPatchDiscount);
 
-		assertHttpResponseStatusCode(
-			404,
-			discountResource.getDiscountByExternalReferenceCodeHttpResponse(
-				discount.getExternalReferenceCode()));
-	}
+		Discount getDiscount = discountResource.getDiscount(
+			patchDiscount.getId());
 
-	protected Discount testDeleteDiscountByExternalReferenceCode_addDiscount()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetDiscountByExternalReferenceCode() throws Exception {
-		Discount postDiscount =
-			testGetDiscountByExternalReferenceCode_addDiscount();
-
-		Discount getDiscount =
-			discountResource.getDiscountByExternalReferenceCode(
-				postDiscount.getExternalReferenceCode());
-
-		assertEquals(postDiscount, getDiscount);
+		assertEquals(expectedPatchDiscount, getDiscount);
 		assertValid(getDiscount);
 	}
 
-	protected Discount testGetDiscountByExternalReferenceCode_addDiscount()
-		throws Exception {
-
+	protected Discount testPatchDiscount_addDiscount() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetDiscountByExternalReferenceCode()
-		throws Exception {
-
-		Discount discount =
-			testGraphQLGetDiscountByExternalReferenceCode_addDiscount();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				discount,
-				DiscountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"discountByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												discount.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/discountByExternalReferenceCode"))));
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Assert.assertTrue(
-			equals(
-				discount,
-				DiscountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminPricing_v2_0",
-								new GraphQLField(
-									"discountByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													discount.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminPricing_v2_0",
-						"Object/discountByExternalReferenceCode"))));
-	}
-
-	@Test
-	public void testGraphQLGetDiscountByExternalReferenceCodeNotFound()
-		throws Exception {
-
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"discountByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminPricing_v2_0",
-						new GraphQLField(
-							"discountByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Discount
-			testGraphQLGetDiscountByExternalReferenceCode_addDiscount()
-		throws Exception {
-
-		return testGraphQLDiscount_addDiscount();
 	}
 
 	@Test
@@ -793,239 +1381,274 @@ public abstract class BaseDiscountResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteDiscount() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Discount discount = testDeleteDiscount_addDiscount();
+	public void testPostDiscount() throws Exception {
+		Discount randomDiscount = randomDiscount();
 
-		assertHttpResponseStatusCode(
-			204, discountResource.deleteDiscountHttpResponse(discount.getId()));
+		Discount postDiscount = testPostDiscount_addDiscount(randomDiscount);
 
-		assertHttpResponseStatusCode(
-			404, discountResource.getDiscountHttpResponse(discount.getId()));
-
-		assertHttpResponseStatusCode(
-			404, discountResource.getDiscountHttpResponse(discount.getId()));
+		assertEquals(randomDiscount, postDiscount);
+		assertValid(postDiscount);
 	}
 
-	protected Discount testDeleteDiscount_addDiscount() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteDiscount() throws Exception {
-
-		// No namespace
-
-		Discount discount1 = testGraphQLDeleteDiscount_addDiscount();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteDiscount",
-						new HashMap<String, Object>() {
-							{
-								put("id", discount1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteDiscount"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"discount",
-					new HashMap<String, Object>() {
-						{
-							put("id", discount1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Discount discount2 = testGraphQLDeleteDiscount_addDiscount();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"headlessCommerceAdminPricing_v2_0",
-						new GraphQLField(
-							"deleteDiscount",
-							new HashMap<String, Object>() {
-								{
-									put("id", discount2.getId());
-								}
-							}))),
-				"JSONObject/data",
-				"JSONObject/headlessCommerceAdminPricing_v2_0",
-				"Object/deleteDiscount"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"headlessCommerceAdminPricing_v2_0",
-					new GraphQLField(
-						"discount",
-						new HashMap<String, Object>() {
-							{
-								put("id", discount2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected Discount testGraphQLDeleteDiscount_addDiscount()
+	protected Discount testPostDiscount_addDiscount(Discount discount)
 		throws Exception {
 
-		return testGraphQLDiscount_addDiscount();
-	}
-
-	@Test
-	public void testGetDiscount() throws Exception {
-		Discount postDiscount = testGetDiscount_addDiscount();
-
-		Discount getDiscount = discountResource.getDiscount(
-			postDiscount.getId());
-
-		assertEquals(postDiscount, getDiscount);
-		assertValid(getDiscount);
-	}
-
-	protected Discount testGetDiscount_addDiscount() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
 	@Test
-	public void testGraphQLGetDiscount() throws Exception {
-		Discount discount = testGraphQLGetDiscount_addDiscount();
+	public void testGraphQLPostDiscount() throws Exception {
+		Discount randomDiscount = randomDiscount();
 
-		// No namespace
+		Discount discount = testGraphQLDiscount_addDiscount(randomDiscount);
 
-		Assert.assertTrue(
-			equals(
-				discount,
-				DiscountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"discount",
-								new HashMap<String, Object>() {
-									{
-										put("id", discount.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/discount"))));
-
-		// Using the namespace headlessCommerceAdminPricing_v2_0
-
-		Assert.assertTrue(
-			equals(
-				discount,
-				DiscountSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminPricing_v2_0",
-								new GraphQLField(
-									"discount",
-									new HashMap<String, Object>() {
-										{
-											put("id", discount.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminPricing_v2_0",
-						"Object/discount"))));
+		Assert.assertTrue(equals(randomDiscount, discount));
 	}
 
 	@Test
-	public void testGraphQLGetDiscountNotFound() throws Exception {
-		Long irrelevantId = RandomTestUtil.randomLong();
+	public void testPutDiscountByExternalReferenceCode() throws Exception {
+		Discount postDiscount =
+			testPutDiscountByExternalReferenceCode_addDiscount();
 
-		// No namespace
+		Discount randomDiscount = randomDiscount();
 
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"discount",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
+		Discount putDiscount =
+			discountResource.putDiscountByExternalReferenceCode(
+				postDiscount.getExternalReferenceCode(), randomDiscount);
 
-		// Using the namespace headlessCommerceAdminPricing_v2_0
+		assertEquals(randomDiscount, putDiscount);
+		assertValid(putDiscount);
 
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminPricing_v2_0",
-						new GraphQLField(
-							"discount",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
+		Discount getDiscount =
+			discountResource.getDiscountByExternalReferenceCode(
+				putDiscount.getExternalReferenceCode());
 
-	protected Discount testGraphQLGetDiscount_addDiscount() throws Exception {
-		return testGraphQLDiscount_addDiscount();
-	}
-
-	@Test
-	public void testPatchDiscount() throws Exception {
-		Discount postDiscount = testPatchDiscount_addDiscount();
-
-		Discount randomPatchDiscount = randomPatchDiscount();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Discount patchDiscount = discountResource.patchDiscount(
-			postDiscount.getId(), randomPatchDiscount);
-
-		Discount expectedPatchDiscount = postDiscount.clone();
-
-		BeanTestUtil.copyProperties(randomPatchDiscount, expectedPatchDiscount);
-
-		Discount getDiscount = discountResource.getDiscount(
-			patchDiscount.getId());
-
-		assertEquals(expectedPatchDiscount, getDiscount);
+		assertEquals(randomDiscount, getDiscount);
 		assertValid(getDiscount);
+
+		Discount newDiscount =
+			testPutDiscountByExternalReferenceCode_createDiscount();
+
+		putDiscount = discountResource.putDiscountByExternalReferenceCode(
+			newDiscount.getExternalReferenceCode(), newDiscount);
+
+		assertEquals(newDiscount, putDiscount);
+		assertValid(putDiscount);
+
+		getDiscount = discountResource.getDiscountByExternalReferenceCode(
+			putDiscount.getExternalReferenceCode());
+
+		assertEquals(newDiscount, getDiscount);
+
+		Assert.assertEquals(
+			newDiscount.getExternalReferenceCode(),
+			putDiscount.getExternalReferenceCode());
 	}
 
-	protected Discount testPatchDiscount_addDiscount() throws Exception {
+	protected Discount testPutDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected Discount testPutDiscountByExternalReferenceCode_createDiscount()
+		throws Exception {
+
+		return randomDiscount();
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Discount discount1 = testBatchEngineDeleteImportTask_addDiscount();
+
+		testBatchEngineDeleteImportTask_deleteDiscount(
+			200, discount1.getExternalReferenceCode(), null);
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+
+		discount1 = testBatchEngineDeleteImportTask_addDiscount();
+
+		testBatchEngineDeleteImportTask_deleteDiscount(
+			200, null, discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+
+		discount1 = testBatchEngineDeleteImportTask_addDiscount();
+		Discount discount2 = testBatchEngineDeleteImportTask_addDiscount();
+
+		testBatchEngineDeleteImportTask_deleteDiscount(
+			200, discount2.getExternalReferenceCode(), discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount1.getId()));
+		assertHttpResponseStatusCode(
+			200, discountResource.getDiscountHttpResponse(discount2.getId()));
+
+		testBatchEngineDeleteImportTask_deleteDiscount(
+			200, discount2.getExternalReferenceCode(), discount1.getId());
+
+		assertHttpResponseStatusCode(
+			404, discountResource.getDiscountHttpResponse(discount2.getId()));
+	}
+
+	protected Discount testBatchEngineDeleteImportTask_addDiscount()
+		throws Exception {
+
+		return testDeleteDiscount_addDiscount();
+	}
+
+	protected void testBatchEngineDeleteImportTask_deleteDiscount(
+			int expectedStatusCode, String externalReferenceCode, Long id,
+			String... parameters)
+		throws Exception {
+
+		ImportTaskResource importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).parameters(
+			parameters
+		).build();
+
+		HttpResponse httpResponse =
+			importTaskResource.deleteImportTaskHttpResponse(
+				"com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount",
+				null, null, null, null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(expectedStatusCode, httpResponse.getStatusCode());
+
+		if (expectedStatusCode == 200) {
+			waitForFinish(
+				"COMPLETED",
+				JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+		}
 	}
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected Discount testGraphQLDiscount_addDiscount() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return testGraphQLDiscount_addDiscount(randomDiscount());
+	}
+
+	protected Discount testGraphQLDiscount_addDiscount(Discount discount)
+		throws Exception {
+
+		JSONDeserializer<Discount> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(Discount.class)) {
+
+			if (getGraphQLValue(field.get(discount)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(discount)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createDiscount",
+						new HashMap<String, Object>() {
+							{
+								put("discount", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createDiscount"),
+			Discount.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(Discount discount, List<Discount> discounts) {
@@ -1435,6 +2058,10 @@ public abstract class BaseDiscountResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -2138,13 +2765,11 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2154,7 +2779,7 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(discount.getDisplayDate()));
+				sb.append(_format.format(discount.getDisplayDate()));
 			}
 
 			return sb.toString();
@@ -2169,13 +2794,11 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2185,7 +2808,7 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(discount.getExpirationDate()));
+				sb.append(_format.format(discount.getExpirationDate()));
 			}
 
 			return sb.toString();
@@ -2360,13 +2983,11 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2376,7 +2997,7 @@ public abstract class BaseDiscountResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(discount.getModifiedDate()));
+				sb.append(_format.format(discount.getModifiedDate()));
 			}
 
 			return sb.toString();
@@ -2602,7 +3223,30 @@ public abstract class BaseDiscountResourceTestCase {
 		return randomDiscount();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected DiscountResource discountResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -2612,12 +3256,12 @@ public abstract class BaseDiscountResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2626,11 +3270,16 @@ public abstract class BaseDiscountResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2662,6 +3311,24 @@ public abstract class BaseDiscountResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2683,16 +3350,6 @@ public abstract class BaseDiscountResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2790,11 +3447,35 @@ public abstract class BaseDiscountResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDiscountResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private
 		com.liferay.headless.commerce.admin.pricing.resource.v2_0.
 			DiscountResource _discountResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

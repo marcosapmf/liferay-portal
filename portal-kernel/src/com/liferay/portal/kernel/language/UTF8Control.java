@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringPool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 
 import java.net.URL;
 import java.net.URLConnection;
@@ -65,9 +66,11 @@ public class UTF8Control extends ResourceBundle.Control {
 
 		urlConnection.setUseCaches(!reload);
 
-		try (InputStream inputStream = urlConnection.getInputStream()) {
-			ResourceBundle resourceBundle = new PropertyResourceBundle(
-				new InputStreamReader(inputStream, StringPool.UTF8));
+		try (InputStream inputStream = urlConnection.getInputStream();
+			Reader reader = new InputStreamReader(
+				inputStream, StringPool.UTF8)) {
+
+			ResourceBundle resourceBundle = new PropertyResourceBundle(reader);
 
 			Map<URL, ResourceBundle> resourceBundles =
 				_resourceBundlesMap.computeIfAbsent(

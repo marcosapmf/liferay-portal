@@ -17,7 +17,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eduardo García
  */
 @Component(
-	property = "javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+	property = "jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 	service = AssetRendererFactory.class
 )
 public class LayoutAssetRendererFactory
@@ -41,7 +41,16 @@ public class LayoutAssetRendererFactory
 	}
 
 	@Override
-	public AssetEntry getAssetEntry(Layout layout) throws PortalException {
+	public AssetEntry getAssetEntry(long assetEntryId) throws PortalException {
+		return getAssetEntry(getClassName(), assetEntryId);
+	}
+
+	@Override
+	public AssetEntry getAssetEntry(String className, long classPK)
+		throws PortalException {
+
+		Layout layout = _layoutLocalService.getLayout(classPK);
+
 		AssetEntry assetEntry = _assetEntryLocalService.createAssetEntry(
 			layout.getPlid());
 
@@ -59,15 +68,8 @@ public class LayoutAssetRendererFactory
 	}
 
 	@Override
-	public AssetEntry getAssetEntry(long assetEntryId) throws PortalException {
-		return getAssetEntry(getClassName(), assetEntryId);
-	}
-
-	@Override
-	public AssetEntry getAssetEntry(String className, long classPK)
-		throws PortalException {
-
-		return getAssetEntry(_layoutLocalService.getLayout(classPK));
+	public long getAssetEntryClassPK(Layout layout) {
+		return layout.getPlid();
 	}
 
 	@Override

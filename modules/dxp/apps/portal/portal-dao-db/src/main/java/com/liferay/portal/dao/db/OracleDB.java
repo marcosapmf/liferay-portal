@@ -34,6 +34,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,6 +82,7 @@ public class OracleDB extends BaseDB {
 				connection, tableName, tempColumnName, newColumnType);
 
 			runSQL(
+				connection,
 				StringBundler.concat(
 					"update ", tableName, " set ", tempColumnName, " = ",
 					columnName));
@@ -134,6 +136,22 @@ public class OracleDB extends BaseDB {
 	}
 
 	@Override
+	public String getCharacterSet(Connection connection) throws SQLException {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select value from nls_database_parameters where parameter " +
+					"in ('NLS_CHARACTERSET')")) {
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getString(1);
+				}
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
+	@Override
 	public List<Index> getIndexes(Connection connection) throws SQLException {
 		List<Index> indexes = new ArrayList<>();
 
@@ -178,14 +196,20 @@ public class OracleDB extends BaseDB {
 
 	@Override
 	public String getPopulateSQL(String databaseName, String sqlContent) {
-		return StringBundler.concat(
-			"connect &1/&2;\n", "set define off;\n\n", sqlContent, "quit");
+		return "connect &1/&2;\nset define off;\n\n" + sqlContent + "quit";
 	}
 
 	@Override
 	public String getRecreateSQL(String databaseName) {
 		return "drop user &1 cascade;\ncreate user &1 identified by &2;\n" +
 			"grant connect,resource to &1;\nquit";
+	}
+
+	@Override
+	public boolean isSupportsCharacterSet(Connection connection)
+		throws SQLException {
+
+		return Objects.equals(getCharacterSet(connection), "AL32UTF8");
 	}
 
 	@Override

@@ -72,13 +72,8 @@ public class LiferayFileShortcut extends LiferayModel implements FileShortcut {
 
 		LiferayFileShortcut liferayFileShortcut = (LiferayFileShortcut)object;
 
-		if (Objects.equals(
-				_dlFileShortcut, liferayFileShortcut._dlFileShortcut)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			_dlFileShortcut, liferayFileShortcut._dlFileShortcut);
 	}
 
 	@Override
@@ -108,6 +103,11 @@ public class LiferayFileShortcut extends LiferayModel implements FileShortcut {
 	@Override
 	public ExpandoBridge getExpandoBridge() {
 		return _dlFileShortcut.getExpandoBridge();
+	}
+
+	@Override
+	public String getExternalReferenceCode() {
+		return _dlFileShortcut.getExternalReferenceCode();
 	}
 
 	@Override

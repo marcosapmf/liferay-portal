@@ -8,6 +8,7 @@ package com.liferay.headless.admin.workflow.internal.graphql.query.v1_0;
 import com.liferay.headless.admin.workflow.dto.v1_0.Assignee;
 import com.liferay.headless.admin.workflow.dto.v1_0.Transition;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowDefinition;
+import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowDefinitionLink;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstance;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowLog;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTask;
@@ -15,15 +16,16 @@ import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskAssignToUser;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTasksBulkSelection;
 import com.liferay.headless.admin.workflow.resource.v1_0.AssigneeResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.TransitionResource;
+import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowDefinitionLinkResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowDefinitionResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowInstanceResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowLogResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -32,15 +34,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -73,6 +75,14 @@ public class Query {
 
 		_workflowDefinitionResourceComponentServiceObjects =
 			workflowDefinitionResourceComponentServiceObjects;
+	}
+
+	public static void setWorkflowDefinitionLinkResourceComponentServiceObjects(
+		ComponentServiceObjects<WorkflowDefinitionLinkResource>
+			workflowDefinitionLinkResourceComponentServiceObjects) {
+
+		_workflowDefinitionLinkResourceComponentServiceObjects =
+			workflowDefinitionLinkResourceComponentServiceObjects;
 	}
 
 	public static void setWorkflowInstanceResourceComponentServiceObjects(
@@ -162,6 +172,44 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinition(workflowDefinitionId: ___){actions, active, content, creator, dateCreated, dateModified, description, externalReferenceCode, id, name, nodes, title, title_i18n, transitions, version}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public WorkflowDefinition workflowDefinition(
+			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionResource ->
+				workflowDefinitionResource.getWorkflowDefinition(
+					workflowDefinitionId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionByName(contentFormat: ___, name: ___, version: ___){actions, active, content, creator, dateCreated, dateModified, description, externalReferenceCode, id, name, nodes, title, title_i18n, transitions, version}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public WorkflowDefinition workflowDefinitionByName(
+			@GraphQLName("name") String name,
+			@GraphQLName("contentFormat") String contentFormat,
+			@GraphQLName("version") Integer version)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionResource ->
+				workflowDefinitionResource.getWorkflowDefinitionByName(
+					name, contentFormat, version));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitions(active: ___, page: ___, pageSize: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -185,39 +233,63 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionByName(contentFormat: ___, name: ___, version: ___){actions, active, content, creator, dateCreated, dateModified, description, id, name, nodes, title, title_i18n, transitions, version}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinks(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public WorkflowDefinition workflowDefinitionByName(
-			@GraphQLName("name") String name,
-			@GraphQLName("contentFormat") String contentFormat,
-			@GraphQLName("version") Integer version)
+	public WorkflowDefinitionLinkPage
+			workflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinks(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_workflowDefinitionResourceComponentServiceObjects,
+			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			workflowDefinitionResource ->
-				workflowDefinitionResource.getWorkflowDefinitionByName(
-					name, contentFormat, version));
+			workflowDefinitionLinkResource -> new WorkflowDefinitionLinkPage(
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
+						externalReferenceCode, Pagination.of(page, pageSize))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinition(workflowDefinitionId: ___){actions, active, content, creator, dateCreated, dateModified, description, id, name, nodes, title, title_i18n, transitions, version}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionWorkflowDefinitionLinks(page: ___, pageSize: ___, workflowDefinitionId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public WorkflowDefinition workflowDefinition(
-			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId)
+	public WorkflowDefinitionLinkPage workflowDefinitionWorkflowDefinitionLinks(
+			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
-			_workflowDefinitionResourceComponentServiceObjects,
+			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			workflowDefinitionResource ->
-				workflowDefinitionResource.getWorkflowDefinition(
-					workflowDefinitionId));
+			workflowDefinitionLinkResource -> new WorkflowDefinitionLinkPage(
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId, Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowInstance(workflowInstanceId: ___){actions, completed, context, currentNodeNames, dateCompletion, dateCreated, id, objectReviewed, workflowDefinitionName, workflowDefinitionVersion}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public WorkflowInstance workflowInstance(
+			@GraphQLName("workflowInstanceId") Long workflowInstanceId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowInstanceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowInstanceResource ->
+				workflowInstanceResource.getWorkflowInstance(
+					workflowInstanceId));
 	}
 
 	/**
@@ -241,24 +313,6 @@ public class Query {
 				workflowInstanceResource.getWorkflowInstancesPage(
 					assetClassName, assetPrimaryKey, completed,
 					Pagination.of(page, pageSize))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowInstance(workflowInstanceId: ___){actions, completed, currentNodeNames, dateCompletion, dateCreated, id, objectReviewed, workflowDefinitionName, workflowDefinitionVersion}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public WorkflowInstance workflowInstance(
-			@GraphQLName("workflowInstanceId") Long workflowInstanceId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowInstanceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowInstanceResource ->
-				workflowInstanceResource.getWorkflowInstance(
-					workflowInstanceId));
 	}
 
 	/**
@@ -323,28 +377,6 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowInstanceWorkflowTasks(completed: ___, page: ___, pageSize: ___, workflowInstanceId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public WorkflowTaskPage workflowInstanceWorkflowTasks(
-			@GraphQLName("workflowInstanceId") Long workflowInstanceId,
-			@GraphQLName("completed") Boolean completed,
-			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowTaskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowTaskResource -> new WorkflowTaskPage(
-				workflowTaskResource.getWorkflowInstanceWorkflowTasksPage(
-					workflowInstanceId, completed,
-					Pagination.of(page, pageSize))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowInstanceWorkflowTasksAssignedToMe(completed: ___, page: ___, pageSize: ___, workflowInstanceId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -387,6 +419,63 @@ public class Query {
 					getWorkflowInstanceWorkflowTasksAssignedToUserPage(
 						workflowInstanceId, assigneeId, completed,
 						Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowInstanceWorkflowTasks(completed: ___, page: ___, pageSize: ___, workflowInstanceId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public WorkflowTaskPage workflowInstanceWorkflowTasks(
+			@GraphQLName("workflowInstanceId") Long workflowInstanceId,
+			@GraphQLName("completed") Boolean completed,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowTaskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowTaskResource -> new WorkflowTaskPage(
+				workflowTaskResource.getWorkflowInstanceWorkflowTasksPage(
+					workflowInstanceId, completed,
+					Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowTask(workflowTaskId: ___){actions, assigneePerson, assigneeRoles, completed, dateCompletion, dateCreated, dateDue, description, id, label, name, objectReviewed, workflowDefinitionId, workflowDefinitionName, workflowDefinitionVersion, workflowInstanceId, workflowLogs}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public WorkflowTask workflowTask(
+			@GraphQLName("workflowTaskId") Long workflowTaskId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowTaskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowTaskResource -> workflowTaskResource.getWorkflowTask(
+				workflowTaskId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowTaskHasAssignableUsers(workflowTaskId: ___){}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Boolean workflowTaskHasAssignableUsers(
+			@GraphQLName("workflowTaskId") Long workflowTaskId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowTaskResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowTaskResource ->
+				workflowTaskResource.getWorkflowTaskHasAssignableUsers(
+					workflowTaskId));
 	}
 
 	/**
@@ -505,41 +594,6 @@ public class Query {
 			workflowTaskResource -> new WorkflowTaskPage(
 				workflowTaskResource.getWorkflowTasksSubmittingUserPage(
 					creatorId, Pagination.of(page, pageSize))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowTask(workflowTaskId: ___){actions, assigneePerson, assigneeRoles, completed, dateCompletion, dateCreated, dateDue, description, id, label, name, objectReviewed, workflowDefinitionId, workflowDefinitionName, workflowDefinitionVersion, workflowInstanceId}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public WorkflowTask workflowTask(
-			@GraphQLName("workflowTaskId") Long workflowTaskId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowTaskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowTaskResource -> workflowTaskResource.getWorkflowTask(
-				workflowTaskId));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowTaskHasAssignableUsers(workflowTaskId: ___){}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public Boolean workflowTaskHasAssignableUsers(
-			@GraphQLName("workflowTaskId") Long workflowTaskId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_workflowTaskResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			workflowTaskResource ->
-				workflowTaskResource.getWorkflowTaskHasAssignableUsers(
-					workflowTaskId));
 	}
 
 	@GraphQLTypeExtension(WorkflowInstance.class)
@@ -773,6 +827,36 @@ public class Query {
 
 	}
 
+	@GraphQLTypeExtension(WorkflowDefinition.class)
+	public class GetWorkflowDefinitionWorkflowDefinitionLinksPageTypeExtension {
+
+		public GetWorkflowDefinitionWorkflowDefinitionLinksPageTypeExtension(
+			WorkflowDefinition workflowDefinition) {
+
+			_workflowDefinition = workflowDefinition;
+		}
+
+		@GraphQLField
+		public WorkflowDefinitionLinkPage workflowDefinitionLinks(
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_workflowDefinitionLinkResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				workflowDefinitionLinkResource ->
+					new WorkflowDefinitionLinkPage(
+						workflowDefinitionLinkResource.
+							getWorkflowDefinitionWorkflowDefinitionLinksPage(
+								_workflowDefinition.getId(),
+								Pagination.of(page, pageSize))));
+		}
+
+		private WorkflowDefinition _workflowDefinition;
+
+	}
+
 	@GraphQLTypeExtension(WorkflowInstance.class)
 	public class
 		GetWorkflowInstanceWorkflowTasksAssignedToUserPageTypeExtension {
@@ -830,35 +914,6 @@ public class Query {
 		}
 
 		private WorkflowInstance _workflowInstance;
-
-	}
-
-	@GraphQLTypeExtension(WorkflowTask.class)
-	public class GetWorkflowTaskWorkflowLogsPageTypeExtension {
-
-		public GetWorkflowTaskWorkflowLogsPageTypeExtension(
-			WorkflowTask workflowTask) {
-
-			_workflowTask = workflowTask;
-		}
-
-		@GraphQLField
-		public WorkflowLogPage workflowLogs(
-				@GraphQLName("types") String[] types,
-				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_workflowLogResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				workflowLogResource -> new WorkflowLogPage(
-					workflowLogResource.getWorkflowTaskWorkflowLogsPage(
-						_workflowTask.getId(), types,
-						Pagination.of(page, pageSize))));
-		}
-
-		private WorkflowTask _workflowTask;
 
 	}
 
@@ -946,6 +1001,39 @@ public class Query {
 
 		@GraphQLField
 		protected java.util.Collection<WorkflowDefinition> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("WorkflowDefinitionLinkPage")
+	public class WorkflowDefinitionLinkPage {
+
+		public WorkflowDefinitionLinkPage(Page workflowDefinitionLinkPage) {
+			actions = workflowDefinitionLinkPage.getActions();
+
+			items = workflowDefinitionLinkPage.getItems();
+			lastPage = workflowDefinitionLinkPage.getLastPage();
+			page = workflowDefinitionLinkPage.getPage();
+			pageSize = workflowDefinitionLinkPage.getPageSize();
+			totalCount = workflowDefinitionLinkPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<WorkflowDefinitionLink> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -1089,6 +1177,10 @@ public class Query {
 		assigneeResource.setContextUriInfo(_uriInfo);
 		assigneeResource.setContextUser(_user);
 		assigneeResource.setGroupLocalService(_groupLocalService);
+		assigneeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		assigneeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		assigneeResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1102,6 +1194,10 @@ public class Query {
 		transitionResource.setContextUriInfo(_uriInfo);
 		transitionResource.setContextUser(_user);
 		transitionResource.setGroupLocalService(_groupLocalService);
+		transitionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		transitionResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		transitionResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1118,7 +1214,32 @@ public class Query {
 		workflowDefinitionResource.setContextUriInfo(_uriInfo);
 		workflowDefinitionResource.setContextUser(_user);
 		workflowDefinitionResource.setGroupLocalService(_groupLocalService);
+		workflowDefinitionResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		workflowDefinitionResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		workflowDefinitionResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
+			WorkflowDefinitionLinkResource workflowDefinitionLinkResource)
+		throws Exception {
+
+		workflowDefinitionLinkResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		workflowDefinitionLinkResource.setContextCompany(_company);
+		workflowDefinitionLinkResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		workflowDefinitionLinkResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		workflowDefinitionLinkResource.setContextUriInfo(_uriInfo);
+		workflowDefinitionLinkResource.setContextUser(_user);
+		workflowDefinitionLinkResource.setGroupLocalService(_groupLocalService);
+		workflowDefinitionLinkResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		workflowDefinitionLinkResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
+		workflowDefinitionLinkResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -1134,6 +1255,10 @@ public class Query {
 		workflowInstanceResource.setContextUriInfo(_uriInfo);
 		workflowInstanceResource.setContextUser(_user);
 		workflowInstanceResource.setGroupLocalService(_groupLocalService);
+		workflowInstanceResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		workflowInstanceResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		workflowInstanceResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1148,6 +1273,10 @@ public class Query {
 		workflowLogResource.setContextUriInfo(_uriInfo);
 		workflowLogResource.setContextUser(_user);
 		workflowLogResource.setGroupLocalService(_groupLocalService);
+		workflowLogResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		workflowLogResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		workflowLogResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1163,6 +1292,10 @@ public class Query {
 		workflowTaskResource.setContextUriInfo(_uriInfo);
 		workflowTaskResource.setContextUser(_user);
 		workflowTaskResource.setGroupLocalService(_groupLocalService);
+		workflowTaskResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		workflowTaskResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		workflowTaskResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -1172,6 +1305,8 @@ public class Query {
 		_transitionResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WorkflowDefinitionResource>
 		_workflowDefinitionResourceComponentServiceObjects;
+	private static ComponentServiceObjects<WorkflowDefinitionLinkResource>
+		_workflowDefinitionLinkResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WorkflowInstanceResource>
 		_workflowInstanceResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WorkflowLogResource>
@@ -1181,12 +1316,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

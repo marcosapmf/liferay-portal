@@ -7,28 +7,27 @@ package com.liferay.oauth2.provider.rest.internal.endpoint.authorize.message.bod
 
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.MessageBodyWriter;
+import jakarta.ws.rs.ext.Provider;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import java.net.URI;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
-
 import org.apache.cxf.rs.security.oauth2.common.OAuthAuthorizationData;
 import org.apache.cxf.rs.security.oauth2.utils.OAuthConstants;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Carlos Sierra Andrés
@@ -64,7 +63,7 @@ public class OAuthAuthorizationDataMessageBodyWriter
 	@Activate
 	protected void activate() {
 		_invokerFilterURIMaxLength = GetterUtil.getInteger(
-			_props.get(PropsKeys.INVOKER_FILTER_URI_MAX_LENGTH),
+			PropsUtil.get(PropsKeys.INVOKER_FILTER_URI_MAX_LENGTH),
 			_invokerFilterURIMaxLength);
 	}
 
@@ -130,8 +129,5 @@ public class OAuthAuthorizationDataMessageBodyWriter
 	}
 
 	private int _invokerFilterURIMaxLength = 4000;
-
-	@Reference
-	private Props _props;
 
 }

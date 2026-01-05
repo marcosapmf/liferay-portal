@@ -5,19 +5,31 @@
 
 package com.liferay.portal.settings.configuration.admin.display;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.Serializable;
+
+import java.util.Dictionary;
 import java.util.Locale;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Drew Brokke
  */
 public interface PortalSettingsConfigurationScreenContributor {
+
+	public default Dictionary<String, Object> exportProperties(
+			Serializable scopePK)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"Export capability is not implemented for configuration: " +
+				getKey());
+	}
 
 	public String getCategoryKey();
 
@@ -45,6 +57,19 @@ public interface PortalSettingsConfigurationScreenContributor {
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		return null;
+	}
+
+	public default void importProperties(
+			Dictionary<String, Object> properties, Serializable scopePK)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"Import capability is not implemented for configuration: " +
+				getKey());
+	}
+
+	public default boolean isDeprecated() {
+		return false;
 	}
 
 	public default boolean isVisible() {

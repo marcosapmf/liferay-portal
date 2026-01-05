@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.increment.BufferedIncrementThreadLocal;
 import com.liferay.portal.kernel.model.ClassName;
+import com.liferay.portal.kernel.security.auth.CompanyInheritableThreadLocalCallable;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -36,7 +37,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 import org.junit.Assert;
@@ -90,24 +90,24 @@ public class ViewCountEntryLocalServiceTest {
 			_createSessionFactoryProxy(
 				countDownLatch, sessionFactory, viewCountEntries));
 
-		try (LogCapture logCapture1 = LoggerTestUtil.configureLog4JLogger(
-				SqlExceptionHelper.class.getName(), LoggerTestUtil.OFF);
-			LogCapture logCapture2 = LoggerTestUtil.configureLog4JLogger(
-				BatchingBatch.class.getName(), LoggerTestUtil.OFF)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				SqlExceptionHelper.class.getName(), LoggerTestUtil.OFF)) {
 
 			FutureTask<Void> futureTask = new FutureTask<>(
-				() -> {
-					try (SafeCloseable safeCloseable =
-							BufferedIncrementThreadLocal.setWithSafeCloseable(
-								true)) {
+				new CompanyInheritableThreadLocalCallable<>(
+					() -> {
+						try (SafeCloseable safeCloseable =
+								BufferedIncrementThreadLocal.
+									setForceSyncWithSafeCloseable(true)) {
 
-						_viewCountEntryLocalService.incrementViewCount(
-							TestPropsValues.getCompanyId(),
-							_className.getClassNameId(), classPK, viewCount);
-					}
+							_viewCountEntryLocalService.incrementViewCount(
+								TestPropsValues.getCompanyId(),
+								_className.getClassNameId(), classPK,
+								viewCount);
+						}
 
-					return null;
-				});
+						return null;
+					}));
 
 			Thread thread = new Thread(
 				futureTask, "Inner View Count Incrementer");

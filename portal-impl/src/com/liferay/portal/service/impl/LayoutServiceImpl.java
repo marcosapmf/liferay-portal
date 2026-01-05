@@ -10,6 +10,7 @@ import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfi
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -50,7 +51,6 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -62,6 +62,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.service.base.LayoutServiceBaseImpl;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -72,8 +74,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * Provides the remote service for accessing, adding, deleting, exporting,
@@ -120,7 +120,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	 *         To see how the URL is normalized when accessed, see {@link
 	 *         com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil#normalize(
 	 *         String)}.
-	 * @param  masterLayoutPlid the primary key of the master layout
+	 * @param  masterLayoutPageTemplateEntryERC the external reference code key
+	 *         of the master layout page template entry
 	 * @param  serviceContext the service context to be applied. Must set the
 	 *         UUID for the layout. Can set the creation date, modification
 	 *         date, and expando bridge attributes for the layout. For layouts
@@ -139,7 +140,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
 			Map<Locale, String> robotsMap, String type, String typeSettings,
 			boolean hidden, boolean system, Map<Locale, String> friendlyURLMap,
-			long masterLayoutPlid, ServiceContext serviceContext)
+			String masterLayoutPageTemplateEntryERC,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
@@ -158,8 +160,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			externalReferenceCode, getUserId(), groupId, privateLayout,
 			parentLayoutId, classNameId, classPK, localeNamesMap,
 			localeTitlesMap, descriptionMap, keywordsMap, robotsMap, type,
-			typeSettings, hidden, system, friendlyURLMap, masterLayoutPlid,
-			serviceContext);
+			typeSettings, hidden, system, friendlyURLMap,
+			masterLayoutPageTemplateEntryERC, serviceContext);
 
 		checkLayoutTypeSettings(layout, StringPool.BLANK, typeSettings);
 
@@ -197,7 +199,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	 *         To see how the URL is normalized when accessed, see {@link
 	 *         com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil#normalize(
 	 *         String)}.
-	 * @param  masterLayoutPlid the primary key of the master layout
+	 * @param  masterLayoutPageTemplateEntryERC the external reference code key
+	 *         of the master layout page template entry
 	 * @param  serviceContext the service context to be applied. Must set the
 	 *         UUID for the layout. Can set the creation date, modification
 	 *         date, and expando bridge attributes for the layout. For layouts
@@ -215,14 +218,15 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
 			Map<Locale, String> robotsMap, String type, String typeSettings,
 			boolean hidden, Map<Locale, String> friendlyURLMap,
-			long masterLayoutPlid, ServiceContext serviceContext)
+			String masterLayoutPageTemplateEntryERC,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		return addLayout(
 			externalReferenceCode, groupId, privateLayout, parentLayoutId, 0, 0,
 			localeNamesMap, localeTitlesMap, descriptionMap, keywordsMap,
 			robotsMap, type, typeSettings, hidden, false, friendlyURLMap,
-			masterLayoutPlid, serviceContext);
+			masterLayoutPageTemplateEntryERC, serviceContext);
 	}
 
 	/**
@@ -279,7 +283,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		return addLayout(
 			externalReferenceCode, groupId, privateLayout, parentLayoutId, 0, 0,
 			localeNamesMap, localeTitlesMap, descriptionMap, keywordsMap,
-			robotsMap, type, typeSettings, hidden, false, friendlyURLMap, 0,
+			robotsMap, type, typeSettings, hidden, false, friendlyURLMap, null,
 			serviceContext);
 	}
 
@@ -356,7 +360,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 		return TempFileEntryUtil.addTempFileEntry(
 			groupId, getUserId(),
-			DigesterUtil.digestHex(Digester.SHA_256, folderName), fileName,
+			DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName), fileName,
 			inputStream, mimeType);
 	}
 
@@ -454,7 +458,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 		TempFileEntryUtil.deleteTempFileEntry(
 			groupId, getUserId(),
-			DigesterUtil.digestHex(Digester.SHA_256, folderName), fileName);
+			DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName), fileName);
 	}
 
 	@Override
@@ -489,6 +493,22 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 		Layout layout = layoutPersistence.fetchByG_P_L(
 			groupId, privateLayout, layoutId);
+
+		if (layout != null) {
+			LayoutPermissionUtil.check(
+				getPermissionChecker(), layout, ActionKeys.VIEW);
+		}
+
+		return layout;
+	}
+
+	@Override
+	public Layout fetchLayoutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		Layout layout = layoutLocalService.fetchLayoutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 
 		if (layout != null) {
 			LayoutPermissionUtil.check(
@@ -690,11 +710,34 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	@Override
+	public Layout getLayout(long plid) throws PortalException {
+		Layout layout = layoutLocalService.getLayout(plid);
+
+		LayoutPermissionUtil.check(
+			getPermissionChecker(), layout, ActionKeys.VIEW);
+
+		return layout;
+	}
+
+	@Override
+	public Layout getLayout(long groupId, boolean privateLayout, long layoutId)
+		throws PortalException {
+
+		Layout layout = layoutLocalService.getLayout(
+			groupId, privateLayout, layoutId);
+
+		LayoutPermissionUtil.check(
+			getPermissionChecker(), layout, ActionKeys.VIEW);
+
+		return layout;
+	}
+
+	@Override
 	public Layout getLayoutByExternalReferenceCode(
 			String externalReferenceCode, long groupId)
 		throws PortalException {
 
-		Layout layout = layoutLocalService.fetchLayoutByExternalReferenceCode(
+		Layout layout = layoutLocalService.getLayoutByExternalReferenceCode(
 			externalReferenceCode, groupId);
 
 		LayoutPermissionUtil.check(
@@ -821,7 +864,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 	@Override
 	public List<Layout> getLayouts(long groupId, boolean privateLayout) {
-		return layoutPersistence.filterFindByG_P(groupId, privateLayout);
+		return layoutPersistence.filterFindByG_P_S(
+			groupId, privateLayout, false);
 	}
 
 	@Override
@@ -906,8 +950,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		throws PortalException {
 
 		if (Validator.isNull(keywords)) {
-			return layoutPersistence.filterFindByG_P(
-				groupId, privateLayout, start, end, orderByComparator);
+			return layoutPersistence.filterFindByG_P_S(
+				groupId, privateLayout, false, start, end, orderByComparator);
 		}
 
 		return layoutLocalService.getLayouts(
@@ -947,7 +991,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 	@Override
 	public int getLayoutsCount(long groupId, boolean privateLayout) {
-		return layoutPersistence.filterCountByG_P(groupId, privateLayout);
+		return layoutPersistence.filterCountByG_P_S(
+			groupId, privateLayout, false);
 	}
 
 	@Override
@@ -993,7 +1038,8 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		throws PortalException {
 
 		if (Validator.isNull(keywords)) {
-			return layoutPersistence.filterCountByG_P(groupId, privateLayout);
+			return layoutPersistence.filterCountByG_P_S(
+				groupId, privateLayout, false);
 		}
 
 		return layoutLocalService.getLayoutsCount(
@@ -1021,6 +1067,26 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	@Override
+	public Layout getOrAddEmptyLayout(
+			String externalReferenceCode, long groupId,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		Layout layout = fetchLayoutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+
+		if (layout != null) {
+			return layout;
+		}
+
+		GroupPermissionUtil.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_LAYOUT);
+
+		return layoutLocalService.getOrAddEmptyLayout(
+			externalReferenceCode, getUserId(), groupId, serviceContext);
+	}
+
+	@Override
 	public String[] getTempFileNames(long groupId, String folderName)
 		throws PortalException {
 
@@ -1035,7 +1101,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 
 			return TempFileEntryUtil.getTempFileNames(
 				groupId, getUserId(),
-				DigesterUtil.digestHex(Digester.SHA_256, folderName));
+				DigesterUtil.digestHex(DigesterUtil.SHA_256, folderName));
 		}
 	}
 
@@ -1106,7 +1172,7 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	 *         DestinationNames#LAYOUTS_LOCAL_PUBLISHER}). See {@link
 	 *         DestinationNames}.
 	 * @param  cronText the cron text. See {@link
-	 *        com.liferay.portal.kernel.scheduler.CronTextUtil#getCronText}
+	 *         com.liferay.portal.kernel.scheduler.CronTextUtil#getCronText}
 	 * @param  schedulerStartDate the scheduler start date
 	 * @param  schedulerEndDate the scheduler end date
 	 * @param  description the scheduler description
@@ -1343,9 +1409,14 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	 *         String)}.
 	 * @param  hasIconImage if the layout has a custom icon image
 	 * @param  iconBytes the byte array of the layout's new icon image
-	 * @param  styleBookEntryId the primary key of the style book entry
-	 * @param  faviconFileEntryId the file entry ID of the layout's new favicon
-	 * @param  masterLayoutPlid the primary key of the master layout
+	 * @param  styleBookEntryERC the external reference code of the style book
+	 *         entry
+	 * @param  faviconFileEntryERC the file entry external reference code of the
+	 *         layout's new favicon
+	 * @param  faviconFileEntryScopeERC the file entry scope external reference
+	 *         code of the layout's new favicon
+	 * @param  masterLayoutPageTemplateEntryERC the external reference code key
+	 *         of the master layout page template entry
 	 * @param  serviceContext the service context to be applied. Can set the
 	 *         modification date and expando bridge attributes for the layout.
 	 * @return the updated layout
@@ -1359,8 +1430,10 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
 			Map<Locale, String> robotsMap, String type, boolean hidden,
 			Map<Locale, String> friendlyURLMap, boolean hasIconImage,
-			byte[] iconBytes, long styleBookEntryId, long faviconFileEntryId,
-			long masterLayoutPlid, ServiceContext serviceContext)
+			byte[] iconBytes, String styleBookEntryERC,
+			String faviconFileEntryERC, String faviconFileEntryScopeERC,
+			String masterLayoutPageTemplateEntryERC,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		Layout layout = layoutLocalService.getLayout(
@@ -1372,8 +1445,9 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		Layout updatedLayout = layoutLocalService.updateLayout(
 			groupId, privateLayout, layoutId, parentLayoutId, localeNamesMap,
 			localeTitlesMap, descriptionMap, keywordsMap, robotsMap, type,
-			hidden, friendlyURLMap, hasIconImage, iconBytes, styleBookEntryId,
-			faviconFileEntryId, masterLayoutPlid, serviceContext);
+			hidden, friendlyURLMap, hasIconImage, iconBytes, styleBookEntryERC,
+			faviconFileEntryERC, faviconFileEntryScopeERC,
+			masterLayoutPageTemplateEntryERC, serviceContext);
 
 		if (!(layout.getLayoutType() instanceof LayoutTypePortlet)) {
 			checkLayoutTypeSettings(
@@ -1381,36 +1455,6 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		}
 
 		return updatedLayout;
-	}
-
-	/**
-	 * Updates the layout replacing its type settings.
-	 *
-	 * @param  groupId the primary key of the group
-	 * @param  privateLayout whether the layout is private to the group
-	 * @param  layoutId the layout ID of the layout
-	 * @param  typeSettings the settings to load the unicode properties object.
-	 *         See {@link com.liferay.portal.kernel.util.UnicodeProperties
-	 *         #fastLoad(String)}.
-	 * @return the updated layout
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Override
-	public Layout updateLayout(
-			long groupId, boolean privateLayout, long layoutId,
-			String typeSettings)
-		throws PortalException {
-
-		Layout layout = layoutLocalService.getLayout(
-			groupId, privateLayout, layoutId);
-
-		LayoutPermissionUtil.checkLayoutUpdatePermission(
-			getPermissionChecker(), layout);
-
-		checkLayoutTypeSettings(layout, layout.getTypeSettings(), typeSettings);
-
-		return layoutLocalService.updateLayout(
-			groupId, privateLayout, layoutId, typeSettings);
 	}
 
 	/**
@@ -1635,6 +1679,36 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		return layoutLocalService.updateType(plid, type);
 	}
 
+	/**
+	 * Updates the layout replacing its type settings.
+	 *
+	 * @param  groupId the primary key of the group
+	 * @param  privateLayout whether the layout is private to the group
+	 * @param  layoutId the layout ID of the layout
+	 * @param  typeSettings the settings to load the unicode properties object.
+	 *         See {@link com.liferay.portal.kernel.util.UnicodeProperties
+	 *         #fastLoad(String)}.
+	 * @return the updated layout
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Override
+	public Layout updateTypeSettings(
+			long groupId, boolean privateLayout, long layoutId,
+			String typeSettings)
+		throws PortalException {
+
+		Layout layout = layoutLocalService.getLayout(
+			groupId, privateLayout, layoutId);
+
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			getPermissionChecker(), layout);
+
+		checkLayoutTypeSettings(layout, layout.getTypeSettings(), typeSettings);
+
+		return layoutLocalService.updateTypeSettings(
+			groupId, privateLayout, layoutId, typeSettings);
+	}
+
 	protected void checkLayoutTypeSettings(
 			Layout layout, String originalTypeSettings, String newTypeSettings)
 		throws PortalException {
@@ -1659,15 +1733,15 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 	}
 
 	protected List<Layout> filterLayouts(List<Layout> layouts) {
-		List<Layout> filteredLayouts = new ArrayList<>();
+		return TransformUtil.transform(
+			layouts,
+			layout -> {
+				if (_hasViewPermission(layout)) {
+					return layout;
+				}
 
-		for (Layout layout : layouts) {
-			if (_hasViewPermission(layout)) {
-				filteredLayouts.add(layout);
-			}
-		}
-
-		return filteredLayouts;
+				return null;
+			});
 	}
 
 	protected List<Layout> filterLayouts(

@@ -15,8 +15,8 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlWebKeys;
@@ -26,14 +26,14 @@ import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.servlet.profile.SingleLogoutProfile;
 import com.liferay.saml.runtime.servlet.profile.WebSsoProfile;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"after-filter=Virtual Host Filter", "dispatcher=FORWARD",
 		"dispatcher=REQUEST",
-		"init-param.url-regex-ignore-pattern=^/html/.+\\.(css|gif|html|ico|jpg|js|png)(\\?.*)?$",
+		"init-param.url-regex-ignore-pattern=^/(html|o)/.+\\.(css|gif|html|ico|jpg|js|png)(\\?.*)?$",
 		"servlet-context-name=",
 		"servlet-filter-name=SP SSO SAML Portal Filter", "url-pattern=/*"
 	},
@@ -66,7 +66,7 @@ public class SpSsoSamlPortalFilter extends BaseSamlPortalFilter {
 		HttpServletResponse httpServletResponse) {
 
 		if (!_samlProviderConfigurationHelper.isEnabled() ||
-			!_samlProviderConfigurationHelper.isRoleSp()) {
+			_samlProviderConfigurationHelper.isRoleIdp()) {
 
 			return false;
 		}
@@ -193,7 +193,7 @@ public class SpSsoSamlPortalFilter extends BaseSamlPortalFilter {
 			WebKeys.LAST_PATH);
 
 		if (GetterUtil.getBoolean(
-				_props.get(PropsKeys.AUTH_FORWARD_BY_LAST_PATH)) &&
+				PropsUtil.get(PropsKeys.AUTH_FORWARD_BY_LAST_PATH)) &&
 			(lastPath != null) && Validator.isNull(relayState)) {
 
 			relayState = StringBundler.concat(
@@ -214,9 +214,6 @@ public class SpSsoSamlPortalFilter extends BaseSamlPortalFilter {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private Props _props;
 
 	@Reference
 	private SamlHttpRequestHelper _samlHttpRequestHelper;

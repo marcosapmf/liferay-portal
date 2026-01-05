@@ -659,7 +659,6 @@ public class SiteNavigationMenuPersistenceImpl
 		"(siteNavigationMenu.uuid IS NULL OR siteNavigationMenu.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the site navigation menu where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchMenuException</code> if it could not be found.
@@ -845,68 +844,13 @@ public class SiteNavigationMenuPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SiteNavigationMenu.class)) {
+		SiteNavigationMenu siteNavigationMenu = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SITENAVIGATIONMENU_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (siteNavigationMenu == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2005,6 +1949,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return findByGroupId(groupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2340,6 +2294,16 @@ public class SiteNavigationMenuPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupIds)) {
 			return findByGroupId(groupIds, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupIds, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupIds);
 		}
 
 		if (groupIds == null) {
@@ -2770,6 +2734,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return countByGroupId(groupId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus = findByGroupId(
+				groupId);
+
+			siteNavigationMenus = InlineSQLHelperUtil.filter(
+				siteNavigationMenus, groupId);
+
+			return siteNavigationMenus.size();
+		}
+
 		StringBundler sb = new StringBundler(2);
 
 		sb.append(_FILTER_SQL_COUNT_SITENAVIGATIONMENU_WHERE);
@@ -2816,6 +2790,13 @@ public class SiteNavigationMenuPersistenceImpl
 	public int filterCountByGroupId(long[] groupIds) {
 		if (!InlineSQLHelperUtil.isEnabled(groupIds)) {
 			return countByGroupId(groupIds);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus =
+				InlineSQLHelperUtil.filter(findByGroupId(groupIds), groupIds);
+
+			return siteNavigationMenus.size();
 		}
 
 		if (groupIds == null) {
@@ -3393,7 +3374,6 @@ public class SiteNavigationMenuPersistenceImpl
 		"siteNavigationMenu.companyId = ?";
 
 	private FinderPath _finderPathFetchByG_N;
-	private FinderPath _finderPathCountByG_N;
 
 	/**
 	 * Returns the site navigation menu where groupId = &#63; and name = &#63; or throws a <code>NoSuchMenuException</code> if it could not be found.
@@ -3579,68 +3559,13 @@ public class SiteNavigationMenuPersistenceImpl
 	 */
 	@Override
 	public int countByG_N(long groupId, String name) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SiteNavigationMenu.class)) {
+		SiteNavigationMenu siteNavigationMenu = fetchByG_N(groupId, name);
 
-			name = Objects.toString(name, "");
-
-			FinderPath finderPath = _finderPathCountByG_N;
-
-			Object[] finderArgs = new Object[] {groupId, name};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SITENAVIGATIONMENU_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_N_GROUPID_2);
-
-				boolean bindName = false;
-
-				if (name.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_N_NAME_3);
-				}
-				else {
-					bindName = true;
-
-					sb.append(_FINDER_COLUMN_G_N_NAME_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindName) {
-						queryPos.add(name);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (siteNavigationMenu == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_N_GROUPID_2 =
@@ -4196,6 +4121,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return findByG_LikeN(groupId, name, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_LikeN(
+					groupId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		name = Objects.toString(name, "");
 
 		StringBundler sb = null;
@@ -4573,6 +4508,16 @@ public class SiteNavigationMenuPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupIds)) {
 			return findByG_LikeN(groupIds, name, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_LikeN(
+					groupIds, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupIds);
 		}
 
 		if (groupIds == null) {
@@ -5104,6 +5049,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return countByG_LikeN(groupId, name);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus = findByG_LikeN(
+				groupId, name);
+
+			siteNavigationMenus = InlineSQLHelperUtil.filter(
+				siteNavigationMenus, groupId);
+
+			return siteNavigationMenus.size();
+		}
+
 		name = Objects.toString(name, "");
 
 		StringBundler sb = new StringBundler(3);
@@ -5168,6 +5123,14 @@ public class SiteNavigationMenuPersistenceImpl
 	public int filterCountByG_LikeN(long[] groupIds, String name) {
 		if (!InlineSQLHelperUtil.isEnabled(groupIds)) {
 			return countByG_LikeN(groupIds, name);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus =
+				InlineSQLHelperUtil.filter(
+					findByG_LikeN(groupIds, name), groupIds);
+
+			return siteNavigationMenus.size();
 		}
 
 		if (groupIds == null) {
@@ -5779,6 +5742,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return findByG_T(groupId, type, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_T(
+					groupId, type, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -6162,6 +6135,16 @@ public class SiteNavigationMenuPersistenceImpl
 	public int filterCountByG_T(long groupId, int type) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_T(groupId, type);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus = findByG_T(
+				groupId, type);
+
+			siteNavigationMenus = InlineSQLHelperUtil.filter(
+				siteNavigationMenus, groupId);
+
+			return siteNavigationMenus.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -6739,6 +6722,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return findByG_A(groupId, auto, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_A(
+					groupId, auto, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -7124,6 +7117,16 @@ public class SiteNavigationMenuPersistenceImpl
 			return countByG_A(groupId, auto);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SiteNavigationMenu> siteNavigationMenus = findByG_A(
+				groupId, auto);
+
+			siteNavigationMenus = InlineSQLHelperUtil.filter(
+				siteNavigationMenus, groupId);
+
+			return siteNavigationMenus.size();
+		}
+
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(_FILTER_SQL_COUNT_SITENAVIGATIONMENU_WHERE);
@@ -7174,7 +7177,6 @@ public class SiteNavigationMenuPersistenceImpl
 		"siteNavigationMenu.auto_ = ?";
 
 	private FinderPath _finderPathFetchByERC_G;
-	private FinderPath _finderPathCountByERC_G;
 
 	/**
 	 * Returns the site navigation menu where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchMenuException</code> if it could not be found.
@@ -7368,68 +7370,14 @@ public class SiteNavigationMenuPersistenceImpl
 	 */
 	@Override
 	public int countByERC_G(String externalReferenceCode, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SiteNavigationMenu.class)) {
+		SiteNavigationMenu siteNavigationMenu = fetchByERC_G(
+			externalReferenceCode, groupId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_G;
-
-			Object[] finderArgs = new Object[] {externalReferenceCode, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SITENAVIGATIONMENU_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (siteNavigationMenu == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
@@ -7588,8 +7536,6 @@ public class SiteNavigationMenuPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, siteNavigationMenuModelImpl);
 
 			args = new Object[] {
@@ -7597,7 +7543,6 @@ public class SiteNavigationMenuPersistenceImpl
 				siteNavigationMenuModelImpl.getName()
 			};
 
-			finderCache.putResult(_finderPathCountByG_N, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByG_N, args, siteNavigationMenuModelImpl);
 
@@ -7606,8 +7551,6 @@ public class SiteNavigationMenuPersistenceImpl
 				siteNavigationMenuModelImpl.getGroupId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByERC_G, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByERC_G, args, siteNavigationMenuModelImpl);
 		}
@@ -8368,6 +8311,7 @@ public class SiteNavigationMenuPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -8380,15 +8324,16 @@ public class SiteNavigationMenuPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("type_");
-		ctStrictColumnNames.add("auto_");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("type_");
+		ctMergeColumnNames.add("auto_");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("siteNavigationMenuId"));
@@ -8445,11 +8390,6 @@ public class SiteNavigationMenuPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -8516,11 +8456,6 @@ public class SiteNavigationMenuPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "name"}, true);
 
-		_finderPathCountByG_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_N",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "name"}, false);
-
 		_finderPathWithPaginationFindByG_LikeN = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_LikeN",
 			new String[] {
@@ -8577,11 +8512,6 @@ public class SiteNavigationMenuPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "groupId"}, true);
-
-		_finderPathCountByERC_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "groupId"}, false);
 
 		SiteNavigationMenuUtil.setPersistence(this);
 	}

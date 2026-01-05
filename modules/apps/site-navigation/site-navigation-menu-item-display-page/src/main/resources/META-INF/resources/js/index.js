@@ -9,8 +9,11 @@ import ClayForm, {ClayCheckbox, ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import classNames from 'classnames';
-import {TranslationAdminSelector} from 'frontend-js-components-web';
-import {fetch, objectToFormData, openSelectionModal} from 'frontend-js-web';
+import {
+	TranslationAdminSelector,
+	openSelectionModal,
+} from 'frontend-js-components-web';
+import {fetch, objectToFormData} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -73,17 +76,17 @@ function DisplayPageItemContextualSidebar({
 
 					let value;
 
-					if (typeof selectedItem.value === 'string') {
+					if (typeof selectedItems.value === 'string') {
 						try {
-							value = JSON.parse(selectedItem.value);
+							value = JSON.parse(selectedItems.value);
 						}
 						catch (error) {}
 					}
 					else if (
-						selectedItem.value &&
-						typeof selectedItem.value === 'object'
+						selectedItems.value &&
+						typeof selectedItems.value === 'object'
 					) {
-						value = selectedItem.value;
+						value = selectedItems.value;
 					}
 
 					if (value) {
@@ -286,10 +289,9 @@ DisplayPageItemContextualSidebar.propTypes = {
 	defaultLanguageId: PropTypes.string.isRequired,
 	hasDisplayPage: PropTypes.bool.isRequired,
 	item: PropTypes.shape({
-		classNameId: PropTypes.string,
-		classPK: PropTypes.string,
-		classTypeId: PropTypes.string,
+		className: PropTypes.string,
 		data: PropTypes.array,
+		externalReferenceCode: PropTypes.string,
 		title: PropTypes.string,
 		type: PropTypes.string,
 	}).isRequired,
@@ -305,22 +307,22 @@ function FormValues({localizedNames, namespace, selectedItem, useCustomName}) {
 	return (
 		<>
 			<input
-				name={getFieldName(namespace, 'classNameId')}
+				name={getFieldName(namespace, 'className')}
 				readOnly
 				type="hidden"
-				value={selectedItem.classNameId || ''}
+				value={selectedItem.className || ''}
 			/>
 			<input
-				name={getFieldName(namespace, 'classPK')}
+				name={getFieldName(namespace, 'externalReferenceCode')}
 				readOnly
 				type="hidden"
-				value={selectedItem.classPK || ''}
+				value={selectedItem.externalReferenceCode || ''}
 			/>
 			<input
-				name={getFieldName(namespace, 'classTypeId')}
+				name={getFieldName(namespace, 'scopeExternalReferenceCode')}
 				readOnly
 				type="hidden"
-				value={selectedItem.classTypeId || ''}
+				value={selectedItem.scopeExternalReferenceCode || ''}
 			/>
 			<input
 				name={getFieldName(namespace, 'title')}
@@ -354,10 +356,9 @@ FormValues.propTypes = {
 	localizedNames: PropTypes.object.isRequired,
 	namespace: PropTypes.string.isRequired,
 	selectedItem: PropTypes.shape({
-		classNameId: PropTypes.string,
-		classPK: PropTypes.string,
-		classTypeId: PropTypes.string,
+		className: PropTypes.string,
 		data: PropTypes.array,
+		externalReferenceCode: PropTypes.string,
 		title: PropTypes.string,
 		type: PropTypes.string,
 	}).isRequired,

@@ -16,10 +16,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.portlet.RenderRequest;
+import jakarta.portlet.RenderRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -100,10 +100,10 @@ public class PortletSharedRequestHelperImpl
 			requestURL = _portal.getAbsoluteURL(
 				httpServletRequest,
 				(String)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI));
+					JavaConstants.JAKARTA_SERVLET_FORWARD_REQUEST_URI));
 
 			queryString = (String)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING);
+				JavaConstants.JAKARTA_SERVLET_FORWARD_QUERY_STRING);
 		}
 		else {
 			requestURL = _portal.getAbsoluteURL(

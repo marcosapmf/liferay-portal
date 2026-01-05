@@ -15,9 +15,9 @@ import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 import com.liferay.product.navigation.personal.menu.BasePersonalMenuEntry;
 import com.liferay.product.navigation.personal.menu.PersonalMenuEntry;
 
-import javax.portlet.PortletRequest;
+import jakarta.portlet.PortletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,14 +61,9 @@ public class AccessibilityMenuPersonalMenuEntry extends BasePersonalMenuEntry {
 	public boolean isShow(
 		PortletRequest portletRequest, PermissionChecker permissionChecker) {
 
-		if (AccessibilitySettingsUtil.isAccessibilityMenuEnabled(
-				_portal.getHttpServletRequest(portletRequest),
-				_configurationProvider)) {
-
-			return true;
-		}
-
-		return false;
+		return AccessibilitySettingsUtil.isAccessibilityMenuEnabled(
+			_portal.getHttpServletRequest(portletRequest),
+			_configurationProvider);
 	}
 
 	@Reference

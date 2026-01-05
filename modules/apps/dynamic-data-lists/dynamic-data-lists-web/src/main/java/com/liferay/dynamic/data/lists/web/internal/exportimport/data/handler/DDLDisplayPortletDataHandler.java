@@ -19,7 +19,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	property = "javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY,
+	property = "jakarta.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY,
 	service = PortletDataHandler.class
 )
 public class DDLDisplayPortletDataHandler extends BasePortletDataHandler {
@@ -76,14 +76,15 @@ public class DDLDisplayPortletDataHandler extends BasePortletDataHandler {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(DDLRecord.class),
 			new StagedModelType(DDLRecordSet.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "record-sets", true, false, null,
 				DDLRecordSet.class.getName()),
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "records", true, false, null,
 				DDLRecord.class.getName()));
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override
@@ -108,7 +109,7 @@ public class DDLDisplayPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS + ")"
+		target = "(jakarta.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS + ")"
 	)
 	private PortletDataHandler _ddlPortletDataHandler;
 

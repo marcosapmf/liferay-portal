@@ -16,9 +16,9 @@ import sub from '../../utils/language/sub';
 function SearchableTypesModal({
 	initialSelectedTypes,
 	observer,
+	onChangeTypes,
 	onClose,
 	onFetchSearchableTypes,
-	onFrameworkConfigChange,
 	searchableTypes,
 }) {
 	const [modalSelectedTypes, setModalSelectedTypes] =
@@ -31,9 +31,7 @@ function SearchableTypesModal({
 	const _handleModalDone = () => {
 		onClose();
 
-		onFrameworkConfigChange({
-			searchableAssetTypes: modalSelectedTypes,
-		});
+		onChangeTypes(modalSelectedTypes);
 	};
 
 	const _handleRowCheck = (type) => () => {
@@ -52,7 +50,9 @@ function SearchableTypesModal({
 			observer={observer}
 			size="lg"
 		>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{Liferay.Language.get('select-types')}
 			</ClayModal.Header>
 
@@ -213,8 +213,8 @@ function SearchableTypesModal({
 export default function ({
 	children,
 	initialSelectedTypes,
+	onChangeTypes,
 	onFetchSearchableTypes,
-	onFrameworkConfigChange,
 	searchableTypes,
 }) {
 	const {observer, onOpenChange, open} = useModal();
@@ -229,9 +229,9 @@ export default function ({
 				<SearchableTypesModal
 					initialSelectedTypes={initialSelectedTypes}
 					observer={observer}
+					onChangeTypes={onChangeTypes}
 					onClose={_handleClose}
 					onFetchSearchableTypes={onFetchSearchableTypes}
-					onFrameworkConfigChange={onFrameworkConfigChange}
 					searchableTypes={searchableTypes}
 				/>
 			)}

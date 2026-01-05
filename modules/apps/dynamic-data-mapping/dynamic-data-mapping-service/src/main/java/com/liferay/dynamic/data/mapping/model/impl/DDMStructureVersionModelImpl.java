@@ -9,8 +9,10 @@ import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersionModel;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
@@ -30,6 +32,8 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -1464,9 +1468,17 @@ public class DDMStructureVersionModelImpl
 			ddmStructureVersionCacheModel.statusDate = Long.MIN_VALUE;
 		}
 
-		setDDMForm(null);
+		try {
+			setDDMForm(null);
 
-		ddmStructureVersionCacheModel._ddmForm = getDDMForm();
+			ddmStructureVersionCacheModel.ddmForm =
+				(com.liferay.dynamic.data.mapping.model.DDMForm)
+					_ddmFormMethodHandle.invokeExact(
+						(DDMStructureVersionImpl)this);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return ddmStructureVersionCacheModel;
 	}
@@ -1670,6 +1682,41 @@ public class DDMStructureVersionModelImpl
 	}
 
 	private long _columnBitmask;
+
+	protected static final BiConsumer
+		<DDMStructureVersion, com.liferay.dynamic.data.mapping.model.DDMForm>
+			ddmFormUpdateEntityCacheBiConsumer =
+				(ddmStructureVersion, ddmForm) -> {
+					DDMStructureVersionCacheModel
+						ddmStructureVersionCacheModel =
+							EntityCacheUtil.fetchCacheModel(
+								DDMStructureVersionImpl.class,
+								ddmStructureVersion.getPrimaryKey(),
+								DDMStructureVersionCacheModel.class);
+
+					if ((ddmStructureVersionCacheModel != null) &&
+						(ddmStructureVersionCacheModel.getMvccVersion() ==
+							ddmStructureVersion.getMvccVersion())) {
+
+						ddmStructureVersionCacheModel.ddmForm = ddmForm;
+					}
+				};
+
+	private static final MethodHandle _ddmFormMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_ddmFormMethodHandle = lookup.findGetter(
+				DDMStructureVersionImpl.class, "_ddmForm",
+				com.liferay.dynamic.data.mapping.model.DDMForm.class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
+
 	private DDMStructureVersion _escapedModel;
 
 }

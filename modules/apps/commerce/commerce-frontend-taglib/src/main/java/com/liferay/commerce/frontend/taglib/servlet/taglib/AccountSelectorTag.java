@@ -5,44 +5,57 @@
 
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
+import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
+import com.liferay.commerce.configuration.CommerceOrderConfiguration;
+import com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration;
+import com.liferay.commerce.constants.CommerceConstants;
+import com.liferay.commerce.constants.CommerceOrderActionKeys;
+import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.frontend.taglib.internal.model.CurrentCommerceAccountModel;
 import com.liferay.commerce.frontend.taglib.internal.model.CurrentCommerceOrderModel;
 import com.liferay.commerce.frontend.taglib.internal.model.WorkflowStatusModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.commerce.model.CommerceOrder;
-import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.service.CommerceOrderTypeLocalService;
+import com.liferay.commerce.order.CommerceOrderHttpHelper;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
 
 /**
  * @author Fabio Diego Mastrorilli
+ * @author Gianmarco Brunialti Masera
  */
 public class AccountSelectorTag extends IncludeTag {
 
@@ -55,27 +68,32 @@ public class AccountSelectorTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
+			_commerceChannelGroupId = 0;
 			_commerceChannelId = 0;
 
 			if (commerceContext != null) {
+				_commerceChannelGroupId =
+					commerceContext.getCommerceChannelGroupId();
 				_commerceChannelId = commerceContext.getCommerceChannelId();
 			}
 
 			if (_commerceChannelId == 0) {
-				_accountEntryAllowedTypes = new String[0];
-				_addCommerceOrderURL = StringPool.BLANK;
-				_editOrderURL = StringPool.BLANK;
-				_setCurrentAccountURL = StringPool.BLANK;
-
 				return super.doStartTag();
 			}
 
 			_accountEntry = commerceContext.getAccountEntry();
-			_accountEntryAllowedTypes =
-				commerceContext.getAccountEntryAllowedTypes();
-			_addCommerceOrderURL = _getAddCommerceOrderURL(httpServletRequest);
+			_addCommerceOrderURL =
+				_commerceOrderHttpHelper.getCommerceCartBaseURL(
+					httpServletRequest);
 			_commerceOrder = commerceContext.getCommerceOrder();
+
+			CommerceCurrency commerceCurrency =
+				commerceContext.getCommerceCurrency();
+
+			_currencyCode = commerceCurrency.getCode();
+
 			_editOrderURL = _getEditOrderURL(httpServletRequest);
+			_orderSelectionDisabled = _isOrderSelectionDisabled();
 			_setCurrentAccountURL =
 				PortalUtil.getPortalURL(httpServletRequest) +
 					PortalUtil.getPathContext() +
@@ -84,21 +102,22 @@ public class AccountSelectorTag extends IncludeTag {
 			_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-			if (Validator.isNull(_spritemap)) {
-				_spritemap = _themeDisplay.getPathThemeSpritemap();
-			}
+			_spritemap = _themeDisplay.getPathThemeSpritemap();
 		}
 		catch (Exception exception) {
 			_log.error(exception);
 
 			_accountEntry = null;
-			_accountEntryAllowedTypes = null;
-			_addCommerceOrderURL = null;
+			_addCommerceOrderURL = StringPool.BLANK;
+			_commerceChannelGroupId = 0;
 			_commerceChannelId = 0;
 			_commerceOrder = null;
-			_editOrderURL = null;
-			_setCurrentAccountURL = null;
-			_spritemap = null;
+			_commerceOrderPortletResourcePermission = null;
+			_configurationProvider = null;
+			_currencyCode = StringPool.BLANK;
+			_editOrderURL = StringPool.BLANK;
+			_setCurrentAccountURL = StringPool.BLANK;
+			_spritemap = StringPool.BLANK;
 			_themeDisplay = null;
 		}
 
@@ -121,27 +140,15 @@ public class AccountSelectorTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		try {
-			HttpServletRequest httpServletRequest = getRequest();
+		setServletContext(ServletContextUtil.getServletContext());
 
-			CommerceContext commerceContext =
-				(CommerceContext)httpServletRequest.getAttribute(
-					CommerceWebKeys.COMMERCE_CONTEXT);
-
-			_commerceChannelId = 0;
-
-			if (commerceContext != null) {
-				_commerceChannelId = commerceContext.getCommerceChannelId();
-			}
-
-			_commerceOrderTypeLocalService =
-				ServletContextUtil.getCommerceOrderTypeLocalService();
-
-			setServletContext(ServletContextUtil.getServletContext());
-		}
-		catch (Exception exception) {
-			_log.error(exception);
-		}
+		_commerceOrderHttpHelper =
+			ServletContextUtil.getCommerceOrderHttpHelper();
+		_commerceOrderLocalService =
+			ServletContextUtil.getCommerceOrderLocalService();
+		_commerceOrderPortletResourcePermission =
+			ServletContextUtil.getCommerceOrderPortletResourcePermission();
+		_configurationProvider = ServletContextUtil.getConfigurationProvider();
 	}
 
 	public void setSpritemap(String spritemap) {
@@ -153,15 +160,20 @@ public class AccountSelectorTag extends IncludeTag {
 		super.cleanUp();
 
 		_accountEntry = null;
-		_accountEntryAllowedTypes = null;
-		_addCommerceOrderURL = null;
+		_addCommerceOrderURL = StringPool.BLANK;
+		_commerceChannelGroupId = 0;
 		_commerceChannelId = 0;
 		_commerceOrder = null;
-		_commerceOrderTypeLocalService = null;
+		_commerceOrderHttpHelper = null;
+		_commerceOrderLocalService = null;
+		_commerceOrderPortletResourcePermission = null;
+		_configurationProvider = null;
 		_cssClasses = StringPool.BLANK;
-		_editOrderURL = null;
-		_setCurrentAccountURL = null;
-		_spritemap = null;
+		_currencyCode = StringPool.BLANK;
+		_editOrderURL = StringPool.BLANK;
+		_orderSelectionDisabled = false;
+		_setCurrentAccountURL = StringPool.BLANK;
+		_spritemap = StringPool.BLANK;
 		_themeDisplay = null;
 	}
 
@@ -172,9 +184,6 @@ public class AccountSelectorTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
-		httpServletRequest.setAttribute(
-			"liferay-commerce:account-selector:accountEntryAllowedTypes",
-			_accountEntryAllowedTypes);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:commerceChannelId",
 			_commerceChannelId);
@@ -229,60 +238,23 @@ public class AccountSelectorTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:cssClasses", _cssClasses);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:currencyCode", _currencyCode);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:hasAddCommerceOrderPermission",
+			_hasAddCommerceOrderPermission());
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:hasManageAccountsPermission",
+			_hasManageAccountsPermission());
+		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:orderSelectionDisabled",
+			_orderSelectionDisabled);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:selectOrderURL", _editOrderURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:setCurrentAccountURL",
 			_setCurrentAccountURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:spritemap", _spritemap);
-	}
-
-	private String _getAddCommerceOrderURL(
-			HttpServletRequest httpServletRequest)
-		throws PortalException {
-
-		int commerceOrderTypesCount =
-			_commerceOrderTypeLocalService.getCommerceOrderTypesCount(
-				PortalUtil.getCompanyId(httpServletRequest),
-				CommerceChannel.class.getName(), _commerceChannelId, true);
-
-		if (commerceOrderTypesCount > 1) {
-			httpServletRequest.setAttribute(
-				"liferay-commerce:account-selector:showOrderTypeModal",
-				Boolean.TRUE);
-
-			return PortletURLBuilder.create(
-				_getPortletURL(
-					httpServletRequest,
-					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
-			).setMVCRenderCommandName(
-				"/commerce_order_content/view_commerce_order_order_type_modal"
-			).setWindowState(
-				LiferayWindowState.POP_UP
-			).buildString();
-		}
-
-		httpServletRequest.setAttribute(
-			"liferay-commerce:account-selector:showOrderTypeModal",
-			Boolean.FALSE);
-
-		long plid = PortalUtil.getPlidFromPortletId(
-			PortalUtil.getScopeGroupId(httpServletRequest),
-			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
-
-		if (plid > 0) {
-			return PortletURLBuilder.create(
-				_getPortletURL(
-					httpServletRequest,
-					CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)
-			).setActionName(
-				"/commerce_open_order_content/edit_commerce_order"
-			).setCMD(
-				Constants.ADD
-			).buildString();
-		}
-
-		return StringPool.BLANK;
 	}
 
 	private String _getEditOrderURL(HttpServletRequest httpServletRequest)
@@ -292,7 +264,7 @@ public class AccountSelectorTag extends IncludeTag {
 			PortalUtil.getScopeGroupId(httpServletRequest),
 			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
 
-		if (plid > 0) {
+		if ((plid > 0) || FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
 			return PortletURLBuilder.create(
 				_getPortletURL(
 					httpServletRequest,
@@ -327,21 +299,120 @@ public class AccountSelectorTag extends IncludeTag {
 			httpServletRequest, portletId, PortletRequest.ACTION_PHASE);
 	}
 
+	private boolean _hasAddCommerceOrderPermission() {
+		if ((_accountEntry == null) || (_themeDisplay == null)) {
+			return false;
+		}
+
+		try {
+			CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
+				_configurationProvider.getConfiguration(
+					CommerceOrderFieldsConfiguration.class,
+					new GroupServiceSettingsLocator(
+						_commerceChannelGroupId,
+						CommerceConstants.SERVICE_NAME_COMMERCE_ORDER_FIELDS));
+
+			int commerceOrdersCount =
+				(int)_commerceOrderLocalService.getCommerceOrdersCount(
+					_accountEntry.getCompanyId(), _commerceChannelGroupId,
+					new long[] {_accountEntry.getAccountEntryId()},
+					StringPool.BLANK,
+					new int[] {CommerceOrderConstants.ORDER_STATUS_OPEN},
+					false);
+
+			if ((commerceOrderFieldsConfiguration.accountCartMaxAllowed() >
+					0) &&
+				(commerceOrdersCount >=
+					commerceOrderFieldsConfiguration.accountCartMaxAllowed())) {
+
+				return false;
+			}
+
+			CommerceOrderCheckoutConfiguration
+				commerceOrderCheckoutConfiguration =
+					_configurationProvider.getConfiguration(
+						CommerceOrderCheckoutConfiguration.class,
+						new GroupServiceSettingsLocator(
+							_commerceChannelGroupId,
+							CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+			if (_accountEntry.isGuestAccount() &&
+				commerceOrderCheckoutConfiguration.guestCheckoutEnabled()) {
+
+				return true;
+			}
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return _commerceOrderPortletResourcePermission.contains(
+			_themeDisplay.getPermissionChecker(),
+			_accountEntry.getAccountEntryGroupId(),
+			CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
+	}
+
+	private boolean _hasManageAccountsPermission() {
+		if (_themeDisplay == null) {
+			return false;
+		}
+
+		try {
+			ModelResourcePermission<User> userModelResourcePermission =
+				_userModelResourcePermissionSnapshot.get();
+
+			return userModelResourcePermission.contains(
+				_themeDisplay.getPermissionChecker(), _themeDisplay.getUser(),
+				AccountActionKeys.MANAGE_ACCOUNTS);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return false;
+	}
+
+	private boolean _isOrderSelectionDisabled() throws PortalException {
+		if (FeatureFlagManagerUtil.isEnabled("LPD-58472")) {
+			CommerceOrderConfiguration commerceOrderConfiguration =
+				_configurationProvider.getConfiguration(
+					CommerceOrderConfiguration.class,
+					new GroupServiceSettingsLocator(
+						_commerceChannelGroupId,
+						CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+			return commerceOrderConfiguration.orderSelectionDisabled();
+		}
+
+		return false;
+	}
+
 	private static final String _PAGE = "/account_selector/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AccountSelectorTag.class);
 
+	private static final Snapshot<ModelResourcePermission<User>>
+		_userModelResourcePermissionSnapshot = new Snapshot<>(
+			AccountSelectorTag.class,
+			Snapshot.cast(ModelResourcePermission.class),
+			"(model.class.name=com.liferay.portal.kernel.model.User)");
+
 	private AccountEntry _accountEntry;
-	private String[] _accountEntryAllowedTypes;
-	private String _addCommerceOrderURL;
+	private String _addCommerceOrderURL = StringPool.BLANK;
+	private long _commerceChannelGroupId;
 	private long _commerceChannelId;
 	private CommerceOrder _commerceOrder;
-	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
+	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
+	private CommerceOrderLocalService _commerceOrderLocalService;
+	private PortletResourcePermission _commerceOrderPortletResourcePermission;
+	private ConfigurationProvider _configurationProvider;
 	private String _cssClasses = StringPool.BLANK;
-	private String _editOrderURL;
-	private String _setCurrentAccountURL;
-	private String _spritemap;
+	private String _currencyCode = StringPool.BLANK;
+	private String _editOrderURL = StringPool.BLANK;
+	private boolean _orderSelectionDisabled;
+	private String _setCurrentAccountURL = StringPool.BLANK;
+	private String _spritemap = StringPool.BLANK;
 	private ThemeDisplay _themeDisplay;
 
 }

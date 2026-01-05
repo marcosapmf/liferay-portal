@@ -8,11 +8,11 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.MessageFormSubmissionResultSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -74,6 +74,32 @@ public class MessageFormSubmissionResult implements Cloneable, Serializable {
 	}
 
 	protected MessageType messageType;
+
+	public FragmentInlineValue getNotificationTextFragmentInlineValue() {
+		return notificationTextFragmentInlineValue;
+	}
+
+	public void setNotificationTextFragmentInlineValue(
+		FragmentInlineValue notificationTextFragmentInlineValue) {
+
+		this.notificationTextFragmentInlineValue =
+			notificationTextFragmentInlineValue;
+	}
+
+	public void setNotificationTextFragmentInlineValue(
+		UnsafeSupplier<FragmentInlineValue, Exception>
+			notificationTextFragmentInlineValueUnsafeSupplier) {
+
+		try {
+			notificationTextFragmentInlineValue =
+				notificationTextFragmentInlineValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentInlineValue notificationTextFragmentInlineValue;
 
 	public Boolean getShowNotification() {
 		return showNotification;

@@ -19,7 +19,14 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -33,23 +40,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Zoltán Takács
  * @generated
  */
 @Generated("")
 @GraphQLName("PriceList")
+@io.swagger.v3.oas.annotations.media.Schema(
+	requiredProperties = {"catalogId", "currencyCode", "name", "type"}
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"catalogId", "currencyCode", "name", "type"})
 @XmlRootElement(name = "PriceList")
 public class PriceList implements Serializable {
 
@@ -61,7 +61,7 @@ public class PriceList implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PriceList.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -104,7 +104,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getActive() {
 		if (_activeSupplier != null) {
 			active = _activeSupplier.get();
@@ -145,7 +145,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _activeSupplier;
 
-	@Schema(example = "admin")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "admin")
 	public String getAuthor() {
 		if (_authorSupplier != null) {
 			author = _authorSupplier.get();
@@ -186,7 +186,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _authorSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getCatalogBasePriceList() {
 		if (_catalogBasePriceListSupplier != null) {
 			catalogBasePriceList = _catalogBasePriceListSupplier.get();
@@ -227,8 +227,53 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _catalogBasePriceListSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getCatalogExternalReferenceCode() {
+		if (_catalogExternalReferenceCodeSupplier != null) {
+			catalogExternalReferenceCode =
+				_catalogExternalReferenceCodeSupplier.get();
+
+			_catalogExternalReferenceCodeSupplier = null;
+		}
+
+		return catalogExternalReferenceCode;
+	}
+
+	public void setCatalogExternalReferenceCode(
+		String catalogExternalReferenceCode) {
+
+		this.catalogExternalReferenceCode = catalogExternalReferenceCode;
+
+		_catalogExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCatalogExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			catalogExternalReferenceCodeUnsafeSupplier) {
+
+		_catalogExternalReferenceCodeSupplier = () -> {
+			try {
+				return catalogExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String catalogExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _catalogExternalReferenceCodeSupplier;
+
 	@DecimalMin("0")
-	@Schema(example = "23130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "23130")
 	public Long getCatalogId() {
 		if (_catalogIdSupplier != null) {
 			catalogId = _catalogIdSupplier.get();
@@ -270,7 +315,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _catalogIdSupplier;
 
-	@Schema(example = "catalog")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "catalog")
 	public String getCatalogName() {
 		if (_catalogNameSupplier != null) {
 			catalogName = _catalogNameSupplier.get();
@@ -311,7 +356,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _catalogNameSupplier;
 
-	@Schema(example = "2017-07-21")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -352,7 +397,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema(example = "EUR")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "EUR")
 	public String getCurrencyCode() {
 		if (_currencyCodeSupplier != null) {
 			currencyCode = _currencyCodeSupplier.get();
@@ -394,7 +439,94 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencyCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getCurrencyExternalReferenceCode() {
+		if (_currencyExternalReferenceCodeSupplier != null) {
+			currencyExternalReferenceCode =
+				_currencyExternalReferenceCodeSupplier.get();
+
+			_currencyExternalReferenceCodeSupplier = null;
+		}
+
+		return currencyExternalReferenceCode;
+	}
+
+	public void setCurrencyExternalReferenceCode(
+		String currencyExternalReferenceCode) {
+
+		this.currencyExternalReferenceCode = currencyExternalReferenceCode;
+
+		_currencyExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			currencyExternalReferenceCodeUnsafeSupplier) {
+
+		_currencyExternalReferenceCodeSupplier = () -> {
+			try {
+				return currencyExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String currencyExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _currencyExternalReferenceCodeSupplier;
+
+	@DecimalMin("0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
+	public Long getCurrencyId() {
+		if (_currencyIdSupplier != null) {
+			currencyId = _currencyIdSupplier.get();
+
+			_currencyIdSupplier = null;
+		}
+
+		return currencyId;
+	}
+
+	public void setCurrencyId(Long currencyId) {
+		this.currencyId = currencyId;
+
+		_currencyIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyId(
+		UnsafeSupplier<Long, Exception> currencyIdUnsafeSupplier) {
+
+		_currencyIdSupplier = () -> {
+			try {
+				return currencyIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long currencyId;
+
+	@JsonIgnore
+	private Supplier<Long> _currencyIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, ?> getCustomFields() {
 		if (_customFieldsSupplier != null) {
@@ -436,7 +568,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, ?>> _customFieldsSupplier;
 
-	@Schema(example = "2017-07-21")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
 		if (_displayDateSupplier != null) {
 			displayDate = _displayDateSupplier.get();
@@ -477,7 +609,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _displayDateSupplier;
 
-	@Schema(example = "2017-08-21")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-08-21")
 	public Date getExpirationDate() {
 		if (_expirationDateSupplier != null) {
 			expirationDate = _expirationDateSupplier.get();
@@ -518,7 +650,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _expirationDateSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -560,7 +692,7 @@ public class PriceList implements Serializable {
 	private Supplier<String> _externalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -599,7 +731,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema(example = "Laptops, Beverages")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Laptops, Beverages")
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -639,7 +771,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getNetPrice() {
 		if (_netPriceSupplier != null) {
 			netPrice = _netPriceSupplier.get();
@@ -680,7 +812,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _netPriceSupplier;
 
-	@Schema(example = "true")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "true")
 	public Boolean getNeverExpire() {
 		if (_neverExpireSupplier != null) {
 			neverExpire = _neverExpireSupplier.get();
@@ -722,7 +854,7 @@ public class PriceList implements Serializable {
 	private Supplier<Boolean> _neverExpireSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getParentPriceListId() {
 		if (_parentPriceListIdSupplier != null) {
 			parentPriceListId = _parentPriceListIdSupplier.get();
@@ -763,7 +895,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _parentPriceListIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceEntry[] getPriceEntries() {
 		if (_priceEntriesSupplier != null) {
@@ -805,7 +937,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceEntry[]> _priceEntriesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceListAccountGroup[] getPriceListAccountGroups() {
 		if (_priceListAccountGroupsSupplier != null) {
@@ -850,7 +982,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceListAccountGroup[]> _priceListAccountGroupsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceListAccount[] getPriceListAccounts() {
 		if (_priceListAccountsSupplier != null) {
@@ -893,7 +1025,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceListAccount[]> _priceListAccountsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceListChannel[] getPriceListChannels() {
 		if (_priceListChannelsSupplier != null) {
@@ -936,7 +1068,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceListChannel[]> _priceListChannelsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceListDiscount[] getPriceListDiscounts() {
 		if (_priceListDiscountsSupplier != null) {
@@ -979,7 +1111,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceListDiscount[]> _priceListDiscountsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceListOrderType[] getPriceListOrderTypes() {
 		if (_priceListOrderTypesSupplier != null) {
@@ -1024,7 +1156,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceListOrderType[]> _priceListOrderTypesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PriceModifier[] getPriceModifiers() {
 		if (_priceModifiersSupplier != null) {
@@ -1067,7 +1199,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<PriceModifier[]> _priceModifiersSupplier;
 
-	@Schema(example = "1.2")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "1.2")
 	public Double getPriority() {
 		if (_prioritySupplier != null) {
 			priority = _prioritySupplier.get();
@@ -1108,8 +1240,10 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _prioritySupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		example = "price-list, promotion, contract"
+	)
 	@JsonGetter("type")
-	@Schema(example = "price-list, promotion, contract")
 	@Valid
 	public Type getType() {
 		if (_typeSupplier != null) {
@@ -1161,7 +1295,7 @@ public class PriceList implements Serializable {
 	@JsonIgnore
 	private Supplier<Type> _typeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getWorkflowStatusInfo() {
 		if (_workflowStatusInfoSupplier != null) {
@@ -1285,6 +1419,22 @@ public class PriceList implements Serializable {
 			sb.append(catalogBasePriceList);
 		}
 
+		String catalogExternalReferenceCode = getCatalogExternalReferenceCode();
+
+		if (catalogExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"catalogExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(catalogExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long catalogId = getCatalogId();
 
 		if (catalogId != null) {
@@ -1343,6 +1493,35 @@ public class PriceList implements Serializable {
 			sb.append(_escape(currencyCode));
 
 			sb.append("\"");
+		}
+
+		String currencyExternalReferenceCode =
+			getCurrencyExternalReferenceCode();
+
+		if (currencyExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(currencyExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		Long currencyId = getCurrencyId();
+
+		if (currencyId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyId\": ");
+
+			sb.append(currencyId);
 		}
 
 		Map<String, ?> customFields = getCustomFields();
@@ -1646,9 +1825,7 @@ public class PriceList implements Serializable {
 			sb.append("\"type\": ");
 
 			sb.append("\"");
-
 			sb.append(type);
-
 			sb.append("\"");
 		}
 
@@ -1669,8 +1846,8 @@ public class PriceList implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList",
 		name = "x-class-name"
 	)

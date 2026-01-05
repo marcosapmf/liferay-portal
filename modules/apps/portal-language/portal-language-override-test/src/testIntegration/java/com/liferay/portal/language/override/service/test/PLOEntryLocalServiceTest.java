@@ -76,6 +76,12 @@ public class PLOEntryLocalServiceTest {
 
 		_assertTranslationValue(existingKey, ploEntry.getValue());
 
+		newKey = RandomTestUtil.randomString();
+
+		_addOrUpdatePLOEntry(newKey, "en_CA", RandomTestUtil.randomString());
+
+		_assertTranslationValue(newKey, null);
+
 		_assertException(
 			PLOEntryKeyException.MustBeShorter.class,
 			() -> {
@@ -94,11 +100,16 @@ public class PLOEntryLocalServiceTest {
 			PLOEntryLanguageIdException.MustBeAvailable.class,
 			() -> _addOrUpdatePLOEntry(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				StringPool.BLANK));
+				RandomTestUtil.randomString()));
 		_assertException(
 			PLOEntryValueException.MustNotBeNull.class,
 			() -> _addOrUpdatePLOEntry(
 				RandomTestUtil.randomString(), languageId, StringPool.BLANK));
+
+		ploEntry = _addOrUpdatePLOEntry(
+			RandomTestUtil.randomString(), "en", RandomTestUtil.randomString());
+
+		Assert.assertEquals("en_US", ploEntry.getLanguageId());
 	}
 
 	@Test

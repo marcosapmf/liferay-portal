@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,12 +33,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Jeyvison Nascimento
@@ -54,7 +52,7 @@ public class DataListView implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(DataListView.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getAppliedFilters() {
 		if (_appliedFiltersSupplier != null) {
@@ -97,7 +95,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Object>> _appliedFiltersSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getDataDefinitionId() {
 		if (_dataDefinitionIdSupplier != null) {
 			dataDefinitionId = _dataDefinitionIdSupplier.get();
@@ -138,7 +136,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _dataDefinitionIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getDateCreated() {
 		if (_dateCreatedSupplier != null) {
 			dateCreated = _dateCreatedSupplier.get();
@@ -179,7 +177,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
 			dateModified = _dateModifiedSupplier.get();
@@ -220,7 +218,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getFieldNames() {
 		if (_fieldNamesSupplier != null) {
 			fieldNames = _fieldNamesSupplier.get();
@@ -261,7 +259,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _fieldNamesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -300,7 +298,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getName() {
 		if (_nameSupplier != null) {
@@ -342,7 +340,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Object>> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getSiteId() {
 		if (_siteIdSupplier != null) {
 			siteId = _siteIdSupplier.get();
@@ -383,7 +381,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _siteIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getSortField() {
 		if (_sortFieldSupplier != null) {
 			sortField = _sortFieldSupplier.get();
@@ -424,7 +422,7 @@ public class DataListView implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _sortFieldSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getUserId() {
 		if (_userIdSupplier != null) {
 			userId = _userIdSupplier.get();
@@ -646,8 +644,8 @@ public class DataListView implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.data.engine.rest.dto.v2_0.DataListView",
 		name = "x-class-name"
 	)

@@ -13,17 +13,15 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.upgrade.v7_0_0.UpgradeCompanyId;
-import com.liferay.portal.util.PropsImpl;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -46,42 +44,51 @@ public class UpgradeCompanyIdTest {
 			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
-	public static void setUpClass() throws SQLException {
-		PropsUtil.setProps(new PropsImpl());
-
+	public static void setUpClass() throws Exception {
 		_connection = DataAccess.getConnection();
 
 		_dbInspector = new DBInspector(_connection);
 	}
 
+	@AfterClass
+	public static void tearDownClass() {
+		DataAccess.cleanUp(_connection);
+	}
+
 	@Before
 	public void setUp() throws Exception {
-		_upgradeProcess.runSQL(
-			StringBundler.concat(
-				"create table ", _MAPPING_TABLE_NAME, " (", _COLUMN_NAME,
-				" LONG not null primary key);"));
+		_companyLocalService.forEachCompany(
+			company -> {
+				_upgradeProcess.runSQL(
+					StringBundler.concat(
+						"create table ", _MAPPING_TABLE_NAME, " (",
+						_COLUMN_NAME, " LONG not null primary key)"));
 
-		_upgradeProcess.runSQL(
-			StringBundler.concat(
-				"insert into ", _MAPPING_TABLE_NAME, " (", _COLUMN_NAME,
-				") values (", _COLUMN_VALUE, ");"));
+				_upgradeProcess.runSQL(
+					StringBundler.concat(
+						"insert into ", _MAPPING_TABLE_NAME, " (", _COLUMN_NAME,
+						") values (", _COLUMN_VALUE, ")"));
 
-		_upgradeProcess.runSQL(
-			StringBundler.concat(
-				"create table ", _TABLE_NAME, " (", _COLUMN_NAME,
-				" LONG not null primary key, companyId LONG);"));
+				_upgradeProcess.runSQL(
+					StringBundler.concat(
+						"create table ", _TABLE_NAME, " (", _COLUMN_NAME,
+						" LONG not null primary key, companyId LONG)"));
 
-		_upgradeProcess.runSQL(
-			StringBundler.concat(
-				"insert into ", _TABLE_NAME, " (", _COLUMN_NAME,
-				", companyId) values (", _COLUMN_VALUE,
-				", (select max(companyId) from Company));"));
+				_upgradeProcess.runSQL(
+					StringBundler.concat(
+						"insert into ", _TABLE_NAME, " (", _COLUMN_NAME,
+						", companyId) values (", _COLUMN_VALUE,
+						", (select max(companyId) from Company))"));
+			});
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		_upgradeProcess.runSQL("drop table " + _MAPPING_TABLE_NAME);
-		_upgradeProcess.runSQL("drop table " + _TABLE_NAME);
+		_companyLocalService.forEachCompany(
+			company -> {
+				_upgradeProcess.runSQL("drop table " + _MAPPING_TABLE_NAME);
+				_upgradeProcess.runSQL("drop table " + _TABLE_NAME);
+			});
 	}
 
 	@Test
@@ -100,7 +107,7 @@ public class UpgradeCompanyIdTest {
 		_upgradeProcess.runSQL(
 			StringBundler.concat(
 				"insert into ", _MAPPING_TABLE_NAME, " (", _COLUMN_NAME,
-				") values (", _COLUMN_VALUE - 1, ");"));
+				") values (", _COLUMN_VALUE - 1, ")"));
 
 		try {
 			_upgradeProcess.upgrade();

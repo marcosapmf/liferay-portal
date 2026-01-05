@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -37,17 +37,17 @@ describe('ViewportSizeSelector', () => {
 
 		expect(screen.getByTitle('select-a-viewport')).toBeInTheDocument();
 		expect(
-			screen.getByLabelText('select-a-viewport.-current-viewport-x')
+			screen.getByLabelText('select-a-viewport.-current-viewport-Desktop')
 		).toBeInTheDocument();
 	});
 
-	it('calls onSizeSelected with sizeId when a size is selected', () => {
+	it('calls onSizeSelected with sizeId when a size is selected', async () => {
 		const onSelect = jest.fn();
 		renderComponent({
 			onSelect,
 		});
 
-		userEvent.click(screen.getByLabelText('Mobile'));
+		await userEvent.click(screen.getByLabelText('Mobile'));
 
 		expect(onSelect).toHaveBeenLastCalledWith('mobile');
 	});
@@ -59,7 +59,7 @@ describe('ViewportSizeSelector', () => {
 			onSelect,
 		});
 
-		userEvent.click(screen.getByRole('combobox'));
+		await userEvent.click(screen.getByRole('combobox'));
 
 		const option = screen.getByText('Mobile');
 

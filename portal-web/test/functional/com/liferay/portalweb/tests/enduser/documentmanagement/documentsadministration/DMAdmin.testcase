@@ -4,7 +4,7 @@ definition {
 	property custom.properties = "default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Document Management";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -58,6 +58,8 @@ definition {
 	@description = "This is a test for LPS-91199. It checks that all files selected on different pages can be deleted."
 	@priority = 4
 	test CanDeleteAllDocumentsOnDifferentPagesAtOnce {
+		property custom.properties = "search.container.page.delta.values=4,8,20,40,60";
+
 		for (var entryCount : list "1,2,3,4,5") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
@@ -80,7 +82,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanMoveDocumentsWithMultiplePaginations {
-		property portal.acceptance = "true";
+		property custom.properties = "search.container.page.delta.values=4,8,20,40,60";
+		property portal.acceptance = "quarantine";
 		property portal.release = "quarantine";
 
 		HeadlessSite.addSite(siteName = "Site Name");
@@ -218,6 +221,8 @@ definition {
 	@description = "This test covers LPS-141587. It validates that if the 'Delete Application Data Before Importing' option is selected the Doc Lib will not increase in size after the LAR import."
 	@priority = 4
 	test DLSizeDoesNotIncreaseIfAppDataIsDeletedBeforeImport {
+		Staging.enableDeleteApplicationDataBeforeImport();
+
 		for (var entryCount : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",

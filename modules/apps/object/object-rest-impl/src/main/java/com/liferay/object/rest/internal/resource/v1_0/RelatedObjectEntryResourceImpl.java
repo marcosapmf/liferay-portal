@@ -33,11 +33,11 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.net.URI;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -100,10 +100,9 @@ public class RelatedObjectEntryResourceImpl
 			previousPath);
 
 		ObjectRelationship objectRelationship =
-			_objectRelationshipLocalService.
-				getObjectRelationshipByObjectDefinitionId(
-					systemObjectDefinition.getObjectDefinitionId(),
-					objectRelationshipName);
+			_objectRelationshipLocalService.getObjectRelationship(
+				systemObjectDefinition.getObjectDefinitionId(),
+				objectRelationshipName);
 
 		ObjectDefinition relatedObjectDefinition = _getRelatedObjectDefinition(
 			systemObjectDefinition, objectRelationship);
@@ -111,6 +110,7 @@ public class RelatedObjectEntryResourceImpl
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					systemObjectDefinition.getCompanyId(),
 					systemObjectDefinition.getStorageType()));
 
 		if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
@@ -119,12 +119,10 @@ public class RelatedObjectEntryResourceImpl
 				pagination);
 		}
 
-		return (Page)
-			defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-				_getDefaultDTOConverterContext(
-					systemObjectDefinition, objectEntryId, _uriInfo),
-				systemObjectDefinition, objectEntryId, objectRelationshipName,
-				pagination);
+		return (Page)defaultObjectEntryManager.getRelatedObjectEntries(
+			_getDefaultDTOConverterContext(
+				systemObjectDefinition, objectEntryId, _uriInfo),
+			objectEntryId, objectRelationship, pagination);
 	}
 
 	@Override
@@ -247,6 +245,7 @@ public class RelatedObjectEntryResourceImpl
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
+					systemObjectDefinition.getCompanyId(),
 					systemObjectDefinition.getStorageType()));
 
 		ObjectDefinition relatedObjectDefinition = _getRelatedObjectDefinition(

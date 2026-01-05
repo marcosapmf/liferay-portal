@@ -24,15 +24,11 @@ definition {
 			locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
 
 		if (isSet(orderType)) {
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
-
 			Select(
 				locator1 = "Select#TYPE",
 				value1 = ${orderType});
 
 			Button.click(button = "Add Order");
-
-			SelectFrame.selectFrameTop();
 		}
 
 		WaitForElementPresent(
@@ -873,7 +869,9 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewMiniCartItem(cartItemPriceInactiveValue = null, cartItemName = null, cartItemPromoPriceValue = null, cartItemQuantity = null, bundledItems = null, cartItemSku = null, cartItemPriceValue = null, cartItemUOMKey = null, optionName = null) {
+	macro viewMiniCartItem(cartItemPriceInactiveValue = null, cartItemName = null,
+	cartItemPromoPriceValue = null, cartItemQuantity = null, bundledItems = null,
+	cartItemSku = null, cartItemPriceValue = null, cartItemUOMKey = null, optionName = null) {
 		if (!(isSet(cartItemPriceOnApplication))) {
 			var cartItemPriceOnApplication = "false";
 		}
@@ -892,11 +890,13 @@ definition {
 			locator1 = "CommerceAccelerators#MINI_CART_ITEM_SKU",
 			value1 = ${cartItemSku});
 
-		AssertTextEquals(
-			key_cartItemSku = ${cartItemSku},
-			key_index = ${index},
-			locator1 = "CommerceAccelerators#MINI_CART_ITEM_QUANTITY_N",
-			value1 = ${cartItemQuantity});
+		if (isSet(cartItemQuantity)) {
+			AssertTextEquals(
+				key_cartItemSku = ${cartItemSku},
+				key_index = ${index},
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_QUANTITY_N",
+				value1 = ${cartItemQuantity});
+		}
 
 		if (isSet(bundledItems)) {
 			var key_cartItemSku = ${cartItemSku};

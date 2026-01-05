@@ -9,11 +9,12 @@ import com.liferay.message.boards.display.context.MBHomeDisplayContext;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.web.internal.display.context.helper.MBRequestHelper;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.UUID;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Iván Zaera
@@ -32,11 +33,13 @@ public class DefaultMBHomeDisplayContext implements MBHomeDisplayContext {
 		MBCategory category = _mbRequestHelper.getCategory();
 
 		if (category == null) {
-			return "add-category";
+			return LanguageUtil.get(
+				_mbRequestHelper.getRequest(), "add-category[message-board]");
 		}
 
 		return LanguageUtil.format(
-			_mbRequestHelper.getRequest(), "edit-x", category.getName(), false);
+			_mbRequestHelper.getRequest(), "edit-x",
+			HtmlUtil.escape(category.getName()), false);
 	}
 
 	@Override

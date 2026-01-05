@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {format} from 'date-fns';
-import {delegate, openConfirmModal, unescapeHTML} from 'frontend-js-web';
+import {openConfirmModal} from 'frontend-js-components-web';
+import {delegate, unescapeHTML} from 'frontend-js-web';
 
 const TPL_TAG_FORM =
 	'<div class="c-mb-4 row {key}" >' +
@@ -43,9 +43,13 @@ export function reportParameters({namespace, parameters}) {
 		'.remove-existing-report'
 	);
 
-	const existingReportElement = document.querySelector('.existing-report');
+	const templateReportFileNameElement = document.querySelector(
+		'.lfr-reports__template-report-file-name'
+	);
 
-	const templateReportElement = document.querySelector('.template-report');
+	const templateReportInputElement = document.querySelector(
+		'.lfr-reports__template-report-input'
+	);
 
 	const cancelUpdateReportElement = document.querySelector(
 		'.cancel-update-template-report'
@@ -126,7 +130,7 @@ export function reportParameters({namespace, parameters}) {
 		}
 
 		if (parametersType === 'date') {
-			parametersValue = getDateValue();
+			parametersValue = getDateValue(namespace);
 		}
 
 		parametersKey = encodeURIComponent(parametersKey);
@@ -256,28 +260,6 @@ export function reportParameters({namespace, parameters}) {
 		addParameterElement.classList.remove('disabled');
 	}
 
-	function getDateValue() {
-		const parameterDateDay = document.getElementById(
-			namespace + 'parameterDateDay'
-		);
-
-		const parameterDateMonth = document.getElementById(
-			namespace + 'parameterDateMonth'
-		);
-
-		const parameterDateYear = document.getElementById(
-			namespace + 'parameterDateYear'
-		);
-
-		const parameterDate = new Date();
-
-		parameterDate.setDate(parameterDateDay.value);
-		parameterDate.setMonth(parameterDateMonth.value);
-		parameterDate.setYear(parameterDateYear.value);
-
-		return format(parameterDate, 'yyyy-MM-dd');
-	}
-
 	function sendErrorMessage(message) {
 		message = unescapeHTML(message);
 
@@ -293,7 +275,7 @@ export function reportParameters({namespace, parameters}) {
 		let parametersValue = parametersValueElement.value;
 
 		if (parametersType === 'date') {
-			parametersValue = getDateValue();
+			parametersValue = getDateValue(namespace);
 		}
 
 		if (parametersKey && parametersValue) {
@@ -309,14 +291,14 @@ export function reportParameters({namespace, parameters}) {
 	addParameterElement.addEventListener('click', addParameter);
 
 	removeReportElement.addEventListener('click', () => {
-		existingReportElement.style.display = 'none';
-		templateReportElement.style.display = 'block';
+		templateReportFileNameElement.style.display = 'none';
+		templateReportInputElement.style.display = 'block';
 		cancelUpdateReportElement.style.display = 'block';
 	});
 
 	cancelUpdateReportElement.addEventListener('click', () => {
-		existingReportElement.style.display = 'block';
-		templateReportElement.style.display = 'none';
+		templateReportFileNameElement.style.display = 'block';
+		templateReportInputElement.style.display = 'none';
 		cancelUpdateReportElement.style.display = 'none';
 	});
 
@@ -350,4 +332,26 @@ export function reportParameters({namespace, parameters}) {
 			delegateHandler?.dispose();
 		},
 	};
+}
+
+export function getDateValue(namespace) {
+	const parameterDateDay = document.getElementById(
+		namespace + 'parameterDateDay'
+	);
+
+	const parameterDateMonth = document.getElementById(
+		namespace + 'parameterDateMonth'
+	);
+
+	const parameterDateYear = document.getElementById(
+		namespace + 'parameterDateYear'
+	);
+
+	const parameterDate = new Date();
+
+	parameterDate.setDate(parameterDateDay.value);
+	parameterDate.setMonth(parameterDateMonth.value);
+	parameterDate.setYear(parameterDateYear.value);
+
+	return parameterDate.toISOString().split('T')[0];
 }

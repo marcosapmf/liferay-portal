@@ -9,8 +9,8 @@ import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.servlet.profile.WebSsoProfile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -22,8 +22,8 @@ import org.osgi.service.component.annotations.Reference;
 public class WebSsoAction extends BaseSamlStrutsAction {
 
 	@Override
-	public boolean isEnabled() {
-		if (_samlProviderConfigurationHelper.isRoleIdp()) {
+	public boolean isEnabled(HttpServletRequest httpServletRequest) {
+		if (!_samlProviderConfigurationHelper.isRoleSp()) {
 			return _samlProviderConfigurationHelper.isEnabled();
 		}
 

@@ -15,7 +15,6 @@ import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {Elements, FlowElement, isNode} from 'react-flow-renderer';
 
-import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES} from '../ModelBuilderContext/typesEnum';
 import {ObjectRelationshipEdgeData, TAction} from '../types';
 
@@ -115,14 +114,22 @@ export function ModalPublishObjectDefinitions({
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise<ObjectDefinition | number>(async (resolve) => {
 			try {
-				const objectDefinitionResponse =
+				const objectDefinitionResponse: any =
 					await API.postObjectDefinitionPublish(objectDefinitionId);
 
 				const objectDefinitionResponseJSON =
 					await objectDefinitionResponse.json();
 
 				if (!objectDefinitionResponse.ok) {
-					throw new Error(objectDefinitionResponseJSON.title);
+					const {detail, title} = objectDefinitionResponseJSON;
+
+					if (detail) {
+						const [details] = JSON.parse(detail);
+						throw new Error(details.message);
+					}
+					else if (title) {
+						throw new Error(title);
+					}
 				}
 
 				setSelectedDraftObjectDefinitions((prevState) =>
@@ -337,9 +344,16 @@ export function ModalPublishObjectDefinitions({
 			status={modalStatus()}
 		>
 			{publishObjectDefinitionsStatus !== STATUS.PENDING ? (
-				<ClayModal.Header>{modalHeaderMessage}</ClayModal.Header>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
+					{modalHeaderMessage}
+				</ClayModal.Header>
 			) : (
-				<ClayModal.Header withTitle={false}>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+					withTitle={false}
+				>
 					<ClayModal.ItemGroup>
 						<ClayModal.Item>
 							<ClayModal.Title>
@@ -465,9 +479,11 @@ export function ModalPublishObjectDefinitions({
 													weight="semi-bold"
 												>
 													{stringUtils.getLocalizableLabel(
-														defaultLanguageId,
-														data?.label,
-														data?.name
+														{
+															fallbackLabel:
+																data?.name,
+															labels: data?.label,
+														}
 													)}
 												</Text>
 											</div>

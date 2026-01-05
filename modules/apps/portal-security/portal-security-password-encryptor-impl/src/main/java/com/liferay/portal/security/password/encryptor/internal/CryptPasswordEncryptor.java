@@ -9,7 +9,7 @@ import com.liferay.portal.kernel.exception.PwdEncryptorException;
 import com.liferay.portal.kernel.security.SecureRandom;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptor;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.Digester;
+import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.UnsupportedEncodingException;
@@ -44,10 +44,10 @@ public class CryptPasswordEncryptor implements PasswordEncryptor {
 
 		try {
 			return Crypt.crypt(
-				saltBytes, plainTextPassword.getBytes(Digester.ENCODING));
+				saltBytes, plainTextPassword.getBytes(DigesterUtil.ENCODING));
 		}
 		catch (UnsupportedEncodingException unsupportedEncodingException) {
-			throw new PwdEncryptorException(
+			throw new PwdEncryptorException.UnsupportedEncoding(
 				unsupportedEncodingException.getMessage(),
 				unsupportedEncodingException);
 		}
@@ -67,16 +67,16 @@ public class CryptPasswordEncryptor implements PasswordEncryptor {
 
 				String salt = _SALT[x].concat(_SALT[y]);
 
-				saltBytes = salt.getBytes(Digester.ENCODING);
+				saltBytes = salt.getBytes(DigesterUtil.ENCODING);
 			}
 			else {
 				String salt = encryptedPassword.substring(0, 2);
 
-				saltBytes = salt.getBytes(Digester.ENCODING);
+				saltBytes = salt.getBytes(DigesterUtil.ENCODING);
 			}
 		}
 		catch (UnsupportedEncodingException unsupportedEncodingException) {
-			throw new PwdEncryptorException(
+			throw new PwdEncryptorException.UnsupportedEncoding(
 				"Unable to extract salt from encrypted password " +
 					unsupportedEncodingException.getMessage(),
 				unsupportedEncodingException);

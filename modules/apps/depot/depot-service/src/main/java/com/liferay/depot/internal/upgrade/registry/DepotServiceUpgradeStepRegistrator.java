@@ -5,6 +5,8 @@
 
 package com.liferay.depot.internal.upgrade.registry;
 
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.internal.upgrade.v2_2_0.util.DepotEntryPinTable;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -40,6 +42,20 @@ public class DepotServiceUpgradeStepRegistrator
 			"2.0.0", "2.1.0",
 			new CTModelUpgradeProcess(
 				"DepotAppCustomization", "DepotEntry", "DepotEntryGroupRel"));
+
+		registry.register("2.1.0", "2.2.0", DepotEntryPinTable.create());
+
+		registry.register(
+			"2.2.0", "2.3.0",
+			UpgradeProcessFactory.addColumns("DepotEntry", "type_ INTEGER"),
+			UpgradeProcessFactory.addColumns(
+				"DepotEntryGroupRel", "type_ INTEGER"),
+			UpgradeProcessFactory.runSQL(
+				"update DepotEntry set type_ = " +
+					DepotConstants.TYPE_ASSET_LIBRARY),
+			UpgradeProcessFactory.runSQL(
+				"update DepotEntryGroupRel set type_ = " +
+					DepotConstants.TYPE_ASSET_LIBRARY));
 	}
 
 }

@@ -10,14 +10,18 @@ import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
 import com.liferay.headless.admin.list.type.internal.dto.v1_0.util.ListTypeEntryUtil;
 import com.liferay.headless.admin.list.type.internal.odata.entity.v1_0.ListTypeEntryEntityModel;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeEntryResource;
+import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeDefinitionService;
+import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.list.type.service.ListTypeEntryService;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -26,9 +30,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -121,13 +125,18 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 			},
 			sorts,
 			document -> {
-				com.liferay.list.type.model.ListTypeEntry listTypeEntry =
-					_listTypeEntryService.getListTypeEntry(
-						GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)));
+				com.liferay.list.type.model.ListTypeEntry
+					serviceBuilderListTypeEntry =
+						_listTypeEntryService.getListTypeEntry(
+							GetterUtil.getLong(
+								document.get(Field.ENTRY_CLASS_PK)));
 
 				return ListTypeEntryUtil.toListTypeEntry(
-					_getActions(listTypeEntry),
-					contextAcceptLanguage.getPreferredLocale(), listTypeEntry);
+					_getActions(serviceBuilderListTypeEntry),
+					contextAcceptLanguage.getPreferredLocale(), _portal,
+					serviceBuilderListTypeEntry, contextUriInfo,
+					_userLocalService.fetchUser(
+						serviceBuilderListTypeEntry.getUserId()));
 			});
 	}
 
@@ -135,9 +144,14 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 	public ListTypeEntry getListTypeEntry(Long listTypeEntryId)
 		throws Exception {
 
+		com.liferay.list.type.model.ListTypeEntry serviceBuilderListTypeEntry =
+			_listTypeEntryService.getListTypeEntry(listTypeEntryId);
+
 		return ListTypeEntryUtil.toListTypeEntry(
-			null, contextAcceptLanguage.getPreferredLocale(),
-			_listTypeEntryService.getListTypeEntry(listTypeEntryId));
+			null, contextAcceptLanguage.getPreferredLocale(), _portal,
+			serviceBuilderListTypeEntry, contextUriInfo,
+			_userLocalService.fetchUser(
+				serviceBuilderListTypeEntry.getUserId()));
 	}
 
 	@Override
@@ -162,13 +176,21 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 			Long listTypeDefinitionId, ListTypeEntry listTypeEntry)
 		throws Exception {
 
+		com.liferay.list.type.model.ListTypeDefinition
+			serviceBuilderListTypeDefinition =
+				_listTypeDefinitionLocalService.getListTypeDefinition(
+					listTypeDefinitionId);
+
 		return ListTypeEntryUtil.toListTypeEntry(
-			null, contextAcceptLanguage.getPreferredLocale(),
+			null, contextAcceptLanguage.getPreferredLocale(), _portal,
 			_listTypeEntryService.addListTypeEntry(
 				listTypeEntry.getExternalReferenceCode(), listTypeDefinitionId,
 				listTypeEntry.getKey(),
-				LocalizedMapUtil.getLocalizedMap(
-					listTypeEntry.getName_i18n())));
+				LocalizedMapUtil.populateLocalizedMap(
+					serviceBuilderListTypeDefinition.getDefaultLanguageId(),
+					listTypeEntry.getName_i18n(), listTypeEntry.getName()),
+				GetterUtil.getBoolean(listTypeEntry.getSystem())),
+			contextUriInfo, contextUser);
 	}
 
 	@Override
@@ -176,12 +198,24 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 			Long listTypeEntryId, ListTypeEntry listTypeEntry)
 		throws Exception {
 
+		com.liferay.list.type.model.ListTypeEntry serviceBuilderListTypeEntry =
+			_listTypeEntryLocalService.getListTypeEntry(listTypeEntryId);
+
+		com.liferay.list.type.model.ListTypeDefinition
+			serviceBuilderListTypeDefinition =
+				_listTypeDefinitionLocalService.getListTypeDefinition(
+					serviceBuilderListTypeEntry.getListTypeDefinitionId());
+
 		return ListTypeEntryUtil.toListTypeEntry(
-			null, contextAcceptLanguage.getPreferredLocale(),
+			null, contextAcceptLanguage.getPreferredLocale(), _portal,
 			_listTypeEntryService.updateListTypeEntry(
 				listTypeEntry.getExternalReferenceCode(), listTypeEntryId,
-				LocalizedMapUtil.getLocalizedMap(
-					listTypeEntry.getName_i18n())));
+				LocalizedMapUtil.populateLocalizedMap(
+					serviceBuilderListTypeDefinition.getDefaultLanguageId(),
+					listTypeEntry.getName_i18n(), listTypeEntry.getName())),
+			contextUriInfo,
+			_userLocalService.fetchUser(
+				serviceBuilderListTypeEntry.getUserId()));
 	}
 
 	private Map<String, Map<String, String>> _getActions(
@@ -190,13 +224,7 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
 			() -> {
-				com.liferay.list.type.model.ListTypeDefinition
-					serviceBuilderlistTypeDefinition =
-						_listTypeDefinitionService.getListTypeDefinition(
-							serviceBuilderListTypeEntry.
-								getListTypeDefinitionId());
-
-				if (serviceBuilderlistTypeDefinition.isSystem()) {
+				if (serviceBuilderListTypeEntry.isSystem()) {
 					return null;
 				}
 
@@ -225,9 +253,21 @@ public class ListTypeEntryResourceImpl extends BaseListTypeEntryResourceImpl {
 		new ListTypeEntryEntityModel();
 
 	@Reference
+	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
+
+	@Reference
 	private ListTypeDefinitionService _listTypeDefinitionService;
 
 	@Reference
+	private ListTypeEntryLocalService _listTypeEntryLocalService;
+
+	@Reference
 	private ListTypeEntryService _listTypeEntryService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

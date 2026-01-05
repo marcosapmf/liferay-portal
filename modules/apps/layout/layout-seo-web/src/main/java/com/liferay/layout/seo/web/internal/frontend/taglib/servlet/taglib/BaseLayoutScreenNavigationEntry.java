@@ -7,7 +7,6 @@ package com.liferay.layout.seo.web.internal.frontend.taglib.servlet.taglib;
 
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -25,22 +24,19 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -57,7 +53,7 @@ public abstract class BaseLayoutScreenNavigationEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(_getResourceBundle(locale), getEntryKey());
+		return LanguageUtil.get(locale, getEntryKey());
 	}
 
 	@Override
@@ -97,17 +93,17 @@ public abstract class BaseLayoutScreenNavigationEntry
 		httpServletRequest.setAttribute(
 			LayoutSEOWebKeys.LAYOUT_PAGE_LAYOUT_SEO_DISPLAY_CONTEXT,
 			new LayoutsSEODisplayContext(
-				ddmStorageEngineManager, dlAppService, dlurlHelper,
-				infoItemServiceRegistry, itemSelector, layoutLocalService,
+				dlAppService, dlurlHelper, infoItemServiceRegistry,
+				itemSelector, layoutLocalService,
 				layoutPageTemplateEntryLocalService,
 				layoutSEOCanonicalURLProvider, layoutSEOLinkManager,
 				layoutSEOSiteLocalService,
 				portal.getLiferayPortletRequest(
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST)),
+						JavaConstants.JAKARTA_PORTLET_REQUEST)),
 				portal.getLiferayPortletResponse(
 					(RenderResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE))));
+						JavaConstants.JAKARTA_PORTLET_RESPONSE))));
 
 		jspRenderer.renderJSP(
 			servletContext, httpServletRequest, httpServletResponse,
@@ -115,9 +111,6 @@ public abstract class BaseLayoutScreenNavigationEntry
 	}
 
 	protected abstract String getJspPath();
-
-	@Reference
-	protected DDMStorageEngineManager ddmStorageEngineManager;
 
 	@Reference
 	protected DLAppService dlAppService;
@@ -155,13 +148,5 @@ public abstract class BaseLayoutScreenNavigationEntry
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.layout.seo.web)")
 	protected ServletContext servletContext;
-
-	private ResourceBundle _getResourceBundle(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, getClass());
-
-		return new AggregateResourceBundle(
-			resourceBundle, portal.getResourceBundle(locale));
-	}
 
 }

@@ -46,14 +46,18 @@ public interface AccountGroupService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountGroupServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the account group remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AccountGroupServiceUtil} if injection and service tracking are not available.
 	 */
 	public AccountGroup addAccountGroup(
-			long userId, String description, String name,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String description,
+			String name, ServiceContext serviceContext)
 		throws PortalException;
 
 	public AccountGroup deleteAccountGroup(long accountGroupId)
 		throws PortalException;
 
 	public void deleteAccountGroups(long[] accountGroupIds)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountGroup fetchAccountGroup(long accountGroupId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -66,6 +70,11 @@ public interface AccountGroupService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountGroup getAccountGroupByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AccountGroup> getAccountGroupsByAccountEntryId(
 			long accountEntryId, int start, int end)
 		throws PortalException;
@@ -73,6 +82,11 @@ public interface AccountGroupService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAccountGroupsCountByAccountEntryId(long accountEntryId)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountGroup getOrAddEmptyAccountGroup(
+			String externalReferenceCode, String name)
+		throws Exception;
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -88,8 +102,8 @@ public interface AccountGroupService extends BaseService {
 		throws PortalException;
 
 	public AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long accountGroupId,
+			String description, String name, ServiceContext serviceContext)
 		throws PortalException;
 
 	public AccountGroup updateExternalReferenceCode(

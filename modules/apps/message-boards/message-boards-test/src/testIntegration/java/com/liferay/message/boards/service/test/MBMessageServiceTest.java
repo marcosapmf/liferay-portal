@@ -113,11 +113,12 @@ public class MBMessageServiceTest {
 				MBCategory.class.getName()));
 
 		_category = MBCategoryServiceUtil.addCategory(
-			MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID, name, description,
-			displayStyle, emailAddress, inProtocol, inServerName, inServerPort,
-			inUseSSL, inUserName, inPassword, inReadInterval, outEmailAddress,
-			outCustom, outServerName, outServerPort, outUseSSL, outUserName,
-			outPassword, allowAnonymous, mailingListActive, serviceContext);
+			null, MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID, name,
+			description, displayStyle, emailAddress, inProtocol, inServerName,
+			inServerPort, inUseSSL, inUserName, inPassword, inReadInterval,
+			outEmailAddress, outCustom, outServerName, outServerPort, outUseSSL,
+			outUserName, outPassword, allowAnonymous, mailingListActive,
+			serviceContext);
 	}
 
 	@Test
@@ -168,35 +169,6 @@ public class MBMessageServiceTest {
 
 					Assert.assertTrue(
 						message.startsWith("Unable to process message"));
-				}
-			}
-			else if (DBManagerUtil.getDBType() == DBType.SYBASE) {
-				for (LogEntry logEntry : logCapture1.getLogEntries()) {
-					String message = logEntry.getMessage();
-
-					Assert.assertTrue(
-						message.startsWith("Caught unexpected exception"));
-				}
-
-				for (LogEntry logEntry : logCapture3.getLogEntries()) {
-					String message = logEntry.getMessage();
-
-					Assert.assertTrue(
-						message.startsWith(
-							"com.liferay.portal.kernel.exception." +
-								"SystemException:"));
-				}
-
-				for (LogEntry logEntry : logCapture4.getLogEntries()) {
-					String message = logEntry.getMessage();
-
-					Assert.assertTrue(
-						message, message.contains("Your server command"));
-					Assert.assertTrue(
-						message,
-						message.contains(
-							"encountered a deadlock situation. Please re-run " +
-								"your command."));
 				}
 			}
 		}

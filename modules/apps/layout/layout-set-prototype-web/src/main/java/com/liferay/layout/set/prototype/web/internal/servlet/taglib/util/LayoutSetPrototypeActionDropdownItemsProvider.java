@@ -27,14 +27,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.security.PermissionsURLTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -265,17 +265,17 @@ public class LayoutSetPrototypeActionDropdownItemsProvider {
 			PanelCategoryKeys.SITE_ADMINISTRATION,
 			_themeDisplay.getPermissionChecker(), group);
 
-		if (Validator.isNotNull(portletId)) {
-			return PortletURLBuilder.create(
-				PortalUtil.getControlPanelPortletURL(
-					_httpServletRequest, group, portletId, 0, 0,
-					PortletRequest.RENDER_PHASE)
-			).setRedirect(
-				_themeDisplay.getURLCurrent()
-			).buildPortletURL();
+		if (Validator.isNull(portletId)) {
+			return null;
 		}
 
-		return null;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				_httpServletRequest, group, portletId, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setRedirect(
+			_themeDisplay.getURLCurrent()
+		).buildPortletURL();
 	}
 
 	private final HttpServletRequest _httpServletRequest;

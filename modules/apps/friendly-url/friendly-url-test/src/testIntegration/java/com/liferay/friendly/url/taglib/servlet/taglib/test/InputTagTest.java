@@ -31,13 +31,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LanguageIds;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,6 +53,9 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Lourdes Fernández Besada
  */
+@LanguageIds(
+	availableLanguageIds = {"en_US", "es_ES"}, defaultLanguageId = "en_US"
+)
 @RunWith(Arquillian.class)
 public class InputTagTest {
 
@@ -113,9 +117,7 @@ public class InputTagTest {
 
 			String languageId = LocaleUtil.toLanguageId(LocaleUtil.SPAIN);
 
-			Assert.assertTrue(
-				StringUtil.contains(
-					originalLanguageIds, languageId, StringPool.BLANK));
+			Assert.assertTrue(originalLanguageIds.contains(languageId));
 
 			_companyLocalService.updatePreferences(
 				_group.getCompanyId(),
@@ -132,10 +134,10 @@ public class InputTagTest {
 			portletPreferences = PrefsPropsUtil.getPreferences(
 				_group.getCompanyId());
 
-			Assert.assertFalse(
-				StringUtil.contains(
-					portletPreferences.getValue(PropsKeys.LOCALES, languageId),
-					languageId, StringPool.BLANK));
+			String locales = portletPreferences.getValue(
+				PropsKeys.LOCALES, languageId);
+
+			Assert.assertFalse(locales.contains(languageId));
 
 			_assertInputTag(friendlyURLMap);
 		}
@@ -173,8 +175,7 @@ public class InputTagTest {
 
 		String languageId = LocaleUtil.toLanguageId(LocaleUtil.SPAIN);
 
-		Assert.assertTrue(
-			StringUtil.contains(languageIds, languageId, StringPool.BLANK));
+		Assert.assertTrue(languageIds.contains(languageId));
 
 		typeSettingsUnicodeProperties.setProperty(
 			PropsKeys.LOCALES,
@@ -193,11 +194,10 @@ public class InputTagTest {
 			Boolean.FALSE.toString(),
 			typeSettingsUnicodeProperties.getProperty("inheritLocales", null));
 
-		Assert.assertFalse(
-			StringUtil.contains(
-				typeSettingsUnicodeProperties.getProperty(
-					PropsKeys.LOCALES, languageId),
-				languageId, StringPool.BLANK));
+		String locales = typeSettingsUnicodeProperties.getProperty(
+			PropsKeys.LOCALES, languageId);
+
+		Assert.assertFalse(locales.contains(languageId));
 
 		_assertInputTag(friendlyURLMap);
 	}

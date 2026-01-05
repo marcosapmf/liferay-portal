@@ -8,8 +8,9 @@ package com.liferay.jenkins.results.parser.testray;
 import com.liferay.jenkins.results.parser.Dom4JUtil;
 import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.NotificationUtil;
 import com.liferay.jenkins.results.parser.TestrayResultsParserUtil;
-import com.liferay.jenkins.results.parser.TopLevelBuild;
+import com.liferay.jenkins.results.parser.TopLevelBuildReport;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,10 +20,12 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeoutException;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,7 +74,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"builds", TestrayBuild.FIELD_NAMES, "id eq '" + buildID + "'",
 				null, 1, 1);
 
@@ -79,7 +82,9 @@ public class TestrayServer {
 				return null;
 			}
 
-			JSONObject entityJSONObject = entityJSONObjects.get(0);
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
+			JSONObject entityJSONObject = iterator.next();
 
 			JSONObject projectJSONObject = entityJSONObject.getJSONObject(
 				"projectToBuilds");
@@ -115,7 +120,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"caseTypes", TestrayCaseType.FIELD_NAMES,
 				"id eq '" + testrayCaseTypeID + "'", null, 1, 1);
 
@@ -123,8 +128,10 @@ public class TestrayServer {
 				return null;
 			}
 
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
 			testrayCaseType = TestrayFactory.newTestrayCaseType(
-				this, entityJSONObjects.get(0));
+				this, iterator.next());
 
 			_testrayCaseTypesID.put(testrayCaseType.getID(), testrayCaseType);
 			_testrayCaseTypesName.put(
@@ -148,7 +155,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"caseTypes", TestrayCaseType.FIELD_NAMES,
 				"name eq '" + testrayCaseTypeName + "'", null, 1, 1);
 
@@ -156,8 +163,10 @@ public class TestrayServer {
 				return null;
 			}
 
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
 			testrayCaseType = TestrayFactory.newTestrayCaseType(
-				this, entityJSONObjects.get(0));
+				this, iterator.next());
 
 			_testrayCaseTypesID.put(testrayCaseType.getID(), testrayCaseType);
 			_testrayCaseTypesName.put(
@@ -176,7 +185,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"projects", TestrayProject.FIELD_NAMES,
 				"id eq '" + projectID + "'", null, 1, 1);
 
@@ -184,8 +193,10 @@ public class TestrayServer {
 				return null;
 			}
 
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
 			TestrayProject testrayProject = TestrayFactory.newTestrayProject(
-				this, entityJSONObjects.get(0));
+				this, iterator.next());
 
 			_testrayProjects.put(testrayProject.getID(), testrayProject);
 
@@ -204,7 +215,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"projects", TestrayProject.FIELD_NAMES,
 				"name eq '" + projectName + "'", null, 1, 1);
 
@@ -212,8 +223,10 @@ public class TestrayServer {
 				return null;
 			}
 
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
 			TestrayProject testrayProject = TestrayFactory.newTestrayProject(
-				this, entityJSONObjects.get(0));
+				this, iterator.next());
 
 			_testrayProjects.put(testrayProject.getID(), testrayProject);
 
@@ -253,7 +266,7 @@ public class TestrayServer {
 		}
 
 		try {
-			List<JSONObject> entityJSONObjects = requestGraphQL(
+			Set<JSONObject> entityJSONObjects = requestGraphQL(
 				"routines", TestrayRoutine.FIELD_NAMES,
 				"id eq '" + routineId + "'", null, 1, 1);
 
@@ -261,7 +274,9 @@ public class TestrayServer {
 				return null;
 			}
 
-			JSONObject entityJSONObject = entityJSONObjects.get(0);
+			Iterator<JSONObject> iterator = entityJSONObjects.iterator();
+
+			JSONObject entityJSONObject = iterator.next();
 
 			JSONObject projectJSONObject = entityJSONObject.getJSONObject(
 				"routineToProjects");
@@ -285,33 +300,43 @@ public class TestrayServer {
 		return _url;
 	}
 
-	public void importCaseResults(TopLevelBuild topLevelBuild) {
+	public void importCaseResults(TopLevelBuildReport topLevelBuildReport) {
 		TestrayResultsParserUtil.processTestrayResultFiles(getResultsDir());
 
-		if (JenkinsResultsParserUtil.isCINode()) {
-			_importCaseResultsFromCI(topLevelBuild);
-		}
-
-		if (TestrayS3Bucket.hasGoogleApplicationCredentials()) {
-			_importCaseResultsToGCP(topLevelBuild);
+		if (TestrayCloudBucket.hasGoogleApplicationCredentials()) {
+			_importCaseResultsToGCP(topLevelBuildReport);
 		}
 	}
 
 	public String requestGet(String urlPath) throws IOException {
-		return JenkinsResultsParserUtil.toString(
-			getTestrayURL(urlPath), true,
-			JenkinsResultsParserUtil.HttpRequestMethod.GET, null,
-			getHTTPAuthorization());
+		try {
+			return JenkinsResultsParserUtil.toString(
+				getTestrayURL(urlPath), true, 2,
+				JenkinsResultsParserUtil.HttpRequestMethod.GET, null, 5,
+				_MILLIS_REQUEST_TIMEOUT_DEFAULT, getHTTPAuthorization(), true);
+		}
+		catch (IOException ioException) {
+			_sendCommunicationFailureNotification(ioException.getMessage());
+
+			throw ioException;
+		}
 	}
 
 	public String requestPost(
 			boolean checkCache, String urlPath, String requestData)
 		throws IOException {
 
-		return JenkinsResultsParserUtil.toString(
-			getTestrayURL(urlPath), checkCache,
-			JenkinsResultsParserUtil.HttpRequestMethod.POST, requestData,
-			getHTTPAuthorization());
+		try {
+			return JenkinsResultsParserUtil.toString(
+				getTestrayURL(urlPath), checkCache, 2,
+				JenkinsResultsParserUtil.HttpRequestMethod.POST, requestData, 5,
+				_MILLIS_REQUEST_TIMEOUT_DEFAULT, getHTTPAuthorization(), false);
+		}
+		catch (IOException ioException) {
+			_sendCommunicationFailureNotification(ioException.getMessage());
+
+			throw ioException;
+		}
 	}
 
 	public String requestPost(String urlPath, String requestData)
@@ -378,7 +403,7 @@ public class TestrayServer {
 		return getURL() + "/" + urlPath;
 	}
 
-	protected List<JSONObject> requestGraphQL(
+	protected Set<JSONObject> requestGraphQL(
 			boolean checkCache, String entityName, String[] entityFields,
 			String filter, String sort, long maxCount, int pageSize)
 		throws IOException {
@@ -395,7 +420,7 @@ public class TestrayServer {
 			pageSize = (int)maxCount;
 		}
 
-		List<JSONObject> entityJSONObjects = new ArrayList<>();
+		Set<JSONObject> entityJSONObjects = new HashSet<>();
 
 		int page = 0;
 
@@ -444,13 +469,20 @@ public class TestrayServer {
 				requestPost(
 					checkCache, "/o/graphql", requestJSONObject.toString()));
 
-			String duration = JenkinsResultsParserUtil.toDurationString(
-				JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
+			long duration =
+				JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
+
+			if (duration > 180000) {
+				_sendCommunicationFailureNotification(
+					"Slow response time: Testray GraphQL query took " +
+						duration + " ms");
+			}
 
 			System.out.println(
 				JenkinsResultsParserUtil.combine(
 					String.valueOf(getURL()), "/o/graphql query: ",
-					sb.toString(), " in ", duration));
+					sb.toString(), " in ",
+					JenkinsResultsParserUtil.toDurationString(duration)));
 
 			try {
 				JSONObject dataJSONObject = responseJSONObject.getJSONObject(
@@ -485,7 +517,7 @@ public class TestrayServer {
 		return entityJSONObjects;
 	}
 
-	protected List<JSONObject> requestGraphQL(
+	protected Set<JSONObject> requestGraphQL(
 			String entityName, String[] entityFields, String filter,
 			String sort)
 		throws IOException {
@@ -493,7 +525,7 @@ public class TestrayServer {
 		return requestGraphQL(entityName, entityFields, filter, sort, 0, 0);
 	}
 
-	protected List<JSONObject> requestGraphQL(
+	protected Set<JSONObject> requestGraphQL(
 			String entityName, String[] entityFields, String filter,
 			String sort, long maxCount, int pageSize)
 		throws IOException {
@@ -502,56 +534,27 @@ public class TestrayServer {
 			false, entityName, entityFields, filter, sort, maxCount, pageSize);
 	}
 
-	private void _importCaseResultsFromCI(TopLevelBuild topLevelBuild) {
-		if (!JenkinsResultsParserUtil.isCINode()) {
-			return;
-		}
+	private void _importCaseResultsToGCP(
+		TopLevelBuildReport topLevelBuildReport) {
 
-		JenkinsMaster jenkinsMaster = topLevelBuild.getJenkinsMaster();
-
-		String command = JenkinsResultsParserUtil.combine(
-			"rsync -aqz --chmod=go=rx \"",
-			JenkinsResultsParserUtil.getCanonicalPath(getResultsDir()),
-			"\"/* \"", jenkinsMaster.getName(),
-			"::testray-results/production/\"");
-
-		try {
-			JenkinsResultsParserUtil.executeBashCommands(command);
-		}
-		catch (IOException | TimeoutException exception) {
-			throw new RuntimeException(exception);
-		}
-
-		for (File resultFile :
-				JenkinsResultsParserUtil.findFiles(getResultsDir(), ".*.xml")) {
-
-			System.out.println(
-				JenkinsResultsParserUtil.combine(
-					"Uploaded ",
-					JenkinsResultsParserUtil.getCanonicalPath(resultFile),
-					" by Rsync"));
-		}
-	}
-
-	private void _importCaseResultsToGCP(TopLevelBuild topLevelBuild) {
-		if (!TestrayS3Bucket.hasGoogleApplicationCredentials()) {
+		if (!TestrayCloudBucket.hasGoogleApplicationCredentials()) {
 			return;
 		}
 
 		StringBuilder sb = new StringBuilder();
 
-		JenkinsMaster jenkinsMaster = topLevelBuild.getJenkinsMaster();
+		JenkinsMaster jenkinsMaster = topLevelBuildReport.getJenkinsMaster();
 
 		sb.append(jenkinsMaster.getName());
 
 		sb.append("-");
 
-		String jobName = topLevelBuild.getJobName();
+		String jobName = topLevelBuildReport.getJobName();
 
 		sb.append(jobName.replaceAll("[\\(\\)]", "_"));
 
 		sb.append("-");
-		sb.append(topLevelBuild.getBuildNumber());
+		sb.append(topLevelBuildReport.getBuildNumber());
 		sb.append("-results.tar.gz");
 
 		File resultsDir = getResultsDir();
@@ -566,7 +569,8 @@ public class TestrayServer {
 			throw new RuntimeException(ioException);
 		}
 
-		TestrayS3Bucket testrayS3Bucket = TestrayS3Bucket.getInstance();
+		TestrayCloudBucket testrayCloudBucket =
+			TestrayCloudBucket.getInstance();
 
 		for (File gcpResultFile :
 				JenkinsResultsParserUtil.findFiles(gcpResultsDir, ".*.xml")) {
@@ -610,7 +614,7 @@ public class TestrayServer {
 					"$1/>");
 				gcpResultFileContent = gcpResultFileContent.replaceAll(
 					getURL() + "/?reports/production/logs",
-					testrayS3Bucket.getTestrayS3BaseURL());
+					testrayCloudBucket.getTestrayCloudBaseURL());
 
 				JenkinsResultsParserUtil.write(
 					gcpResultFile, gcpResultFileContent);
@@ -624,9 +628,23 @@ public class TestrayServer {
 
 		JenkinsResultsParserUtil.tarGzip(gcpResultsDir, resultsTarGzFile);
 
-		testrayS3Bucket.createTestrayS3Object(
+		testrayCloudBucket.createTestrayCloudObject(
 			"inbox/" + resultsTarGzFile.getName(), resultsTarGzFile);
 	}
+
+	private void _sendCommunicationFailureNotification(String message) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(message);
+		sb.append("\n");
+		sb.append(System.getenv("TOP_LEVEL_BUILD_URL"));
+
+		NotificationUtil.sendSlackNotification(
+			sb.toString(), "#ci-notifications", ":testray:",
+			"Testray communication failure", "Liferay CI");
+	}
+
+	private static final int _MILLIS_REQUEST_TIMEOUT_DEFAULT = 60000;
 
 	private static final Map<Long, TestrayBuild> _testrayBuilds =
 		new HashMap<>();

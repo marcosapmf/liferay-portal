@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.util.PortletCategoryUtil;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -33,8 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -134,7 +134,7 @@ public class LegacyPortletPanelAppHotDeployListener
 			return Collections.emptyList();
 		}
 
-		List<Dictionary<String, Object>> propertiesList = new ArrayList<>();
+		List<Dictionary<String, Object>> properties = new ArrayList<>();
 
 		Document document = UnsecureSAXReaderUtil.read(xml, true);
 
@@ -156,7 +156,7 @@ public class LegacyPortletPanelAppHotDeployListener
 				PortletCategoryUtil.getPortletCategoryKey(
 					controlPanelEntryCategory);
 
-			propertiesList.add(
+			properties.add(
 				HashMapDictionaryBuilder.<String, Object>put(
 					"panel.app.order",
 					() -> {
@@ -164,13 +164,13 @@ public class LegacyPortletPanelAppHotDeployListener
 							portletElement.elementText(
 								"control-panel-entry-weight");
 
-						if (Validator.isNotNull(controlPanelEntryWeight)) {
-							return (int)Math.ceil(
-								GetterUtil.getDouble(controlPanelEntryWeight) *
-									100);
+						if (Validator.isNull(controlPanelEntryWeight)) {
+							return null;
 						}
 
-						return null;
+						return (int)Math.ceil(
+							GetterUtil.getDouble(controlPanelEntryWeight) *
+								100);
 					}
 				).put(
 					"panel.app.portlet.id",
@@ -182,7 +182,7 @@ public class LegacyPortletPanelAppHotDeployListener
 				).build());
 		}
 
-		return propertiesList;
+		return properties;
 	}
 
 	private BundleContext _bundleContext;

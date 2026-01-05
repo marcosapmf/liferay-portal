@@ -60,7 +60,7 @@ definition {
 			webContentText = "Text",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		Site.openSiteSettingsAdmin(siteURLKey = "guest");
 
@@ -121,6 +121,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewTranslatedFieldContentAfterEditing {
+		property portal.acceptance = "quarantine";
+
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
 		NavItem.gotoStructures();
@@ -144,7 +146,7 @@ definition {
 			webContentText = "Text EN",
 			webContentTitle = "WC WebContent Title EN");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 

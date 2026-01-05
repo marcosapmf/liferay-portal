@@ -7,13 +7,14 @@ package com.liferay.site.admin.web.internal.portlet.action;
 
 import com.liferay.layout.admin.kernel.visibility.LayoutVisibilityManager;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.admin.web.internal.constants.SiteAdminPortletKeys;
 import com.liferay.site.admin.web.internal.display.context.AddGroupDisplayContext;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -23,7 +24,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
+		"jakarta.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
 		"mvc.command.name=/site_admin/add_group"
 	},
 	service = MVCRenderCommand.class
@@ -34,10 +35,14 @@ public class AddGroupMVCRenderCommand implements MVCRenderCommand {
 	public String render(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			new AddGroupDisplayContext(
-				!_layoutVisibilityManager.isPrivateLayoutsEnabled(),
+				!_layoutVisibilityManager.isPrivateLayoutsEnabled(
+					themeDisplay.getCompanyId()),
 				_portal.getHttpServletRequest(renderRequest), renderResponse));
 
 		return "/add_group.jsp";

@@ -17,6 +17,7 @@ import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanProperties;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -29,10 +30,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -120,26 +121,19 @@ public class CommercePaymentRestrictionsPageFDSDataProvider
 		List<CommercePaymentMethodGroupRel> commercePaymentMethodGroupRels,
 		long countryId, String languageId) {
 
-		List<RestrictionField> restrictionFields = new ArrayList<>();
-
-		for (CommercePaymentMethodGroupRel commercePaymentMethodGroupRel :
-				commercePaymentMethodGroupRels) {
-
-			restrictionFields.add(
-				new RestrictionField(
-					commercePaymentMethodGroupRel.getName(languageId),
-					String.valueOf(
+		return TransformUtil.transform(
+			commercePaymentMethodGroupRels,
+			commercePaymentMethodGroupRel -> new RestrictionField(
+				commercePaymentMethodGroupRel.getName(languageId),
+				String.valueOf(
+					commercePaymentMethodGroupRel.
+						getCommercePaymentMethodGroupRelId()),
+				_commerceAddressRestrictionLocalService.
+					isCommerceAddressRestricted(
+						CommercePaymentMethodGroupRel.class.getName(),
 						commercePaymentMethodGroupRel.
-							getCommercePaymentMethodGroupRelId()),
-					_commerceAddressRestrictionLocalService.
-						isCommerceAddressRestricted(
-							CommercePaymentMethodGroupRel.class.getName(),
-							commercePaymentMethodGroupRel.
-								getCommercePaymentMethodGroupRelId(),
-							countryId)));
-		}
-
-		return restrictionFields;
+							getCommercePaymentMethodGroupRelId(),
+						countryId)));
 	}
 
 	@Reference

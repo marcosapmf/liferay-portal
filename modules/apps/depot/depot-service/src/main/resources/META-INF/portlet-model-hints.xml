@@ -21,6 +21,7 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="type" type="int" />
 	</model>
 	<model name="com.liferay.depot.model.DepotEntryGroupRel">
 		<field name="mvccVersion" type="long" />
@@ -37,6 +38,17 @@
 		<field name="depotEntryId" type="long" />
 		<field name="searchable" type="boolean" />
 		<field name="toGroupId" type="long" />
+		<field name="type" type="int" />
 		<field name="lastPublishDate" type="Date" />
+	</model>
+	<model name="com.liferay.depot.model.DepotEntryPin">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="uuid" type="String" />
+		<field name="depotEntryPinId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="depotEntryId" type="long" />
 	</model>
 </model-hints>

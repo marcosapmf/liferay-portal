@@ -100,6 +100,10 @@ public class OrganizationPermissionUtil {
 					groupId, Organization.class.getName(),
 					organization.getOrganizationId(),
 					ActionKeys.MANAGE_SUBORGANIZATIONS) ||
+				 permissionChecker.hasPermission(
+					 groupId, Organization.class.getName(),
+					 organization.getOrganizationId(),
+					 ActionKeys.UPDATE_SUBORGANIZATIONS) ||
 				 PortalPermissionUtil.contains(
 					 permissionChecker, ActionKeys.ADD_ORGANIZATION))) {
 

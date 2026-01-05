@@ -19,7 +19,6 @@ import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
@@ -46,16 +45,16 @@ import com.liferay.translation.service.TranslationEntryService;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 import com.liferay.translation.web.internal.helper.TranslationRequestHelper;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletRequest;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,7 +64,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + TranslationPortletKeys.TRANSLATION,
+		"jakarta.portlet.name=" + TranslationPortletKeys.TRANSLATION,
 		"mvc.command.name=/translation/update_translation"
 	},
 	service = MVCActionCommand.class
@@ -122,8 +121,7 @@ public class UpdateTranslationMVCActionCommand extends BaseMVCActionCommand {
 			InfoItemFieldValues sourceInfoItemFieldValues =
 				_getInfoItemFieldValues(className, infoItem);
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-11253") &&
-				(modifiedDateTime > 0) &&
+			if ((modifiedDateTime > 0) &&
 				(workflowAction == WorkflowConstants.ACTION_PUBLISH)) {
 
 				Object infoItemFieldValue = _getInfoItemFieldValue(

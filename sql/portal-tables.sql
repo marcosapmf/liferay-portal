@@ -24,9 +24,11 @@ create table Address (
 	street1 VARCHAR(255) null,
 	street2 VARCHAR(255) null,
 	street3 VARCHAR(255) null,
+	subtype VARCHAR(75) null,
 	validationDate DATE null,
 	validationStatus INTEGER,
 	zip VARCHAR(75) null,
+	status INTEGER,
 	primary key (addressId, ctCollectionId)
 );
 
@@ -97,6 +99,7 @@ create table AssetCategory (
 	description TEXT null,
 	vocabularyId LONG,
 	lastPublishDate DATE null,
+	status INTEGER,
 	primary key (categoryId, ctCollectionId)
 );
 
@@ -145,6 +148,7 @@ create table AssetTag (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	tagId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -156,6 +160,17 @@ create table AssetTag (
 	assetCount INTEGER,
 	lastPublishDate DATE null,
 	primary key (tagId, ctCollectionId)
+);
+
+create table AssetTagGroupRel (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	assetTagGroupRelId LONG not null,
+	groupId LONG,
+	companyId LONG,
+	tagId LONG,
+	primary key (assetTagGroupRelId, ctCollectionId)
 );
 
 create table AssetVocabulary (
@@ -176,7 +191,19 @@ create table AssetVocabulary (
 	settings_ STRING null,
 	visibilityType INTEGER,
 	lastPublishDate DATE null,
+	status INTEGER,
 	primary key (vocabularyId, ctCollectionId)
+);
+
+create table AssetVocabularyGroupRel (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	assetVocabularyGroupRelId LONG not null,
+	groupId LONG,
+	companyId LONG,
+	vocabularyId LONG,
+	primary key (assetVocabularyGroupRelId, ctCollectionId)
 );
 
 create table BrowserTracker (
@@ -343,6 +370,7 @@ create table DLFileEntryMetadata (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	fileEntryMetadataId LONG not null,
 	companyId LONG,
 	DDMStorageId LONG,
@@ -386,6 +414,7 @@ create table DLFileShortcut (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	fileShortcutId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -478,6 +507,7 @@ create table EmailAddress (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	emailAddressId LONG not null,
 	companyId LONG,
 	userId LONG,
@@ -660,14 +690,15 @@ create table Layout (
 	iconImageId LONG,
 	themeId VARCHAR(75) null,
 	colorSchemeId VARCHAR(75) null,
-	styleBookEntryId LONG,
+	styleBookEntryERC VARCHAR(75) null,
 	css TEXT null,
 	priority INTEGER,
-	faviconFileEntryId LONG,
-	masterLayoutPlid LONG,
+	faviconFileEntryERC VARCHAR(75) null,
+	faviconFileEntryScopeERC VARCHAR(75) null,
+	masterLPTEERC VARCHAR(75) null,
 	layoutPrototypeUuid VARCHAR(75) null,
 	layoutPrototypeLinkEnabled BOOLEAN,
-	sourcePrototypeLayoutUuid VARCHAR(75) null,
+	layoutSetPrototypeLayoutERC VARCHAR(75) null,
 	publishDate DATE null,
 	lastPublishDate DATE null,
 	status INTEGER,
@@ -803,8 +834,9 @@ create table LayoutSetBranch (
 
 create table LayoutSetPrototype (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	layoutSetPrototypeId LONG not null primary key,
+	layoutSetPrototypeId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -813,7 +845,8 @@ create table LayoutSetPrototype (
 	name TEXT null,
 	description TEXT null,
 	settings_ STRING null,
-	active_ BOOLEAN
+	active_ BOOLEAN,
+	primary key (layoutSetPrototypeId, ctCollectionId)
 );
 
 create table ListType (
@@ -886,6 +919,7 @@ create table Organization_ (
 	statusListTypeId LONG,
 	comments STRING null,
 	logoId LONG,
+	status INTEGER,
 	primary key (organizationId, ctCollectionId)
 );
 
@@ -949,6 +983,7 @@ create table Phone (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	phoneId LONG not null,
 	companyId LONG,
 	userId LONG,
@@ -1146,6 +1181,7 @@ create table Release_ (
 	schemaVersion VARCHAR(75) null,
 	buildNumber INTEGER,
 	buildDate DATE null,
+	versionDisplayName VARCHAR(75) null,
 	verified BOOLEAN,
 	state_ INTEGER,
 	testString VARCHAR(1024) null
@@ -1165,6 +1201,7 @@ create table Repository (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	repositoryId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -1242,6 +1279,7 @@ create table Role_ (
 	description TEXT null,
 	type_ INTEGER,
 	subtype VARCHAR(75) null,
+	status INTEGER,
 	primary key (roleId, ctCollectionId)
 );
 
@@ -1392,6 +1430,7 @@ create table SystemEvent (
 	userId LONG,
 	userName VARCHAR(75) null,
 	createDate DATE null,
+	classExternalReferenceCode VARCHAR(1000) null,
 	classNameId LONG,
 	classPK LONG,
 	classUuid VARCHAR(75) null,
@@ -1660,6 +1699,7 @@ create table WebDAVProps (
 create table Website (
 	mvccVersion LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	websiteId LONG not null primary key,
 	companyId LONG,
 	userId LONG,
@@ -1677,6 +1717,8 @@ create table Website (
 create table WorkflowDefinitionLink (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	workflowDefinitionLinkId LONG not null,
 	groupId LONG,
 	companyId LONG,

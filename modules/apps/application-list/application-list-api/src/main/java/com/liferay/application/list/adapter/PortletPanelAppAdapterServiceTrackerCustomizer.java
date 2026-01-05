@@ -37,7 +37,7 @@ public class PortletPanelAppAdapterServiceTrackerCustomizer
 	@Override
 	public PanelApp addingService(ServiceReference<Portlet> serviceReference) {
 		String portletId = (String)serviceReference.getProperty(
-			"javax.portlet.name");
+			"jakarta.portlet.name");
 
 		if (Validator.isNull(portletId)) {
 			return null;
@@ -94,12 +94,12 @@ public class PortletPanelAppAdapterServiceTrackerCustomizer
 		String controlPanelEntryWeight = (String)serviceReference.getProperty(
 			"com.liferay.portlet.control-panel-entry-weight");
 
-		if (Validator.isNotNull(controlPanelEntryWeight)) {
-			return (int)Math.ceil(
-				GetterUtil.getDouble(controlPanelEntryWeight) * 100);
+		if (Validator.isNull(controlPanelEntryWeight)) {
+			return null;
 		}
 
-		return null;
+		return (int)Math.ceil(
+			GetterUtil.getDouble(controlPanelEntryWeight) * 100);
 	}
 
 	private final BundleContext _bundleContext;

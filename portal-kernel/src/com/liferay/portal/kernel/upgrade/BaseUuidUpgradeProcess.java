@@ -5,15 +5,13 @@
 
 package com.liferay.portal.kernel.upgrade;
 
-import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 /**
  * @author Amos Fong
@@ -23,21 +21,40 @@ public abstract class BaseUuidUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		for (String[] tableAndPrimaryKeyColumnName :
-				getTableAndPrimaryKeyColumnNames()) {
+		String[] tableNames = getTableNames();
 
-			String tableName = tableAndPrimaryKeyColumnName[0];
-			String primKeyColumnName = tableAndPrimaryKeyColumnName[1];
-
-			upgradeUuid(tableName, primKeyColumnName);
+		for (String tableName : tableNames) {
+			upgradeUuid(tableName);
 		}
 	}
 
-	protected abstract String[][] getTableAndPrimaryKeyColumnNames();
-
-	protected void upgradeUuid(String tableName, String primKeyColumnName)
+	protected String getPrimaryKeyColumnName(String tableName)
 		throws Exception {
 
+		String[] primaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, tableName);
+
+		if (primaryKeyColumnNames.length == 0) {
+			throw new Exception("Table " + tableName + " has no primary key");
+		}
+
+		if (primaryKeyColumnNames.length > 1) {
+			primaryKeyColumnNames = ArrayUtil.filter(
+				primaryKeyColumnNames,
+				name -> !StringUtil.equalsIgnoreCase(name, "ctCollectionId"));
+		}
+
+		if (primaryKeyColumnNames.length > 1) {
+			throw new Exception(
+				"Table " + tableName + " has too many primary key columns");
+		}
+
+		return primaryKeyColumnNames[0];
+	}
+
+	protected abstract String[] getTableNames();
+
+	protected void upgradeUuid(String tableName) throws Exception {
 		if (!hasTable(tableName)) {
 			_log.error("Skip nonexistent table " + tableName);
 
@@ -52,39 +69,26 @@ public abstract class BaseUuidUpgradeProcess extends UpgradeProcess {
 			alterTableAddColumn(tableName, "uuid_", "VARCHAR(75) null");
 		}
 
+		String primaryKeyColumnName = getPrimaryKeyColumnName(tableName);
+
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			StringBundler selectSB = new StringBundler(5);
+			processConcurrently(
+				StringBundler.concat(
+					"select distinct ", primaryKeyColumnName, " from ",
+					tableName, " where uuid_ is null or uuid_ = ''"),
+				StringBundler.concat(
+					"update ", tableName, " set uuid_ = ? where ",
+					primaryKeyColumnName, " = ?"),
+				resultSet -> new Object[] {
+					resultSet.getLong(primaryKeyColumnName)
+				},
+				(values, preparedStatement) -> {
+					preparedStatement.setString(1, PortalUUIDUtil.generate());
+					preparedStatement.setLong(2, (long)values[0]);
 
-			selectSB.append("select ");
-			selectSB.append(primKeyColumnName);
-			selectSB.append(" from ");
-			selectSB.append(tableName);
-			selectSB.append(" where uuid_ is null or uuid_ = ''");
-
-			StringBundler updateSB = new StringBundler(5);
-
-			updateSB.append("update ");
-			updateSB.append(tableName);
-			updateSB.append(" set uuid_ = ? where ");
-			updateSB.append(primKeyColumnName);
-			updateSB.append(" = ?");
-
-			try (PreparedStatement preparedStatement1 =
-					connection.prepareStatement(selectSB.toString());
-				PreparedStatement preparedStatement2 =
-					AutoBatchPreparedStatementUtil.autoBatch(
-						connection, updateSB.toString());
-				ResultSet resultSet = preparedStatement1.executeQuery()) {
-
-				while (resultSet.next()) {
-					preparedStatement2.setString(1, PortalUUIDUtil.generate());
-					preparedStatement2.setLong(2, resultSet.getLong(1));
-
-					preparedStatement2.addBatch();
-				}
-
-				preparedStatement2.executeBatch();
-			}
+					preparedStatement.addBatch();
+				},
+				null);
 		}
 	}
 

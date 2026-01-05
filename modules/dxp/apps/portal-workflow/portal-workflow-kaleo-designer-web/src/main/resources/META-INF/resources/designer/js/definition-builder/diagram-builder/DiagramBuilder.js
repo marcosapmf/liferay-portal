@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {sub} from 'frontend-js-web';
 import React, {
 	useCallback,
 	useContext,
@@ -10,11 +11,13 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
+import {flushSync} from 'react-dom';
 import ReactFlow, {
 	Background,
 	Controls,
 	addEdge,
 	isEdge,
+	isNode,
 } from 'react-flow-renderer';
 import {v4 as uuidv4} from 'uuid';
 
@@ -70,7 +73,7 @@ export default function DiagramBuilder() {
 		setHasGroovyOrJavaScript,
 		setShowDefinitionInfo,
 		statuses,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
 	const reactFlowWrapperRef = useRef(null);
 	const [collidingElements, setCollidingElements] = useState(null);
@@ -78,6 +81,8 @@ export default function DiagramBuilder() {
 	const [reactFlowInstance, setReactFlowInstance] = useState(null);
 	const [selectedItem, setSelectedItem] = useState(null);
 	const [selectedItemNewId, setSelectedItemNewId] = useState(null);
+	const [selectedTransitionNewName, setSelectedTransitionNewName] =
+		useState(null);
 	const [defaultPosition, setDefaultPosition] = useState(null);
 	const [scriptedReassignmentTimerIndex, setScriptedReassignmentTimerIndex] =
 		useState(null);
@@ -101,6 +106,8 @@ export default function DiagramBuilder() {
 				element.data.defaultEdge
 		).length;
 
+		const newEdgeId = uuidv4();
+
 		const newEdge = {
 			...params,
 			arrowHeadType: 'arrowclosed',
@@ -110,8 +117,9 @@ export default function DiagramBuilder() {
 					[defaultLanguageId]:
 						Liferay.Language.get('transition-label'),
 				},
+				name: newEdgeId,
 			},
-			id: uuidv4(),
+			id: newEdgeId,
 			type: 'transition',
 		};
 
@@ -198,6 +206,30 @@ export default function DiagramBuilder() {
 		setReactFlowInstance(reactFlowInstance);
 	};
 
+	const onNodeDrag = (event, node) => {
+		const reactFlowBounds =
+			reactFlowWrapperRef.current.getBoundingClientRect();
+
+		const position = reactFlowInstance.project({
+			x:
+				event.clientX -
+				reactFlowBounds.left -
+				elementRectangle.mouseXInRectangle,
+			y:
+				event.clientY -
+				reactFlowBounds.top -
+				elementRectangle.mouseYInRectangle,
+		});
+
+		const filteredElements = elements.filter(
+			(element) => element.id !== node.id
+		);
+
+		setCollidingElements(
+			getCollidingElements(filteredElements, elementRectangle, position)
+		);
+	};
+
 	const onNodeDragStart = (event) => {
 		const elementRectangle = event.currentTarget.getBoundingClientRect();
 		const reactFlowBounds =
@@ -233,25 +265,28 @@ export default function DiagramBuilder() {
 				elementRectangle.mouseYInRectangle,
 		});
 
-		setElements((elements) =>
-			elements.map((element) => {
-				if (element.id === node.id) {
-					element = {
-						...element,
-						position,
-					};
-				}
+		flushSync(() => {
+			setElements((elements) =>
+				elements.map((element) => {
+					if (element.id === node.id) {
+						element = {
+							...element,
+							position,
+						};
+					}
 
-				return element;
-			})
-		);
+					return element;
+				})
+			);
+		});
 
-		const newElements = elements.filter(
+		const filteredElements = elements.filter(
 			(element) => element.id !== node.id
 		);
 
 		if (
-			getCollidingElements(newElements, elementRectangle, position).length
+			getCollidingElements(filteredElements, elementRectangle, position)
+				.length
 		) {
 			setElements((elements) =>
 				elements.map((element) => {
@@ -262,6 +297,8 @@ export default function DiagramBuilder() {
 					return element;
 				})
 			);
+
+			setCollidingElements(null);
 		}
 	};
 
@@ -295,46 +332,72 @@ export default function DiagramBuilder() {
 	}, [selectedItem]);
 
 	useEffect(() => {
-		if (
-			selectedItemNewId &&
-			selectedItemNewId.trim() !== '' &&
-			!isIdDuplicated(elements, selectedItemNewId.trim())
-		) {
-			setElements((elements) =>
-				elements.map((element) => {
-					if (element.id === selectedItem.id) {
-						element = {
-							...element,
-							id: selectedItemNewId,
-						};
+		if (selectedItem) {
+			if (
+				isNode(selectedItem) &&
+				selectedItemNewId &&
+				selectedItemNewId.trim() !== '' &&
+				!isIdDuplicated(elements, selectedItemNewId.trim())
+			) {
+				setElements((elements) =>
+					elements.map((element) => {
+						if (element.id === selectedItem.id) {
+							element = {
+								...element,
+								id: selectedItemNewId,
+							};
 
-						setSelectedItemNewId(null);
+							setSelectedItemNewId(null);
 
-						setSelectedItem(element);
-					}
-					else if (isEdge(element)) {
-						element = {
-							...element,
-							...(selectedItem.id === element.source && {
-								source: selectedItemNewId,
-							}),
-							...(selectedItem.id === element.target && {
-								target: selectedItemNewId,
-							}),
-						};
-					}
+							setSelectedItem(element);
+						}
+						else if (isEdge(element)) {
+							element = {
+								...element,
+								...(selectedItem.id === element.source && {
+									source: selectedItemNewId,
+								}),
+								...(selectedItem.id === element.target && {
+									target: selectedItemNewId,
+								}),
+							};
+						}
 
-					return element;
-				})
-			);
+						return element;
+					})
+				);
+			}
+			else if (isEdge(selectedItem) && selectedTransitionNewName) {
+				const updatedTransition = {
+					...selectedItem,
+					data: {
+						...selectedItem.data,
+						name: selectedTransitionNewName,
+					},
+				};
+
+				setSelectedTransitionNewName(null);
+
+				setSelectedItem(updatedTransition);
+
+				setElements((elements) =>
+					elements.map((element) => {
+						if (element.id === selectedItem.id) {
+							return updatedTransition;
+						}
+
+						return element;
+					})
+				);
+			}
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedItem, selectedItemNewId]);
+	}, [selectedItem, selectedItemNewId, selectedTransitionNewName]);
 
 	useEffect(() => {
 		if (deserialize && currentEditor) {
-			const xmlDefinition = currentEditor.getData();
+			const xmlDefinition = currentEditor.getValue();
 
 			deserializeUtil.updateXMLDefinition(xmlDefinition);
 
@@ -370,12 +433,29 @@ export default function DiagramBuilder() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentEditor, deserialize, version]);
+	}, [currentEditor, deserialize, workflowDefinitionVersions]);
 
 	useEffect(() => {
-		if (definitionName && version !== 0 && !deserialize) {
+		if (
+			definitionName &&
+			workflowDefinitionVersions.length !== 0 &&
+			!deserialize
+		) {
 			retrieveDefinitionRequest(definitionName)
-				.then((response) => response.json())
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(
+							sub(
+								Liferay.Language.get(
+									'failed-to-retrieve-definition-with-name-x'
+								),
+								definitionName
+							)
+						);
+					}
+
+					return response.json();
+				})
 				.then(
 					({
 						active,
@@ -433,11 +513,14 @@ export default function DiagramBuilder() {
 							setElements
 						);
 					}
-				);
+				)
+				.catch((error) => {
+					console.error(error);
+				});
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [definitionName, version]);
+	}, [definitionName, workflowDefinitionVersions]);
 
 	const contextProps = {
 		collidingElements,
@@ -446,11 +529,13 @@ export default function DiagramBuilder() {
 		scriptedReassignmentTimerIndex,
 		selectedItem,
 		selectedItemNewId,
+		selectedTransitionNewName,
 		setCollidingElements,
 		setElementRectangle,
 		setScriptedReassignmentTimerIndex,
 		setSelectedItem,
 		setSelectedItemNewId,
+		setSelectedTransitionNewName,
 		statuses,
 	};
 
@@ -470,6 +555,7 @@ export default function DiagramBuilder() {
 						onDragOver={onDragOver}
 						onDrop={onDrop}
 						onLoad={onLoad}
+						onNodeDrag={onNodeDrag}
 						onNodeDragStart={onNodeDragStart}
 						onNodeDragStop={onNodeDragStop}
 					/>

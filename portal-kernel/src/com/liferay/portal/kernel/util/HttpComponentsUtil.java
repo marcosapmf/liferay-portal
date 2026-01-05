@@ -12,22 +12,25 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.util.Set;
 
 /**
  * @author Tina Tian
@@ -338,6 +341,37 @@ public class HttpComponentsUtil {
 		return parameterMapFromString(queryString);
 	}
 
+	public static Set<String> getParameterNames(String queryString) {
+		if (Validator.isNull(queryString)) {
+			return Collections.emptySet();
+		}
+
+		Set<String> parameterNames = new HashSet<>();
+
+		int startIndex = 0;
+
+		while (true) {
+			int equalIndex = queryString.indexOf(CharPool.EQUAL, startIndex);
+
+			if (equalIndex <= 0) {
+				break;
+			}
+
+			parameterNames.add(queryString.substring(startIndex, equalIndex));
+
+			startIndex = queryString.indexOf(
+				CharPool.AMPERSAND, equalIndex + 1);
+
+			if (startIndex < 0) {
+				break;
+			}
+
+			startIndex++;
+		}
+
+		return parameterNames;
+	}
+
 	public static String getPath(String url) {
 		if (Validator.isNull(url)) {
 			return url;
@@ -420,7 +454,7 @@ public class HttpComponentsUtil {
 		if (isForwarded(httpServletRequest)) {
 			return GetterUtil.getString(
 				httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING));
+					JavaConstants.JAKARTA_SERVLET_FORWARD_QUERY_STRING));
 		}
 
 		return httpServletRequest.getQueryString();
@@ -493,7 +527,7 @@ public class HttpComponentsUtil {
 
 	public static boolean isForwarded(HttpServletRequest httpServletRequest) {
 		String forwardedRequestURI = (String)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI);
+			JavaConstants.JAKARTA_SERVLET_FORWARD_REQUEST_URI);
 
 		if (forwardedRequestURI != null) {
 			return true;

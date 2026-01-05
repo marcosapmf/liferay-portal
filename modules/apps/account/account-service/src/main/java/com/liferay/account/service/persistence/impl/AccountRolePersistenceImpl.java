@@ -49,7 +49,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -575,6 +574,15 @@ public class AccountRolePersistenceImpl
 			return findByCompanyId(companyId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -924,6 +932,14 @@ public class AccountRolePersistenceImpl
 	public int filterCountByCompanyId(long companyId) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByCompanyId(companyId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<AccountRole> accountRoles = findByCompanyId(companyId);
+
+			accountRoles = InlineSQLHelperUtil.filter(accountRoles);
+
+			return accountRoles.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -1452,6 +1468,15 @@ public class AccountRolePersistenceImpl
 				accountEntryId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByAccountEntryId(
+					accountEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -1781,6 +1806,15 @@ public class AccountRolePersistenceImpl
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return findByAccountEntryId(
 				accountEntryIds, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByAccountEntryId(
+					accountEntryIds, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
 		}
 
 		if (accountEntryIds == null) {
@@ -2194,6 +2228,15 @@ public class AccountRolePersistenceImpl
 			return countByAccountEntryId(accountEntryId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<AccountRole> accountRoles = findByAccountEntryId(
+				accountEntryId);
+
+			accountRoles = InlineSQLHelperUtil.filter(accountRoles);
+
+			return accountRoles.size();
+		}
+
 		StringBundler sb = new StringBundler(2);
 
 		sb.append(_FILTER_SQL_COUNT_ACCOUNTROLE_WHERE);
@@ -2240,6 +2283,13 @@ public class AccountRolePersistenceImpl
 	public int filterCountByAccountEntryId(long[] accountEntryIds) {
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return countByAccountEntryId(accountEntryIds);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<AccountRole> accountRoles = InlineSQLHelperUtil.filter(
+				findByAccountEntryId(accountEntryIds));
+
+			return accountRoles.size();
 		}
 
 		if (accountEntryIds == null) {
@@ -2301,7 +2351,6 @@ public class AccountRolePersistenceImpl
 		"accountRole.accountEntryId IN (";
 
 	private FinderPath _finderPathFetchByRoleId;
-	private FinderPath _finderPathCountByRoleId;
 
 	/**
 	 * Returns the account role where roleId = &#63; or throws a <code>NoSuchRoleException</code> if it could not be found.
@@ -2404,21 +2453,6 @@ public class AccountRolePersistenceImpl
 					}
 				}
 				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
-
-						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
-								finderArgs = new Object[] {roleId};
-							}
-
-							_log.warn(
-								"AccountRolePersistenceImpl.fetchByRoleId(long, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
-						}
-					}
-
 					AccountRole accountRole = list.get(0);
 
 					result = accountRole;
@@ -2463,45 +2497,13 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public int countByRoleId(long roleId) {
-		FinderPath finderPath = _finderPathCountByRoleId;
+		AccountRole accountRole = fetchByRoleId(roleId);
 
-		Object[] finderArgs = new Object[] {roleId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_ACCOUNTROLE_WHERE);
-
-			sb.append(_FINDER_COLUMN_ROLEID_ROLEID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(roleId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (accountRole == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ROLEID_ROLEID_2 =
@@ -3031,6 +3033,15 @@ public class AccountRolePersistenceImpl
 				companyId, accountEntryId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByC_A(
+					companyId, accountEntryId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -3376,6 +3387,15 @@ public class AccountRolePersistenceImpl
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByC_A(
 				companyId, accountEntryIds, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByC_A(
+					companyId, accountEntryIds, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator));
 		}
 
 		if (accountEntryIds == null) {
@@ -3823,6 +3843,15 @@ public class AccountRolePersistenceImpl
 			return countByC_A(companyId, accountEntryId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<AccountRole> accountRoles = findByC_A(
+				companyId, accountEntryId);
+
+			accountRoles = InlineSQLHelperUtil.filter(accountRoles);
+
+			return accountRoles.size();
+		}
+
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(_FILTER_SQL_COUNT_ACCOUNTROLE_WHERE);
@@ -3874,6 +3903,13 @@ public class AccountRolePersistenceImpl
 	public int filterCountByC_A(long companyId, long[] accountEntryIds) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByC_A(companyId, accountEntryIds);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<AccountRole> accountRoles = InlineSQLHelperUtil.filter(
+				findByC_A(companyId, accountEntryIds));
+
+			return accountRoles.size();
 		}
 
 		if (accountEntryIds == null) {
@@ -3944,7 +3980,6 @@ public class AccountRolePersistenceImpl
 		"accountRole.accountEntryId IN (";
 
 	private FinderPath _finderPathFetchByERC_C;
-	private FinderPath _finderPathCountByERC_C;
 
 	/**
 	 * Returns the account role where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchRoleException</code> if it could not be found.
@@ -4130,62 +4165,14 @@ public class AccountRolePersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+		AccountRole accountRole = fetchByERC_C(
+			externalReferenceCode, companyId);
 
-		FinderPath finderPath = _finderPathCountByERC_C;
-
-		Object[] finderArgs = new Object[] {externalReferenceCode, companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_ACCOUNTROLE_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (accountRole == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
@@ -4302,7 +4289,6 @@ public class AccountRolePersistenceImpl
 
 		Object[] args = new Object[] {accountRoleModelImpl.getRoleId()};
 
-		finderCache.putResult(_finderPathCountByRoleId, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByRoleId, args, accountRoleModelImpl);
 
@@ -4311,7 +4297,6 @@ public class AccountRolePersistenceImpl
 			accountRoleModelImpl.getCompanyId()
 		};
 
-		finderCache.putResult(_finderPathCountByERC_C, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByERC_C, args, accountRoleModelImpl);
 	}
@@ -4850,11 +4835,6 @@ public class AccountRolePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByRoleId",
 			new String[] {Long.class.getName()}, new String[] {"roleId"}, true);
 
-		_finderPathCountByRoleId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRoleId",
-			new String[] {Long.class.getName()}, new String[] {"roleId"},
-			false);
-
 		_finderPathWithPaginationFindByC_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A",
 			new String[] {
@@ -4883,11 +4863,6 @@ public class AccountRolePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
-
-		_finderPathCountByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, false);
 
 		AccountRoleUtil.setPersistence(this);
 	}

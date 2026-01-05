@@ -2,10 +2,9 @@
 definition {
 
 	property osgi.modules.includes = "frontend-js-walkthrough-sample-web";
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
-	property testray.component.names = "Walkthrough";
-	property testray.main.component.name = "User Interface";
+	property testray.main.component.name = "Frontend JS";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -14,6 +13,8 @@ definition {
 
 		task ("Given a new Site") {
 			HeadlessSite.addSite(siteName = "Site Name");
+
+			Walkthrough.enableWalkthroughFF();
 
 			ApplicationsMenu.gotoSite(site = "Site Name");
 		}
@@ -44,7 +45,7 @@ definition {
 	@description = "LPS-150905. Walkthrough does not show when disabled."
 	@priority = 5
 	test CanBeDisabled {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -72,7 +73,7 @@ definition {
 	@description = "LPS-150905. Can enable walkthrough in System Settings."
 	@priority = 5
 	test CanBeEnabled {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -92,7 +93,7 @@ definition {
 	@description = "LPS-150905. JSON can be configured on System Settings."
 	@priority = 5
 	test JSONCanBeConfigured {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -114,7 +115,7 @@ definition {
 	@description = "LPS-150905. JSON can be updated."
 	@priority = 5
 	test JSONCanBeUpdated {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -144,7 +145,7 @@ definition {
 	@description = "LPS-150905. Walkthrough displays when defined for a site."
 	@priority = 5
 	test WillDisplayWhenDefinedForSite {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -181,7 +182,7 @@ definition {
 	@description = "LPS-150905. Walkthrough will not display when not defined for a site."
 	@priority = 5
 	test WillNotDisplayWhenNotDefinedForSite {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		var portalURL = PropsUtil.get("portal.url");
 

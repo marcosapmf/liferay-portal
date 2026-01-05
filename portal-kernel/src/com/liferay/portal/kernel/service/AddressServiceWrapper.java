@@ -28,16 +28,16 @@ public class AddressServiceWrapper
 	@Override
 	public Address addAddress(
 			String externalReferenceCode, String className, long classPK,
-			String name, String description, String street1, String street2,
-			String street3, String city, String zip, long regionId,
-			long countryId, long listTypeId, boolean mailing, boolean primary,
-			String phoneNumber, ServiceContext serviceContext)
+			long countryId, long listTypeId, long regionId, String city,
+			String description, boolean mailing, String name, boolean primary,
+			String street1, String street2, String street3, String subtype,
+			String zip, String phoneNumber, ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _addressService.addAddress(
-			externalReferenceCode, className, classPK, name, description,
-			street1, street2, street3, city, zip, regionId, countryId,
-			listTypeId, mailing, primary, phoneNumber, serviceContext);
+			externalReferenceCode, className, classPK, countryId, listTypeId,
+			regionId, city, description, mailing, name, primary, street1,
+			street2, street3, subtype, zip, phoneNumber, serviceContext);
 	}
 
 	@Override
@@ -45,6 +45,15 @@ public class AddressServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_addressService.deleteAddress(addressId);
+	}
+
+	@Override
+	public Address fetchAddressByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _addressService.fetchAddressByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -70,6 +79,15 @@ public class AddressServiceWrapper
 			className, classPK, listTypeIds);
 	}
 
+	@Override
+	public Address getOrAddEmptyAddress(
+			String externalReferenceCode, String className, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _addressService.getOrAddEmptyAddress(
+			externalReferenceCode, className, classPK);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -82,15 +100,17 @@ public class AddressServiceWrapper
 
 	@Override
 	public Address updateAddress(
-			long addressId, String name, String description, String street1,
-			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long listTypeId, boolean mailing,
-			boolean primary, String phoneNumber)
+			String externalReferenceCode, long addressId, long countryId,
+			long listTypeId, long regionId, String city, String description,
+			boolean mailing, String name, boolean primary, String street1,
+			String street2, String street3, String subtype, String zip,
+			String phoneNumber)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _addressService.updateAddress(
-			addressId, name, description, street1, street2, street3, city, zip,
-			regionId, countryId, listTypeId, mailing, primary, phoneNumber);
+			externalReferenceCode, addressId, countryId, listTypeId, regionId,
+			city, description, mailing, name, primary, street1, street2,
+			street3, subtype, zip, phoneNumber);
 	}
 
 	@Override

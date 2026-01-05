@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -48,6 +47,12 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -58,12 +63,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -138,8 +137,8 @@ public class LayoutStructureCommonStylesCSSServlet extends HttpServlet {
 		}
 
 		if ((layout == null) ||
-			(!layout.isTypeAssetDisplay() && !layout.isTypeCollection() &&
-			 !layout.isTypeContent() && !layout.isTypeUtility() &&
+			(!layout.isTypeAssetDisplay() && !layout.isTypeContent() &&
+			 !layout.isTypeUtility() &&
 			 ((layout.getMasterLayoutPlid() == 0) ||
 			  !layout.isTypePortlet()))) {
 
@@ -280,9 +279,7 @@ public class LayoutStructureCommonStylesCSSServlet extends HttpServlet {
 			ServletContextUtil.getFrontendTokenDefinitionRegistry();
 
 		FrontendTokenDefinition frontendTokenDefinition =
-			frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-				_layoutSetLocalService.fetchLayoutSet(
-					group.getGroupId(), group.isLayoutSetPrototype()));
+			frontendTokenDefinitionRegistry.getFrontendTokenDefinition(layout);
 
 		if (frontendTokenDefinition == null) {
 			return _jsonFactory.createJSONObject();
@@ -300,7 +297,8 @@ public class LayoutStructureCommonStylesCSSServlet extends HttpServlet {
 				continue;
 			}
 
-			String value = frontendToken.getDefaultValue();
+			String value = String.valueOf(
+				frontendToken.<Object>getDefaultValue());
 
 			JSONObject valueJSONObject =
 				frontendTokenValuesJSONObject.getJSONObject(
@@ -531,9 +529,6 @@ public class LayoutStructureCommonStylesCSSServlet extends HttpServlet {
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
 	private LayoutStructureProvider _layoutStructureProvider;

@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
+import com.liferay.portal.kernel.portlet.PortletFriendlyURLMapperMatch;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
@@ -29,13 +30,13 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
+import jakarta.servlet.ServletContext;
+
 import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -311,6 +312,10 @@ public interface PortletLocalService
 	public Portlet getPortletByStrutsPath(long companyId, String strutsPath);
 
 	@Transactional(enabled = false)
+	public PortletFriendlyURLMapperMatch getPortletFriendlyURLMapperMatch(
+		String url);
+
+	@Transactional(enabled = false)
 	public List<Portlet> getPortlets();
 
 	/**
@@ -370,6 +375,8 @@ public interface PortletLocalService
 	@Clusterable
 	@Transactional(enabled = false)
 	public void removeCompanyPortletsPool(long companyId);
+
+	public void removePortletModelResources(long companyId, String portletId);
 
 	public Portlet updatePortlet(
 		long companyId, String portletId, String roles, boolean active);

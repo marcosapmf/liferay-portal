@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -52,7 +50,7 @@ public class WidgetInstance implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(WidgetInstance.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getWidgetConfig() {
 		if (_widgetConfigSupplier != null) {
@@ -95,7 +93,9 @@ public class WidgetInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Object>> _widgetConfigSupplier;
 
-	@Schema(description = "The widget instance's ID.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The widget instance's ID."
+	)
 	public String getWidgetInstanceId() {
 		if (_widgetInstanceIdSupplier != null) {
 			widgetInstanceId = _widgetInstanceIdSupplier.get();
@@ -136,7 +136,9 @@ public class WidgetInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _widgetInstanceIdSupplier;
 
-	@Schema(description = "The widget instance's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The widget instance's name."
+	)
 	public String getWidgetName() {
 		if (_widgetNameSupplier != null) {
 			widgetName = _widgetNameSupplier.get();
@@ -177,7 +179,9 @@ public class WidgetInstance implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _widgetNameSupplier;
 
-	@Schema(description = "The widget instance's permissions.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The widget instance's permissions."
+	)
 	@Valid
 	public WidgetPermission[] getWidgetPermissions() {
 		if (_widgetPermissionsSupplier != null) {
@@ -318,8 +322,8 @@ public class WidgetInstance implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.WidgetInstance",
 		name = "x-class-name"
 	)

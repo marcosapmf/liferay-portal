@@ -7,7 +7,7 @@ package com.liferay.site.navigation.site.map.web.internal.display.context;
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
-import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
+import com.liferay.layout.item.selector.LayoutItemSelectorCriterion;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
@@ -29,11 +29,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.site.map.web.internal.configuration.SiteNavigationSiteMapPortletInstanceConfiguration;
 
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Juergen Kappler
@@ -63,7 +63,7 @@ public class SiteNavigationSiteMapDisplayContext {
 	public String buildSiteMap() throws Exception {
 		StringBundler sb = new StringBundler();
 
-		_buildSiteMap(
+		_buildSitemap(
 			_themeDisplay.getLayout(), getRootLayouts(), getRootLayout(),
 			isIncludeRootInTree(),
 			_siteNavigationSiteMapPortletInstanceConfiguration.displayDepth(),
@@ -78,22 +78,30 @@ public class SiteNavigationSiteMapDisplayContext {
 	}
 
 	public long getDisplayStyleGroupId() {
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		String displayStyleGroupKey = getDisplayStyleGroupKey();
-
-		if (Validator.isNotNull(displayStyleGroupKey)) {
-			Group group = GroupLocalServiceUtil.fetchGroup(
-				themeDisplay.getCompanyId(), displayStyleGroupKey);
-
-			if (group != null) {
-				return group.getGroupId();
-			}
+		if (_displayStyleGroupId != null) {
+			return _displayStyleGroupId;
 		}
 
-		return themeDisplay.getScopeGroupId();
+		String displayStyleGroupExternalReferenceCode =
+			_siteNavigationSiteMapPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode();
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				_themeDisplay.getCompanyId());
+		}
+
+		if (group != null) {
+			_displayStyleGroupId = group.getGroupId();
+		}
+		else {
+			_displayStyleGroupId = _themeDisplay.getScopeGroupId();
+		}
+
+		return _displayStyleGroupId;
 	}
 
 	public String getDisplayStyleGroupKey() {
@@ -101,32 +109,23 @@ public class SiteNavigationSiteMapDisplayContext {
 			return _displayStyleGroupKey;
 		}
 
-		String displayStyleGroupKey =
+		String displayStyleGroupExternalReferenceCode =
 			_siteNavigationSiteMapPortletInstanceConfiguration.
-				displayStyleGroupKey();
+				displayStyleGroupExternalReferenceCode();
 
-		if (Validator.isNotNull(displayStyleGroupKey)) {
-			_displayStyleGroupKey = displayStyleGroupKey;
+		Group group = _themeDisplay.getScopeGroup();
 
-			return _displayStyleGroupKey;
+		if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+			group = GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+				displayStyleGroupExternalReferenceCode,
+				_themeDisplay.getCompanyId());
 		}
-
-		long displayStyleGroupId =
-			_siteNavigationSiteMapPortletInstanceConfiguration.
-				displayStyleGroupId();
-
-		if (displayStyleGroupId <= 0) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)_httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			displayStyleGroupId = themeDisplay.getScopeGroupId();
-		}
-
-		Group group = GroupLocalServiceUtil.fetchGroup(displayStyleGroupId);
 
 		if (group != null) {
 			_displayStyleGroupKey = group.getGroupKey();
+		}
+		else {
+			_displayStyleGroupKey = StringPool.BLANK;
 		}
 
 		return _displayStyleGroupKey;
@@ -258,7 +257,7 @@ public class SiteNavigationSiteMapDisplayContext {
 		sb.append("</a>");
 	}
 
-	private void _buildSiteMap(
+	private void _buildSitemap(
 			Layout layout, List<Layout> layouts, Layout rootLayout,
 			boolean includeRootInTree, int displayDepth,
 			boolean showCurrentPage, boolean useHtmlTitle,
@@ -289,7 +288,7 @@ public class SiteNavigationSiteMapDisplayContext {
 			_buildLayoutView(
 				rootLayout, cssClass, useHtmlTitle, themeDisplay, sb);
 
-			_buildSiteMap(
+			_buildSitemap(
 				layout, layouts, rootLayout, includeRootInTree, displayDepth,
 				showCurrentPage, useHtmlTitle, showHiddenPages, curDepth + 1,
 				themeDisplay, sb);
@@ -316,14 +315,14 @@ public class SiteNavigationSiteMapDisplayContext {
 
 					if ((displayDepth == 0) || (displayDepth > curDepth)) {
 						if (showHiddenPages) {
-							_buildSiteMap(
+							_buildSitemap(
 								layout, curLayout.getChildren(), rootLayout,
 								includeRootInTree, displayDepth,
 								showCurrentPage, useHtmlTitle, showHiddenPages,
 								curDepth + 1, themeDisplay, sb);
 						}
 						else {
-							_buildSiteMap(
+							_buildSitemap(
 								layout,
 								curLayout.getChildren(
 									themeDisplay.getPermissionChecker()),
@@ -341,6 +340,7 @@ public class SiteNavigationSiteMapDisplayContext {
 		sb.append("</ul>");
 	}
 
+	private Long _displayStyleGroupId;
 	private String _displayStyleGroupKey;
 	private final HttpServletRequest _httpServletRequest;
 	private Boolean _includeRootInTree;

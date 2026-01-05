@@ -3,7 +3,7 @@
 exports[`IssueSubmitted should render 1`] = `
 <div>
   <div
-    class="modal-header"
+    class="modal-header has-title"
   >
     <div
       class="h4 modal-title"
@@ -29,11 +29,11 @@ exports[`IssueSubmitted should render 1`] = `
     class="modal-body d-flex flex-column align-items-center"
   >
     <svg
-      class="lexicon-icon lexicon-icon-ac-no-sites icon-root icon-size-xxxl my-5"
+      class="lexicon-icon lexicon-icon-ac_no_sites icon-root icon-size-xxxl my-5"
       role="presentation"
     >
       <use
-        href="#ac-no-sites"
+        href="#ac_no_sites"
       />
     </svg>
     <h3>

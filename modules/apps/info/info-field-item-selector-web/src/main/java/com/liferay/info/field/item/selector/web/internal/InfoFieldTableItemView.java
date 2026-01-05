@@ -29,7 +29,7 @@ public class InfoFieldTableItemView implements TableItemView {
 
 	@Override
 	public List<String> getHeaderNames() {
-		return ListUtil.fromArray("name", "type", "mandatory");
+		return ListUtil.fromArray("name", "type", "mandatory", "localizable");
 	}
 
 	@Override
@@ -64,6 +64,17 @@ public class InfoFieldTableItemView implements TableItemView {
 		}
 
 		searchEntries.add(mandatoryTextSearchEntry);
+
+		TextSearchEntry localizableTextSearchEntry = new TextSearchEntry();
+
+		if (_infoField.isLocalizable()) {
+			localizableTextSearchEntry.setName(LanguageUtil.get(locale, "yes"));
+		}
+		else {
+			localizableTextSearchEntry.setName(LanguageUtil.get(locale, "no"));
+		}
+
+		searchEntries.add(localizableTextSearchEntry);
 
 		return searchEntries;
 	}

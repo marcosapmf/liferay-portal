@@ -11,11 +11,12 @@ import com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.Bas
 import com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.FragmentEntryVerticalCardFactory;
 import com.liferay.fragment.web.internal.frontend.taglib.clay.servlet.taglib.InheritedFragmentEntryVerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.VerticalCard;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import javax.portlet.RenderRequest;
+import jakarta.portlet.RenderRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,6 +69,29 @@ public class FragmentEntryVerticalCardFactoryTest {
 
 		Assert.assertTrue(
 			verticalCard instanceof InheritedFragmentEntryVerticalCard);
+	}
+
+	@Test
+	@TestInfo("LPS-122082")
+	public void testIsSelectableFragmentEntryTypeReact() {
+		FragmentEntryVerticalCardFactory fragmentEntryVerticalCardFactory =
+			FragmentEntryVerticalCardFactory.getInstance();
+
+		FragmentEntry fragmentEntry = Mockito.mock(FragmentEntry.class);
+
+		Mockito.when(
+			fragmentEntry.isTypeReact()
+		).thenReturn(
+			true
+		);
+
+		BasicFragmentEntryVerticalCard basicFragmentEntryVerticalCard =
+			(BasicFragmentEntryVerticalCard)
+				fragmentEntryVerticalCardFactory.getVerticalCard(
+					fragmentEntry, Mockito.mock(RenderRequest.class), null,
+					null, FragmentTypeConstants.BASIC_FRAGMENT_TYPE);
+
+		Assert.assertFalse(basicFragmentEntryVerticalCard.isSelectable());
 	}
 
 	private void _setUpPortalUtil() {

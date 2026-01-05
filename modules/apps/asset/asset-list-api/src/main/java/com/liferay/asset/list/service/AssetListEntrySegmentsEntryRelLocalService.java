@@ -252,6 +252,10 @@ public interface AssetListEntrySegmentsEntryRelLocalService
 			long assetListEntryId, long[] segmentsEntryIds);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntrySegmentsEntryRel>
+		fetchDynamicAssetListEntrySegmentsEntryRels(long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	/**
@@ -311,6 +315,11 @@ public interface AssetListEntrySegmentsEntryRelLocalService
 			long assetListEntryId, long[] segmentsEntryIds, int start, int end,
 			OrderByComparator<AssetListEntrySegmentsEntryRel>
 				orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntrySegmentsEntryRel>
+		getAssetListEntrySegmentsEntryRelsByClassNameId(
+			long companyId, long classNameId);
 
 	/**
 	 * Returns all the asset list entry segments entry rels matching the UUID and company.

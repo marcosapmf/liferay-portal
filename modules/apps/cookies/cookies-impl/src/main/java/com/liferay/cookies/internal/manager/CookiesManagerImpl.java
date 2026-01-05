@@ -30,13 +30,13 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeFormatter;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -245,6 +245,7 @@ public class CookiesManagerImpl implements CookiesManager {
 
 			cookie.setMaxAge(0);
 			cookie.setPath(_getContextPath(httpServletRequest));
+			cookie.setSecure(_portal.isSecure(httpServletRequest));
 			cookie.setValue(StringPool.BLANK);
 
 			httpServletResponse.addCookie(cookie);
@@ -337,7 +338,7 @@ public class CookiesManagerImpl implements CookiesManager {
 		}
 
 		if (internetDomainName.isTopPrivateDomain()) {
-			return StringPool.PERIOD + internetDomainName.toString();
+			return internetDomainName.toString();
 		}
 
 		int x = host.indexOf(CharPool.PERIOD);
@@ -349,10 +350,10 @@ public class CookiesManagerImpl implements CookiesManager {
 		int y = host.indexOf(CharPool.PERIOD, x + 1);
 
 		if (y <= 0) {
-			return StringPool.PERIOD + host;
+			return host;
 		}
 
-		return host.substring(x);
+		return host.substring(x + 1);
 	}
 
 	@Override

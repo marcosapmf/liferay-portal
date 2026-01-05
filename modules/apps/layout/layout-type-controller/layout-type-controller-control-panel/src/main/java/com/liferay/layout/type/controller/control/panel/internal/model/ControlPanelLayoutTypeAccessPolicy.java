@@ -6,6 +6,7 @@
 package com.liferay.layout.type.controller.control.panel.internal.model;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeAccessPolicy;
@@ -18,7 +19,7 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -38,15 +39,20 @@ public class ControlPanelLayoutTypeAccessPolicy
 			Portlet portlet)
 		throws PortalException {
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (scopeGroup.isOrganization() && !scopeGroup.isSite()) {
+			throw new PrincipalException(
+				"Unable to access an organization's site that is not enabled");
+		}
+
 		if (PortletPermissionUtil.hasControlPanelAccessPermission(
-				permissionChecker, themeDisplay.getScopeGroupId(), portlet) ||
+				PermissionThreadLocal.getPermissionChecker(),
+				themeDisplay.getScopeGroupId(), portlet) ||
 			isAccessGrantedByRuntimePortlet(httpServletRequest) ||
 			isAccessGrantedByPortletAuthenticationToken(
 				httpServletRequest, layout, portlet)) {

@@ -6,6 +6,8 @@
 package com.liferay.site.sitemap.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -20,9 +22,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.configuration.manager.SitemapConfigurationManager;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"jakarta.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 		"mvc.command.name=/site_sitemap/save_company_configuration"
 	},
 	service = MVCActionCommand.class
@@ -61,9 +63,6 @@ public class SaveCompanyConfigurationMVCActionCommand
 
 		_sitemapConfigurationManager.saveSitemapCompanyConfiguration(
 			themeDisplay.getCompanyId(),
-			ParamUtil.getBoolean(actionRequest, "includeCategories"),
-			ParamUtil.getBoolean(actionRequest, "includePages"),
-			ParamUtil.getBoolean(actionRequest, "includeWebContent"),
 			ArrayUtil.filter(
 				ArrayUtil.unique(
 					ParamUtil.getLongValues(
@@ -76,7 +75,30 @@ public class SaveCompanyConfigurationMVCActionCommand
 					}
 
 					return true;
-				}));
+				}),
+			ArrayUtil.filter(
+				ArrayUtil.unique(
+					ParamUtil.getLongValues(
+						actionRequest,
+						"objectDefinitionsSearchContainerPrimaryKeys")),
+				objectDefinitionId -> {
+					ObjectDefinition objectDefinition =
+						_objectDefinitionLocalService.fetchObjectDefinition(
+							objectDefinitionId);
+
+					if ((objectDefinition == null) ||
+						!objectDefinition.isActive() ||
+						objectDefinition.isSystem()) {
+
+						return false;
+					}
+
+					return true;
+				}),
+			ParamUtil.getBoolean(actionRequest, "includeCategories"),
+			ParamUtil.getBoolean(actionRequest, "includePages"),
+			ParamUtil.getBoolean(actionRequest, "includeWebContent"),
+			ParamUtil.getBoolean(actionRequest, "xmlSitemapIndexEnabled"));
 
 		SessionMessages.add(
 			actionRequest, "requestProcessed",
@@ -92,6 +114,9 @@ public class SaveCompanyConfigurationMVCActionCommand
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private SitemapConfigurationManager _sitemapConfigurationManager;

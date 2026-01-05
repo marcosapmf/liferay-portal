@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.service.persistence.impl;
 
+import com.liferay.commerce.product.exception.DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionSpecificationOptionValueException;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValueTable;
@@ -26,13 +27,19 @@ import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -683,7 +690,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		"(cpDefinitionSpecificationOptionValue.uuid IS NULL OR cpDefinitionSpecificationOptionValue.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the cp definition specification option value where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
@@ -882,69 +888,14 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPDefinitionSpecificationOptionValue.class)) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(
-					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -3821,7 +3772,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			"cpDefinitionSpecificationOptionValue.CPOptionCategoryId = ?";
 
 	private FinderPath _finderPathFetchByC_CSOVI;
-	private FinderPath _finderPathCountByC_CSOVI;
 
 	/**
 	 * Returns the cp definition specification option value where CPDefinitionSpecificationOptionValueId = &#63; and CPDefinitionId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
@@ -4018,59 +3968,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	public int countByC_CSOVI(
 		long CPDefinitionSpecificationOptionValueId, long CPDefinitionId) {
 
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					CPDefinitionSpecificationOptionValue.class)) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByC_CSOVI(
+				CPDefinitionSpecificationOptionValueId, CPDefinitionId);
 
-			FinderPath finderPath = _finderPathCountByC_CSOVI;
-
-			Object[] finderArgs = new Object[] {
-				CPDefinitionSpecificationOptionValueId, CPDefinitionId
-			};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(
-					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-				sb.append(
-					_FINDER_COLUMN_C_CSOVI_CPDEFINITIONSPECIFICATIONOPTIONVALUEID_2);
-
-				sb.append(_FINDER_COLUMN_C_CSOVI_CPDEFINITIONID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(CPDefinitionSpecificationOptionValueId);
-
-					queryPos.add(CPDefinitionId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String
@@ -5273,7 +5179,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		"cpDefinitionSpecificationOptionValue.CPOptionCategoryId = ?";
 
 	private FinderPath _finderPathFetchByC_K;
-	private FinderPath _finderPathCountByC_K;
 
 	/**
 	 * Returns the cp definition specification option value where CPDefinitionId = &#63; and key = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
@@ -5475,37 +5380,148 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByC_K(long CPDefinitionId, String key) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByC_K(
+				CPDefinitionId, key);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_C_K_CPDEFINITIONID_2 =
+		"cpDefinitionSpecificationOptionValue.CPDefinitionId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_K_KEY_2 =
+		"cpDefinitionSpecificationOptionValue.key = ?";
+
+	private static final String _FINDER_COLUMN_C_K_KEY_3 =
+		"(cpDefinitionSpecificationOptionValue.key IS NULL OR cpDefinitionSpecificationOptionValue.key = '')";
+
+	private FinderPath _finderPathFetchByERC_C;
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp definition specification option value
+	 * @throws NoSuchCPDefinitionSpecificationOptionValueException if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByERC_C(
+				externalReferenceCode, companyId);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", companyId=");
+			sb.append(companyId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchCPDefinitionSpecificationOptionValueException(
+				sb.toString());
+		}
+
+		return cpDefinitionSpecificationOptionValue;
+	}
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return fetchByERC_C(externalReferenceCode, companyId, true);
+	}
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
+
 		try (SafeCloseable safeCloseable =
 				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
 					CPDefinitionSpecificationOptionValue.class)) {
 
-			key = Objects.toString(key, "");
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-			FinderPath finderPath = _finderPathCountByC_K;
+			Object[] finderArgs = null;
 
-			Object[] finderArgs = new Object[] {CPDefinitionId, key};
+			if (useFinderCache) {
+				finderArgs = new Object[] {externalReferenceCode, companyId};
+			}
 
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
+			Object result = null;
 
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByERC_C, finderArgs, this);
+			}
+
+			if (result instanceof CPDefinitionSpecificationOptionValue) {
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)result;
+
+				if (!Objects.equals(
+						externalReferenceCode,
+						cpDefinitionSpecificationOptionValue.
+							getExternalReferenceCode()) ||
+					(companyId !=
+						cpDefinitionSpecificationOptionValue.getCompanyId())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
 
 				sb.append(
-					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-				sb.append(_FINDER_COLUMN_C_K_CPDEFINITIONID_2);
+				boolean bindExternalReferenceCode = false;
 
-				boolean bindKey = false;
-
-				if (key.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_K_KEY_3);
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
 				}
 				else {
-					bindKey = true;
+					bindExternalReferenceCode = true;
 
-					sb.append(_FINDER_COLUMN_C_K_KEY_2);
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
 				}
+
+				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
 
 				String sql = sb.toString();
 
@@ -5518,15 +5534,29 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 					QueryPos queryPos = QueryPos.getInstance(query);
 
-					queryPos.add(CPDefinitionId);
-
-					if (bindKey) {
-						queryPos.add(key);
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
 					}
 
-					count = (Long)query.uniqueResult();
+					queryPos.add(companyId);
 
-					finderCache.putResult(finderPath, finderArgs, count);
+					List<CPDefinitionSpecificationOptionValue> list =
+						query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByERC_C, finderArgs, list);
+						}
+					}
+					else {
+						CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue = list.get(0);
+
+						result = cpDefinitionSpecificationOptionValue;
+
+						cacheResult(cpDefinitionSpecificationOptionValue);
+					}
 				}
 				catch (Exception exception) {
 					throw processException(exception);
@@ -5536,18 +5566,62 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				}
 			}
 
-			return count.intValue();
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPDefinitionSpecificationOptionValue)result;
+			}
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_K_CPDEFINITIONID_2 =
-		"cpDefinitionSpecificationOptionValue.CPDefinitionId = ? AND ";
+	/**
+	 * Removes the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the cp definition specification option value that was removed
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
 
-	private static final String _FINDER_COLUMN_C_K_KEY_2 =
-		"cpDefinitionSpecificationOptionValue.key = ?";
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = findByERC_C(
+				externalReferenceCode, companyId);
 
-	private static final String _FINDER_COLUMN_C_K_KEY_3 =
-		"(cpDefinitionSpecificationOptionValue.key IS NULL OR cpDefinitionSpecificationOptionValue.key = '')";
+		return remove(cpDefinitionSpecificationOptionValue);
+	}
+
+	/**
+	 * Returns the number of cp definition specification option values where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching cp definition specification option values
+	 */
+	@Override
+	public int countByERC_C(String externalReferenceCode, long companyId) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByERC_C(
+				externalReferenceCode, companyId);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
+		"cpDefinitionSpecificationOptionValue.externalReferenceCode = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
+		"(cpDefinitionSpecificationOptionValue.externalReferenceCode IS NULL OR cpDefinitionSpecificationOptionValue.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
+		"cpDefinitionSpecificationOptionValue.companyId = ?";
 
 	public CPDefinitionSpecificationOptionValuePersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -5609,6 +5683,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				new Object[] {
 					cpDefinitionSpecificationOptionValue.getCPDefinitionId(),
 					cpDefinitionSpecificationOptionValue.getKey()
+				},
+				cpDefinitionSpecificationOptionValue);
+
+			finderCache.putResult(
+				_finderPathFetchByERC_C,
+				new Object[] {
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode(),
+					cpDefinitionSpecificationOptionValue.getCompanyId()
 				},
 				cpDefinitionSpecificationOptionValue);
 		}
@@ -5725,8 +5808,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args,
 				cpDefinitionSpecificationOptionValueModelImpl);
 
@@ -5738,8 +5819,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByC_CSOVI, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByC_CSOVI, args,
 				cpDefinitionSpecificationOptionValueModelImpl);
 
@@ -5749,9 +5828,18 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				cpDefinitionSpecificationOptionValueModelImpl.getKey()
 			};
 
-			finderCache.putResult(_finderPathCountByC_K, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_K, args,
+				cpDefinitionSpecificationOptionValueModelImpl);
+
+			args = new Object[] {
+				cpDefinitionSpecificationOptionValueModelImpl.
+					getExternalReferenceCode(),
+				cpDefinitionSpecificationOptionValueModelImpl.getCompanyId()
+			};
+
+			finderCache.putResult(
+				_finderPathFetchByERC_C, args,
 				cpDefinitionSpecificationOptionValueModelImpl);
 		}
 	}
@@ -5921,6 +6009,90 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			String uuid = PortalUUIDUtil.generate();
 
 			cpDefinitionSpecificationOptionValue.setUuid(uuid);
+		}
+
+		if (Validator.isNull(
+				cpDefinitionSpecificationOptionValue.
+					getExternalReferenceCode())) {
+
+			cpDefinitionSpecificationOptionValue.setExternalReferenceCode(
+				cpDefinitionSpecificationOptionValue.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					cpDefinitionSpecificationOptionValueModelImpl.
+						getColumnOriginalValue("externalReferenceCode"),
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId =
+						cpDefinitionSpecificationOptionValue.getCompanyId();
+
+					long groupId =
+						cpDefinitionSpecificationOptionValue.getGroupId();
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK =
+							cpDefinitionSpecificationOptionValue.
+								getPrimaryKey();
+					}
+
+					try {
+						cpDefinitionSpecificationOptionValue.
+							setExternalReferenceCode(
+								SanitizerUtil.sanitize(
+									companyId, groupId, userId,
+									CPDefinitionSpecificationOptionValue.class.
+										getName(),
+									classPK, ContentTypes.TEXT_HTML,
+									Sanitizer.MODE_ALL,
+									cpDefinitionSpecificationOptionValue.
+										getExternalReferenceCode(),
+									null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			CPDefinitionSpecificationOptionValue
+				ercCPDefinitionSpecificationOptionValue = fetchByERC_C(
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode(),
+					cpDefinitionSpecificationOptionValue.getCompanyId());
+
+			if (isNew) {
+				if (ercCPDefinitionSpecificationOptionValue != null) {
+					throw new DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException(
+						"Duplicate cp definition specification option value with external reference code " +
+							cpDefinitionSpecificationOptionValue.
+								getExternalReferenceCode() + " and company " +
+									cpDefinitionSpecificationOptionValue.
+										getCompanyId());
+				}
+			}
+			else {
+				if ((ercCPDefinitionSpecificationOptionValue != null) &&
+					(cpDefinitionSpecificationOptionValue.
+						getCPDefinitionSpecificationOptionValueId() !=
+							ercCPDefinitionSpecificationOptionValue.
+								getCPDefinitionSpecificationOptionValueId())) {
+
+					throw new DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException(
+						"Duplicate cp definition specification option value with external reference code " +
+							cpDefinitionSpecificationOptionValue.
+								getExternalReferenceCode() + " and company " +
+									cpDefinitionSpecificationOptionValue.
+										getCompanyId());
+				}
+			}
 		}
 
 		ServiceContext serviceContext =
@@ -6507,29 +6679,33 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("groupId");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("CPDefinitionId");
-		ctStrictColumnNames.add("CPSpecificationOptionId");
-		ctStrictColumnNames.add("CPOptionCategoryId");
-		ctStrictColumnNames.add("key_");
-		ctStrictColumnNames.add("priority");
-		ctStrictColumnNames.add("value");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("CPDefinitionId");
+		ctMergeColumnNames.add("CPSpecificationOptionId");
+		ctMergeColumnNames.add("CPOptionCategoryId");
+		ctMergeColumnNames.add("key_");
+		ctMergeColumnNames.add("priority");
+		ctMergeColumnNames.add("value");
+		ctMergeColumnNames.add("visible");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("CPDSpecificationOptionValueId"));
@@ -6542,6 +6718,9 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"});
 
 		_uniqueIndexColumnNames.add(new String[] {"CPDefinitionId", "key_"});
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"externalReferenceCode", "companyId"});
 	}
 
 	/**
@@ -6586,11 +6765,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -6693,12 +6867,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"},
 			true);
 
-		_finderPathCountByC_CSOVI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_CSOVI",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"},
-			false);
-
 		_finderPathWithPaginationFindByC_CSO = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CSO",
 			new String[] {
@@ -6742,10 +6910,10 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"CPDefinitionId", "key_"}, true);
 
-		_finderPathCountByC_K = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_K",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"CPDefinitionId", "key_"}, false);
+		_finderPathFetchByERC_C = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "companyId"}, true);
 
 		CPDefinitionSpecificationOptionValueUtil.setPersistence(this);
 	}

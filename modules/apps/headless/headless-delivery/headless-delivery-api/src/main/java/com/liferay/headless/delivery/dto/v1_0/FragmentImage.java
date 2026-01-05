@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -53,7 +51,9 @@ public class FragmentImage implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(FragmentImage.class, json);
 	}
 
-	@Schema(description = "The fragment image's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The fragment image's description."
+	)
 	@Valid
 	public Object getDescription() {
 		if (_descriptionSupplier != null) {
@@ -95,7 +95,9 @@ public class FragmentImage implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _descriptionSupplier;
 
-	@Schema(description = "A reference to a fragment image class primary key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A reference to a fragment image class primary key."
+	)
 	@Valid
 	public FragmentImageClassPKReference getFragmentImageClassPKReference() {
 		if (_fragmentImageClassPKReferenceSupplier != null) {
@@ -144,7 +146,9 @@ public class FragmentImage implements Serializable {
 	private Supplier<FragmentImageClassPKReference>
 		_fragmentImageClassPKReferenceSupplier;
 
-	@Schema(description = "The fragment image's title.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The fragment image's title."
+	)
 	@Valid
 	public Object getTitle() {
 		if (_titleSupplier != null) {
@@ -186,7 +190,7 @@ public class FragmentImage implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _titleSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The fragment image's url. Can be inline or mapped to an external value."
 	)
 	@Valid
@@ -342,8 +346,8 @@ public class FragmentImage implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentImage",
 		name = "x-class-name"
 	)

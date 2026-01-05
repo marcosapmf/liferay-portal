@@ -100,22 +100,23 @@ public class CommerceOrderItemServiceWrapper
 	}
 
 	@Override
-	public com.liferay.commerce.model.CommerceOrderItem
-			fetchByExternalReferenceCode(
-				String externalReferenceCode, long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceOrderItemService.fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
-	@Override
 	public com.liferay.commerce.model.CommerceOrderItem fetchCommerceOrderItem(
 			long commerceOrderItemId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemService.fetchCommerceOrderItem(
 			commerceOrderItemId);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			fetchCommerceOrderItemByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemService.
+			fetchCommerceOrderItemByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -222,6 +223,30 @@ public class CommerceOrderItemServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
+			getParentCommerceOrderItems(
+				long commerceOrderId, long parentCommerceOrderItemId, int start,
+				int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.commerce.model.CommerceOrderItem>
+						orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemService.getParentCommerceOrderItems(
+			commerceOrderId, parentCommerceOrderItemId, start, end,
+			orderByComparator);
+	}
+
+	@Override
+	public int getParentCommerceOrderItemsCount(
+			long commerceOrderId, long parentCommerceOrderItemId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemService.getParentCommerceOrderItemsCount(
+			commerceOrderId, parentCommerceOrderItemId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
 			getSupplierCommerceOrderItems(
 				long customerCommerceOrderItemId, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -234,8 +259,8 @@ public class CommerceOrderItemServiceWrapper
 	public com.liferay.commerce.model.CommerceOrderItem importCommerceOrderItem(
 			String externalReferenceCode, long commerceOrderItemId,
 			long commerceOrderId, long cpInstanceId,
-			String cpMeasurementUnitKey, java.math.BigDecimal quantity,
-			java.math.BigDecimal shippedQuantity,
+			String cpMeasurementUnitKey, String json,
+			java.math.BigDecimal quantity, java.math.BigDecimal shippedQuantity,
 			java.math.BigDecimal unitOfMeasureIncrementalOrderQuantity,
 			String unitOfMeasureKey,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -243,7 +268,7 @@ public class CommerceOrderItemServiceWrapper
 
 		return _commerceOrderItemService.importCommerceOrderItem(
 			externalReferenceCode, commerceOrderItemId, commerceOrderId,
-			cpInstanceId, cpMeasurementUnitKey, quantity, shippedQuantity,
+			cpInstanceId, cpMeasurementUnitKey, json, quantity, shippedQuantity,
 			unitOfMeasureIncrementalOrderQuantity, unitOfMeasureKey,
 			serviceContext);
 	}
@@ -321,15 +346,15 @@ public class CommerceOrderItemServiceWrapper
 
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, String json,
+			String externalReferenceCode, long commerceOrderItemId, String json,
 			java.math.BigDecimal quantity,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemService.updateCommerceOrderItem(
-			commerceOrderItemId, json, quantity, commerceContext,
-			serviceContext);
+			externalReferenceCode, commerceOrderItemId, json, quantity,
+			commerceContext, serviceContext);
 	}
 
 	@Override
@@ -346,25 +371,26 @@ public class CommerceOrderItemServiceWrapper
 	public com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
 				long commerceOrderItemId, long shippingAddressId,
-				String deliveryGroup, String printedNote)
+				String deliveryGroupName, String printedNote)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemService.updateCommerceOrderItemInfo(
-			commerceOrderItemId, shippingAddressId, deliveryGroup, printedNote);
+			commerceOrderItemId, shippingAddressId, deliveryGroupName,
+			printedNote);
 	}
 
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
 				long commerceOrderItemId, long shippingAddressId,
-				String deliveryGroup, String printedNote,
+				String deliveryGroupName, String printedNote,
 				int requestedDeliveryDateMonth, int requestedDeliveryDateDay,
 				int requestedDeliveryDateYear)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemService.updateCommerceOrderItemInfo(
-			commerceOrderItemId, shippingAddressId, deliveryGroup, printedNote,
-			requestedDeliveryDateMonth, requestedDeliveryDateDay,
+			commerceOrderItemId, shippingAddressId, deliveryGroupName,
+			printedNote, requestedDeliveryDateMonth, requestedDeliveryDateDay,
 			requestedDeliveryDateYear);
 	}
 
@@ -375,7 +401,7 @@ public class CommerceOrderItemServiceWrapper
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
-				long commerceOrderItemId, String deliveryGroup,
+				long commerceOrderItemId, String deliveryGroupName,
 				long shippingAddressId, String printedNote,
 				int requestedDeliveryDateMonth, int requestedDeliveryDateDay,
 				int requestedDeliveryDateYear, int requestedDeliveryDateHour,
@@ -384,8 +410,8 @@ public class CommerceOrderItemServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemService.updateCommerceOrderItemInfo(
-			commerceOrderItemId, deliveryGroup, shippingAddressId, printedNote,
-			requestedDeliveryDateMonth, requestedDeliveryDateDay,
+			commerceOrderItemId, deliveryGroupName, shippingAddressId,
+			printedNote, requestedDeliveryDateMonth, requestedDeliveryDateDay,
 			requestedDeliveryDateYear, requestedDeliveryDateHour,
 			requestedDeliveryDateMinute, serviceContext);
 	}

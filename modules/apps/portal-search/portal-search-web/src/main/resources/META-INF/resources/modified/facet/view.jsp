@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -86,6 +86,10 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 							onClick="Liferay.Search.FacetUtil.clearSelections(event);"
 						>
 							<strong><liferay-ui:message key="clear" /></strong>
+
+							<span class="sr-only">
+								<liferay-ui:message arguments="modified-facet-portlet-instance-configuration-name" key="x-filter" />
+							</span>
 						</clay:button>
 					</c:if>
 
@@ -145,7 +149,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeFrom" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="from">
+								<aui:field-wrapper label="from" name="fromInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-from"
 										dayParam="fromDay"
@@ -165,7 +169,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeTo" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="to">
+								<aui:field-wrapper label="to[date-time]" name="toInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-to"
 										dayParam="toDay"
@@ -205,8 +209,13 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 		module="{FacetUtil} from portal-search-web"
 	/>
 
-	<aui:script use="liferay-search-date-facet">
-		new Liferay.Search.DateFacetFilter({
+	<aui:script>
+		Liferay.destroyComponent('<portlet:namespace />fromInputDatePicker');
+		Liferay.destroyComponent('<portlet:namespace />toInputDatePicker');
+	</aui:script>
+
+	<aui:script use="liferay-search-custom-range-facet">
+		new Liferay.Search.CustomRangeFacet({
 			form: A.one('#<portlet:namespace />fm'),
 			fromInputName: '<portlet:namespace />fromInput',
 			namespace: '<portlet:namespace />',

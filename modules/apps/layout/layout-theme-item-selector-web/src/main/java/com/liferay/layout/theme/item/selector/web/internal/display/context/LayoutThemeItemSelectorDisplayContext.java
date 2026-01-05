@@ -8,6 +8,7 @@ package com.liferay.layout.theme.item.selector.web.internal.display.context;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.theme.item.selector.web.internal.util.comparator.ThemeNameComparator;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
@@ -17,12 +18,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.display.context.GroupDisplayContextHelper;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Stefan Tanasie
@@ -86,13 +88,22 @@ public class LayoutThemeItemSelectorDisplayContext {
 			orderByAsc = true;
 		}
 
+		List<Theme> themes = ListUtil.filter(
+			ThemeLocalServiceUtil.getPageThemes(
+				themeDisplay.getCompanyId(),
+				groupDisplayContextHelper.getLiveGroupId(),
+				themeDisplay.getUserId()),
+			theme -> {
+				if (Objects.equals(theme.getThemeId(), "cms_WAR_cmstheme")) {
+					return FeatureFlagManagerUtil.isEnabled(
+						themeDisplay.getCompanyId(), "LPD-17564");
+				}
+
+				return true;
+			});
+
 		themesSearchContainer.setResultsAndTotal(
-			ListUtil.sort(
-				ThemeLocalServiceUtil.getPageThemes(
-					themeDisplay.getCompanyId(),
-					groupDisplayContextHelper.getLiveGroupId(),
-					themeDisplay.getUserId()),
-				new ThemeNameComparator(orderByAsc)));
+			ListUtil.sort(themes, new ThemeNameComparator(orderByAsc)));
 
 		_themesSearchContainer = themesSearchContainer;
 

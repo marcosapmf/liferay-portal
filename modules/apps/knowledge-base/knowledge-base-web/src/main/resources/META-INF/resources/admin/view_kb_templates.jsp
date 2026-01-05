@@ -20,7 +20,9 @@ ViewKBTemplatesDisplayContext viewKBTemplatesDisplayContext = (ViewKBTemplatesDi
 		searchContainerId="kbTemplates"
 	/>
 
-	<clay:container-fluid>
+	<clay:container-fluid
+		size="xxxl"
+	>
 		<aui:form action="<%= viewKBTemplatesDisplayContext.getSearchURL() %>" method="get" name="fm">
 			<aui:input name="kbTemplateIds" type="hidden" />
 
@@ -58,7 +60,7 @@ ViewKBTemplatesDisplayContext viewKBTemplatesDisplayContext = (ViewKBTemplatesDi
 								</h2>
 
 								<span class="text-default">
-									<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(kbTemplate.getUserName()), viewKBTemplatesDisplayContext.getKBTemplateModifiedDateDescription(kbTemplate)} %>" key="x-modified-x-ago" />
+									<liferay-ui:message arguments="<%= viewKBTemplatesDisplayContext.getKBTemplateModifiedDateDescription(kbTemplate) %>" key="modified-x-ago" />
 								</span>
 							</liferay-ui:search-container-column-text>
 

@@ -6,7 +6,6 @@
 package com.liferay.exportimport.kernel.lar;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
@@ -17,12 +16,15 @@ import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.io.IOException;
 
@@ -32,8 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-
-import javax.portlet.PortletPreferences;
 
 /**
  * @author Brian Wing Shun Chan
@@ -45,6 +45,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws PortletDataException {
+
+		if (!isEnabled(_getCompanyId(portletDataContext))) {
+			return null;
+		}
 
 		long startTime = 0;
 
@@ -81,6 +85,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletPreferences portletPreferences)
 		throws PortletDataException {
 
+		if (!isEnabled(_getCompanyId(portletDataContext))) {
+			return null;
+		}
+
 		long startTime = 0;
 
 		if (_log.isInfoEnabled()) {
@@ -112,6 +120,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletPreferences portletPreferences)
 		throws PortletDataException {
 
+		if (!isEnabled(_getCompanyId(portletDataContext))) {
+			return null;
+		}
+
 		long startTime = 0;
 
 		if (_log.isInfoEnabled()) {
@@ -129,7 +141,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 				getDeletionSystemEventStagedModelTypes());
 
 			for (PortletDataHandlerControl portletDataHandlerControl :
-					getExportControls()) {
+					getExportPortletDataHandlerControls()) {
 
 				addUncheckedModelAdditionCount(
 					portletDataContext, portletDataHandlerControl);
@@ -169,19 +181,21 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getExportConfigurationControls(
-			long companyId, long groupId, Portlet portlet,
-			boolean privateLayout)
+	public PortletDataHandlerControl[]
+			getExportConfigurationPortletDataHandlerControls(
+				long companyId, long groupId, Portlet portlet,
+				boolean privateLayout)
 		throws Exception {
 
-		return getExportConfigurationControls(
+		return getExportConfigurationPortletDataHandlerControls(
 			companyId, groupId, portlet, -1, privateLayout);
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getExportConfigurationControls(
-			long companyId, long groupId, Portlet portlet, long plid,
-			boolean privateLayout)
+	public PortletDataHandlerControl[]
+			getExportConfigurationPortletDataHandlerControls(
+				long companyId, long groupId, Portlet portlet, long plid,
+				boolean privateLayout)
 		throws Exception {
 
 		List<PortletDataHandlerBoolean> configurationControls =
@@ -206,7 +220,8 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletDataHandlerControl[] portletDataHandlerControls = null;
 
 			if (isDisplayPortlet()) {
-				portletDataHandlerControls = getExportControls();
+				portletDataHandlerControls =
+					getExportPortletDataHandlerControls();
 			}
 
 			configurationControls.add(
@@ -247,32 +262,37 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getExportControls() {
-		return _exportControls;
-	}
+	public PortletDataHandlerControl[]
+		getExportMetadataPortletDataHandlerControls() {
 
-	@Override
-	public PortletDataHandlerControl[] getExportMetadataControls() {
-		return _exportMetadataControls;
+		return _exportMetadataPortletDataHandlerControls;
 	}
 
 	@Override
 	public long getExportModelCount(ManifestSummary manifestSummary) {
-		return getExportModelCount(manifestSummary, getExportControls());
+		return getExportModelCount(
+			manifestSummary, getExportPortletDataHandlerControls());
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getImportConfigurationControls(
-		Portlet portlet, ManifestSummary manifestSummary) {
+	public PortletDataHandlerControl[] getExportPortletDataHandlerControls() {
+		return _exportPortletDataHandlerControls;
+	}
 
-		return getImportConfigurationControls(
+	@Override
+	public PortletDataHandlerControl[]
+		getImportConfigurationPortletDataHandlerControls(
+			Portlet portlet, ManifestSummary manifestSummary) {
+
+		return getImportConfigurationPortletDataHandlerControls(
 			manifestSummary.getConfigurationPortletOptions(
 				portlet.getRootPortletId()));
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getImportConfigurationControls(
-		String[] configurationPortletOptions) {
+	public PortletDataHandlerControl[]
+		getImportConfigurationPortletDataHandlerControls(
+			String[] configurationPortletOptions) {
 
 		List<PortletDataHandlerBoolean> configurationControls =
 			new ArrayList<>();
@@ -283,7 +303,8 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletDataHandlerControl[] portletDataHandlerControls = null;
 
 			if (isDisplayPortlet()) {
-				portletDataHandlerControls = getExportControls();
+				portletDataHandlerControls =
+					getExportPortletDataHandlerControls();
 			}
 
 			configurationControls.add(
@@ -318,13 +339,15 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getImportControls() {
-		return _importControls;
+	public PortletDataHandlerControl[]
+		getImportMetadataPortletDataHandlerControls() {
+
+		return _importMetadataPortletDataHandlerControls;
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getImportMetadataControls() {
-		return _importMetadataControls;
+	public PortletDataHandlerControl[] getImportPortletDataHandlerControls() {
+		return _importPortletDataHandlerControls;
 	}
 
 	@Override
@@ -353,8 +376,8 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	}
 
 	@Override
-	public PortletDataHandlerControl[] getStagingControls() {
-		return _stagingControls;
+	public PortletDataHandlerControl[] getStagingPortletDataHandlerControls() {
+		return _stagingPortletDataHandlerControls;
 	}
 
 	@Override
@@ -362,6 +385,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences, String data)
 		throws PortletDataException {
+
+		if (!isEnabled(_getCompanyId(portletDataContext))) {
+			return null;
+		}
 
 		long startTime = 0;
 
@@ -410,6 +437,11 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	}
 
 	@Override
+	public boolean isDataDepotLevel() {
+		return _dataLevel.equals(DataLevel.DEPOT);
+	}
+
+	@Override
 	public boolean isDataLocalized() {
 		return _dataLocalized;
 	}
@@ -432,12 +464,16 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	@Override
 	public boolean isDisplayPortlet() {
 		if (isDataPortletInstanceLevel() &&
-			!ArrayUtil.isEmpty(getDataPortletPreferences())) {
+			ArrayUtil.isNotEmpty(getDataPortletPreferences())) {
 
 			return true;
 		}
 
 		return false;
+	}
+
+	public boolean isEmptyControlsAllowed() {
+		return _emptyControlsAllowed;
 	}
 
 	@Override
@@ -470,6 +506,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			PortletPreferences portletPreferences)
 		throws PortletDataException {
 
+		if (!isEnabled(_getCompanyId(portletDataContext))) {
+			return;
+		}
+
 		try {
 			doPrepareManifestSummary(portletDataContext, portletPreferences);
 		}
@@ -492,6 +532,10 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 
 	@Override
 	public boolean validateSchemaVersion(String schemaVersion) {
+		if (!isEnabled(CompanyThreadLocal.getCompanyId())) {
+			return true;
+		}
+
 		try {
 			return doValidateSchemaVersion(schemaVersion);
 		}
@@ -553,12 +597,12 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		PortletDataHandlerBoolean portletDataHandlerBoolean =
 			(PortletDataHandlerBoolean)portletDataHandlerControl;
 
-		PortletDataHandlerControl[] childPortletDataHandlerControls =
-			portletDataHandlerBoolean.getChildren();
+		PortletDataHandlerControl[] childrenPortletDataHandlerControls =
+			portletDataHandlerBoolean.getChildrenPortletDataHandlerControls();
 
-		if (childPortletDataHandlerControls != null) {
+		if (childrenPortletDataHandlerControls != null) {
 			for (PortletDataHandlerControl childPortletDataHandlerControl :
-					childPortletDataHandlerControls) {
+					childrenPortletDataHandlerControls) {
 
 				addUncheckedModelAdditionCount(
 					portletDataContext, childPortletDataHandlerControl);
@@ -572,7 +616,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		boolean checkedControl = GetterUtil.getBoolean(
 			portletDataContext.getBooleanParameter(
 				portletDataHandlerControl.getNamespace(),
-				portletDataHandlerControl.getControlName(), false));
+				portletDataHandlerControl.getName(), false));
 
 		if (!checkedControl) {
 			ManifestSummary manifestSummary =
@@ -700,12 +744,13 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 				PortletDataHandlerBoolean portletDataHandlerBoolean =
 					(PortletDataHandlerBoolean)portletDataHandlerControl;
 
-				PortletDataHandlerControl[] childPortletDataHandlerControls =
-					portletDataHandlerBoolean.getChildren();
+				PortletDataHandlerControl[] childrenPortletDataHandlerControls =
+					portletDataHandlerBoolean.
+						getChildrenPortletDataHandlerControls();
 
-				if (childPortletDataHandlerControls != null) {
+				if (childrenPortletDataHandlerControls != null) {
 					long childModelCount = getExportModelCount(
-						manifestSummary, childPortletDataHandlerControls);
+						manifestSummary, childrenPortletDataHandlerControls);
 
 					if (childModelCount != -1) {
 						if (modelAdditionCount == -1) {
@@ -737,7 +782,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		Supplier<List<StagedModelType>> stagedModelTypesSupplier) {
 
 		return _stagedModelTypesMap.computeIfAbsent(
-			DBPartition.isPartitionEnabled() ?
+			PropsValues.DATABASE_PARTITION_ENABLED ?
 				CompanyThreadLocal.getCompanyId() : CompanyConstants.SYSTEM,
 			companyId -> {
 				List<StagedModelType> stagedModelTypes =
@@ -770,42 +815,57 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 			deletionSystemEventStagedModelTypes;
 	}
 
-	protected void setExportControls(
-		PortletDataHandlerControl... exportControls) {
-
-		_exportControls = exportControls;
-
-		setImportControls(exportControls);
+	protected void setEmptyControlsAllowed(boolean emptyControlsAllowed) {
+		_emptyControlsAllowed = emptyControlsAllowed;
 	}
 
-	protected void setExportMetadataControls(
-		PortletDataHandlerControl... exportMetadataControls) {
+	protected void setExportMetadataPortletDataHandlerControls(
+		PortletDataHandlerControl... exportMetadataPortletDataHandlerControls) {
 
-		_exportMetadataControls = exportMetadataControls;
+		_exportMetadataPortletDataHandlerControls =
+			exportMetadataPortletDataHandlerControls;
 
-		setImportMetadataControls(exportMetadataControls);
+		setImportMetadataPortletDataHandlerControls(
+			exportMetadataPortletDataHandlerControls);
 	}
 
-	protected void setImportControls(
-		PortletDataHandlerControl... importControls) {
+	protected void setExportPortletDataHandlerControls(
+		PortletDataHandlerControl... exportPortletDataHandlerControls) {
 
-		_importControls = importControls;
+		_exportPortletDataHandlerControls = exportPortletDataHandlerControls;
+
+		setImportPortletDataHandlerControls(exportPortletDataHandlerControls);
 	}
 
-	protected void setImportMetadataControls(
-		PortletDataHandlerControl... importMetadataControls) {
+	protected void setImportMetadataPortletDataHandlerControls(
+		PortletDataHandlerControl... importMetadataPortletDataHandlerControls) {
 
-		_importMetadataControls = importMetadataControls;
+		_importMetadataPortletDataHandlerControls =
+			importMetadataPortletDataHandlerControls;
+	}
+
+	protected void setImportPortletDataHandlerControls(
+		PortletDataHandlerControl... importPortletDataHandlerControls) {
+
+		_importPortletDataHandlerControls = importPortletDataHandlerControls;
 	}
 
 	protected void setPublishToLiveByDefault(boolean publishToLiveByDefault) {
 		_publishToLiveByDefault = publishToLiveByDefault;
 	}
 
-	protected void setStagingControls(
-		PortletDataHandlerControl... stagingControls) {
+	protected void setStagingPortletDataHandlerControls(
+		PortletDataHandlerControl... stagingPortletDataHandlerControls) {
 
-		_stagingControls = stagingControls;
+		_stagingPortletDataHandlerControls = stagingPortletDataHandlerControls;
+	}
+
+	private long _getCompanyId(PortletDataContext portletDataContext) {
+		if (portletDataContext != null) {
+			return portletDataContext.getCompanyId();
+		}
+
+		return CompanyThreadLocal.getCompanyId();
 	}
 
 	private PortletDataException _handleException(
@@ -841,20 +901,23 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	private String[] _dataPortletPreferences = StringPool.EMPTY_ARRAY;
 	private StagedModelType[] _deletionSystemEventStagedModelTypes =
 		new StagedModelType[0];
-	private PortletDataHandlerControl[] _exportControls =
+	private boolean _emptyControlsAllowed;
+	private PortletDataHandlerControl[]
+		_exportMetadataPortletDataHandlerControls =
+			new PortletDataHandlerControl[0];
+	private PortletDataHandlerControl[] _exportPortletDataHandlerControls =
 		new PortletDataHandlerControl[0];
-	private PortletDataHandlerControl[] _exportMetadataControls =
-		new PortletDataHandlerControl[0];
-	private PortletDataHandlerControl[] _importControls =
-		new PortletDataHandlerControl[0];
-	private PortletDataHandlerControl[] _importMetadataControls =
+	private PortletDataHandlerControl[]
+		_importMetadataPortletDataHandlerControls =
+			new PortletDataHandlerControl[0];
+	private PortletDataHandlerControl[] _importPortletDataHandlerControls =
 		new PortletDataHandlerControl[0];
 	private String _portletId;
 	private boolean _publishToLiveByDefault;
 	private int _rank = 100;
 	private final Map<Long, StagedModelType[]> _stagedModelTypesMap =
 		new ConcurrentHashMap<>();
-	private PortletDataHandlerControl[] _stagingControls =
+	private PortletDataHandlerControl[] _stagingPortletDataHandlerControls =
 		new PortletDataHandlerControl[0];
 
 }

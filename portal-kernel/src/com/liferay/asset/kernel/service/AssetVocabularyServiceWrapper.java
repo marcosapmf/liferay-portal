@@ -111,10 +111,28 @@ public class AssetVocabularyServiceWrapper
 	}
 
 	@Override
+	public AssetVocabulary deleteVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetVocabularyService.deleteVocabularyByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
 	public AssetVocabulary fetchVocabulary(long vocabularyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetVocabularyService.fetchVocabulary(vocabularyId);
+	}
+
+	@Override
+	public AssetVocabulary fetchVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetVocabularyService.fetchVocabularyByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	@Override
@@ -260,6 +278,15 @@ public class AssetVocabularyServiceWrapper
 			groupId, name, start, end, orderByComparator);
 	}
 
+	@Override
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetVocabularyService.getOrAddEmptyVocabulary(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -301,38 +328,42 @@ public class AssetVocabularyServiceWrapper
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, java.util.Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long vocabularyId,
+			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String settings)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetVocabularyService.updateVocabulary(
-			vocabularyId, titleMap, descriptionMap, settings);
+			externalReferenceCode, vocabularyId, titleMap, descriptionMap,
+			settings);
 	}
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, java.util.Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long vocabularyId,
+			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			String settings, int visibilityType)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetVocabularyService.updateVocabulary(
-			vocabularyId, titleMap, descriptionMap, settings, visibilityType);
+			externalReferenceCode, vocabularyId, titleMap, descriptionMap,
+			settings, visibilityType);
 	}
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String title,
+			String externalReferenceCode, long vocabularyId, String title,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
-			String settings,
+			String settings, int visibilityType,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetVocabularyService.updateVocabulary(
-			vocabularyId, title, titleMap, descriptionMap, settings,
-			serviceContext);
+			externalReferenceCode, vocabularyId, title, titleMap,
+			descriptionMap, settings, visibilityType, serviceContext);
 	}
 
 	@Override

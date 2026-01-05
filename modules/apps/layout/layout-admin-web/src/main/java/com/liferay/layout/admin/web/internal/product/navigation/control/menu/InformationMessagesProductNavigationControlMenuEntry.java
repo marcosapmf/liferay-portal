@@ -26,11 +26,11 @@ import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuE
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 import com.liferay.sites.kernel.util.Sites;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -63,14 +63,9 @@ public class InformationMessagesProductNavigationControlMenuEntry
 	public boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		if (LayoutPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
-				ActionKeys.UPDATE)) {
-
-			return true;
-		}
-
-		return false;
+		return LayoutPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
+			ActionKeys.UPDATE);
 	}
 
 	@Override
@@ -165,14 +160,9 @@ public class InformationMessagesProductNavigationControlMenuEntry
 			(layout.isLayoutPrototypeLinkActive() &&
 			 !group.hasStagingGroup())) {
 
-			if (!LayoutPermissionUtil.containsWithoutViewableGroup(
-					themeDisplay.getPermissionChecker(), layout, false,
-					ActionKeys.UPDATE)) {
-
-				return false;
-			}
-
-			return true;
+			return LayoutPermissionUtil.containsWithoutViewableGroup(
+				themeDisplay.getPermissionChecker(), layout, false,
+				ActionKeys.UPDATE);
 		}
 
 		return false;

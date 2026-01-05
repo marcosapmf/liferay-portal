@@ -6,18 +6,23 @@
 package com.liferay.object.rest.internal.dto.v1_0.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
+import com.liferay.object.rest.dto.v1_0.ParentTaxonomyCategory;
+import com.liferay.object.rest.dto.v1_0.ParentTaxonomyVocabulary;
 import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.scope.Scope;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.util.Collections;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
 
 /**
  * @author Javier Gamarra
@@ -34,6 +39,43 @@ public class TaxonomyCategoryBriefUtil {
 				setEmbeddedTaxonomyCategory(
 					() -> _toTaxonomyCategory(
 						assetCategory.getCategoryId(), dtoConverterContext));
+				setParentTaxonomyCategory(
+					() -> {
+						AssetCategory parentAssetCategory =
+							assetCategory.getParentCategory();
+
+						if (parentAssetCategory == null) {
+							return null;
+						}
+
+						return new ParentTaxonomyCategory() {
+							{
+								setExternalReferenceCode(
+									parentAssetCategory::
+										getExternalReferenceCode);
+							}
+						};
+					});
+				setParentTaxonomyVocabulary(
+					() -> {
+						AssetVocabulary parentAssetVocabulary =
+							AssetVocabularyLocalServiceUtil.getAssetVocabulary(
+								assetCategory.getVocabularyId());
+
+						return new ParentTaxonomyVocabulary() {
+							{
+								setExternalReferenceCode(
+									parentAssetVocabulary::
+										getExternalReferenceCode);
+							}
+						};
+					});
+				setScope(
+					() -> Scope.of(
+						assetCategory.getGroupId(),
+						dtoConverterContext.getLocale()));
+				setTaxonomyCategoryExternalReferenceCode(
+					assetCategory::getExternalReferenceCode);
 				setTaxonomyCategoryId(assetCategory::getCategoryId);
 				setTaxonomyCategoryName(
 					() -> assetCategory.getTitle(
@@ -61,31 +103,30 @@ public class TaxonomyCategoryBriefUtil {
 
 		String nestedFields = queryParameters.getFirst("nestedFields");
 
-		if (Validator.isNotNull(nestedFields) &&
-			nestedFields.contains("embeddedTaxonomyCategory")) {
+		if (Validator.isNull(nestedFields) ||
+			!nestedFields.contains("embeddedTaxonomyCategory")) {
 
-			DTOConverterRegistry dtoConverterRegistry =
-				dtoConverterContext.getDTOConverterRegistry();
-
-			DTOConverter<?, ?> dtoConverter =
-				dtoConverterRegistry.getDTOConverter(
-					"Liferay.Headless.Admin.Taxonomy",
-					AssetCategory.class.getName(), "v1.0");
-
-			if (dtoConverter == null) {
-				return null;
-			}
-
-			return dtoConverter.toDTO(
-				new DefaultDTOConverterContext(
-					dtoConverterContext.isAcceptAllLanguages(),
-					Collections.emptyMap(), dtoConverterRegistry,
-					dtoConverterContext.getHttpServletRequest(), categoryId,
-					dtoConverterContext.getLocale(), uriInfo,
-					dtoConverterContext.getUser()));
+			return null;
 		}
 
-		return null;
+		DTOConverterRegistry dtoConverterRegistry =
+			dtoConverterContext.getDTOConverterRegistry();
+
+		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
+			"Liferay.Headless.Admin.Taxonomy", AssetCategory.class.getName(),
+			"v1.0");
+
+		if (dtoConverter == null) {
+			return null;
+		}
+
+		return dtoConverter.toDTO(
+			new DefaultDTOConverterContext(
+				dtoConverterContext.isAcceptAllLanguages(),
+				Collections.emptyMap(), dtoConverterRegistry,
+				dtoConverterContext.getHttpServletRequest(), categoryId,
+				dtoConverterContext.getLocale(), uriInfo,
+				dtoConverterContext.getUser()));
 	}
 
 }

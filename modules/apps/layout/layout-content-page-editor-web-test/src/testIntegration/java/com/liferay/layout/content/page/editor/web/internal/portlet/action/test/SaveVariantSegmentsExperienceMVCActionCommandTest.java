@@ -206,7 +206,8 @@ public class SaveVariantSegmentsExperienceMVCActionCommandTest {
 
 		return ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			null, fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
-			fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+			fragmentEntry.getExternalReferenceCode(),
+			fragmentEntry.getScopeERC(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), layout, fragmentEntry.getFragmentEntryKey(),
 			segmentsExperienceId, fragmentEntry.getType());
 	}
@@ -227,7 +228,7 @@ public class SaveVariantSegmentsExperienceMVCActionCommandTest {
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry-key",
 			RandomTestUtil.randomString(), StringPool.BLANK, html,
-			StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+			StringPool.BLANK, false, StringPool.BLANK, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -242,7 +243,7 @@ public class SaveVariantSegmentsExperienceMVCActionCommandTest {
 			new MockLiferayPortletActionRequest();
 
 		mockLiferayPortletActionRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG,
+			JavaConstants.JAKARTA_PORTLET_CONFIG,
 			PortletConfigFactoryUtil.create(
 				_portletLocalService.getPortletById(
 					ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET),

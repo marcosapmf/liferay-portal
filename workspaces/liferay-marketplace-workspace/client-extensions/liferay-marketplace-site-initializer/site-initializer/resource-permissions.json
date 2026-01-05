@@ -1,21 +1,32 @@
 [
 	{
 		"actionIds": [
-			"ADD_USER"
+			"VIEW"
 		],
 		"primKey": "0",
-		"resourceName": "90",
-		"roleName": "Account Administrator (Regular)",
+		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:LicenseTypesDescription$]",
+		"roleName": "User",
 		"scope": "1"
 	},
 	{
 		"actionIds": [
-			"VIEW_ACCOUNT_GROUPS"
+			"UPDATE",
+			"VIEW"
 		],
 		"primKey": "0",
-		"resourceName": "com.liferay.account.model.AccountEntry",
-		"roleName": "Account Administrator (Regular)",
-		"scope": "1"
+		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:TrialExtensionRequest$]",
+		"roleName": "SSA Admin",
+		"scope": "3"
+	},
+	{
+		"actionIds": [
+			"UPDATE",
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:TrialExtensionRequest$]",
+		"roleName": "SSA User",
+		"scope": "3"
 	},
 	{
 		"actionIds": [
@@ -41,16 +52,17 @@
 		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.model.CommerceOrderType",
-		"roleName": "Account Administrator (Regular)",
+		"roleName": "Dashboard Viewer",
 		"scope": "1"
 	},
 	{
 		"actionIds": [
-			"VIEW"
+			"VIEW_COMMERCE_ORDERS",
+			"VIEW_OPEN_COMMERCE_ORDERS"
 		],
 		"primKey": "0",
-		"resourceName": "com.liferay.commerce.model.CommerceOrderType",
-		"roleName": "Account Administrator (Regular)",
+		"resourceName": "com.liferay.commerce.order",
+		"roleName": "Dashboard Viewer",
 		"scope": "1"
 	},
 	{
@@ -85,17 +97,17 @@
 			"VIEW"
 		],
 		"primKey": "0",
-		"resourceName": "com.liferay.commerce.product.model.CommerceChannel",
-		"roleName": "Guest",
+		"resourceName": "com.liferay.commerce.product.model.CommerceCatalog",
+		"roleName": "Dashboard Viewer",
 		"scope": "1"
 	},
 	{
 		"actionIds": [
-			"UPDATE"
+			"VIEW"
 		],
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.product.model.CommerceChannel",
-		"roleName": "Supplier",
+		"roleName": "Guest",
 		"scope": "1"
 	},
 	{
@@ -109,11 +121,39 @@
 	},
 	{
 		"actionIds": [
-			"ADD_DOCUMENT"
+			"ADD_DOCUMENT",
+			"ADD_FOLDER"
 		],
 		"primKey": "0",
 		"resourceName": "com.liferay.document.library",
 		"roleName": "Supplier",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"DELETE"
+		],
+		"resourceName": "com.liferay.document.library.kernel.model.DLFileEntry",
+		"roleName": "Supplier",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"ADD_DOCUMENT",
+			"ADD_SUBFOLDER",
+			"DELETE"
+		],
+		"resourceName": "com.liferay.document.library.kernel.model.DLFolder",
+		"roleName": "Supplier",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"UPDATE"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.expando.kernel.model.ExpandoColumn",
+		"roleName": "Liferay Staff",
 		"scope": "1"
 	},
 	{
@@ -158,7 +198,16 @@
 		],
 		"primKey": "0",
 		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:PublisherAssets$]",
-		"roleName": "Account Administrator (Regular)",
+		"roleName": "Supplier",
+		"scope": "1"
+	},
+	{
+		"actionIds": [
+			"VIEW"
+		],
+		"primKey": "0",
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:PublisherDetails$]",
+		"roleName": "Guest",
 		"scope": "1"
 	},
 	{
@@ -172,60 +221,20 @@
 	},
 	{
 		"actionIds": [
-			"VIEW"
+			"ADD_OBJECT_ENTRY"
 		],
 		"primKey": "0",
-		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:LicenseTypesDescription$]",
-		"roleName": "User",
-		"scope": "1"
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:TrialExtensionRequest$]",
+		"roleName": "SSA Admin",
+		"scope": "3"
 	},
 	{
 		"actionIds": [
-			"UPDATE",
-			"VIEW"
+			"ADD_OBJECT_ENTRY"
 		],
 		"primKey": "0",
-		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:PublisherAssets$]",
-		"roleName": "Account Administrator (Regular)",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"UPDATE",
-			"VIEW"
-		],
-		"primKey": "0",
-		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:UserAdditionalInfo$]",
-		"roleName": "Account Administrator (Regular)",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"UPDATE",
-			"VIEW"
-		],
-		"primKey": "0",
-		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:UserAdditionalInfo$]",
-		"roleName": "User",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"ASSIGN_MEMBERS",
-			"VIEW"
-		],
-		"primKey": "0",
-		"resourceName": "com.liferay.portal.kernel.model.Role",
-		"roleName": "Account Administrator (Regular)",
-		"scope": "1"
-	},
-	{
-		"actionIds": [
-			"VIEW"
-		],
-		"primKey": "0",
-		"resourceName": "com.liferay.portal.kernel.model.User",
-		"roleName": "Account Administrator (Regular)",
-		"scope": "1"
+		"resourceName": "com.liferay.object#[$OBJECT_DEFINITION_ID:TrialExtensionRequest$]",
+		"roleName": "SSA User",
+		"scope": "3"
 	}
 ]

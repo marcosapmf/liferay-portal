@@ -11,15 +11,23 @@ import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.oauth2.provider.scope.liferay.OAuth2ProviderScopeLiferayAccessControlContext;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.graphql.util.GraphQLNamingUtil;
+
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -32,12 +40,6 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Javier Gamarra
@@ -408,8 +410,29 @@ public class ActionUtil {
 
 			parameterMap.put(firstParameterName, depotEntry.getDepotEntryId());
 		}
+		else if ((siteId != null) &&
+				 Objects.equals(
+					 firstParameterName, "assetLibraryExternalReferenceCode")) {
+
+			DepotEntry depotEntry = DepotEntryServiceUtil.getGroupDepotEntry(
+				siteId);
+
+			Group group = depotEntry.getGroup();
+
+			parameterMap.put(
+				firstParameterName, group.getExternalReferenceCode());
+		}
 		else if (Objects.equals(firstParameterName, "id")) {
 			parameterMap.put(firstParameterName, id);
+		}
+		else if ((siteId != null) &&
+				 Objects.equals(
+					 firstParameterName, "siteExternalReferenceCode")) {
+
+			Group group = GroupServiceUtil.getGroup(siteId);
+
+			parameterMap.put(
+				firstParameterName, group.getExternalReferenceCode());
 		}
 		else if ((siteId != null) &&
 				 Objects.equals(firstParameterName, "siteId")) {

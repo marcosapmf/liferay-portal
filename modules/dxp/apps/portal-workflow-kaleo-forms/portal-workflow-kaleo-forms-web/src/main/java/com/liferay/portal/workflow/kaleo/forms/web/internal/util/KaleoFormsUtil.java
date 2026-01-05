@@ -27,6 +27,8 @@ import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalServ
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessServiceUtil;
 import com.liferay.portal.workflow.util.WorkflowDefinitionManagerUtil;
 
+import jakarta.portlet.PortletSession;
+
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -35,8 +37,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
-
-import javax.portlet.PortletSession;
 
 /**
  * @author Marcellus Tavares
@@ -127,16 +127,8 @@ public class KaleoFormsUtil {
 
 		List<String> nodeNames = _getNodeNames(
 			companyId, workflowDefinitionName, workflowDefinitionVersion,
-			workflowNode -> {
-				if (Objects.equals(
-						workflowNode.getType(),
-						WorkflowNode.Type.INITIAL_STATE)) {
-
-					return true;
-				}
-
-				return false;
-			});
+			workflowNode -> Objects.equals(
+				workflowNode.getType(), WorkflowNode.Type.INITIAL_STATE));
 
 		return nodeNames.get(0);
 	}
@@ -490,15 +482,8 @@ public class KaleoFormsUtil {
 
 		return _getNodeNames(
 			companyId, workflowDefinitionName, workflowDefinitionVersion,
-			workflowNode -> {
-				if (Objects.equals(
-						workflowNode.getType(), WorkflowNode.Type.TASK)) {
-
-					return true;
-				}
-
-				return false;
-			});
+			workflowNode -> Objects.equals(
+				workflowNode.getType(), WorkflowNode.Type.TASK));
 	}
 
 	private static String _getTaskSessionKey(

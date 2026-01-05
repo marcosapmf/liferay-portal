@@ -15,8 +15,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.VirtualLayoutConstants;
+import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.portlet.LayoutFriendlyURLSeparatorComposite;
+import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -32,12 +34,13 @@ import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -102,11 +105,14 @@ public class UpdateLanguageAction implements Action {
 			Locale locale)
 		throws PortalException {
 
-		String redirect = PortalUtil.escapeRedirect(
-			ParamUtil.getString(httpServletRequest, "redirect"));
+		String redirect = ParamUtil.getString(httpServletRequest, "redirect");
 
-		if (Validator.isNull(redirect)) {
-			throw new IllegalArgumentException();
+		if (Validator.isNotNull(redirect)) {
+			redirect = PortalUtil.escapeRedirect(redirect);
+
+			if (Validator.isNull(redirect)) {
+				throw new IllegalArgumentException();
+			}
 		}
 
 		String contextPath = httpServletRequest.getContextPath();
@@ -185,6 +191,25 @@ public class UpdateLanguageAction implements Action {
 			layoutURL = layoutURL.substring(0, friendlyURLSeparatorIndex);
 		}
 
+		String mappingPart = StringPool.BLANK;
+
+		List<FriendlyURLMapper> friendlyURLMappers =
+			PortletLocalServiceUtil.getFriendlyURLMappers();
+
+		for (FriendlyURLMapper friendlyURLMapper : friendlyURLMappers) {
+			if (friendlyURLMapper.isCheckMappingWithPrefix()) {
+				continue;
+			}
+
+			int mappingIndex = layoutURL.indexOf(
+				friendlyURLMapper.getMapping());
+
+			if (mappingIndex != -1) {
+				mappingPart =
+					StringPool.SLASH + layoutURL.substring(mappingIndex);
+			}
+		}
+
 		Locale currentLocale = themeDisplay.getLocale();
 
 		if (themeDisplay.isI18n()) {
@@ -215,9 +240,8 @@ public class UpdateLanguageAction implements Action {
 
 			redirect = layoutURL + friendlyURLSeparatorPart;
 		}
-		else if (layoutURL.equals(StringPool.SLASH) ||
-				 isGroupFriendlyURL(
-					 layout.getGroup(), layout, layoutURL, currentLocale)) {
+		else if (isGroupFriendlyURL(
+					layout.getGroup(), layout, layoutURL, currentLocale)) {
 
 			if (localePrependFriendlyURLStyle == 0) {
 				redirect = layoutURL;
@@ -250,6 +274,10 @@ public class UpdateLanguageAction implements Action {
 			if (Validator.isNotNull(friendlyURLSeparatorPart)) {
 				redirect += friendlyURLSeparatorPart;
 			}
+
+			if (Validator.isNotNull(mappingPart)) {
+				redirect += mappingPart;
+			}
 		}
 
 		if (Validator.isNotNull(queryString)) {
@@ -275,9 +303,8 @@ public class UpdateLanguageAction implements Action {
 	protected boolean isGroupFriendlyURL(
 		Group group, Layout layout, String layoutURL, Locale locale) {
 
-		if (Objects.equals(layoutURL, PortalUtil.getPathContext()) ||
-			Objects.equals(
-				layoutURL, PortalUtil.getPathContext() + StringPool.SLASH) ||
+		if (Validator.isNull(layoutURL) ||
+			Objects.equals(layoutURL, StringPool.SLASH) ||
 			PortalUtil.isGroupFriendlyURL(
 				layoutURL, group.getFriendlyURL(),
 				layout.getFriendlyURL(locale))) {
@@ -285,8 +312,7 @@ public class UpdateLanguageAction implements Action {
 			return true;
 		}
 
-		int index = layoutURL.indexOf(
-			PortalUtil.getPathContext() + StringPool.SLASH);
+		int index = layoutURL.indexOf(StringPool.SLASH);
 
 		String string = layoutURL.substring(index + 1);
 

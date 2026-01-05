@@ -10,13 +10,11 @@ import com.liferay.headless.admin.address.client.dto.v1_0.Region;
 import com.liferay.headless.admin.address.client.http.HttpInvoker;
 import com.liferay.headless.admin.address.client.pagination.Page;
 import com.liferay.headless.admin.address.client.pagination.Pagination;
-import com.liferay.headless.admin.address.client.serdes.v1_0.RegionSerDes;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.portal.kernel.exception.DuplicateRegionException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.RegionLocalService;
@@ -24,19 +22,18 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -84,47 +81,6 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 		assertContains(region1, (List<Region>)page.getItems());
 		assertContains(region2, (List<Region>)page.getItems());
 		assertValid(page);
-	}
-
-	@Override
-	@Test
-	public void testGraphQLGetRegionsPage() throws Exception {
-		GraphQLField graphQLField = new GraphQLField(
-			"regions",
-			HashMapBuilder.<String, Object>put(
-				"page", 1
-			).put(
-				"pageSize", 10
-			).put(
-				"sort", "\"position:desc\""
-			).build(),
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		JSONObject regionsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/regions");
-
-		long totalCount = regionsJSONObject.getLong("totalCount");
-
-		Region region1 = testGraphQLGetRegionsPage_addRegion();
-		Region region2 = testGraphQLGetRegionsPage_addRegion();
-
-		regionsJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/regions");
-
-		Assert.assertEquals(
-			totalCount + 2, regionsJSONObject.getLong("totalCount"));
-
-		assertContains(
-			region1,
-			Arrays.asList(
-				RegionSerDes.toDTOs(regionsJSONObject.getString("items"))));
-		assertContains(
-			region2,
-			Arrays.asList(
-				RegionSerDes.toDTOs(regionsJSONObject.getString("items"))));
 	}
 
 	@Override
@@ -241,6 +197,13 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 	}
 
 	@Override
+	protected Long testGetCountryRegionByRegionCode_getCountryId(Region region)
+		throws Exception {
+
+		return region.getCountryId();
+	}
+
+	@Override
 	protected Long testGetCountryRegionsPage_getCountryId() throws Exception {
 		return _country.getCountryId();
 	}
@@ -327,6 +290,21 @@ public class RegionResourceTest extends BaseRegionResourceTestCase {
 				Arrays.asList(region2, region1),
 				(List<Region>)descPage.getItems());
 		}
+	}
+
+	@Override
+	protected Long testGraphQLGetCountryRegionByRegionCode_getCountryId(
+			Region region)
+		throws Exception {
+
+		return region.getCountryId();
+	}
+
+	@Override
+	protected Long testGraphQLPostCountryRegion_getCountryId(Region region)
+		throws Exception {
+
+		return _country.getCountryId();
 	}
 
 	@Override

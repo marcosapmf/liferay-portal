@@ -8,20 +8,21 @@ package com.liferay.commerce.address.content.web.internal.portlet.action;
 import com.liferay.commerce.address.content.web.internal.display.context.CommerceAddressDisplayContext;
 import com.liferay.commerce.address.content.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
-import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.portlet.action.BaseConfigurationAction;
 
-import javax.portlet.PortletConfig;
+import jakarta.portlet.PortletConfig;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,11 +31,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "javax.portlet.name=" + CommercePortletKeys.COMMERCE_ADDRESS_CONTENT,
+	property = "jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_ADDRESS_CONTENT,
 	service = ConfigurationAction.class
 )
 public class CommerceAddressContentConfigurationAction
-	extends DefaultConfigurationAction {
+	extends BaseConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
@@ -52,7 +53,7 @@ public class CommerceAddressContentConfigurationAction
 				new CommerceAddressDisplayContext(
 					_actionHelper, _commerceAccountHelper,
 					_commerceAddressService, _countryService,
-					httpServletRequest, _regionService);
+					_groupLocalService, httpServletRequest, _regionService);
 
 			httpServletRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAddressDisplayContext);
@@ -78,6 +79,9 @@ public class CommerceAddressContentConfigurationAction
 
 	@Reference
 	private CountryService _countryService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private RegionService _regionService;

@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 
+import jakarta.ws.rs.BadRequestException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,8 +39,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.ws.rs.BadRequestException;
 
 /**
  * @author Víctor Galán
@@ -163,11 +163,9 @@ public class DDMFormValuesUtil {
 		Map<String, List<ContentField>> contentFieldsMap = new HashMap<>();
 
 		for (ContentField contentField : contentFields) {
-			String contentFieldName = contentField.getName();
-
 			List<ContentField> contentFieldsList =
 				contentFieldsMap.computeIfAbsent(
-					contentFieldName, key -> new ArrayList<>());
+					contentField.getFieldReference(), key -> new ArrayList<>());
 
 			contentFieldsList.add(contentField);
 		}

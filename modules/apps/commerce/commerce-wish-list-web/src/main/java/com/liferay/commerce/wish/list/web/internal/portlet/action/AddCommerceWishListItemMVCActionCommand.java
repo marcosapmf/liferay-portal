@@ -11,11 +11,11 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.commerce.wish.list.constants.CommerceWishListPortletKeys;
+import com.liferay.commerce.wish.list.helper.CommerceWishListHttpHelper;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
-import com.liferay.commerce.wish.list.util.CommerceWishListHttpHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -24,18 +24,18 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT,
+		"jakarta.portlet.name=" + CommerceWishListPortletKeys.COMMERCE_WISH_LIST_CONTENT,
 		"mvc.command.name=/commerce_wish_list_content/add_commerce_wish_list_item"
 	},
 	service = MVCActionCommand.class
@@ -86,13 +86,14 @@ public class AddCommerceWishListItemMVCActionCommand
 				_commerceWishListHttpHelper.getCurrentCommerceWishList(
 					httpServletRequest, httpServletResponse);
 
-			ServiceContext serviceContext = ServiceContextFactory.getInstance(
-				CommerceWishListItem.class.getName(), actionRequest);
-
 			if (commerceWishList == null) {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
 				commerceWishList = _commerceWishListService.addCommerceWishList(
-					_language.get(serviceContext.getLocale(), "default"), true,
-					serviceContext);
+					themeDisplay.getScopeGroupId(),
+					_language.get(themeDisplay.getLocale(), "default"), true);
 			}
 
 			CommerceWishListItem commerceWishListItem =
@@ -100,8 +101,8 @@ public class AddCommerceWishListItemMVCActionCommand
 					CommerceUtil.getCommerceAccountId(
 						(CommerceContext)httpServletRequest.getAttribute(
 							CommerceWebKeys.COMMERCE_CONTEXT)),
-					commerceWishList.getCommerceWishListId(), cpDefinitionId,
-					cpInstanceUuid, formFieldValues, serviceContext);
+					commerceWishList.getCommerceWishListId(), cpInstanceUuid,
+					cpDefinitionId, formFieldValues);
 
 			jsonObject.put(
 				"commerceWishListItemId",

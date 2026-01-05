@@ -25,14 +25,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Drew Brokke
@@ -112,7 +112,7 @@ public class AccountEntryDisplayFactoryUtil {
 		return create(
 			accountEntryId,
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST));
+				JavaConstants.JAKARTA_PORTLET_REQUEST));
 	}
 
 	public static AccountEntryDisplay create(

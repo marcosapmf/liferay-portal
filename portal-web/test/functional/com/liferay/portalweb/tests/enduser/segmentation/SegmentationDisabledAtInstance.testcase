@@ -1,10 +1,12 @@
-@component-name = "portal-segmentation"
+@component-name = "portal-analytics-cloud"
 definition {
 
-	property ci.retries.disabled = "true";
+	property analytics.cloud.release = "true";
+	property analytics.cloud.upstream = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
+	property property.group = "analytics.cloud.profile";
 	property testray.main.component.name = "Segmentation";
 
 	setUp {
@@ -35,6 +37,7 @@ definition {
 	@description = "LPS-153084 Given the ""Enable Assign Roles by Segment"" is disable at Instance Settings And enabled at System Settings When user navigates to Regular Roles > Assignees > Segments Then the warning alert explains how to re-enable it"
 	@priority = 3
 	test CheckRoleDisabledAlertAtInstanceSettings {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -318,42 +321,6 @@ definition {
 		}
 	}
 
-	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Segments Page And the page is reloaded Then the alert reappears"
-	@priority = 3
-	test DisabledAlertAfterRefreshAtExperiences {
-		task ("Navigate to Segments Admin") {
-			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
-		}
-
-		task ("Close warning message") {
-			Segmentation.closeSegmentationDisabledWarning();
-		}
-
-		task ("Refresh and check if warning reappears") {
-			Refresh();
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "Segmentation is disabled");
-		}
-
-		task ("Go to segments editor") {
-			LexiconEntry.gotoAdd();
-		}
-
-		task ("Close warning message") {
-			Segmentation.closeSegmentationDisabledWarning();
-		}
-
-		task ("Refresh and check if warning reappears") {
-			Refresh();
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "Segmentation is disabled");
-		}
-	}
-
 	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Experience menu And the page is reloaded Then the alert reappears"
 	@priority = 3
 	test DisabledAlertAfterRefreshAtExperiencesMenu {
@@ -402,6 +369,42 @@ definition {
 			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
 
 			AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection Test");
+		}
+
+		task ("Close warning message") {
+			Segmentation.closeSegmentationDisabledWarning();
+		}
+
+		task ("Refresh and check if warning reappears") {
+			Refresh();
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_3",
+				value1 = "Segmentation is disabled");
+		}
+	}
+
+	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Segments Page And the page is reloaded Then the alert reappears"
+	@priority = 3
+	test DisabledAlertAfterRefreshAtSegmentsPage {
+		task ("Navigate to Segments Admin") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+		}
+
+		task ("Close warning message") {
+			Segmentation.closeSegmentationDisabledWarning();
+		}
+
+		task ("Refresh and check if warning reappears") {
+			Refresh();
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_3",
+				value1 = "Segmentation is disabled");
+		}
+
+		task ("Go to segments editor") {
+			LexiconEntry.gotoAdd();
 		}
 
 		task ("Close warning message") {
@@ -495,46 +498,6 @@ definition {
 		}
 	}
 
-	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Segments Page And user leaves and returns to page Then the alert reappears"
-	@priority = 3
-	test DisabledAlertAfterReturnsAtExperiences {
-		task ("Navigate to Segments Admin") {
-			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
-		}
-
-		task ("Close warning message") {
-			Segmentation.closeSegmentationDisabledWarning();
-		}
-
-		task ("Leave then return to page and check if warning reappears") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name");
-
-			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "Segmentation is disabled");
-		}
-
-		task ("Go to segments editor") {
-			LexiconEntry.gotoAdd();
-		}
-
-		task ("Close warning message") {
-			Segmentation.closeSegmentationDisabledWarning();
-		}
-
-		task ("Leave then return to page and check if warning reappears") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name");
-
-			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "Segmentation is disabled");
-		}
-	}
-
 	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Experience menu And user leaves and returns to page Then the alert reappears"
 	@priority = 3
 	test DisabledAlertAfterReturnsAtExperiencesMenu {
@@ -599,6 +562,46 @@ definition {
 			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
 
 			AssetListsAdmin.editAssetList(assetListTitle = "Manual Collection Test");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_3",
+				value1 = "Segmentation is disabled");
+		}
+	}
+
+	@description = "LPS-154019 Given the 'Enable Segmentation' is disabled When user clicks at Close button at Segments Page And user leaves and returns to page Then the alert reappears"
+	@priority = 3
+	test DisabledAlertAfterReturnsAtSegmentsPage {
+		task ("Navigate to Segments Admin") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+		}
+
+		task ("Close warning message") {
+			Segmentation.closeSegmentationDisabledWarning();
+		}
+
+		task ("Leave then return to page and check if warning reappears") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name");
+
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_3",
+				value1 = "Segmentation is disabled");
+		}
+
+		task ("Go to segments editor") {
+			LexiconEntry.gotoAdd();
+		}
+
+		task ("Close warning message") {
+			Segmentation.closeSegmentationDisabledWarning();
+		}
+
+		task ("Leave then return to page and check if warning reappears") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name");
+
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_3",
@@ -840,22 +843,6 @@ definition {
 		}
 
 		task ("Check if warning appears") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#ERROR_3",
-				value1 = "To enable, go to Instance Settings.");
-		}
-	}
-
-	@description = "LPS-151362 Given segmentation is disabled at Instance Settings When user navigates to Experience menu Then the warning alert explains how to re-enable it"
-	@priority = 3
-	test ViewReEnabledAlertAtExperiencesMenu {
-		task ("Open the Experience menu and check if warning appears") {
-			Navigator.openURL();
-
-			ContentPages.gotoPageEditor();
-
-			PageEditor.openExperienceMenu();
-
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_3",
 				value1 = "To enable, go to Instance Settings.");

@@ -17,6 +17,7 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.mail.kernel.service.MailService;
 import com.liferay.message.boards.constants.MBCategoryConstants;
 import com.liferay.message.boards.constants.MBConstants;
 import com.liferay.message.boards.constants.MBMessageConstants;
@@ -124,8 +125,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -134,10 +134,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.linkback.LinkbackProducerUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
+
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.Closeable;
 import java.io.File;
@@ -154,10 +157,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTag;
@@ -434,7 +433,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			user.getCompanyId(), groupId, userId, MBMessage.class.getName(),
-			messageId, ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, body,
+			messageId, "text/" + format, Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion",
 				() -> {
@@ -1999,6 +1998,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		for (MBMessage message : messages) {
 			message.setUserName(userName);
+			message.setModifiedDate(message.getModifiedDate());
 
 			mbMessagePersistence.update(message);
 		}
@@ -2183,7 +2183,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (httpServletRequest == null) {
+		if ((httpServletRequest == null) || message.isDiscussion()) {
 			if (Validator.isNull(serviceContext.getLayoutFullURL())) {
 				return StringPool.BLANK;
 			}
@@ -2347,7 +2347,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		String uniqueUrlSubject = urlSubject;
 
-		if (Objects.equals(StringPool.DASH, urlSubject)) {
+		if (Objects.equals(StringPool.DASH, urlSubject) ||
+			Objects.equals(urlSubject, "re-")) {
+
 			uniqueUrlSubject = urlSubject + mbMessageId;
 		}
 
@@ -2358,12 +2360,23 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			return uniqueUrlSubject;
 		}
 
-		if (!StringUtil.endsWith(uniqueUrlSubject, StringPool.DASH)) {
-			urlSubject = urlSubject + StringPool.DASH;
-		}
+		int maxLength = ModelHintsUtil.getMaxLength(
+			MBMessage.class.getName(), "urlSubject");
 
 		for (int i = 1; mbMessage != null; i++) {
-			uniqueUrlSubject = urlSubject + i;
+			String suffix = StringPool.DASH + i;
+
+			if (urlSubject.length() > (maxLength - suffix.length())) {
+				urlSubject = urlSubject.substring(
+					0, maxLength - suffix.length());
+			}
+
+			if (urlSubject.endsWith(StringPool.DASH)) {
+				uniqueUrlSubject = urlSubject + i;
+			}
+			else {
+				uniqueUrlSubject = urlSubject + suffix;
+			}
 
 			mbMessage = mbMessagePersistence.fetchByG_US(
 				groupId, uniqueUrlSubject);
@@ -2568,13 +2581,11 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		String replyToAddress = StringPool.BLANK;
 
-		if (PrefsPropsUtil.getBoolean(
-				company.getCompanyId(),
-				PropsKeys.POP_SERVER_NOTIFICATIONS_ENABLED,
-				PropsValues.POP_SERVER_NOTIFICATIONS_ENABLED)) {
+		if (_mailService.isPOPServerNotificationsEnabled(
+				company.getCompanyId())) {
 
 			replyToAddress = MBMailUtil.getReplyToAddress(
-				message.getCategoryId(), message.getMessageId(),
+				_mailService, message.getCategoryId(), message.getMessageId(),
 				company.getMx(), fromAddress);
 		}
 
@@ -2621,7 +2632,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 			Date modifiedDate = parentMessage.getModifiedDate();
 
-			inReplyTo = _portal.getMailId(
+			inReplyTo = _mailService.getMailId(
 				company.getMx(), MBMailUtil.MESSAGE_POP_PORTLET_PREFIX,
 				message.getCategoryId(), parentMessage.getMessageId(),
 				modifiedDate.getTime());
@@ -2801,7 +2812,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			message.getCompanyId(), message.getGroupId(), userId,
-			MBMessage.class.getName(), messageId, ContentTypes.TEXT_HTML,
+			MBMessage.class.getName(), messageId, "text/" + message.getFormat(),
 			Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion", message.isDiscussion()
@@ -3085,6 +3096,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 	@Reference
 	private Localization _localization;
+
+	@Reference
+	private MailService _mailService;
 
 	@Reference
 	private MBCategoryPersistence _mbCategoryPersistence;

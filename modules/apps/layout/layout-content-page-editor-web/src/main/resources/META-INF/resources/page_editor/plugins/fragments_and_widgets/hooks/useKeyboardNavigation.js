@@ -29,7 +29,8 @@ export default function useKeyboardNavigation({handleOpen, type}) {
 		Liferay.Language.direction?.[themeDisplay?.getLanguageId()] === 'rtl';
 
 	useEffect(() => {
-		const list = element?.closest('[role="menubar"]');
+		const list = element?.closest('[data-menu][role="menu"]');
+
 		const listItem = element?.closest('li');
 
 		const isFirstChild = listItem === list?.firstChild;
@@ -74,7 +75,7 @@ export default function useKeyboardNavigation({handleOpen, type}) {
 	useEventListener(
 		'blur',
 		(event) => {
-			const list = event.target.closest('[role="menubar"]');
+			const list = event.target.closest('[data-menu][role="menu"]');
 
 			const nextActiveElement = event.relatedTarget;
 
@@ -102,7 +103,7 @@ function onHeaderKeyDown(element, keyCode, handleOpen) {
 		}
 		else {
 			const collapse = element.parentElement;
-			const nextCollapse = collapse.nextSibling;
+			const nextCollapse = collapse?.nextSibling;
 			const nextHeader = nextCollapse?.querySelector('button');
 
 			nextHeader?.focus();
@@ -113,7 +114,7 @@ function onHeaderKeyDown(element, keyCode, handleOpen) {
 		// Target last item of the previous list. If it's collapsed, target previous header
 
 		const collapse = element.parentElement;
-		const previousCollapse = collapse.previousSibling;
+		const previousCollapse = collapse?.previousSibling;
 
 		if (!previousCollapse) {
 			return;
@@ -156,9 +157,9 @@ function onListItemKeyDown(element, keyCode) {
 		}
 		else {
 			const collapse = element.closest('.page-editor__collapse');
-			const header = collapse.querySelector('button');
+			const header = collapse?.querySelector('button');
 
-			header.focus();
+			header?.focus();
 		}
 	}
 	else if (keyCode === ARROW_DOWN_KEY_CODE) {
@@ -170,7 +171,7 @@ function onListItemKeyDown(element, keyCode) {
 		}
 		else {
 			const collapse = element.closest('.page-editor__collapse');
-			const nextCollapse = collapse.nextSibling;
+			const nextCollapse = collapse?.nextSibling;
 			const nextHeader = nextCollapse?.querySelector('button');
 
 			nextHeader?.focus();

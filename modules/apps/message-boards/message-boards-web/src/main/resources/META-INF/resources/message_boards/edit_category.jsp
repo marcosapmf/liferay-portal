@@ -61,13 +61,13 @@ if (portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(redirect);
 
-	renderResponse.setTitle(LanguageUtil.get(request, mbHomeDisplayContext.getTitle()));
+	renderResponse.setTitle(mbHomeDisplayContext.getTitle());
 }
 %>
 
 <div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl container-form-lg\"" : StringPool.BLANK %>>
 	<c:if test="<%= !portletTitleBasedNavigation %>">
-		<h3><liferay-ui:message key="<%= mbHomeDisplayContext.getTitle() %>" /></h3>
+		<h3><%= mbHomeDisplayContext.getTitle() %></h3>
 	</c:if>
 
 	<portlet:actionURL name="/message_boards/edit_category" var="editCategoryURL">

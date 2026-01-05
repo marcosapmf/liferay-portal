@@ -27,9 +27,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Pei-Jung Lan
@@ -172,13 +172,8 @@ public class ViewAccountOrganizationsManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (AccountEntryPermission.hasEditOrManageOrganizationsPermission(
-				themeDisplay.getPermissionChecker(), _getAccountEntryId())) {
-
-			return true;
-		}
-
-		return false;
+		return AccountEntryPermission.hasEditOrManageOrganizationsPermission(
+			themeDisplay.getPermissionChecker(), _getAccountEntryId());
 	}
 
 }

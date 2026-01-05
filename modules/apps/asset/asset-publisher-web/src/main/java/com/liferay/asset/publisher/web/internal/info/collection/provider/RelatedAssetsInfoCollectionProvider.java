@@ -28,12 +28,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -105,14 +105,9 @@ public class RelatedAssetsInfoCollectionProvider
 		String assetPublisherPortletNamespace = _portal.getPortletNamespace(
 			AssetPublisherPortletKeys.ASSET_PUBLISHER);
 
-		if (Objects.equals(
-				itemSelectedEventName,
-				assetPublisherPortletNamespace + "selectAssetList")) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			itemSelectedEventName,
+			assetPublisherPortletNamespace + "selectAssetList");
 	}
 
 	private AssetEntryQuery _getAssetEntryQuery(Pagination pagination) {

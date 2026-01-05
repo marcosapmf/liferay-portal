@@ -6,40 +6,51 @@
 package com.liferay.portlet.preferences.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.deploy.hot.ServiceBag;
-import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutRevision;
+import com.liferay.portal.kernel.model.LayoutStagingHandler;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceWrapper;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CompanyProviderClassTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.model.impl.PortletAppImpl;
 import com.liferay.portal.spring.aop.AopInvocationHandler;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.PortletPreferencesImpl;
 import com.liferay.portlet.StrictPortletPreferencesImpl;
+
+import jakarta.servlet.ServletContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.ServletContext;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -61,7 +72,13 @@ public class PortletPreferencesLocalServiceTest
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule() {
+				{
+					skipTestRule(CompanyProviderClassTestRule.INSTANCE);
+				}
+			},
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -98,7 +115,7 @@ public class PortletPreferencesLocalServiceTest
 		throws Exception {
 
 		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 					TestPropsValues.getCompanyId())) {
 
 			PortletPreferences portletPreferences =
@@ -117,21 +134,15 @@ public class PortletPreferencesLocalServiceTest
 	public void testAddPortletPreferencesWithCompanyThreadLocalSystem()
 		throws Exception {
 
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
-					CompanyConstants.SYSTEM)) {
-
-			PortletPreferences portletPreferences =
-				portletPreferencesLocalService.addPortletPreferences(
-					TestPropsValues.getCompanyId(),
-					PortletKeys.PREFS_OWNER_ID_DEFAULT,
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
-					testPortlet.getPortletId(), testPortlet, null);
-
-			Assert.assertEquals(
+		PortletPreferences portletPreferences =
+			portletPreferencesLocalService.addPortletPreferences(
 				TestPropsValues.getCompanyId(),
-				portletPreferences.getCompanyId());
-		}
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
+				testPortlet.getPortletId(), testPortlet, null);
+
+		Assert.assertEquals(
+			TestPropsValues.getCompanyId(), portletPreferences.getCompanyId());
 	}
 
 	@Test
@@ -161,7 +172,7 @@ public class PortletPreferencesLocalServiceTest
 		assertOwner(testLayout, portletPreferencesImpl);
 		assertEmptyPortletPreferencesMap(portletPreferencesImpl);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			fetchLayoutJxPortletPreferences(testLayout, testPortlet);
 
 		assertOwner(testLayout, (PortletPreferencesImpl)jxPortletPreferences);
@@ -430,7 +441,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId());
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.fetchPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -445,7 +456,7 @@ public class PortletPreferencesLocalServiceTest
 			testLayout, testPortlet,
 			getPortletPreferencesXML(_NAME, _SINGLE_VALUE));
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.fetchPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -465,7 +476,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId());
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.fetchPreferences(
 				portletPreferencesIds);
 
@@ -662,7 +673,7 @@ public class PortletPreferencesLocalServiceTest
 		String multipleValuesPortletPreferencesXML = getPortletPreferencesXML(
 			_NAME, _MULTIPLE_VALUES);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testGroup.getCompanyId(), testGroup.getGroupId(),
 				PortletKeys.PREFS_OWNER_TYPE_GROUP, testLayout.getPlid(),
@@ -677,7 +688,7 @@ public class PortletPreferencesLocalServiceTest
 
 	@Test
 	public void testGetGroupPreferencesByOwnerAndPlidAndPortletIdWithoutDefaultAutoAdded() {
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testGroup.getCompanyId(), testGroup.getGroupId(),
 				PortletKeys.PREFS_OWNER_TYPE_GROUP, testLayout.getPlid(),
@@ -700,7 +711,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_GROUP, testLayout.getPlid(),
 			testPortlet.getPortletId());
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				portletPreferencesIds);
 
@@ -712,7 +723,7 @@ public class PortletPreferencesLocalServiceTest
 
 	@Test
 	public void testGetGroupreferencesByOwnerAndPlidAndPortletIdWithDefaultXMLAutoAdded() {
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testGroup.getCompanyId(), testGroup.getGroupId(),
 				PortletKeys.PREFS_OWNER_TYPE_GROUP, testLayout.getPlid(),
@@ -829,7 +840,7 @@ public class PortletPreferencesLocalServiceTest
 		String multipleValuesPortletPreferencesXML = getPortletPreferencesXML(
 			_NAME, _MULTIPLE_VALUES);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -842,7 +853,7 @@ public class PortletPreferencesLocalServiceTest
 
 	@Test
 	public void testGetLayoutPreferencesByOwnerAndPlidAndPortletIdWithDefaultXMLAutoAdded() {
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -855,7 +866,7 @@ public class PortletPreferencesLocalServiceTest
 
 	@Test
 	public void testGetLayoutPreferencesByOwnerAndPlidAndPortletIdWithoutDefaultAutoAdded() {
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -878,7 +889,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId());
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				portletPreferencesIds);
 
@@ -925,7 +936,7 @@ public class PortletPreferencesLocalServiceTest
 		replaceService();
 
 		try {
-			javax.portlet.PortletPreferences jxPortletPreferences =
+			jakarta.portlet.PortletPreferences jxPortletPreferences =
 				portletPreferencesLocalService.getStrictPreferences(
 					testLayout.getCompanyId(),
 					PortletKeys.PREFS_OWNER_ID_DEFAULT,
@@ -1193,7 +1204,7 @@ public class PortletPreferencesLocalServiceTest
 
 	@Test
 	public void testGetStrictPreferences() {
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getStrictPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1209,7 +1220,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId());
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getStrictPreferences(
 				portletPreferencesIds);
 
@@ -1232,7 +1243,7 @@ public class PortletPreferencesLocalServiceTest
 			portletPreferences.getPlid(), portletPreferences.getPortletId(),
 			multipleValuesPortletPreferencesAsXML);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1257,7 +1268,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId(), multipleValuesPortletPreferencesAsXML);
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1274,7 +1285,7 @@ public class PortletPreferencesLocalServiceTest
 			testPortlet.getPortletId(),
 			getPortletPreferencesXML(_NAME, _SINGLE_VALUE));
 
-		javax.portlet.PortletPreferences jxPortletPreferences =
+		jakarta.portlet.PortletPreferences jxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1294,7 +1305,7 @@ public class PortletPreferencesLocalServiceTest
 		String multipleValuesPortletPreferencesXML = getPortletPreferencesXML(
 			_NAME, _MULTIPLE_VALUES);
 
-		javax.portlet.PortletPreferences initialJxPortletPreferences =
+		jakarta.portlet.PortletPreferences initialJxPortletPreferences =
 			portletPreferencesFactory.fromXML(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1306,7 +1317,7 @@ public class PortletPreferencesLocalServiceTest
 			PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
 			testPortlet.getPortletId(), initialJxPortletPreferences);
 
-		javax.portlet.PortletPreferences currentJxPortletPreferences =
+		jakarta.portlet.PortletPreferences currentJxPortletPreferences =
 			portletPreferencesLocalService.getPreferences(
 				testLayout.getCompanyId(), PortletKeys.PREFS_OWNER_ID_DEFAULT,
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, testLayout.getPlid(),
@@ -1315,8 +1326,82 @@ public class PortletPreferencesLocalServiceTest
 		assertValues(currentJxPortletPreferences, _NAME, _MULTIPLE_VALUES);
 	}
 
+	@Test
+	public void testUpdateTypeSettingsLayoutRevision() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		String originalName = PrincipalThreadLocal.getName();
+
+		try {
+			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
+			_stagingLocalService.enableLocalStaging(
+				TestPropsValues.getUserId(), testGroup, true, false,
+				ServiceContextTestUtil.getServiceContext(
+					testGroup, TestPropsValues.getUserId()));
+
+			Group stagingGroup = testGroup.getStagingGroup();
+
+			Layout stagingLayout =
+				_layoutLocalService.getLayoutByUuidAndGroupId(
+					layout.getUuid(), stagingGroup.getGroupId(),
+					layout.isPrivateLayout());
+
+			Layout draftLayout = stagingLayout.fetchDraftLayout();
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				draftLayout.getTypeSettingsProperties();
+
+			String propertyKey = RandomTestUtil.randomString();
+			String propertyValue = RandomTestUtil.randomString();
+
+			typeSettingsUnicodeProperties.setProperty(
+				propertyKey, propertyValue);
+
+			_layoutLocalService.updateTypeSettings(
+				draftLayout, typeSettingsUnicodeProperties.toString());
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext();
+
+			serviceContext.setAttribute("exporting", Boolean.FALSE);
+
+			ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+			portletPreferencesLocalService.updatePreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, stagingLayout.getPlid(),
+				testPortlet.getPortletId(),
+				getPortletPreferencesXML(_NAME, _SINGLE_VALUE));
+
+			Layout updatedLayout = _layoutLocalService.getLayout(
+				stagingLayout.getPlid());
+
+			LayoutStagingHandler layoutStagingHandler =
+				new LayoutStagingHandler(updatedLayout);
+
+			LayoutRevision layoutRevision =
+				layoutStagingHandler.getLayoutRevision();
+
+			String typeSettings = layoutRevision.getTypeSettings();
+
+			Assert.assertTrue(
+				typeSettings.contains(propertyKey + "=" + propertyValue));
+
+			typeSettings = updatedLayout.getTypeSettings();
+
+			Assert.assertTrue(
+				typeSettings.contains(propertyKey + "=" + propertyValue));
+		}
+		finally {
+			PrincipalThreadLocal.setName(originalName);
+
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
 	protected void assertEmptyPortletPreferencesMap(
-		javax.portlet.PortletPreferences jxPortletPreferences) {
+		jakarta.portlet.PortletPreferences jxPortletPreferences) {
 
 		PortletPreferencesImpl portletPreferencesImpl =
 			(PortletPreferencesImpl)jxPortletPreferences;
@@ -1351,7 +1436,7 @@ public class PortletPreferencesLocalServiceTest
 	}
 
 	protected void assertStrictPortletPreferences(
-		javax.portlet.PortletPreferences jxPortletPreferences) {
+		jakarta.portlet.PortletPreferences jxPortletPreferences) {
 
 		StrictPortletPreferencesImpl strictPortletPreferencesImpl =
 			(StrictPortletPreferencesImpl)jxPortletPreferences;
@@ -1375,7 +1460,7 @@ public class PortletPreferencesLocalServiceTest
 	}
 
 	protected void assertValues(
-		javax.portlet.PortletPreferences jxPortletPreferences, String name,
+		jakarta.portlet.PortletPreferences jxPortletPreferences, String name,
 		String[] values) {
 
 		PortletPreferencesImpl portletPreferencesImpl =
@@ -1447,23 +1532,24 @@ public class PortletPreferencesLocalServiceTest
 	@DeleteAfterTestRun
 	private final List<Group> _groups = new ArrayList<>();
 
+	@Inject
+	private LayoutLocalService _layoutLocalService;
+
 	private ServiceBag<PortletPreferencesLocalService> _serviceBag;
+
+	@Inject
+	private StagingLocalService _stagingLocalService;
 
 	private static class TestPortletPreferencesLocalServiceWrapper
 		extends PortletPreferencesLocalServiceWrapper {
 
 		@Override
-		public javax.portlet.PortletPreferences getStrictPreferences(
+		public jakarta.portlet.PortletPreferences getStrictPreferences(
 			long companyId, long ownerId, int ownerType, long plid,
 			String portletId) {
 
-			ClassLoaderBeanHandler classLoaderBeanHandler =
-				(ClassLoaderBeanHandler)ProxyUtil.getInvocationHandler(
-					getWrappedService());
-
 			PortletPreferencesLocalService portletPreferencesLocalService =
-				(PortletPreferencesLocalService)
-					classLoaderBeanHandler.getBean();
+				(PortletPreferencesLocalService)getWrappedService();
 
 			return portletPreferencesLocalService.getPreferences(
 				companyId, ownerId, ownerType, plid, portletId);

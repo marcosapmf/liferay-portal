@@ -8,13 +8,13 @@ package com.liferay.headless.delivery.client.serdes.v1_0;
 import com.liferay.headless.delivery.client.dto.v1_0.MessageFormSubmissionResult;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -68,10 +68,23 @@ public class MessageFormSubmissionResultSerDes {
 			sb.append("\"messageType\": ");
 
 			sb.append("\"");
-
 			sb.append(messageFormSubmissionResult.getMessageType());
-
 			sb.append("\"");
+		}
+
+		if (messageFormSubmissionResult.
+				getNotificationTextFragmentInlineValue() != null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"notificationTextFragmentInlineValue\": ");
+
+			sb.append(
+				String.valueOf(
+					messageFormSubmissionResult.
+						getNotificationTextFragmentInlineValue()));
 		}
 
 		if (messageFormSubmissionResult.getShowNotification() != null) {
@@ -124,6 +137,19 @@ public class MessageFormSubmissionResultSerDes {
 				String.valueOf(messageFormSubmissionResult.getMessageType()));
 		}
 
+		if (messageFormSubmissionResult.
+				getNotificationTextFragmentInlineValue() == null) {
+
+			map.put("notificationTextFragmentInlineValue", null);
+		}
+		else {
+			map.put(
+				"notificationTextFragmentInlineValue",
+				String.valueOf(
+					messageFormSubmissionResult.
+						getNotificationTextFragmentInlineValue()));
+		}
+
 		if (messageFormSubmissionResult.getShowNotification() == null) {
 			map.put("showNotification", null);
 		}
@@ -158,6 +184,12 @@ public class MessageFormSubmissionResultSerDes {
 			else if (Objects.equals(jsonParserFieldName, "messageType")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"notificationTextFragmentInlineValue")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "showNotification")) {
 				return false;
 			}
@@ -182,6 +214,17 @@ public class MessageFormSubmissionResultSerDes {
 					messageFormSubmissionResult.setMessageType(
 						MessageFormSubmissionResult.MessageType.create(
 							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"notificationTextFragmentInlineValue")) {
+
+				if (jsonParserFieldValue != null) {
+					messageFormSubmissionResult.
+						setNotificationTextFragmentInlineValue(
+							FragmentInlineValueSerDes.toDTO(
+								(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "showNotification")) {
@@ -235,6 +278,10 @@ public class MessageFormSubmissionResultSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

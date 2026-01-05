@@ -73,7 +73,8 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 			String externalReferenceCode, long userId, long groupId,
-			long layoutPageTemplateCollectionId, long classNameId,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, long classNameId,
 			long classTypeId, String name, int type, long previewFileEntryId,
 			boolean defaultTemplate, long layoutPrototypeId, long plid,
 			long masterLayoutPlid, int status,
@@ -82,15 +83,17 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			externalReferenceCode, userId, groupId,
-			layoutPageTemplateCollectionId, classNameId, classTypeId, name,
-			type, previewFileEntryId, defaultTemplate, layoutPrototypeId, plid,
-			masterLayoutPlid, status, serviceContext);
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey,
+			classNameId, classTypeId, name, type, previewFileEntryId,
+			defaultTemplate, layoutPrototypeId, plid, masterLayoutPlid, status,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 			String externalReferenceCode, long userId, long groupId,
-			long layoutPageTemplateCollectionId, long classNameId,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, long classNameId,
 			long classTypeId, String name, int type, long masterLayoutPlid,
 			int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -98,22 +101,24 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			externalReferenceCode, userId, groupId,
-			layoutPageTemplateCollectionId, classNameId, classTypeId, name,
-			type, masterLayoutPlid, status, serviceContext);
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey,
+			classNameId, classTypeId, name, type, masterLayoutPlid, status,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 			String externalReferenceCode, long userId, long groupId,
-			long layoutPageTemplateCollectionId, String name, int type,
+			long layoutPageTemplateCollectionId,
+			String layoutPageTemplateEntryKey, String name, int type,
 			long masterLayoutPlid, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			externalReferenceCode, userId, groupId,
-			layoutPageTemplateCollectionId, name, type, masterLayoutPlid,
-			status, serviceContext);
+			layoutPageTemplateCollectionId, layoutPageTemplateEntryKey, name,
+			type, masterLayoutPlid, status, serviceContext);
 	}
 
 	@Override
@@ -413,6 +418,15 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 	}
 
 	@Override
+	public LayoutPageTemplateEntry getFirstLayoutPageTemplateEntry(
+			long layoutPrototypeId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutPageTemplateEntryLocalService.
+			getFirstLayoutPageTemplateEntry(layoutPrototypeId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -687,6 +701,16 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 				groupId, layoutPageTemplateCollectionId, name, type);
 	}
 
+	@Override
+	public LayoutPageTemplateEntry moveLayoutPageTemplateEntry(
+			long layoutPageTemplateEntryId,
+			long targetLayoutPageTemplateCollectionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
+			layoutPageTemplateEntryId, targetLayoutPageTemplateCollectionId);
+	}
+
 	/**
 	 * Updates the layout page template entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -707,7 +731,8 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 
 	@Override
 	public LayoutPageTemplateEntry updateLayoutPageTemplateEntry(
-		long layoutPageTemplateEntryId, boolean defaultTemplate) {
+			long layoutPageTemplateEntryId, boolean defaultTemplate)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateEntryLocalService.
 			updateLayoutPageTemplateEntry(
@@ -726,12 +751,13 @@ public class LayoutPageTemplateEntryLocalServiceWrapper
 
 	@Override
 	public LayoutPageTemplateEntry updateLayoutPageTemplateEntry(
-			long layoutPageTemplateEntryId, long classNameId, long classTypeId)
+			long userId, long layoutPageTemplateEntryId, long classNameId,
+			long classTypeId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateEntryLocalService.
 			updateLayoutPageTemplateEntry(
-				layoutPageTemplateEntryId, classNameId, classTypeId);
+				userId, layoutPageTemplateEntryId, classNameId, classTypeId);
 	}
 
 	@Override

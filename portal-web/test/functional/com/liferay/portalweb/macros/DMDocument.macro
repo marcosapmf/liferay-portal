@@ -898,10 +898,10 @@ definition {
 		var downloadedFile = FileUtil.exists("${tempDir}/${fileName}");
 
 		if (${downloadedFile} == "true") {
-			echo("This is a correct file name.");
+			echo("There is a file named ${fileName} in temp folder ${tempDir}");
 		}
 		else {
-			fail("FAIL!");
+			fail("There is no file named ${fileName} in temp folder ${tempDir}");
 		}
 	}
 
@@ -2804,7 +2804,7 @@ definition {
 
 	@summary = "Default summary"
 	macro setExpirationDate(invalidExpirationDate = null, increaseMinutes = null) {
-		Panel.expandPanel(panel = "Expiration Date");
+		Panel.expandPanel(panel = "Schedule");
 
 		if (isSet(enableExpirationDate)) {
 			Uncheck(
@@ -2853,7 +2853,7 @@ definition {
 
 	@summary = "Default summary"
 	macro setReviewDate(increaseMinutes = null) {
-		Panel.expandPanel(panel = "Expiration Date");
+		Panel.expandPanel(panel = "Schedule");
 
 		if (isSet(enableReviewDate)) {
 			Uncheck(
@@ -3475,9 +3475,21 @@ definition {
 
 		AssertElementPresent(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_ICON_LOCKED");
 
-		AssertTextEquals(
-			locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS",
-			value1 = ${status});
+		if (${status} == "Approved") {
+			AssertTextEquals(
+				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_APPROVED",
+				value1 = "Approved");
+		}
+		else if (${status} == "Draft") {
+			AssertTextEquals(
+				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_DRAFT",
+				value1 = "Draft");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS",
+				value1 = ${status});
+		}
 
 		AssertClick(
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
@@ -4787,13 +4799,20 @@ definition {
 
 		if (${dmDocumentStatus} == "Approved") {
 			AssertTextEquals(
-				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS",
+				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_APPROVED",
 				value1 = "Approved");
 		}
 		else {
-			AssertTextEquals(
-				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS",
-				value1 = ${dmDocumentStatus});
+			if (${dmDocumentStatus} == "Draft") {
+				AssertTextEquals(
+					locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_DRAFT",
+					value1 = "Draft");
+			}
+			else {
+				AssertTextEquals(
+					locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS",
+					value1 = ${dmDocumentStatus});
+			}
 
 			DMDocument.gotoEntry(dmDocumentTitle = ${dmDocumentTitle});
 

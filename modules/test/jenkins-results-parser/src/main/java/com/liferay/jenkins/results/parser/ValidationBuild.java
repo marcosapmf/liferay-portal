@@ -186,16 +186,20 @@ public class ValidationBuild extends BaseBuild {
 
 		JSONObject testReportJSONObject = getTestReportJSONObject(false);
 
+		if (testReportJSONObject.isEmpty()) {
+			return new ArrayList<>();
+		}
+
 		return getTestResults(
 			this, testReportJSONObject.getJSONArray("suites"), testStatus);
 	}
 
-	protected ValidationBuild(String url) {
-		this(url, null);
+	protected ValidationBuild(String buildURL) {
+		this(buildURL, null);
 	}
 
-	protected ValidationBuild(String url, TopLevelBuild topLevelBuild) {
-		super(url, topLevelBuild);
+	protected ValidationBuild(String buildURL, TopLevelBuild topLevelBuild) {
+		super(buildURL, topLevelBuild);
 	}
 
 	protected Element getBaseBranchDetailsElement() {

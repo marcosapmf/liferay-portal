@@ -46,14 +46,14 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -96,7 +96,7 @@ public class ContentDashboardSearchContextBuilder {
 				_httpServletRequest, "contentDashboardItemSubtypePayload",
 				new String[0], false);
 
-		if (!ArrayUtil.isEmpty(contentDashboardItemSubtypePayloads)) {
+		if (ArrayUtil.isNotEmpty(contentDashboardItemSubtypePayloads)) {
 			searchContext.setClassTypeIds(
 				TransformUtil.transformToLongArray(
 					Arrays.asList(contentDashboardItemSubtypePayloads),
@@ -124,7 +124,7 @@ public class ContentDashboardSearchContextBuilder {
 			searchContext.setEnd(_end);
 		}
 
-		if (!ArrayUtil.isEmpty(contentDashboardItemSubtypePayloads)) {
+		if (ArrayUtil.isNotEmpty(contentDashboardItemSubtypePayloads)) {
 			searchContext.setEntryClassNames(
 				TransformUtil.transform(
 					contentDashboardItemSubtypePayloads,
@@ -209,7 +209,7 @@ public class ContentDashboardSearchContextBuilder {
 
 		BooleanFilter booleanFilter = new BooleanFilter();
 
-		if (!ArrayUtil.isEmpty(
+		if (ArrayUtil.isNotEmpty(
 				assetCategoryIds.getExternalAssetCategoryIds())) {
 
 			booleanFilter.add(
@@ -219,7 +219,7 @@ public class ContentDashboardSearchContextBuilder {
 				BooleanClauseOccur.MUST);
 		}
 
-		if (!ArrayUtil.isEmpty(
+		if (ArrayUtil.isNotEmpty(
 				assetCategoryIds.getInternalAssetCategoryIds())) {
 
 			booleanFilter.add(

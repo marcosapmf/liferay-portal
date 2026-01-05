@@ -46,7 +46,6 @@ public class UpgradeRelease extends UpgradeProcess {
 		"com.liferay.document.library.service",
 		"com.liferay.document.library.video",
 		"com.liferay.dynamic.data.mapping.service",
-		"com.liferay.frontend.js.a11y.web",
 		"com.liferay.message.boards.service",
 		"com.liferay.organizations.service", "com.liferay.portal.lock.service",
 		"com.liferay.portal.search.tuning.rankings.web",
@@ -55,8 +54,7 @@ public class UpgradeRelease extends UpgradeProcess {
 		"com.liferay.portal.security.sso.facebook.connect",
 		"com.liferay.portal.security.sso.opensso",
 		"com.liferay.portal.workflow.kaleo.designer.web",
-		"com.liferay.search.experiences.service", "com.liferay.wiki.service",
-		"portal"
+		"com.liferay.search.experiences.service", "com.liferay.wiki.service"
 	};
 
 }

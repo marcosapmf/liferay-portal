@@ -14,22 +14,24 @@ import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pedro Victor Silvestre
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	property = "screen.navigation.entry.order:Integer=10",
 	service = ScreenNavigationEntry.class
 )
+@Deprecated
 public class CommerceChannelNotificationsQueueScreenNavigationEntry
 	extends CommerceChannelNotificationsQueueScreenNavigationCategory
 	implements ScreenNavigationEntry<CommerceChannel> {
@@ -41,13 +43,8 @@ public class CommerceChannelNotificationsQueueScreenNavigationEntry
 
 	@Override
 	public boolean isVisible(User user, CommerceChannel commerceChannel) {
-		if (CommerceChannelConstants.CHANNEL_TYPE_SITE.equals(
-				commerceChannel.getType())) {
-
-			return true;
-		}
-
-		return false;
+		return CommerceChannelConstants.CHANNEL_TYPE_SITE.equals(
+			commerceChannel.getType());
 	}
 
 	@Override

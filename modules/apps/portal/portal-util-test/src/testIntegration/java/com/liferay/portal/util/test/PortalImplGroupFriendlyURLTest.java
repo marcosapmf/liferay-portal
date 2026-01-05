@@ -31,10 +31,10 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.TreeMap;
 
@@ -59,7 +59,7 @@ public class PortalImplGroupFriendlyURLTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_originalVirtualHostDefaultSiteName =
+		_originalVirtualHostsDefaultSiteName =
 			ReflectionTestUtil.getAndSetFieldValue(
 				PropsValues.class, "VIRTUAL_HOSTS_DEFAULT_SITE_NAME",
 				GroupConstants.GUEST);
@@ -92,7 +92,7 @@ public class PortalImplGroupFriendlyURLTest {
 	public static void tearDownClass() throws PortalException {
 		ReflectionTestUtil.setFieldValue(
 			PropsValues.class, "VIRTUAL_HOSTS_DEFAULT_SITE_NAME",
-			_originalVirtualHostDefaultSiteName);
+			_originalVirtualHostsDefaultSiteName);
 
 		_companyLocalService.deleteCompany(_company);
 
@@ -315,7 +315,7 @@ public class PortalImplGroupFriendlyURLTest {
 	private static GroupLocalService _groupLocalService;
 
 	private static String _originalName;
-	private static String _originalVirtualHostDefaultSiteName;
+	private static String _originalVirtualHostsDefaultSiteName;
 
 	@Inject
 	private static VirtualHostLocalService _virtualHostLocalService;

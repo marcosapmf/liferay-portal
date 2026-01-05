@@ -8,13 +8,13 @@ package com.liferay.search.experiences.rest.client.serdes.v1_0;
 import com.liferay.search.experiences.rest.client.dto.v1_0.SearchableAssetName;
 import com.liferay.search.experiences.rest.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Brian Wing Shun Chan
@@ -171,6 +171,10 @@ public class SearchableAssetNameSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

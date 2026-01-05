@@ -15,7 +15,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.PropsValues;
 
 /**
  * Provides utility methods for determining if a user is a universal
@@ -85,7 +85,7 @@ public class OmniadminUtil {
 			}
 
 			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 						PortalInstancePool.getDefaultCompanyId())) {
 
 				return RoleLocalServiceUtil.hasUserRole(

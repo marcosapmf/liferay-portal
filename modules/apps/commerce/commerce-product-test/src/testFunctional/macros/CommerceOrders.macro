@@ -309,7 +309,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${sku},
 					key_cellName2 = ${orderId},
-					key_columnNumber = 3,
+					key_columnNumber = 4,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = ${outstandingQuantity});
 
@@ -483,7 +483,11 @@ definition {
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
 			value1 = ${keyReferenceCode});
 
-		Button.click(button = "Submit");
+		SelectFrame.selectFrameTop();
+
+		Click(
+			key_text = "Submit",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		if (isSet(checkReferenceCode)) {
 			AssertElementPresent(
@@ -592,7 +596,7 @@ definition {
 
 		if (isSet(editedRegion)) {
 			Select(
-				locator1 = "Select#REGION",
+				locator1 = "Select#NEW_REGION",
 				value1 = ${editedRegion});
 		}
 
@@ -983,9 +987,11 @@ definition {
 			key_radioOption = ${paymentMethod},
 			locator1 = "CommerceEntry#RADIO_BUTTON_SPECIFIC");
 
-		Click(locator1 = "Button#MODAL_IFRAME_FOOTER_SUBMIT");
-
 		IFrame.selectTopFrame();
+
+		Click(
+			key_text = "Submit",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 	}
 
 	@summary = "Default summary"
@@ -1001,13 +1007,14 @@ definition {
 			selectFieldId = "paymentStatus",
 			value1 = ${paymentStatus});
 
-		Click(locator1 = "Button#MODAL_IFRAME_FOOTER_SUBMIT");
-
 		IFrame.selectTopFrame();
+
+		Click(locator1 = "Button#SUBMIT");
 	}
 
 	@summary = "Default summary"
-	macro getOrderCreationDateFromTable(columnIndex = null, rowIndex = null) {
+	macro getOrderCreationDateFromTable(columnIndex = null, orderId = null, rowIndex = null) {
+		var key_cellContent = ${orderId};
 		var key_columnIndex = ${columnIndex};
 		var key_rowIndex = ${rowIndex};
 		var orderCreationDate = selenium.getText("CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC");

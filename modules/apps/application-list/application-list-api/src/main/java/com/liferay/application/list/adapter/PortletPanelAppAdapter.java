@@ -12,11 +12,11 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 
+import jakarta.portlet.PortletConfig;
+
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
-
-import javax.portlet.PortletConfig;
 
 /**
  * @author Adolfo Pérez
@@ -45,7 +45,7 @@ public class PortletPanelAppAdapter extends BasePanelApp {
 		Portlet portlet = getPortlet();
 
 		String key =
-			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+			JavaConstants.JAKARTA_PORTLET_TITLE + StringPool.PERIOD +
 				portlet.getPortletName();
 
 		String value = LanguageUtil.get(resourceBundle, key);

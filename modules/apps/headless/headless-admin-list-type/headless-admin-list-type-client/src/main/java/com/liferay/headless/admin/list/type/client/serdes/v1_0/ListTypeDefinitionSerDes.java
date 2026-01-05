@@ -9,6 +9,8 @@ import com.liferay.headless.admin.list.type.client.dto.v1_0.ListTypeDefinition;
 import com.liferay.headless.admin.list.type.client.dto.v1_0.ListTypeEntry;
 import com.liferay.headless.admin.list.type.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -17,8 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Gabriel Albuquerque
@@ -63,6 +63,16 @@ public class ListTypeDefinitionSerDes {
 			sb.append(_toJSON(listTypeDefinition.getActions()));
 		}
 
+		if (listTypeDefinition.getCreator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"creator\": ");
+
+			sb.append(listTypeDefinition.getCreator());
+		}
+
 		if (listTypeDefinition.getDateCreated() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -91,6 +101,20 @@ public class ListTypeDefinitionSerDes {
 			sb.append(
 				liferayToJSONDateFormat.format(
 					listTypeDefinition.getDateModified()));
+
+			sb.append("\"");
+		}
+
+		if (listTypeDefinition.getDefaultLanguageId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"defaultLanguageId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(listTypeDefinition.getDefaultLanguageId()));
 
 			sb.append("\"");
 		}
@@ -166,6 +190,38 @@ public class ListTypeDefinitionSerDes {
 			sb.append(_toJSON(listTypeDefinition.getName_i18n()));
 		}
 
+		if (listTypeDefinition.getPermissions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < listTypeDefinition.getPermissions().length;
+				 i++) {
+
+				sb.append(listTypeDefinition.getPermissions()[i]);
+
+				if ((i + 1) < listTypeDefinition.getPermissions().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (listTypeDefinition.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append(String.valueOf(listTypeDefinition.getStatus()));
+		}
+
 		if (listTypeDefinition.getSystem() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -207,6 +263,13 @@ public class ListTypeDefinitionSerDes {
 			map.put("actions", String.valueOf(listTypeDefinition.getActions()));
 		}
 
+		if (listTypeDefinition.getCreator() == null) {
+			map.put("creator", null);
+		}
+		else {
+			map.put("creator", String.valueOf(listTypeDefinition.getCreator()));
+		}
+
 		if (listTypeDefinition.getDateCreated() == null) {
 			map.put("dateCreated", null);
 		}
@@ -225,6 +288,15 @@ public class ListTypeDefinitionSerDes {
 				"dateModified",
 				liferayToJSONDateFormat.format(
 					listTypeDefinition.getDateModified()));
+		}
+
+		if (listTypeDefinition.getDefaultLanguageId() == null) {
+			map.put("defaultLanguageId", null);
+		}
+		else {
+			map.put(
+				"defaultLanguageId",
+				String.valueOf(listTypeDefinition.getDefaultLanguageId()));
 		}
 
 		if (listTypeDefinition.getExternalReferenceCode() == null) {
@@ -267,6 +339,22 @@ public class ListTypeDefinitionSerDes {
 				"name_i18n", String.valueOf(listTypeDefinition.getName_i18n()));
 		}
 
+		if (listTypeDefinition.getPermissions() == null) {
+			map.put("permissions", null);
+		}
+		else {
+			map.put(
+				"permissions",
+				String.valueOf(listTypeDefinition.getPermissions()));
+		}
+
+		if (listTypeDefinition.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put("status", String.valueOf(listTypeDefinition.getStatus()));
+		}
+
 		if (listTypeDefinition.getSystem() == null) {
 			map.put("system", null);
 		}
@@ -295,10 +383,16 @@ public class ListTypeDefinitionSerDes {
 			if (Objects.equals(jsonParserFieldName, "actions")) {
 				return true;
 			}
+			else if (Objects.equals(jsonParserFieldName, "creator")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "defaultLanguageId")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -318,6 +412,12 @@ public class ListTypeDefinitionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "name_i18n")) {
 				return true;
 			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "system")) {
 				return false;
 			}
@@ -336,6 +436,12 @@ public class ListTypeDefinitionSerDes {
 						(Map<String, Map<String, String>>)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "creator")) {
+				if (jsonParserFieldValue != null) {
+					listTypeDefinition.setCreator(
+						CreatorSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				if (jsonParserFieldValue != null) {
 					listTypeDefinition.setDateCreated(
@@ -346,6 +452,12 @@ public class ListTypeDefinitionSerDes {
 				if (jsonParserFieldValue != null) {
 					listTypeDefinition.setDateModified(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "defaultLanguageId")) {
+				if (jsonParserFieldValue != null) {
+					listTypeDefinition.setDefaultLanguageId(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -387,6 +499,32 @@ public class ListTypeDefinitionSerDes {
 				if (jsonParserFieldValue != null) {
 					listTypeDefinition.setName_i18n(
 						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "permissions")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					com.liferay.headless.admin.list.type.client.permission.
+						Permission[] permissionsArray = new
+						com.liferay.headless.admin.list.type.client.permission.
+							Permission[jsonParserFieldValues.length];
+
+					for (int i = 0; i < permissionsArray.length; i++) {
+						permissionsArray[i] =
+							com.liferay.headless.admin.list.type.client.
+								permission.Permission.toDTO(
+									(String)jsonParserFieldValues[i]);
+					}
+
+					listTypeDefinition.setPermissions(permissionsArray);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					listTypeDefinition.setStatus(
+						StatusSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "system")) {
@@ -439,6 +577,10 @@ public class ListTypeDefinitionSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

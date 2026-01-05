@@ -7,7 +7,7 @@ package com.liferay.info.field.item.selector.web.internal.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.item.selector.criterion.InfoFieldItemSelectorCriterion;
+import com.liferay.info.field.item.selector.InfoFieldItemSelectorCriterion;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.dao.search.ResultRowSplitterEntry;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -54,7 +55,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -107,10 +107,10 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, "myRichText",
-					"myRichText", false)));
+					"myRichText", false)),
+			false);
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testGetResultRowSplitter() throws Exception {
 		_objectDefinition2 = ObjectDefinitionTestUtil.publishObjectDefinition(
@@ -118,7 +118,8 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, "myText", "myText",
-					false)));
+					false)),
+			false);
 
 		ObjectRelationship objectRelationship =
 			ObjectRelationshipTestUtil.addObjectRelationship(
@@ -143,24 +144,31 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 						RandomTestUtil.nextInt())));
 
 		Assert.assertEquals(
-			resultRowSplitterEntries.toString(), 2,
+			resultRowSplitterEntries.toString(), 3,
 			resultRowSplitterEntries.size());
 
 		ResultRowSplitterEntry resultRowSplitterEntry1 =
 			resultRowSplitterEntries.get(0);
 
 		Assert.assertEquals(
-			_objectDefinition1.getLabel(LocaleUtil.getSiteDefault()),
+			_language.get(LocaleUtil.getSiteDefault(), "basic-information"),
 			resultRowSplitterEntry1.getTitle());
 
 		ResultRowSplitterEntry resultRowSplitterEntry2 =
 			resultRowSplitterEntries.get(1);
 
 		Assert.assertEquals(
+			_objectDefinition1.getLabel(LocaleUtil.getSiteDefault()),
+			resultRowSplitterEntry2.getTitle());
+
+		ResultRowSplitterEntry resultRowSplitterEntry3 =
+			resultRowSplitterEntries.get(2);
+
+		Assert.assertEquals(
 			StringBundler.concat(
 				objectRelationship.getLabel(LocaleUtil.getSiteDefault()), " (",
 				_objectDefinition2.getLabel(LocaleUtil.getSiteDefault()), ")"),
-			resultRowSplitterEntry2.getTitle());
+			resultRowSplitterEntry3.getTitle());
 	}
 
 	@Test
@@ -171,7 +179,7 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		SearchContainer<Object> searchContainer =
 			itemSelectorViewDescriptor.getSearchContainer();
 
-		Assert.assertEquals(3, searchContainer.getTotal());
+		Assert.assertEquals(4, searchContainer.getTotal());
 	}
 
 	@Test
@@ -183,7 +191,7 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 		long defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid());
+				draftLayout.getPlid());
 
 		LayoutStructure layoutStructure = new LayoutStructure();
 
@@ -205,8 +213,9 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), draftLayout.getPlid(),
-				defaultSegmentsExperienceId, layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				draftLayout.getPlid(), defaultSegmentsExperienceId,
+				layoutStructure.toString());
 
 		mockHttpServletRequest.setParameter(
 			"formItemId", formStyledLayoutStructureItem.getItemId());
@@ -217,7 +226,7 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		SearchContainer<Object> searchContainer =
 			itemSelectorViewDescriptor.getSearchContainer();
 
-		Assert.assertEquals(3, searchContainer.getTotal());
+		Assert.assertEquals(4, searchContainer.getTotal());
 	}
 
 	@Test
@@ -236,7 +245,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		Assert.assertEquals(1, searchContainer.getTotal());
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testGetSearchContainerWithRelationship() throws Exception {
 		_objectDefinition2 = ObjectDefinitionTestUtil.publishObjectDefinition(
@@ -244,7 +252,8 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, "myText", "myText",
-					false)));
+					false)),
+			false);
 
 		ObjectRelationshipTestUtil.addObjectRelationship(
 			_objectRelationshipLocalService, _objectDefinition2,
@@ -256,10 +265,9 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		SearchContainer<Object> searchContainer =
 			itemSelectorViewDescriptor.getSearchContainer();
 
-		Assert.assertEquals(5, searchContainer.getTotal());
+		Assert.assertEquals(6, searchContainer.getTotal());
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testRowCheckerWithCheckedInfoFields() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
@@ -275,13 +283,15 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		List<InfoField<?>> allInfoFields = ListUtil.filter(
 			infoForm.getAllInfoFields(), InfoField::isEditable);
 
+		Layout draftLayout = _layout.fetchDraftLayout();
+
 		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
 			false,
 			String.valueOf(
 				_portal.getClassNameId(_objectDefinition1.getClassName())),
-			"0", _layout.fetchDraftLayout(), _layoutStructureProvider,
+			"0", draftLayout, _layoutStructureProvider,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				_layout.getPlid()),
+				draftLayout.getPlid()),
 			allInfoFields.toArray(new InfoField<?>[0]));
 
 		mockHttpServletRequest.setParameter(
@@ -300,7 +310,6 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 		}
 	}
 
-	@FeatureFlags("LPD-20213")
 	@Test
 	public void testRowCheckerWithoutCheckedInfoFields() throws Exception {
 		MockHttpServletRequest mockHttpServletRequest =
@@ -342,22 +351,25 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 			"null-" + WebKeys.CURRENT_PORTLET_URL, new MockLiferayPortletURL());
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST,
+			JavaConstants.JAKARTA_PORTLET_REQUEST,
 			mockLiferayPortletRenderRequest);
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletRenderResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));
 
 		mockHttpServletRequest.setParameter(
 			"itemType", _objectDefinition1.getClassName());
+
+		Layout draftLayout = _layout.fetchDraftLayout();
+
 		mockHttpServletRequest.setParameter(
 			"segmentsExperienceId",
 			String.valueOf(
 				_segmentsExperienceLocalService.
-					fetchDefaultSegmentsExperienceId(_layout.getPlid())));
+					fetchDefaultSegmentsExperienceId(draftLayout.getPlid())));
 
 		_infoFieldProviderItemSelectorView.renderHTML(
 			mockHttpServletRequest, new MockHttpServletResponse(),
@@ -407,6 +419,9 @@ public class InfoFieldItemSelectorViewDescriptorTest {
 
 	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	@Inject
+	private Language _language;
 
 	private Layout _layout;
 

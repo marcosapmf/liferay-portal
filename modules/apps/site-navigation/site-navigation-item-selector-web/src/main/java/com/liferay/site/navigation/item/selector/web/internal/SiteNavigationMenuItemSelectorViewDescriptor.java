@@ -22,10 +22,10 @@ import com.liferay.site.navigation.service.SiteNavigationMenuServiceUtil;
 import com.liferay.site.navigation.util.comparator.SiteNavigationMenuModifiedDateComparator;
 import com.liferay.site.navigation.util.comparator.SiteNavigationMenuNameComparator;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -73,7 +73,7 @@ public class SiteNavigationMenuItemSelectorViewDescriptor
 		SearchContainer<SiteNavigationMenu> searchContainer =
 			new SearchContainer<>(
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST),
+					JavaConstants.JAKARTA_PORTLET_REQUEST),
 				_portletURL, null, "there-are-no-navigation-menus");
 
 		String orderByCol = ParamUtil.getString(
@@ -135,10 +135,11 @@ public class SiteNavigationMenuItemSelectorViewDescriptor
 		}
 
 		if (orderByCol.equals("modified-date")) {
-			return new SiteNavigationMenuModifiedDateComparator(orderByAsc);
+			return SiteNavigationMenuModifiedDateComparator.getInstance(
+				orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
-			return new SiteNavigationMenuNameComparator(orderByAsc);
+			return SiteNavigationMenuNameComparator.getInstance(orderByAsc);
 		}
 
 		return null;

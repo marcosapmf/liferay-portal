@@ -16,7 +16,9 @@
 		<field name="conditionExpression" type="String">
 			<hint-collection name="CLOB" />
 		</field>
-		<field name="description" type="String" />
+		<field name="description" type="String">
+			<hint-collection name="TEXTAREA" />
+		</field>
 		<field localized="true" name="errorMessage" type="String" />
 		<field localized="true" name="label" type="String" />
 		<field name="name" type="String" />
@@ -43,25 +45,29 @@
 		<field name="accountEntryRestrictedObjectFieldId" type="long" />
 		<field name="descriptionObjectFieldId" type="long" />
 		<field name="objectFolderId" type="long" />
-		<field name="rootObjectDefinitionId" type="long" />
 		<field name="titleObjectFieldId" type="long" />
 		<field name="accountEntryRestricted" type="boolean" />
 		<field name="active" type="boolean" />
-		<field name="DBTableName" type="String">
-			<validator name="required" />
-		</field>
-		<field localized="true" name="label" type="String">
-			<validator name="required" />
-		</field>
 		<field name="className" type="String">
 			<hint name="max-length">255</hint>
 		</field>
+		<field name="DBTableName" type="String">
+			<validator name="required" />
+		</field>
 		<field name="enableCategorization" type="boolean" />
 		<field name="enableComments" type="boolean" />
+		<field name="enableFormContainer" type="boolean" />
+		<field name="enableFriendlyURLCustomization" type="boolean" />
 		<field name="enableIndexSearch" type="boolean" />
-		<field name="enableLocalization" type="boolean" />
 		<field name="enableObjectEntryDraft" type="boolean" />
 		<field name="enableObjectEntryHistory" type="boolean" />
+		<field name="enableObjectEntrySchedule" type="boolean" />
+		<field name="enableObjectEntrySubscription" type="boolean" />
+		<field name="enableObjectEntryVersioning" type="boolean" />
+		<field name="friendlyURLSeparator" type="String" />
+		<field localized="true" name="label" type="String">
+			<validator name="required" />
+		</field>
 		<field name="modifiable" type="boolean" />
 		<field name="name" type="String" />
 		<field name="panelAppOrder" type="String" />
@@ -80,10 +86,25 @@
 		<field name="version" type="int" />
 		<field name="status" type="int" />
 	</model>
+	<model name="com.liferay.object.model.ObjectDefinitionSetting">
+		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
+		<field name="objectDefinitionSettingId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="objectDefinitionId" type="long" />
+		<field name="name" type="String" />
+		<field name="value" type="String" />
+	</model>
 	<model name="com.liferay.object.model.ObjectEntry">
 		<field name="mvccVersion" type="long" />
 		<field name="uuid" type="String" />
-		<field name="externalReferenceCode" type="String" />
+		<field name="externalReferenceCode" type="String">
+			<hint name="max-length">1000</hint>
+		</field>
 		<field name="objectEntryId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -91,9 +112,64 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="headObjectEntryId" type="long" />
 		<field name="objectDefinitionId" type="long" />
+		<field name="objectEntryFolderId" type="long" />
 		<field name="rootObjectEntryId" type="long" />
+		<field name="defaultLanguageId" type="String" />
+		<field name="displayDate" type="Date" />
+		<field name="expirationDate" type="Date" />
+		<field name="reviewDate" type="Date" />
+		<field name="treePath" type="String">
+			<hint name="max-length">4000</hint>
+		</field>
+		<field name="version" type="int" />
 		<field name="lastPublishDate" type="Date" />
+		<field name="status" type="int" />
+		<field name="statusByUserId" type="long" />
+		<field name="statusByUserName" type="String" />
+		<field name="statusDate" type="Date" />
+	</model>
+	<model name="com.liferay.object.model.ObjectEntryFolder">
+		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
+		<field name="objectEntryFolderId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="parentObjectEntryFolderId" type="long" />
+		<field name="description" type="String">
+			<hint name="max-length">4000</hint>
+		</field>
+		<field localized="true" name="label" type="String" />
+		<field name="name" type="String" />
+		<field name="treePath" type="String">
+			<hint name="max-length">4000</hint>
+		</field>
+		<field name="status" type="int" />
+	</model>
+	<model name="com.liferay.object.model.ObjectEntryVersion">
+		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
+		<field name="objectEntryVersionId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="objectDefinitionId" type="long" />
+		<field name="objectEntryId" type="long" />
+		<field name="content" type="String">
+			<hint-collection name="CLOB" />
+		</field>
+		<field name="displayDate" type="Date" />
+		<field name="expirationDate" type="Date" />
+		<field name="reviewDate" type="Date" />
+		<field name="version" type="int" />
 		<field name="status" type="int" />
 		<field name="statusByUserId" type="long" />
 		<field name="statusByUserName" type="String" />
@@ -142,7 +218,7 @@
 		<field name="objectFieldId" type="long" />
 		<field name="name" type="String" />
 		<field name="value" type="String">
-			<hint name="max-length">255</hint>
+			<hint-collection name="CLOB" />
 		</field>
 	</model>
 	<model name="com.liferay.object.model.ObjectFilter">

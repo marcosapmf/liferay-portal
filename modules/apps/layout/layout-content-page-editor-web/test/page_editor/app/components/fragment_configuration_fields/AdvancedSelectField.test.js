@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {AdvancedSelectField} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment_configuration_fields/AdvancedSelectField';
 import StoreMother from '../../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
+
+jest.mock('@liferay/layout-js-components-web', () => ({
+	...jest.requireActual('@liferay/layout-js-components-web'),
+	isValidStyleValue: jest.fn(() => true),
+}));
 
 const FIELD = {
 	cssProperty: 'font-size',
@@ -122,11 +127,6 @@ jest.mock(
 	})
 );
 
-jest.mock('frontend-js-web', () => ({
-	...jest.requireActual('frontend-js-web'),
-	sub: jest.fn((langKey, arg) => langKey.replace('x', arg)),
-}));
-
 describe('AdvancedSelectField', () => {
 	it('renders AdvancedSelectField', () => {
 		renderAdvancedSelectField();
@@ -134,11 +134,11 @@ describe('AdvancedSelectField', () => {
 		expect(screen.getByLabelText('font-size')).toBeInTheDocument();
 	});
 
-	it('changes the value', () => {
+	it('changes the value', async () => {
 		renderAdvancedSelectField();
 		const select = screen.getByLabelText('font-size');
 
-		userEvent.selectOptions(select, 'fontSizeSm');
+		await userEvent.selectOptions(select, 'fontSizeSm');
 		fireEvent.change(select);
 
 		expect(select.options[1].selected).toBeTruthy();
@@ -150,14 +150,14 @@ describe('AdvancedSelectField', () => {
 		expect(screen.getByTitle('detach-style')).toBeInTheDocument();
 	});
 
-	it('only renders the inherited value indicator if the style is inherited and no value is selected', () => {
+	it('only renders the inherited value indicator if the style is inherited and no value is selected', async () => {
 		renderAdvancedSelectField();
 		const select = screen.getByLabelText('font-size');
 
 		expect(select.tagName).toBe('SELECT');
 		expect(screen.getByTitle('inherited-value')).toBeInTheDocument();
 
-		userEvent.selectOptions(select, 'fontSizeSm');
+		await userEvent.selectOptions(select, 'fontSizeSm');
 		fireEvent.change(select);
 
 		expect(screen.queryByTitle('inherited-value')).not.toBeInTheDocument();
@@ -170,10 +170,10 @@ describe('AdvancedSelectField', () => {
 		expect(screen.queryByTitle('inherited-value')).not.toBeInTheDocument();
 	});
 
-	it('renders an input with the token value when Detach button is clicked', () => {
+	it('renders an input with the token value when Detach button is clicked', async () => {
 		renderAdvancedSelectField({value: 'fontSizeLg'});
 
-		userEvent.click(screen.getByTitle('detach-style'));
+		await userEvent.click(screen.getByTitle('detach-style'));
 
 		const input = screen.getByLabelText('font-size');
 
@@ -181,7 +181,7 @@ describe('AdvancedSelectField', () => {
 		expect(input).toHaveValue('1.125rem');
 	});
 
-	it('saves the value when a new value is typed and the user leaves the input', () => {
+	it('saves the value when a new value is typed and the user leaves the input', async () => {
 		const onValueSelect = jest.fn();
 		renderAdvancedSelectField({
 			onValueSelect,
@@ -189,14 +189,14 @@ describe('AdvancedSelectField', () => {
 		});
 		const input = screen.getByLabelText('font-size');
 
-		userEvent.type(input, 'initial');
+		fireEvent.change(input, {target: {value: 'initial'}});
 		fireEvent.blur(input);
 
 		expect(onValueSelect).toBeCalledWith(FIELD.name, 'initial');
 		expect(input).toHaveValue('initial');
 	});
 
-	it('saves the value when a new value is typed and Enter key is pressed', () => {
+	it('saves the value when a new value is typed and Enter key is pressed', async () => {
 		const onValueSelect = jest.fn();
 		renderAdvancedSelectField({
 			onValueSelect,
@@ -204,33 +204,33 @@ describe('AdvancedSelectField', () => {
 		});
 		const input = screen.getByLabelText('font-size');
 
-		userEvent.type(input, 'initial');
-		fireEvent.keyDown(input, {key: 'Enter'});
+		await userEvent.clear(input);
+		await userEvent.type(input, 'initial');
+		await userEvent.type(input, '{Enter}');
 
 		expect(onValueSelect).toBeCalledWith(FIELD.name, 'initial');
 		expect(input).toHaveValue('initial');
 	});
 
-	it('keeps the last value when the input is cleared', () => {
+	it('keeps the last value when the input is cleared', async () => {
 		renderAdvancedSelectField({
 			value: 'mystyle',
 		});
 		const input = screen.getByLabelText('font-size');
 
-		userEvent.type(input, '');
+		await userEvent.clear(input);
 		fireEvent.blur(input);
 
 		expect(input).toHaveValue('mystyle');
 	});
 
-	it('renders the select when a token value is selected from the Value From Stylebook button', () => {
+	it('renders the select when a token value is selected from the Value From Stylebook button', async () => {
 		renderAdvancedSelectField({
 			value: 'mystyle',
 		});
 
-		userEvent.click(screen.getByTitle('value-from-stylebook'));
-
-		userEvent.click(screen.getByText('Font Size Base'));
+		await userEvent.click(screen.getByTitle('value-from-stylebook'));
+		await userEvent.click(screen.getByText('Font Size Base'));
 
 		expect(screen.getByLabelText('font-size').tagName).toBe('SELECT');
 	});
@@ -269,12 +269,12 @@ describe('AdvancedSelectField', () => {
 		).not.toBeInTheDocument();
 	});
 
-	it('clears the value when the "Reset" button is clicked and the viewport is Desktop', () => {
+	it('clears the value when the "Reset" button is clicked and the viewport is Desktop', async () => {
 		renderAdvancedSelectField({
 			value: 'fontSizeLg',
 		});
 
-		userEvent.click(screen.getByTitle('reset-to-initial-value'));
+		await userEvent.click(screen.getByTitle('reset-to-initial-value'));
 
 		const select = screen.getByLabelText('font-size');
 
@@ -282,13 +282,13 @@ describe('AdvancedSelectField', () => {
 		expect(select.nextSibling.textContent).toBe('');
 	});
 
-	it('sets the value of the previous viewport when the "Reset" button is clicked', () => {
+	it('sets the value of the previous viewport when the "Reset" button is clicked', async () => {
 		renderAdvancedSelectField({
 			selectedViewportSize: 'landscapeMobile',
 			value: 'fontSizeSm',
 		});
 
-		userEvent.click(screen.getByTitle('reset-to-tablet-value'));
+		await userEvent.click(screen.getByTitle('reset-to-tablet-value'));
 
 		const select = screen.getByLabelText('font-size');
 

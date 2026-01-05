@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.util.Locale;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,11 +60,11 @@ public class CommerceShippingFixedOptionIndexer
 			"commerceShippingMethodId");
 
 		if (commerceShippingMethodId != -1) {
-			TermFilter termFilter = new TermFilter(
-				"commerceShippingMethodId",
-				String.valueOf(commerceShippingMethodId));
-
-			contextBooleanFilter.add(termFilter, BooleanClauseOccur.MUST);
+			contextBooleanFilter.add(
+				new TermFilter(
+					"commerceShippingMethodId",
+					String.valueOf(commerceShippingMethodId)),
+				BooleanClauseOccur.MUST);
 		}
 	}
 
@@ -110,12 +110,14 @@ public class CommerceShippingFixedOptionIndexer
 			CLASS_NAME, commerceShippingFixedOption);
 
 		document.addKeyword(
-			Field.DESCRIPTION, commerceShippingFixedOption.getDescription());
-		document.addKeyword(Field.NAME, commerceShippingFixedOption.getName());
+			Field.DESCRIPTION, commerceShippingFixedOption.getDescription(),
+			true);
+		document.addKeyword(
+			Field.NAME, commerceShippingFixedOption.getName(), true);
 		document.addKeyword(
 			"commerceShippingMethodId",
 			commerceShippingFixedOption.getCommerceShippingMethodId());
-		document.addKeyword("key", commerceShippingFixedOption.getKey());
+		document.addKeyword("key", commerceShippingFixedOption.getKey(), true);
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(

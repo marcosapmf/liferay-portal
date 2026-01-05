@@ -10,9 +10,12 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
@@ -42,8 +45,9 @@ import org.osgi.service.component.annotations.Reference;
 public class KaleoDefinitionLocalServiceImpl
 	extends KaleoDefinitionLocalServiceBaseImpl {
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public void activateKaleoDefinition(
+	public KaleoDefinition activateKaleoDefinition(
 			long kaleoDefinitionId, long kaleoDefinitionVersionId,
 			long startKaleoNodeId, ServiceContext serviceContext)
 		throws PortalException {
@@ -55,8 +59,9 @@ public class KaleoDefinitionLocalServiceImpl
 
 		kaleoDefinition.setModifiedDate(new Date());
 		kaleoDefinition.setActive(true);
+		kaleoDefinition.setStatus(WorkflowConstants.STATUS_APPROVED);
 
-		kaleoDefinitionPersistence.update(kaleoDefinition);
+		kaleoDefinition = kaleoDefinitionPersistence.update(kaleoDefinition);
 
 		// Kaleo definition version
 
@@ -68,10 +73,13 @@ public class KaleoDefinitionLocalServiceImpl
 		kaleoDefinitionVersion.setStartKaleoNodeId(startKaleoNodeId);
 
 		_kaleoDefinitionVersionPersistence.update(kaleoDefinitionVersion);
+
+		return kaleoDefinition;
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public void activateKaleoDefinition(
+	public KaleoDefinition activateKaleoDefinition(
 			long kaleoDefinitionId, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -82,12 +90,14 @@ public class KaleoDefinitionLocalServiceImpl
 
 		kaleoDefinition.setModifiedDate(new Date());
 		kaleoDefinition.setActive(true);
+		kaleoDefinition.setStatus(WorkflowConstants.STATUS_APPROVED);
 
-		kaleoDefinitionPersistence.update(kaleoDefinition);
+		return kaleoDefinitionPersistence.update(kaleoDefinition);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public void activateKaleoDefinition(
+	public KaleoDefinition activateKaleoDefinition(
 			String name, int version, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -99,14 +109,16 @@ public class KaleoDefinitionLocalServiceImpl
 
 		kaleoDefinition.setModifiedDate(new Date());
 		kaleoDefinition.setActive(true);
+		kaleoDefinition.setStatus(WorkflowConstants.STATUS_APPROVED);
 
-		kaleoDefinitionPersistence.update(kaleoDefinition);
+		return kaleoDefinitionPersistence.update(kaleoDefinition);
 	}
 
 	@Override
 	public KaleoDefinition addKaleoDefinition(
-			String name, String title, String description, String content,
-			String scope, int version, ServiceContext serviceContext)
+			String externalReferenceCode, String name, String title,
+			String description, String content, String scope, int version,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		// Kaleo definition
@@ -116,6 +128,7 @@ public class KaleoDefinitionLocalServiceImpl
 		KaleoDefinition kaleoDefinition = kaleoDefinitionPersistence.create(
 			kaleoDefinitionId);
 
+		kaleoDefinition.setExternalReferenceCode(externalReferenceCode);
 		kaleoDefinition.setGroupId(
 			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 
@@ -142,6 +155,7 @@ public class KaleoDefinitionLocalServiceImpl
 		kaleoDefinition.setScope(scope);
 		kaleoDefinition.setVersion(version);
 		kaleoDefinition.setActive(false);
+		kaleoDefinition.setStatus(WorkflowConstants.STATUS_DRAFT);
 
 		kaleoDefinition = kaleoDefinitionPersistence.update(kaleoDefinition);
 
@@ -154,8 +168,9 @@ public class KaleoDefinitionLocalServiceImpl
 		return kaleoDefinition;
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public void deactivateKaleoDefinition(
+	public KaleoDefinition deactivateKaleoDefinition(
 			String name, int version, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -165,8 +180,9 @@ public class KaleoDefinitionLocalServiceImpl
 
 		kaleoDefinition.setModifiedDate(new Date());
 		kaleoDefinition.setActive(false);
+		kaleoDefinition.setStatus(WorkflowConstants.STATUS_DRAFT);
 
-		kaleoDefinitionPersistence.update(kaleoDefinition);
+		return kaleoDefinitionPersistence.update(kaleoDefinition);
 	}
 
 	@Override
@@ -340,8 +356,8 @@ public class KaleoDefinitionLocalServiceImpl
 
 	@Override
 	public KaleoDefinition updatedKaleoDefinition(
-			long kaleoDefinitionId, String title, String description,
-			String content, ServiceContext serviceContext)
+			String externalReferenceCode, long kaleoDefinitionId, String title,
+			String description, String content, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Kaleo definition
@@ -353,6 +369,7 @@ public class KaleoDefinitionLocalServiceImpl
 		KaleoDefinition kaleoDefinition =
 			kaleoDefinitionPersistence.findByPrimaryKey(kaleoDefinitionId);
 
+		kaleoDefinition.setExternalReferenceCode(externalReferenceCode);
 		kaleoDefinition.setGroupId(
 			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 		kaleoDefinition.setUserId(user.getUserId());

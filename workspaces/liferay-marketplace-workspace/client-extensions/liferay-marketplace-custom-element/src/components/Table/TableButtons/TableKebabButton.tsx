@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
+import Icon from '@clayui/icon';
+
+import ButtonWithIcon from '../../ButtonWithIcon';
 
 type TableKebabButtonProps = {
 	items: {
 		disabled?: boolean;
+		icon?: string;
 		label?: string;
 		onClick?: () => void;
 	}[];
@@ -17,7 +20,7 @@ type TableKebabButtonProps = {
 const TableKebabButton: React.FC<TableKebabButtonProps> = ({items}) => (
 	<ClayDropDown
 		trigger={
-			<ClayButtonWithIcon
+			<ButtonWithIcon
 				aria-label="Kebab Button"
 				displayType={null}
 				symbol="ellipsis-v"
@@ -33,6 +36,9 @@ const TableKebabButton: React.FC<TableKebabButtonProps> = ({items}) => (
 						key={index}
 						onClick={item?.onClick}
 					>
+						{item.icon && (
+							<Icon className="mr-3" symbol={item.icon} />
+						)}
 						{item?.label}
 					</ClayDropDown.Item>
 				);

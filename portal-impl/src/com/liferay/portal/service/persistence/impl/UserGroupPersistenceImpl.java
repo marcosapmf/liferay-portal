@@ -608,6 +608,15 @@ public class UserGroupPersistenceImpl
 			return findByUuid(uuid, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByUuid(
+					uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		uuid = Objects.toString(uuid, "");
 
 		StringBundler sb = null;
@@ -996,6 +1005,14 @@ public class UserGroupPersistenceImpl
 	public int filterCountByUuid(String uuid) {
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return countByUuid(uuid);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByUuid(uuid);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
 		}
 
 		uuid = Objects.toString(uuid, "");
@@ -1605,6 +1622,15 @@ public class UserGroupPersistenceImpl
 			return findByUuid_C(uuid, companyId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		uuid = Objects.toString(uuid, "");
 
 		StringBundler sb = null;
@@ -2012,6 +2038,14 @@ public class UserGroupPersistenceImpl
 	public int filterCountByUuid_C(String uuid, long companyId) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByUuid_C(uuid, companyId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByUuid_C(uuid, companyId);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
 		}
 
 		uuid = Objects.toString(uuid, "");
@@ -2567,6 +2601,15 @@ public class UserGroupPersistenceImpl
 			return findByCompanyId(companyId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2918,6 +2961,14 @@ public class UserGroupPersistenceImpl
 	public int filterCountByCompanyId(long companyId) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByCompanyId(companyId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByCompanyId(companyId);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -3488,6 +3539,15 @@ public class UserGroupPersistenceImpl
 				companyId, parentUserGroupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByC_P(
+					companyId, parentUserGroupId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -3861,6 +3921,15 @@ public class UserGroupPersistenceImpl
 			return countByC_P(companyId, parentUserGroupId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByC_P(
+				companyId, parentUserGroupId);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
+		}
+
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(_FILTER_SQL_COUNT_USERGROUP_WHERE);
@@ -3908,7 +3977,6 @@ public class UserGroupPersistenceImpl
 		"userGroup.parentUserGroupId = ?";
 
 	private FinderPath _finderPathFetchByC_N;
-	private FinderPath _finderPathCountByC_N;
 
 	/**
 	 * Returns the user group where companyId = &#63; and name = &#63; or throws a <code>NoSuchUserGroupException</code> if it could not be found.
@@ -4093,68 +4161,13 @@ public class UserGroupPersistenceImpl
 	 */
 	@Override
 	public int countByC_N(long companyId, String name) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					UserGroup.class)) {
+		UserGroup userGroup = fetchByC_N(companyId, name);
 
-			name = Objects.toString(name, "");
-
-			FinderPath finderPath = _finderPathCountByC_N;
-
-			Object[] finderArgs = new Object[] {companyId, name};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_USERGROUP_WHERE);
-
-				sb.append(_FINDER_COLUMN_C_N_COMPANYID_2);
-
-				boolean bindName = false;
-
-				if (name.isEmpty()) {
-					sb.append(_FINDER_COLUMN_C_N_NAME_3);
-				}
-				else {
-					bindName = true;
-
-					sb.append(_FINDER_COLUMN_C_N_NAME_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(companyId);
-
-					if (bindName) {
-						queryPos.add(StringUtil.toLowerCase(name));
-					}
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (userGroup == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_N_COMPANYID_2 =
@@ -4704,6 +4717,15 @@ public class UserGroupPersistenceImpl
 				companyId, name, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByC_LikeN(
+					companyId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator));
+		}
+
 		name = Objects.toString(name, "");
 
 		StringBundler sb = null;
@@ -5111,6 +5133,14 @@ public class UserGroupPersistenceImpl
 	public int filterCountByC_LikeN(long companyId, String name) {
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByC_LikeN(companyId, name);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByC_LikeN(companyId, name);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
 		}
 
 		name = Objects.toString(name, "");
@@ -5567,6 +5597,15 @@ public class UserGroupPersistenceImpl
 				orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGtU_C_P(
+					userGroupId, companyId, parentUserGroupId,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, orderByComparator));
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -5755,6 +5794,15 @@ public class UserGroupPersistenceImpl
 			return countByGtU_C_P(userGroupId, companyId, parentUserGroupId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<UserGroup> userGroups = findByGtU_C_P(
+				userGroupId, companyId, parentUserGroupId);
+
+			userGroups = InlineSQLHelperUtil.filter(userGroups);
+
+			return userGroups.size();
+		}
+
 		StringBundler sb = new StringBundler(4);
 
 		sb.append(_FILTER_SQL_COUNT_USERGROUP_WHERE);
@@ -5809,7 +5857,6 @@ public class UserGroupPersistenceImpl
 		"userGroup.parentUserGroupId = ?";
 
 	private FinderPath _finderPathFetchByERC_C;
-	private FinderPath _finderPathCountByERC_C;
 
 	/**
 	 * Returns the user group where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchUserGroupException</code> if it could not be found.
@@ -5998,70 +6045,13 @@ public class UserGroupPersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		try (SafeCloseable safeCloseable =
-				CTPersistenceHelperUtil.setCTCollectionIdWithSafeCloseable(
-					UserGroup.class)) {
+		UserGroup userGroup = fetchByERC_C(externalReferenceCode, companyId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_C;
-
-			Object[] finderArgs = new Object[] {
-				externalReferenceCode, companyId
-			};
-
-			Long count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_USERGROUP_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(companyId);
-
-					count = (Long)query.uniqueResult();
-
-					FinderCacheUtil.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (userGroup == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
@@ -6203,8 +6193,6 @@ public class UserGroupPersistenceImpl
 			};
 
 			FinderCacheUtil.putResult(
-				_finderPathCountByC_N, args, Long.valueOf(1));
-			FinderCacheUtil.putResult(
 				_finderPathFetchByC_N, args, userGroupModelImpl);
 
 			args = new Object[] {
@@ -6212,8 +6200,6 @@ public class UserGroupPersistenceImpl
 				userGroupModelImpl.getCompanyId()
 			};
 
-			FinderCacheUtil.putResult(
-				_finderPathCountByERC_C, args, Long.valueOf(1));
 			FinderCacheUtil.putResult(
 				_finderPathFetchByERC_C, args, userGroupModelImpl);
 		}
@@ -7911,6 +7897,7 @@ public class UserGroupPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -7922,18 +7909,19 @@ public class UserGroupPersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("parentUserGroupId");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("description");
-		ctStrictColumnNames.add("addedByLDAPImport");
-		ctStrictColumnNames.add("groups_");
-		ctStrictColumnNames.add("teams");
-		ctStrictColumnNames.add("users");
+		ctMergeColumnNames.add("parentUserGroupId");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("description");
+		ctMergeColumnNames.add("addedByLDAPImport");
+		ctMergeColumnNames.add("groups_");
+		ctMergeColumnNames.add("teams");
+		ctMergeColumnNames.add("users");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("userGroupId"));
 		_ctColumnNamesMap.put(
@@ -8059,11 +8047,6 @@ public class UserGroupPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "name"}, true);
 
-		_finderPathCountByC_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_N",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "name"}, false);
-
 		_finderPathWithPaginationFindByC_LikeN = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_LikeN",
 			new String[] {
@@ -8100,11 +8083,6 @@ public class UserGroupPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
-
-		_finderPathCountByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, false);
 
 		UserGroupUtil.setPersistence(this);
 	}

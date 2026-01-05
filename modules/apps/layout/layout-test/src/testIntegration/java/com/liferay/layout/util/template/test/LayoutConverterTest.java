@@ -18,7 +18,6 @@ import com.liferay.layout.util.template.LayoutConverterRegistry;
 import com.liferay.layout.util.template.LayoutData;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -29,14 +28,17 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -51,7 +53,10 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.GenericPortlet;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -61,8 +66,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.portlet.GenericPortlet;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -646,6 +649,87 @@ public class LayoutConverterTest {
 	}
 
 	@Test
+	@TestInfo("LPS-105943")
+	public void testGetConversionWarningMessagesWithNestedApplicationsWidgetAndWidgetPageCustomizable()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(
+			_group.getGroupId(),
+			UnicodePropertiesBuilder.put(
+				LayoutConstants.CUSTOMIZABLE_LAYOUT, Boolean.TRUE.toString()
+			).put(
+				LayoutTypePortletConstants.NESTED_COLUMN_IDS,
+				StringUtil.randomString()
+			).buildString());
+
+		LayoutTestUtil.addPortletToLayout(
+			layout, LayoutTypePortletConstants.NESTED_COLUMN_IDS);
+
+		layout = _layoutLocalService.fetchLayout(layout.getPlid());
+
+		LayoutConverter layoutConverter =
+			_layoutConverterRegistry.getLayoutConverter(
+				_getLayoutTemplateId(layout));
+
+		LayoutConversionResult layoutConversionResult = layoutConverter.convert(
+			layout, LocaleUtil.getSiteDefault());
+
+		String[] conversionWarningMessages =
+			layoutConversionResult.getConversionWarningMessages();
+
+		Assert.assertEquals(
+			Arrays.toString(conversionWarningMessages), 2,
+			conversionWarningMessages.length);
+		Assert.assertTrue(
+			ArrayUtil.contains(
+				conversionWarningMessages,
+				StringBundler.concat(
+					"This page uses nested applications widgets. All widgets ",
+					"that were inside a nested application widget have been ",
+					"placed in a single column and may require manual ",
+					"reorganization.")));
+		Assert.assertTrue(
+			ArrayUtil.contains(
+				conversionWarningMessages,
+				"This page has customizable columns. This capability is not " +
+					"supported for content pages and will be lost if the " +
+						"conversion draft is published."));
+	}
+
+	@Test
+	@TestInfo("LPS-105943")
+	public void testGetConversionWarningMessagesWithNonstandarLayout()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(
+			_group.getGroupId(),
+			UnicodePropertiesBuilder.put(
+				LayoutTypePortletConstants.LAYOUT_TEMPLATE_ID,
+				"custom-template-id"
+			).buildString());
+
+		LayoutConverter layoutConverter =
+			_layoutConverterRegistry.getLayoutConverter(
+				_getLayoutTemplateId(layout));
+
+		LayoutConversionResult layoutConversionResult = layoutConverter.convert(
+			layout, LocaleUtil.getSiteDefault());
+
+		String[] conversionWarningMessages =
+			layoutConversionResult.getConversionWarningMessages();
+
+		Assert.assertEquals(
+			Arrays.toString(conversionWarningMessages), 1,
+			conversionWarningMessages.length);
+		Assert.assertTrue(
+			ArrayUtil.contains(
+				conversionWarningMessages,
+				"This page uses a custom page layout. All widgets have been " +
+					"placed in a single column and will require manual " +
+						"reorganization."));
+	}
+
+	@Test
 	public void testIsConvertibleTrue() throws Exception {
 		Layout layout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId());
@@ -842,11 +926,11 @@ public class LayoutConverterTest {
 	private void _registerTestPortlet(String portletName) {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
-				javax.portlet.Portlet.class, new TestPortlet(),
+				jakarta.portlet.Portlet.class, new TestPortlet(),
 				HashMapDictionaryBuilder.put(
 					"com.liferay.portlet.instanceable", "true"
 				).put(
-					"javax.portlet.name", portletName
+					"jakarta.portlet.name", portletName
 				).build()));
 	}
 
@@ -961,8 +1045,8 @@ public class LayoutConverterTest {
 				for (FragmentEntryLink fragmentEntryLink :
 						fragmentEntryLinksInColumn) {
 
-					JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-						fragmentEntryLink.getEditableValues());
+					JSONObject jsonObject =
+						fragmentEntryLink.getEditableValuesJSONObject();
 
 					String portletId = jsonObject.getString("portletId");
 
@@ -1183,6 +1267,9 @@ public class LayoutConverterTest {
 
 	@Inject
 	private LayoutConverterRegistry _layoutConverterRegistry;
+
+	@Inject
+	private LayoutLocalService _layoutLocalService;
 
 	@Inject
 	private PortletLocalService _portletLocalService;

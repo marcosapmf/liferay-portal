@@ -8,7 +8,6 @@
 <%@ include file="/publications/init.jsp" %>
 
 <%
-portletDisplay.setBeta(true);
 portletDisplay.setShowBackIcon(true);
 
 ViewRelatedEntriesDisplayContext viewRelatedEntriesDisplayContext = (ViewRelatedEntriesDisplayContext)request.getAttribute(CTWebKeys.VIEW_RELATED_ENTRIES_DISPLAY_CONTEXT);
@@ -18,12 +17,20 @@ portletDisplay.setURLBack(viewRelatedEntriesDisplayContext.getRedirectURL());
 renderResponse.setTitle(LanguageUtil.get(request, "move-changes"));
 %>
 
-<clay:container-fluid
-	cssClass="publications-related-entries-container"
->
+<div class="publications-related-entries-container">
 	<div class="sheet">
 		<clay:sheet-section>
-			<h2 class="sheet-title"><liferay-ui:message key="moved-changes" /></h2>
+			<clay:content-row>
+				<clay:content-col
+					expand="<%= true %>"
+				>
+					<h2 class="sheet-title"><liferay-ui:message key="moved-changes" /></h2>
+				</clay:content-col>
+
+				<clay:content-col>
+					<aui:input id="showHideable" inlineLabel="right" label='<%= LanguageUtil.get(request, "show-all-items") %>' name="show-hideable" type="toggle-switch" value="<%= viewRelatedEntriesDisplayContext.isShowHideable() %>" />
+				</clay:content-col>
+			</clay:content-row>
 
 			<c:if test="<%= SessionErrors.contains(renderRequest, CTCollectionStatusException.class) %>">
 				<clay:alert
@@ -65,9 +72,27 @@ renderResponse.setTitle(LanguageUtil.get(request, "move-changes"));
 			</clay:sheet-footer>
 		</aui:form>
 	</div>
-</clay:container-fluid>
+</div>
 
 <aui:script use="aui-base">
+	const showAllItemsToggleSelector = document.getElementById(
+		'<portlet:namespace />showHideable'
+	);
+
+	showAllItemsToggleSelector.addEventListener('change', (event) => {
+		var showHideableToggleState =
+			'<%= !viewRelatedEntriesDisplayContext.isShowHideable() %>';
+
+		let url = new URL(window.location.href);
+
+		url.searchParams.set(
+			'<portlet:namespace />showHideable',
+			showHideableToggleState
+		);
+
+		window.location.href = url;
+	});
+
 	const toPublicationSelector = document.getElementById(
 		'<portlet:namespace />toPublication'
 	);

@@ -72,12 +72,12 @@
 </tr>
 <tr>
 	<td>ADD_SHIPMENT_ITEMS_CHECKBOX</td>
-	<td>//div[contains(text(), '${key_productSku}')]/preceding-sibling::div[@class='dnd-td item-selector']//input[@type='checkbox']</td>
+	<td>//*[contains(text(), '${key_productSku}')]/preceding-sibling::td//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ADD_SHIPMENT_ITEMS_CHECKBOX_WITH_ORDER_ID</td>
-	<td>//div[contains(text(), '${key_productSku}')]/../div[contains(text(), '${key_orderId}')]/preceding-sibling::div[@class='dnd-td item-selector']//input[@type='checkbox']</td>
+	<td>//*[contains(text(), '${key_productSku}')]/../td[contains(text(), '${key_orderId}')]/preceding-sibling::td//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -297,7 +297,7 @@
 </tr>
 <tr>
 	<td>FDS_SELECT_ALL</td>
-	<td>//input[contains(@name,'table-head-selector') and (@type='checkbox')]</td>
+	<td>//input[contains(@name,'items-selector') and (@type='checkbox')]</td>
 	<td></td>
 </tr>
 <tr>

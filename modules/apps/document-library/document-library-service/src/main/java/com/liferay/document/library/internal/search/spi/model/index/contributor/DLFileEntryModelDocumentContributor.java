@@ -8,22 +8,26 @@ package com.liferay.document.library.internal.search.spi.model.index.contributor
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.document.library.internal.configuration.DLIndexerConfiguration;
+import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadataTable;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.kernel.store.DLStore;
 import com.liferay.document.library.kernel.store.DLStoreRequest;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.Value;
-import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesIndexer;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -31,12 +35,12 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentHelper;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.ReindexCacheThreadLocal;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.RelatedEntryIndexerRegistry;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -46,27 +50,28 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextExtractor;
-import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.search.ml.embedding.text.TextEmbeddingDocumentContributor;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.trash.TrashHelper;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.nio.charset.StandardCharsets;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -95,7 +100,7 @@ public class DLFileEntryModelDocumentContributor
 
 			_addFile(
 				document, Field.getLocalizedName(defaultLocale, Field.CONTENT),
-				dlFileEntry);
+				dlFileEntry, dlFileVersion);
 
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, dlFileEntry.getFileEntryTypeId());
@@ -126,9 +131,6 @@ public class DLFileEntryModelDocumentContributor
 
 			document.addKeyword(
 				"dataRepositoryId", dlFileEntry.getDataRepositoryId());
-			document.addText(
-				"ddmContent",
-				_extractDDMContent(dlFileVersion, LocaleUtil.getSiteDefault()));
 			document.addKeyword("extension", dlFileEntry.getExtension());
 			document.addKeyword(
 				"fileEntryTypeId", dlFileEntry.getFileEntryTypeId());
@@ -146,7 +148,7 @@ public class DLFileEntryModelDocumentContributor
 			document.addNumber(
 				"versionCount", GetterUtil.getDouble(dlFileEntry.getVersion()));
 
-			_addFileEntryTypeAttributes(document, dlFileVersion);
+			_processDDMIndexer(document, dlFileVersion.getFileVersionId());
 
 			if (dlFileEntry.isInHiddenFolder()) {
 				List<RelatedEntryIndexer> relatedEntryIndexers =
@@ -184,17 +186,36 @@ public class DLFileEntryModelDocumentContributor
 	}
 
 	@Activate
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		modified(properties);
+
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, DDMFormValuesIndexer.class);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerList.close();
+	}
+
 	@Modified
-	protected void activate(Map<String, Object> properties) {
+	protected void modified(Map<String, Object> properties) {
 		_dlIndexerConfiguration = ConfigurableUtil.createConfigurable(
 			DLIndexerConfiguration.class, properties);
 	}
 
 	private void _addFile(
-		Document document, String fieldName, DLFileEntry dlFileEntry) {
+		Document document, String fieldName, DLFileEntry dlFileEntry,
+		DLFileVersion dlFileVersion) {
+
+		if (!_isIndexContent(dlFileEntry)) {
+			return;
+		}
 
 		try {
-			String text = _extractText(dlFileEntry);
+			String text = _extractText(dlFileEntry, dlFileVersion);
 
 			if (text != null) {
 				document.addText(fieldName, text);
@@ -213,149 +234,70 @@ public class DLFileEntryModelDocumentContributor
 		}
 	}
 
-	private void _addFileEntryTypeAttributes(
-		Document document, DLFileVersion dlFileVersion) {
-
-		List<DLFileEntryMetadata> dlFileEntryMetadatas =
-			_dlFileEntryMetadataLocalService.getFileVersionFileEntryMetadatas(
-				dlFileVersion.getFileVersionId());
-
-		for (DLFileEntryMetadata dlFileEntryMetadata : dlFileEntryMetadatas) {
-			try {
-				DDMFormValues ddmFormValues =
-					_ddmStorageEngineManager.getDDMFormValues(
-						dlFileEntryMetadata.getDDMStorageId());
-
-				if (ddmFormValues != null) {
-					DDMStructure ddmStructure =
-						_ddmStructureLocalService.getStructure(
-							dlFileEntryMetadata.getDDMStructureId());
-
-					_ddmIndexer.addAttributes(
-						document, ddmStructure, ddmFormValues);
-
-					if (!FeatureFlagManagerUtil.isEnabled(
-							dlFileVersion.getCompanyId(), "LPD-30087")) {
-
-						continue;
-					}
-
-					Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
-						ddmFormValues.getDDMFormFieldValuesMap(false);
-
-					long tiffImageLength = _getDDMFormFieldsValueValue(
-						ddmFormFieldValuesMap.get("TIFF_IMAGE_LENGTH"));
-
-					if (tiffImageLength <= 0) {
-						continue;
-					}
-
-					long tiffImageWidth = _getDDMFormFieldsValueValue(
-						ddmFormFieldValuesMap.get("TIFF_IMAGE_WIDTH"));
-
-					if (tiffImageWidth <= 0) {
-						continue;
-					}
-
-					String aspectRatio = "square";
-
-					if (tiffImageLength > tiffImageWidth) {
-						aspectRatio = "tall";
-					}
-					else if (tiffImageLength < tiffImageWidth) {
-						aspectRatio = "wide";
-					}
-
-					document.addText("aspectRatio", aspectRatio);
-					document.addNumber("imageLength", tiffImageLength);
-					document.addNumber("imageWidth", tiffImageWidth);
-				}
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to retrieve metadata values", exception);
-				}
-			}
-		}
-	}
-
-	private String _extractDDMContent(
-		DLFileVersion dlFileVersion, Locale locale) {
-
-		List<DLFileEntryMetadata> dlFileEntryMetadatas =
-			_dlFileEntryMetadataLocalService.getFileVersionFileEntryMetadatas(
-				dlFileVersion.getFileVersionId());
-
-		StringBundler sb = new StringBundler(dlFileEntryMetadatas.size() * 2);
-
-		for (DLFileEntryMetadata dlFileEntryMetadata : dlFileEntryMetadatas) {
-			try {
-				DDMFormValues ddmFormValues =
-					_ddmStorageEngineManager.getDDMFormValues(
-						dlFileEntryMetadata.getDDMStorageId());
-
-				if (ddmFormValues != null) {
-					DDMStructure ddmStructure =
-						_ddmStructureLocalService.getStructure(
-							dlFileEntryMetadata.getDDMStructureId());
-
-					sb.append(
-						_ddmIndexer.extractIndexableAttributes(
-							ddmStructure, ddmFormValues, locale));
-
-					sb.append(StringPool.SPACE);
-				}
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to retrieve metadata values", exception);
-				}
-			}
-		}
-
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
-		}
-
-		return sb.toString();
-	}
-
-	private String _extractText(DLFileEntry dlFileEntry)
+	private String _extractText(
+			DLFileEntry dlFileEntry, DLFileVersion dlFileVersion)
 		throws IOException, PortalException {
 
-		String indexVersionLabel = _getIndexVersionLabel(dlFileEntry);
+		int dlFileIndexingMaxSize = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.DL_FILE_INDEXING_MAX_SIZE));
 
-		if (_dlIndexerConfiguration.cacheTextExtraction() &&
-			_dlStore.hasFile(
-				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), indexVersionLabel)) {
+		String indexVersionLabel = dlFileVersion.getStoreFileName() + ".index";
 
-			String string = StreamUtil.toString(
-				_dlStore.getFileAsStream(
+		if (_dlIndexerConfiguration.cacheTextExtraction()) {
+			try {
+				String string = StreamUtil.toString(
+					_dlStore.getFileAsStream(
+						dlFileEntry.getCompanyId(),
+						dlFileEntry.getDataRepositoryId(),
+						dlFileEntry.getName(), indexVersionLabel));
+
+				if (string.length() <= dlFileIndexingMaxSize) {
+					if (string.isEmpty()) {
+						return null;
+					}
+
+					return string;
+				}
+
+				_dlStore.deleteFile(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
-					indexVersionLabel));
-
-			if (string.length() <= PropsValues.DL_FILE_INDEXING_MAX_SIZE) {
-				return string;
+					indexVersionLabel);
 			}
-
-			_dlStore.deleteFile(
-				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), indexVersionLabel);
+			catch (NoSuchFileException noSuchFileException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to get cached text extraction" +
+							noSuchFileException);
+				}
+			}
 		}
 
-		InputStream inputStream = _getInputStream(dlFileEntry);
+		String text = null;
 
-		if (inputStream == null) {
-			return null;
+		try {
+			text = _textExtractor.extractText(
+				_inputStreamSanitizer.sanitize(
+					dlFileVersion.getContentStream(false)),
+				dlFileIndexingMaxSize);
 		}
-
-		String text = _textExtractor.extractText(
-			inputStream, PropsValues.DL_FILE_INDEXING_MAX_SIZE);
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to get input stream", portalException);
+			}
+		}
 
 		if (_dlIndexerConfiguration.cacheTextExtraction() &&
-			Validator.isNotNull(text) && !_isReadOnlyCtCollection()) {
+			!_isReadOnlyCtCollection()) {
+
+			byte[] bytes = null;
+
+			if (text == null) {
+				bytes = new byte[0];
+			}
+			else {
+				bytes = text.getBytes(StandardCharsets.UTF_8);
+			}
 
 			_dlStore.addFile(
 				DLStoreRequest.builder(
@@ -364,74 +306,141 @@ public class DLFileEntryModelDocumentContributor
 				).versionLabel(
 					indexVersionLabel
 				).build(),
-				text.getBytes(StandardCharsets.UTF_8));
+				bytes);
 		}
 
 		return text;
 	}
 
-	private long _getDDMFormFieldsValueValue(
-		List<DDMFormFieldValue> ddmFormFieldValues) {
+	private Map<DDMStructure, DDMFormValues> _getDDMFormValues(
+		long dlFileVersionId) {
 
-		if (ListUtil.isEmpty(ddmFormFieldValues)) {
-			return 0;
-		}
+		Map<Long, Map<DDMStructure, DDMFormValues>> ddmFormValuesMaps =
+			ReindexCacheThreadLocal.getGlobalReindexCache(
+				() -> _dlFileEntryMetadataLocalService.dslQueryCount(
+					DSLQueryFactoryUtil.count(
+					).from(
+						DLFileEntryMetadataTable.INSTANCE
+					),
+					false),
+				DLFileEntryModelDocumentContributor.class.getName(),
+				count -> {
+					Map<Long, Map<DDMStructure, DDMFormValues>>
+						localDDMFormValuesMaps = new HashMap<>();
 
-		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+					if (count == 0) {
+						return localDDMFormValuesMaps;
+					}
 
-		if (ddmFormFieldValue == null) {
-			return 0;
-		}
+					DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+						DLFileEntryMetadataTable.INSTANCE.DDMStructureId,
+						DLFileEntryMetadataTable.INSTANCE.DDMStorageId,
+						DLFileEntryMetadataTable.INSTANCE.fileVersionId
+					).from(
+						DLFileEntryMetadataTable.INSTANCE
+					);
 
-		Value value = ddmFormFieldValue.getValue();
+					Map<Long, DDMStructure> ddmStructureMap = new HashMap<>();
+					Map<DDMStructure, DDMFormValues> ddmFormValuesMap =
+						new HashMap<>();
 
-		if (value == null) {
-			return 0;
-		}
+					for (Object[] values :
+							_dlFileEntryMetadataLocalService.
+								<List<Object[]>>dslQuery(dslQuery, false)) {
 
-		return GetterUtil.getLong(value.getString(LocaleUtil.ROOT));
-	}
+						try {
+							Long ddmStructureId = (Long)values[0];
 
-	private String _getIndexVersionLabel(DLFileEntry dlFileEntry)
-		throws PortalException {
+							DDMStructure ddmStructure = ddmStructureMap.get(
+								ddmStructureId);
 
-		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+							if (ddmStructure == null) {
+								ddmStructure =
+									_ddmStructureLocalService.getDDMStructure(
+										ddmStructureId);
 
-		return dlFileVersion.getStoreFileName() + ".index";
-	}
+								ddmStructureMap.put(
+									ddmStructureId, ddmStructure);
+							}
 
-	private InputStream _getInputStream(DLFileEntry dlFileEntry) {
-		try {
-			if (!_isIndexContent(dlFileEntry)) {
-				return null;
+							DDMFormValues ddmFormValues = ddmFormValuesMap.get(
+								ddmStructure);
+
+							if (ddmFormValues == null) {
+								ddmFormValues =
+									_ddmStorageEngineManager.getDDMFormValues(
+										(Long)values[1],
+										ddmStructure.getDDMForm(false));
+
+								ddmFormValuesMap.put(
+									ddmStructure, ddmFormValues);
+							}
+
+							Map<DDMStructure, DDMFormValues>
+								localDDMFormValues =
+									localDDMFormValuesMaps.computeIfAbsent(
+										(Long)values[2],
+										key -> new HashMap<>());
+
+							localDDMFormValues.put(ddmStructure, ddmFormValues);
+						}
+						catch (Exception exception) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(
+									"Unable to retrieve metadata values",
+									exception);
+							}
+						}
+					}
+
+					return localDDMFormValuesMaps;
+				});
+
+		if (ddmFormValuesMaps == null) {
+			Map<DDMStructure, DDMFormValues> ddmFormValuesMap = new HashMap<>();
+
+			List<DLFileEntryMetadata> dlFileEntryMetadatas =
+				_dlFileEntryMetadataLocalService.
+					getFileVersionFileEntryMetadatas(dlFileVersionId);
+
+			for (DLFileEntryMetadata dlFileEntryMetadata :
+					dlFileEntryMetadatas) {
+
+				try {
+					DDMStructure ddmStructure =
+						_ddmStructureLocalService.getStructure(
+							dlFileEntryMetadata.getDDMStructureId());
+
+					DDMFormValues ddmFormValues =
+						_ddmStorageEngineManager.getDDMFormValues(
+							dlFileEntryMetadata.getDDMStorageId(),
+							ddmStructure.getDDMForm(false));
+
+					if (ddmFormValues != null) {
+						ddmFormValuesMap.put(ddmStructure, ddmFormValues);
+					}
+				}
+				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							"Unable to retrieve metadata values", exception);
+					}
+				}
 			}
 
-			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
-
-			return _inputStreamSanitizer.sanitize(
-				dlFileVersion.getContentStream(false));
+			return ddmFormValuesMap;
 		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get input stream", portalException);
-			}
 
-			return null;
-		}
+		return ddmFormValuesMaps.getOrDefault(
+			dlFileVersionId, Collections.emptyMap());
 	}
 
 	private boolean _isIndexContent(DLFileEntry dlFileEntry) {
 		String[] ignoreExtensions = _prefsProps.getStringArray(
 			PropsKeys.DL_FILE_INDEXING_IGNORE_EXTENSIONS, StringPool.COMMA);
 
-		if (ArrayUtil.contains(
-				ignoreExtensions,
-				StringPool.PERIOD + dlFileEntry.getExtension())) {
-
-			return false;
-		}
-
-		return true;
+		return !ArrayUtil.contains(
+			ignoreExtensions, StringPool.PERIOD + dlFileEntry.getExtension());
 	}
 
 	private boolean _isReadOnlyCtCollection() throws PortalException {
@@ -442,13 +451,44 @@ public class DLFileEntryModelDocumentContributor
 		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
 			CTCollectionThreadLocal.getCTCollectionId());
 
-		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
-			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING)) {
+		return ctCollection.isReadOnly();
+	}
 
-			return true;
+	private void _processDDMIndexer(Document document, long dlFileVersionId) {
+		Map<DDMStructure, DDMFormValues> ddmFormValuesMap = _getDDMFormValues(
+			dlFileVersionId);
+
+		Locale locale = LocaleUtil.getSiteDefault();
+
+		StringBundler sb = new StringBundler(ddmFormValuesMap.size() * 2);
+
+		for (Map.Entry<DDMStructure, DDMFormValues> entry :
+				ddmFormValuesMap.entrySet()) {
+
+			DDMStructure ddmStructure = entry.getKey();
+
+			DDMFormValues ddmFormValues = entry.getValue();
+
+			sb.append(
+				_ddmIndexer.extractIndexableAttributes(
+					ddmStructure, ddmFormValues, locale));
+
+			sb.append(StringPool.SPACE);
+
+			for (DDMFormValuesIndexer ddmFormValuesIndexer :
+					_serviceTrackerList) {
+
+				ddmFormValuesIndexer.index(document, ddmFormValues);
+			}
+
+			_ddmIndexer.addAttributes(document, ddmStructure, ddmFormValues);
 		}
 
-		return false;
+		if (sb.index() > 0) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		document.addText("ddmContent", sb.toString());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -456,9 +496,6 @@ public class DLFileEntryModelDocumentContributor
 
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
-
-	@Reference
-	private DDMFieldLocalService _ddmFieldLocalService;
 
 	@Reference
 	private DDMIndexer _ddmIndexer;
@@ -488,6 +525,8 @@ public class DLFileEntryModelDocumentContributor
 
 	@Reference
 	private RelatedEntryIndexerRegistry _relatedEntryIndexerRegistry;
+
+	private ServiceTrackerList<DDMFormValuesIndexer> _serviceTrackerList;
 
 	@Reference
 	private TextEmbeddingDocumentContributor _textEmbeddingDocumentContributor;

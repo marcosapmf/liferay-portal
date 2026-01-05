@@ -8,6 +8,7 @@ package com.liferay.client.extension.web.internal.display.context;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.annotation.CETProperty;
 import com.liferay.client.extension.web.internal.display.context.util.CETLabelUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CamelCaseUtil;
@@ -17,6 +18,10 @@ import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
@@ -24,10 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Iván Zaera Avellón
@@ -77,11 +78,16 @@ public class ViewClientExtensionEntryDisplayContext<T extends CET> {
 				continue;
 			}
 
-			for (Method method : interfaceClass.getDeclaredMethods()) {
-				if (method.getAnnotation(CETProperty.class) != null) {
-					methods.add(method);
-				}
-			}
+			methods.addAll(
+				TransformUtil.transformToList(
+					interfaceClass.getDeclaredMethods(),
+					method -> {
+						if (method.getAnnotation(CETProperty.class) != null) {
+							return method;
+						}
+
+						return null;
+					}));
 		}
 
 		Collections.sort(

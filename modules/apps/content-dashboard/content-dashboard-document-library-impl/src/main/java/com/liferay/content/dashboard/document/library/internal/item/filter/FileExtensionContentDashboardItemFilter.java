@@ -26,15 +26,15 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -72,7 +72,7 @@ public class FileExtensionContentDashboardItemFilter
 		).setActive(
 			ListUtil.isNotEmpty(getParameterValues())
 		).setLabel(
-			_language.get(_httpServletRequest, "extension")
+			_language.get(_httpServletRequest, "extension[file]")
 		).build();
 	}
 
@@ -110,7 +110,7 @@ public class FileExtensionContentDashboardItemFilter
 
 	@Override
 	public String getParameterLabel(Locale locale) {
-		return _language.get(locale, "extension");
+		return _language.get(locale, "extension[file]");
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public class FileExtensionContentDashboardItemFilter
 		try {
 			PortletRequest portletRequest =
 				(PortletRequest)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_REQUEST);
+					JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 			RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 				RequestBackedPortletURLFactoryUtil.create(portletRequest);
@@ -149,7 +149,7 @@ public class FileExtensionContentDashboardItemFilter
 
 			PortletResponse portletResponse =
 				(PortletResponse)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE);
+					JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 			return PortletURLBuilder.create(
 				_itemSelector.getItemSelectorURL(
@@ -182,7 +182,7 @@ public class FileExtensionContentDashboardItemFilter
 	private String _getRedirectURL() {
 		PortletResponse portletResponse =
 			(PortletResponse)_httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
+				JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		return HttpComponentsUtil.removeParameter(
 			_portal.getCurrentCompleteURL(_httpServletRequest),

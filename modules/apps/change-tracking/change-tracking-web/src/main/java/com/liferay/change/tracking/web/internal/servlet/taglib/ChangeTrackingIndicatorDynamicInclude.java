@@ -5,9 +5,7 @@
 
 package com.liferay.change.tracking.web.internal.servlet.taglib;
 
-import com.liferay.application.list.PanelAppRegistry;
-import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
+import com.liferay.change.tracking.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
@@ -16,19 +14,23 @@ import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.model.CTRemote;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
+import com.liferay.change.tracking.service.CTPreferencesService;
 import com.liferay.change.tracking.service.CTRemoteLocalService;
 import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
-import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.change.tracking.CTCollectionPreviewThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -41,12 +43,14 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
-import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -54,6 +58,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -62,21 +67,22 @@ import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
 import com.liferay.taglib.util.HtmlTopTag;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspException;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -97,6 +103,10 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
+
+		if (CTCollectionPreviewThreadLocal.isIndicatorEnabled()) {
+			return;
+		}
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -131,6 +141,10 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 		htmlTopTag.setPosition("auto");
 
 		try {
+			writer.write("<div class=\"d-flex flex-column\">");
+			writer.write(
+				"<nav aria-label=\"Publication Menu\" class=\"cadmin\">");
+
 			htmlTopTag.doBodyTag(
 				httpServletRequest, httpServletResponse,
 				pageContext -> {
@@ -143,8 +157,11 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 									_servletContext.getContextPath(),
 									"/publications/css",
 									"/ChangeTrackingIndicator.css")));
+						writer.write(StringPool.QUOTE);
 						writer.write(
-							"\" rel=\"stylesheet\" type=\"text/css\" />");
+							ContentSecurityPolicyNonceProviderUtil.getNonce(
+								httpServletRequest));
+						writer.write(" rel=\"stylesheet\" type=\"text/css\"/>");
 					}
 					catch (IOException ioException) {
 						ReflectionUtil.throwException(ioException);
@@ -152,20 +169,16 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				});
 
 			writer.write(
-				"<div class=\"change-tracking-indicator\"><div>" +
-					"<button class=\"change-tracking-indicator-button\">" +
-						"<span className=\"change-tracking-indicator-title\">");
-
-			CTCollection ctCollection = null;
+				"<div class=\"change-tracking-indicator\"><div><button " +
+					"class=\"change-tracking-indicator-button\"><span " +
+						"className=\"change-tracking-indicator-title\">");
 
 			CTPreferences ctPreferences =
 				_ctPreferencesLocalService.fetchCTPreferences(
 					themeDisplay.getCompanyId(), themeDisplay.getUserId());
 
-			if (ctPreferences != null) {
-				ctCollection = _ctCollectionLocalService.fetchCTCollection(
-					ctPreferences.getCtCollectionId());
-			}
+			CTCollection ctCollection = _getCTCollection(
+				httpServletRequest, ctPreferences);
 
 			if (ctCollection == null) {
 				writer.write(
@@ -195,14 +208,15 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 						ctConfiguration.productionOnlyApplication(), portletId),
 					_ctSettingsConfigurationHelper.isSandboxEnabled(
 						themeDisplay.getCompanyId()),
-					_isShowContextChangePopover(portletId, themeDisplay),
+					_isShowContextChangePopover(
+						httpServletRequest, themeDisplay),
 					themeDisplay,
 					Validator.isNotNull(portletId) &&
 					ArrayUtil.contains(
 						ctConfiguration.unsupportedApplication(), portletId)),
 				httpServletRequest, writer);
 
-			writer.write("</div>");
+			writer.write("</div></nav></div>");
 		}
 		catch (JspException | PortalException exception) {
 			ReflectionUtil.throwException(exception);
@@ -212,7 +226,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
 		dynamicIncludeRegistry.register(
-			"com.liferay.product.navigation.taglib#/page.jsp#pre");
+			"/html/common/themes/body_top.jsp#post");
 	}
 
 	@Activate
@@ -220,6 +234,31 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	protected void activate(Map<String, Object> properties) {
 		_defaultCTConfiguration = ConfigurableUtil.createConfigurable(
 			CTConfiguration.class, properties);
+	}
+
+	private CTCollection _getCTCollection(
+		HttpServletRequest httpServletRequest, CTPreferences ctPreferences) {
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		long ctCollectionId = GetterUtil.getLong(
+			httpSession.getAttribute(CTWebKeys.SELECTED_CT_COLLECTION_ID));
+
+		if (ctCollectionId > 0) {
+			CTCollection ctCollection =
+				_ctCollectionLocalService.fetchCTCollection(ctCollectionId);
+
+			if (ctCollection != null) {
+				return ctCollection;
+			}
+		}
+
+		if (ctPreferences != null) {
+			return _ctCollectionLocalService.fetchCTCollection(
+				ctPreferences.getCtCollectionId());
+		}
+
+		return null;
 	}
 
 	private CTConfiguration _getCTConfiguration(long companyId) {
@@ -299,6 +338,12 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			"spritemap", themeDisplay.getPathThemeSpritemap()
 		).build();
 
+		boolean cms = _isCMSContextChange(httpServletRequest);
+
+		if (cms) {
+			data.put("cms", true);
+		}
+
 		long ctCollectionId = CTConstants.CT_COLLECTION_ID_PRODUCTION;
 
 		if (ctCollection != null) {
@@ -307,7 +352,30 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			data.put("iconClass", "change-tracking-indicator-icon-publication");
 			data.put("iconName", "radio-button");
 
-			if (productionOnlyApplication) {
+			if (cms) {
+				data.put(
+					"title",
+					StringBundler.concat(
+						ctCollection.getName(), " (",
+						_language.get(
+							themeDisplay.getLocale(), "production-only-title"),
+						")"));
+
+				if (_isShowCMSWarningPopover(httpServletRequest)) {
+					data.put(
+						"warningBody",
+						_language.get(
+							themeDisplay.getLocale(),
+							"publication-cms-warning"));
+					data.put("warningButton", false);
+					data.put(
+						"warningHeader",
+						_language.get(
+							themeDisplay.getLocale(), "production-only-title"));
+					data.put("warningLearnLink", null);
+				}
+			}
+			else if (productionOnlyApplication) {
 				data.put(
 					"title",
 					StringBundler.concat(
@@ -316,15 +384,15 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 							themeDisplay.getLocale(), "production-only-title"),
 						")"));
 				data.put(
-					"warningHeader",
-					_language.get(
-						themeDisplay.getLocale(), "production-only-title"));
-				data.put(
 					"warningBody",
 					_language.get(
 						themeDisplay.getLocale(), "production-only-message"));
-				data.put("warningLearnLink", null);
 				data.put("warningButton", false);
+				data.put(
+					"warningHeader",
+					_language.get(
+						themeDisplay.getLocale(), "production-only-title"));
+				data.put("warningLearnLink", null);
 			}
 			else if (unsupportedApplication) {
 				data.put(
@@ -336,31 +404,33 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 							"unsupported-application-title"),
 						")"));
 				data.put(
-					"warningHeader",
-					_language.get(
-						themeDisplay.getLocale(),
-						"unsupported-application-title"));
-				data.put(
 					"warningBody",
 					_language.get(
 						themeDisplay.getLocale(),
 						"unsupported-application-message"));
-				data.put("warningLearnLink", null);
 				data.put("warningButton", true);
-			}
-			else if (showContextChangePopover) {
-				data.put("title", ctCollection.getName());
 				data.put(
 					"warningHeader",
 					_language.get(
 						themeDisplay.getLocale(),
-						"keep-working-in-this-publication"));
+						"unsupported-application-title"));
+				data.put("warningLearnLink", null);
+			}
+			else if (showContextChangePopover) {
+				data.put("contextChangeButtons", true);
+				data.put("title", ctCollection.getName());
 				data.put(
 					"warningBody",
 					_language.get(
 						themeDisplay.getLocale(),
 						"you-just-switched-contexts.-do-you-want-to-keep-" +
 							"working-in-this-publication"));
+				data.put("warningButton", true);
+				data.put(
+					"warningHeader",
+					_language.get(
+						themeDisplay.getLocale(),
+						"keep-working-in-this-publication"));
 			}
 			else {
 				data.put("title", ctCollection.getName());
@@ -402,7 +472,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				}
 			}
 			else {
-				if (!sandboxOnlyEnabled ||
+				if (cms || !sandboxOnlyEnabled ||
 					PortletPermissionUtil.contains(
 						themeDisplay.getPermissionChecker(),
 						CTPortletKeys.PUBLICATIONS,
@@ -417,11 +487,17 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 						"checkoutDropdownItem",
 						JSONUtil.put(
 							"confirmationMessage",
-							_language.get(
-								themeDisplay.getLocale(),
-								"any-changes-made-in-production-will-" +
-									"immediately-be-live.-continue-to-" +
-										"production")
+							() -> {
+								if (cms) {
+									return null;
+								}
+
+								return _language.get(
+									themeDisplay.getLocale(),
+									"any-changes-made-in-production-will-" +
+										"immediately-be-live.-continue-to-" +
+											"production");
+							}
 						).put(
 							"href", checkoutURL.toString()
 						).put(
@@ -431,6 +507,54 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 						).put(
 							"symbolLeft", "simple-circle"
 						));
+				}
+				else {
+					Layout layout = themeDisplay.getLayout();
+
+					Layout previewLayout = null;
+
+					try (SafeCloseable safeCloseable =
+							CTCollectionThreadLocal.
+								setProductionModeWithSafeCloseable()) {
+
+						previewLayout = _layoutLocalService.fetchLayout(
+							layout.getPlid());
+					}
+
+					if (previewLayout != null) {
+						String url = HttpComponentsUtil.addParameter(
+							_portal.getLayoutFriendlyURL(
+								previewLayout, themeDisplay),
+							"p_l_mode", "preview");
+
+						url = HttpComponentsUtil.addParameter(
+							url, "previewCTCollectionId",
+							previewLayout.getCtCollectionId());
+						url = HttpComponentsUtil.addParameter(
+							url, "previewCTIndicator", true);
+
+						long segmentsExperienceId = ParamUtil.getLong(
+							httpServletRequest, "segmentsExperienceId");
+
+						if (segmentsExperienceId > 0) {
+							url = HttpComponentsUtil.addParameter(
+								url, "segmentsExperienceId",
+								segmentsExperienceId);
+						}
+
+						data.put(
+							"previewProductionDropdownItem",
+							JSONUtil.put(
+								"href", url
+							).put(
+								"label",
+								_language.get(
+									themeDisplay.getLocale(),
+									"view-on-production")
+							).put(
+								"symbolLeft", "simple-circle"
+							));
+					}
 				}
 			}
 		}
@@ -549,7 +673,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				));
 		}
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-161033")) {
+		if (!cms) {
 			_getTimelineData(
 				ctCollection, data, httpServletRequest, themeDisplay);
 		}
@@ -568,7 +692,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 		long classPK = GetterUtil.getLong(
 			httpServletRequest.getAttribute(CTTimelineKeys.CLASS_PK));
 
-		if ((className == null) || (classPK == 0)) {
+		if ((className == null) && (classPK == 0)) {
 			Layout layout = themeDisplay.getLayout();
 
 			if (!layout.isTypeControlPanel()) {
@@ -577,7 +701,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			}
 		}
 
-		if ((className != null) && (classPK != 0)) {
+		if (className != null) {
 			long classNameId = _portal.getClassNameId(className);
 
 			if (currentCTCollection != null) {
@@ -600,14 +724,46 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				data.put("getConflictInfoURL", getConflictInfoURL.toString());
 			}
 
+			data.put("timelineClassNameId", classNameId);
+			data.put("timelineClassPK", classPK);
+			data.put(
+				"timelineDeleteURL",
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						httpServletRequest, themeDisplay.getScopeGroup(),
+						CTPortletKeys.PUBLICATIONS, 0, 0,
+						PortletRequest.ACTION_PHASE)
+				).setActionName(
+					"/change_tracking/delete_ct_collection"
+				).buildString());
+
+			data.put(
+				"timelineEditURL",
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						httpServletRequest, themeDisplay.getScopeGroup(),
+						CTPortletKeys.PUBLICATIONS, 0, 0,
+						PortletRequest.ACTION_PHASE)
+				).setActionName(
+					"/change_tracking/checkout_ct_collection"
+				).setRedirect(
+					_portal.getCurrentURL(httpServletRequest)
+				).buildString());
+
 			data.put("timelineIconClass", "change-tracking-timeline-icon");
 			data.put("timelineIconName", "time");
-			data.put(
-				"timelineItemsURL",
-				StringBundler.concat(
-					_portal.getPortalURL(themeDisplay),
-					"/o/change-tracking-rest/v1.0/ct-collections/history?",
-					"classNameId=", classNameId, "&classPK=", classPK));
+
+			String timelineItemsURL = StringBundler.concat(
+				_portal.getPortalURL(themeDisplay),
+				"/o/change-tracking-rest/v1.0/ct-entries/history?",
+				"classNameId=", classNameId);
+
+			if (classPK != 0) {
+				timelineItemsURL = StringBundler.concat(
+					timelineItemsURL, "&classPK=", classPK);
+			}
+
+			data.put("timelineItemsURL", timelineItemsURL);
 
 			CTDisplayRenderer<?> ctDisplayRenderer =
 				_ctDisplayRendererRegistry.getCTDisplayRenderer(classNameId);
@@ -615,22 +771,107 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			data.put(
 				"timelineType",
 				ctDisplayRenderer.getTypeName(themeDisplay.getLocale()));
+
+			data.put(
+				"viewTimelineHistoryURL",
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						httpServletRequest, themeDisplay.getScopeGroup(),
+						CTPortletKeys.PUBLICATIONS, 0, 0,
+						PortletRequest.RENDER_PHASE)
+				).setMVCRenderCommandName(
+					"/change_tracking/view_timeline_history"
+				).setRedirect(
+					_portal.getCurrentURL(httpServletRequest)
+				).setParameter(
+					"classNameId", classNameId
+				).setParameter(
+					"classPK", classPK
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString());
 		}
 	}
 
-	private boolean _isShowContextChangePopover(
-		String portletId, ThemeDisplay themeDisplay) {
+	private boolean _isCMSContextChange(HttpServletRequest httpServletRequest)
+		throws PortalException {
 
-		Group group = themeDisplay.getScopeGroup();
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		if (CTCollectionThreadLocal.isProductionMode() || !group.isSite() ||
-			!FeatureFlagManagerUtil.isEnabled(
-				themeDisplay.getCompanyId(), "LPD-20131")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				themeDisplay.getCompanyId(), "LPD-17564")) {
 
 			return false;
 		}
 
-		HttpSession httpSession = PortalSessionThreadLocal.getHttpSession();
+		Group group = themeDisplay.getSiteGroup();
+
+		if (group == null) {
+			return false;
+		}
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		if (group.isCMS()) {
+			if (!CTCollectionThreadLocal.isProductionMode()) {
+				httpSession.setAttribute(
+					CTWebKeys.SELECTED_CT_COLLECTION_ID,
+					CTCollectionThreadLocal.getCTCollectionId());
+
+				_ctPreferencesService.checkoutCTCollection(
+					themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+					CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION);
+			}
+
+			return true;
+		}
+
+		long ctCollectionId = GetterUtil.getLong(
+			httpSession.getAttribute(CTWebKeys.SELECTED_CT_COLLECTION_ID));
+
+		if (CTCollectionThreadLocal.isProductionMode() &&
+			(ctCollectionId > 0)) {
+
+			httpSession.removeAttribute(CTWebKeys.CT_HIDE_CMS_POPOVER);
+			httpSession.removeAttribute(CTWebKeys.SELECTED_CT_COLLECTION_ID);
+
+			_ctPreferencesService.checkoutCTCollection(
+				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+				ctCollectionId);
+		}
+
+		return false;
+	}
+
+	private boolean _isShowCMSWarningPopover(
+		HttpServletRequest httpServletRequest) {
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		boolean hidePopover = GetterUtil.getBoolean(
+			httpSession.getAttribute(CTWebKeys.CT_HIDE_CMS_POPOVER));
+
+		if (hidePopover) {
+			return false;
+		}
+
+		httpSession.setAttribute(CTWebKeys.CT_HIDE_CMS_POPOVER, Boolean.TRUE);
+
+		return true;
+	}
+
+	private boolean _isShowContextChangePopover(
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
+
+		Group group = themeDisplay.getScopeGroup();
+
+		if (CTCollectionThreadLocal.isProductionMode() || !group.isSite()) {
+			return false;
+		}
+
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		long ctLastGroupId = GetterUtil.getLong(
 			httpSession.getAttribute(CTWebKeys.CT_LAST_GROUP_ID));
@@ -642,25 +883,33 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 		}
 
 		if (ctLastGroupId != group.getGroupId()) {
-			httpSession.setAttribute(CTWebKeys.CT_SHOW_POPOVER, Boolean.TRUE);
-		}
+			httpSession.setAttribute(
+				CTWebKeys.CT_LAST_GROUP_ID, group.getGroupId());
 
-		if (!GetterUtil.getBoolean(
-				httpSession.getAttribute(CTWebKeys.CT_SHOW_POPOVER))) {
+			PortalPreferences portalPreferences =
+				_portletPreferencesFactory.getPortalPreferences(
+					httpServletRequest);
+
+			String hideContextChangeWarningExpiryTime =
+				portalPreferences.getValue(
+					CTPortletKeys.PUBLICATIONS,
+					"hideContextChangeWarningExpiryTime");
+
+			if (Validator.isNull(hideContextChangeWarningExpiryTime)) {
+				return true;
+			}
+
+			if (Objects.equals(hideContextChangeWarningExpiryTime, "-1")) {
+				return false;
+			}
+
+			if (GetterUtil.getLong(hideContextChangeWarningExpiryTime) <=
+					System.currentTimeMillis()) {
+
+				return true;
+			}
 
 			return false;
-		}
-
-		PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(
-			_panelAppRegistry);
-
-		if (Validator.isNotNull(portletId) &&
-			panelCategoryHelper.containsPortlet(
-				portletId, PanelCategoryKeys.SITE_ADMINISTRATION) &&
-			!panelCategoryHelper.containsPortlet(
-				portletId, PanelCategoryKeys.SITE_ADMINISTRATION_PUBLISHING)) {
-
-			return true;
 		}
 
 		return false;
@@ -682,6 +931,9 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	private CTPreferencesLocalService _ctPreferencesLocalService;
 
 	@Reference
+	private CTPreferencesService _ctPreferencesService;
+
+	@Reference
 	private CTRemoteLocalService _ctRemoteLocalService;
 
 	@Reference
@@ -696,10 +948,13 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	private Language _language;
 
 	@Reference
-	private PanelAppRegistry _panelAppRegistry;
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletPreferencesFactory _portletPreferencesFactory;
 
 	@Reference
 	private ReactRenderer _reactRenderer;

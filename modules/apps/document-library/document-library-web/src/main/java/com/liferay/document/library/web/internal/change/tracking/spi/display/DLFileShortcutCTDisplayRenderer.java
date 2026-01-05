@@ -21,13 +21,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.InputStream;
 
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -123,18 +123,20 @@ public class DLFileShortcutCTDisplayRenderer
 				return folder.getName();
 			}
 		).display(
-			"download", _getDownloadLink(displayBuilder, dlFileShortcut), false
+			"download",
+			() -> {
+				FileVersion fileVersion = dlFileShortcut.getFileVersion();
+
+				DLFileVersion dlFileVersion =
+					(DLFileVersion)fileVersion.getModel();
+
+				return getDownloadLink(
+					displayBuilder.getDisplayContext(),
+					dlFileVersion.getVersion(), dlFileVersion.getSize(),
+					dlFileVersion.getFileName());
+			},
+			false
 		);
-	}
-
-	private String _getDownloadLink(
-			DisplayBuilder<?> displayBuilder, DLFileShortcut dlFileShortcut)
-		throws PortalException {
-
-		FileVersion fileVersion = dlFileShortcut.getFileVersion();
-
-		return DLFileVersionCTDisplayRenderer.getDownloadLink(
-			displayBuilder, (DLFileVersion)fileVersion.getModel());
 	}
 
 	@Reference

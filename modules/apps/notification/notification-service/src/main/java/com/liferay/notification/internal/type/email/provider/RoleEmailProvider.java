@@ -22,11 +22,17 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -55,6 +61,8 @@ public class RoleEmailProvider implements EmailProvider {
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		ObjectFieldLocalService objectFieldLocalService,
 		OrganizationLocalService organizationLocalService,
+		PermissionCheckerFactory permissionCheckerFactory,
+		ResourcePermissionLocalService resourcePermissionLocalService,
 		RoleLocalService roleLocalService,
 		UserGroupRoleLocalService userGroupRoleLocalService,
 		UserLocalService userLocalService) {
@@ -67,6 +75,8 @@ public class RoleEmailProvider implements EmailProvider {
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_organizationLocalService = organizationLocalService;
+		_permissionCheckerFactory = permissionCheckerFactory;
+		_resourcePermissionLocalService = resourcePermissionLocalService;
 		_roleLocalService = roleLocalService;
 		_userGroupRoleLocalService = userGroupRoleLocalService;
 		_userLocalService = userLocalService;
@@ -108,8 +118,7 @@ public class RoleEmailProvider implements EmailProvider {
 						QueryUtil.ALL_POS, QueryUtil.ALL_POS),
 					Organization::getGroupId));
 
-			return _getEmailAddresses(
-				notificationContext.getCompanyId(), groupIdsMap, value);
+			return _getEmailAddresses(groupIdsMap, notificationContext, value);
 		}
 
 		ObjectField objectField = _objectFieldLocalService.getObjectField(
@@ -144,18 +153,19 @@ public class RoleEmailProvider implements EmailProvider {
 		groupIdsMap.put(
 			RoleConstants.TYPE_ORGANIZATION, ArrayUtil.toLongArray(groupIds));
 
-		return _getEmailAddresses(
-			notificationContext.getCompanyId(), groupIdsMap, value);
+		return _getEmailAddresses(groupIdsMap, notificationContext, value);
 	}
 
 	private String _getEmailAddresses(
-		long companyId, Map<Integer, long[]> groupIdsMap, Object value) {
+			Map<Integer, long[]> groupIdsMap,
+			NotificationContext notificationContext, Object value)
+		throws PortalException {
 
 		Set<String> emailAddresses = new HashSet<>();
 
 		for (Map<String, String> roleMap : (List<Map<String, String>>)value) {
 			Role role = _roleLocalService.fetchRole(
-				companyId,
+				notificationContext.getCompanyId(),
 				roleMap.get(
 					NotificationRecipientSettingConstants.NAME_ROLE_NAME));
 
@@ -168,11 +178,42 @@ public class RoleEmailProvider implements EmailProvider {
 			}
 
 			if (role.getType() == RoleConstants.TYPE_REGULAR) {
+				if (StringUtil.equals(role.getName(), RoleConstants.OWNER)) {
+					ResourcePermission resourcePermission =
+						_resourcePermissionLocalService.getResourcePermission(
+							notificationContext.getCompanyId(),
+							notificationContext.getClassName(),
+							ResourceConstants.SCOPE_INDIVIDUAL,
+							String.valueOf(notificationContext.getClassPK()),
+							role.getRoleId());
+
+					User user = _userLocalService.fetchUser(
+						resourcePermission.getOwnerId());
+
+					if (user != null) {
+						emailAddresses.add(user.getEmailAddress());
+					}
+
+					continue;
+				}
+
 				ListUtil.isNotEmptyForEach(
-					_userLocalService.getRoleUsers(
+					_userLocalService.getInheritedRoleUsers(
 						role.getRoleId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 						null),
-					user -> emailAddresses.add(user.getEmailAddress()));
+					user -> {
+						if (!ModelResourcePermissionUtil.contains(
+								_permissionCheckerFactory.create(user),
+								notificationContext.getGroupId(),
+								notificationContext.getClassName(),
+								notificationContext.getClassPK(),
+								ActionKeys.VIEW)) {
+
+							return;
+						}
+
+						emailAddresses.add(user.getEmailAddress());
+					});
 
 				continue;
 			}
@@ -235,6 +276,9 @@ public class RoleEmailProvider implements EmailProvider {
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final OrganizationLocalService _organizationLocalService;
+	private final PermissionCheckerFactory _permissionCheckerFactory;
+	private final ResourcePermissionLocalService
+		_resourcePermissionLocalService;
 	private final RoleLocalService _roleLocalService;
 	private final UserGroupRoleLocalService _userGroupRoleLocalService;
 	private final UserLocalService _userLocalService;

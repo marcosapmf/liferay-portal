@@ -11,7 +11,6 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.AuthToken;
 import com.liferay.portal.kernel.security.auth.AuthTokenWhitelist;
-import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -24,8 +23,14 @@ import com.liferay.portal.security.auth.SessionAuthToken;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.SecurityPortletContainerWrapper;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,16 +38,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,11 +48,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ActionRequestPortletContainerTest
 	extends BasePortletContainerTestCase {
-
-	@ClassRule
-	@Rule
-	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
 
 	@Test
 	public void testAuthTokenCheckEnabled() throws Exception {
@@ -136,7 +127,7 @@ public class ActionRequestPortletContainerTest
 		setUpPortlet(
 			testPortlet,
 			HashMapDictionaryBuilder.<String, Object>put(
-				"javax.portlet.init-param.check-auth-token",
+				"jakarta.portlet.init-param.check-auth-token",
 				Boolean.FALSE.toString()
 			).build(),
 			TEST_PORTLET_ID);
@@ -365,11 +356,7 @@ public class ActionRequestPortletContainerTest
 
 		@Override
 		public boolean isValidSharedSecret(String sharedSecret) {
-			if (_SHARED_SECRET.equals(sharedSecret)) {
-				return true;
-			}
-
-			return false;
+			return _SHARED_SECRET.equals(sharedSecret);
 		}
 
 	}

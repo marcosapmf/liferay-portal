@@ -5,30 +5,40 @@
 
 package com.liferay.style.book.web.internal.portlet.action;
 
+import com.liferay.client.extension.type.ThemeCSSCET;
+import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenDefinition;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.frontend.token.definition.constants.FrontendTokenDefinitionConstants;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
+import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.theme.ThemeUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.web.internal.constants.StyleBookWebKeys;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Objects;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -42,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
+		"jakarta.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
 		"mvc.command.name=/style_book/preview_fragment_collection"
 	},
 	service = MVCResourceCommand.class
@@ -93,14 +103,49 @@ public class PreviewFragmentCollectionMVCResourceCommand
 		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 			themeDisplay.getScopeGroupId(), false);
 
-		themeDisplay.setLayoutSet(layoutSet);
+		Theme theme = layoutSet.getTheme();
+
+		String themeId = ParamUtil.getString(
+			httpServletRequest, "styleBookEntryThemeId");
+
+		FrontendTokenDefinition frontendTokenDefinition =
+			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+				themeDisplay.getCompanyId(), themeId);
+
+		if ((frontendTokenDefinition != null) &&
+			Objects.equals(
+				frontendTokenDefinition.getThemeType(),
+				FrontendTokenDefinitionConstants.THEME_TYPE_THEME_CSS_CET)) {
+
+			themeId = theme.getThemeId();
+
+			ThemeCSSCET themeCSSCET = (ThemeCSSCET)_cetManager.getCET(
+				themeDisplay.getCompanyId(), themeId);
+
+			if (themeCSSCET != null) {
+				if (_portal.isRightToLeft(httpServletRequest)) {
+					themeDisplay.setClayCSSURL(themeCSSCET.getClayRTLURL());
+					themeDisplay.setMainCSSURL(themeCSSCET.getMainRTLURL());
+				}
+				else {
+					themeDisplay.setClayCSSURL(themeCSSCET.getClayURL());
+					themeDisplay.setMainCSSURL(themeCSSCET.getMainURL());
+				}
+			}
+		}
+
+		theme = _themeLocalService.fetchTheme(
+			themeDisplay.getCompanyId(), themeId);
+
 		themeDisplay.setLookAndFeel(
-			layoutSet.getTheme(), layoutSet.getColorScheme());
+			theme,
+			_themeLocalService.getColorScheme(
+				themeDisplay.getCompanyId(), theme.getThemeId(),
+				StringPool.BLANK));
 
 		return ThemeUtil.include(
 			ServletContextPool.get(StringPool.BLANK), httpServletRequest,
-			httpServletResponse, "portal_normal.ftl", layoutSet.getTheme(),
-			false);
+			httpServletResponse, "portal_normal.ftl", theme, false);
 	}
 
 	private String _renderPreviewFragmentCollection(
@@ -123,8 +168,14 @@ public class PreviewFragmentCollectionMVCResourceCommand
 	}
 
 	@Reference
+	private CETManager _cetManager;
+
+	@Reference
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
+
+	@Reference
+	private FrontendTokenDefinitionRegistry _frontendTokenDefinitionRegistry;
 
 	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;
@@ -134,5 +185,8 @@ public class PreviewFragmentCollectionMVCResourceCommand
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.style.book.web)")
 	private ServletContext _servletContext;
+
+	@Reference
+	private ThemeLocalService _themeLocalService;
 
 }

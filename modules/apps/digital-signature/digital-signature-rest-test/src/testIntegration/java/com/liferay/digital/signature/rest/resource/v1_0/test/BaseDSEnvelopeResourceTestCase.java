@@ -30,22 +30,28 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,7 +87,7 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -98,10 +101,15 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 
 		_dsEnvelopeResource.setContextCompany(testCompany);
 
-		DSEnvelopeResource.Builder builder = DSEnvelopeResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		dsEnvelopeResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		dsEnvelopeResource = DSEnvelopeResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -115,7 +123,32 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DSEnvelope dsEnvelope1 = randomDSEnvelope();
+
+		String json = objectMapper.writeValueAsString(dsEnvelope1);
+
+		DSEnvelope dsEnvelope2 = DSEnvelopeSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(dsEnvelope1, dsEnvelope2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DSEnvelope dsEnvelope = randomDSEnvelope();
+
+		String json1 = objectMapper.writeValueAsString(dsEnvelope);
+		String json2 = DSEnvelopeSerDes.toJSON(dsEnvelope);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -130,40 +163,6 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		DSEnvelope dsEnvelope1 = randomDSEnvelope();
-
-		String json = objectMapper.writeValueAsString(dsEnvelope1);
-
-		DSEnvelope dsEnvelope2 = DSEnvelopeSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(dsEnvelope1, dsEnvelope2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		DSEnvelope dsEnvelope = randomDSEnvelope();
-
-		String json1 = objectMapper.writeValueAsString(dsEnvelope);
-		String json2 = DSEnvelopeSerDes.toJSON(dsEnvelope);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -194,15 +193,145 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	}
 
 	@Test
+	public void testGetSiteDSEnvelope() throws Exception {
+		DSEnvelope postDSEnvelope = testGetSiteDSEnvelope_addDSEnvelope();
+
+		DSEnvelope getDSEnvelope = dsEnvelopeResource.getSiteDSEnvelope(
+			postDSEnvelope.getSiteId(), postDSEnvelope.getId());
+
+		assertEquals(postDSEnvelope, getDSEnvelope);
+		assertValid(getDSEnvelope);
+	}
+
+	protected DSEnvelope testGetSiteDSEnvelope_addDSEnvelope()
+		throws Exception {
+
+		return dsEnvelopeResource.postSiteDSEnvelope(
+			testGroup.getGroupId(), randomDSEnvelope());
+	}
+
+	@Test
+	public void testGraphQLGetSiteDSEnvelope() throws Exception {
+		DSEnvelope dsEnvelope = testGraphQLGetSiteDSEnvelope_addDSEnvelope();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				dsEnvelope,
+				DSEnvelopeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"dSEnvelope",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"siteKey",
+											"\"" + dsEnvelope.getSiteId() +
+												"\"");
+										put(
+											"dsEnvelopeId",
+											"\"" + dsEnvelope.getId() + "\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/dSEnvelope"))));
+
+		// Using the namespace digitalSignature_v1_0
+
+		Assert.assertTrue(
+			equals(
+				dsEnvelope,
+				DSEnvelopeSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"digitalSignature_v1_0",
+								new GraphQLField(
+									"dSEnvelope",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" + dsEnvelope.getSiteId() +
+													"\"");
+											put(
+												"dsEnvelopeId",
+												"\"" + dsEnvelope.getId() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/digitalSignature_v1_0",
+						"Object/dSEnvelope"))));
+	}
+
+	@Test
+	public void testGraphQLGetSiteDSEnvelopeNotFound() throws Exception {
+		String irrelevantDsEnvelopeId =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"dSEnvelope",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"siteKey",
+									"\"" + irrelevantGroup.getGroupId() + "\"");
+								put("dsEnvelopeId", irrelevantDsEnvelopeId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace digitalSignature_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"digitalSignature_v1_0",
+						new GraphQLField(
+							"dSEnvelope",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put("dsEnvelopeId", irrelevantDsEnvelopeId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected DSEnvelope testGraphQLGetSiteDSEnvelope_addDSEnvelope()
+		throws Exception {
+
+		return testGraphQLSiteDSEnvelope_addDSEnvelope();
+	}
+
+	@Test
 	public void testGetSiteDSEnvelopesPage() throws Exception {
 		Long siteId = testGetSiteDSEnvelopesPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteDSEnvelopesPage_getIrrelevantSiteId();
 
 		Page<DSEnvelope> page = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, RandomTestUtil.randomString(),
+			siteId, RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), Pagination.of(1, 10));
+			Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
@@ -264,11 +393,11 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	public void testGetSiteDSEnvelopesPageWithPagination() throws Exception {
 		Long siteId = testGetSiteDSEnvelopesPage_getSiteId();
 
-		Page<DSEnvelope> dsEnvelopePage =
+		Page<DSEnvelope> dsEnvelopesPage =
 			dsEnvelopeResource.getSiteDSEnvelopesPage(
 				siteId, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(dsEnvelopePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(dsEnvelopesPage.getTotalCount());
 
 		DSEnvelope dsEnvelope1 = testGetSiteDSEnvelopesPage_addDSEnvelope(
 			siteId, randomDSEnvelope());
@@ -359,6 +488,87 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	}
 
 	@Test
+	public void testGraphQLGetSiteDSEnvelopesPage() throws Exception {
+		Long siteId = testGetSiteDSEnvelopesPage_getSiteId();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"dSEnvelopes",
+			new HashMap<String, Object>() {
+				{
+					put("siteKey", "\"" + siteId + "\"");
+					put(
+						"fromDate",
+						getGraphQLValue(RandomTestUtil.randomString()));
+					put("keywords", null);
+					put(
+						"order",
+						getGraphQLValue(RandomTestUtil.randomString()));
+					put(
+						"status",
+						getGraphQLValue(RandomTestUtil.randomString()));
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject dSEnvelopesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/dSEnvelopes");
+
+		long totalCount = dSEnvelopesJSONObject.getLong("totalCount");
+
+		DSEnvelope dsEnvelope1 = testGraphQLSiteDSEnvelope_addDSEnvelope(
+			siteId, randomDSEnvelope());
+
+		DSEnvelope dsEnvelope2 = testGraphQLSiteDSEnvelope_addDSEnvelope(
+			siteId, randomDSEnvelope());
+
+		dSEnvelopesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/dSEnvelopes");
+
+		Assert.assertEquals(
+			totalCount + 2, dSEnvelopesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			dsEnvelope1,
+			Arrays.asList(
+				DSEnvelopeSerDes.toDTOs(
+					dSEnvelopesJSONObject.getString("items"))));
+		assertContains(
+			dsEnvelope2,
+			Arrays.asList(
+				DSEnvelopeSerDes.toDTOs(
+					dSEnvelopesJSONObject.getString("items"))));
+
+		// Using the namespace digitalSignature_v1_0
+
+		dSEnvelopesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("digitalSignature_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/digitalSignature_v1_0",
+			"JSONObject/dSEnvelopes");
+
+		Assert.assertEquals(
+			totalCount + 2, dSEnvelopesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			dsEnvelope1,
+			Arrays.asList(
+				DSEnvelopeSerDes.toDTOs(
+					dSEnvelopesJSONObject.getString("items"))));
+		assertContains(
+			dsEnvelope2,
+			Arrays.asList(
+				DSEnvelopeSerDes.toDTOs(
+					dSEnvelopesJSONObject.getString("items"))));
+	}
+
+	@Test
 	public void testPostSiteDSEnvelope() throws Exception {
 		DSEnvelope randomDSEnvelope = randomDSEnvelope();
 
@@ -381,212 +591,26 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	public void testGraphQLPostSiteDSEnvelope() throws Exception {
 		DSEnvelope randomDSEnvelope = randomDSEnvelope();
 
-		DSEnvelope dsEnvelope = testGraphQLDSEnvelope_addDSEnvelope(
-			randomDSEnvelope);
+		DSEnvelope dsEnvelope = testGraphQLSiteDSEnvelope_addDSEnvelope(
+			testGroup.getGroupId(), randomDSEnvelope);
 
 		Assert.assertTrue(equals(randomDSEnvelope, dsEnvelope));
 	}
 
 	@Test
-	public void testGetSiteDSEnvelope() throws Exception {
-		DSEnvelope postDSEnvelope = testGetSiteDSEnvelope_addDSEnvelope();
-
-		DSEnvelope getDSEnvelope = dsEnvelopeResource.getSiteDSEnvelope(
-			testGetSiteDSEnvelope_getSiteId(postDSEnvelope),
-			postDSEnvelope.getId());
-
-		assertEquals(postDSEnvelope, getDSEnvelope);
-		assertValid(getDSEnvelope);
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
-	protected Long testGetSiteDSEnvelope_getSiteId(DSEnvelope dsEnvelope)
+	protected DSEnvelope testGraphQLSiteDSEnvelope_addDSEnvelope()
 		throws Exception {
 
-		return dsEnvelope.getSiteId();
-	}
-
-	protected DSEnvelope testGetSiteDSEnvelope_addDSEnvelope()
-		throws Exception {
-
-		return dsEnvelopeResource.postSiteDSEnvelope(
+		return testGraphQLSiteDSEnvelope_addDSEnvelope(
 			testGroup.getGroupId(), randomDSEnvelope());
 	}
 
-	@Test
-	public void testGraphQLGetSiteDSEnvelope() throws Exception {
-		DSEnvelope dsEnvelope = testGraphQLGetSiteDSEnvelope_addDSEnvelope();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				dsEnvelope,
-				DSEnvelopeSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"dSEnvelope",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"siteKey",
-											"\"" +
-												testGraphQLGetSiteDSEnvelope_getSiteId(
-													dsEnvelope) + "\"");
-
-										put(
-											"dsEnvelopeId",
-											"\"" + dsEnvelope.getId() + "\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/dSEnvelope"))));
-
-		// Using the namespace digitalSignature_v1_0
-
-		Assert.assertTrue(
-			equals(
-				dsEnvelope,
-				DSEnvelopeSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"digitalSignature_v1_0",
-								new GraphQLField(
-									"dSEnvelope",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"siteKey",
-												"\"" +
-													testGraphQLGetSiteDSEnvelope_getSiteId(
-														dsEnvelope) + "\"");
-
-											put(
-												"dsEnvelopeId",
-												"\"" + dsEnvelope.getId() +
-													"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/digitalSignature_v1_0",
-						"Object/dSEnvelope"))));
-	}
-
-	protected Long testGraphQLGetSiteDSEnvelope_getSiteId(DSEnvelope dsEnvelope)
-		throws Exception {
-
-		return dsEnvelope.getSiteId();
-	}
-
-	@Test
-	public void testGraphQLGetSiteDSEnvelopeNotFound() throws Exception {
-		String irrelevantDsEnvelopeId =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dSEnvelope",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"siteKey",
-									"\"" + irrelevantGroup.getGroupId() + "\"");
-								put("dsEnvelopeId", irrelevantDsEnvelopeId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace digitalSignature_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"digitalSignature_v1_0",
-						new GraphQLField(
-							"dSEnvelope",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"siteKey",
-										"\"" + irrelevantGroup.getGroupId() +
-											"\"");
-									put("dsEnvelopeId", irrelevantDsEnvelopeId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected DSEnvelope testGraphQLGetSiteDSEnvelope_addDSEnvelope()
-		throws Exception {
-
-		return testGraphQLDSEnvelope_addDSEnvelope();
-	}
-
-	protected void appendGraphQLFieldValue(StringBuilder sb, Object value)
-		throws Exception {
-
-		if (value instanceof Object[]) {
-			StringBuilder arraySB = new StringBuilder("[");
-
-			for (Object object : (Object[])value) {
-				if (arraySB.length() > 1) {
-					arraySB.append(", ");
-				}
-
-				arraySB.append("{");
-
-				Class<?> clazz = object.getClass();
-
-				for (java.lang.reflect.Field field :
-						getDeclaredFields(clazz.getSuperclass())) {
-
-					arraySB.append(field.getName());
-					arraySB.append(": ");
-
-					appendGraphQLFieldValue(arraySB, field.get(object));
-
-					arraySB.append(", ");
-				}
-
-				arraySB.setLength(arraySB.length() - 2);
-
-				arraySB.append("}");
-			}
-
-			arraySB.append("]");
-
-			sb.append(arraySB.toString());
-		}
-		else if (value instanceof String) {
-			sb.append("\"");
-			sb.append(value);
-			sb.append("\"");
-		}
-		else {
-			sb.append(value);
-		}
-	}
-
-	protected DSEnvelope testGraphQLDSEnvelope_addDSEnvelope()
-		throws Exception {
-
-		return testGraphQLDSEnvelope_addDSEnvelope(randomDSEnvelope());
-	}
-
-	protected DSEnvelope testGraphQLDSEnvelope_addDSEnvelope(
-			DSEnvelope dsEnvelope)
+	protected DSEnvelope testGraphQLSiteDSEnvelope_addDSEnvelope(
+			Long siteId, DSEnvelope dsEnvelope)
 		throws Exception {
 
 		JSONDeserializer<DSEnvelope> jsonDeserializer =
@@ -597,27 +621,20 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(DSEnvelope.class)) {
 
-			if (!ArrayUtil.contains(
-					getAdditionalAssertFieldNames(), field.getName())) {
+			if (getGraphQLValue(field.get(dsEnvelope)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
 
-				continue;
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(dsEnvelope)));
 			}
-
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append(field.getName());
-			sb.append(": ");
-
-			appendGraphQLFieldValue(sb, field.get(dsEnvelope));
 		}
 
 		sb.append("}");
 
 		List<GraphQLField> graphQLFields = getGraphQLFields();
-
-		graphQLFields.add(new GraphQLField("id"));
 
 		return jsonDeserializer.deserialize(
 			JSONUtil.getValueAsString(
@@ -626,15 +643,80 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 						"createSiteDSEnvelope",
 						new HashMap<String, Object>() {
 							{
-								put(
-									"siteKey",
-									"\"" + testGroup.getGroupId() + "\"");
+								put("siteKey", "\"" + siteId + "\"");
 								put("dsEnvelope", sb.toString());
 							}
 						},
 						graphQLFields)),
 				"JSONObject/data", "JSONObject/createSiteDSEnvelope"),
 			DSEnvelope.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(
@@ -841,6 +923,8 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
@@ -1132,13 +1216,11 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1148,7 +1230,7 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(dsEnvelope.getDateCreated()));
+				sb.append(_format.format(dsEnvelope.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1163,13 +1245,11 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1179,7 +1259,7 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(dsEnvelope.getDateModified()));
+				sb.append(_format.format(dsEnvelope.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1561,12 +1641,12 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1575,11 +1655,16 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1611,6 +1696,24 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1632,16 +1735,6 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1739,7 +1832,9 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDSEnvelopeResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.digital.signature.rest.resource.v1_0.DSEnvelopeResource

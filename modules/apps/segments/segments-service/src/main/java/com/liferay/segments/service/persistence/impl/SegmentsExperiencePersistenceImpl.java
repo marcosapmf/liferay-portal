@@ -659,7 +659,6 @@ public class SegmentsExperiencePersistenceImpl
 		"(segmentsExperience.uuid IS NULL OR segmentsExperience.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the segments experience where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchExperienceException</code> if it could not be found.
@@ -845,68 +844,13 @@ public class SegmentsExperiencePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperience.class)) {
+		SegmentsExperience segmentsExperience = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperience == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2004,6 +1948,16 @@ public class SegmentsExperiencePersistenceImpl
 			return findByGroupId(groupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2368,6 +2322,16 @@ public class SegmentsExperiencePersistenceImpl
 	public int filterCountByGroupId(long groupId) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByGroupId(groupId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByGroupId(
+				groupId);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -3458,6 +3422,16 @@ public class SegmentsExperiencePersistenceImpl
 			return findByG_P(groupId, plid, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_P(
+					groupId, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -3841,6 +3815,16 @@ public class SegmentsExperiencePersistenceImpl
 	public int filterCountByG_P(long groupId, long plid) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_P(groupId, plid);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_P(
+				groupId, plid);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -4454,6 +4438,16 @@ public class SegmentsExperiencePersistenceImpl
 				groupId, segmentsEntryId, plid, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_S_P(
+					groupId, segmentsEntryId, plid, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -4859,6 +4853,16 @@ public class SegmentsExperiencePersistenceImpl
 			return countByG_S_P(groupId, segmentsEntryId, plid);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_S_P(
+				groupId, segmentsEntryId, plid);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
+		}
+
 		StringBundler sb = new StringBundler(4);
 
 		sb.append(_FILTER_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
@@ -4913,7 +4917,6 @@ public class SegmentsExperiencePersistenceImpl
 		"segmentsExperience.plid = ?";
 
 	private FinderPath _finderPathFetchByG_SEK_P;
-	private FinderPath _finderPathCountByG_SEK_P;
 
 	/**
 	 * Returns the segments experience where groupId = &#63; and segmentsExperienceKey = &#63; and plid = &#63; or throws a <code>NoSuchExperienceException</code> if it could not be found.
@@ -5125,74 +5128,14 @@ public class SegmentsExperiencePersistenceImpl
 	public int countByG_SEK_P(
 		long groupId, String segmentsExperienceKey, long plid) {
 
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperience.class)) {
+		SegmentsExperience segmentsExperience = fetchByG_SEK_P(
+			groupId, segmentsExperienceKey, plid);
 
-			segmentsExperienceKey = Objects.toString(segmentsExperienceKey, "");
-
-			FinderPath finderPath = _finderPathCountByG_SEK_P;
-
-			Object[] finderArgs = new Object[] {
-				groupId, segmentsExperienceKey, plid
-			};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_SEK_P_GROUPID_2);
-
-				boolean bindSegmentsExperienceKey = false;
-
-				if (segmentsExperienceKey.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_SEK_P_SEGMENTSEXPERIENCEKEY_3);
-				}
-				else {
-					bindSegmentsExperienceKey = true;
-
-					sb.append(_FINDER_COLUMN_G_SEK_P_SEGMENTSEXPERIENCEKEY_2);
-				}
-
-				sb.append(_FINDER_COLUMN_G_SEK_P_PLID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindSegmentsExperienceKey) {
-						queryPos.add(segmentsExperienceKey);
-					}
-
-					queryPos.add(plid);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperience == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_SEK_P_GROUPID_2 =
@@ -5208,7 +5151,6 @@ public class SegmentsExperiencePersistenceImpl
 		"segmentsExperience.plid = ?";
 
 	private FinderPath _finderPathFetchByG_P_P;
-	private FinderPath _finderPathCountByG_P_P;
 
 	/**
 	 * Returns the segments experience where groupId = &#63; and plid = &#63; and priority = &#63; or throws a <code>NoSuchExperienceException</code> if it could not be found.
@@ -5399,59 +5341,14 @@ public class SegmentsExperiencePersistenceImpl
 	 */
 	@Override
 	public int countByG_P_P(long groupId, long plid, int priority) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperience.class)) {
+		SegmentsExperience segmentsExperience = fetchByG_P_P(
+			groupId, plid, priority);
 
-			FinderPath finderPath = _finderPathCountByG_P_P;
-
-			Object[] finderArgs = new Object[] {groupId, plid, priority};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_P_P_GROUPID_2);
-
-				sb.append(_FINDER_COLUMN_G_P_P_PLID_2);
-
-				sb.append(_FINDER_COLUMN_G_P_P_PRIORITY_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					queryPos.add(plid);
-
-					queryPos.add(priority);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperience == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_P_P_GROUPID_2 =
@@ -6012,6 +5909,16 @@ public class SegmentsExperiencePersistenceImpl
 				groupId, plid, priority, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_P_GtP(
+					groupId, plid, priority, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -6413,6 +6320,16 @@ public class SegmentsExperiencePersistenceImpl
 	public int filterCountByG_P_GtP(long groupId, long plid, int priority) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_P_GtP(groupId, plid, priority);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_P_GtP(
+				groupId, plid, priority);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -7017,6 +6934,16 @@ public class SegmentsExperiencePersistenceImpl
 				groupId, plid, priority, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_P_LtP(
+					groupId, plid, priority, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -7418,6 +7345,16 @@ public class SegmentsExperiencePersistenceImpl
 	public int filterCountByG_P_LtP(long groupId, long plid, int priority) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_P_LtP(groupId, plid, priority);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_P_LtP(
+				groupId, plid, priority);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -8031,6 +7968,16 @@ public class SegmentsExperiencePersistenceImpl
 				groupId, plid, active, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_P_A(
+					groupId, plid, active, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -8431,6 +8378,16 @@ public class SegmentsExperiencePersistenceImpl
 	public int filterCountByG_P_A(long groupId, long plid, boolean active) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_P_A(groupId, plid, active);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_P_A(
+				groupId, plid, active);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -9092,6 +9049,16 @@ public class SegmentsExperiencePersistenceImpl
 				orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_S_P_A(
+					groupId, segmentsEntryId, plid, active, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -9476,6 +9443,16 @@ public class SegmentsExperiencePersistenceImpl
 			return findByG_S_P_A(
 				groupId, segmentsEntryIds, plid, active, start, end,
 				orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_S_P_A(
+					groupId, segmentsEntryIds, plid, active, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
 		}
 
 		if (segmentsEntryIds == null) {
@@ -10022,6 +9999,16 @@ public class SegmentsExperiencePersistenceImpl
 			return countByG_S_P_A(groupId, segmentsEntryId, plid, active);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences = findByG_S_P_A(
+				groupId, segmentsEntryId, plid, active);
+
+			segmentsExperiences = InlineSQLHelperUtil.filter(
+				segmentsExperiences, groupId);
+
+			return segmentsExperiences.size();
+		}
+
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(_FILTER_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
@@ -10085,6 +10072,15 @@ public class SegmentsExperiencePersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_S_P_A(groupId, segmentsEntryIds, plid, active);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<SegmentsExperience> segmentsExperiences =
+				InlineSQLHelperUtil.filter(
+					findByG_S_P_A(groupId, segmentsEntryIds, plid, active),
+					groupId);
+
+			return segmentsExperiences.size();
 		}
 
 		if (segmentsEntryIds == null) {
@@ -10174,7 +10170,6 @@ public class SegmentsExperiencePersistenceImpl
 		"segmentsExperience.active_ = ?";
 
 	private FinderPath _finderPathFetchByERC_G;
-	private FinderPath _finderPathCountByERC_G;
 
 	/**
 	 * Returns the segments experience where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchExperienceException</code> if it could not be found.
@@ -10368,68 +10363,14 @@ public class SegmentsExperiencePersistenceImpl
 	 */
 	@Override
 	public int countByERC_G(String externalReferenceCode, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					SegmentsExperience.class)) {
+		SegmentsExperience segmentsExperience = fetchByERC_G(
+			externalReferenceCode, groupId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_G;
-
-			Object[] finderArgs = new Object[] {externalReferenceCode, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_SEGMENTSEXPERIENCE_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (segmentsExperience == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
@@ -10597,8 +10538,6 @@ public class SegmentsExperiencePersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, segmentsExperienceModelImpl);
 
 			args = new Object[] {
@@ -10607,8 +10546,6 @@ public class SegmentsExperiencePersistenceImpl
 				segmentsExperienceModelImpl.getPlid()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByG_SEK_P, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByG_SEK_P, args, segmentsExperienceModelImpl);
 
@@ -10619,8 +10556,6 @@ public class SegmentsExperiencePersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByG_P_P, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByG_P_P, args, segmentsExperienceModelImpl);
 
 			args = new Object[] {
@@ -10628,8 +10563,6 @@ public class SegmentsExperiencePersistenceImpl
 				segmentsExperienceModelImpl.getGroupId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByERC_G, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByERC_G, args, segmentsExperienceModelImpl);
 		}
@@ -11390,6 +11323,7 @@ public class SegmentsExperiencePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -11402,19 +11336,20 @@ public class SegmentsExperiencePersistenceImpl
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("segmentsEntryId");
-		ctStrictColumnNames.add("segmentsExperienceKey");
-		ctStrictColumnNames.add("plid");
-		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("priority");
-		ctStrictColumnNames.add("active_");
-		ctStrictColumnNames.add("typeSettings");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("segmentsEntryId");
+		ctMergeColumnNames.add("segmentsExperienceKey");
+		ctMergeColumnNames.add("plid");
+		ctMergeColumnNames.add("name");
+		ctMergeColumnNames.add("priority");
+		ctMergeColumnNames.add("active_");
+		ctMergeColumnNames.add("typeSettings");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("segmentsExperienceId"));
@@ -11475,11 +11410,6 @@ public class SegmentsExperiencePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -11586,14 +11516,6 @@ public class SegmentsExperiencePersistenceImpl
 			},
 			new String[] {"groupId", "segmentsExperienceKey", "plid"}, true);
 
-		_finderPathCountByG_SEK_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_SEK_P",
-			new String[] {
-				Long.class.getName(), String.class.getName(),
-				Long.class.getName()
-			},
-			new String[] {"groupId", "segmentsExperienceKey", "plid"}, false);
-
 		_finderPathFetchByG_P_P = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_P_P",
 			new String[] {
@@ -11601,14 +11523,6 @@ public class SegmentsExperiencePersistenceImpl
 				Integer.class.getName()
 			},
 			new String[] {"groupId", "plid", "priority"}, true);
-
-		_finderPathCountByG_P_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_P",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Integer.class.getName()
-			},
-			new String[] {"groupId", "plid", "priority"}, false);
 
 		_finderPathWithPaginationFindByG_P_GtP = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_GtP",
@@ -11711,11 +11625,6 @@ public class SegmentsExperiencePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "groupId"}, true);
-
-		_finderPathCountByERC_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "groupId"}, false);
 
 		SegmentsExperienceUtil.setPersistence(this);
 	}

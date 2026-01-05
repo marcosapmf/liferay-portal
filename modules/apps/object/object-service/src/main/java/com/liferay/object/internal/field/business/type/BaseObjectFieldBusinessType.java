@@ -6,12 +6,15 @@
 package com.liferay.object.internal.field.business.type;
 
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.exception.ObjectFieldSettingNameException;
 import com.liferay.object.exception.ObjectFieldSettingValueException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.render.ObjectFieldRenderingContext;
+import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
@@ -19,8 +22,10 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -43,14 +49,56 @@ public abstract class BaseObjectFieldBusinessType
 
 	@Override
 	public Map<String, Object> getProperties(
-		ObjectField objectField,
-		ObjectFieldRenderingContext objectFieldRenderingContext) {
+			ObjectField objectField,
+			ObjectFieldRenderingContext objectFieldRenderingContext)
+		throws PortalException {
 
-		return new HashMap<>(
+		return HashMapBuilder.<String, Object>put(
+			"predefinedValue",
+			() -> {
+				if (!FeatureFlagManagerUtil.isEnabled(
+						objectField.getCompanyId(), "LPD-46451") &&
+					!Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
+
+					return null;
+				}
+
+				LocalizedValue localizedValue = new LocalizedValue(
+					objectFieldRenderingContext.getLocale());
+
+				Locale defaultLocale = objectFieldRenderingContext.getLocale();
+				String defaultValue = Objects.toString(
+					ObjectFieldSettingUtil.getDefaultValue(
+						ddmExpressionFactory, objectField, null),
+					StringPool.BLANK);
+
+				if (objectField.isLocalized() &&
+					Validator.isNotNull(defaultValue)) {
+
+					localizedValue.addString(
+						defaultLocale,
+						jsonFactory.createJSONObject(
+							HashMapBuilder.put(
+								defaultLocale, defaultValue
+							).build()
+						).toJSONString());
+				}
+				else {
+					localizedValue.addString(defaultLocale, defaultValue);
+				}
+
+				return localizedValue;
+			}
+		).putAll(
 			getObjectFieldSettingsValues(
 				objectFieldSettingLocalService.
-					getObjectFieldObjectFieldSettings(
-						objectField.getObjectFieldId())));
+					getObjectFieldObjectFieldSettings(objectField))
+		).putAll(
+			ObjectFieldBusinessType.super.getProperties(
+				objectField, objectFieldRenderingContext)
+		).build();
 	}
 
 	protected Map<String, String> getObjectFieldSettingsValues(
@@ -146,6 +194,9 @@ public abstract class BaseObjectFieldBusinessType
 				objectField.getName(), objectFieldSettingsValues);
 		}
 	}
+
+	@Reference
+	protected DDMExpressionFactory ddmExpressionFactory;
 
 	@Reference
 	protected JSONFactory jsonFactory;

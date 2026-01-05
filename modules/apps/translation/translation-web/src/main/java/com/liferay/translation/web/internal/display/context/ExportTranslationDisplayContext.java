@@ -38,6 +38,8 @@ import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporter;
 import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporterRegistry;
 import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,8 +49,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Jorge González
@@ -102,28 +102,19 @@ public class ExportTranslationDisplayContext {
 			return null;
 		}
 
-		List<Map<String, String>> experiences = new ArrayList<>();
-
-		List<SegmentsExperience> segmentsExperiences =
-			_getSegmentsExperiences();
-
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			experiences.add(
-				HashMapBuilder.put(
-					"label",
-					segmentsExperience.getName(_themeDisplay.getLocale())
-				).put(
-					"segment",
-					_getSegmentsEntryName(
-						segmentsExperience.getSegmentsEntryId(),
-						_themeDisplay.getLocale())
-				).put(
-					"value",
-					String.valueOf(segmentsExperience.getSegmentsExperienceId())
-				).build());
-		}
-
-		return experiences;
+		return TransformUtil.transform(
+			_getSegmentsExperiences(),
+			segmentsExperience -> HashMapBuilder.put(
+				"label", segmentsExperience.getName(_themeDisplay.getLocale())
+			).put(
+				"segment",
+				_getSegmentsEntryName(
+					segmentsExperience.getSegmentsEntryId(),
+					_themeDisplay.getLocale())
+			).put(
+				"value",
+				String.valueOf(segmentsExperience.getSegmentsExperienceId())
+			).build());
 	}
 
 	public Map<String, Object> getExportTranslationData() throws Exception {
@@ -163,7 +154,7 @@ public class ExportTranslationDisplayContext {
 		).put(
 			"pathModule", PortalUtil.getPathModule()
 		).put(
-			"redirectURL", getRedirect()
+			"redirectURL", PortalUtil.escapeRedirect(getRedirect())
 		).build();
 	}
 

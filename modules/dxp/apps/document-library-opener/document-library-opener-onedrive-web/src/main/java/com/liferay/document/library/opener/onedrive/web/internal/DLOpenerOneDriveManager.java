@@ -23,9 +23,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -41,6 +41,7 @@ import com.microsoft.graph.models.extensions.IGraphServiceClient;
 import com.microsoft.graph.models.extensions.Permission;
 import com.microsoft.graph.models.extensions.SharingLink;
 import com.microsoft.graph.models.extensions.User;
+import com.microsoft.graph.options.HeaderOption;
 import com.microsoft.graph.requests.extensions.GraphServiceClient;
 import com.microsoft.graph.requests.extensions.IDriveItemCreateLinkRequest;
 import com.microsoft.graph.requests.extensions.IDriveItemRequest;
@@ -52,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
@@ -70,10 +72,7 @@ public class DLOpenerOneDriveManager {
 		BackgroundTask backgroundTask = _addBackgroundTask(
 			userId, fileEntry, locale);
 
-		_dlOpenerFileEntryReferenceLocalService.
-			addPlaceholderDLOpenerFileEntryReference(
-				userId, DLOpenerOneDriveConstants.ONE_DRIVE_REFERENCE_TYPE,
-				fileEntry, DLOpenerFileEntryReferenceConstants.TYPE_EDIT);
+		_addPlaceholderDLOpenerFileEntryReference(fileEntry, userId);
 
 		return new DLOpenerOneDriveFileReference<>(
 			fileEntry.getFileEntryId(),
@@ -118,7 +117,9 @@ public class DLOpenerOneDriveManager {
 		).drive(
 		).items(
 			_getOneDriveReferenceKey(fileEntry)
-		).buildRequest();
+		).buildRequest(
+			Arrays.asList(new HeaderOption("Prefer", "bypass-shared-lock"))
+		);
 
 		try {
 			iDriveItemRequest.delete();
@@ -266,7 +267,7 @@ public class DLOpenerOneDriveManager {
 		throws PortalException {
 
 		return _backgroundTaskManager.addBackgroundTask(
-			userId, CompanyConstants.SYSTEM,
+			userId, BackgroundTaskConstants.GROUP_ID_DEFAULT,
 			StringBundler.concat(
 				DLOpenerOneDriveManager.class.getSimpleName(), StringPool.POUND,
 				fileEntry.getFileEntryId()),
@@ -284,6 +285,24 @@ public class DLOpenerOneDriveManager {
 				OneDriveBackgroundTaskConstants.USER_ID, userId
 			).build(),
 			new ServiceContext());
+	}
+
+	private void _addPlaceholderDLOpenerFileEntryReference(
+			FileEntry fileEntry, long userId)
+		throws PortalException {
+
+		DLOpenerFileEntryReference dlOpenerFileEntryReference =
+			_dlOpenerFileEntryReferenceLocalService.
+				fetchDLOpenerFileEntryReference(
+					DLOpenerOneDriveConstants.ONE_DRIVE_REFERENCE_TYPE,
+					fileEntry);
+
+		if (dlOpenerFileEntryReference == null) {
+			_dlOpenerFileEntryReferenceLocalService.
+				addPlaceholderDLOpenerFileEntryReference(
+					userId, DLOpenerOneDriveConstants.ONE_DRIVE_REFERENCE_TYPE,
+					fileEntry, DLOpenerFileEntryReferenceConstants.TYPE_EDIT);
+		}
 	}
 
 	private AccessToken _getAccessToken(long companyId, long userId)

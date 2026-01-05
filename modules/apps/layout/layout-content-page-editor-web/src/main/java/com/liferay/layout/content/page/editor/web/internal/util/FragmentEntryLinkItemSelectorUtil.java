@@ -5,7 +5,7 @@
 
 package com.liferay.layout.content.page.editor.web.internal.util;
 
-import com.liferay.info.collection.provider.item.selector.criterion.InfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.InfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
@@ -19,13 +19,13 @@ import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Jürgen Kappler
@@ -35,6 +35,10 @@ public class FragmentEntryLinkItemSelectorUtil {
 	public static void addFragmentEntryLinkFieldsSelectorURL(
 		ItemSelector itemSelector, HttpServletRequest httpServletRequest,
 		JSONObject jsonObject) {
+
+		if (jsonObject == null) {
+			return;
+		}
 
 		JSONArray fieldSetsJSONArray = jsonObject.getJSONArray("fieldSets");
 

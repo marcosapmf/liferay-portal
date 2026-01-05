@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -24,6 +24,7 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 page import="com.liferay.application.list.PanelCategory" %><%@
 page import="com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration" %><%@
 page import="com.liferay.depot.application.DepotApplication" %><%@
+page import="com.liferay.depot.constants.DepotPortletKeys" %><%@
 page import="com.liferay.depot.exception.DepotEntryGroupRelToGroupException" %><%@
 page import="com.liferay.depot.exception.DepotEntryNameException" %><%@
 page import="com.liferay.depot.exception.DepotEntryStagedException" %><%@
@@ -31,7 +32,6 @@ page import="com.liferay.depot.model.DepotEntry" %><%@
 page import="com.liferay.depot.model.DepotEntryGroupRel" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotAdminWebKeys" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotEntryConstants" %><%@
-page import="com.liferay.depot.web.internal.constants.DepotPortletKeys" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotScreenNavigationEntryConstants" %><%@
 page import="com.liferay.depot.web.internal.constants.SharingWebKeys" %><%@
 page import="com.liferay.depot.web.internal.display.context.DepotAdminDLDisplayContext" %><%@
@@ -66,21 +66,21 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.PrefsPropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropertiesParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropsKeys" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeFormatter" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.sharing.configuration.SharingConfiguration" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %>
+
+<%@ page import="jakarta.portlet.ActionRequest" %><%@
+page import="jakarta.portlet.PortletURL" %>
 
 <%@ page import="java.util.Collection" %><%@
 page import="java.util.Collections" %><%@
 page import="java.util.List" %>
-
-<%@ page import="javax.portlet.ActionRequest" %><%@
-page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

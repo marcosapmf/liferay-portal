@@ -29,7 +29,7 @@ import com.liferay.journal.util.comparator.FolderArticleModifiedDateComparator;
 import com.liferay.journal.util.comparator.FolderArticleTitleComparator;
 import com.liferay.journal.web.internal.asset.model.JournalArticleAssetRenderer;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
-import com.liferay.journal.web.internal.dao.search.JournalRowChecker;
+import com.liferay.journal.web.internal.dao.search.JournalArticleRowChecker;
 import com.liferay.journal.web.internal.item.selector.JournalArticleItemSelectorView;
 import com.liferay.journal.web.internal.util.JournalSearcherUtil;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -40,6 +40,8 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -75,19 +77,19 @@ import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBui
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -118,9 +120,9 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		_stagingGroupHelper = stagingGroupHelper;
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 		_portletResponse = (RenderResponse)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -206,10 +208,20 @@ public class JournalArticleItemSelectorViewDisplayContext {
 				ClassTypeReader classTypeReader =
 					assetRendererFactory.getClassTypeReader();
 
-				ClassType classType = classTypeReader.getClassType(
-					assetEntry.getClassTypeId(), _themeDisplay.getLocale());
+				try {
+					ClassType classType = classTypeReader.getClassType(
+						assetEntry.getClassTypeId(), _themeDisplay.getLocale());
 
-				return classType.getName();
+					return classType.getName();
+				}
+				catch (Exception exception) {
+					_log.error(
+						"Unable to get class type for article: " +
+							journalArticle.getArticleId(),
+						exception);
+				}
+
+				return StringPool.BLANK;
 			}
 		).put(
 			"className", JournalArticle.class.getName()
@@ -220,12 +232,32 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		).put(
 			"classTypeId", _getClassTypeId(ddmStructure)
 		).put(
+			"externalReferenceCode", journalArticle.getExternalReferenceCode()
+		).put(
 			"groupDescriptiveName",
 			() -> {
 				Group group = GroupLocalServiceUtil.fetchGroup(
 					assetEntry.getGroupId());
 
 				return group.getDescriptiveName(_themeDisplay.getLocale());
+			}
+		).put(
+			"scopeExternalReferenceCode",
+			() -> {
+				long scopeGroupId = _themeDisplay.getRefererGroupId();
+
+				if (scopeGroupId <= 0) {
+					scopeGroupId = _themeDisplay.getScopeGroupId();
+				}
+
+				if (assetEntry.getGroupId() == scopeGroupId) {
+					return null;
+				}
+
+				Group group = GroupLocalServiceUtil.getGroup(
+					assetEntry.getGroupId());
+
+				return group.getExternalReferenceCode();
 			}
 		).put(
 			"subtype", _getSubtype(ddmStructure)
@@ -312,7 +344,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			"scopeGroupType",
 			ParamUtil.getBoolean(_httpServletRequest, "scopeGroupType")
 		).setParameter(
-			"selectedTab", _getTitle(_httpServletRequest.getLocale())
+			"selectedTab", _getSelectedTab()
 		).buildPortletURL();
 	}
 
@@ -337,17 +369,19 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			new SearchContainer<>(_portletRequest, portletURL, null, null);
 
 		if (_infoItemItemSelectorCriterion.isMultiSelection()) {
-			JournalRowChecker journalRowChecker = new JournalRowChecker(
-				JournalArticleLocalServiceUtil.fetchJournalArticle(
-					_infoItemItemSelectorCriterion.getRefererClassPK()),
-				_portletResponse);
+			JournalArticleRowChecker journalArticleRowChecker =
+				new JournalArticleRowChecker(
+					JournalArticleLocalServiceUtil.fetchLatestArticle(
+						_infoItemItemSelectorCriterion.getRefererClassPK()),
+					_portletResponse);
 
-			journalRowChecker.setRememberCheckBoxStateURLRegex(
+			journalArticleRowChecker.setRememberCheckBoxStateURLRegex(
 				StringBundler.concat(
 					"^(?!.*", _portletResponse.getNamespace(),
 					"redirect).*(folderId=", _getFolderId(), ")"));
 
-			articleAndFolderSearchContainer.setRowChecker(journalRowChecker);
+			articleAndFolderSearchContainer.setRowChecker(
+				journalArticleRowChecker);
 		}
 
 		articleAndFolderSearchContainer.setOrderByCol(_getOrderByCol());
@@ -363,7 +397,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			}
 
 			SearchResponse searchResponse =
-				JournalSearcherUtil.searchJournalArticleAndFolders(
+				JournalSearcherUtil.searchJournalArticlesAndJournalFolders(
 					searchContext -> {
 						try {
 							_populateSearchContext(
@@ -416,12 +450,14 @@ public class JournalArticleItemSelectorViewDisplayContext {
 					_getGroupId(), 0, _getFolderId(), _getDDMStructureId(),
 					_infoItemItemSelectorCriterion.getStatus(),
 					_themeDisplay.getLocale(),
+					new int[] {WorkflowConstants.STATUS_EXPIRED},
 					articleAndFolderSearchContainer.getStart(),
 					articleAndFolderSearchContainer.getEnd(),
 					folderOrderByComparator);
 			},
 			JournalFolderServiceUtil.getFoldersAndArticlesCount(
 				_getGroupId(), 0, _getFolderId(), _getDDMStructureId(),
+				new int[] {WorkflowConstants.STATUS_EXPIRED},
 				_infoItemItemSelectorCriterion.getStatus()));
 
 		_articleSearchContainer = articleAndFolderSearchContainer;
@@ -491,11 +527,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	public boolean isShowBreadcrumb() {
 		Group group = _themeDisplay.getScopeGroup();
 
-		if (group.isLayout()) {
-			return false;
-		}
-
-		return true;
+		return !group.isLayout();
 	}
 
 	public boolean showArticleId() {
@@ -645,6 +677,16 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		return _scope;
 	}
 
+	private String _getSelectedTab() {
+		if (_selectedTab != null) {
+			return _selectedTab;
+		}
+
+		_selectedTab = ParamUtil.getString(_httpServletRequest, "selectedTab");
+
+		return _selectedTab;
+	}
+
 	private long _getStagingAwareGroupId() {
 		if (_groupId != null) {
 			return _groupId;
@@ -676,19 +718,9 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		return classType.getName();
 	}
 
-	private String _getTitle(Locale locale) {
-		return _journalArticleItemSelectorView.getTitle(locale);
-	}
-
 	private boolean _isEverywhereScopeFilter() {
-		if (Objects.equals(
-				ParamUtil.getString(_httpServletRequest, "scope"),
-				"everywhere")) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			ParamUtil.getString(_httpServletRequest, "scope"), "everywhere");
 	}
 
 	private void _populateSearchContext(
@@ -775,6 +807,9 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleItemSelectorViewDisplayContext.class);
+
 	private SearchContainer<?> _articleSearchContainer;
 	private Long _ddmStructureId;
 	private String _displayStyle;
@@ -802,6 +837,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	private String _scope;
 	private final boolean _search;
 	private Boolean _searchEverywhere;
+	private String _selectedTab;
 	private final StagingGroupHelper _stagingGroupHelper;
 	private final ThemeDisplay _themeDisplay;
 

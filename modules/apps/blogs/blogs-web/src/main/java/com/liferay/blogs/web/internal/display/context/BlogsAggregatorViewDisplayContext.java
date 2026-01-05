@@ -22,17 +22,17 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mariano Álvaro Sáiz
@@ -121,17 +121,17 @@ public class BlogsAggregatorViewDisplayContext {
 			_renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, 5,
 			getPortletURL(), null, null);
 
-		List<BlogsEntry> blogEntries = new ArrayList<>();
+		List<BlogsEntry> blogsEntries = new ArrayList<>();
 
 		if (Objects.equals(getSelectionMethod(), "users")) {
 			if (getOrganizationId() > 0) {
-				blogEntries.addAll(
+				blogsEntries.addAll(
 					BlogsEntryServiceUtil.getOrganizationEntries(
 						getOrganizationId(), new Date(),
 						WorkflowConstants.STATUS_APPROVED, getMax()));
 			}
 			else {
-				blogEntries.addAll(
+				blogsEntries.addAll(
 					BlogsEntryServiceUtil.getGroupsEntries(
 						_themeDisplay.getCompanyId(),
 						_themeDisplay.getScopeGroupId(), new Date(),
@@ -139,13 +139,13 @@ public class BlogsAggregatorViewDisplayContext {
 			}
 		}
 		else {
-			blogEntries.addAll(
+			blogsEntries.addAll(
 				BlogsEntryServiceUtil.getGroupEntries(
 					_themeDisplay.getScopeGroupId(), new Date(),
 					WorkflowConstants.STATUS_APPROVED, getMax()));
 		}
 
-		_searchContainer.setResultsAndTotal(blogEntries);
+		_searchContainer.setResultsAndTotal(blogsEntries);
 
 		return _searchContainer;
 	}

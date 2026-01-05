@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Petteri Karttunen
@@ -50,7 +48,7 @@ public class EmbeddingProviderValidationResult implements Serializable {
 			EmbeddingProviderValidationResult.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getErrorMessage() {
 		if (_errorMessageSupplier != null) {
 			errorMessage = _errorMessageSupplier.get();
@@ -91,7 +89,7 @@ public class EmbeddingProviderValidationResult implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _errorMessageSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getExpectedDimensions() {
 		if (_expectedDimensionsSupplier != null) {
 			expectedDimensions = _expectedDimensionsSupplier.get();
@@ -194,8 +192,8 @@ public class EmbeddingProviderValidationResult implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.search.rest.dto.v1_0.EmbeddingProviderValidationResult",
 		name = "x-class-name"
 	)

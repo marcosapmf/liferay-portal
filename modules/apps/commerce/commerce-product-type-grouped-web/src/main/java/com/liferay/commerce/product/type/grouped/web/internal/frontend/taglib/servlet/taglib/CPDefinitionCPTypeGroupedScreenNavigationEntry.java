@@ -17,17 +17,17 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.io.IOException;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Joao Victor Alves
+ * @author João Victor Alves
  */
 @Component(
 	property = "screen.navigation.entry.order:Integer=20",
@@ -50,11 +50,7 @@ public class CPDefinitionCPTypeGroupedScreenNavigationEntry
 
 		String productTypeName = cpDefinition.getProductTypeName();
 
-		if (productTypeName.equals(getCategoryKey())) {
-			return true;
-		}
-
-		return false;
+		return productTypeName.equals(getCategoryKey());
 	}
 
 	@Override

@@ -26,12 +26,12 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.GetterUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.math.BigDecimal;
 
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -134,17 +134,19 @@ public class CommerceInventoryWarehouseIndexer
 			CLASS_NAME, commerceInventoryWarehouse);
 
 		document.addKeyword(
-			Field.DESCRIPTION, commerceInventoryWarehouse.getDescription());
+			Field.DESCRIPTION, commerceInventoryWarehouse.getDescription(),
+			true);
 		document.addNumberSortable(
 			Field.ENTRY_CLASS_PK,
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
-		document.addKeyword(Field.NAME, commerceInventoryWarehouse.getName());
+		document.addKeyword(
+			Field.NAME, commerceInventoryWarehouse.getName(), true);
 		document.addKeyword(
 			FIELD_ACTIVE, commerceInventoryWarehouse.isActive());
+		document.addKeyword(FIELD_CITY, commerceInventoryWarehouse.getCity());
 		document.addKeyword(
 			FIELD_COUNTRY_TWO_LETTERS_ISO_CODE,
 			commerceInventoryWarehouse.getCountryTwoLettersISOCode());
-		document.addKeyword(FIELD_CITY, commerceInventoryWarehouse.getCity());
 		document.addKeyword(
 			FIELD_STREET_1, commerceInventoryWarehouse.getStreet1());
 		document.addKeyword(FIELD_ZIP, commerceInventoryWarehouse.getZip());

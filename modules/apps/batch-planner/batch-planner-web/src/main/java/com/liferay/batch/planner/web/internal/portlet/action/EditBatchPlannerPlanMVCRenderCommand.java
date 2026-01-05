@@ -26,13 +26,13 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegateRegistry;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + BatchPlannerPortletKeys.BATCH_PLANNER,
+		"jakarta.portlet.name=" + BatchPlannerPortletKeys.BATCH_PLANNER,
 		"mvc.command.name=/batch_planner/edit_export_batch_planner_plan",
 		"mvc.command.name=/batch_planner/edit_import_batch_planner_plan"
 	},
@@ -126,11 +126,7 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 			entityClassName = entityClassName.substring(0, index);
 		}
 
-		if (_allowedEntityClassNames.contains(entityClassName)) {
-			return true;
-		}
-
-		return false;
+		return _allowedEntityClassNames.contains(entityClassName);
 	}
 
 	private boolean _isBatchPlannerEnabled(
@@ -146,11 +142,7 @@ public class EditBatchPlannerPlanMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private boolean _isExport(String value) {
-		if (value.equals("export")) {
-			return true;
-		}
-
-		return false;
+		return value.equals("export");
 	}
 
 	private String _render(RenderRequest renderRequest) throws PortalException {

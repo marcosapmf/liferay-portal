@@ -12,6 +12,7 @@ import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.headless.delivery.dto.v1_0.ClientExtension;
 import com.liferay.headless.delivery.dto.v1_0.MasterPage;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
@@ -292,17 +293,19 @@ public class PageDefinitionDTOConverter
 							};
 						}
 
-						long faviconFileEntryId =
-							layout.getFaviconFileEntryId();
+						String faviconFileEntryERC =
+							layout.getFaviconFileEntryERC();
 
-						if (faviconFileEntryId != 0) {
-							return ContentDocumentUtil.toContentDocument(
-								_dlURLHelper, "settings.favIcon.image",
-								_dlAppService.getFileEntry(faviconFileEntryId),
-								dtoConverterContext.getUriInfo());
+						if (Validator.isNull(faviconFileEntryERC)) {
+							return null;
 						}
 
-						return null;
+						return ContentDocumentUtil.toContentDocument(
+							_dlURLHelper, "settings.favIcon.image",
+							_dlAppService.getFileEntryByExternalReferenceCode(
+								faviconFileEntryERC,
+								layout.getFaviconFileEntryGroupId()),
+							dtoConverterContext.getUriInfo());
 					});
 				setGlobalCSSClientExtensions(
 					() -> _getClientExtensions(
@@ -348,13 +351,16 @@ public class PageDefinitionDTOConverter
 					});
 				setStyleBook(
 					() -> {
-						StyleBookEntry styleBookEntry =
-							_styleBookEntryLocalService.fetchStyleBookEntry(
-								layout.getStyleBookEntryId());
-
-						if (styleBookEntry == null) {
+						if (Validator.isNull(layout.getStyleBookEntryERC())) {
 							return null;
 						}
+
+						StyleBookEntry styleBookEntry =
+							_styleBookEntryLocalService.
+								fetchStyleBookEntryByExternalReferenceCode(
+									layout.getStyleBookEntryERC(),
+									_staging.getLiveGroupId(
+										layout.getGroupId()));
 
 						return new StyleBook() {
 							{
@@ -428,13 +434,16 @@ public class PageDefinitionDTOConverter
 		_layoutPageTemplateEntryLocalService;
 
 	@Reference(
-		target = "(dto.class.name=com.liferay.layout.util.structure.LayoutStructureItem)"
+		target = "(component.name=com.liferay.headless.delivery.internal.dto.v1_0.converter.PageElementDTOConverter)"
 	)
 	private DTOConverter<LayoutStructureItem, PageElement>
 		_pageElementDTOConverter;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Staging _staging;
 
 	@Reference
 	private StyleBookEntryLocalService _styleBookEntryLocalService;

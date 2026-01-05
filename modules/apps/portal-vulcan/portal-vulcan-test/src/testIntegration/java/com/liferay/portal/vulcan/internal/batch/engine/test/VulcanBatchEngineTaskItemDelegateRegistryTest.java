@@ -13,6 +13,9 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -29,6 +32,9 @@ import com.liferay.portal.vulcan.util.OpenAPIUtil;
 import com.liferay.portal.vulcan.yaml.YAMLUtil;
 import com.liferay.portal.vulcan.yaml.openapi.OpenAPIYAML;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.io.Serializable;
 
 import java.util.Arrays;
@@ -37,9 +43,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -419,6 +422,20 @@ public class VulcanBatchEngineTaskItemDelegateRegistryTest {
 
 		@Override
 		public void setLanguageId(String languageId) {
+		}
+
+		@Override
+		public void setResourceActionLocalService(
+			ResourceActionLocalService resourceActionLocalService) {
+		}
+
+		@Override
+		public void setResourcePermissionLocalService(
+			ResourcePermissionLocalService resourcePermissionLocalService) {
+		}
+
+		@Override
+		public void setRoleLocalService(RoleLocalService roleLocalService) {
 		}
 
 		@Override

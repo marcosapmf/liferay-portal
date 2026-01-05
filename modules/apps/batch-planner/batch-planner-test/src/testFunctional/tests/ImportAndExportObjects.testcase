@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-186620=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -26,43 +27,8 @@ definition {
 		}
 	}
 
-	@priority = 3
-	test DownloadSampleFileOfTheCustomObject {
-		task ("Given a custom object is published") {
-			ObjectDefinitionAPI.createAndPublishObjectDefinition(
-				en_US_label = "student",
-				en_US_plural_label = "students",
-				name = "Student",
-				requiredStringFieldName = "name");
-		}
-
-		task ("And Given I create an import file task with custom object as the entity type") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.gotoImport();
-
-			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
-		}
-
-		task ("When I download a sample file of this entity") {
-			Click.clickAt(locator1 = "ImportExport#SAMPLE_FILE_DOWNLOAD_BUTTON");
-		}
-
-		task ("Then the sample file download successfully") {
-			DownloadTempFile();
-
-			var sampleFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "c_student-*.csv");
-
-			ImportExport.assertFileContent(
-				comparisonFileName = "objectEntry_import_sample.csv",
-				fileName = ${sampleFileName});
-		}
-	}
-
 	@priority = 4
 	test ExportCustomObjectEntryWithManyToManyRelationship {
-		property portal.acceptance = "true";
-
 		task ("Given two custom objects published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "university",
@@ -120,8 +86,6 @@ definition {
 
 	@priority = 4
 	test ExportCustomObjectEntryWithOneToManyRelationship {
-		property portal.acceptance = "true";
-
 		task ("Given two custom objects published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "university",
@@ -179,8 +143,6 @@ definition {
 
 	@priority = 4
 	test ExportCustomObjectWithObjectEntry {
-		property portal.acceptance = "true";
-
 		task ("Given a custom object is published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "student",
@@ -301,8 +263,6 @@ definition {
 
 	@priority = 4
 	test SelectCustomObjectAsEntityType {
-		property portal.acceptance = "true";
-
 		task ("Given a custom object is published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "student",

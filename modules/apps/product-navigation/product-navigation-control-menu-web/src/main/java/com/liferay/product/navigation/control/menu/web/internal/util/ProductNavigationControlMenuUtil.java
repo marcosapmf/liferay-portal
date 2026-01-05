@@ -15,7 +15,7 @@ import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -63,11 +63,7 @@ public class ProductNavigationControlMenuUtil {
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.isLayoutPrototypeLinkActive()) {
-			return false;
-		}
-
-		return true;
+		return !layout.isLayoutPrototypeLinkActive();
 	}
 
 	private static boolean _hasCustomizePermission(ThemeDisplay themeDisplay)
@@ -84,14 +80,8 @@ public class ProductNavigationControlMenuUtil {
 			return false;
 		}
 
-		if (LayoutPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.CUSTOMIZE)) {
-
-			return true;
-		}
-
-		return false;
+		return LayoutPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), layout, ActionKeys.CUSTOMIZE);
 	}
 
 	private static boolean _hasUpdateLayoutPermission(ThemeDisplay themeDisplay)

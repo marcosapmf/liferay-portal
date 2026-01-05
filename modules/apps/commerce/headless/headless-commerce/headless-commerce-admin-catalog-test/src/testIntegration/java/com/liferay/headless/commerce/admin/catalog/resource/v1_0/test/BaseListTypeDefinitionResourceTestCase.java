@@ -21,6 +21,7 @@ import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ListTypeDe
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -28,21 +29,27 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,10 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -81,7 +85,7 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -95,11 +99,15 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 		_listTypeDefinitionResource.setContextCompany(testCompany);
 
-		ListTypeDefinitionResource.Builder builder =
-			ListTypeDefinitionResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		listTypeDefinitionResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		listTypeDefinitionResource = ListTypeDefinitionResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -113,7 +121,33 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ListTypeDefinition listTypeDefinition1 = randomListTypeDefinition();
+
+		String json = objectMapper.writeValueAsString(listTypeDefinition1);
+
+		ListTypeDefinition listTypeDefinition2 = ListTypeDefinitionSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(listTypeDefinition1, listTypeDefinition2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ListTypeDefinition listTypeDefinition = randomListTypeDefinition();
+
+		String json1 = objectMapper.writeValueAsString(listTypeDefinition);
+		String json2 = ListTypeDefinitionSerDes.toJSON(listTypeDefinition);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -128,41 +162,6 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ListTypeDefinition listTypeDefinition1 = randomListTypeDefinition();
-
-		String json = objectMapper.writeValueAsString(listTypeDefinition1);
-
-		ListTypeDefinition listTypeDefinition2 = ListTypeDefinitionSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(listTypeDefinition1, listTypeDefinition2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ListTypeDefinition listTypeDefinition = randomListTypeDefinition();
-
-		String json1 = objectMapper.writeValueAsString(listTypeDefinition);
-		String json2 = ListTypeDefinitionSerDes.toJSON(listTypeDefinition);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -183,6 +182,105 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		Assert.assertEquals(
 			regex, listTypeDefinition.getExternalReferenceCode());
 		Assert.assertEquals(regex, listTypeDefinition.getName());
+	}
+
+	@Test
+	public void testDeleteSpecificationListTypeDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ListTypeDefinition listTypeDefinition =
+			testDeleteSpecificationListTypeDefinition_addListTypeDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			listTypeDefinitionResource.
+				deleteSpecificationListTypeDefinitionHttpResponse(
+					testDeleteSpecificationListTypeDefinition_getSpecificationId(),
+					listTypeDefinition.getId()));
+	}
+
+	protected ListTypeDefinition
+			testDeleteSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteSpecificationListTypeDefinition()
+		throws Exception {
+
+		// No namespace
+
+		ListTypeDefinition listTypeDefinition1 =
+			testGraphQLDeleteSpecificationListTypeDefinition_addListTypeDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteSpecificationListTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"specificationId",
+									testGraphQLDeleteSpecificationListTypeDefinition_getSpecificationId());
+								put(
+									"listTypeDefinitionId",
+									listTypeDefinition1.getId());
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteSpecificationListTypeDefinition"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ListTypeDefinition listTypeDefinition2 =
+			testGraphQLDeleteSpecificationListTypeDefinition_addListTypeDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteSpecificationListTypeDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"specificationId",
+										testGraphQLDeleteSpecificationListTypeDefinition_getSpecificationId());
+									put(
+										"listTypeDefinitionId",
+										listTypeDefinition2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteSpecificationListTypeDefinition"));
+	}
+
+	protected Long
+			testGraphQLDeleteSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ListTypeDefinition
+			testGraphQLDeleteSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return testGraphQLListTypeDefinition_addListTypeDefinition();
 	}
 
 	@Test
@@ -277,6 +375,100 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	}
 
 	@Test
+	public void testGraphQLGetSpecificationIdListTypeDefinitionsPage()
+		throws Exception {
+
+		Long id = testGetSpecificationIdListTypeDefinitionsPage_getId();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"specificationIdListTypeDefinitions",
+			new HashMap<String, Object>() {
+				{
+					put("id", id);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject specificationIdListTypeDefinitionsJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/specificationIdListTypeDefinitions");
+
+		long totalCount = specificationIdListTypeDefinitionsJSONObject.getLong(
+			"totalCount");
+
+		ListTypeDefinition listTypeDefinition1 =
+			testGraphQLGetSpecificationIdListTypeDefinitionsPageSpecificationListTypeDefinition_addListTypeDefinition(
+				id, randomListTypeDefinition());
+
+		ListTypeDefinition listTypeDefinition2 =
+			testGraphQLGetSpecificationIdListTypeDefinitionsPageSpecificationListTypeDefinition_addListTypeDefinition(
+				id, randomListTypeDefinition());
+
+		specificationIdListTypeDefinitionsJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/specificationIdListTypeDefinitions");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			specificationIdListTypeDefinitionsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			listTypeDefinition1,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					specificationIdListTypeDefinitionsJSONObject.getString(
+						"items"))));
+		assertContains(
+			listTypeDefinition2,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					specificationIdListTypeDefinitionsJSONObject.getString(
+						"items"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		specificationIdListTypeDefinitionsJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0", graphQLField)),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"JSONObject/specificationIdListTypeDefinitions");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			specificationIdListTypeDefinitionsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			listTypeDefinition1,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					specificationIdListTypeDefinitionsJSONObject.getString(
+						"items"))));
+		assertContains(
+			listTypeDefinition2,
+			Arrays.asList(
+				ListTypeDefinitionSerDes.toDTOs(
+					specificationIdListTypeDefinitionsJSONObject.getString(
+						"items"))));
+	}
+
+	protected ListTypeDefinition
+			testGraphQLGetSpecificationIdListTypeDefinitionsPageSpecificationListTypeDefinition_addListTypeDefinition(
+				Long id, ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostSpecificationIdListTypeDefinition() throws Exception {
 		ListTypeDefinition randomListTypeDefinition =
 			randomListTypeDefinition();
@@ -298,12 +490,226 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testGraphQLPostSpecificationIdListTypeDefinition()
+		throws Exception {
+
+		ListTypeDefinition randomListTypeDefinition =
+			randomListTypeDefinition();
+
+		ListTypeDefinition listTypeDefinition =
+			testGraphQLSpecificationListTypeDefinition_addListTypeDefinition(
+				testGraphQLPostSpecificationIdListTypeDefinition_getSpecificationId(),
+				testGraphQLPostSpecificationIdListTypeDefinition_getListTypeDefinitionId(),
+				randomListTypeDefinition);
+
+		Assert.assertTrue(equals(randomListTypeDefinition, listTypeDefinition));
+	}
+
+	protected Long
+			testGraphQLPostSpecificationIdListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGraphQLPostSpecificationIdListTypeDefinition_getListTypeDefinitionId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostSpecificationListTypeDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ListTypeDefinition listTypeDefinition =
+			testPostSpecificationListTypeDefinition_addListTypeDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			listTypeDefinitionResource.
+				postSpecificationListTypeDefinitionHttpResponse(
+					testPostSpecificationListTypeDefinition_getSpecificationId(),
+					listTypeDefinition.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			listTypeDefinitionResource.
+				postSpecificationListTypeDefinitionHttpResponse(
+					testPostSpecificationListTypeDefinition_getSpecificationId(),
+					0L));
+	}
+
+	protected Long testPostSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ListTypeDefinition
+			testPostSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
+	}
+
 	protected ListTypeDefinition
 			testGraphQLListTypeDefinition_addListTypeDefinition()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected ListTypeDefinition
+			testGraphQLSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return testGraphQLSpecificationListTypeDefinition_addListTypeDefinition(
+			testGraphQLSpecificationListTypeDefinition_getSpecificationId(),
+			testGraphQLSpecificationListTypeDefinition_getListTypeDefinitionId(),
+			randomListTypeDefinition());
+	}
+
+	protected Long
+			testGraphQLSpecificationListTypeDefinition_getSpecificationId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGraphQLSpecificationListTypeDefinition_getListTypeDefinitionId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ListTypeDefinition
+			testGraphQLSpecificationListTypeDefinition_addListTypeDefinition(
+				Long specificationId, Long listTypeDefinitionId,
+				ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		JSONDeserializer<ListTypeDefinition> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(ListTypeDefinition.class)) {
+
+			if (getGraphQLValue(field.get(listTypeDefinition)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(listTypeDefinition)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createListTypeDefinition",
+						new HashMap<String, Object>() {
+							{
+								put("specificationId", specificationId);
+								put(
+									"listTypeDefinitionId",
+									listTypeDefinitionId);
+								put("listTypeDefinition", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createListTypeDefinition"),
+			ListTypeDefinition.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(
@@ -506,6 +912,10 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -781,13 +1191,11 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -797,8 +1205,7 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(
-					_dateFormat.format(listTypeDefinition.getDateCreated()));
+				sb.append(_format.format(listTypeDefinition.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -813,13 +1220,11 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -829,8 +1234,7 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(
-					_dateFormat.format(listTypeDefinition.getDateModified()));
+				sb.append(_format.format(listTypeDefinition.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1024,12 +1428,12 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1038,11 +1442,16 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1074,6 +1483,24 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1095,16 +1522,6 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -1202,7 +1619,9 @@ public abstract class BaseListTypeDefinitionResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseListTypeDefinitionResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.catalog.resource.v1_0.

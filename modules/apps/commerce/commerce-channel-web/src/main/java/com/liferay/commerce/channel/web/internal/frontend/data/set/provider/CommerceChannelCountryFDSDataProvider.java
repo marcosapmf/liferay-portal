@@ -20,9 +20,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,7 +47,7 @@ public class CommerceChannelCountryFDSDataProvider
 			httpServletRequest, "commerceChannelId");
 
 		return TransformUtil.transform(
-			_commerceChannelRelService.getCommerceChannelCountries(
+			_commerceChannelRelService.getCountryCommerceChannelRels(
 				commerceChannelId, fdsKeywords.getKeywords(),
 				fdsPagination.getStartPosition(),
 				fdsPagination.getEndPosition()),
@@ -79,7 +79,7 @@ public class CommerceChannelCountryFDSDataProvider
 		long commerceChannelId = ParamUtil.getLong(
 			httpServletRequest, "commerceChannelId");
 
-		return _commerceChannelRelService.getCommerceChannelCountriesCount(
+		return _commerceChannelRelService.getCountryCommerceChannelRelsCount(
 			commerceChannelId, fdsKeywords.getKeywords());
 	}
 

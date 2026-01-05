@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Jeyvison Nascimento
@@ -50,7 +48,7 @@ public class DataLayoutPage implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(DataLayoutPage.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public DataLayoutRow[] getDataLayoutRows() {
 		if (_dataLayoutRowsSupplier != null) {
@@ -93,7 +91,7 @@ public class DataLayoutPage implements Serializable {
 	@JsonIgnore
 	private Supplier<DataLayoutRow[]> _dataLayoutRowsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getDescription() {
 		if (_descriptionSupplier != null) {
@@ -136,7 +134,7 @@ public class DataLayoutPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Object>> _descriptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Object> getTitle() {
 		if (_titleSupplier != null) {
@@ -256,8 +254,8 @@ public class DataLayoutPage implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.data.engine.rest.dto.v2_0.DataLayoutPage",
 		name = "x-class-name"
 	)

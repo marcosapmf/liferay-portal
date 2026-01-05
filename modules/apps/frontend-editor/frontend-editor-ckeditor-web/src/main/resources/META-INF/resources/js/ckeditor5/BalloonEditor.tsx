@@ -1,0 +1,56 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {EventInfo} from '@ckeditor/ckeditor5-utils/dist/index.js';
+import React from 'react';
+
+import {BaseCKEditor5BalloonEditor} from '../index';
+import BaseEditor from './BaseEditor';
+import getDefaultEditorConfig from './utils/getDefaultEditorConfig';
+import {
+	EEditorConfigPreset,
+	EEditorVariant,
+	LiferayEditorConfig,
+	TEditor,
+} from './utils/types';
+
+const BalloonEditor = ({
+	className,
+	config,
+	data,
+	formInputEnabled,
+	formInputName,
+	onChange,
+	onReady,
+}: {
+	className?: string;
+	config?: LiferayEditorConfig;
+	data?: string;
+	formInputEnabled?: boolean;
+	formInputName?: string;
+	onChange?: (event: EventInfo, editor: TEditor) => void;
+	onReady?: (editor: TEditor) => void;
+}) => {
+	return (
+		<BaseEditor
+			className={className}
+			config={{
+				...getDefaultEditorConfig({
+					editorVariant: EEditorVariant.BALLOON,
+					preset: config?.preset || EEditorConfigPreset.ADVANCED,
+				}),
+				...config,
+			}}
+			data={data}
+			editor={BaseCKEditor5BalloonEditor}
+			formInputEnabled={formInputEnabled}
+			formInputName={formInputName}
+			onChange={onChange}
+			onReady={onReady}
+		/>
+	);
+};
+
+export default BalloonEditor;

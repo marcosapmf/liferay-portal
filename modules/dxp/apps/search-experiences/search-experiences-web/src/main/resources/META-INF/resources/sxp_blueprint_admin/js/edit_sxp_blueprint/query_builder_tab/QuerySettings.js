@@ -21,9 +21,11 @@ const QUERY_CONTRIBUTORS_OPTIONS = {
 
 function QuerySettings({
 	applyIndexerClauses,
+	assetSubtypesMap,
 	clauseContributorsList,
 	frameworkConfig,
 	onApplyIndexerClausesChange,
+	onAssetSubtypesMapChange,
 	onChangeClauseContributorsVisibility,
 	onChangeIndexerClausesHelpVisibility,
 	onChangeQueryContributorsHelpVisibility,
@@ -85,11 +87,16 @@ function QuerySettings({
 
 	return (
 		<div className="query-settings">
-			<ClayLayout.Row className="configuration-header" justify="between">
-				<ClayLayout.Col size={12}>
-					{Liferay.Language.get('query-settings')}
-				</ClayLayout.Col>
-			</ClayLayout.Row>
+			{!Liferay.FeatureFlags['LPD-37320'] && (
+				<ClayLayout.Row
+					className="configuration-header"
+					justify="between"
+				>
+					<ClayLayout.Col size={12}>
+						{Liferay.Language.get('query-settings')}
+					</ClayLayout.Col>
+				</ClayLayout.Row>
+			)}
 
 			<div className="sheet">
 				<ClayPanel.Group flush small>
@@ -130,6 +137,13 @@ function QuerySettings({
 									</div>
 
 									<SelectTypes
+										assetSubtypesMap={assetSubtypesMap}
+										initialSelectedTypes={
+											frameworkConfig.searchableAssetTypes
+										}
+										onAssetSubtypesMapChange={
+											onAssetSubtypesMapChange
+										}
 										onFetchSearchableTypes={
 											onFetchSearchableTypes
 										}
@@ -137,9 +151,6 @@ function QuerySettings({
 											onFrameworkConfigChange
 										}
 										searchableTypes={searchableTypes}
-										selectedTypes={
-											frameworkConfig.searchableAssetTypes
-										}
 									/>
 								</>
 							)}

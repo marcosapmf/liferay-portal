@@ -7,9 +7,10 @@ package com.liferay.asset.publisher.web.internal.frontend.taglib.form.navigator;
 
 import com.liferay.asset.publisher.constants.AssetPublisherConstants;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,7 +42,9 @@ public class ScopeFormNavigatorEntry
 
 	@Override
 	public boolean isVisible(User user, Object object) {
-		if (!isManualSelection() && !isDynamicAssetSelection()) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-39304") ||
+			(!isManualSelection() && !isDynamicAssetSelection())) {
+
 			return false;
 		}
 

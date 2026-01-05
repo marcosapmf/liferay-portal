@@ -22,10 +22,10 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.RenderRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -103,18 +103,20 @@ public class AssetEntryVerticalCard implements VerticalCard {
 					_assetBrowserDisplayContext.getSubtypeSelectionId()));
 		}
 
-		if (_assetBrowserDisplayContext.isSearchEverywhere()) {
-			Group group = GroupLocalServiceUtil.fetchGroup(
-				_assetEntry.getGroupId());
+		if (!_assetBrowserDisplayContext.isSearchEverywhere()) {
+			return null;
+		}
 
-			try {
-				return HtmlUtil.escape(
-					group.getDescriptiveName(_themeDisplay.getLocale()));
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
+		Group group = GroupLocalServiceUtil.fetchGroup(
+			_assetEntry.getGroupId());
+
+		try {
+			return HtmlUtil.escape(
+				group.getDescriptiveName(_themeDisplay.getLocale()));
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
 			}
 		}
 

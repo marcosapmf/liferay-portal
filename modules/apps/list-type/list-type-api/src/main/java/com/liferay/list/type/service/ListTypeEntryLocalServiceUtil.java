@@ -55,11 +55,12 @@ public class ListTypeEntryLocalServiceUtil {
 	public static ListTypeEntry addListTypeEntry(
 			String externalReferenceCode, long userId,
 			long listTypeDefinitionId, String key,
-			Map<java.util.Locale, String> nameMap)
+			Map<java.util.Locale, String> nameMap, boolean system)
 		throws PortalException {
 
 		return getService().addListTypeEntry(
-			externalReferenceCode, userId, listTypeDefinitionId, key, nameMap);
+			externalReferenceCode, userId, listTypeDefinitionId, key, nameMap,
+			system);
 	}
 
 	/**
@@ -308,6 +309,12 @@ public class ListTypeEntryLocalServiceUtil {
 			listTypeDefinitionId, start, end, orderByComparator);
 	}
 
+	public static List<ListTypeEntry> getListTypeEntries(
+		long[] listTypeDefinitionIds) {
+
+		return getService().getListTypeEntries(listTypeDefinitionIds);
+	}
+
 	/**
 	 * Returns the number of list type entries.
 	 *
@@ -365,6 +372,14 @@ public class ListTypeEntryLocalServiceUtil {
 		return getService().getListTypeEntryByUuidAndCompanyId(uuid, companyId);
 	}
 
+	public static ListTypeEntry getOrAddEmptyListTypeEntry(
+			long userId, long listTypeDefinitionId, String key)
+		throws PortalException {
+
+		return getService().getOrAddEmptyListTypeEntry(
+			userId, listTypeDefinitionId, key);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -406,6 +421,13 @@ public class ListTypeEntryLocalServiceUtil {
 
 		return getService().updateListTypeEntry(
 			externalReferenceCode, listTypeEntryId, nameMap);
+	}
+
+	public static void updateUserId(
+			long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		getService().updateUserId(companyId, oldUserId, newUserId);
 	}
 
 	public static ListTypeEntryLocalService getService() {

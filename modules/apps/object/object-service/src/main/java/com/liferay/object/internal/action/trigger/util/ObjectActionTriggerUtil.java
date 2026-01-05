@@ -21,7 +21,7 @@ import java.util.List;
 public class ObjectActionTriggerUtil {
 
 	public static List<ObjectActionTrigger> getDefaultObjectActionTriggers() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-34594")) {
 			return ListUtil.filter(
 				_defaultObjectActionTriggers,
 				objectActionTrigger -> !StringUtil.equals(
@@ -59,6 +59,8 @@ public class ObjectActionTriggerUtil {
 							KEY_ON_AFTER_ATTACHMENT_DOWNLOAD),
 					new ObjectActionTrigger(
 						ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE),
+					new ObjectActionTrigger(
+						ObjectActionTriggerConstants.KEY_ON_AFTER_LOGIN),
 					new ObjectActionTrigger(
 						ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE),
 					new ObjectActionTrigger(

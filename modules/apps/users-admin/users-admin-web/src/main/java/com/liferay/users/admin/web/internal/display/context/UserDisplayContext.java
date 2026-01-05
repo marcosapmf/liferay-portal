@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
@@ -30,20 +31,25 @@ import com.liferay.portal.kernel.service.PasswordPolicyLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
 import com.liferay.user.groups.admin.item.selector.UserGroupItemSelectorCriterion;
+
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,10 +57,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pei-Jung Lan
@@ -78,7 +80,7 @@ public class UserDisplayContext {
 		_permissionChecker = themeDisplay.getPermissionChecker();
 
 		_renderResponse = (RenderResponse)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 		_selUser = PortalUtil.getSelectedUser(httpServletRequest);
 		_themeDisplay = themeDisplay;
@@ -129,8 +131,13 @@ public class UserDisplayContext {
 		SortedSet<Group> inheritedSiteGroupsSet = new TreeSet<>();
 
 		inheritedSiteGroupsSet.addAll(
-			GroupLocalServiceUtil.getUserGroupsRelatedGroups(getUserGroups()));
-		inheritedSiteGroupsSet.addAll(_getOrganizationRelatedGroups());
+			ListUtil.filter(
+				GroupLocalServiceUtil.getUserGroupsRelatedGroups(
+					getUserGroups()),
+				group -> !group.isDepot()));
+		inheritedSiteGroupsSet.addAll(
+			ListUtil.filter(
+				_getOrganizationRelatedGroups(), group -> !group.isDepot()));
 
 		return ListUtil.fromCollection(inheritedSiteGroupsSet);
 	}
@@ -284,6 +291,12 @@ public class UserDisplayContext {
 			_permissionChecker, _selUser.getUserGroups());
 	}
 
+	public boolean hasUpdatePermission() {
+		return UserPermissionUtil.contains(
+			_themeDisplay.getPermissionChecker(), _selUser.getUserId(),
+			ActionKeys.UPDATE);
+	}
+
 	public boolean isAllowRemoveRole(Role role) throws PortalException {
 		User selUser = getSelectedUser();
 
@@ -339,7 +352,8 @@ public class UserDisplayContext {
 				organization.getParentOrganization();
 
 			if ((parentOrganization != null) &&
-				!organizations.contains(parentOrganization)) {
+				!organizations.contains(parentOrganization) &&
+				!parentOrganizations.contains(parentOrganization)) {
 
 				parentOrganizations.add(parentOrganization);
 			}

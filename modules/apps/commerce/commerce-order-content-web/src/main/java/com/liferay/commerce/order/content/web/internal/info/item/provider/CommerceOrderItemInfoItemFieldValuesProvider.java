@@ -5,17 +5,17 @@
 
 package com.liferay.commerce.order.content.web.internal.info.item.provider;
 
-import com.liferay.commerce.context.CommerceContextThreadLocal;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.content.web.internal.info.CommerceOrderItemInfoItemFields;
 import com.liferay.commerce.order.content.web.internal.util.CommerceOrderItemUtil;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
+import com.liferay.commerce.product.helper.CPInstanceHelper;
 import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.product.util.CPInstanceHelper;
+import com.liferay.commerce.product.service.CPInstanceService;
+import com.liferay.commerce.util.CommerceContextThreadLocal;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.expando.info.item.provider.ExpandoInfoItemFieldSetProvider;
 import com.liferay.info.field.InfoFieldValue;
@@ -179,7 +179,7 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 			unitPrice = CommerceOrderItemUtil.formatUnitPrice(
 				commerceOrderItemPrice, _language, locale);
 
-			CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
+			CPInstance cpInstance = _cpInstanceService.fetchCPInstance(
 				commerceOrderItem.getCPInstanceId());
 
 			if (cpInstance != null) {
@@ -257,7 +257,7 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 	private CPInstanceHelper _cpInstanceHelper;
 
 	@Reference
-	private CPInstanceLocalService _cpInstanceLocalService;
+	private CPInstanceService _cpInstanceService;
 
 	@Reference
 	private ExpandoInfoItemFieldSetProvider _expandoInfoItemFieldSetProvider;

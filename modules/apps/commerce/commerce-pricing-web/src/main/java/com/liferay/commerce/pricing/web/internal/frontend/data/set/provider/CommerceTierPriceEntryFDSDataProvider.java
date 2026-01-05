@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.pricing.web.internal.frontend.data.set.provider;
 
+import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
@@ -31,13 +32,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -93,9 +94,12 @@ public class CommerceTierPriceEntryFDSDataProvider
 		for (CommerceTierPriceEntry commerceTierPriceEntry :
 				commerceTierPriceEntryBaseModelSearchResult.getBaseModels()) {
 
+			CommerceCurrency commerceCurrency =
+				commercePriceList.getCommerceCurrency();
+
 			CommerceMoney priceCommerceMoney =
 				commerceTierPriceEntry.getPriceCommerceMoney(
-					commercePriceList.getCommerceCurrencyId());
+					commerceCurrency.getCommerceCurrencyId());
 
 			tierPriceEntries.add(
 				new TierPriceEntry(

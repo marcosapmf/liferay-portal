@@ -6,24 +6,73 @@
 import {Outlet} from 'react-router-dom';
 
 import {DashboardNavigation} from '../../components/DashboardNavigation/DashboardNavigation';
-import {initialAdministratorDashboardNavigationItems} from './AdministratorDashboardPageUtil';
+import {useMarketplaceContext} from '../../context/MarketplaceContext';
+import i18n from '../../i18n';
 
-const AdministratorDashboardOutlet = () => (
-	<div className="d-flex">
-		<div className="d-flex dashboard-navigation-container">
-			<div className="dashboard-navigation-body">
+const dashboardNavigationItems = [
+	{
+		itemTitle: i18n.translate('summary'),
+		items: [],
+		path: '/',
+		symbol: 'polls',
+	},
+	{
+		adminOnly: true,
+		itemTitle: i18n.translate('orders'),
+		path: '/orders',
+		symbol: 'order-form',
+	},
+	{
+		itemTitle: i18n.translate('apps'),
+		path: '/apps',
+		symbol: 'slideshow',
+	},
+	{
+		adminOnly: true,
+		itemTitle: i18n.translate('solutions'),
+		path: '/solutions',
+		symbol: 'edit-layout',
+	},
+	{
+		adminOnly: true,
+		itemTitle: i18n.translate('trials'),
+		path: '/trial',
+		symbol: 'squares-clock',
+	},
+	{
+		itemTitle: i18n.translate('publishers'),
+		path: '/publishers',
+		symbol: 'users',
+	},
+	{
+		adminOnly: true,
+		itemTitle: i18n.translate('publisher-requests'),
+		path: '/publisher-request',
+		symbol: 'envelope-closed',
+	},
+];
+
+const AdministratorDashboardOutlet = () => {
+	const {marketplaceUserAccount} = useMarketplaceContext();
+
+	return (
+		<div className="d-flex">
+			<div className="d-flex dashboard-navigation-container">
 				<DashboardNavigation
-					dashboardNavigationItems={
-						initialAdministratorDashboardNavigationItems
-					}
+					dashboardNavigationItems={dashboardNavigationItems.filter(
+						({adminOnly}) =>
+							typeof adminOnly === 'boolean'
+								? marketplaceUserAccount.isAdmin
+								: true
+					)}
 				/>
 			</div>
-		</div>
 
-		<span className="h-vh-100 ml-6 w-100">
-			<Outlet />
-		</span>
-	</div>
-);
+			<span className="h-vh-100 ml-6 w-100">
+				<Outlet />
+			</span>
+		</div>
+	);
+};
 
 export default AdministratorDashboardOutlet;

@@ -10,11 +10,12 @@ import com.liferay.list.type.entry.util.ListTypeEntryUtil;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
-import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.constants.ObjectViewFilterColumnConstants;
 import com.liferay.object.exception.DefaultObjectViewException;
 import com.liferay.object.exception.ObjectDefinitionModifiableException;
+import com.liferay.object.exception.ObjectRelationshipEdgeException;
 import com.liferay.object.exception.ObjectViewColumnFieldNameException;
 import com.liferay.object.exception.ObjectViewFilterColumnException;
 import com.liferay.object.exception.ObjectViewSortColumnException;
@@ -37,24 +38,25 @@ import com.liferay.object.service.persistence.ObjectViewColumnPersistence;
 import com.liferay.object.service.persistence.ObjectViewFilterColumnPersistence;
 import com.liferay.object.service.persistence.ObjectViewSortColumnPersistence;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectRelationshipTestUtil;
+import com.liferay.object.test.util.TreeTestUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
-
-import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,6 +66,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,6 +75,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Gabriel Albuquerque
  */
+@FeatureFlag("LPD-34594")
 @RunWith(Arquillian.class)
 public class ObjectViewLocalServiceTest {
 
@@ -79,6 +83,22 @@ public class ObjectViewLocalServiceTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_objectDefinitionA =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
+		_objectDefinitionAA =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
+
+		_objectRelationshipA_AA =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				_objectRelationshipLocalService, _objectDefinitionA,
+				_objectDefinitionAA);
+
+		TreeTestUtil.bind(
+			_objectRelationshipLocalService, List.of(_objectRelationshipA_AA));
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -120,6 +140,17 @@ public class ObjectViewLocalServiceTest {
 			ObjectDefinitionModifiableException.class, true,
 			"A modifiable object definition is required", null, null,
 			Collections.emptyList(), null);
+
+		_assertFailureAddOrUpdateObjectView(
+			ObjectRelationshipEdgeException.class, true,
+			"Edge object relationship object fields cannot be associated " +
+				"with object views",
+			_objectDefinitionAA, null,
+			List.of(
+				_createObjectViewColumn(
+					_objectFieldLocalService.getObjectField(
+						_objectRelationshipA_AA.getObjectFieldId2()))),
+			Collections.emptyList(), Collections.emptyList());
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
@@ -220,7 +251,7 @@ public class ObjectViewLocalServiceTest {
 
 		_objectDefinition =
 			ObjectDefinitionTestUtil.addModifiableSystemObjectDefinition(
-				TestPropsValues.getUserId(), null, false,
+				TestPropsValues.getUserId(), null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -279,6 +310,27 @@ public class ObjectViewLocalServiceTest {
 		Assert.assertEquals(
 			objectViewSortColumns.toString(), 1, objectViewSortColumns.size());
 
+		_assertFailureAddOrUpdateObjectView(
+			ObjectRelationshipEdgeException.class,
+			objectView.isDefaultObjectView(),
+			"Edge object relationship object fields cannot be associated " +
+				"with object views",
+			_objectDefinitionAA,
+			_objectViewLocalService.addObjectView(
+				TestPropsValues.getUserId(),
+				_objectDefinitionAA.getObjectDefinitionId(), false,
+				RandomTestUtil.randomLocaleStringMap(),
+				List.of(
+					_createObjectViewColumn(
+						_objectFieldLocalService.getObjectField(
+							_objectDefinitionAA.getObjectDefinitionId(),
+							"id"))),
+				Collections.emptyList(), Collections.emptyList()),
+			List.of(
+				_createObjectViewColumn(
+					_objectFieldLocalService.getObjectField(
+						_objectRelationshipA_AA.getObjectFieldId2()))),
+			Collections.emptyList(), Collections.emptyList());
 		_assertFailureAddOrUpdateObjectView(
 			ObjectViewColumnFieldNameException.class,
 			objectView.isDefaultObjectView(),
@@ -385,7 +437,8 @@ public class ObjectViewLocalServiceTest {
 				Collections.singletonList(
 					ListTypeEntryUtil.createListTypeEntry(
 						StringUtil.randomId(),
-						Collections.singletonMap(LocaleUtil.US, "Brazil"))));
+						Collections.singletonMap(LocaleUtil.US, "Brazil"))),
+				new ServiceContext());
 
 		ObjectField objectField = ObjectFieldUtil.createObjectField(
 			ObjectFieldConstants.BUSINESS_TYPE_PICKLIST,
@@ -395,36 +448,11 @@ public class ObjectViewLocalServiceTest {
 			listTypeDefinition.getListTypeDefinitionId());
 
 		return ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			false,
 			Arrays.asList(
 				objectField,
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, "name")));
-	}
-
-	private String _addObjectField(
-			String objectFieldLabel, String objectFieldName,
-			boolean objectFieldSystem)
-		throws Exception {
-
-		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
-			new TextObjectFieldBuilder(
-			).userId(
-				TestPropsValues.getUserId()
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(objectFieldLabel)
-			).name(
-				objectFieldName
-			).objectDefinitionId(
-				_objectDefinition.getObjectDefinitionId()
-			).required(
-				true
-			).system(
-				objectFieldSystem
-			).build());
-
-		return objectField.getName();
 	}
 
 	private ObjectView _addObjectView() throws Exception {
@@ -435,7 +463,8 @@ public class ObjectViewLocalServiceTest {
 				Collections.singletonList(
 					ListTypeEntryUtil.createListTypeEntry(
 						StringUtil.randomId(),
-						Collections.singletonMap(LocaleUtil.US, "Brazil"))));
+						Collections.singletonMap(LocaleUtil.US, "Brazil"))),
+				new ServiceContext());
 
 		ObjectField objectField = ObjectFieldUtil.createObjectField(
 			ObjectFieldConstants.BUSINESS_TYPE_PICKLIST,
@@ -469,36 +498,63 @@ public class ObjectViewLocalServiceTest {
 				_createObjectViewSortColumn("baker", "asc")));
 	}
 
+	private void _asserFailureObjectViewFilterColumn(
+		String errorMessage, String filter,
+		String relationshipObjectFieldName) {
+
+		AssertUtils.assertFailure(
+			ObjectViewFilterColumnException.class, errorMessage,
+			() -> _objectViewLocalService.addObjectView(
+				TestPropsValues.getUserId(),
+				_objectDefinition.getObjectDefinitionId(), false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				Collections.emptyList(),
+				Collections.singletonList(
+					_createObjectViewFilterColumn(
+						ObjectViewFilterColumnConstants.FILTER_TYPE_INCLUDES,
+						StringBundler.concat("{\"includes\": ", filter, "}"),
+						relationshipObjectFieldName)),
+				Collections.emptyList()));
+	}
+
+	private void _assertFailureAddOrUpdateObjectView(
+		Class<?> clazz, boolean defaultObjectView, String message,
+		ObjectDefinition objectDefinition, ObjectView objectView,
+		List<ObjectViewColumn> objectViewColumns,
+		List<ObjectViewFilterColumn> objectViewFilterColumns,
+		List<ObjectViewSortColumn> objectViewSortColumns) {
+
+		AssertUtils.assertFailure(
+			clazz, message,
+			() -> {
+				if (objectView != null) {
+					_objectViewLocalService.updateObjectView(
+						objectView.getObjectViewId(), defaultObjectView,
+						objectView.getNameMap(), objectViewColumns,
+						objectViewFilterColumns, objectViewSortColumns);
+				}
+				else {
+					_objectViewLocalService.addObjectView(
+						TestPropsValues.getUserId(),
+						objectDefinition.getObjectDefinitionId(),
+						defaultObjectView,
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString()),
+						objectViewColumns, objectViewFilterColumns,
+						objectViewSortColumns);
+				}
+			});
+	}
+
 	private void _assertFailureAddOrUpdateObjectView(
 		Class<?> clazz, boolean defaultObjectView, String message,
 		ObjectView objectView, List<ObjectViewColumn> objectViewColumns,
 		List<ObjectViewFilterColumn> objectViewFilterColumns,
 		List<ObjectViewSortColumn> objectViewSortColumns) {
 
-		try {
-			if (objectView != null) {
-				_objectViewLocalService.updateObjectView(
-					objectView.getObjectViewId(), defaultObjectView,
-					objectView.getNameMap(), objectViewColumns,
-					objectViewFilterColumns, objectViewSortColumns);
-			}
-			else {
-				_objectViewLocalService.addObjectView(
-					TestPropsValues.getUserId(),
-					_objectDefinition.getObjectDefinitionId(),
-					defaultObjectView,
-					LocalizedMapUtil.getLocalizedMap(
-						RandomTestUtil.randomString()),
-					objectViewColumns, objectViewFilterColumns,
-					objectViewSortColumns);
-			}
-
-			Assert.fail();
-		}
-		catch (PortalException portalException) {
-			Assert.assertTrue(clazz.isInstance(portalException));
-			Assert.assertEquals(message, portalException.getMessage());
-		}
+		_assertFailureAddOrUpdateObjectView(
+			clazz, defaultObjectView, message, _objectDefinition, objectView,
+			objectViewColumns, objectViewFilterColumns, objectViewSortColumns);
 	}
 
 	private void _assertObjectView(ObjectView objectView) {
@@ -522,17 +578,14 @@ public class ObjectViewLocalServiceTest {
 			objectViewSortColumns.toString(), 2, objectViewSortColumns.size());
 	}
 
-	private ObjectRelationship _createObjectRelationship(
-			long objectDefinitionId1, long objectDefinitionId2)
-		throws Exception {
+	private ObjectViewColumn _createObjectViewColumn(ObjectField objectField) {
+		ObjectViewColumn objectViewColumn = _objectViewColumnPersistence.create(
+			0);
 
-		return _objectRelationshipLocalService.addObjectRelationship(
-			null, TestPropsValues.getUserId(), objectDefinitionId1,
-			objectDefinitionId2, 0,
-			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
-			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			StringUtil.randomId(), false,
-			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+		objectViewColumn.setLabelMap(RandomTestUtil.randomLocaleStringMap());
+		objectViewColumn.setObjectFieldName(objectField.getName());
+
+		return objectViewColumn;
 	}
 
 	private ObjectViewColumn _createObjectViewColumn(
@@ -540,17 +593,22 @@ public class ObjectViewLocalServiceTest {
 			boolean objectFieldSystem)
 		throws Exception {
 
-		ObjectViewColumn objectViewColumn = _objectViewColumnPersistence.create(
-			0);
-
-		objectViewColumn.setLabelMap(
-			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()));
-		objectViewColumn.setObjectFieldName(
-			_addObjectField(
-				objectFieldLabel, objectFieldName, objectFieldSystem));
-		objectViewColumn.setPriority(0);
-
-		return objectViewColumn;
+		return _createObjectViewColumn(
+			ObjectFieldUtil.addCustomObjectField(
+				new TextObjectFieldBuilder(
+				).userId(
+					TestPropsValues.getUserId()
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(objectFieldLabel)
+				).name(
+					objectFieldName
+				).objectDefinitionId(
+					_objectDefinition.getObjectDefinitionId()
+				).required(
+					true
+				).system(
+					objectFieldSystem
+				).build()));
 	}
 
 	private List<ObjectViewColumn>
@@ -635,160 +693,123 @@ public class ObjectViewLocalServiceTest {
 	}
 
 	private void _deleteObjectFields() throws Exception {
-		List<ObjectField> objectFields =
-			_objectFieldLocalService.getObjectFields(
-				_objectDefinition.getObjectDefinitionId());
+		for (ObjectField objectField :
+				_objectFieldLocalService.getObjectFields(
+					_objectDefinition.getObjectDefinitionId())) {
 
-		for (ObjectField objectField : objectFields) {
+			if (objectField.isMetadata()) {
+				continue;
+			}
+
 			_objectFieldLocalService.deleteObjectField(objectField);
 		}
+	}
+
+	private String _getRelationshipObjectFieldName(
+			ObjectDefinition objectDefinition1)
+		throws Exception {
+
+		ObjectRelationship objectRelationship =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				_objectRelationshipLocalService, objectDefinition1,
+				_objectDefinition);
+
+		ObjectField objectField = _objectFieldLocalService.getObjectField(
+			objectRelationship.getObjectFieldId2());
+
+		return objectField.getName();
 	}
 
 	private void _testAddObjectViewRelationshipFilterColumn() throws Exception {
 		String externalReferenceCode = RandomTestUtil.randomString();
 
-		ObjectDefinition objectDefinition1 =
-			ObjectDefinitionTestUtil.addCustomObjectDefinition(
-				false,
-				Arrays.asList(
-					ObjectFieldUtil.createObjectField(
-						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-						ObjectFieldConstants.DB_TYPE_STRING, "title")));
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition();
 
-		ObjectRelationship objectRelationship = _createObjectRelationship(
-			objectDefinition1.getObjectDefinitionId(),
-			_objectDefinition.getObjectDefinitionId());
+		String relationshipObjectFieldName = _getRelationshipObjectFieldName(
+			objectDefinition);
 
-		ObjectField objectField = _objectFieldLocalService.getObjectField(
-			objectRelationship.getObjectFieldId2());
+		_asserFailureObjectViewFilterColumn(
+			StringBundler.concat(
+				"No ", objectDefinition.getShortName(),
+				" exists with the external reference code ",
+				externalReferenceCode),
+			"[\"" + externalReferenceCode + "\"]", relationshipObjectFieldName);
 
-		try {
-			_objectViewLocalService.addObjectView(
-				TestPropsValues.getUserId(),
-				_objectDefinition.getObjectDefinitionId(), false,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				Arrays.asList(_createObjectViewColumn("Golf", "golf", false)),
-				Arrays.asList(
-					_createObjectViewFilterColumn(
-						ObjectViewFilterColumnConstants.FILTER_TYPE_INCLUDES,
-						StringBundler.concat(
-							"{\"includes\": [\"", externalReferenceCode,
-							"\"]}"),
-						objectField.getName())),
-				Collections.emptyList());
-		}
-		catch (ObjectViewFilterColumnException
-					objectViewFilterColumnException) {
+		long randomId = RandomTestUtil.randomLong();
 
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No ", objectDefinition1.getShortName(),
-					" exists with the external reference code ",
-					externalReferenceCode),
-				objectViewFilterColumnException.getMessage());
-		}
+		_asserFailureObjectViewFilterColumn(
+			"No User exists with the primary key " + randomId,
+			"[\"" + randomId + "\"]",
+			_getRelationshipObjectFieldName(
+				_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+					TestPropsValues.getCompanyId(), User.class.getName())));
 
-		_objectDefinitionLocalService.publishCustomObjectDefinition(
-			TestPropsValues.getUserId(),
-			objectDefinition1.getObjectDefinitionId());
+		String errorMessage = StringBundler.concat(
+			"Object field name \"", relationshipObjectFieldName,
+			"\" needs to have the filter type and JSON specified");
 
-		ObjectEntry objectEntry1 = _objectEntryLocalService.addObjectEntry(
-			TestPropsValues.getUserId(), 0,
-			objectDefinition1.getObjectDefinitionId(),
-			HashMapBuilder.<String, Serializable>put(
-				"title", "Roger"
-			).build(),
+		_asserFailureObjectViewFilterColumn(
+			errorMessage, "[]", relationshipObjectFieldName);
+		_asserFailureObjectViewFilterColumn(
+			errorMessage, "[\"\"]", relationshipObjectFieldName);
+		_asserFailureObjectViewFilterColumn(
+			errorMessage, "[ ]", relationshipObjectFieldName);
+		_asserFailureObjectViewFilterColumn(
+			errorMessage, "[ , ]", relationshipObjectFieldName);
+
+		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
+			0, TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null, Collections.emptyMap(),
 			ServiceContextTestUtil.getServiceContext());
 
 		_objectViewLocalService.addObjectView(
 			TestPropsValues.getUserId(),
 			_objectDefinition.getObjectDefinitionId(), false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			Arrays.asList(_createObjectViewColumn("How", "how", false)),
+			Collections.emptyList(),
 			Arrays.asList(
 				_createObjectViewFilterColumn(
 					ObjectViewFilterColumnConstants.FILTER_TYPE_INCLUDES,
 					StringBundler.concat(
 						"{\"includes\": [\"",
-						objectEntry1.getExternalReferenceCode(), "\"]}"),
-					objectField.getName())),
+						objectEntry.getExternalReferenceCode(), "\"]}"),
+					relationshipObjectFieldName)),
 			Collections.emptyList());
 
-		_objectRelationshipLocalService.deleteObjectRelationship(
-			objectRelationship.getObjectRelationshipId());
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 
-		ObjectDefinition systemObjectDefinition = null;
-
-		for (ObjectDefinition objectDefinition :
-				_objectDefinitionLocalService.getSystemObjectDefinitions()) {
-
-			if (StringUtil.equals(objectDefinition.getName(), "User")) {
-				systemObjectDefinition = objectDefinition;
-
-				break;
-			}
-		}
-
-		Assert.assertNotNull(systemObjectDefinition);
-
-		objectRelationship = _createObjectRelationship(
-			systemObjectDefinition.getObjectDefinitionId(),
-			_objectDefinition.getObjectDefinitionId());
-
-		objectField = _objectFieldLocalService.getObjectField(
-			objectRelationship.getObjectFieldId2());
-
-		long randomId = RandomTestUtil.randomLong();
-
-		try {
-			_objectViewLocalService.addObjectView(
-				TestPropsValues.getUserId(),
-				_objectDefinition.getObjectDefinitionId(), false,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				Arrays.asList(_createObjectViewColumn("India", "india", false)),
-				Arrays.asList(
-					_createObjectViewFilterColumn(
-						ObjectViewFilterColumnConstants.FILTER_TYPE_INCLUDES,
-						StringBundler.concat(
-							"{\"includes\": [\"", randomId, "\"]}"),
-						objectField.getName())),
-				Collections.emptyList());
-		}
-		catch (ObjectViewFilterColumnException
-					objectViewFilterColumnException) {
-
-			Assert.assertEquals(
-				"No User exists with the primary key " + randomId,
-				objectViewFilterColumnException.getMessage());
-		}
-
-		long[] userIds = new long[2];
-
-		for (int i = 0; i < 2; i++) {
-			User user = UserTestUtil.addUser();
-
-			userIds[i] = user.getUserId();
-		}
+		User user1 = UserTestUtil.addUser();
+		User user2 = UserTestUtil.addUser();
 
 		_objectViewLocalService.addObjectView(
 			TestPropsValues.getUserId(),
 			_objectDefinition.getObjectDefinitionId(), false,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			Arrays.asList(_createObjectViewColumn("York", "york", false)),
+			Collections.emptyList(),
 			Arrays.asList(
 				_createObjectViewFilterColumn(
 					ObjectViewFilterColumnConstants.FILTER_TYPE_INCLUDES,
 					StringBundler.concat(
-						"{\"includes\": [\"", userIds[0], "\",\"", userIds[1],
-						"\"]}"),
-					objectField.getName())),
+						"{\"includes\": [\"", user1.getUserId(), "\",\"",
+						user2.getUserId(), "\"]}"),
+					_getRelationshipObjectFieldName(
+						_objectDefinitionLocalService.
+							fetchObjectDefinitionByClassName(
+								TestPropsValues.getCompanyId(),
+								User.class.getName())))),
 			Collections.emptyList());
-
-		_objectRelationshipLocalService.deleteObjectRelationship(
-			objectRelationship.getObjectRelationshipId());
-
-		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition1);
 	}
+
+	private static ObjectDefinition _objectDefinitionA;
+	private static ObjectDefinition _objectDefinitionAA;
+	private static ObjectRelationship _objectRelationshipA_AA;
+
+	@Inject
+	private static ObjectRelationshipLocalService
+		_objectRelationshipLocalService;
 
 	@Inject
 	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
@@ -804,9 +825,6 @@ public class ObjectViewLocalServiceTest {
 
 	@Inject
 	private ObjectFieldLocalService _objectFieldLocalService;
-
-	@Inject
-	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Inject
 	private ObjectViewColumnPersistence _objectViewColumnPersistence;

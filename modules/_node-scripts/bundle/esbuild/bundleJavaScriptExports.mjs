@@ -4,12 +4,16 @@
  */
 
 import path from 'path';
+import Sonda from 'sonda/esbuild';
 
-import {BUILD_MAIN_EXPORTS_PATH} from '../../util/constants.mjs';
+import {
+	BUILD_MAIN_EXPORTS_PATH,
+	BUNDLE_REPORTS_PATH,
+} from '../../util/constants.mjs';
 import getFlatName from '../../util/getFlatName.mjs';
 import getEntryPoint from './getEntryPoint.mjs';
-import getExternals from './getExternals.mjs';
 import getExactAliasPlugin from './plugins/getExactAliasPlugin.mjs';
+import getExternalsPlugin from './plugins/getExternalsPlugin.mjs';
 import getImportBridgesPlugin from './plugins/getImportBridgesPlugin.mjs';
 import relocateSourcemap from './relocateSourcemap.mjs';
 import runEsbuild from './runEsbuild.mjs';
@@ -18,6 +22,7 @@ import writeExportBridge from './writeExportBridge.mjs';
 export default async function bundleJavaScriptExports(
 	globalImports,
 	overridenPackageSymbols,
+	projectAlias,
 	projectExports,
 	projectWebContextPath
 ) {
@@ -32,6 +37,7 @@ export default async function bundleJavaScriptExports(
 				bundle(
 					globalImports,
 					overridenPackageSymbols,
+					projectAlias,
 					projectWebContextPath,
 					moduleName
 				)
@@ -42,35 +48,73 @@ export default async function bundleJavaScriptExports(
 async function bundle(
 	globalImports,
 	overridenPackageSymbols,
+	projectAlias,
 	projectWebContextPath,
 	moduleName
 ) {
+	const entryPoint = getEntryPoint(moduleName);
+
 	const esbuildConfig = {
+		alias: projectAlias,
 		bundle: true,
-		entryPoints: [getEntryPoint(moduleName)],
-		external: getExternals(globalImports, projectWebContextPath, 'exports'),
+		entryNames: '[dir]/[name].([hash])',
+		entryPoints: [entryPoint],
 		format: 'esm',
 		outdir: BUILD_MAIN_EXPORTS_PATH,
 		plugins: [
 			getExactAliasPlugin(globalImports, 'exports', [moduleName]),
+			getExternalsPlugin(),
 			getImportBridgesPlugin(globalImports, overridenPackageSymbols),
 		],
 		sourcemap: true,
 		target: ['es2022'],
 	};
 
+	if (process.env.CREATE_BUNDLE_REPORTS) {
+		esbuildConfig.plugins.push(
+			Sonda({
+				brotli: false,
+				detailed: false,
+				enabled: true,
+				filename: path.join(
+					BUNDLE_REPORTS_PATH,
+					`${entryPoint.out}.html`
+				),
+				format: 'html',
+				gzip: true,
+				open: false,
+				sources: false,
+			}),
+			Sonda({
+				brotli: false,
+				detailed: false,
+				enabled: true,
+				filename: path.join(
+					BUNDLE_REPORTS_PATH,
+					`${entryPoint.out}.json`
+				),
+				format: 'json',
+				gzip: true,
+				open: false,
+			})
+		);
+	}
+
 	await writeExportBridge(overridenPackageSymbols, moduleName);
 
 	const flatModuleName = getFlatName(moduleName);
 
-	await runEsbuild(esbuildConfig, flatModuleName);
+	const {metafile} = await runEsbuild(esbuildConfig, flatModuleName);
+	const {outputs} = metafile;
 
-	await relocateSourcemap(
-		path.join(
-			BUILD_MAIN_EXPORTS_PATH,
-			'exports',
-			`${flatModuleName}.js.map`
-		),
-		projectWebContextPath
-	);
+	await Promise.all([
+		...Object.keys(outputs).map(async (output) => {
+			if (output.endsWith('.map')) {
+				return relocateSourcemap(
+					path.join(output),
+					projectWebContextPath
+				);
+			}
+		}),
+	]);
 }

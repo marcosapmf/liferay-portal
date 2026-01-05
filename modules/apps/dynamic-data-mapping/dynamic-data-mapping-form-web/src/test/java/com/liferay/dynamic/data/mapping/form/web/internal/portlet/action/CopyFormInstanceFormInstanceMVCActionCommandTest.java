@@ -83,34 +83,34 @@ public class CopyFormInstanceFormInstanceMVCActionCommandTest {
 			ddmFormInstanceSettings
 		);
 
-		DDMFormValues formInstanceSettingsDDMFormValuesCopy =
+		DDMFormValues copiedFormInstanceSettingsDDMFormValues =
 			_copyFormInstanceMVCActionCommand.
 				createFormInstanceSettingsDDMFormValues(
 					formInstance, new ThemeDisplay());
 
 		Assert.assertEquals(
 			formInstanceSettingsDDMForm,
-			formInstanceSettingsDDMFormValuesCopy.getDDMForm());
+			copiedFormInstanceSettingsDDMFormValues.getDDMForm());
 
 		List<DDMFormFieldValue> formInstanceSettingsDDMFormFieldValues =
 			ddmFormValues.getDDMFormFieldValues();
 
-		List<DDMFormFieldValue> formInstanceSettingsDDMFormFieldValuesCopy =
-			formInstanceSettingsDDMFormValuesCopy.getDDMFormFieldValues();
+		List<DDMFormFieldValue> copiedFormInstanceSettingsDDMFormFieldValues =
+			copiedFormInstanceSettingsDDMFormValues.getDDMFormFieldValues();
 
 		Assert.assertEquals(
-			formInstanceSettingsDDMFormFieldValuesCopy.toString(),
+			copiedFormInstanceSettingsDDMFormFieldValues.toString(),
 			_getDDMFormFieldsSize(formInstanceSettingsDDMForm),
-			formInstanceSettingsDDMFormFieldValuesCopy.size());
+			copiedFormInstanceSettingsDDMFormFieldValues.size());
 
-		for (int i = 0; i < formInstanceSettingsDDMFormFieldValuesCopy.size();
+		for (int i = 0; i < copiedFormInstanceSettingsDDMFormFieldValues.size();
 			 i++) {
 
 			DDMFormFieldValue ddmFormFieldValue =
 				formInstanceSettingsDDMFormFieldValues.get(i);
 
 			DDMFormFieldValue ddmFormFieldValueCopy =
-				formInstanceSettingsDDMFormFieldValuesCopy.get(i);
+				copiedFormInstanceSettingsDDMFormFieldValues.get(i);
 
 			Value valueCopy = ddmFormFieldValueCopy.getValue();
 
@@ -139,9 +139,8 @@ public class CopyFormInstanceFormInstanceMVCActionCommandTest {
 	protected DDMFormFieldValue createDDMFormFieldValue(
 		String instanceId, String name, Value value) {
 
-		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
+		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue(instanceId);
 
-		ddmFormFieldValue.setInstanceId(instanceId);
 		ddmFormFieldValue.setName(name);
 		ddmFormFieldValue.setValue(value);
 

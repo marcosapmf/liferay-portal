@@ -24,6 +24,10 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,10 +48,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
@@ -59,11 +59,7 @@ public class ServletResponseUtil {
 
 		String className = clazz.getName();
 
-		if (className.equals(_CLIENT_ABORT_EXCEPTION)) {
-			return true;
-		}
-
-		return false;
+		return className.equals(_CLIENT_ABORT_EXCEPTION);
 	}
 
 	public static void sendFile(

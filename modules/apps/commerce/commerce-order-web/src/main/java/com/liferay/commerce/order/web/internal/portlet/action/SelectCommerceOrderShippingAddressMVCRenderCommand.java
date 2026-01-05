@@ -9,6 +9,7 @@ import com.liferay.commerce.configuration.CommerceOrderItemDecimalQuantityConfig
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.exception.NoSuchOrderException;
+import com.liferay.commerce.frontend.helper.CommerceOrderStepTrackerHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.notification.service.CommerceNotificationQueueEntryLocalService;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
@@ -31,11 +32,11 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Map;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -48,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.commerce.configuration.CommerceOrderItemDecimalQuantityConfiguration",
 	property = {
-		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
+		"jakarta.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
 		"mvc.command.name=/commerce_order/select_commerce_order_shipping_address"
 	},
 	service = MVCRenderCommand.class
@@ -71,7 +72,7 @@ public class SelectCommerceOrderShippingAddressMVCRenderCommand
 					_commerceOrderItemQuantityFormatter,
 					_commerceOrderItemService, _commerceOrderNoteService, null,
 					_commerceOrderService, _commerceOrderStatusRegistry,
-					_commerceOrderTypeService,
+					_commerceOrderStepTrackerHelper, _commerceOrderTypeService,
 					_commercePaymentMethodGroupRelLocalService,
 					_commercePriceFormatter, _commerceShipmentService,
 					_commerceTermEntryLocalService, _cpMeasurementUnitService,
@@ -133,6 +134,9 @@ public class SelectCommerceOrderShippingAddressMVCRenderCommand
 
 	@Reference
 	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
+
+	@Reference
+	private CommerceOrderStepTrackerHelper _commerceOrderStepTrackerHelper;
 
 	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;

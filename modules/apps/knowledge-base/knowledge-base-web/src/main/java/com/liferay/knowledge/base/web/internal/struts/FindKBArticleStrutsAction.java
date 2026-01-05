@@ -42,18 +42,18 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletMode;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -390,18 +390,17 @@ public class FindKBArticleStrutsAction implements StrutsAction {
 	}
 
 	private String _getKBFolderUrlTitle(KBArticle kbArticle) throws Exception {
-		if ((kbArticle != null) &&
-			Validator.isNotNull(kbArticle.getUrlTitle()) &&
-			(kbArticle.getKbFolderId() !=
+		if ((kbArticle == null) || Validator.isNull(kbArticle.getUrlTitle()) ||
+			(kbArticle.getKbFolderId() ==
 				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID)) {
 
-			KBFolder kbFolder = _kbFolderLocalService.getKBFolder(
-				kbArticle.getKbFolderId());
-
-			return kbFolder.getUrlTitle();
+			return null;
 		}
 
-		return null;
+		KBFolder kbFolder = _kbFolderLocalService.getKBFolder(
+			kbArticle.getKbFolderId());
+
+		return kbFolder.getUrlTitle();
 	}
 
 	private String _getPortletId(long plid) throws Exception {

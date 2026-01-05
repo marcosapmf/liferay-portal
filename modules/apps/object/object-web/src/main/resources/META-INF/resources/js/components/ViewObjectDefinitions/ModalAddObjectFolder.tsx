@@ -12,6 +12,7 @@ import {
 	FormError,
 	Input,
 	constantsUtils,
+	objectDefinitionUtils,
 	openToast,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -19,7 +20,6 @@ import {sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
-import {normalizeName} from './objectDefinitionUtil';
 
 interface ModalAddObjectFolderProps {
 	handleOnClose: () => void;
@@ -55,7 +55,7 @@ export function ModalAddObjectFolder({
 			label: {
 				[defaultLanguageId]: label,
 			},
-			name: name || normalizeName(label),
+			name: name || objectDefinitionUtils.normalizeName(label),
 		};
 
 		try {
@@ -122,9 +122,11 @@ export function ModalAddObjectFolder({
 
 	return (
 		<ClayModalProvider>
-			<ClayModal observer={observer}>
+			<ClayModal center observer={observer}>
 				<ClayForm onSubmit={handleSubmit}>
-					<ClayModal.Header>
+					<ClayModal.Header
+						closeButtonAriaLabel={Liferay.Language.get('close')}
+					>
 						{Liferay.Language.get('new-object-folder')}
 					</ClayModal.Header>
 
@@ -148,7 +150,12 @@ export function ModalAddObjectFolder({
 							name="name"
 							onChange={handleChange}
 							required
-							value={values.name ?? normalizeName(values.label)}
+							value={
+								values.name ??
+								objectDefinitionUtils.normalizeName(
+									values.label
+								)
+							}
 						/>
 					</ClayModal.Body>
 

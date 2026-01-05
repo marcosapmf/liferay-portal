@@ -50,18 +50,13 @@ export function VersionRow({
 		setAlertType,
 		setDefinitionName,
 		setShowAlert,
-		setVersion,
 	} = useContext(DefinitionBuilderContext);
 
-	let versionCreationDate = '';
-
-	if (Liferay.FeatureFlags['LPD-29635']) {
-		versionCreationDate = toLocalDateTimeFormatted(
-			dateCreated,
-			Liferay.ThemeDisplay.getBCP47LanguageId(),
-			timeZoneId
-		);
-	}
+	const versionCreationDate = toLocalDateTimeFormatted(
+		dateCreated,
+		Liferay.ThemeDisplay.getBCP47LanguageId(),
+		timeZoneId
+	);
 
 	const restoreSuccess = async (response: Response) => {
 		const alertMessage = lang.sub(
@@ -78,22 +73,17 @@ export function VersionRow({
 			(await response.json()) as WorkflowDefinition;
 
 		setDefinitionName(restoredWorkflowDefinition.name);
-		setVersion(parseInt(restoredWorkflowDefinition.version, 10));
 
-		if (Liferay.FeatureFlags['LPD-29635']) {
-			setWorkflowDefinitionVersions((prevValues) => [
-				{
-					creatorName: restoredWorkflowDefinition.creator
-						?.name as string,
-					dateCreated:
-						restoredWorkflowDefinition.dateModified as string,
-					version: String(
-						parseInt(restoredWorkflowDefinition.version, 10)
-					),
-				},
-				...prevValues,
-			]);
-		}
+		setWorkflowDefinitionVersions((prevValues) => [
+			{
+				creatorName: restoredWorkflowDefinition.creator?.name as string,
+				dateCreated: restoredWorkflowDefinition.dateModified as string,
+				version: String(
+					parseInt(restoredWorkflowDefinition.version, 10)
+				),
+			},
+			...prevValues,
+		]);
 	};
 
 	const restoreFailed = () => {
@@ -159,24 +149,15 @@ export function VersionRow({
 	return (
 		<>
 			<div className="lfr-workflow__version-row-container">
-				{Liferay.FeatureFlags['LPD-29635'] ? (
-					<div className="lfr-workflow__version-row-info-container">
-						<label className="lfr-workflow__version-row-info-number">
-							{Liferay.Language.get('version')} {versionNumber}
-						</label>
-
-						<span className="lfr-workflow__version-row-info-date-user">
-							{getVersionDetails(
-								creatorName,
-								versionCreationDate
-							)}
-						</span>
-					</div>
-				) : (
-					<label className="text-secondary">
+				<div className="lfr-workflow__version-row-info-container">
+					<label className="lfr-workflow__version-row-info-number">
 						{Liferay.Language.get('version')} {versionNumber}
 					</label>
-				)}
+
+					<span className="lfr-workflow__version-row-info-date-user">
+						{getVersionDetails(creatorName, versionCreationDate)}
+					</span>
+				</div>
 
 				<ClayButtonWithIcon
 					aria-labelledby={Liferay.Language.get('restore')}

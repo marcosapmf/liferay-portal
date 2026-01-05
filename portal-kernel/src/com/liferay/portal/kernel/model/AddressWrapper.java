@@ -60,9 +60,11 @@ public class AddressWrapper
 		attributes.put("street1", getStreet1());
 		attributes.put("street2", getStreet2());
 		attributes.put("street3", getStreet3());
+		attributes.put("subtype", getSubtype());
 		attributes.put("validationDate", getValidationDate());
 		attributes.put("validationStatus", getValidationStatus());
 		attributes.put("zip", getZip());
+		attributes.put("status", getStatus());
 
 		return attributes;
 	}
@@ -220,6 +222,12 @@ public class AddressWrapper
 			setStreet3(street3);
 		}
 
+		String subtype = (String)attributes.get("subtype");
+
+		if (subtype != null) {
+			setSubtype(subtype);
+		}
+
 		Date validationDate = (Date)attributes.get("validationDate");
 
 		if (validationDate != null) {
@@ -236,6 +244,12 @@ public class AddressWrapper
 
 		if (zip != null) {
 			setZip(zip);
+		}
+
+		Integer status = (Integer)attributes.get("status");
+
+		if (status != null) {
+			setStatus(status);
 		}
 	}
 
@@ -475,6 +489,16 @@ public class AddressWrapper
 	}
 
 	/**
+	 * Returns the status of this address.
+	 *
+	 * @return the status of this address
+	 */
+	@Override
+	public int getStatus() {
+		return model.getStatus();
+	}
+
+	/**
 	 * Returns the street1 of this address.
 	 *
 	 * @return the street1 of this address
@@ -502,6 +526,16 @@ public class AddressWrapper
 	@Override
 	public String getStreet3() {
 		return model.getStreet3();
+	}
+
+	/**
+	 * Returns the subtype of this address.
+	 *
+	 * @return the subtype of this address
+	 */
+	@Override
+	public String getSubtype() {
+		return model.getSubtype();
 	}
 
 	/**
@@ -805,6 +839,16 @@ public class AddressWrapper
 	}
 
 	/**
+	 * Sets the status of this address.
+	 *
+	 * @param status the status of this address
+	 */
+	@Override
+	public void setStatus(int status) {
+		model.setStatus(status);
+	}
+
+	/**
 	 * Sets the street1 of this address.
 	 *
 	 * @param street1 the street1 of this address
@@ -832,6 +876,16 @@ public class AddressWrapper
 	@Override
 	public void setStreet3(String street3) {
 		model.setStreet3(street3);
+	}
+
+	/**
+	 * Sets the subtype of this address.
+	 *
+	 * @param subtype the subtype of this address
+	 */
+	@Override
+	public void setSubtype(String subtype) {
+		model.setSubtype(subtype);
 	}
 
 	/**

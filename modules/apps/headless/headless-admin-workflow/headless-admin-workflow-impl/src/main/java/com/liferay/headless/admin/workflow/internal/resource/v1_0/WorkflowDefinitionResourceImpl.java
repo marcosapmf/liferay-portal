@@ -36,14 +36,14 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.io.Serializable;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -214,6 +214,7 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.deployWorkflowDefinition(
+				workflowDefinition.getExternalReferenceCode(),
 				contextCompany.getCompanyId(), contextUser.getUserId(),
 				_getTitle(workflowDefinition), workflowDefinition.getName(),
 				content.getBytes()));
@@ -228,6 +229,7 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.saveWorkflowDefinition(
+				workflowDefinition.getExternalReferenceCode(),
 				contextCompany.getCompanyId(), contextUser.getUserId(),
 				_getTitle(workflowDefinition), workflowDefinition.getName(),
 				content.getBytes()));
@@ -346,6 +348,8 @@ public class WorkflowDefinitionResourceImpl
 				setDateCreated(workflowDefinition::getCreateDate);
 				setDateModified(workflowDefinition::getModifiedDate);
 				setDescription(workflowDefinition::getDescription);
+				setExternalReferenceCode(
+					workflowDefinition::getExternalReferenceCode);
 				setId(workflowDefinition::getWorkflowDefinitionId);
 				setName(workflowDefinition::getName);
 				setNodes(

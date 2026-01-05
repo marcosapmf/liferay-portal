@@ -263,6 +263,13 @@ public class SegmentsEntryLocalServiceUtil {
 		return getService().fetchSegmentsEntry(groupId, segmentsEntryKey);
 	}
 
+	public static SegmentsEntry fetchSegmentsEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchSegmentsEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the segments entry matching the UUID and group.
 	 *
@@ -346,6 +353,12 @@ public class SegmentsEntryLocalServiceUtil {
 			groupId, source, start, end, orderByComparator);
 	}
 
+	public static List<SegmentsEntry> getSegmentsEntries(
+		long[] segmentsEntryIds, int start, int end) {
+
+		return getService().getSegmentsEntries(segmentsEntryIds, start, end);
+	}
+
 	public static List<SegmentsEntry> getSegmentsEntriesBySource(
 		String source, int start, int end,
 		OrderByComparator<SegmentsEntry> orderByComparator) {
@@ -410,6 +423,14 @@ public class SegmentsEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getSegmentsEntry(segmentsEntryId);
+	}
+
+	public static SegmentsEntry getSegmentsEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getSegmentsEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**

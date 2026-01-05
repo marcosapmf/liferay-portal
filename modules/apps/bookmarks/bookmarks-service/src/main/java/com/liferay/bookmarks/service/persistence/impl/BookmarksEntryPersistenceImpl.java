@@ -645,7 +645,6 @@ public class BookmarksEntryPersistenceImpl
 		"(bookmarksEntry.uuid IS NULL OR bookmarksEntry.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the bookmarks entry where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -830,68 +829,13 @@ public class BookmarksEntryPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					BookmarksEntry.class)) {
+		BookmarksEntry bookmarksEntry = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_BOOKMARKSENTRY_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (bookmarksEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -2529,6 +2473,16 @@ public class BookmarksEntryPersistenceImpl
 			return findByG_F(groupId, folderId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F(
+					groupId, folderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2875,6 +2829,16 @@ public class BookmarksEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return findByG_F(groupId, folderIds, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F(
+					groupId, folderIds, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
 		}
 
 		if (folderIds == null) {
@@ -3342,6 +3306,16 @@ public class BookmarksEntryPersistenceImpl
 			return countByG_F(groupId, folderId);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_F(
+				groupId, folderId);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(_FILTER_SQL_COUNT_BOOKMARKSENTRY_WHERE);
@@ -3393,6 +3367,13 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_F(long groupId, long[] folderIds) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_F(groupId, folderIds);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = InlineSQLHelperUtil.filter(
+				findByG_F(groupId, folderIds), groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		if (folderIds == null) {
@@ -3985,6 +3966,16 @@ public class BookmarksEntryPersistenceImpl
 			return findByG_S(groupId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_S(
+					groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -4363,6 +4354,15 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_S(long groupId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_S(groupId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_S(groupId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -4924,6 +4924,16 @@ public class BookmarksEntryPersistenceImpl
 			return findByG_NotS(groupId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_NotS(
+					groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -5302,6 +5312,16 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_NotS(long groupId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_NotS(groupId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_NotS(
+				groupId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -6448,6 +6468,16 @@ public class BookmarksEntryPersistenceImpl
 				groupId, userId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_S(
+					groupId, userId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -6842,6 +6872,16 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_U_S(long groupId, long userId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_S(groupId, userId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_U_S(
+				groupId, userId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -7444,6 +7484,16 @@ public class BookmarksEntryPersistenceImpl
 				groupId, userId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_NotS(
+					groupId, userId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -7838,6 +7888,16 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_U_NotS(long groupId, long userId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_NotS(groupId, userId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_U_NotS(
+				groupId, userId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -8452,6 +8512,16 @@ public class BookmarksEntryPersistenceImpl
 				groupId, folderId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F_S(
+					groupId, folderId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -8812,6 +8882,16 @@ public class BookmarksEntryPersistenceImpl
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return findByG_F_S(
 				groupId, folderIds, status, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F_S(
+					groupId, folderIds, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
 		}
 
 		if (folderIds == null) {
@@ -9314,6 +9394,16 @@ public class BookmarksEntryPersistenceImpl
 			return countByG_F_S(groupId, folderId, status);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_F_S(
+				groupId, folderId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(4);
 
 		sb.append(_FILTER_SQL_COUNT_BOOKMARKSENTRY_WHERE);
@@ -9370,6 +9460,13 @@ public class BookmarksEntryPersistenceImpl
 	public int filterCountByG_F_S(long groupId, long[] folderIds, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_F_S(groupId, folderIds, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = InlineSQLHelperUtil.filter(
+				findByG_F_S(groupId, folderIds, status), groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		if (folderIds == null) {
@@ -9996,6 +10093,16 @@ public class BookmarksEntryPersistenceImpl
 				groupId, folderId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F_NotS(
+					groupId, folderId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -10357,6 +10464,16 @@ public class BookmarksEntryPersistenceImpl
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return findByG_F_NotS(
 				groupId, folderIds, status, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_F_NotS(
+					groupId, folderIds, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
 		}
 
 		if (folderIds == null) {
@@ -10859,6 +10976,16 @@ public class BookmarksEntryPersistenceImpl
 			return countByG_F_NotS(groupId, folderId, status);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_F_NotS(
+				groupId, folderId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(4);
 
 		sb.append(_FILTER_SQL_COUNT_BOOKMARKSENTRY_WHERE);
@@ -10917,6 +11044,13 @@ public class BookmarksEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_F_NotS(groupId, folderIds, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = InlineSQLHelperUtil.filter(
+				findByG_F_NotS(groupId, folderIds, status), groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		if (folderIds == null) {
@@ -11591,6 +11725,16 @@ public class BookmarksEntryPersistenceImpl
 				orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_F_S(
+					groupId, userId, folderId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -11966,6 +12110,16 @@ public class BookmarksEntryPersistenceImpl
 			return findByG_U_F_S(
 				groupId, userId, folderIds, status, start, end,
 				orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_F_S(
+					groupId, userId, folderIds, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
 		}
 
 		if (folderIds == null) {
@@ -12507,6 +12661,16 @@ public class BookmarksEntryPersistenceImpl
 			return countByG_U_F_S(groupId, userId, folderId, status);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = findByG_U_F_S(
+				groupId, userId, folderId, status);
+
+			bookmarksEntries = InlineSQLHelperUtil.filter(
+				bookmarksEntries, groupId);
+
+			return bookmarksEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(_FILTER_SQL_COUNT_BOOKMARKSENTRY_WHERE);
@@ -12570,6 +12734,13 @@ public class BookmarksEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_F_S(groupId, userId, folderIds, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BookmarksEntry> bookmarksEntries = InlineSQLHelperUtil.filter(
+				findByG_U_F_S(groupId, userId, folderIds, status), groupId);
+
+			return bookmarksEntries.size();
 		}
 
 		if (folderIds == null) {
@@ -12780,8 +12951,6 @@ public class BookmarksEntryPersistenceImpl
 				bookmarksEntryModelImpl.getGroupId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, bookmarksEntryModelImpl);
 		}
@@ -13482,10 +13651,10 @@ public class BookmarksEntryPersistenceImpl
 		ctMergeColumnNames.add("description");
 		ctMergeColumnNames.add("priority");
 		ctMergeColumnNames.add("lastPublishDate");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
-		ctStrictColumnNames.add("statusDate");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
@@ -13542,11 +13711,6 @@ public class BookmarksEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",

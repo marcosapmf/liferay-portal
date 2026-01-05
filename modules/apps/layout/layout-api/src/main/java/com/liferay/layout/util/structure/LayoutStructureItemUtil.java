@@ -52,6 +52,12 @@ public class LayoutStructureItemUtil {
 		}
 
 		if (Objects.equals(
+				itemType, LayoutDataItemTypeConstants.TYPE_FORM_RELATIONSHIP)) {
+
+			return new FormRelationshipStyledLayoutStructureItem(parentItemId);
+		}
+
+		if (Objects.equals(
 				itemType, LayoutDataItemTypeConstants.TYPE_FORM_STEP)) {
 
 			return new FormStepLayoutStructureItem(parentItemId);
@@ -93,6 +99,10 @@ public class LayoutStructureItemUtil {
 
 		LayoutStructureItem layoutStructureItem =
 			layoutStructure.getLayoutStructureItem(itemId);
+
+		if (layoutStructureItem == null) {
+			return null;
+		}
 
 		LayoutStructureItem parentLayoutStructureItem =
 			layoutStructure.getLayoutStructureItem(

@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.servlet.BaseFilter;
@@ -20,29 +21,27 @@ import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.remote.cors.internal.CORSSupport;
 import com.liferay.portal.remote.cors.internal.configuration.persistence.listener.PortalCORSConfigurationModelListener;
 import com.liferay.portal.remote.cors.internal.util.PortalCORSRegistryUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Arthur Chan
@@ -70,11 +69,7 @@ public class PortalCORSServletFilter extends BaseFilter {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		if (CORSSupport.isCORSRequest(httpServletRequest::getHeader)) {
-			return true;
-		}
-
-		return false;
+		return CORSSupport.isCORSRequest(httpServletRequest::getHeader);
 	}
 
 	@Activate
@@ -113,7 +108,7 @@ public class PortalCORSServletFilter extends BaseFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(httpServletRequest);
+		long companyId = CompanyThreadLocal.getCompanyId();
 
 		if (companyId == CompanyConstants.SYSTEM) {
 			return;
@@ -207,10 +202,6 @@ public class PortalCORSServletFilter extends BaseFilter {
 		PortalCORSServletFilter.class);
 
 	private String _contextPath;
-
-	@Reference
-	private Portal _portal;
-
 	private ServiceRegistration<ConfigurationModelListener>
 		_serviceRegistration;
 

@@ -119,11 +119,18 @@ public class SystemObjectEntryInfoItemFormProvider
 			).infoFieldSetEntry(
 				ObjectEntryInfoItemFields.createDateInfoField
 			).infoFieldSetEntry(
+				ObjectEntryInfoItemFields.expirationDateInfoField
+			).infoFieldSetEntry(
 				ObjectEntryInfoItemFields.externalReferenceCodeInfoField
 			).infoFieldSetEntry(
 				ObjectEntryInfoItemFields.modifiedDateInfoField
 			).infoFieldSetEntry(
+				ObjectEntryInfoItemFields.getFriendlyURLInfoField(
+					_objectDefinition)
+			).infoFieldSetEntry(
 				ObjectEntryInfoItemFields.objectEntryIdInfoField
+			).infoFieldSetEntry(
+				ObjectEntryInfoItemFields.reviewDateInfoField
 			).infoFieldSetEntry(
 				ObjectEntryInfoItemFields.statusInfoField
 			).labelInfoLocalizedValue(

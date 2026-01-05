@@ -16,18 +16,18 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 
+import jakarta.annotation.security.RolesAllowed;
+
+import jakarta.mail.internet.InternetAddress;
+
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+
 import java.util.Date;
-
-import javax.annotation.security.RolesAllowed;
-
-import javax.mail.internet.InternetAddress;
-
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -67,12 +67,12 @@ public class IssueController extends BaseFaroController {
 				faroProject.getName() + " - " + title,
 				StringBundler.concat(
 					"Account Name: ", faroProject.getAccountName(), "\n",
-					"Current URL: ", currentURL, "\n", "Data Center Region: ",
-					faroProject.getServerLocation(), "\n", "Issue Title: ",
-					title, "\n", "Submission Date: ", submissionDate, "\n",
-					"User Email: ", user.getEmailAddress(), "\n", "User Name: ",
-					user.getFullName(), "\n", "Workspace Name: ",
-					faroProject.getName(), "\n", "Description: ", description),
+					"Current URL: ", currentURL, "\nData Center Region: ",
+					faroProject.getServerLocation(), "\nIssue Title: ", title,
+					"\nSubmission Date: ", submissionDate, "\nUser Email: ",
+					user.getEmailAddress(), "\nUser Name: ", user.getFullName(),
+					"\nWorkspace Name: ", faroProject.getName(),
+					"\nDescription: ", description),
 				false));
 	}
 

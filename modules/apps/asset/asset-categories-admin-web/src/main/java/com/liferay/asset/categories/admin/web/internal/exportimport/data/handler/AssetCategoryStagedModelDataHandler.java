@@ -71,6 +71,15 @@ public class AssetCategoryStagedModelDataHandler
 	}
 
 	@Override
+	public AssetCategory fetchStagedModelByExternalReferenceCodeAndGroupId(
+		String externalReferenceCode, long groupId) {
+
+		return _assetCategoryLocalService.
+			fetchAssetCategoryByExternalReferenceCode(
+				externalReferenceCode, groupId);
+	}
+
+	@Override
 	public AssetCategory fetchStagedModelByUuidAndGroupId(
 		String uuid, long groupId) {
 
@@ -142,20 +151,23 @@ public class AssetCategoryStagedModelDataHandler
 
 		category.setUserUuid(category.getUserUuid());
 
-		List<AssetCategoryProperty> categoryProperties =
+		List<AssetCategoryProperty> assetCategoryProperties =
 			_assetCategoryPropertyLocalService.getCategoryProperties(
 				category.getCategoryId());
 
-		for (AssetCategoryProperty categoryProperty : categoryProperties) {
-			if (!_exists(categoryElement, categoryProperty)) {
+		for (AssetCategoryProperty assetCategoryProperty :
+				assetCategoryProperties) {
+
+			if (!_exists(categoryElement, assetCategoryProperty)) {
 				Element propertyElement = categoryElement.addElement(
 					"property");
 
 				propertyElement.addAttribute(
-					"userUuid", categoryProperty.getUserUuid());
-				propertyElement.addAttribute("key", categoryProperty.getKey());
+					"userUuid", assetCategoryProperty.getUserUuid());
 				propertyElement.addAttribute(
-					"value", categoryProperty.getValue());
+					"key", assetCategoryProperty.getKey());
+				propertyElement.addAttribute(
+					"value", assetCategoryProperty.getValue());
 			}
 		}
 
@@ -240,8 +252,8 @@ public class AssetCategoryStagedModelDataHandler
 
 		AssetCategory importedCategory = null;
 
-		AssetCategory existingCategory = fetchStagedModelByUuidAndGroupId(
-			category.getUuid(), portletDataContext.getScopeGroupId());
+		AssetCategory existingCategory = fetchExistingStagedModel(
+			category, portletDataContext.getScopeGroupId());
 
 		if (existingCategory == null) {
 			String name = _getCategoryName(
@@ -264,7 +276,8 @@ public class AssetCategoryStagedModelDataHandler
 				parentCategoryId, category.getName(), vocabularyId, 2);
 
 			importedCategory = _assetCategoryLocalService.updateCategory(
-				userId, existingCategory.getCategoryId(), parentCategoryId,
+				existingCategory.getExternalReferenceCode(), userId,
+				existingCategory.getCategoryId(), parentCategoryId,
 				_getCategoryTitleMap(
 					portletDataContext.getScopeGroupId(), category, name),
 				category.getDescriptionMap(), vocabularyId, properties,

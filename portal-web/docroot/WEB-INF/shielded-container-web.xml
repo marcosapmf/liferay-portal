@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<web-app id="Liferay_Portal" metadata-complete="true" version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+<web-app id="Liferay_Portal" metadata-complete="true" version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
 	<filter>
 		<filter-name>Invoker Filter - ASYNC</filter-name>
 		<filter-class>com.liferay.portal.kernel.servlet.filters.invoker.InvokerFilter</filter-class>
@@ -78,6 +78,15 @@
 	<servlet>
 		<servlet-name>Combo Servlet</servlet-name>
 		<servlet-class>com.liferay.portal.servlet.ComboServlet</servlet-class>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet>
+		<servlet-name>Favicon Servlet</servlet-name>
+		<servlet-class>com.liferay.portal.servlet.ServletAdapter</servlet-class>
+		<init-param>
+			<param-name>filter</param-name>
+			<param-value>(servlet.type=favicon)</param-value>
+		</init-param>
 		<async-supported>true</async-supported>
 	</servlet>
 	<servlet>
@@ -220,6 +229,10 @@
 		<url-pattern>/combo/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
+		<servlet-name>Favicon Servlet</servlet-name>
+		<url-pattern>/favicon.ico</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>Friendly URL Servlet - Private Group</servlet-name>
 		<url-pattern>/group/*</url-pattern>
 	</servlet-mapping>
@@ -317,7 +330,23 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de-AT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de-CH/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/de-DE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de_AT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -353,6 +382,10 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/en-IE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/en-US/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
@@ -366,6 +399,10 @@
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/en_GB/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/en_IE/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -461,7 +498,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr-BE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/fr-CA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr-CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -469,7 +514,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr_BE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/fr_CA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -505,7 +558,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/hr-BA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/hr-HR/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/hr_BA/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -541,7 +602,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/it-CH/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/it-IT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/it_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -633,6 +702,18 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk-MK/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk_MK/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/ms/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
@@ -642,6 +723,18 @@
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/ms_MY/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/my/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/my-MM/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/my_MM/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -674,6 +767,18 @@
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/nl_NL/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/no/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/no-NO/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/no_NO/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -945,23 +1050,23 @@
 	</servlet-mapping>
 	<jsp-config>
 		<taglib>
-			<taglib-uri>http://java.sun.com/jsp/jstl/core</taglib-uri>
+			<taglib-uri>jakarta.tags.core</taglib-uri>
 			<taglib-location>/WEB-INF/tld/c.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://java.sun.com/jsp/jstl/fmt</taglib-uri>
+			<taglib-uri>jakarta.tags.fmt</taglib-uri>
 			<taglib-location>/WEB-INF/tld/fmt.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://java.sun.com/jsp/jstl/functions</taglib-uri>
+			<taglib-uri>jakarta.tags.functions</taglib-uri>
 			<taglib-location>/WEB-INF/tld/fn.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://java.sun.com/jsp/jstl/sql</taglib-uri>
+			<taglib-uri>jakarta.tags.sql</taglib-uri>
 			<taglib-location>/WEB-INF/tld/sql.tld</taglib-location>
 		</taglib>
 		<taglib>
-			<taglib-uri>http://java.sun.com/jsp/jstl/xml</taglib-uri>
+			<taglib-uri>jakarta.tags.xml</taglib-uri>
 			<taglib-location>/WEB-INF/tld/x.tld</taglib-location>
 		</taglib>
 		<taglib>
@@ -974,7 +1079,7 @@
 		</taglib>
 		<taglib>
 			<taglib-uri>http://xmlns.jcp.org/portlet_3_0</taglib-uri>
-			<taglib-location>/WEB-INF/tld/liferay-portlet.tld</taglib-location>
+			<taglib-location>/WEB-INF/tld/liferay-portlet_3_0.tld</taglib-location>
 		</taglib>
 		<taglib>
 			<taglib-uri>http://liferay.com/tld/aui</taglib-uri>
@@ -999,6 +1104,10 @@
 		<taglib>
 			<taglib-uri>http://liferay.com/tld/util</taglib-uri>
 			<taglib-location>/WEB-INF/tld/liferay-util.tld</taglib-location>
+		</taglib>
+		<taglib>
+			<taglib-uri>jakarta.tags.portlet</taglib-uri>
+			<taglib-location>/WEB-INF/tld/liferay-portlet.tld</taglib-location>
 		</taglib>
 	</jsp-config>
 </web-app>

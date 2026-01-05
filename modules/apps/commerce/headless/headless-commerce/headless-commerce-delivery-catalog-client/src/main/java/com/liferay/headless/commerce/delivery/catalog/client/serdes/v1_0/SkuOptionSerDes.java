@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -94,6 +94,16 @@ public class SkuOptionSerDes {
 			sb.append(_escape(skuOption.getQuantity()));
 
 			sb.append("\"");
+		}
+
+		if (skuOption.getRequired() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"required\": ");
+
+			sb.append(skuOption.getRequired());
 		}
 
 		if (skuOption.getSkuId() != null) {
@@ -246,6 +256,13 @@ public class SkuOptionSerDes {
 			map.put("quantity", String.valueOf(skuOption.getQuantity()));
 		}
 
+		if (skuOption.getRequired() == null) {
+			map.put("required", null);
+		}
+		else {
+			map.put("required", String.valueOf(skuOption.getRequired()));
+		}
+
 		if (skuOption.getSkuId() == null) {
 			map.put("skuId", null);
 		}
@@ -339,6 +356,9 @@ public class SkuOptionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "required")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "skuId")) {
 				return false;
 			}
@@ -393,6 +413,11 @@ public class SkuOptionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
 				if (jsonParserFieldValue != null) {
 					skuOption.setQuantity((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "required")) {
+				if (jsonParserFieldValue != null) {
+					skuOption.setRequired((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "skuId")) {
@@ -488,6 +513,10 @@ public class SkuOptionSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

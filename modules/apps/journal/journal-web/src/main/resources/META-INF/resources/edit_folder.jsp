@@ -114,6 +114,7 @@ renderResponse.setTitle(title);
 			<liferay-frontend:fieldset
 				collapsed="<%= false %>"
 				collapsible="<%= true %>"
+				disabled="<%= !journalDisplayContext.hasUpdateDLFolderPermission() %>"
 				label="details"
 			>
 				<aui:input name="name" />
@@ -127,6 +128,7 @@ renderResponse.setTitle(title);
 				<liferay-frontend:fieldset
 					collapsed="<%= true %>"
 					collapsible="<%= true %>"
+					disabled="<%= !journalDisplayContext.hasUpdateDLFolderPermission() %>"
 					label="custom-fields"
 				>
 					<liferay-expando:custom-attribute-list
@@ -143,6 +145,7 @@ renderResponse.setTitle(title);
 			<liferay-frontend:fieldset
 				collapsed="<%= true %>"
 				collapsible="<%= true %>"
+				disabled="<%= !journalDisplayContext.hasUpdateDLFolderPermission() %>"
 				label="parent-folder"
 			>
 
@@ -181,7 +184,7 @@ renderResponse.setTitle(title);
 			</liferay-frontend:fieldset>
 		</c:if>
 
-		<c:if test="<%= rootFolder || (folder != null) %>">
+		<c:if test="<%= (rootFolder || (folder != null)) && journalDisplayContext.hasAdvancedUpdateDLFolderPermission() %>">
 
 			<%
 			List<DDMStructure> ddmStructures = journalDisplayContext.getDDMStructures(JournalFolderConstants.RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW);
@@ -327,6 +330,10 @@ renderResponse.setTitle(title);
 
 							<%
 							WorkflowDefinitionLink workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.fetchWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalFolder.class.getName(), folderId, JournalArticleConstants.DDM_STRUCTURE_ID_ALL, true);
+
+							if (workflowDefinitionLink == null) {
+								workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.fetchWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalArticle.class.getName(), JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, JournalArticleConstants.DDM_STRUCTURE_ID_ALL, true);
+							}
 
 							for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 								boolean selected = false;

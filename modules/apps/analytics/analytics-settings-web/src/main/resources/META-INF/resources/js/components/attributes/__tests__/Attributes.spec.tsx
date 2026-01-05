@@ -5,7 +5,7 @@
 
 import fetch from 'jest-fetch-mock';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {useModal} from '@clayui/modal';
 import {act, cleanup, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -50,7 +50,9 @@ interface IComponentWithDataProps {
 	requestFn: (params: TTableRequestParams) => Promise<any>;
 }
 
-const ComponentWithData: React.FC<IComponentWithDataProps> = ({requestFn}) => {
+const ComponentWithData: React.FC<
+	{children?: React.ReactNode | undefined} & IComponentWithDataProps
+> = ({requestFn}) => {
 	const {observer} = useModal({onClose: () => {}});
 
 	return (
@@ -106,34 +108,32 @@ describe('Attributes', () => {
 
 		render(<Attributes />);
 
-		expect(await screen.findByRole(/people/i)).toHaveTextContent(
+		expect(await screen.findByRole('people')).toHaveTextContent(
 			/people44/i
 		);
-		expect(await screen.findByRole(/people/i)).toHaveTextContent(
+		expect(await screen.findByRole('people')).toHaveTextContent(
 			/selected/i
 		);
 
-		expect(await screen.findByRole(/account/i)).toHaveTextContent(
+		expect(await screen.findByRole('account')).toHaveTextContent(
 			/account25/i
 		);
 
-		expect(await screen.findByRole(/account/i)).toHaveTextContent(
+		expect(await screen.findByRole('account')).toHaveTextContent(
 			/selected/i
 		);
 
-		expect(await screen.findByRole(/product/i)).toHaveTextContent(
+		expect(await screen.findByRole('products')).toHaveTextContent(
 			/products34/i
 		);
 
-		expect(await screen.findByRole(/product/i)).toHaveTextContent(
+		expect(await screen.findByRole('products')).toHaveTextContent(
 			/selected/i
 		);
 
-		expect(await screen.findByRole(/order/i)).toHaveTextContent(/order0/i);
+		expect(await screen.findByRole('order')).toHaveTextContent(/order0/i);
 
-		expect(await screen.findByRole(/order/i)).toHaveTextContent(
-			/selected/i
-		);
+		expect(await screen.findByRole('order')).toHaveTextContent(/selected/i);
 	});
 
 	it('renders Attributes with select buttons', async () => {

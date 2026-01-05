@@ -1,20 +1,16 @@
-.info {
-	&-container {
-		box-sizing: border-box;
-		gap: 16px;
-	}
+.info-container {
+	box-sizing: border-box;
+	gap: 16px;
 
-	&-card {
-		background: #fbfcfe;
-		border: 2px solid #eef3fd;
+	.info-card {
 		border-radius: 10px;
-		flex: 1 0 auto;
-		max-width: 274px;
+		flex: 1 0 0;
+		max-width: none;
 		transition: all ease-in-out 0.3s;
 
-		&:hover {
-			background: #f0f5ff;
-			border: 2px solid #80acff;
+		&.limited {
+			flex: 1 0 auto;
+			max-width: 274px;
 		}
 	}
 }
@@ -23,7 +19,6 @@
 	&-container {
 		box-sizing: border-box;
 		gap: 16px;
-		max-width: 1146px;
 	}
 
 	&-card {

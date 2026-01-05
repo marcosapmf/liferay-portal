@@ -1,11 +1,45 @@
 {
 	"properties": {
+		"accountEntryRestrictedObjectFieldValue": {
+			"type": "keyword"
+		},
+		"accountEntryRestrictedOrganizationIds": {
+			"type": "keyword"
+		},
+		"objectActionId": {
+			"type": "keyword"
+		},
+		"objectDefinitionId": {
+			"type": "keyword"
+		},
+		"objectDefinitionName": {
+			"type": "keyword"
+		},
+		"objectEntryId": {
+			"type": "keyword"
+		},
+		"objectFieldId": {
+			"type": "keyword"
+		},
 		"objectFolderExternalReferenceCode": {
-			"store": true,
+			"type": "keyword"
+		},
+		"objectFolderId": {
+			"type": "keyword"
+		},
+		"objectLayoutId": {
+			"type": "keyword"
+		},
+		"objectRelationshipId": {
+			"type": "keyword"
+		},
+		"objectValidationRuleId": {
+			"type": "keyword"
+		},
+		"objectViewId": {
 			"type": "keyword"
 		},
 		"rootObjectDefinitionExternalReferenceCode": {
-			"store": true,
 			"type": "keyword"
 		}
 	}

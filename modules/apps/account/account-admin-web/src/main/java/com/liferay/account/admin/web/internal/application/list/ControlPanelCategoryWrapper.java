@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"panel.category.key=" + PanelCategoryKeys.APPLICATIONS_MENU,
-		"panel.category.order:Integer=100"
+		"panel.category.order:Integer=150"
 	},
 	service = PanelCategory.class
 )
@@ -52,14 +52,9 @@ public class ControlPanelCategoryWrapper extends BasePanelCategory {
 
 		User user = permissionChecker.getUser();
 
-		if (OrganizationPermissionUtil.contains(
-				permissionChecker, user.getOrganizationIds(true),
-				AccountActionKeys.MANAGE_ACCOUNTS)) {
-
-			return true;
-		}
-
-		return false;
+		return OrganizationPermissionUtil.contains(
+			permissionChecker, user.getOrganizationIds(true),
+			AccountActionKeys.MANAGE_ACCOUNTS);
 	}
 
 	@Reference(

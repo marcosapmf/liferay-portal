@@ -5,10 +5,10 @@
 
 package com.liferay.depot.web.internal.portlet.action;
 
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.depot.web.internal.constants.DepotAdminWebKeys;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.display.context.DepotAdminDLDisplayContext;
 import com.liferay.document.library.configuration.DLSizeLimitConfigurationProvider;
 import com.liferay.item.selector.ItemSelector;
@@ -17,9 +17,9 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,8 +29,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
-		"javax.portlet.name=" + DepotPortletKeys.DEPOT_SETTINGS,
+		"jakarta.portlet.name=" + DepotPortletKeys.DEPOT_ADMIN,
+		"jakarta.portlet.name=" + DepotPortletKeys.DEPOT_SETTINGS,
 		"mvc.command.name=/depot/edit_depot_entry"
 	},
 	service = MVCRenderCommand.class

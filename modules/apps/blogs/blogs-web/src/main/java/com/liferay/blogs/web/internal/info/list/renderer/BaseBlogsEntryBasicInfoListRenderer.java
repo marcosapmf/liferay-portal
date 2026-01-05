@@ -17,10 +17,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -38,23 +38,23 @@ public abstract class BaseBlogsEntryBasicInfoListRenderer
 
 	@Override
 	public void render(
-		List<BlogsEntry> blogEntries, HttpServletRequest httpServletRequest,
+		List<BlogsEntry> blogsEntries, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
 		render(
-			blogEntries,
+			blogsEntries,
 			new DefaultInfoListRendererContext(
 				httpServletRequest, httpServletResponse));
 	}
 
 	@Override
 	public void render(
-		List<BlogsEntry> blogEntries,
+		List<BlogsEntry> blogsEntries,
 		InfoListRendererContext infoListRendererContext) {
 
 		InfoListBasicListTag infoListBasicListTag = new InfoListBasicListTag();
 
-		infoListBasicListTag.setInfoListObjects(blogEntries);
+		infoListBasicListTag.setInfoListObjects(blogsEntries);
 
 		String listItemRendererKey =
 			infoListRendererContext.getListItemRendererKey();

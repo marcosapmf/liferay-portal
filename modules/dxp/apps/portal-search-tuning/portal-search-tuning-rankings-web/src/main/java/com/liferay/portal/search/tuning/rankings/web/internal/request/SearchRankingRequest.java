@@ -27,12 +27,12 @@ import com.liferay.portal.search.tuning.rankings.web.internal.constants.ResultRa
 import com.liferay.portal.search.tuning.rankings.web.internal.display.context.RankingEntryDisplayContext;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingFields;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Wade Cao
@@ -69,6 +69,7 @@ public class SearchRankingRequest {
 
 		searchSearchRequest.setFetchSource(true);
 		searchSearchRequest.setIndexNames(_rankingIndexName.getIndexName());
+		searchSearchRequest.setSelectedFieldNames(StringPool.BLANK);
 		searchSearchRequest.setSize(_searchContainer.getDelta());
 		searchSearchRequest.setSorts(_getSorts());
 		searchSearchRequest.setStart(_searchContainer.getStart());

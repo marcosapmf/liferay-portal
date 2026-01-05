@@ -114,6 +114,18 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				/>
 			</liferay-ui:search-container-column-text>
 
+			<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
+					name="status"
+				>
+					<clay:label
+						displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+						label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+					/>
+				</liferay-ui:search-container-column-text>
+			</c:if>
+
 			<liferay-ui:search-container-column-text>
 				<c:if test="<%= !portletName.equals(myAccountPortletId) && userDisplayContext.isAllowRemoveRole(role) %>">
 					<clay:button
@@ -145,6 +157,27 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 					var searchContainer = Liferay.SearchContainer.get(searchContainerName);
 
+					let searchContainerData = searchContainer.getData(true);
+
+					<%
+					String[] roleIds = new String[0];
+
+					if (selUser != null) {
+						roleIds = ArrayUtil.toStringArray(selUser.getRoleIds());
+					}
+
+					JSONArray roleIdsJSONArray = JSONFactoryUtil.createJSONArray(roleIds);
+					%>
+
+					if (searchContainerData.length < <%= roleIds.length %>) {
+						searchContainerData = [
+							...new Set([
+								...<%= roleIdsJSONArray.toString() %>,
+								...searchContainerData,
+							]),
+						];
+					}
+
 					Liferay.Util.openSelectionModal({
 						onSelect: function (event) {
 							<portlet:namespace />selectRole(
@@ -162,7 +195,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 						%>
 
 						selectEventName: '<%= regularRoleEventName %>',
-						selectedData: searchContainer.getData(true),
+						selectedData: searchContainerData,
 						title: '<liferay-ui:message arguments="regular-role" key="select-x" />',
 
 						<%
@@ -312,6 +345,18 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					name="organization"
 					value="<%= HtmlUtil.escape(userGroupRole.getGroup().getDescriptiveName(locale)) %>"
 				/>
+
+				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand"
+						name="status"
+					>
+						<clay:label
+							displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+							label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+						/>
+					</liferay-ui:search-container-column-text>
+				</c:if>
 
 				<%
 				boolean membershipProtected = false;
@@ -561,6 +606,18 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 						group="<%= userGroupRole.getGroup() %>"
 					/>
 				</liferay-ui:search-container-column-text>
+
+				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-35914") %>'>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand"
+						name="status"
+					>
+						<clay:label
+							displayType="<%= WorkflowConstants.getStatusStyle(role.getStatus()) %>"
+							label="<%= WorkflowConstants.getStatusLabel(role.getStatus()) %>"
+						/>
+					</liferay-ui:search-container-column-text>
+				</c:if>
 
 				<%
 				boolean membershipProtected = false;

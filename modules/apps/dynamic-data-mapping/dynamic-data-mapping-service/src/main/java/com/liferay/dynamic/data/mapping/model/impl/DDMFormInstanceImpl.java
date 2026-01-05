@@ -60,11 +60,14 @@ public class DDMFormInstanceImpl extends DDMFormInstanceBaseImpl {
 	}
 
 	@Override
-	public DDMFormValues getSettingsDDMFormValues() throws PortalException {
+	public DDMFormValues getSettingsDDMFormValues() {
 		if (_ddmFormValues == null) {
 			_ddmFormValues =
 				DDMFormInstanceLocalServiceUtil.
 					getFormInstanceSettingsFormValues(this);
+
+			ddmFormValuesUpdateEntityCacheBiConsumer.accept(
+				this, _ddmFormValues);
 		}
 
 		return _ddmFormValues;
@@ -108,7 +111,14 @@ public class DDMFormInstanceImpl extends DDMFormInstanceBaseImpl {
 		_formInstanceSettings = null;
 	}
 
-	@CacheField(methodName = "DDMFormValues", propagateToInterface = true)
+	@Override
+	public void setSettingsDDMFormValues(DDMFormValues ddmFormValues) {
+		_ddmFormValues = ddmFormValues;
+	}
+
+	@CacheField(
+		methodName = "SettingsDDMFormValues", propagateToInterface = true
+	)
 	private DDMFormValues _ddmFormValues;
 
 	private DDMFormInstanceSettings _formInstanceSettings;

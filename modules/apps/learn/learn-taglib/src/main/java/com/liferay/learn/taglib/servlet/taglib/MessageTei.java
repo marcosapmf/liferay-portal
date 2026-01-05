@@ -7,9 +7,9 @@ package com.liferay.learn.taglib.servlet.taglib;
 
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.servlet.jsp.tagext.TagData;
-import javax.servlet.jsp.tagext.TagExtraInfo;
-import javax.servlet.jsp.tagext.VariableInfo;
+import jakarta.servlet.jsp.tagext.TagData;
+import jakarta.servlet.jsp.tagext.TagExtraInfo;
+import jakarta.servlet.jsp.tagext.VariableInfo;
 
 /**
  * @author Brian Wing Shun Chan
@@ -20,14 +20,14 @@ public class MessageTei extends TagExtraInfo {
 	public VariableInfo[] getVariableInfo(TagData tagData) {
 		String var = tagData.getAttributeString("var");
 
-		if (Validator.isNotNull(var)) {
-			return new VariableInfo[] {
-				new VariableInfo(
-					var, String.class.getName(), true, VariableInfo.AT_END)
-			};
+		if (Validator.isNull(var)) {
+			return null;
 		}
 
-		return null;
+		return new VariableInfo[] {
+			new VariableInfo(
+				var, String.class.getName(), true, VariableInfo.AT_END)
+		};
 	}
 
 }

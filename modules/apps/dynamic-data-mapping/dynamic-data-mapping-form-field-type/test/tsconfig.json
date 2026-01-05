@@ -1,0 +1,88 @@
+{
+	"@generated": "181b888c4b73a10960e68496abef7fc214454982",
+	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"checkJs": false,
+		"composite": true,
+		"declarationDir": "../../../../.tsc/types",
+		"emitDeclarationOnly": true,
+		"jsx": "react",
+		"module": "es2022",
+		"moduleResolution": "node",
+		"paths": {
+			"@liferay/frontend-js-react-web": [
+				"../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"@liferay/map-google-maps": [
+				"../../../map/map-google-maps/src/main/resources/META-INF/resources/js/index.js"
+			],
+			"@liferay/map-openstreetmap": [
+				"../../../map/map-openstreetmap/src/main/resources/META-INF/resources/js/index.js"
+			],
+			"@liferay/object-js-components-web": [
+				"../../../object/object-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			],
+			"data-engine-js-components-web": [
+				"../../../data-engine/data-engine-js-components-web/src/main/resources/META-INF/resources/js/index.d.ts"
+			],
+			"dynamic-data-mapping-form-field-type/api": [
+				"./../src/main/resources/META-INF/resources/js/api/api.ts"
+			],
+			"frontend-editor-ckeditor-web": [
+				"../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			],
+			"frontend-js-web": [
+				"../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
+			]
+		},
+		"rootDir": "../../../..",
+		"skipLibCheck": true,
+		"sourceMap": false,
+		"strict": true,
+		"target": "esnext",
+		"tsBuildInfoFile": "../../../../.tsc/buildinfo/dynamic-data-mapping-form-field-type-test.tsbuildinfo",
+		"typeRoots": [
+			"../../../../node_modules/@types"
+		]
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.tsx",
+		"../../../../global.d.ts",
+		"../src/**/*.ts",
+		"../src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../../../frontend-js/frontend-js-react-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../map/map-google-maps/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../map/map-openstreetmap/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../object/object-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../data-engine/data-engine-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../frontend-editor/frontend-editor-ckeditor-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"
+		}
+	]
+}

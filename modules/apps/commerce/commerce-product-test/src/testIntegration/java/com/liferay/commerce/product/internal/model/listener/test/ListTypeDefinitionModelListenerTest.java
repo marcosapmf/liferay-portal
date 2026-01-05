@@ -95,12 +95,12 @@ public class ListTypeDefinitionModelListenerTest {
 		_cpSpecificationOptionLocalService.addCPSpecificationOption(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_cpOptionCategory.getCPOptionCategoryId(),
-			_listTypeDefinition.getListTypeDefinitionId(),
+			new long[] {_listTypeDefinition.getListTypeDefinitionId()},
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), true,
 			CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest.
 				class.getSimpleName(),
-			RandomTestUtil.randomDouble(), _serviceContext);
+			RandomTestUtil.randomDouble(), true, _serviceContext);
 
 		_listTypeDefinitionLocalService.deleteListTypeDefinition(
 			_listTypeDefinition.getListTypeDefinitionId());
@@ -117,7 +117,8 @@ public class ListTypeDefinitionModelListenerTest {
 			false,
 			Collections.singletonList(
 				ListTypeEntryUtil.createListTypeEntry(
-					RandomTestUtil.randomString())));
+					RandomTestUtil.randomString())),
+			new ServiceContext());
 	}
 
 	private static User _user;

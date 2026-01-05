@@ -5,14 +5,13 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.util.v2_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListAccountRel;
 import com.liferay.commerce.price.list.service.CommercePriceListAccountRelService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -45,15 +44,9 @@ public class PriceListAccountUtil {
 		}
 		else {
 			accountEntry =
-				accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					serviceContext.getCompanyId(),
-					priceListAccount.getAccountExternalReferenceCode());
-
-			if (accountEntry == null) {
-				throw new NoSuchEntryException(
-					"Unable to find account with external reference code " +
-						priceListAccount.getAccountExternalReferenceCode());
-			}
+				accountEntryService.getAccountEntryByExternalReferenceCode(
+					priceListAccount.getAccountExternalReferenceCode(),
+					serviceContext.getCompanyId());
 		}
 
 		return commercePriceListAccountRelService.

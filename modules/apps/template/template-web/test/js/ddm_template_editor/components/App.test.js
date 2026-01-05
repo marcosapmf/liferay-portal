@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {act, cleanup, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -41,27 +41,22 @@ const renderApp = ({initialScript = ''} = {}) => {
 };
 
 describe('', () => {
+	beforeAll(() => {
+		Liferay.Util.unescapeHTML = (str) => str;
+	});
+
 	beforeEach(() => {
 		cleanup();
 
+		window.document.createRange = () => ({
+			cloneRange: (range) => range,
+			getBoundingClientRect: () => 1,
+			getClientRects: () => 1,
+			setEnd: () => {},
+			setStart: () => {},
+		});
+
 		if (global.document) {
-			global.document.body.createTextRange = () => ({
-				commonAncestorContainer: {
-					nodeName: 'BODY',
-					ownerDocument: document,
-				},
-				getBoundingClientRect: () => {},
-				getClientRects: () => ({length: 0}),
-				setEnd: () => {},
-				setStart: () => {},
-			});
-
-			global.document.getSelection = () => {
-				return {
-					removeAllRanges: () => {},
-				};
-			};
-
 			const saveButton = global.document.createElement('button');
 			saveButton.classList.add('save-button');
 
@@ -86,12 +81,12 @@ describe('', () => {
 		expect(screen.getByText('thisistheinitialscript')).toBeInTheDocument();
 	});
 
-	it('includes the variable in the script when clicked', () => {
+	it('includes the variable in the script when clicked', async () => {
 		renderApp();
 
 		const variableButton = screen.getByText('variableTemplate1');
 
-		userEvent.click(variableButton);
+		await userEvent.click(variableButton);
 
 		expect(screen.getByText('this is a variable 1')).toBeInTheDocument();
 	});
@@ -106,23 +101,23 @@ describe('', () => {
 		expect(screen.getByText('this is a tooltip 1')).toBeInTheDocument();
 	});
 
-	it('filters variable groups when search', () => {
+	it('filters variable groups when search', async () => {
 		renderApp();
 
 		const searchInput = screen.getByLabelText('search');
 
-		userEvent.type(searchInput, 'variableTemplate2');
+		await userEvent.type(searchInput, 'variableTemplate2');
 
 		expect(screen.queryByText('variableTemplate2')).toBeInTheDocument();
 		expect(screen.queryByText('variableTemplate1')).not.toBeInTheDocument();
 	});
 
-	it('no result when searching', () => {
+	it('no result when searching', async () => {
 		renderApp();
 
 		const searchInput = screen.getByLabelText('search');
 
-		userEvent.type(searchInput, 'anotherVariable');
+		await userEvent.type(searchInput, 'anotherVariable');
 
 		expect(screen.queryByText('no-results-found')).toBeInTheDocument();
 	});

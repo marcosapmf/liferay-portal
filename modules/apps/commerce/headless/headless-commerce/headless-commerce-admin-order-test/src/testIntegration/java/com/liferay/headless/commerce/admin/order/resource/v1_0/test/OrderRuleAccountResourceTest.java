@@ -57,8 +57,22 @@ public class OrderRuleAccountResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testDeleteOrderRuleAccount() throws Exception {
 		super.testDeleteOrderRuleAccount();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteOrderRuleAccountBatch() throws Exception {
+		super.testDeleteOrderRuleAccountBatch();
 	}
 
 	@Ignore
@@ -73,8 +87,8 @@ public class OrderRuleAccountResourceTest
 		User guestUser = testCompany.getGuestUser();
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			guestUser.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, guestUser.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null,
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 

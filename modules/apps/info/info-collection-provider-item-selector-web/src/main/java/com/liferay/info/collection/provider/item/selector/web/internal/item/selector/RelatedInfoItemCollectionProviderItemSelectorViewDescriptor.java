@@ -15,14 +15,14 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Diego Hu
@@ -59,7 +59,7 @@ public class RelatedInfoItemCollectionProviderItemSelectorViewDescriptor
 
 		PortletRequest portletRequest =
 			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST);
+				JavaConstants.JAKARTA_PORTLET_REQUEST);
 
 		SearchContainer<RelatedInfoItemCollectionProvider<?, ?>>
 			searchContainer = new SearchContainer<>(
@@ -67,12 +67,12 @@ public class RelatedInfoItemCollectionProviderItemSelectorViewDescriptor
 				"there-are-no-related-items-collection-providers");
 
 		List<RelatedInfoItemCollectionProvider<?, ?>>
-			relatedInfoItemCollectionProviderList = new ArrayList<>(
+			filteredRelatedInfoItemCollectionProviders = new ArrayList<>(
 				infoCollectionProviders);
 
 		if (Validator.isNotNull(getSelectedItemType())) {
-			relatedInfoItemCollectionProviderList = ListUtil.filter(
-				relatedInfoItemCollectionProviderList,
+			filteredRelatedInfoItemCollectionProviders = ListUtil.filter(
+				filteredRelatedInfoItemCollectionProviders,
 				relatedInfoItemCollectionProvider -> Objects.equals(
 					relatedInfoItemCollectionProvider.
 						getCollectionItemClassName(),
@@ -82,8 +82,8 @@ public class RelatedInfoItemCollectionProviderItemSelectorViewDescriptor
 		String keywords = ParamUtil.getString(httpServletRequest, "keywords");
 
 		if (Validator.isNotNull(keywords)) {
-			relatedInfoItemCollectionProviderList = ListUtil.filter(
-				relatedInfoItemCollectionProviderList,
+			filteredRelatedInfoItemCollectionProviders = ListUtil.filter(
+				filteredRelatedInfoItemCollectionProviders,
 				relatedInfoItemCollectionProvider -> {
 					String label = StringUtil.toLowerCase(
 						relatedInfoItemCollectionProvider.getLabel(
@@ -94,7 +94,7 @@ public class RelatedInfoItemCollectionProviderItemSelectorViewDescriptor
 		}
 
 		searchContainer.setResultsAndTotal(
-			relatedInfoItemCollectionProviderList);
+			filteredRelatedInfoItemCollectionProviders);
 
 		return searchContainer;
 	}

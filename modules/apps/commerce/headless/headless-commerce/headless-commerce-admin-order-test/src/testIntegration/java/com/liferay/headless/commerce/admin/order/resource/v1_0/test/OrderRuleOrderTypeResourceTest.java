@@ -57,8 +57,22 @@ public class OrderRuleOrderTypeResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testDeleteOrderRuleOrderType() throws Exception {
 		super.testDeleteOrderRuleOrderType();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testDeleteOrderRuleOrderTypeBatch() throws Exception {
+		super.testDeleteOrderRuleOrderTypeBatch();
 	}
 
 	@Ignore

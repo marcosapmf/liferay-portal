@@ -35,11 +35,11 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.text.DateFormat;
 
@@ -132,22 +132,23 @@ public abstract class BaseAssetSearchTestCase {
 			serviceContext = ServiceContextTestUtil.getServiceContext(groupId);
 
 			AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), groupId, "liferay",
+				null, TestPropsValues.getUserId(), groupId, "liferay",
 				serviceContext);
 
 			AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), groupId, "architecture",
+				null, TestPropsValues.getUserId(), groupId, "architecture",
 				serviceContext);
 
 			AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), groupId, "modularity",
+				null, TestPropsValues.getUserId(), groupId, "modularity",
 				serviceContext);
 
 			AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), groupId, "osgi", serviceContext);
+				null, TestPropsValues.getUserId(), groupId, "osgi",
+				serviceContext);
 
 			AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), groupId, "services",
+				null, TestPropsValues.getUserId(), groupId, "services",
 				serviceContext);
 		}
 

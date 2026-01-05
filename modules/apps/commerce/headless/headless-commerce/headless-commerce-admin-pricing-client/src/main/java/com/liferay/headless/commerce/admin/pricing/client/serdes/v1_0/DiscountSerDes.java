@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.admin.pricing.client.dto.v1_0.DiscountProdu
 import com.liferay.headless.commerce.admin.pricing.client.dto.v1_0.DiscountRule;
 import com.liferay.headless.commerce.admin.pricing.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
@@ -22,8 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -925,6 +925,10 @@ public class DiscountSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

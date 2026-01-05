@@ -297,6 +297,13 @@ public class AssetListEntrySegmentsEntryRelLocalServiceUtil {
 			assetListEntryId, segmentsEntryIds);
 	}
 
+	public static List<AssetListEntrySegmentsEntryRel>
+		fetchDynamicAssetListEntrySegmentsEntryRels(long companyId) {
+
+		return getService().fetchDynamicAssetListEntrySegmentsEntryRels(
+			companyId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -378,6 +385,14 @@ public class AssetListEntrySegmentsEntryRelLocalServiceUtil {
 
 		return getService().getAssetListEntrySegmentsEntryRels(
 			assetListEntryId, segmentsEntryIds, start, end, orderByComparator);
+	}
+
+	public static List<AssetListEntrySegmentsEntryRel>
+		getAssetListEntrySegmentsEntryRelsByClassNameId(
+			long companyId, long classNameId) {
+
+		return getService().getAssetListEntrySegmentsEntryRelsByClassNameId(
+			companyId, classNameId);
 	}
 
 	/**

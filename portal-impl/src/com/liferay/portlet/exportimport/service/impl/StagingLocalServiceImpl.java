@@ -25,6 +25,7 @@ import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -78,6 +79,8 @@ import com.liferay.portal.service.http.GroupServiceHttp;
 import com.liferay.portlet.exportimport.service.base.StagingLocalServiceBaseImpl;
 import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
 
+import jakarta.portlet.PortletRequest;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -90,8 +93,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
 
 /**
  * @author Michael C. Han
@@ -451,6 +452,9 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		typeSettingsUnicodeProperties.setProperty(
 			"remoteAddress", remoteAddress);
 		typeSettingsUnicodeProperties.setProperty(
+			"remoteGroupExternalReferenceCode",
+			remoteGroup.getExternalReferenceCode());
+		typeSettingsUnicodeProperties.setProperty(
 			"remoteGroupId", String.valueOf(remoteGroupId));
 		typeSettingsUnicodeProperties.setProperty(
 			"remoteGroupUUID", remoteGroup.getUuid());
@@ -661,12 +665,13 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		throws PortalException {
 
 		Group stagingGroup = _groupLocalService.addGroup(
-			userId, liveGroup.getParentGroupId(), liveGroup.getClassName(),
-			liveGroup.getClassPK(), liveGroup.getGroupId(),
-			liveGroup.getNameMap(), liveGroup.getDescriptionMap(),
-			liveGroup.getType(), liveGroup.isManualMembership(),
+			StringPool.BLANK, userId, liveGroup.getParentGroupId(),
+			liveGroup.getClassName(), liveGroup.getClassPK(),
+			liveGroup.getGroupId(), liveGroup.getNameMap(),
+			liveGroup.getDescriptionMap(), liveGroup.getType(), null,
+			liveGroup.isManualMembership(),
 			liveGroup.getMembershipRestriction(), liveGroup.getFriendlyURL(),
-			false, true, serviceContext);
+			false, false, true, serviceContext);
 
 		if (LanguageUtil.isInheritLocales(liveGroup.getGroupId())) {
 			return stagingGroup;
@@ -1153,7 +1158,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 				layoutRevision.getLayoutRevisionId());
 
 		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			javax.portlet.PortletPreferences jxPortletPreferences =
+			jakarta.portlet.PortletPreferences jxPortletPreferences =
 				_portletPreferenceValueLocalService.getPreferences(
 					portletPreferences);
 

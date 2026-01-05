@@ -14,7 +14,7 @@ import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionService;
 import com.liferay.object.service.ObjectFieldService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsDetailsDisplayContext;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsFieldsDisplayContext;
@@ -24,9 +24,9 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ObjectPortletKeys.OBJECT_DEFINITIONS,
+		"jakarta.portlet.name=" + ObjectPortletKeys.OBJECT_DEFINITIONS,
 		"mvc.command.name=/object_definitions/view_model_builder"
 	},
 	service = MVCRenderCommand.class
@@ -54,21 +54,22 @@ public class ViewModelBuilderMVCRenderCommand implements MVCRenderCommand {
 				_configurationProvider,
 				_portal.getHttpServletRequest(renderRequest),
 				_objectDefinitionModelResourcePermission,
-				_objectEntryManagerRegistry, _objectScopeProviderRegistry));
+				_objectEntryManagerRegistry, _objectFolderLocalService,
+				_objectScopeProviderRegistry));
 		renderRequest.setAttribute(
 			ObjectWebKeys.OBJECT_DEFINITIONS_FIELD_DISPLAY_CONTEXT,
 			new ObjectDefinitionsFieldsDisplayContext(
 				_portal.getHttpServletRequest(renderRequest),
 				_listTypeDefinitionService,
 				_objectDefinitionModelResourcePermission,
-				_objectFieldBusinessTypeRegistry,
-				_objectFieldSettingLocalService));
+				_objectFieldBusinessTypeRegistry, _objectFolderLocalService));
 		renderRequest.setAttribute(
 			ObjectWebKeys.OBJECT_DEFINITIONS_RELATIONSHIP_DISPLAY_CONTEXT,
 			new ObjectDefinitionsRelationshipsDisplayContext(
 				_portal.getHttpServletRequest(renderRequest),
 				_objectDefinitionModelResourcePermission,
 				_objectDefinitionService, _objectFieldService,
+				_objectFolderLocalService,
 				_systemObjectDefinitionManagerRegistry));
 
 		return "/object_folders/view_model_builder.jsp";
@@ -99,7 +100,7 @@ public class ViewModelBuilderMVCRenderCommand implements MVCRenderCommand {
 	private ObjectFieldService _objectFieldService;
 
 	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
 	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;

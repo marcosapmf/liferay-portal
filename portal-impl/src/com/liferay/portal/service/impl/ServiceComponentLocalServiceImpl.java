@@ -6,6 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -16,6 +17,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.model.ServiceComponent;
 import com.liferay.portal.kernel.service.configuration.ServiceComponentConfiguration;
 import com.liferay.portal.kernel.service.configuration.servlet.ServletServiceContextComponentConfiguration;
@@ -23,6 +25,7 @@ import com.liferay.portal.kernel.upgrade.util.UpgradeTable;
 import com.liferay.portal.kernel.upgrade.util.UpgradeTableListener;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
@@ -31,7 +34,6 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.service.base.ServiceComponentLocalServiceBaseImpl;
 import com.liferay.portal.upgrade.util.UpgradeTableFactoryUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
 
@@ -140,7 +142,10 @@ public class ServiceComponentLocalServiceImpl
 						" has build number ", previousBuildNumber,
 						" which is newer than ", buildNumber));
 			}
-			else {
+			else if (!StringUtil.equals(
+						buildNamespace,
+						ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME)) {
+
 				return serviceComponent;
 			}
 		}
@@ -243,27 +248,17 @@ public class ServiceComponentLocalServiceImpl
 	}
 
 	protected List<String> getModelNames(String xml) throws DocumentException {
-		List<String> modelNames = new ArrayList<>();
-
 		Document document = UnsecureSAXReaderUtil.read(xml);
 
 		Element rootElement = document.getRootElement();
 
-		List<Element> modelElements = rootElement.elements("model");
-
-		for (Element modelElement : modelElements) {
-			String name = modelElement.attributeValue("name");
-
-			modelNames.add(name);
-		}
-
-		return modelNames;
+		return TransformUtil.transform(
+			rootElement.elements("model"),
+			modelElement -> modelElement.attributeValue("name"));
 	}
 
 	protected List<String> getModifiedTableNames(
 		String previousTablesSQL, String tablesSQL) {
-
-		List<String> modifiedTableNames = new ArrayList<>();
 
 		List<String> previousTablesSQLParts = ListUtil.fromArray(
 			StringUtil.split(previousTablesSQL, StringPool.SEMICOLON));
@@ -272,14 +267,14 @@ public class ServiceComponentLocalServiceImpl
 
 		tablesSQLParts.removeAll(previousTablesSQLParts);
 
-		for (String tablesSQLPart : tablesSQLParts) {
-			int x = tablesSQLPart.indexOf("create table ");
-			int y = tablesSQLPart.indexOf(" (");
+		return TransformUtil.transform(
+			tablesSQLParts,
+			tablesSQLPart -> {
+				int x = tablesSQLPart.indexOf("create table ");
+				int y = tablesSQLPart.indexOf(" (");
 
-			modifiedTableNames.add(tablesSQLPart.substring(x + 13, y));
-		}
-
-		return modifiedTableNames;
+				return tablesSQLPart.substring(x + 13, y);
+			});
 	}
 
 	protected UpgradeTableListener getUpgradeTableListener(

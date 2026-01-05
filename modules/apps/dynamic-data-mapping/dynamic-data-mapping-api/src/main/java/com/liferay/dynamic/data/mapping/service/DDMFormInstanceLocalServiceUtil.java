@@ -428,6 +428,12 @@ public class DDMFormInstanceLocalServiceUtil {
 		return getService().getFormInstance(uuid, ddmFormInstanceId);
 	}
 
+	public static DDMFormInstance getFormInstanceByStructureId(long structureId)
+		throws PortalException {
+
+		return getService().getFormInstanceByStructureId(structureId);
+	}
+
 	public static List<DDMFormInstance> getFormInstances(long groupId) {
 		return getService().getFormInstances(groupId);
 	}
@@ -443,8 +449,7 @@ public class DDMFormInstanceLocalServiceUtil {
 	}
 
 	public static com.liferay.dynamic.data.mapping.storage.DDMFormValues
-			getFormInstanceSettingsFormValues(DDMFormInstance formInstance)
-		throws PortalException {
+		getFormInstanceSettingsFormValues(DDMFormInstance formInstance) {
 
 		return getService().getFormInstanceSettingsFormValues(formInstance);
 	}

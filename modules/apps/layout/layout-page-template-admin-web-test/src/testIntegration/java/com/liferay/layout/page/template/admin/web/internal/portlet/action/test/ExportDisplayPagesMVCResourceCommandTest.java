@@ -43,6 +43,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ResourceRequest;
+
 import java.io.File;
 
 import java.util.ArrayList;
@@ -54,8 +56,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.portlet.ResourceRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -95,7 +95,8 @@ public class ExportDisplayPagesMVCResourceCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), layoutPageTemplateEntry.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateEntry.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(
 						layoutPageTemplateEntry.getPlid()),
@@ -171,7 +172,8 @@ public class ExportDisplayPagesMVCResourceCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), layoutPageTemplateEntry1.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateEntry1.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(
 						layoutPageTemplateEntry1.getPlid()),
@@ -185,7 +187,8 @@ public class ExportDisplayPagesMVCResourceCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), layoutPageTemplateEntry2.getPlid(),
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateEntry2.getPlid(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(
 						layoutPageTemplateEntry2.getPlid()),
@@ -304,7 +307,7 @@ public class ExportDisplayPagesMVCResourceCommandTest {
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 			null, _serviceContext.getUserId(),
-			_serviceContext.getScopeGroupId(), 0,
+			_serviceContext.getScopeGroupId(), 0, null,
 			_portal.getClassNameId(className), _getClassTypeId(className), name,
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, status,
 			_serviceContext);

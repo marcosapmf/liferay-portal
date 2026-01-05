@@ -868,6 +868,26 @@ public class ArrayUtil {
 		return set.toArray(new String[0]);
 	}
 
+	public static boolean equalsIgnoreCase(String[] array1, String[] array2) {
+		if (array1 == array2) {
+			return true;
+		}
+
+		if (isEmpty(array1) || isEmpty(array2) ||
+			(array1.length != array2.length)) {
+
+			return false;
+		}
+
+		for (int i = 0; i < array1.length; i++) {
+			if (!StringUtil.equalsIgnoreCase(array1[i], array2[i])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public static <T> boolean exists(T[] array, Predicate<T> predicate) {
 		if (isEmpty(array)) {
 			return false;
@@ -2045,14 +2065,16 @@ public class ArrayUtil {
 		return newArray;
 	}
 
-	public static short[] toShortArray(Collection<Short> collection) {
+	public static short[] toShortArray(
+		Collection<? extends Number> collection) {
+
 		short[] newArray = new short[collection.size()];
 
 		if (collection instanceof List) {
-			List<Short> list = (List<Short>)collection;
+			List<Number> list = (List<Number>)collection;
 
 			for (int i = 0; i < list.size(); i++) {
-				Short value = list.get(i);
+				Number value = list.get(i);
 
 				newArray[i] = value.shortValue();
 			}
@@ -2060,10 +2082,10 @@ public class ArrayUtil {
 		else {
 			int i = 0;
 
-			Iterator<Short> iterator = collection.iterator();
+			Iterator<? extends Number> iterator = collection.iterator();
 
 			while (iterator.hasNext()) {
-				Short value = iterator.next();
+				Number value = iterator.next();
 
 				newArray[i++] = value.shortValue();
 			}

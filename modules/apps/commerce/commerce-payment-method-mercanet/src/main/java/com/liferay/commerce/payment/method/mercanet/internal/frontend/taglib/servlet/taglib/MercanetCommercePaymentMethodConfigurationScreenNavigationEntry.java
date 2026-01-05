@@ -21,14 +21,14 @@ import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ParameterMapSettingsLocator;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -80,14 +80,9 @@ public class MercanetCommercePaymentMethodConfigurationScreenNavigationEntry
 			return false;
 		}
 
-		if (Objects.equals(
-				commercePaymentMethod.getPaymentIntegrationKey(),
-				MercanetCommercePaymentMethod.KEY)) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			commercePaymentMethod.getPaymentIntegrationKey(),
+			MercanetCommercePaymentMethod.KEY);
 	}
 
 	@Override

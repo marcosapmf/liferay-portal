@@ -5,6 +5,8 @@
 
 package com.liferay.site.internal.util;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactoryUtil;
 import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
@@ -70,15 +72,17 @@ import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletPreferencesImpl;
 import com.liferay.sites.kernel.util.Sites;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.io.File;
 import java.io.Serializable;
@@ -89,8 +93,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -130,12 +132,20 @@ public class SitesImpl implements Sites {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
+		long[] originalAssetCategoryIds = serviceContext.getAssetCategoryIds();
+		String[] originalAssetTagNames = serviceContext.getAssetTagNames();
 		Serializable originalLayoutPrototypeLinkEnabled =
 			serviceContext.getAttribute("layoutPrototypeLinkEnabled");
 		Serializable originalLayoutPrototypeUuid = serviceContext.getAttribute(
 			"layoutPrototypeUuid");
 
 		try {
+			AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+				Layout.class.getName(), layoutPrototypeLayout.getPlid());
+
+			serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
+			serviceContext.setAssetTagNames(assetEntry.getTagNames());
+
 			serviceContext.setAttribute(
 				"layoutPrototypeLinkEnabled", linkEnabled);
 			serviceContext.setAttribute(
@@ -153,10 +163,15 @@ public class SitesImpl implements Sites {
 				targetLayout.getDescriptionMap(), targetLayout.getKeywordsMap(),
 				targetLayout.getRobotsMap(), layoutPrototypeLayout.getType(),
 				targetLayout.isHidden(), targetLayout.getFriendlyURLMap(),
-				layoutPrototypeLayout.isIconImage(), iconBytes, 0, 0,
-				layoutPrototypeLayout.getMasterLayoutPlid(), serviceContext);
+				layoutPrototypeLayout.isIconImage(), iconBytes, null, null,
+				null,
+				layoutPrototypeLayout.getMasterLayoutPageTemplateEntryERC(),
+				serviceContext);
 		}
 		finally {
+			serviceContext.setAssetCategoryIds(originalAssetCategoryIds);
+			serviceContext.setAssetTagNames(originalAssetTagNames);
+
 			if (originalLayoutPrototypeLinkEnabled == null) {
 				serviceContext.removeAttribute("layoutPrototypeLinkEnabled");
 			}
@@ -177,10 +192,8 @@ public class SitesImpl implements Sites {
 			LocaleThreadLocal.setSiteDefaultLocale(siteDefaultLocale);
 		}
 
-		targetLayout = _layoutLocalService.updateLayout(
-			targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
-			targetLayout.getLayoutId(),
-			layoutPrototypeLayout.getTypeSettings());
+		targetLayout = _layoutLocalService.updateTypeSettings(
+			targetLayout, layoutPrototypeLayout.getTypeSettings());
 
 		copyExpandoBridgeAttributes(layoutPrototypeLayout, targetLayout);
 
@@ -207,9 +220,8 @@ public class SitesImpl implements Sites {
 		typeSettingsUnicodeProperties.setProperty(
 			LAST_MERGE_TIME, String.valueOf(modifiedDate.getTime()));
 
-		_layoutLocalService.updateLayout(
-			targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
-			targetLayout.getLayoutId(), targetLayout.getTypeSettings());
+		_layoutLocalService.updateTypeSettings(
+			targetLayout, targetLayout.getTypeSettings());
 
 		UnicodeProperties prototypeTypeSettingsUnicodeProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
@@ -343,7 +355,7 @@ public class SitesImpl implements Sites {
 	@Override
 	public boolean isLayoutModifiedSinceLastMerge(Layout layout) {
 		if ((layout == null) ||
-			Validator.isNull(layout.getSourcePrototypeLayoutUuid()) ||
+			Validator.isNull(layout.getLayoutSetPrototypeLayoutERC()) ||
 			layout.isLayoutPrototypeLinkActive() ||
 			(layout instanceof VirtualLayout) || !layout.isLayoutUpdateable()) {
 
@@ -461,10 +473,10 @@ public class SitesImpl implements Sites {
 	public void mergeLayoutPrototypeLayout(Group group, Layout layout)
 		throws Exception {
 
-		String sourcePrototypeLayoutUuid =
-			layout.getSourcePrototypeLayoutUuid();
+		String layoutSetPrototypeLayoutERC =
+			layout.getLayoutSetPrototypeLayoutERC();
 
-		if (Validator.isNull(sourcePrototypeLayoutUuid)) {
+		if (Validator.isNull(layoutSetPrototypeLayoutERC)) {
 			doMergeLayoutPrototypeLayout(group, layout);
 
 			return;
@@ -480,9 +492,9 @@ public class SitesImpl implements Sites {
 					layout.getCompanyId(), layoutSetPrototypeId);
 
 			Layout sourcePrototypeLayout =
-				_layoutLocalService.fetchLayoutByUuidAndGroupId(
-					sourcePrototypeLayoutUuid,
-					layoutSetPrototypeGroup.getGroupId(), true);
+				_layoutLocalService.fetchLayoutByExternalReferenceCode(
+					layoutSetPrototypeLayoutERC,
+					layoutSetPrototypeGroup.getGroupId());
 
 			if (sourcePrototypeLayout != null) {
 				doMergeLayoutPrototypeLayout(
@@ -838,6 +850,9 @@ public class SitesImpl implements Sites {
 				PortletDataHandlerKeys.DATA_STRATEGY,
 				new String[] {PortletDataHandlerKeys.DATA_STRATEGY_MIRROR});
 			parameterMap.put(
+				PortletDataHandlerKeys.FAVICON,
+				new String[] {Boolean.TRUE.toString()});
+			parameterMap.put(
 				PortletDataHandlerKeys.LOGO,
 				new String[] {Boolean.TRUE.toString()});
 			parameterMap.put(
@@ -854,6 +869,9 @@ public class SitesImpl implements Sites {
 			parameterMap.put(
 				PortletDataHandlerKeys.DELETIONS,
 				new String[] {Boolean.TRUE.toString()});
+			parameterMap.put(
+				PortletDataHandlerKeys.FAVICON,
+				new String[] {Boolean.FALSE.toString()});
 
 			if (PropsValues.LAYOUT_SET_PROTOTYPE_PROPAGATE_LOGO) {
 				parameterMap.put(
@@ -1329,11 +1347,12 @@ public class SitesImpl implements Sites {
 
 		if (!targetScopeLayout.hasScopeGroup()) {
 			_groupLocalService.addGroup(
-				userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
-				Layout.class.getName(), targetLayout.getPlid(),
-				GroupConstants.DEFAULT_LIVE_GROUP_ID, targetLayout.getNameMap(),
-				null, 0, true, GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
-				null, false, true, null);
+				StringPool.BLANK, userId,
+				GroupConstants.DEFAULT_PARENT_GROUP_ID, Layout.class.getName(),
+				targetLayout.getPlid(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
+				targetLayout.getNameMap(), null, 0, null, true,
+				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false,
+				false, true, null);
 		}
 
 		String newPortletTitle = _portal.getNewPortletTitle(
@@ -1360,6 +1379,9 @@ public class SitesImpl implements Sites {
 			"/liferay/layout_set_prototype/";
 
 	private static final Log _log = LogFactoryUtil.getLog(SitesImpl.class);
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
 	private BackgroundTaskManager _backgroundTaskManager;

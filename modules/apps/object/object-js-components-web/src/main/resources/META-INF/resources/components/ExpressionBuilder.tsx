@@ -175,7 +175,9 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 			observer={observer}
 			size="lg"
 		>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{header ?? Liferay.Language.get('expression-builder')}
 			</ClayModal.Header>
 
@@ -185,11 +187,8 @@ export function ExpressionBuilderModal({sidebarElements}: IModalProps) {
 					onChange={() => {}}
 					placeholder={
 						placeholder ??
-						`<#-- ${Liferay.Util.sub(
-							Liferay.Language.get(
-								'create-the-condition-of-the-action-using-the-expression-builder-type-x-to-use-the-autocomplete-feature'
-							),
-							['"${"']
+						`<#-- ${Liferay.Language.get(
+							'create-the-condition-of-the-action-using-the-expression-builder'
 						)} -->`
 					}
 					ref={editorRef}

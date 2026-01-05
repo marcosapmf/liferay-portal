@@ -5,6 +5,7 @@
 
 package com.liferay.object.rest.internal.util;
 
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.exception.NoSuchObjectEntryException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
@@ -25,6 +26,7 @@ import java.util.Map;
 public class ObjectEntryValuesUtil {
 
 	public static Object getValue(
+			Long groupId,
 			ObjectDefinitionLocalService objectDefinitionLocalService,
 			ObjectEntryLocalService objectEntryLocalService,
 			ObjectField objectField,
@@ -38,7 +40,7 @@ public class ObjectEntryValuesUtil {
 					objectField.getBusinessType());
 
 			return objectFieldBusinessType.getValue(
-				objectField, userId, values);
+				groupId, objectField, userId, values);
 		}
 		catch (NoSuchObjectEntryException noSuchObjectEntryException) {
 			if (_log.isDebugEnabled()) {
@@ -53,9 +55,11 @@ public class ObjectEntryValuesUtil {
 			}
 
 			ObjectEntry objectEntry = objectEntryLocalService.addObjectEntry(
-				externalReferenceCode, userId,
+				externalReferenceCode, groupId, userId,
 				objectDefinitionLocalService.getObjectDefinition(
-					noSuchObjectEntryException.getObjectDefinitionId()));
+					noSuchObjectEntryException.getObjectDefinitionId()),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT);
 
 			return objectEntry.getObjectEntryId();
 		}

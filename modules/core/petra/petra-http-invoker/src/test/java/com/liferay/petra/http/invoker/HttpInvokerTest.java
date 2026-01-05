@@ -5,15 +5,18 @@
 
 package com.liferay.petra.http.invoker;
 
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import java.net.HttpURLConnection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -22,6 +25,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import org.mockito.Mockito;
 
 /**
  * @author Drew Brokke
@@ -69,6 +74,40 @@ public class HttpInvokerTest {
 		Assert.assertEquals(
 			_protocol, _httpMethod.name(),
 			httpURLConnection.getRequestMethod());
+	}
+
+	@Test
+	public void testPathReplacement() {
+		_testPathReplacement("$");
+		_testPathReplacement("\\\\");
+	}
+
+	@Test
+	public void testReadResponse() throws Exception {
+		HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+		Class<?> clazz = httpInvoker.getClass();
+
+		Method method = clazz.getDeclaredMethod(
+			"_readResponse", HttpURLConnection.class);
+
+		method.setAccessible(true);
+
+		byte[] bytes = (byte[])method.invoke(
+			httpInvoker, Mockito.mock(HttpURLConnection.class));
+
+		Assert.assertEquals(Arrays.toString(bytes), 0, bytes.length);
+	}
+
+	private void _testPathReplacement(String specialCharacter) {
+		HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+		httpInvoker.path("/api/users/{name}");
+		httpInvoker.path("name", "value" + specialCharacter);
+
+		Assert.assertEquals(
+			"/api/users/value" + specialCharacter,
+			ReflectionTestUtil.getFieldValue(httpInvoker, "_path"));
 	}
 
 	private static final Field _httpMethodField;

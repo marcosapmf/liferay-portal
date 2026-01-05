@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {act, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
@@ -101,6 +101,11 @@ Object.defineProperties(window.HTMLElement.prototype, {
 	},
 });
 
+jest.mock('frontend-js-web', () => ({
+	...jest.requireActual('frontend-js-web'),
+	createResourceURL: jest.fn(() => 'http://localhost:8080?p_p_id=unitTest'),
+}));
+
 describe('The WorkflowInstanceTracker component should', () => {
 	let container;
 	let queryAllByText;
@@ -113,7 +118,9 @@ describe('The WorkflowInstanceTracker component should', () => {
 
 		window.SVGElement.prototype.getBBox = () => ({});
 
-		const renderResult = render(<WorkflowInstanceTracker />);
+		const renderResult = render(
+			<WorkflowInstanceTracker baseResourceURL="http://localhost:8080?p_p_id=unitTest" />
+		);
 
 		container = renderResult.container;
 		queryAllByText = renderResult.queryAllByText;

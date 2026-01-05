@@ -12,20 +12,33 @@ import React, {forwardRef, useEffect, useRef, useState} from 'react';
 import {CP_UNIT_OF_MEASURE_SELECTOR_CHANGED} from '../../utilities/eventsDefinitions';
 import {
 	getMinQuantity,
+	getMultipleQuantity,
 	getNumberOfDecimals,
 	getProductMaxQuantity,
 	isMultiple,
 } from '../../utilities/quantities';
 import RulesPopover from './RulesPopover';
 
-const getErrors = (value, min, max, step, precision = 0) => {
+const getErrors = (
+	value,
+	min,
+	max,
+	step,
+	precision = 0,
+	allowEmptyValue = false
+) => {
 	const errors = [];
 
 	if (getNumberOfDecimals(value) > precision) {
 		errors.push('decimals');
 	}
 
-	if (!value || value < min) {
+	if (allowEmptyValue) {
+		if (value && value < min) {
+			errors.push('min');
+		}
+	}
+	else if (!value || value < min) {
 		errors.push('min');
 	}
 
@@ -44,6 +57,7 @@ const InputQuantitySelector = forwardRef(
 	(
 		{
 			alignment,
+			allowEmptyValue,
 			className,
 			disabled,
 			max,
@@ -54,6 +68,7 @@ const InputQuantitySelector = forwardRef(
 			quantity,
 			step,
 			unitOfMeasure,
+			...props
 		},
 		inputRef
 	) => {
@@ -62,31 +77,43 @@ const InputQuantitySelector = forwardRef(
 			max: unitOfMeasure
 				? getProductMaxQuantity(
 						max,
-						unitOfMeasure.incrementalOrderQuantity,
+						getMultipleQuantity(
+							unitOfMeasure.incrementalOrderQuantity,
+							step,
+							unitOfMeasure.precision
+						),
 						unitOfMeasure.precision
 					)
 				: getProductMaxQuantity(Math.ceil(max), Math.ceil(step)),
 			min: unitOfMeasure
 				? getMinQuantity(
 						min,
-						unitOfMeasure.incrementalOrderQuantity,
+						getMultipleQuantity(
+							unitOfMeasure.incrementalOrderQuantity,
+							step,
+							unitOfMeasure.precision
+						),
 						unitOfMeasure.precision
 					)
 				: getMinQuantity(Math.ceil(min), Math.ceil(step)),
 			quantity,
 			step: unitOfMeasure
-				? unitOfMeasure.incrementalOrderQuantity
+				? getMultipleQuantity(
+						unitOfMeasure.incrementalOrderQuantity,
+						step,
+						unitOfMeasure.precision
+					)
 				: Math.ceil(step),
 		});
 		const [showPopover, setShowPopover] = useState(false);
 		const [visibleErrors, setVisibleErrors] = useState(() =>
 			getErrors(
 				quantity,
-				unitOfMeasure ? min : Math.ceil(min),
-				unitOfMeasure ? max : Math.ceil(max),
-				unitOfMeasure
-					? unitOfMeasure.incrementalOrderQuantity
-					: Math.ceil(step)
+				inputProperties.min,
+				inputProperties.max,
+				inputProperties.step,
+				unitOfMeasure?.precision ? unitOfMeasure.precision : 0,
+				allowEmptyValue
 			)
 		);
 		const isMounted = useIsMounted();
@@ -117,7 +144,14 @@ const InputQuantitySelector = forwardRef(
 				}));
 
 				onUpdate({
-					errors: getErrors(quantity, min, max, step, precision),
+					errors: getErrors(
+						quantity,
+						inputProperties.min,
+						inputProperties.max,
+						step,
+						precision,
+						allowEmptyValue
+					),
 					unitOfMeasure,
 					value: quantity,
 				});
@@ -127,13 +161,7 @@ const InputQuantitySelector = forwardRef(
 				let quantity = inputProperties.quantity;
 
 				if (resetQuantity) {
-					quantity = Number(
-						getMinQuantity(
-							min,
-							unitOfMeasure.incrementalOrderQuantity,
-							unitOfMeasure.precision
-						)
-					);
+					quantity = Number(inputProperties.min);
 
 					setInputProperties((inputProperties) => ({
 						...inputProperties,
@@ -146,7 +174,14 @@ const InputQuantitySelector = forwardRef(
 					min,
 					precision: unitOfMeasure.precision,
 					quantity,
-					step: unitOfMeasure.incrementalOrderQuantity,
+					step:
+						unitOfMeasure.incrementalOrderQuantity === step
+							? unitOfMeasure.incrementalOrderQuantity
+							: getMultipleQuantity(
+									unitOfMeasure.incrementalOrderQuantity,
+									step,
+									unitOfMeasure.precision
+								),
 					unitOfMeasure,
 				});
 			}
@@ -167,22 +202,25 @@ const InputQuantitySelector = forwardRef(
 				if (inputProperties.currentUnitOfMeasure) {
 					return getErrors(
 						inputProperties.quantity,
-						min,
-						max,
+						inputProperties.min,
+						inputProperties.max,
 						inputProperties.step,
-						inputProperties.currentUnitOfMeasure.precision
+						inputProperties.currentUnitOfMeasure.precision,
+						allowEmptyValue
 					);
 				}
 				else {
 					return getErrors(
 						inputProperties.quantity,
-						Math.ceil(min),
-						Math.ceil(max),
-						Math.ceil(inputProperties.step)
+						inputProperties.min,
+						Math.ceil(inputProperties.max),
+						Math.ceil(inputProperties.step),
+						0,
+						allowEmptyValue
 					);
 				}
 			});
-		}, [inputProperties, max, min]);
+		}, [allowEmptyValue, inputProperties]);
 
 		useEffect(() => {
 			Liferay.on(
@@ -198,6 +236,15 @@ const InputQuantitySelector = forwardRef(
 			};
 		}, [handleUOMChanged, namespace]);
 
+		useEffect(() => {
+			setInputProperties((prevState) => {
+				return {
+					...prevState,
+					quantity,
+				};
+			});
+		}, [quantity]);
+
 		return (
 			<ClayForm.Group
 				className={classNames({
@@ -207,9 +254,10 @@ const InputQuantitySelector = forwardRef(
 			>
 				<ClayInput
 					className={className}
+					data-qa-id={props['data-qa-id']}
 					disabled={disabled}
 					max={inputProperties.max}
-					min={inputProperties.min}
+					min={allowEmptyValue ? 0 : inputProperties.min}
 					name={name}
 					onBlur={() => {
 						setShowPopover(false);
@@ -219,10 +267,11 @@ const InputQuantitySelector = forwardRef(
 
 						const errors = getErrors(
 							numValue,
-							min,
-							max,
+							inputProperties.min,
+							inputProperties.max,
 							inputProperties.step,
-							inputProperties.currentUnitOfMeasure?.precision
+							inputProperties.currentUnitOfMeasure?.precision,
+							allowEmptyValue
 						);
 
 						setInputProperties((inputProperties) => ({
@@ -243,29 +292,26 @@ const InputQuantitySelector = forwardRef(
 					value={String(inputProperties.quantity || '')}
 				/>
 
-				{showPopover &&
-					(inputProperties.step > 0 ||
-						min > 0 ||
-						visibleErrors.includes('max')) && (
-						<RulesPopover
-							alignment={alignment}
-							errors={visibleErrors}
-							inputRef={inputRef}
-							max={max || ''}
-							min={min}
-							multiple={inputProperties.step}
-							precision={
-								inputProperties.currentUnitOfMeasure
-									?.precision || 0
-							}
-						/>
-					)}
+				{showPopover && (
+					<RulesPopover
+						alignment={alignment}
+						errors={visibleErrors}
+						inputRef={inputRef}
+						max={inputProperties.max || ''}
+						min={inputProperties.min}
+						multiple={inputProperties.step}
+						precision={
+							inputProperties.currentUnitOfMeasure?.precision || 0
+						}
+					/>
+				)}
 			</ClayForm.Group>
 		);
 	}
 );
 
 InputQuantitySelector.defaultProps = {
+	allowEmptyValue: false,
 	max: null,
 	min: 1,
 	step: 1,

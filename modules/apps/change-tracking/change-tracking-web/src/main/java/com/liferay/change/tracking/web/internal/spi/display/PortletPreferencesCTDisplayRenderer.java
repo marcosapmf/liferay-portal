@@ -106,11 +106,6 @@ public class PortletPreferencesCTDisplayRenderer
 	}
 
 	@Override
-	public boolean isMovable(PortletPreferences portletPreferences) {
-		return false;
-	}
-
-	@Override
 	protected void buildDisplay(
 		DisplayBuilder<PortletPreferences> displayBuilder) {
 
@@ -138,7 +133,7 @@ public class PortletPreferencesCTDisplayRenderer
 		).display(
 			"preferences",
 			() -> {
-				javax.portlet.PortletPreferences jxPortletPreferences =
+				jakarta.portlet.PortletPreferences jxPortletPreferences =
 					_portletPreferenceValueLocalService.getPreferences(
 						portletPreferences);
 

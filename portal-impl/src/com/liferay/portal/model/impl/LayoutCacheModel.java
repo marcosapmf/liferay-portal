@@ -67,7 +67,7 @@ public class LayoutCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(89);
+		StringBundler sb = new StringBundler(91);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -129,22 +129,24 @@ public class LayoutCacheModel
 		sb.append(themeId);
 		sb.append(", colorSchemeId=");
 		sb.append(colorSchemeId);
-		sb.append(", styleBookEntryId=");
-		sb.append(styleBookEntryId);
+		sb.append(", styleBookEntryERC=");
+		sb.append(styleBookEntryERC);
 		sb.append(", css=");
 		sb.append(css);
 		sb.append(", priority=");
 		sb.append(priority);
-		sb.append(", faviconFileEntryId=");
-		sb.append(faviconFileEntryId);
-		sb.append(", masterLayoutPlid=");
-		sb.append(masterLayoutPlid);
+		sb.append(", faviconFileEntryERC=");
+		sb.append(faviconFileEntryERC);
+		sb.append(", faviconFileEntryScopeERC=");
+		sb.append(faviconFileEntryScopeERC);
+		sb.append(", masterLayoutPageTemplateEntryERC=");
+		sb.append(masterLayoutPageTemplateEntryERC);
 		sb.append(", layoutPrototypeUuid=");
 		sb.append(layoutPrototypeUuid);
 		sb.append(", layoutPrototypeLinkEnabled=");
 		sb.append(layoutPrototypeLinkEnabled);
-		sb.append(", sourcePrototypeLayoutUuid=");
-		sb.append(sourcePrototypeLayoutUuid);
+		sb.append(", layoutSetPrototypeLayoutERC=");
+		sb.append(layoutSetPrototypeLayoutERC);
 		sb.append(", publishDate=");
 		sb.append(publishDate);
 		sb.append(", lastPublishDate=");
@@ -291,7 +293,12 @@ public class LayoutCacheModel
 			layoutImpl.setColorSchemeId(colorSchemeId);
 		}
 
-		layoutImpl.setStyleBookEntryId(styleBookEntryId);
+		if (styleBookEntryERC == null) {
+			layoutImpl.setStyleBookEntryERC("");
+		}
+		else {
+			layoutImpl.setStyleBookEntryERC(styleBookEntryERC);
+		}
 
 		if (css == null) {
 			layoutImpl.setCss("");
@@ -301,8 +308,28 @@ public class LayoutCacheModel
 		}
 
 		layoutImpl.setPriority(priority);
-		layoutImpl.setFaviconFileEntryId(faviconFileEntryId);
-		layoutImpl.setMasterLayoutPlid(masterLayoutPlid);
+
+		if (faviconFileEntryERC == null) {
+			layoutImpl.setFaviconFileEntryERC("");
+		}
+		else {
+			layoutImpl.setFaviconFileEntryERC(faviconFileEntryERC);
+		}
+
+		if (faviconFileEntryScopeERC == null) {
+			layoutImpl.setFaviconFileEntryScopeERC("");
+		}
+		else {
+			layoutImpl.setFaviconFileEntryScopeERC(faviconFileEntryScopeERC);
+		}
+
+		if (masterLayoutPageTemplateEntryERC == null) {
+			layoutImpl.setMasterLayoutPageTemplateEntryERC("");
+		}
+		else {
+			layoutImpl.setMasterLayoutPageTemplateEntryERC(
+				masterLayoutPageTemplateEntryERC);
+		}
 
 		if (layoutPrototypeUuid == null) {
 			layoutImpl.setLayoutPrototypeUuid("");
@@ -313,11 +340,12 @@ public class LayoutCacheModel
 
 		layoutImpl.setLayoutPrototypeLinkEnabled(layoutPrototypeLinkEnabled);
 
-		if (sourcePrototypeLayoutUuid == null) {
-			layoutImpl.setSourcePrototypeLayoutUuid("");
+		if (layoutSetPrototypeLayoutERC == null) {
+			layoutImpl.setLayoutSetPrototypeLayoutERC("");
 		}
 		else {
-			layoutImpl.setSourcePrototypeLayoutUuid(sourcePrototypeLayoutUuid);
+			layoutImpl.setLayoutSetPrototypeLayoutERC(
+				layoutSetPrototypeLayoutERC);
 		}
 
 		if (publishDate == Long.MIN_VALUE) {
@@ -404,19 +432,17 @@ public class LayoutCacheModel
 		iconImageId = objectInput.readLong();
 		themeId = objectInput.readUTF();
 		colorSchemeId = objectInput.readUTF();
-
-		styleBookEntryId = objectInput.readLong();
+		styleBookEntryERC = objectInput.readUTF();
 		css = (String)objectInput.readObject();
 
 		priority = objectInput.readInt();
-
-		faviconFileEntryId = objectInput.readLong();
-
-		masterLayoutPlid = objectInput.readLong();
+		faviconFileEntryERC = objectInput.readUTF();
+		faviconFileEntryScopeERC = objectInput.readUTF();
+		masterLayoutPageTemplateEntryERC = objectInput.readUTF();
 		layoutPrototypeUuid = objectInput.readUTF();
 
 		layoutPrototypeLinkEnabled = objectInput.readBoolean();
-		sourcePrototypeLayoutUuid = objectInput.readUTF();
+		layoutSetPrototypeLayoutERC = objectInput.readUTF();
 		publishDate = objectInput.readLong();
 		lastPublishDate = objectInput.readLong();
 
@@ -553,7 +579,12 @@ public class LayoutCacheModel
 			objectOutput.writeUTF(colorSchemeId);
 		}
 
-		objectOutput.writeLong(styleBookEntryId);
+		if (styleBookEntryERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(styleBookEntryERC);
+		}
 
 		if (css == null) {
 			objectOutput.writeObject("");
@@ -564,9 +595,26 @@ public class LayoutCacheModel
 
 		objectOutput.writeInt(priority);
 
-		objectOutput.writeLong(faviconFileEntryId);
+		if (faviconFileEntryERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(faviconFileEntryERC);
+		}
 
-		objectOutput.writeLong(masterLayoutPlid);
+		if (faviconFileEntryScopeERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(faviconFileEntryScopeERC);
+		}
+
+		if (masterLayoutPageTemplateEntryERC == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(masterLayoutPageTemplateEntryERC);
+		}
 
 		if (layoutPrototypeUuid == null) {
 			objectOutput.writeUTF("");
@@ -577,11 +625,11 @@ public class LayoutCacheModel
 
 		objectOutput.writeBoolean(layoutPrototypeLinkEnabled);
 
-		if (sourcePrototypeLayoutUuid == null) {
+		if (layoutSetPrototypeLayoutERC == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(sourcePrototypeLayoutUuid);
+			objectOutput.writeUTF(layoutSetPrototypeLayoutERC);
 		}
 
 		objectOutput.writeLong(publishDate);
@@ -631,14 +679,15 @@ public class LayoutCacheModel
 	public long iconImageId;
 	public String themeId;
 	public String colorSchemeId;
-	public long styleBookEntryId;
+	public String styleBookEntryERC;
 	public String css;
 	public int priority;
-	public long faviconFileEntryId;
-	public long masterLayoutPlid;
+	public String faviconFileEntryERC;
+	public String faviconFileEntryScopeERC;
+	public String masterLayoutPageTemplateEntryERC;
 	public String layoutPrototypeUuid;
 	public boolean layoutPrototypeLinkEnabled;
-	public String sourcePrototypeLayoutUuid;
+	public String layoutSetPrototypeLayoutERC;
 	public long publishDate;
 	public long lastPublishDate;
 	public int status;

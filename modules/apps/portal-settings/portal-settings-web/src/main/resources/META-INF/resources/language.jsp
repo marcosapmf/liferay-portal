@@ -66,37 +66,38 @@
 
 		List<KeyValuePair> leftList = new ArrayList<>();
 
-		String[] currentLanguageIds = PrefsPropsUtil.getStringArray(company.getCompanyId(), PropsKeys.LOCALES, StringPool.COMMA, PropsValues.LOCALES_ENABLED);
-
-		for (Locale currentLocale : LocaleUtil.fromLanguageIds(currentLanguageIds)) {
-			leftList.add(new KeyValuePair(LanguageUtil.getLanguageId(currentLocale), currentLocale.getDisplayName(locale)));
-		}
-
-		// Right list
-
-		List<KeyValuePair> rightList = new ArrayList<>();
-
 		for (String propsValuesLanguageId : SetUtil.fromArray(PropsValues.LOCALES)) {
 			if (!ArrayUtil.contains(availableLanguageIds, propsValuesLanguageId)) {
 				Locale propsValuesLocale = LocaleUtil.fromLanguageId(propsValuesLanguageId, false);
 
 				if (propsValuesLocale != null) {
-					rightList.add(new KeyValuePair(propsValuesLanguageId, propsValuesLocale.getDisplayName(locale)));
+					leftList.add(new KeyValuePair(propsValuesLanguageId, propsValuesLocale.getDisplayName(locale)));
 				}
 			}
 		}
 
-		rightList = ListUtil.sort(rightList, new KeyValuePairComparator(false, true));
+		leftList = ListUtil.sort(leftList, new KeyValuePairComparator(false, true));
+
+		// Right list
+
+		List<KeyValuePair> rightList = new ArrayList<>();
+
+		String[] currentLanguageIds = ArrayUtil.unique(PrefsPropsUtil.getStringArray(company.getCompanyId(), PropsKeys.LOCALES, StringPool.COMMA, PropsValues.LOCALES_ENABLED));
+
+		for (String currentLanguageId : currentLanguageIds) {
+			Locale currentLocale = LocaleUtil.fromLanguageId(currentLanguageId);
+
+			rightList.add(new KeyValuePair(currentLanguageId, currentLocale.getDisplayName(locale)));
+		}
 		%>
 
 		<liferay-ui:input-move-boxes
-			leftBoxName="currentLanguageIds"
+			leftBoxName="availableLanguageIds"
 			leftList="<%= leftList %>"
-			leftReorder="<%= Boolean.TRUE.toString() %>"
-			leftTitle="current"
-			rightBoxName="availableLanguageIds"
+			leftTitle="available"
+			rightBoxName="currentLanguageIds"
 			rightList="<%= rightList %>"
-			rightTitle="available"
+			rightTitle="in-use"
 		/>
 	</aui:fieldset>
 </aui:fieldset>
@@ -121,20 +122,25 @@
 	}
 
 	function <portlet:namespace />saveLocales() {
-		var form = document.<portlet:namespace />fm;
 
-		var currentLanguageIdsElement = Liferay.Util.getFormElement(
-			form,
-			'currentLanguageIds'
-		);
+		// Wrapping in a timeout to deal with React's async rendering
 
-		if (currentLanguageIdsElement) {
-			Liferay.Util.setFormValues(form, {
-				<%= PropsKeys.LOCALES %>: Liferay.Util.getSelectedOptionValues(
-					currentLanguageIdsElement
-				),
-			});
-		}
+		setTimeout(() => {
+			var form = document.<portlet:namespace />fm;
+
+			var currentLanguageIdsElement = Liferay.Util.getFormElement(
+				form,
+				'currentLanguageIds'
+			);
+
+			if (currentLanguageIdsElement) {
+				Liferay.Util.setFormValues(form, {
+					<%= PropsKeys.LOCALES %>: Liferay.Util.getSelectedOptionValues(
+						currentLanguageIdsElement
+					),
+				});
+			}
+		});
 	}
 
 	Liferay.after(

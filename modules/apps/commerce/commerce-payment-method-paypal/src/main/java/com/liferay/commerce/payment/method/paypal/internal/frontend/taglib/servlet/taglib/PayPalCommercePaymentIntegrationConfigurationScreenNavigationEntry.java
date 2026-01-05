@@ -21,13 +21,13 @@ import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ParameterMapSettingsLocator;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -79,13 +79,8 @@ public class PayPalCommercePaymentIntegrationConfigurationScreenNavigationEntry
 			return false;
 		}
 
-		if (PayPalCommercePaymentIntegration.KEY.equals(
-				commercePaymentMethod.getPaymentIntegrationKey())) {
-
-			return true;
-		}
-
-		return false;
+		return PayPalCommercePaymentIntegration.KEY.equals(
+			commercePaymentMethod.getPaymentIntegrationKey());
 	}
 
 	@Override

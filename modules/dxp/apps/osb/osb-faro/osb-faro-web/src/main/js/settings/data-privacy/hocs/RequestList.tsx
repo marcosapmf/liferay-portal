@@ -265,9 +265,9 @@ const RequestList: React.FC<IRequestListProps> = ({
 					variables: {
 						emailAddresses,
 						fileName,
-						ownerId: currentUser.id,
+						ownerId: String(currentUser.id),
 						types,
-						userId: currentUser.userId,
+						userId: String(currentUser.userId),
 						userName: currentUser.name
 					}
 				})
@@ -332,7 +332,9 @@ const RequestList: React.FC<IRequestListProps> = ({
 					},
 					{
 						accessor: 'emailAddress',
-						className: 'table-cell-expand',
+						cellRenderer: ({data: {emailAddresses}}) => (
+							<td>{emailAddresses.join(', ')}</td>
+						),
 						label: Liferay.Language.get('email')
 					},
 					{
@@ -401,11 +403,12 @@ const RequestList: React.FC<IRequestListProps> = ({
 						icon={{
 							border: false,
 							size: Sizes.XXXLarge,
-							symbol: 'ac-satellite'
+							symbol: 'ac_satellite'
 						}}
 						title={Liferay.Language.get('no-requests-found')}
 					/>
 				}
+				nowrap={false}
 				orderIOMap={orderIOMap}
 				page={page}
 				primary

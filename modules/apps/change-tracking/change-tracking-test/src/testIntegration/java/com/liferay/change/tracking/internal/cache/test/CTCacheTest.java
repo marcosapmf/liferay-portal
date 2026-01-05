@@ -43,6 +43,7 @@ import com.liferay.portal.service.persistence.impl.LayoutPersistenceImpl;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -161,6 +162,8 @@ public class CTCacheTest {
 			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			0, RandomTestUtil.randomString(), RandomTestUtil.randomString());
 
+		_ctCollections.add(ctCollection1);
+
 		Layout ctCollection1Layout = null;
 
 		try (SafeCloseable safeCloseable =
@@ -203,6 +206,8 @@ public class CTCacheTest {
 		CTCollection ctCollection2 = _ctCollectionLocalService.addCTCollection(
 			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			0, RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
+		_ctCollections.add(ctCollection2);
 
 		Layout ctCollection2Layout = null;
 
@@ -637,6 +642,9 @@ public class CTCacheTest {
 
 	@Inject
 	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@DeleteAfterTestRun
+	private final List<CTCollection> _ctCollections = new ArrayList<>();
 
 	@Inject
 	private CTProcessLocalService _ctProcessLocalService;

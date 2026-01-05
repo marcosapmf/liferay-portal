@@ -149,10 +149,9 @@ public class SocialCounterPeriodUtil {
 			calendar.set(Calendar.DATE, 1);
 			calendar.set(Calendar.HOUR_OF_DAY, 0);
 			calendar.set(Calendar.MINUTE, 0);
+			calendar.add(Calendar.MONTH, offset);
 			calendar.set(Calendar.SECOND, 0);
 			calendar.set(Calendar.MILLISECOND, 0);
-
-			calendar.add(Calendar.MONTH, offset);
 
 			return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 		}
@@ -189,11 +188,9 @@ public class SocialCounterPeriodUtil {
 			Calendar calendar = new GregorianCalendar();
 
 			calendar.set(Calendar.DATE, 1);
-
-			calendar.add(Calendar.MONTH, offset);
-
 			calendar.set(Calendar.HOUR_OF_DAY, 0);
 			calendar.set(Calendar.MINUTE, 0);
+			calendar.add(Calendar.MONTH, offset);
 			calendar.set(Calendar.SECOND, 0);
 			calendar.set(Calendar.MILLISECOND, 0);
 
@@ -218,11 +215,7 @@ public class SocialCounterPeriodUtil {
 	}
 
 	private static boolean _isMonthlyPeriod() {
-		if (_SOCIAL_ACTIVITY_COUNTER_PERIOD_LENGTH.equals("month")) {
-			return true;
-		}
-
-		return false;
+		return _SOCIAL_ACTIVITY_COUNTER_PERIOD_LENGTH.equals("month");
 	}
 
 	private static boolean _isWithinPeriod(

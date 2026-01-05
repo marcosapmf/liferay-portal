@@ -19,6 +19,8 @@ import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortlet
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
@@ -27,12 +29,12 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+		"jakarta.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 		"mvc.command.name=/layout_content_page_editor/get_available_templates"
 	},
 	service = MVCResourceCommand.class
@@ -66,7 +68,9 @@ public class GetAvailableTemplatesMVCResourceCommand
 			resourceRequest, "externalReferenceCode");
 
 		Object infoItemObject = _getInfoItemObject(
-			className, classPK, externalReferenceCode);
+			className, classPK, externalReferenceCode,
+			ParamUtil.getString(
+				resourceRequest, "scopeExternalReferenceCode", null));
 
 		for (InfoItemRenderer<?> infoItemRenderer :
 				_infoItemRendererRegistry.getInfoItemRenderers(className)) {
@@ -77,6 +81,10 @@ public class GetAvailableTemplatesMVCResourceCommand
 
 			if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
 				JSONArray templatesJSONArray = _jsonFactory.createJSONArray();
+
+				if (infoItemObject == null) {
+					continue;
+				}
 
 				InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
 					(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
@@ -133,7 +141,8 @@ public class GetAvailableTemplatesMVCResourceCommand
 	}
 
 	private Object _getInfoItemObject(
-		String className, long classPK, String externalReferenceCode) {
+		String className, long classPK, String externalReferenceCode,
+		String scopeExternalReferenceCode) {
 
 		InfoItemIdentifier infoItemIdentifier = null;
 
@@ -142,7 +151,7 @@ public class GetAvailableTemplatesMVCResourceCommand
 		}
 		else if (Validator.isNotNull(externalReferenceCode)) {
 			infoItemIdentifier = new ERCInfoItemIdentifier(
-				externalReferenceCode);
+				externalReferenceCode, scopeExternalReferenceCode);
 		}
 		else {
 			return null;
@@ -159,12 +168,19 @@ public class GetAvailableTemplatesMVCResourceCommand
 			}
 		}
 		catch (NoSuchInfoItemException noSuchInfoItemException) {
-			throw new RuntimeException(
-				"Caught unexpected exception", noSuchInfoItemException);
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Missing reference with info item identifier: " +
+						infoItemIdentifier,
+					noSuchInfoItemException);
+			}
 		}
 
 		return null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GetAvailableTemplatesMVCResourceCommand.class);
 
 	@Reference
 	private InfoItemRendererRegistry _infoItemRendererRegistry;

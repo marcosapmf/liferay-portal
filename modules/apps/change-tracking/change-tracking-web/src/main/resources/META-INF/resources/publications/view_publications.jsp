@@ -11,32 +11,40 @@
 	navigationItems="<%= publicationsDisplayContext.getViewNavigationItems() %>"
 />
 
-<clay:container-fluid>
+<div>
+	<react:component
+		module="{PublicationsExpiredInfoPanel} from change-tracking-web"
+	/>
+</div>
+
+<div>
 	<frontend-data-set:headless-display
 		apiURL="<%= publicationsDisplayContext.getAPIURL() %>"
 		creationMenu="<%= publicationsDisplayContext.getCreationMenu() %>"
 		fdsActionDropdownItems="<%= publicationsDisplayContext.getFDSActionDropdownItems() %>"
 		id="<%= PublicationsFDSNames.PUBLICATIONS_ONGOING %>"
-		propsTransformer="{DeletePublicationsFDSPropsTransformer} from change-tracking-web"
+		propsTransformer="{OngoingPublicationsFDSPropsTransformer} from change-tracking-web"
 	/>
-</clay:container-fluid>
+</div>
 
 <aui:script>
-	const sessionKey = 'com.liferay.change.tracking.web.successMessage';
+	(function () {
+		const sessionKey = 'com.liferay.change.tracking.web.successMessage';
 
-	const successMessage = Liferay.Util.SessionStorage.getItem(
-		sessionKey,
-		Liferay.Util.SessionStorage.TYPES.NECESSARY
-	);
+		const successMessage = Liferay.Util.SessionStorage.getItem(
+			sessionKey,
+			Liferay.Util.SessionStorage.TYPES.NECESSARY
+		);
 
-	if (successMessage) {
-		Liferay.Util.openToast({
-			message: successMessage,
-			type: 'success',
-		});
+		if (successMessage) {
+			Liferay.Util.openToast({
+				message: successMessage,
+				type: 'success',
+			});
 
-		Liferay.Util.SessionStorage.removeItem(sessionKey);
-	}
+			Liferay.Util.SessionStorage.removeItem(sessionKey);
+		}
+	})();
 </aui:script>
 
 <%

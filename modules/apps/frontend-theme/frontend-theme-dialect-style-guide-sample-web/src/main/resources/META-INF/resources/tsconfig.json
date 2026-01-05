@@ -1,15 +1,14 @@
 {
-	"@generated": "98a24210a1886ef34be944262975f69b8fdaa468",
+	"@generated": "121dc0867ca4d4d4b1c7ecf347cf93e47022b419",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 		},

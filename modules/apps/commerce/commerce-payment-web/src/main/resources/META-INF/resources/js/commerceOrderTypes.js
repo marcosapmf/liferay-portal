@@ -8,7 +8,7 @@ import {
 	ItemFinder,
 	commerceEvents,
 } from 'commerce-frontend-js';
-import {openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
 
 export default function ({dataSetId, paymentMethodGroupRelId, rootPortletId}) {
 	const paymentMethodGroupRelOrderTypesResource =
@@ -32,16 +32,12 @@ export default function ({dataSetId, paymentMethodGroupRelId, rootPortletId}) {
 				});
 			})
 			.catch((error) => {
-				const errorsMap = {
-					'the-qualifier-is-already-linked': Liferay.Language.get(
-						'the-qualifier-is-already-linked'
-					),
-				};
-
 				openToast({
-					message:
-						errorsMap[error.message] ||
-						Liferay.Language.get('an-unexpected-error-occurred'),
+					message: error.type.includes(
+						'DuplicateCommercePaymentMethodGroupRelQualifierException'
+					)
+						? error.title
+						: Liferay.Language.get('an-unexpected-error-occurred'),
 					title: Liferay.Language.get('error'),
 					type: 'danger',
 				});

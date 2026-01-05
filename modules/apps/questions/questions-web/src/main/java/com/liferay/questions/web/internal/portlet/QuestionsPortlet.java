@@ -5,8 +5,8 @@
 
 package com.liferay.questions.web.internal.portlet;
 
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
-import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.flags.taglib.servlet.taglib.util.FlagsTagUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
@@ -17,7 +17,6 @@ import com.liferay.message.boards.moderation.configuration.MBModerationGroupConf
 import com.liferay.message.boards.service.MBStatsUserLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,37 +31,32 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.questions.web.internal.configuration.QuestionsConfiguration;
 import com.liferay.questions.web.internal.constants.QuestionsPortletKeys;
 import com.liferay.questions.web.internal.constants.QuestionsWebKeys;
+
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Javier Gamarra
  */
 @Component(
-	configurationPid = "com.liferay.questions.web.internal.configuration.QuestionsConfiguration",
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-questions",
 		"com.liferay.portlet.display-category=category.collaboration",
@@ -73,15 +67,15 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.scopeable=true",
 		"com.liferay.portlet.single-page-application=false",
-		"javax.portlet.display-name=Questions",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/view.jsp",
-		"javax.portlet.name=" + QuestionsPortletKeys.QUESTIONS,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator,guest,power-user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Questions",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/view.jsp",
+		"jakarta.portlet.name=" + QuestionsPortletKeys.QUESTIONS,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=administrator,guest,power-user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -91,9 +85,6 @@ public class QuestionsPortlet extends MVCPortlet {
 	public void doView(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
-
-		renderRequest.setAttribute(
-			QuestionsConfiguration.class.getName(), _questionsConfiguration);
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			renderRequest);
@@ -185,13 +176,6 @@ public class QuestionsPortlet extends MVCPortlet {
 		super.doView(renderRequest, renderResponse);
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_questionsConfiguration = ConfigurableUtil.createConfigurable(
-			QuestionsConfiguration.class, properties);
-	}
-
 	private String _getTagSelectorURL(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
@@ -266,7 +250,5 @@ public class QuestionsPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
-
-	private volatile QuestionsConfiguration _questionsConfiguration;
 
 }

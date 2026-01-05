@@ -10,13 +10,13 @@ import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.ProductOpt
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -303,9 +303,7 @@ public class MappedProductSerDes {
 			sb.append("\"type\": ");
 
 			sb.append("\"");
-
 			sb.append(mappedProduct.getType());
-
 			sb.append("\"");
 		}
 
@@ -829,6 +827,10 @@ public class MappedProductSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

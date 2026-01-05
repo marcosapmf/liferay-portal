@@ -68,8 +68,9 @@ public class JavaComponentActivateCheck extends BaseJavaTermCheck {
 					addMessage(
 						fileName,
 						StringBundler.concat(
-							"Method with annotation '", annotationName,
-							"' should have name '", expectedMethodName, "'"));
+							"Method with annotation \"", annotationName,
+							"\" should have name \"", expectedMethodName,
+							"\""));
 				}
 			}
 
@@ -92,7 +93,7 @@ public class JavaComponentActivateCheck extends BaseJavaTermCheck {
 
 			addMessage(
 				fileName,
-				"Method '" + javaTerm.getName() + "' should be protected",
+				"Method \"" + javaTerm.getName() + "\" should be protected",
 				javaTerm.getLineNumber(matcher.start()));
 		}
 

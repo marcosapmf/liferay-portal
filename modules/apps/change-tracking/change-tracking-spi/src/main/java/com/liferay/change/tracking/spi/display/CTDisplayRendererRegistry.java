@@ -13,13 +13,13 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pei-Jung Lan
@@ -80,9 +80,6 @@ public interface CTDisplayRendererRegistry {
 		Locale locale, long modelClassNameId);
 
 	public <T extends BaseModel<T>> boolean isHideable(
-		T model, long modelClassNameId);
-
-	public <T extends BaseModel<T>> boolean isMovable(
 		T model, long modelClassNameId);
 
 	public <T extends BaseModel<T>> boolean isWorkflowEnabled(

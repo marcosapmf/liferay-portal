@@ -8,7 +8,14 @@ package com.liferay.commerce.product.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.exception.CPOptionSKUContributorException;
+import com.liferay.commerce.product.exception.RequiredCPOptionException;
+import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CPDefinitionOptionRel;
+import com.liferay.commerce.product.model.CPOption;
+import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPOptionLocalService;
+import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -19,11 +26,14 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.frutilla.FrutillaRule;
 
@@ -60,6 +70,13 @@ public class CPOptionLocalServiceTest {
 
 	@After
 	public void tearDown() throws Exception {
+		for (CPDefinitionOptionRel cpDefinitionOptionRel :
+				_cpDefinitionOptionRels) {
+
+			_cpDefinitionOptionRelLocalService.deleteCPDefinitionOptionRel(
+				cpDefinitionOptionRel);
+		}
+
 		_cpOptionLocalService.deleteCPOptions(_serviceContext.getCompanyId());
 	}
 
@@ -189,6 +206,43 @@ public class CPOptionLocalServiceTest {
 			true, RandomTestUtil.randomString(), _serviceContext);
 	}
 
+	@Test(expected = RequiredCPOptionException.class)
+	public void testDeleteOptionUsedByProduct() throws Exception {
+		frutillaRule.scenario(
+			"Deleting an Option that is being used by a product"
+		).given(
+			"An Option and a Product that is using it"
+		).when(
+			"the option is deleted"
+		).then(
+			"the deletion should fail and throw an exception"
+		);
+
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogLocalService.addCommerceCatalog(
+				null, RandomTestUtil.randomString(), null,
+				LocaleUtil.US.getDisplayLanguage(), _serviceContext);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinition(
+			commerceCatalog.getGroupId());
+
+		CPOption cpOption = CPTestUtil.addCPOption(
+			commerceCatalog.getGroupId(), false);
+
+		CPDefinitionOptionRel cpDefinitionOptionRel =
+			_cpDefinitionOptionRelLocalService.addCPDefinitionOptionRel(
+				cpDefinition.getCPDefinitionId(), cpOption.getCPOptionId(),
+				RandomTestUtil.randomLocaleStringMap(),
+				RandomTestUtil.randomLocaleStringMap(),
+				CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+				RandomTestUtil.randomDouble(), false, true, true, false,
+				CPConstants.PRODUCT_OPTION_PRICE_TYPE_DYNAMIC, _serviceContext);
+
+		_cpDefinitionOptionRels.add(cpDefinitionOptionRel);
+
+		_cpOptionLocalService.deleteCPOption(cpOption);
+	}
+
 	@Rule
 	public final FrutillaRule frutillaRule = new FrutillaRule();
 
@@ -208,6 +262,16 @@ public class CPOptionLocalServiceTest {
 	}
 
 	private static User _user;
+
+	@Inject
+	private CommerceCatalogLocalService _commerceCatalogLocalService;
+
+	@Inject
+	private CPDefinitionOptionRelLocalService
+		_cpDefinitionOptionRelLocalService;
+
+	private final List<CPDefinitionOptionRel> _cpDefinitionOptionRels =
+		new ArrayList<>();
 
 	@Inject
 	private CPOptionLocalService _cpOptionLocalService;

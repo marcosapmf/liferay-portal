@@ -26,9 +26,8 @@ import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -49,7 +48,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -65,13 +63,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.site.manager.SitemapManager;
 import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 
@@ -81,6 +79,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
@@ -110,17 +109,19 @@ public class SitemapManagerTest {
 			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
-	public static void setUpClass() throws PortalException {
-		_originalXMLSitemapIndexEnabled =
-			ReflectionTestUtil.getAndSetFieldValue(
-				PropsValues.class, "XML_SITEMAP_INDEX_ENABLED", Boolean.FALSE);
+	public static void setUpClass() throws Exception {
+		_companyConfigurationTemporarySwapper =
+			new CompanyConfigurationTemporarySwapper(
+				TestPropsValues.getCompanyId(),
+				_PID_SITEMAP_COMPANY_CONFIGURATION,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"xmlSitemapIndexEnabled", false
+				).build());
 	}
 
 	@AfterClass
-	public static void tearDownClass() {
-		ReflectionTestUtil.setFieldValue(
-			PropsValues.class, "XML_SITEMAP_INDEX_ENABLED",
-			_originalXMLSitemapIndexEnabled);
+	public static void tearDownClass() throws Exception {
+		_companyConfigurationTemporarySwapper.close();
 	}
 
 	@Before
@@ -264,7 +265,7 @@ public class SitemapManagerTest {
 
 		LayoutSet layoutSet = group.getPublicLayoutSet();
 
-		TreeMap<String, String> originalVirtualHostnames =
+		NavigableMap<String, String> originalVirtualHostnames =
 			layoutSet.getVirtualHostnames();
 
 		try {
@@ -280,7 +281,8 @@ public class SitemapManagerTest {
 		}
 		finally {
 			_layoutSetLocalService.updateVirtualHosts(
-				group.getGroupId(), false, originalVirtualHostnames);
+				group.getGroupId(), false,
+				new TreeMap<>(originalVirtualHostnames));
 		}
 	}
 
@@ -417,7 +419,7 @@ public class SitemapManagerTest {
 			_setUpAssetCategoryDisplayPage();
 
 			_assertSitemap(
-				_group.getGroupId(), _layout.getUuid(),
+				true, _group.getGroupId(), _layout.getUuid(),
 				_getExpectedAssetCategoryUrls());
 		}
 	}
@@ -449,9 +451,8 @@ public class SitemapManagerTest {
 		typeSettingsUnicodeProperties.setProperty(
 			"sitemap-include-child-layouts", "false");
 
-		_layoutLocalService.updateLayout(
-			childLayout.getGroupId(), false, childLayout.getLayoutId(),
-			typeSettingsUnicodeProperties.toString());
+		_layoutLocalService.updateTypeSettings(
+			childLayout, typeSettingsUnicodeProperties.toString());
 
 		_testSitemapIncludePagesCompanyEnabledGroupEnabled(
 			childLayout.getUuid(), childLayoutCanonicalURL);
@@ -464,14 +465,59 @@ public class SitemapManagerTest {
 		typeSettingsUnicodeProperties.setProperty(
 			"sitemap-include-child-layouts", "false");
 
-		_layoutLocalService.updateLayout(
-			_layout.getGroupId(), false, _layout.getLayoutId(),
-			typeSettingsUnicodeProperties.toString());
+		_layoutLocalService.updateTypeSettings(
+			_layout, typeSettingsUnicodeProperties.toString());
 
 		_testEmptySitemapIncludePagesCompanyEnabledGroupEnabled(
 			childLayout.getUuid());
 		_testEmptySitemapIncludePagesCompanyEnabledGroupEnabled(
 			grandChildLayout.getUuid());
+	}
+
+	@Test
+	public void testSitemapIncludeLayoutPageTemplateEntryWithXMLSitemapIndexEnabled()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						_PID_SITEMAP_COMPANY_CONFIGURATION,
+						HashMapDictionaryBuilder.<String, Object>put(
+							"xmlSitemapIndexEnabled", true
+						).build());
+			GroupConfigurationTemporarySwapper
+				groupConfigurationTemporarySwapper =
+					new GroupConfigurationTemporarySwapper(
+						_group.getGroupId(), _PID_SITEMAP_GROUP_CONFIGURATION,
+						HashMapDictionaryBuilder.<String, Object>put(
+							"xmlSitemapIndexEnabled", true
+						).build())) {
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+					_group.getGroupId(),
+					_portal.getClassNameId(JournalArticle.class.getName()), 0,
+					true, WorkflowConstants.STATUS_APPROVED);
+
+			Layout layout = _layoutLocalService.getLayout(
+				layoutPageTemplateEntry.getPlid());
+
+			String[] urls = {
+				StringBundler.concat(
+					_themeDisplay.getPortalURL(), _portal.getPathContext(),
+					"/sitemap.xml?p_l_id=", _layout.getPlid(), "&layoutUuid=",
+					_layout.getUuid(), "&groupId=", _group.getGroupId(),
+					"&privateLayout=", _layout.isPrivateLayout()),
+				StringBundler.concat(
+					_themeDisplay.getPortalURL(), _portal.getPathContext(),
+					"/sitemap.xml?p_l_id=", layout.getPlid(), "&layoutUuid=",
+					layout.getUuid(), "&groupId=", _group.getGroupId(),
+					"&privateLayout=", layout.isPrivateLayout())
+			};
+
+			_assertSitemap(false, _group.getGroupId(), StringPool.BLANK, urls);
+		}
 	}
 
 	@Test
@@ -738,7 +784,7 @@ public class SitemapManagerTest {
 				assetDisplayPageEntry.getPlid());
 
 			_assertSitemap(
-				_group.getGroupId(), layout.getUuid(),
+				true, _group.getGroupId(), layout.getUuid(),
 				_portal.getCanonicalURL(
 					StringBundler.concat(
 						_portal.getGroupFriendlyURL(
@@ -762,11 +808,9 @@ public class SitemapManagerTest {
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
-				classNameId, classTypeId, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, 0, _serviceContext);
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId, classTypeId, true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		return _assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(), classNameId,
@@ -805,7 +849,8 @@ public class SitemapManagerTest {
 				uuid, _group.getGroupId(), false, _themeDisplay));
 	}
 
-	private void _assertSitemap(long groupId, String uuid, String... urls)
+	private void _assertSitemap(
+			boolean encodeURL, long groupId, String uuid, String... urls)
 		throws Exception {
 
 		String xml = _sitemapManager.getSitemap(
@@ -820,8 +865,11 @@ public class SitemapManagerTest {
 		Assert.assertEquals(elements.toString(), urls.length, elements.size());
 
 		for (String url : urls) {
-			Assert.assertNotNull(
-				_getLocElement(elements, _sitemapManager.encodeXML(url)));
+			if (encodeURL) {
+				url = _sitemapManager.encodeXML(url);
+			}
+
+			Assert.assertNotNull(_getLocElement(elements, url));
 		}
 	}
 
@@ -890,7 +938,9 @@ public class SitemapManagerTest {
 
 	private Element _getLocElement(List<Element> elements, String url) {
 		for (Element element : elements) {
-			if (!Objects.equals(element.getName(), "url")) {
+			if (!Objects.equals(element.getName(), "sitemap") &&
+				!Objects.equals(element.getName(), "url")) {
+
 				continue;
 			}
 
@@ -1026,7 +1076,7 @@ public class SitemapManagerTest {
 							"includeWebContent", false
 						).build())) {
 
-			_assertSitemap(guestGroupId, null, urls);
+			_assertSitemap(true, guestGroupId, null, urls);
 		}
 	}
 
@@ -1126,7 +1176,7 @@ public class SitemapManagerTest {
 							"includeWebContent", false
 						).build())) {
 
-			_assertSitemap(groupId, uuid, urls);
+			_assertSitemap(true, groupId, uuid, urls);
 		}
 	}
 
@@ -1144,7 +1194,8 @@ public class SitemapManagerTest {
 	private static final String _PID_SITEMAP_GROUP_CONFIGURATION =
 		"com.liferay.site.internal.configuration.SitemapGroupConfiguration";
 
-	private static boolean _originalXMLSitemapIndexEnabled;
+	private static CompanyConfigurationTemporarySwapper
+		_companyConfigurationTemporarySwapper;
 
 	@Inject
 	private AssetCategoryService _assetCategoryService;
@@ -1183,10 +1234,6 @@ public class SitemapManagerTest {
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
-
-	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

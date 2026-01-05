@@ -26,12 +26,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
+		"jakarta.portlet.name=" + AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
 		"mvc.command.name=/asset_categories_admin/edit_asset_category"
 	},
 	service = MVCActionCommand.class
@@ -53,6 +53,8 @@ public class EditAssetCategoryMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		String externalReferenceCode = ParamUtil.getString(
+			actionRequest, "externalReferenceCode");
 		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 
 		long parentCategoryId = ParamUtil.getLong(
@@ -89,8 +91,8 @@ public class EditAssetCategoryMVCActionCommand extends BaseMVCActionCommand {
 			long groupId = ParamUtil.getLong(actionRequest, "groupId");
 
 			category = _assetCategoryService.addCategory(
-				groupId, parentCategoryId, titleMap, descriptionMap,
-				vocabularyId, null, serviceContext);
+				externalReferenceCode, groupId, parentCategoryId, titleMap,
+				descriptionMap, vocabularyId, null, serviceContext);
 
 			MultiSessionMessages.add(
 				actionRequest, "categoryAdded",
@@ -108,8 +110,9 @@ public class EditAssetCategoryMVCActionCommand extends BaseMVCActionCommand {
 					categoryId));
 
 			category = _assetCategoryService.updateCategory(
-				categoryId, parentCategoryId, titleMap, descriptionMap,
-				vocabularyId, categoryPropertiesArray, serviceContext);
+				externalReferenceCode, categoryId, parentCategoryId, titleMap,
+				descriptionMap, vocabularyId, categoryPropertiesArray,
+				serviceContext);
 
 			MultiSessionMessages.add(
 				actionRequest, "categoryUpdated",
@@ -129,21 +132,22 @@ public class EditAssetCategoryMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private String[] _getCategoryProperties(
-		List<AssetCategoryProperty> categoryProperties) {
+		List<AssetCategoryProperty> assetCategoryProperties) {
 
-		String[] categoryPropertiesArray =
-			new String[categoryProperties.size()];
+		String[] assetCategoryPropertiesArray =
+			new String[assetCategoryProperties.size()];
 
-		for (int i = 0; i < categoryProperties.size(); i++) {
-			AssetCategoryProperty categoryProperty = categoryProperties.get(i);
+		for (int i = 0; i < assetCategoryProperties.size(); i++) {
+			AssetCategoryProperty categoryProperty =
+				assetCategoryProperties.get(i);
 
-			categoryPropertiesArray[i] =
+			assetCategoryPropertiesArray[i] =
 				categoryProperty.getKey() +
 					AssetCategoryConstants.PROPERTY_KEY_VALUE_SEPARATOR +
 						categoryProperty.getValue();
 		}
 
-		return categoryPropertiesArray;
+		return assetCategoryPropertiesArray;
 	}
 
 	@Reference

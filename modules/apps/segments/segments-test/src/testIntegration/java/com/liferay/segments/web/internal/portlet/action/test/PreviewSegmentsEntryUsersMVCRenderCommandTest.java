@@ -36,9 +36,9 @@ import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
-import java.util.List;
+import jakarta.portlet.PortletSession;
 
-import javax.portlet.PortletSession;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -290,7 +290,7 @@ public class PreviewSegmentsEntryUsersMVCRenderCommandTest {
 			SegmentsPortletKeys.SEGMENTS);
 
 		mockLiferayPortletRenderRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG,
+			JavaConstants.JAKARTA_PORTLET_CONFIG,
 			PortletConfigFactoryUtil.create(portlet, null));
 
 		mockLiferayPortletRenderRequest.setAttribute(

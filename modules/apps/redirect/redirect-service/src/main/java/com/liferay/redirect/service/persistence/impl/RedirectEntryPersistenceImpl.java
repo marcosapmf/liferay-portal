@@ -628,7 +628,6 @@ public class RedirectEntryPersistenceImpl
 		"(redirectEntry.uuid IS NULL OR redirectEntry.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the redirect entry where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -808,62 +807,13 @@ public class RedirectEntryPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		uuid = Objects.toString(uuid, "");
+		RedirectEntry redirectEntry = fetchByUUID_G(uuid, groupId);
 
-		FinderPath finderPath = _finderPathCountByUUID_G;
-
-		Object[] finderArgs = new Object[] {uuid, groupId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_REDIRECTENTRY_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				queryPos.add(groupId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (redirectEntry == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -1936,6 +1886,16 @@ public class RedirectEntryPersistenceImpl
 			return findByGroupId(groupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2288,6 +2248,15 @@ public class RedirectEntryPersistenceImpl
 	public int filterCountByGroupId(long groupId) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByGroupId(groupId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<RedirectEntry> redirectEntries = findByGroupId(groupId);
+
+			redirectEntries = InlineSQLHelperUtil.filter(
+				redirectEntries, groupId);
+
+			return redirectEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -2880,6 +2849,16 @@ public class RedirectEntryPersistenceImpl
 				groupId, destinationURL, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_D(
+					groupId, destinationURL, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		destinationURL = Objects.toString(destinationURL, "");
 
 		StringBundler sb = null;
@@ -3293,6 +3272,16 @@ public class RedirectEntryPersistenceImpl
 			return countByG_D(groupId, destinationURL);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<RedirectEntry> redirectEntries = findByG_D(
+				groupId, destinationURL);
+
+			redirectEntries = InlineSQLHelperUtil.filter(
+				redirectEntries, groupId);
+
+			return redirectEntries.size();
+		}
+
 		destinationURL = Objects.toString(destinationURL, "");
 
 		StringBundler sb = new StringBundler(3);
@@ -3356,7 +3345,6 @@ public class RedirectEntryPersistenceImpl
 		"(redirectEntry.destinationURL IS NULL OR redirectEntry.destinationURL = '')";
 
 	private FinderPath _finderPathFetchByG_S;
-	private FinderPath _finderPathCountByG_S;
 
 	/**
 	 * Returns the redirect entry where groupId = &#63; and sourceURL = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -3536,62 +3524,13 @@ public class RedirectEntryPersistenceImpl
 	 */
 	@Override
 	public int countByG_S(long groupId, String sourceURL) {
-		sourceURL = Objects.toString(sourceURL, "");
+		RedirectEntry redirectEntry = fetchByG_S(groupId, sourceURL);
 
-		FinderPath finderPath = _finderPathCountByG_S;
-
-		Object[] finderArgs = new Object[] {groupId, sourceURL};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_REDIRECTENTRY_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_S_GROUPID_2);
-
-			boolean bindSourceURL = false;
-
-			if (sourceURL.isEmpty()) {
-				sb.append(_FINDER_COLUMN_G_S_SOURCEURL_3);
-			}
-			else {
-				bindSourceURL = true;
-
-				sb.append(_FINDER_COLUMN_G_S_SOURCEURL_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				if (bindSourceURL) {
-					queryPos.add(sourceURL);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (redirectEntry == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_S_GROUPID_2 =
@@ -3719,7 +3658,6 @@ public class RedirectEntryPersistenceImpl
 			redirectEntryModelImpl.getGroupId()
 		};
 
-		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByUUID_G, args, redirectEntryModelImpl);
 
@@ -3728,7 +3666,6 @@ public class RedirectEntryPersistenceImpl
 			redirectEntryModelImpl.getSourceURL()
 		};
 
-		finderCache.putResult(_finderPathCountByG_S, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByG_S, args, redirectEntryModelImpl);
 	}
@@ -4258,11 +4195,6 @@ public class RedirectEntryPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
-
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -4323,11 +4255,6 @@ public class RedirectEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "sourceURL"}, true);
-
-		_finderPathCountByG_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "sourceURL"}, false);
 
 		RedirectEntryUtil.setPersistence(this);
 	}

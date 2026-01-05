@@ -5,19 +5,22 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.web.internal.display.context.JournalEditArticleDisplayContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -27,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/edit_article"
 	},
 	service = MVCRenderCommand.class
@@ -48,7 +51,9 @@ public class EditArticleMVCRenderCommand implements MVCRenderCommand {
 				new JournalEditArticleDisplayContext(
 					httpServletRequest,
 					_portal.getLiferayPortletResponse(renderResponse),
-					ActionUtil.getArticle(httpServletRequest)));
+					ActionUtil.getArticle(httpServletRequest),
+					_depotEntryGroupRelLocalService, _depotEntryLocalService,
+					_groupLocalService));
 
 			return "/edit_article.jsp";
 		}
@@ -68,6 +73,15 @@ public class EditArticleMVCRenderCommand implements MVCRenderCommand {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditArticleMVCRenderCommand.class);
+
+	@Reference
+	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

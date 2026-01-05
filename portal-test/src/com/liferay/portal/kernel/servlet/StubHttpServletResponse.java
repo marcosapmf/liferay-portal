@@ -5,15 +5,15 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Collection;
 import java.util.Locale;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Shuyang Zhou
@@ -49,7 +49,6 @@ public class StubHttpServletResponse implements HttpServletResponse {
 	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
-	@Override
 	public String encodeRedirectUrl(String url) {
 		throw new UnsupportedOperationException();
 	}
@@ -63,7 +62,6 @@ public class StubHttpServletResponse implements HttpServletResponse {
 	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
-	@Override
 	public String encodeUrl(String string) {
 		throw new UnsupportedOperationException();
 	}
@@ -212,7 +210,6 @@ public class StubHttpServletResponse implements HttpServletResponse {
 	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
-	@Override
 	public void setStatus(int status, String message) {
 		throw new UnsupportedOperationException();
 	}

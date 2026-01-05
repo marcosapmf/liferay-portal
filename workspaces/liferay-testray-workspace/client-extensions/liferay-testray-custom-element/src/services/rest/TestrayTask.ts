@@ -73,10 +73,12 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	}
 
 	public abandon(task: TestrayTask) {
-		return this.update(task.id, {
-			dueStatus: TaskStatuses.ABANDONED,
-			name: task.name,
-		});
+		return this.fetcher.patch(
+			`/${this.uri}/${task.id}`,
+			this.adapter({
+				dueStatus: TaskStatuses.ABANDONED,
+			})
+		);
 	}
 
 	public async assignTo(task: TestrayTask, userIds: number[]) {
@@ -92,10 +94,12 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	}
 
 	public complete(task: TestrayTask) {
-		return this.update(task.id, {
-			dueStatus: TaskStatuses.COMPLETE,
-			name: task.name,
-		});
+		return this.fetcher.patch(
+			`/${this.uri}/${task.id}`,
+			this.adapter({
+				dueStatus: TaskStatuses.COMPLETE,
+			})
+		);
 	}
 
 	public async create(data: TaskForm): Promise<TestrayTask> {
@@ -113,20 +117,26 @@ class TestrayTaskImpl extends Rest<TaskForm, TestrayTask, NestedObjectOptions> {
 	}
 
 	public async reanalyze(task: TestrayTask) {
-		return this.update(task.id, {
-			dueStatus: TaskStatuses.IN_ANALYSIS,
-			name: task.name as string,
-		});
+		return this.fetcher.patch(
+			`/${this.uri}/${task.id}`,
+			this.adapter({
+				dueStatus: TaskStatuses.IN_ANALYSIS,
+			})
+		);
 	}
 
 	protected async validate(task: TaskForm, id?: number) {
-		const searchBuilder = new SearchBuilder();
+		const searchBuilder = new SearchBuilder({useURIEncode: true});
 
 		if (id) {
 			searchBuilder.ne('id', id).and();
 		}
 
-		const filter = searchBuilder.eq('name', task.name).build();
+		if (task.name) {
+			searchBuilder.eq('name', task.name);
+		}
+
+		const filter = searchBuilder.build();
 
 		const response = await this.fetcher<APIResponse<TestrayTask>>(
 			`/tasks?filter=${filter}`

@@ -12,6 +12,12 @@ import CompareRunsCases from './pages/CompareRuns/CompareRunsCases';
 import CompareRunsOutlet from './pages/CompareRuns/CompareRunsOutlet';
 import CompareRunsComponents from './pages/CompareRuns/Components';
 import CompareRunsTeams from './pages/CompareRuns/Teams';
+import JiraProjects from './pages/Issues';
+import ChildIssues from './pages/Issues/Inner';
+import IssueOutlet from './pages/Issues/Inner/IssueOutlet';
+import IssueResults from './pages/Issues/Inner/IssueResults';
+import Issues from './pages/Issues/Issues';
+import IssuesOutlet from './pages/Issues/IssuesOutlet';
 import Users from './pages/Manage/User';
 import ChangeUserPassword from './pages/Manage/User/ChangeUserPassword';
 import UserForm from './pages/Manage/User/UserForm';
@@ -47,6 +53,7 @@ import Teams from './pages/Project/Routines/Builds/Inner/Teams';
 import BuildTemplates from './pages/Project/Routines/Builds/Templates';
 import Routine from './pages/Project/Routines/Routine';
 import RoutineArchived from './pages/Project/Routines/RoutineArchived';
+import RoutineDurationReport from './pages/Project/Routines/RoutineDurationReport';
 import RoutineForm from './pages/Project/Routines/RoutineForm';
 import RoutineOutlet from './pages/Project/Routines/RoutineOutlet';
 import Suites from './pages/Project/Suites';
@@ -188,6 +195,11 @@ const TestrayRoute = () => (
 									/>
 
 									<Route
+										element={<RoutineDurationReport />}
+										path="duration"
+									/>
+
+									<Route
 										element={
 											<BuildOutlet
 												ignorePaths={[
@@ -285,6 +297,30 @@ const TestrayRoute = () => (
 								element={<ChangeUserPassword />}
 								path="password"
 							/>
+						</Route>
+					</Route>
+
+					<Route element={<OutletBridge />} path="issues">
+						<Route element={<JiraProjects />} index />
+
+						<Route
+							element={<IssuesOutlet />}
+							path=":jiraProjectERC"
+						>
+							<Route element={<Issues />} path="initiative" />
+							<Route element={<Issues />} path="epic" />
+							<Route element={<Issues />} path="story" />
+
+							<Route
+								element={<IssueOutlet />}
+								path=":jiraIssueERC"
+							>
+								<Route element={<ChildIssues />} index />
+								<Route
+									element={<IssueResults />}
+									path="results"
+								/>
+							</Route>
 						</Route>
 					</Route>
 

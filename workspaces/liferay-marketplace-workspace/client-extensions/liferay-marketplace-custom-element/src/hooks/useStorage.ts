@@ -5,8 +5,11 @@
 
 import {useCallback, useMemo, useState} from 'react';
 
-import MarketplaceStorage, {STORAGE_KEYS} from '../core/Storage';
-import {CONSENT_TYPE} from '../enums/consentType';
+import MarketplaceStorage, {
+	CONSENT_TYPE,
+	STORAGE_KEYS,
+	StorageType,
+} from '../core/Storage';
 
 type UseStorage<T> = [T, (value: T) => void];
 

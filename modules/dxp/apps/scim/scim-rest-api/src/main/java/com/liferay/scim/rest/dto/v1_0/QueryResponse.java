@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Olivér Kecskeméty
@@ -51,7 +49,7 @@ public class QueryResponse implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(QueryResponse.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A multi-valued list of complex objects containing the requested resources."
 	)
 	@Valid
@@ -97,7 +95,7 @@ public class QueryResponse implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _ResourcesSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The number of resources returned in a list response page."
 	)
 	public Integer getItemsPerPage() {
@@ -142,7 +140,7 @@ public class QueryResponse implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _itemsPerPageSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The 1-based index of the first result in the current set of list results."
 	)
 	public Integer getStartIndex() {
@@ -187,7 +185,7 @@ public class QueryResponse implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _startIndexSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The total number of results returned by the list or query operation."
 	)
 	public Integer getTotalResults() {
@@ -323,8 +321,8 @@ public class QueryResponse implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.scim.rest.dto.v1_0.QueryResponse",
 		name = "x-class-name"
 	)

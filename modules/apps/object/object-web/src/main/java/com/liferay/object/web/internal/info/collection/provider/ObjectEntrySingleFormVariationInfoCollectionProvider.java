@@ -10,6 +10,9 @@ import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntryModel;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.info.collection.provider.CollectionQuery;
 import com.liferay.info.collection.provider.ConfigurableInfoCollectionProvider;
@@ -66,6 +69,8 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.NestedQuery;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
@@ -227,11 +232,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 	@Override
 	public String getKey() {
-		return StringBundler.concat(
-			ObjectEntrySingleFormVariationInfoCollectionProvider.class.
-				getName(),
-			StringPool.UNDERLINE, _objectDefinition.getCompanyId(),
-			StringPool.UNDERLINE, _objectDefinition.getName());
+		return _objectDefinition.getClassName();
 	}
 
 	@Override
@@ -307,13 +308,21 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 		searchContext.setEnd(pagination.getEnd());
 
-		searchContext.setGroupIds(new long[] {_getGroupId()});
+		searchContext.setGroupIds(_getGroupIds());
 
 		KeywordsInfoFilter keywordsInfoFilter = collectionQuery.getInfoFilter(
 			KeywordsInfoFilter.class);
 
 		if (keywordsInfoFilter != null) {
 			searchContext.setKeywords(keywordsInfoFilter.getKeywords());
+		}
+
+		com.liferay.info.sort.Sort sort = collectionQuery.getSort();
+
+		if (sort == null) {
+			searchContext.setSorts(
+				SortFactoryUtil.create(
+					Field.CREATE_DATE, Sort.LONG_TYPE, false));
 		}
 
 		searchContext.setStart(pagination.getStart());
@@ -428,6 +437,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getCompanyId(),
 				_objectDefinition.getStorageType());
 
 		ServiceContext serviceContext =
@@ -455,7 +465,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 			TransformUtil.transform(
 				new ArrayList<>(objectEntriesPage.getItems()),
 				objectEntry -> ObjectEntryUtil.toObjectEntry(
-					_objectDefinition.getObjectDefinitionId(), objectEntry)),
+					_objectDefinition, objectEntry)),
 			collectionQuery.getPagination(),
 			(int)objectEntriesPage.getTotalCount());
 	}
@@ -524,19 +534,38 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		return StringUtil.removeLast(sb.toString(), " and ");
 	}
 
-	private long _getGroupId() throws Exception {
+	private long[] _getGroupIds() throws Exception {
 		ObjectScopeProvider objectScopeProvider =
 			_objectScopeProviderRegistry.getObjectScopeProvider(
 				_objectDefinition.getScope());
 
 		if (!objectScopeProvider.isGroupAware()) {
-			return 0;
+			return new long[0];
 		}
+
+		List<Long> groupIds = new ArrayList<>();
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		return objectScopeProvider.getGroupId(serviceContext.getRequest());
+		long groupId = objectScopeProvider.getGroupId(
+			serviceContext.getRequest());
+
+		groupIds.add(groupId);
+
+		if (StringUtil.equals(
+				_objectDefinition.getScope(),
+				ObjectDefinitionConstants.SCOPE_DEPOT)) {
+
+			groupIds.addAll(
+				TransformUtil.transform(
+					DepotEntryLocalServiceUtil.getGroupConnectedDepotEntries(
+						groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+						QueryUtil.ALL_POS),
+					DepotEntryModel::getGroupId));
+		}
+
+		return ArrayUtil.toLongArray(groupIds);
 	}
 
 	private InfoField<?> _getInfoField() {

@@ -8,12 +8,12 @@ package com.liferay.exportimport.resources.importer.internal.portlet.preferences
 import com.liferay.exportimport.resources.importer.portlet.preferences.PortletPreferencesTranslator;
 import com.liferay.portal.kernel.json.JSONObject;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletPreferences;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -41,7 +41,7 @@ public class RSSPortletPreferencesTranslator
 			return;
 		}
 
-		List<String> valuesList = new ArrayList<>();
+		List<String> values = new ArrayList<>();
 
 		JSONObject jsonObject = portletPreferencesJSONObject.getJSONObject(key);
 
@@ -50,12 +50,10 @@ public class RSSPortletPreferencesTranslator
 		while (iterator.hasNext()) {
 			String jsonObjectKey = iterator.next();
 
-			valuesList.add(jsonObject.getString(jsonObjectKey));
+			values.add(jsonObject.getString(jsonObjectKey));
 		}
 
-		String[] values = valuesList.toArray(new String[0]);
-
-		portletPreferences.setValues(key, values);
+		portletPreferences.setValues(key, values.toArray(new String[0]));
 	}
 
 }

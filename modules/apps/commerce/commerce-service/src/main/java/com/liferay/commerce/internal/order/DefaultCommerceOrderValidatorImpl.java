@@ -7,21 +7,31 @@ package com.liferay.commerce.internal.order;
 
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngineRegistry;
-import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderValidator;
 import com.liferay.commerce.order.CommerceOrderValidatorResult;
+import com.liferay.commerce.product.discovery.CPConfigurationListDiscovery;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
+import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.math.BigDecimal;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -65,17 +75,54 @@ public class DefaultCommerceOrderValidatorImpl
 					locale, "this-order-has-already-been-checked-out", null));
 		}
 
-		CPDefinitionInventory cpDefinitionInventory =
-			_cpDefinitionInventoryLocalService.
-				fetchCPDefinitionInventoryByCPDefinitionId(
-					cpInstance.getCPDefinitionId());
+		long cpConfigurationListId = 0;
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		CPConfigurationEntry cpConfigurationEntry =
+			cpDefinition.fetchMasterCPConfigurationEntry();
+
+		if (cpConfigurationEntry != null) {
+			cpConfigurationListId =
+				cpConfigurationEntry.getCPConfigurationListId();
+		}
+
+		try {
+			CommerceChannel commerceChannel =
+				_commerceChannelLocalService.getCommerceChannelByGroupId(
+					commerceOrder.getGroupId());
+
+			CPConfigurationList cpConfigurationList =
+				_cpConfigurationListDiscovery.getCPConfigurationList(
+					cpInstance.getCompanyId(), cpInstance.getGroupId(),
+					commerceOrder.getCommerceAccountId(),
+					commerceChannel.getCommerceChannelId(),
+					commerceOrder.getCommerceOrderTypeId());
+
+			cpConfigurationListId =
+				cpConfigurationList.getCPConfigurationListId();
+
+			cpConfigurationEntry =
+				_cpConfigurationEntryLocalService.getCPConfigurationEntry(
+					_classNameLocalService.getClassNameId(CPDefinition.class),
+					cpInstance.getCPDefinitionId(), cpConfigurationListId);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to find a commerce product configuration list " +
+						"for SKU " + cpInstance.getSku(),
+					portalException);
+			}
+		}
 
 		CPDefinitionInventoryEngine cpDefinitionInventoryEngine =
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
-				cpDefinitionInventory);
+				cpConfigurationEntry.getCPDefinitionInventoryEngine());
 
 		BigDecimal minOrderQuantity =
-			cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMinOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (BigDecimalUtil.lt(quantity, minOrderQuantity)) {
 			return new CommerceOrderValidatorResult(
@@ -86,7 +133,8 @@ public class DefaultCommerceOrderValidatorImpl
 		}
 
 		BigDecimal maxOrderQuantity =
-			cpDefinitionInventoryEngine.getMaxOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMaxOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (BigDecimalUtil.gt(maxOrderQuantity, BigDecimal.ZERO) &&
 			BigDecimalUtil.gt(quantity, maxOrderQuantity)) {
@@ -98,12 +146,18 @@ public class DefaultCommerceOrderValidatorImpl
 					new Object[] {maxOrderQuantity}));
 		}
 
-		String[] allowedOrderQuantities =
-			cpDefinitionInventoryEngine.getAllowedOrderQuantities(cpInstance);
+		List<BigDecimal> allowedOrderQuantities = TransformUtil.transformToList(
+			cpDefinitionInventoryEngine.getAllowedOrderQuantities(
+				cpConfigurationListId, cpInstance),
+			allowedOrderQuantity -> {
+				BigDecimal allowedOrderQuantityBigDecimal = BigDecimal.valueOf(
+					GetterUtil.getDouble(allowedOrderQuantity));
 
-		if ((allowedOrderQuantities.length > 0) &&
-			!ArrayUtil.contains(
-				allowedOrderQuantities, String.valueOf(quantity.intValue()))) {
+				return allowedOrderQuantityBigDecimal.stripTrailingZeros();
+			});
+
+		if (!allowedOrderQuantities.isEmpty() &&
+			!allowedOrderQuantities.contains(quantity.stripTrailingZeros())) {
 
 			return new CommerceOrderValidatorResult(
 				false,
@@ -112,7 +166,8 @@ public class DefaultCommerceOrderValidatorImpl
 		}
 
 		BigDecimal multipleOrderQuantity =
-			cpDefinitionInventoryEngine.getMultipleOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMultipleOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (!BigDecimalUtil.eq(
 				quantity.remainder(multipleOrderQuantity), BigDecimal.ZERO)) {
@@ -138,17 +193,41 @@ public class DefaultCommerceOrderValidatorImpl
 			return new CommerceOrderValidatorResult(false);
 		}
 
-		CPDefinitionInventory cpDefinitionInventory =
-			_cpDefinitionInventoryLocalService.
-				fetchCPDefinitionInventoryByCPDefinitionId(
-					cpInstance.getCPDefinitionId());
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByGroupId(
+				commerceOrder.getGroupId());
+
+		CPConfigurationList cpConfigurationList =
+			_cpConfigurationListDiscovery.getCPConfigurationList(
+				cpInstance.getCompanyId(), cpInstance.getGroupId(),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getCommerceChannelId(),
+				commerceOrder.getCommerceOrderTypeId());
+
+		long cpConfigurationListId =
+			cpConfigurationList.getCPConfigurationListId();
+
+		CPConfigurationEntry cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.fetchCPConfigurationEntry(
+				_classNameLocalService.getClassNameId(CPDefinition.class),
+				cpInstance.getCPDefinitionId(), cpConfigurationListId);
+
+		if (cpConfigurationEntry == null) {
+			CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+			cpConfigurationEntry =
+				cpDefinition.fetchMasterCPConfigurationEntry();
+		}
 
 		CPDefinitionInventoryEngine cpDefinitionInventoryEngine =
 			_cpDefinitionInventoryEngineRegistry.getCPDefinitionInventoryEngine(
-				cpDefinitionInventory);
+				cpConfigurationEntry.getCPDefinitionInventoryEngine());
 
 		BigDecimal minOrderQuantity =
-			cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMinOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		BigDecimal quantity = commerceOrderItem.getQuantity();
 
@@ -161,7 +240,8 @@ public class DefaultCommerceOrderValidatorImpl
 		}
 
 		BigDecimal maxOrderQuantity =
-			cpDefinitionInventoryEngine.getMaxOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMaxOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (BigDecimalUtil.gt(maxOrderQuantity, BigDecimal.ZERO) &&
 			BigDecimalUtil.gt(quantity, maxOrderQuantity)) {
@@ -173,12 +253,18 @@ public class DefaultCommerceOrderValidatorImpl
 					new Object[] {maxOrderQuantity}));
 		}
 
-		String[] allowedOrderQuantities =
-			cpDefinitionInventoryEngine.getAllowedOrderQuantities(cpInstance);
+		List<BigDecimal> allowedOrderQuantities = TransformUtil.transformToList(
+			cpDefinitionInventoryEngine.getAllowedOrderQuantities(
+				cpConfigurationListId, cpInstance),
+			allowedOrderQuantity -> {
+				BigDecimal allowedOrderQuantityBigDecimal = BigDecimal.valueOf(
+					GetterUtil.getDouble(allowedOrderQuantity));
 
-		if ((allowedOrderQuantities.length > 0) &&
-			!ArrayUtil.contains(
-				allowedOrderQuantities, String.valueOf(quantity.intValue()))) {
+				return allowedOrderQuantityBigDecimal.stripTrailingZeros();
+			});
+
+		if (!allowedOrderQuantities.isEmpty() &&
+			!allowedOrderQuantities.contains(quantity.stripTrailingZeros())) {
 
 			return new CommerceOrderValidatorResult(
 				commerceOrderItem.getCommerceOrderItemId(), false,
@@ -187,7 +273,8 @@ public class DefaultCommerceOrderValidatorImpl
 		}
 
 		BigDecimal multipleOrderQuantity =
-			cpDefinitionInventoryEngine.getMultipleOrderQuantity(cpInstance);
+			cpDefinitionInventoryEngine.getMultipleOrderQuantity(
+				cpConfigurationListId, cpInstance);
 
 		if (!BigDecimalUtil.eq(
 				quantity.remainder(multipleOrderQuantity), BigDecimal.ZERO)) {
@@ -219,13 +306,24 @@ public class DefaultCommerceOrderValidatorImpl
 		return _language.format(resourceBundle, key, arguments);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		DefaultCommerceOrderValidatorImpl.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private CPConfigurationEntryLocalService _cpConfigurationEntryLocalService;
+
+	@Reference
+	private CPConfigurationListDiscovery _cpConfigurationListDiscovery;
+
 	@Reference
 	private CPDefinitionInventoryEngineRegistry
 		_cpDefinitionInventoryEngineRegistry;
-
-	@Reference
-	private CPDefinitionInventoryLocalService
-		_cpDefinitionInventoryLocalService;
 
 	@Reference
 	private Language _language;

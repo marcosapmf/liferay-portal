@@ -549,6 +549,15 @@ public class OrganizationLocalServiceUtil {
 		return getService().getNoAssetOrganizations();
 	}
 
+	public static Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, long companyId, long userId,
+			String name)
+		throws PortalException {
+
+		return getService().getOrAddEmptyOrganization(
+			externalReferenceCode, companyId, userId, name);
+	}
+
 	/**
 	 * Returns the organization with the primary key.
 	 *
@@ -753,6 +762,10 @@ public class OrganizationLocalServiceUtil {
 
 		return getService().getOrganizationsAndUsersCount(
 			companyId, parentOrganizationId, status);
+	}
+
+	public static List<Organization> getOrganizationsByLogoId(long logoId) {
+		return getService().getOrganizationsByLogoId(logoId);
 	}
 
 	/**

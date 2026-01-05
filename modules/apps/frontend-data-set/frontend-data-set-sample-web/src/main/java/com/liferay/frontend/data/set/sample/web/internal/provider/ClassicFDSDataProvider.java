@@ -19,10 +19,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,13 +50,13 @@ public class ClassicFDSDataProvider implements FDSDataProvider<UserEntry> {
 			UsersAdminUtil.getUsers(
 				_userLocalService.search(
 					themeDisplay.getCompanyId(), fdsKeywords.getKeywords(),
-					WorkflowConstants.STATUS_APPROVED,
+					WorkflowConstants.STATUS_ANY,
 					new LinkedHashMap<String, Object>(),
 					fdsPagination.getStartPosition(),
 					fdsPagination.getEndPosition(), sort)),
 			user -> new UserEntry(
-				user.getEmailAddress(), user.getFirstName(), user.getUserId(),
-				user.getLastName()));
+				user.isActive(), user.getEmailAddress(), user.getFirstName(),
+				user.getUserId(), user.getLastName()));
 	}
 
 	@Override

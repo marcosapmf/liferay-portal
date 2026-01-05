@@ -59,13 +59,16 @@ public class LayoutPageTemplateStructureRelModelListener
 	}
 
 	private void _addAssetListEntryUsage(
-		long classNameId, long groupId, String itemId, String key, long plid) {
+		long classNameId, long groupId, String itemId, String key, long plid,
+		long userId) {
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		if (serviceContext == null) {
+		if ((serviceContext == null) || (serviceContext.getUserId() == 0)) {
 			serviceContext = new ServiceContext();
+
+			serviceContext.setUserId(userId);
 		}
 
 		try {
@@ -91,11 +94,7 @@ public class LayoutPageTemplateStructureRelModelListener
 			return false;
 		}
 
-		if (layoutStructure.isItemMarkedForDeletion(itemId)) {
-			return false;
-		}
-
-		return true;
+		return !layoutStructure.isItemMarkedForDeletion(itemId);
 	}
 
 	private void _updateAssetListEntryUsages(
@@ -154,7 +153,8 @@ public class LayoutPageTemplateStructureRelModelListener
 					layoutPageTemplateStructure.getGroupId(),
 					layoutStructureItem.getItemId(),
 					collectionJSONObject.getString("classPK"),
-					layoutPageTemplateStructure.getPlid());
+					layoutPageTemplateStructure.getPlid(),
+					layoutPageTemplateStructure.getUserId());
 			}
 
 			if (collectionJSONObject.has("key")) {
@@ -164,7 +164,8 @@ public class LayoutPageTemplateStructureRelModelListener
 					layoutPageTemplateStructure.getGroupId(),
 					layoutStructureItem.getItemId(),
 					collectionJSONObject.getString("key"),
-					layoutPageTemplateStructure.getPlid());
+					layoutPageTemplateStructure.getPlid(),
+					layoutPageTemplateStructure.getUserId());
 			}
 		}
 	}

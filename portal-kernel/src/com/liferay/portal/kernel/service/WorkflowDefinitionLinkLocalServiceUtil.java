@@ -36,14 +36,14 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.service.impl.WorkflowDefinitionLinkLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static WorkflowDefinitionLink addWorkflowDefinitionLink(
-			long userId, long companyId, long groupId, String className,
-			long classPK, long typePK, String workflowDefinitionName,
-			int workflowDefinitionVersion)
+			String externalReferenceCode, long userId, long companyId,
+			long groupId, String className, long classPK, long typePK,
+			String workflowDefinitionName, int workflowDefinitionVersion)
 		throws PortalException {
 
 		return getService().addWorkflowDefinitionLink(
-			userId, companyId, groupId, className, classPK, typePK,
-			workflowDefinitionName, workflowDefinitionVersion);
+			externalReferenceCode, userId, companyId, groupId, className,
+			classPK, typePK, workflowDefinitionName, workflowDefinitionVersion);
 	}
 
 	/**
@@ -139,6 +139,12 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 			workflowDefinitionLink);
 	}
 
+	public static void deleteWorkflowDefinitionLinks(
+		long companyId, String className) {
+
+		getService().deleteWorkflowDefinitionLinks(companyId, className);
+	}
+
 	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
@@ -225,10 +231,10 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 	}
 
 	public static WorkflowDefinitionLink fetchDefaultWorkflowDefinitionLink(
-		long companyId, String className, long classPK, long typePK) {
+		long companyId, String className) {
 
 		return getService().fetchDefaultWorkflowDefinitionLink(
-			companyId, className, classPK, typePK);
+			companyId, className);
 	}
 
 	public static WorkflowDefinitionLink fetchWorkflowDefinitionLink(
@@ -254,6 +260,28 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 			companyId, groupId, className, classPK, typePK, strict);
 	}
 
+	public static WorkflowDefinitionLink
+		fetchWorkflowDefinitionLinkByExternalReferenceCode(
+			String externalReferenceCode, long groupId) {
+
+		return getService().fetchWorkflowDefinitionLinkByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	/**
+	 * Returns the workflow definition link matching the UUID and group.
+	 *
+	 * @param uuid the workflow definition link's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching workflow definition link, or <code>null</code> if a matching workflow definition link could not be found
+	 */
+	public static WorkflowDefinitionLink
+		fetchWorkflowDefinitionLinkByUuidAndGroupId(String uuid, long groupId) {
+
+		return getService().fetchWorkflowDefinitionLinkByUuidAndGroupId(
+			uuid, groupId);
+	}
+
 	public static List<WorkflowDefinitionLink> fetchWorkflowDefinitionLinks(
 		long companyId, long groupId, String className, long classPK) {
 
@@ -267,12 +295,12 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
-	public static WorkflowDefinitionLink getDefaultWorkflowDefinitionLink(
-			long companyId, String className, long classPK, long typePK)
-		throws PortalException {
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
 
-		return getService().getDefaultWorkflowDefinitionLink(
-			companyId, className, classPK, typePK);
+		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
 	public static
@@ -316,20 +344,36 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 
 	public static WorkflowDefinitionLink getWorkflowDefinitionLink(
 			long companyId, long groupId, String className, long classPK,
-			long typePK)
-		throws PortalException {
-
-		return getService().getWorkflowDefinitionLink(
-			companyId, groupId, className, classPK, typePK);
-	}
-
-	public static WorkflowDefinitionLink getWorkflowDefinitionLink(
-			long companyId, long groupId, String className, long classPK,
 			long typePK, boolean strict)
 		throws PortalException {
 
 		return getService().getWorkflowDefinitionLink(
 			companyId, groupId, className, classPK, typePK, strict);
+	}
+
+	public static WorkflowDefinitionLink
+			getWorkflowDefinitionLinkByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getWorkflowDefinitionLinkByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
+	/**
+	 * Returns the workflow definition link matching the UUID and group.
+	 *
+	 * @param uuid the workflow definition link's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching workflow definition link
+	 * @throws PortalException if a matching workflow definition link could not be found
+	 */
+	public static WorkflowDefinitionLink
+			getWorkflowDefinitionLinkByUuidAndGroupId(String uuid, long groupId)
+		throws PortalException {
+
+		return getService().getWorkflowDefinitionLinkByUuidAndGroupId(
+			uuid, groupId);
 	}
 
 	/**
@@ -366,12 +410,52 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 	}
 
 	public static List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
+		long companyId, String className) {
+
+		return getService().getWorkflowDefinitionLinks(companyId, className);
+	}
+
+	public static List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
 			long companyId, String workflowDefinitionName,
 			int workflowDefinitionVersion)
 		throws PortalException {
 
 		return getService().getWorkflowDefinitionLinks(
 			companyId, workflowDefinitionName, workflowDefinitionVersion);
+	}
+
+	/**
+	 * Returns all the workflow definition links matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the workflow definition links
+	 * @param companyId the primary key of the company
+	 * @return the matching workflow definition links, or an empty list if no matches were found
+	 */
+	public static List<WorkflowDefinitionLink>
+		getWorkflowDefinitionLinksByUuidAndCompanyId(
+			String uuid, long companyId) {
+
+		return getService().getWorkflowDefinitionLinksByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of workflow definition links matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the workflow definition links
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of workflow definition links
+	 * @param end the upper bound of the range of workflow definition links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching workflow definition links, or an empty list if no matches were found
+	 */
+	public static List<WorkflowDefinitionLink>
+		getWorkflowDefinitionLinksByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			OrderByComparator<WorkflowDefinitionLink> orderByComparator) {
+
+		return getService().getWorkflowDefinitionLinksByUuidAndCompanyId(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -439,6 +523,17 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 		return getService().updateWorkflowDefinitionLink(
 			userId, companyId, groupId, className, classPK, typePK,
 			workflowDefinitionName, workflowDefinitionVersion);
+	}
+
+	public static WorkflowDefinitionLink updateWorkflowDefinitionLink(
+			String externalReferenceCode, long userId, long companyId,
+			long groupId, String className, long classPK, long typePK,
+			String workflowDefinitionName, int workflowDefinitionVersion)
+		throws PortalException {
+
+		return getService().updateWorkflowDefinitionLink(
+			externalReferenceCode, userId, companyId, groupId, className,
+			classPK, typePK, workflowDefinitionName, workflowDefinitionVersion);
 	}
 
 	/**

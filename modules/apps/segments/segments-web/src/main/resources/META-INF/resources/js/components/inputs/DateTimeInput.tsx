@@ -4,10 +4,11 @@
  */
 
 import ClayDatePicker from '@clayui/date-picker';
-import {format, isValid, parse} from 'date-fns';
+import {dateUtils} from 'frontend-js-web';
 import {default as React, useEffect, useRef, useState} from 'react';
 
 import {PROPERTY_TYPES} from '../../utils/constants';
+import {convertTimezoneToUTC} from '../../utils/date';
 
 const INTERNAL_DATE_FORMAT = 'yyyy-MM-dd';
 const DISPLAY_DATE_FORMAT = 'yyyy/MM/dd';
@@ -95,11 +96,14 @@ function DateTimeInput({
 					input: `${propertyLabel}: ${Liferay.Language.get(
 						'input-a-value'
 					)}`,
+					selectMonth: `${Liferay.Language.get('select-a-month')}`,
+					selectYear: `${Liferay.Language.get('select-a-year')}`,
 				}}
 				data-testid="date-input"
 				dateFormat="yyyy/MM/dd"
 				disabled={disabled}
 				expanded={expanded}
+				firstDayOfWeek={dateUtils.getFirstDayOfWeek()}
 				months={[
 					`${Liferay.Language.get('january')}`,
 					`${Liferay.Language.get('february')}`,
@@ -118,6 +122,7 @@ function DateTimeInput({
 				onChange={setDisplayDate}
 				onExpandedChange={onExpandedChange}
 				value={displayDate}
+				weekdaysShort={dateUtils.getWeekdaysShort()}
 				years={{
 					end: new Date().getFullYear(),
 					start: 1900,
@@ -132,33 +137,33 @@ function datesAreEqual(dateA: string, dateB: string) {
 }
 
 function toDisplayDate(internalOrIsoDate: string, previousDate?: string) {
-	let dateObject = new Date(internalOrIsoDate);
+	let dateObject = convertTimezoneToUTC(internalOrIsoDate);
 
 	const resetDate = previousDate ? new Date(previousDate) : new Date();
 
-	if (!isValid(dateObject)) {
-		dateObject = parse(internalOrIsoDate, INTERNAL_DATE_FORMAT, resetDate);
+	if (!dateUtils.isValid(dateObject)) {
+		dateObject = dateUtils.parse(internalOrIsoDate, INTERNAL_DATE_FORMAT);
 	}
 
-	if (!isValid(dateObject)) {
+	if (!dateUtils.isValid(dateObject)) {
 		dateObject = resetDate;
 	}
 
-	return format(dateObject, DISPLAY_DATE_FORMAT);
+	return dateUtils.format(dateObject, 'yyyy/MM/dd');
 }
 
 function toInternalDate(displayOrIsoDate: string) {
 	let dateObject = new Date(displayOrIsoDate);
 
-	if (!isValid(dateObject)) {
-		dateObject = parse(displayOrIsoDate, DISPLAY_DATE_FORMAT, new Date());
+	if (!dateUtils.isValid(dateObject)) {
+		dateObject = dateUtils.parse(displayOrIsoDate, DISPLAY_DATE_FORMAT);
 	}
 
-	if (!isValid(dateObject)) {
+	if (!dateUtils.isValid(dateObject)) {
 		dateObject = new Date();
 	}
 
-	return format(dateObject, INTERNAL_DATE_FORMAT);
+	return dateUtils.format(dateObject, 'yyyy-MM-dd');
 }
 
 function toInternalDateTime(displayOrIsoDate: string) {

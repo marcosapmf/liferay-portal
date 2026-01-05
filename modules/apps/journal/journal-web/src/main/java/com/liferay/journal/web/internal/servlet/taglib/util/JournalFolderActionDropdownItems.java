@@ -39,9 +39,9 @@ import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.trash.TrashHelper;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Eudaldo Alonso
@@ -72,7 +72,11 @@ public class JournalFolderActionDropdownItems {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> hasUpdatePermission,
+						() ->
+							hasUpdatePermission ||
+							JournalFolderPermission.contains(
+								_themeDisplay.getPermissionChecker(), _folder,
+								ActionKeys.ADVANCED_UPDATE),
 						_getEditFolderActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -177,7 +181,7 @@ public class JournalFolderActionDropdownItems {
 						_themeDisplay.getPermissionChecker(),
 						_themeDisplay.getScopeGroupId(),
 						JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-						ActionKeys.UPDATE)) {
+						ActionKeys.ADVANCED_UPDATE)) {
 
 					return true;
 				}

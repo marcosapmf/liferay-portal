@@ -14,12 +14,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Julien Castelain
@@ -625,7 +625,7 @@ public class VerticalCardTag extends BaseCardTag {
 			jspWriter.write("<p class=\"card-subtitle\"><span class=\"");
 			jspWriter.write("text-truncate-inline\"><span class=\"");
 			jspWriter.write("text-truncate\">");
-			jspWriter.write(subtitle);
+			jspWriter.write(HtmlUtil.escape(subtitle));
 			jspWriter.write("</span></span></p>");
 		}
 

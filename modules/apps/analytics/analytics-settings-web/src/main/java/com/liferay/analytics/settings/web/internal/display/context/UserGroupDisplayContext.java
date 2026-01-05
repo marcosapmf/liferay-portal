@@ -20,12 +20,12 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.UserGroupNameComparator;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.LinkedHashMap;
 import java.util.Objects;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author André Miranda
@@ -121,11 +121,7 @@ public class UserGroupDisplayContext {
 	}
 
 	private boolean _isOrderByAscending() {
-		if (Objects.equals(getOrderByType(), "asc")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getOrderByType(), "asc");
 	}
 
 	private final AnalyticsConfiguration _analyticsConfiguration;

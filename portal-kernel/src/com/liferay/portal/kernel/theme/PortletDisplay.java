@@ -10,7 +10,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIconMenu;
 import com.liferay.portal.kernel.portlet.toolbar.PortletToolbar;
 import com.liferay.portal.kernel.util.Constants;
@@ -23,13 +22,13 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletPreferences;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
-
-import javax.portlet.PortletPreferences;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Provides general configuration methods for the portlet, providing access to
@@ -463,15 +462,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 
 		Layout layout = _themeDisplay.getLayout();
 
-		LayoutTypePortlet layoutTypePortlet =
-			_themeDisplay.getLayoutTypePortlet();
-
-		HttpServletRequest httpServletRequest = _themeDisplay.getRequest();
-
-		String ppid = ParamUtil.getString(httpServletRequest, "p_p_id");
-
-		if ((!layoutTypePortlet.hasStateMax() || Validator.isNull(ppid)) &&
-			Validator.isNull(portletSetupPortletDecoratorId) &&
+		if (Validator.isNull(portletSetupPortletDecoratorId) &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 
 			return false;
@@ -498,11 +489,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 			return false;
 		}
 
-		if (layoutMode.equals(Constants.PREVIEW)) {
-			return false;
-		}
-
-		return true;
+		return !layoutMode.equals(Constants.PREVIEW);
 	}
 
 	public boolean isShowPrintIcon() {

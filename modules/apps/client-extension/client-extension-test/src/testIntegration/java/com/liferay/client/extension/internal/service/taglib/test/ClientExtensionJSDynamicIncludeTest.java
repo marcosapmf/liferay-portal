@@ -186,7 +186,7 @@ public class ClientExtensionJSDynamicIncludeTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -208,7 +208,8 @@ public class ClientExtensionJSDynamicIncludeTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
+		layout.setMasterLayoutPageTemplateEntryERC(
+			masterLayoutPageTemplateEntry.getExternalReferenceCode());
 
 		layout = _layoutLocalService.updateLayout(layout);
 

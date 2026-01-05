@@ -20,12 +20,12 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.PortletPreferences;
 
 import java.util.List;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = "javax.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN,
+	property = "jakarta.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN,
 	service = PortletDataHandler.class
 )
 public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
@@ -79,7 +79,7 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 	protected void activate() {
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(BlogsEntry.class));
-		setExportControls(
+		setExportPortletDataHandlerControls(
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "entries", true, false,
 				new PortletDataHandlerControl[] {
@@ -88,7 +88,8 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 				},
 				BlogsEntry.class.getName()));
 		setPublishToLiveByDefault(PropsValues.BLOGS_PUBLISH_TO_LIVE_BY_DEFAULT);
-		setStagingControls(getExportControls());
+		setStagingPortletDataHandlerControls(
+			getExportPortletDataHandlerControls());
 	}
 
 	@Override

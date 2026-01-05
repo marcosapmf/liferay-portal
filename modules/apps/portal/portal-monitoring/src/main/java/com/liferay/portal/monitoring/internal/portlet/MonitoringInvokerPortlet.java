@@ -8,37 +8,37 @@ package com.liferay.portal.monitoring.internal.portlet;
 import com.liferay.portal.kernel.monitoring.DataSample;
 import com.liferay.portal.kernel.monitoring.DataSampleFactory;
 import com.liferay.portal.kernel.monitoring.DataSampleThreadLocal;
-import com.liferay.portal.kernel.monitoring.PortletMonitoringControl;
 import com.liferay.portal.kernel.monitoring.PortletRequestType;
 import com.liferay.portal.kernel.monitoring.RequestStatus;
 import com.liferay.portal.kernel.portlet.InvokerFilterContainer;
 import com.liferay.portal.kernel.portlet.InvokerPortlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
+import com.liferay.portal.monitoring.internal.configuration.MonitoringConfiguration;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.EventRequest;
+import jakarta.portlet.EventResponse;
+import jakarta.portlet.HeaderRequest;
+import jakarta.portlet.HeaderResponse;
+import jakarta.portlet.MimeResponse;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletContext;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+import jakarta.portlet.filter.ActionFilter;
+import jakarta.portlet.filter.EventFilter;
+import jakarta.portlet.filter.HeaderFilter;
+import jakarta.portlet.filter.RenderFilter;
+import jakarta.portlet.filter.ResourceFilter;
 
 import java.io.IOException;
 
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.EventRequest;
-import javax.portlet.EventResponse;
-import javax.portlet.HeaderRequest;
-import javax.portlet.HeaderResponse;
-import javax.portlet.MimeResponse;
-import javax.portlet.Portlet;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletContext;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-import javax.portlet.filter.ActionFilter;
-import javax.portlet.filter.EventFilter;
-import javax.portlet.filter.HeaderFilter;
-import javax.portlet.filter.RenderFilter;
-import javax.portlet.filter.ResourceFilter;
 
 /**
  * @author Michael C. Han
@@ -51,12 +51,12 @@ public class MonitoringInvokerPortlet
 	implements InvokerFilterContainer, InvokerPortlet {
 
 	public MonitoringInvokerPortlet(
-		InvokerPortlet invokerPortlet, DataSampleFactory dataSampleFactory,
-		PortletMonitoringControl portletMonitoringControl) {
+		DataSampleFactory dataSampleFactory, InvokerPortlet invokerPortlet,
+		MonitoringConfiguration monitoringConfiguration) {
 
-		_invokerPortlet = invokerPortlet;
 		_dataSampleFactory = dataSampleFactory;
-		_portletMonitoringControl = portletMonitoringControl;
+		_invokerPortlet = invokerPortlet;
+		_monitoringConfiguration = monitoringConfiguration;
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public class MonitoringInvokerPortlet
 		DataSample dataSample = null;
 
 		try {
-			if (_portletMonitoringControl.isMonitorPortletActionRequest()) {
+			if (_monitoringConfiguration.monitorPortletActionRequest()) {
 				dataSample = _dataSampleFactory.createPortletRequestDataSample(
 					PortletRequestType.ACTION, actionRequest, actionResponse);
 
@@ -185,7 +185,7 @@ public class MonitoringInvokerPortlet
 
 			_invokerPortlet.processAction(actionRequest, actionResponse);
 
-			if (_portletMonitoringControl.isMonitorPortletActionRequest() &&
+			if (_monitoringConfiguration.monitorPortletActionRequest() &&
 				(dataSample != null)) {
 
 				dataSample.capture(RequestStatus.SUCCESS);
@@ -193,7 +193,7 @@ public class MonitoringInvokerPortlet
 		}
 		catch (Exception exception) {
 			_processException(
-				_portletMonitoringControl.isMonitorPortletActionRequest(),
+				_monitoringConfiguration.monitorPortletActionRequest(),
 				dataSample, exception);
 		}
 		finally {
@@ -211,7 +211,7 @@ public class MonitoringInvokerPortlet
 		DataSample dataSample = null;
 
 		try {
-			if (_portletMonitoringControl.isMonitorPortletEventRequest()) {
+			if (_monitoringConfiguration.monitorPortletEventRequest()) {
 				dataSample = _dataSampleFactory.createPortletRequestDataSample(
 					PortletRequestType.EVENT, eventRequest, eventResponse);
 
@@ -222,7 +222,7 @@ public class MonitoringInvokerPortlet
 
 			_invokerPortlet.processEvent(eventRequest, eventResponse);
 
-			if (_portletMonitoringControl.isMonitorPortletEventRequest() &&
+			if (_monitoringConfiguration.monitorPortletEventRequest() &&
 				(dataSample != null)) {
 
 				dataSample.capture(RequestStatus.SUCCESS);
@@ -230,7 +230,7 @@ public class MonitoringInvokerPortlet
 		}
 		catch (Exception exception) {
 			_processException(
-				_portletMonitoringControl.isMonitorPortletEventRequest(),
+				_monitoringConfiguration.monitorPortletEventRequest(),
 				dataSample, exception);
 		}
 		finally {
@@ -270,7 +270,7 @@ public class MonitoringInvokerPortlet
 		DataSample dataSample = null;
 
 		try {
-			if (_portletMonitoringControl.isMonitorPortletResourceRequest()) {
+			if (_monitoringConfiguration.monitorPortletResourceRequest()) {
 				dataSample = _dataSampleFactory.createPortletRequestDataSample(
 					PortletRequestType.RESOURCE, resourceRequest,
 					resourceResponse);
@@ -282,7 +282,7 @@ public class MonitoringInvokerPortlet
 
 			_invokerPortlet.serveResource(resourceRequest, resourceResponse);
 
-			if (_portletMonitoringControl.isMonitorPortletResourceRequest() &&
+			if (_monitoringConfiguration.monitorPortletResourceRequest() &&
 				(dataSample != null)) {
 
 				dataSample.capture(RequestStatus.SUCCESS);
@@ -290,7 +290,7 @@ public class MonitoringInvokerPortlet
 		}
 		catch (Exception exception) {
 			_processException(
-				_portletMonitoringControl.isMonitorPortletResourceRequest(),
+				_monitoringConfiguration.monitorPortletResourceRequest(),
 				dataSample, exception);
 		}
 		finally {
@@ -337,8 +337,8 @@ public class MonitoringInvokerPortlet
 		DataSample dataSample = null;
 
 		try {
-			if (_portletMonitoringControl.isMonitorPortletHeaderRequest() ||
-				_portletMonitoringControl.isMonitorPortletRenderRequest()) {
+			if (_monitoringConfiguration.monitorPortletHeaderRequest() ||
+				_monitoringConfiguration.monitorPortletRenderRequest()) {
 
 				dataSample = _dataSampleFactory.createPortletRequestDataSample(
 					portletRequestType, renderRequest, mimeResponse);
@@ -352,8 +352,8 @@ public class MonitoringInvokerPortlet
 
 			renderable.render();
 
-			if ((_portletMonitoringControl.isMonitorPortletHeaderRequest() ||
-				 _portletMonitoringControl.isMonitorPortletRenderRequest()) &&
+			if ((_monitoringConfiguration.monitorPortletHeaderRequest() ||
+				 _monitoringConfiguration.monitorPortletRenderRequest()) &&
 				(dataSample != null)) {
 
 				dataSample.capture(RequestStatus.SUCCESS);
@@ -361,8 +361,8 @@ public class MonitoringInvokerPortlet
 		}
 		catch (Exception exception) {
 			_processException(
-				_portletMonitoringControl.isMonitorPortletHeaderRequest() ||
-				_portletMonitoringControl.isMonitorPortletRenderRequest(),
+				_monitoringConfiguration.monitorPortletHeaderRequest() ||
+				_monitoringConfiguration.monitorPortletRenderRequest(),
 				dataSample, exception);
 		}
 		finally {
@@ -376,7 +376,7 @@ public class MonitoringInvokerPortlet
 	private final DataSampleFactory _dataSampleFactory;
 	private long _headerTimeout;
 	private InvokerPortlet _invokerPortlet;
-	private final PortletMonitoringControl _portletMonitoringControl;
+	private final MonitoringConfiguration _monitoringConfiguration;
 	private long _renderTimeout;
 
 	@FunctionalInterface

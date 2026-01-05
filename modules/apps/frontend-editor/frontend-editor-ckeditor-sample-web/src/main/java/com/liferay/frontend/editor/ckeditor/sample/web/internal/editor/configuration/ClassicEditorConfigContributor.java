@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	property = {
 		"editor.config.key=sampleClassicEditor",
-		"javax.portlet.name=" + CKEditorSamplePortletKeys.CKEDITOR_SAMPLE
+		"jakarta.portlet.name=" + CKEditorSamplePortletKeys.CKEDITOR_SAMPLE
 	},
 	service = EditorConfigContributor.class
 )
@@ -36,13 +36,20 @@ public class ClassicEditorConfigContributor
 		ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
+		String extraPlugins = jsonObject.getString("extraPlugins");
+
 		jsonObject.put(
+			"extraPlugins", extraPlugins += ",maximize"
+		).put(
 			"toolbar_liferay",
 			JSONUtil.putAll(
 				toJSONArray("['Undo', 'Redo']"),
 				toJSONArray("['Styles', 'Bold', 'Italic', 'Underline']"),
 				toJSONArray("['NumberedList', 'BulletedList']"),
-				toJSONArray("['Link', Unlink]"), toJSONArray("['Table']")));
+				toJSONArray("['Maximize']"), toJSONArray("['Link', Unlink]"),
+				toJSONArray("['Table', 'ImageSelector']"),
+				toJSONArray("['Source', 'Expand']"))
+		);
 	}
 
 }

@@ -33,11 +33,11 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.site.configuration.MenuAccessConfiguration;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.Arrays;
 import java.util.Dictionary;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -92,6 +92,36 @@ public class EditMenuAccessConfigurationMVCActionCommandTest {
 			new MockLiferayPortletActionResponse());
 
 		_assertConfiguration(new String[] {String.valueOf(role.getRoleId())});
+	}
+
+	@Test
+	public void testDoProcessActionWithDefaultRoles() throws Exception {
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+			new MockLiferayPortletActionRequest();
+
+		mockLiferayPortletActionRequest.addParameter(
+			"roleSearchContainerPrimaryKeys", new String[0]);
+		mockLiferayPortletActionRequest.addParameter(
+			"showControlMenuByRole", Boolean.TRUE.toString());
+		mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(TestPropsValues.getUser()));
+
+		ReflectionTestUtil.invoke(
+			_mvcActionCommand, "doProcessAction",
+			new Class<?>[] {ActionRequest.class, ActionResponse.class},
+			mockLiferayPortletActionRequest,
+			new MockLiferayPortletActionResponse());
+
+		Role administratorRole = _roleLocalService.getRole(
+			_group.getCompanyId(), RoleConstants.ADMINISTRATOR);
+		Role siteAdministratorRole = _roleLocalService.getRole(
+			_group.getCompanyId(), RoleConstants.SITE_ADMINISTRATOR);
+
+		_assertConfiguration(
+			new String[] {
+				String.valueOf(administratorRole.getRoleId()),
+				String.valueOf(siteAdministratorRole.getRoleId())
+			});
 	}
 
 	@Test(expected = PortalException.class)

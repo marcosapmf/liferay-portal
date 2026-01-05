@@ -21,9 +21,9 @@ import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -43,11 +43,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -186,7 +186,7 @@ public class BlogsEntryContentDashboardItemTest {
 	@Test
 	public void testGetAssetTags() throws Exception {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			RandomTestUtil.randomString(), _serviceContext);
 
 		_serviceContext.setAssetTagNames(new String[] {assetTag.getName()});
@@ -348,16 +348,14 @@ public class BlogsEntryContentDashboardItemTest {
 		ContentDashboardItem contentDashboardItem =
 			_contentDashboardItemFactory.create(blogsEntry.getEntryId());
 
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
+		List<ContentDashboardItem.SpecificInformation<?>> specificInformations =
+			contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
 
 		Assert.assertEquals(
-			specificInformationList.toString(), 1,
-			specificInformationList.size());
+			specificInformations.toString(), 1, specificInformations.size());
 
 		ContentDashboardItem.SpecificInformation<?> specificInformation =
-			specificInformationList.get(0);
+			specificInformations.get(0);
 
 		Assert.assertEquals(
 			specificInformation.getValue(), blogsEntry.getDisplayDate());
@@ -428,12 +426,10 @@ public class BlogsEntryContentDashboardItemTest {
 			_contentDashboardItemFactory.create(blogsEntry.getEntryId());
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, _group.getCreatorUserId(), blogsEntry.getGroupId(), 0,
-				_portal.getClassNameId(BlogsEntry.class.getName()), 0,
-				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
-				0, 0, 0, _serviceContext);
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				blogsEntry.getGroupId(),
+				_portal.getClassNameId(BlogsEntry.class.getName()), 0, true,
+				WorkflowConstants.STATUS_APPROVED);
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
 			blogsEntry.getUserId(), blogsEntry.getGroupId(),
@@ -442,14 +438,12 @@ public class BlogsEntryContentDashboardItemTest {
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 			AssetDisplayPageConstants.TYPE_DEFAULT, _serviceContext);
 
-		HttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
+		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		mockHttpServletRequest.setAttribute(
+		httpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(LocaleUtil.US));
 
-		Assert.assertTrue(
-			contentDashboardItem.isViewable(mockHttpServletRequest));
+		Assert.assertTrue(contentDashboardItem.isViewable(httpServletRequest));
 	}
 
 	@Test
@@ -461,14 +455,12 @@ public class BlogsEntryContentDashboardItemTest {
 		ContentDashboardItem contentDashboardItem =
 			_contentDashboardItemFactory.create(blogsEntry.getEntryId());
 
-		HttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
+		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		mockHttpServletRequest.setAttribute(
+		httpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(LocaleUtil.US));
 
-		Assert.assertFalse(
-			contentDashboardItem.isViewable(mockHttpServletRequest));
+		Assert.assertFalse(contentDashboardItem.isViewable(httpServletRequest));
 	}
 
 	private ThemeDisplay _getThemeDisplay(Locale locale) throws Exception {

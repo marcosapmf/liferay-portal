@@ -7,7 +7,7 @@ import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import IssuesList from '../../../../src/main/resources/META-INF/resources/js/components/layout_reports/IssuesList';
 import {StoreContextProvider} from '../../../../src/main/resources/META-INF/resources/js/context/StoreContext';
@@ -150,14 +150,6 @@ const renderIssuesList = ({
 };
 
 describe('IssuesList', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPS-187284'] = true;
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPS-187284'] = false;
-	});
-
 	it('renders accessibility and seo sections with issues count', () => {
 		const {getByText} = renderIssuesList({
 			layoutReportsIssues: mockLayoutReportsIssues,

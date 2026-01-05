@@ -22,7 +22,7 @@ ErrorData errorData = pageContext.getErrorData();
 
 int code = errorData.getStatusCode();
 
-String msg = String.valueOf(request.getAttribute(JavaConstants.JAVAX_SERVLET_ERROR_MESSAGE));
+String msg = String.valueOf(request.getAttribute(JavaConstants.JAKARTA_SERVLET_ERROR_MESSAGE));
 String uri = errorData.getRequestURI();
 
 if (_log.isWarnEnabled()) {
@@ -37,6 +37,13 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 	<c:when test="<%= GetterUtil.getBoolean(request.getAttribute(WebKeys.UNKNOWN_VIRTUAL_HOST)) %>">
 		<liferay-ui:message key="unknown-virtual-hostname" />: <%= PortalUtil.getHost(request) %>
 	</c:when>
+	<c:when test="<%= code == HttpServletResponse.SC_NOT_FOUND %>">
+
+		<%
+		PortalUtil.sendError(HttpServletResponse.SC_NOT_FOUND, new NoSuchLayoutException(uri, exception), request, response);
+		%>
+
+	</c:when>
 	<c:when test="<%= !Validator.isBlank(dynamicIncludeKey) %>">
 		<liferay-util:dynamic-include key="<%= dynamicIncludeKey %>" />
 	</c:when>
@@ -50,7 +57,7 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 
 			LayoutSet layoutSet = (LayoutSet)request.getAttribute(WebKeys.VIRTUAL_HOST_LAYOUT_SET);
 
-			if (layoutSet != null) {
+			if ((layoutSet != null) && !StringUtil.equals(uri, PortalUtil.getPathMain())) {
 				redirect = PortalUtil.getPathMain();
 			}
 			else {
@@ -68,18 +75,21 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 				<meta content="1; url=<%= HtmlUtil.escapeAttribute(redirect) %>" http-equiv="refresh" />
 			</head>
 
-			<body onload="javascript:location.replace('<%= HtmlUtil.escapeJS(redirect) %>');">
+			<liferay-ui:csp>
+				<body onload="window.location.replace('<%= HtmlUtil.escapeJS(redirect) %>');">
 
-				<!--
-				The numbers below are used to fill up space so that this works properly in IE.
-				See http://support.microsoft.com/default.aspx?scid=kb;en-us;Q294807 for more
-				information on why this is necessary.
+					<!--
+					The numbers below are used to fill up space so that this works properly in IE.
+					See http://support.microsoft.com/default.aspx?scid=kb;en-us;Q294807 for more
+					information on why this is necessary.
 
-				12345678901234567890123456789012345678901234567890123456789012345678901234567890
-				12345678901234567890123456789012345678901234567890123456789012345678901234567890
-				12345678901234567890123456789012345678901234567890123456789012345678901234567890
-				-->
-			</body>
+					12345678901234567890123456789012345678901234567890123456789012345678901234567890
+					12345678901234567890123456789012345678901234567890123456789012345678901234567890
+					12345678901234567890123456789012345678901234567890123456789012345678901234567890
+					-->
+
+				</body>
+			</liferay-ui:csp>
 		</html>
 	</c:when>
 	<c:otherwise>

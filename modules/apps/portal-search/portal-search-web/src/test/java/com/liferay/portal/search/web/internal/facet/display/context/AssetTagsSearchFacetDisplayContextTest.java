@@ -7,7 +7,9 @@ package com.liferay.portal.search.web.internal.facet.display.context;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetTagsSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.tag.facet.configuration.TagFacetPortletInstanceConfiguration;
@@ -57,6 +59,8 @@ public class AssetTagsSearchFacetDisplayContextTest
 		assetTagsSearchFacetDisplayContextBuilder.setFacet(facet);
 		assetTagsSearchFacetDisplayContextBuilder.setFrequenciesVisible(true);
 		assetTagsSearchFacetDisplayContextBuilder.setFrequencyThreshold(0);
+		assetTagsSearchFacetDisplayContextBuilder.setLocale(
+			LocaleUtil.getDefault());
 		assetTagsSearchFacetDisplayContextBuilder.setMaxTerms(0);
 		assetTagsSearchFacetDisplayContextBuilder.setOrder(order);
 		assetTagsSearchFacetDisplayContextBuilder.setParameterName(
@@ -65,6 +69,41 @@ public class AssetTagsSearchFacetDisplayContextTest
 			parameterValue);
 
 		return assetTagsSearchFacetDisplayContextBuilder.build();
+	}
+
+	@Override
+	protected FacetDisplayContext getFacetDisplayContext(Group group)
+		throws Exception {
+
+		AssetTagsSearchFacetDisplayContextBuilder
+			assetTagsSearchFacetDisplayContextBuilder =
+				new AssetTagsSearchFacetDisplayContextBuilder(
+					getRenderRequest(group));
+
+		return assetTagsSearchFacetDisplayContextBuilder.build();
+	}
+
+	@Override
+	protected void setUpPortletDisplayStyleGroupExternalReferenceCode(
+		String externalReferenceCode) {
+
+		TagFacetPortletInstanceConfiguration
+			tagFacetPortletInstanceConfiguration = Mockito.mock(
+				TagFacetPortletInstanceConfiguration.class);
+
+		Mockito.when(
+			tagFacetPortletInstanceConfiguration.
+				displayStyleGroupExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		configurationProviderUtilMockedStatic.when(
+			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				Mockito.any(), Mockito.any())
+		).thenReturn(
+			tagFacetPortletInstanceConfiguration
+		);
 	}
 
 	@Override

@@ -6,7 +6,6 @@
 package com.liferay.journal.web.internal.util;
 
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
-import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -21,6 +20,7 @@ import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.JournalHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -29,21 +29,24 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import jakarta.portlet.PortletRequest;
 
 import java.io.File;
 
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
+import java.util.Objects;
 
 /**
  * @author Mikel Lorza
@@ -51,10 +54,7 @@ import javax.portlet.PortletRequest;
 public class JournalArticleUtil {
 
 	public static JournalArticle addOrUpdateArticle(
-			String actionName,
-			AssetDisplayPageEntryFormProcessor
-				assetDisplayPageEntryFormProcessor,
-			DDMFormValuesFactory ddmFormValuesFactory,
+			String actionName, DDMFormValuesFactory ddmFormValuesFactory,
 			DDMFormValuesToFieldsConverter ddmFormValuesToFieldsConverter,
 			DDMStructureLocalService ddmStructureLocalService,
 			JournalArticleService journalArticleService,
@@ -322,6 +322,29 @@ public class JournalArticleUtil {
 			article = journalArticleService.getArticle(
 				groupId, articleId, version);
 
+			if (article.isDraft() && (version == 1.0) &&
+				(displayDateYear == 0)) {
+
+				Calendar calendar = CalendarFactoryUtil.getCalendar(
+					serviceContext.getTimeZone());
+
+				displayDateMinute = calendar.get(Calendar.MINUTE);
+				displayDateHour = calendar.get(Calendar.HOUR_OF_DAY);
+				displayDateDay = calendar.get(Calendar.DAY_OF_MONTH);
+				displayDateMonth = calendar.get(Calendar.MONTH);
+				displayDateYear = calendar.get(Calendar.YEAR);
+			}
+
+			int count = journalArticleService.getArticlesCountByArticleId(
+				article.getGroupId(), article.getArticleId());
+
+			if (!FeatureFlagManagerUtil.isEnabled("LPD-11228") || (count > 1) ||
+				!Objects.equals(
+					WorkflowConstants.STATUS_DRAFT, article.getStatus())) {
+
+				serviceContext.setModelPermissions(null);
+			}
+
 			if (actionName.equals("/journal/update_article")) {
 				article = journalArticleService.updateArticle(
 					groupId, folderId, articleId, version, titleMap,
@@ -336,10 +359,6 @@ public class JournalArticleUtil {
 					smallFile, null, articleURL, serviceContext);
 			}
 		}
-
-		assetDisplayPageEntryFormProcessor.process(
-			JournalArticle.class.getName(), article.getResourcePrimKey(),
-			portletRequest);
 
 		return article;
 	}

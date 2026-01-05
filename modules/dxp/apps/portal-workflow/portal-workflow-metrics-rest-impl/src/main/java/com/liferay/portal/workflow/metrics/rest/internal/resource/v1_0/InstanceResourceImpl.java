@@ -5,6 +5,7 @@
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -69,6 +70,8 @@ import com.liferay.portal.workflow.metrics.search.index.constants.WorkflowMetric
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionLocalService;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,8 +84,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -190,7 +191,7 @@ public class InstanceResourceImpl extends BaseInstanceResourceImpl {
 			taskNameTermsAggregation);
 
 		searchSearchRequest.addAggregation(termsAggregation);
-
+		searchSearchRequest.setFetchSource(true);
 		searchSearchRequest.setIndexNames(
 			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE,
@@ -207,6 +208,7 @@ public class InstanceResourceImpl extends BaseInstanceResourceImpl {
 			booleanQuery.addMustQueryClauses(
 				_queries.term("instanceId", instanceId)));
 
+		searchSearchRequest.setSelectedFieldNames(StringPool.BLANK);
 		searchSearchRequest.setSize(10000);
 
 		SearchSearchResponse searchSearchResponse =
@@ -698,7 +700,6 @@ public class InstanceResourceImpl extends BaseInstanceResourceImpl {
 
 		searchSearchRequest.addSorts(_toFieldSort(sorts));
 		searchSearchRequest.setFetchSource(true);
-		searchSearchRequest.setSelectedFieldNames("");
 		searchSearchRequest.setIndexNames(
 			_indexNameBuilder.getIndexName(contextCompany.getCompanyId()) +
 				WorkflowMetricsIndexNameConstants.SUFFIX_INSTANCE);
@@ -711,6 +712,7 @@ public class InstanceResourceImpl extends BaseInstanceResourceImpl {
 					assigneeIds, classPKs, dateEnd, dateStart, processId,
 					slaStatuses, startInstanceId, statuses, taskNames)));
 
+		searchSearchRequest.setSelectedFieldNames(StringPool.BLANK);
 		searchSearchRequest.setSize(pagination.getPageSize());
 		searchSearchRequest.setStart(pagination.getStartPosition());
 

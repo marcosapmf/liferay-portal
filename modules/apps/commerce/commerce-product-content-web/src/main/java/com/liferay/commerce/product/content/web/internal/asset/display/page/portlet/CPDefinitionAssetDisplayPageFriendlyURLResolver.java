@@ -19,13 +19,13 @@ import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
-import com.liferay.commerce.context.CommerceContextThreadLocal;
-import com.liferay.commerce.context.CommerceGroupThreadLocal;
+import com.liferay.commerce.helper.CommerceAccountHelper;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.configuration.CPDisplayLayoutConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.constants.CPWebKeys;
+import com.liferay.commerce.product.helper.CPDefinitionHelper;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.commerce.product.model.CProduct;
@@ -35,8 +35,8 @@ import com.liferay.commerce.product.service.CPDisplayLayoutLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.url.CPFriendlyURL;
-import com.liferay.commerce.product.util.CPDefinitionHelper;
-import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.commerce.util.CommerceContextThreadLocal;
+import com.liferay.commerce.util.CommerceGroupThreadLocal;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -67,18 +67,18 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.InheritableMap;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -190,8 +190,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 		}
 
 		return _getBasicLayoutURL(
-			groupId, privateLayout, mainPath, params, requestContext,
-			cpDefinition);
+			groupId, privateLayout, mainPath, requestContext, cpCatalogEntry);
 	}
 
 	@Override
@@ -305,8 +304,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 	private String _getBasicLayoutURL(
 			long groupId, boolean privateLayout, String mainPath,
-			Map<String, String[]> params, Map<String, Object> requestContext,
-			CPDefinition cpDefinition)
+			Map<String, Object> requestContext, CPCatalogEntry cpCatalogEntry)
 		throws PortalException {
 
 		HttpServletRequest httpServletRequest =
@@ -314,26 +312,18 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 		Locale locale = _portal.getLocale(httpServletRequest);
 
-		CPCatalogEntry cpCatalogEntry = _cpDefinitionHelper.getCPCatalogEntry(
-			_getCommerceAccountId(groupId, httpServletRequest), groupId,
-			cpDefinition.getCPDefinitionId(), locale);
-
 		Layout layout = _getProductLayout(
 			groupId, privateLayout, cpCatalogEntry.getCPDefinitionId());
 
 		String layoutActualURL = _portal.getLayoutActualURL(layout, mainPath);
 
-		InheritableMap<String, String[]> actualParams = new InheritableMap<>();
-
-		if (params != null) {
-			actualParams.setParentMap(params);
-		}
-
-		actualParams.put("p_p_lifecycle", new String[] {"0"});
-		actualParams.put("p_p_mode", new String[] {"view"});
-
 		String queryString = HttpComponentsUtil.parameterMapToString(
-			actualParams, false);
+			HashMapBuilder.put(
+				"p_p_lifecycle", new String[] {"0"}
+			).put(
+				"p_p_mode", new String[] {"view"}
+			).build(),
+			false);
 
 		if (layoutActualURL.contains(StringPool.QUESTION)) {
 			layoutActualURL =

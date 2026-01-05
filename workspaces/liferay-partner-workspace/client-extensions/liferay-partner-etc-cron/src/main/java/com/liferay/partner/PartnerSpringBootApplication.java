@@ -5,8 +5,8 @@
 
 package com.liferay.partner;
 
-import com.liferay.client.extension.util.spring.boot.ClientExtensionUtilSpringBootComponentScan;
-import com.liferay.client.extension.util.spring.boot.LiferayOAuth2Util;
+import com.liferay.client.extension.util.spring.boot3.client.ClientExtensionUtilSpringBootClientComponentScan;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2Util;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
@@ -20,7 +20,7 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 /**
  * @author Jair Medeiros
  */
-@Import(ClientExtensionUtilSpringBootComponentScan.class)
+@Import(ClientExtensionUtilSpringBootClientComponentScan.class)
 @SpringBootApplication
 public class PartnerSpringBootApplication {
 

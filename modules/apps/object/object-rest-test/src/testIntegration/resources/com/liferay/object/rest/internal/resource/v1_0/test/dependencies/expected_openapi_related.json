@@ -30,6 +30,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "AuditEvent"
 				}
@@ -38,6 +40,9 @@
 				"properties": {
 					"name": {
 						"type": "string"
+					},
+					"newValue": {
+						"type": "object"
 					},
 					"oldValue": {
 						"type": "object"
@@ -49,8 +54,161 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "AuditFieldChange"
+				}
+			},
+			"Collaborator": {
+				"description": "Represents a collaborator for an entry.",
+				"properties": {
+					"actionIds": {
+						"description": "The collaborator actions for the shared asset.",
+						"items": {
+							"description": "The collaborator actions for the shared asset.",
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"actions": {
+						"additionalProperties": {
+							"description": "Block of actions allowed by the user making the request.",
+							"type": "object"
+						},
+						"description": "Block of actions allowed by the user making the request.",
+						"readOnly": true,
+						"type": "object"
+					},
+					"creator": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"dateExpired": {
+						"description": "The expiration date to be a collaborator of the asset.",
+						"format": "date-time",
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The collaborator external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"id": {
+						"description": "The collaborator ID.",
+						"format": "int64",
+						"type": "integer"
+					},
+					"name": {
+						"description": "The collaborator name.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"portrait": {
+						"description": "The collaborator portrait.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"share": {
+						"description": "If the collaborator can share or not the asset.",
+						"type": "boolean"
+					},
+					"type": {
+						"description": "The collaborator type.",
+						"example": "User",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.headless.object.dto.v1_0.Collaborator",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"required": [
+					"actionIds",
+					"type"
+				],
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Collaborator"
+				}
+			},
+			"Comment": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"description": "Block of actions allowed by the user making the request.",
+								"type": "string"
+							},
+							"description": "Block of actions allowed by the user making the request.",
+							"type": "object"
+						},
+						"description": "Block of actions allowed by the user making the request.",
+						"readOnly": true,
+						"type": "object"
+					},
+					"creator": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"dateCreated": {
+						"description": "The comment's creation date.",
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"dateModified": {
+						"description": "The comment's latest modification date.",
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The comment's external reference code.",
+						"type": "string"
+					},
+					"id": {
+						"description": "The comment's ID.",
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"numberOfComments": {
+						"description": "The number of child comments on this comment.",
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"parentCommentId": {
+						"description": "The ID of the comment's parent, if it exists.",
+						"format": "int64",
+						"type": "integer"
+					},
+					"text": {
+						"description": "The comment's text content.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.headless.delivery.dto.v1_0.Comment",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					}
+				},
+				"xml": {
+					"name": "Comment"
 				}
 			},
 			"Creator": {
@@ -62,6 +220,11 @@
 					},
 					"contentType": {
 						"description": "The type of the content.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"description": "The external reference code of the author.",
 						"readOnly": true,
 						"type": "string"
 					},
@@ -110,6 +273,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Creator"
 				}
@@ -126,7 +291,9 @@
 						"type": "array"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
 			},
 			"FacetValue": {
 				"properties": {
@@ -138,7 +305,121 @@
 						"type": "string"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"FileEntry": {
+				"properties": {
+					"alternativeText": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"fileBase64": {
+						"description": "optional field with the content of the document in Base64, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileBase64`)",
+						"type": "string"
+					},
+					"fileURL": {
+						"description": "optional field that specifies the source of the file to be downloaded, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.fileURL`)",
+						"type": "string"
+					},
+					"folder": {
+						"$ref": "#/components/schemas/Folder"
+					},
+					"id": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"link": {
+						"$ref": "#/components/schemas/Link"
+					},
+					"metadata": {
+						"additionalProperties": {
+							"description": "optional field that specifies the metadata of the file, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.metadata`)",
+							"type": "object"
+						},
+						"description": "optional field that specifies the metadata of the file, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.metadata`)",
+						"readOnly": true,
+						"type": "object"
+					},
+					"mimeType": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"previewURL": {
+						"description": "optional field that specifies the preview URL of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.previewURL`)",
+						"readOnly": true,
+						"type": "string"
+					},
+					"scope": {
+						"$ref": "#/components/schemas/Scope"
+					},
+					"thumbnailURL": {
+						"description": "optional field that specifies the thumbnail of the file to be used, can be embedded with nestedFields (the format of the nested field must be `<attachment field name>.thumbnailURL`)",
+						"readOnly": true,
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.FileEntry",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "FileEntry"
+				}
+			},
+			"Folder": {
+				"properties": {
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"siteId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Folder",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Folder"
+				}
+			},
+			"Link": {
+				"properties": {
+					"href": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Link",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Link"
+				}
 			},
 			"ListEntry": {
 				"properties": {
@@ -162,6 +443,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "ListEntry"
 				}
@@ -176,30 +459,24 @@
 							},
 							"type": "object"
 						},
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"readOnly": true,
-						"type": "object"
+						"type": "object",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"auditEvents": {
 						"description": "Optional field with the audit events associated with this object entry, can be embedded with nestedFields",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/AuditEvent"
 						},
 						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"creator": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
 						"readOnly": true,
-						"type": "string"
+						"type": "string",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"dateCreated": {
 						"format": "date-time",
@@ -211,36 +488,73 @@
 						"readOnly": true,
 						"type": "string"
 					},
-					"externalReferenceCode": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
-						"readOnly": false,
+					"defaultLanguageId": {
 						"type": "string"
+					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"externalReferenceCode": {
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
 					},
 					"field1": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
+						"$ref": "#/components/schemas/FileEntry"
+					},
+					"field2": {
 						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"friendlyUrlPath": {
+						"description": "A relative URL to the page's rendered content.",
 						"type": "string"
 					},
-					"id": {
-						"extensions": {
-							"x-parent-map": "properties"
+					"friendlyUrlPath_i18n": {
+						"additionalProperties": {
+							"description": "The localized relative URLs to the page's rendered content.",
+							"type": "string"
 						},
+						"description": "The localized relative URLs to the page's rendered content.",
+						"type": "object"
+					},
+					"id": {
 						"format": "int64",
 						"readOnly": true,
-						"type": "integer"
+						"type": "integer",
+						"x-parent-map": "properties"
 					},
 					"keywords": {
 						"description": "A list of keywords describing the object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"description": "A list of keywords describing the object entry.",
 							"type": "string"
+						},
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"permissions": {
+						"items": {
+							"$ref": "#/components/schemas/Permission"
 						},
 						"type": "array"
 					},
@@ -258,39 +572,53 @@
 						},
 						"type": "array"
 					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
 					},
 					"status": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
+						"format": "int32",
 						"readOnly": true,
-						"type": "string"
+						"type": "integer",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"taxonomyCategoryBriefs": {
 						"description": "The categories associated with this object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"taxonomyCategoryIds": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"format": "int64",
 							"type": "integer"
 						},
 						"type": "array",
-						"writeOnly": true
+						"writeOnly": true,
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"x-class-name": {
 						"default": "com.liferay.object.rest.dto.v1_0.ObjectEntry",
@@ -304,6 +632,627 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+					"creator": {
+						"type": "string"
+					},
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"field2": {
+						"type": "string"
+					},
+					"folderId": {
+						"type": "integer"
+					},
+					"id": {
+						"type": "id"
+					},
+					"keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship1/creator": {
+						"type": "string"
+					},
+					"relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship1/field1": {
+						"type": "string"
+					},
+					"relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship1/id": {
+						"type": "id"
+					},
+					"relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship1/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship1/object1Id": {
+						"type": "id"
+					},
+					"relationship1/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship1/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship1/status": {
+						"type": "integer"
+					},
+					"relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship1/title": {
+						"type": "string"
+					},
+					"relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship1/version": {
+						"type": "integer"
+					},
+					"relationship2/creator": {
+						"type": "string"
+					},
+					"relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/field1": {
+						"type": "string"
+					},
+					"relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship2/id": {
+						"type": "id"
+					},
+					"relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/object1Id": {
+						"type": "id"
+					},
+					"relationship2/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship2/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship1/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship1/field2": {
+						"type": "string"
+					},
+					"relationship2/relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/id": {
+						"type": "id"
+					},
+					"relationship2/relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship1/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship1/title": {
+						"type": "string"
+					},
+					"relationship2/relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship2/field2": {
+						"type": "string"
+					},
+					"relationship2/relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/id": {
+						"type": "id"
+					},
+					"relationship2/relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship2/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship2/title": {
+						"type": "string"
+					},
+					"relationship2/relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship3/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship3/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship3/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship3/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship3/object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship3/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship3/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship3/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship3/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship3/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship4/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship4/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship4/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship4/object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship4/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship4/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship4/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship4/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship4/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship5/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship5/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship5/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship5/relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship5/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship5/object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship5/relationship5/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship5/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship5/relationship5/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship5/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship5/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship6/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship6/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship6/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/relationship6/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship3/relationship5/relationship6/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship6/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship6/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship6/id": {
+						"type": "id"
+					},
+					"relationship2/relationship3/relationship5/relationship6/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship6/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship6/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/relationship6/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/relationship6/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/relationship6/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/relationship5/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/relationship5/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship3/title": {
+						"type": "string"
+					},
+					"relationship2/relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship3/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship4/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship4/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship4/id": {
+						"type": "id"
+					},
+					"relationship2/relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship4/object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship4/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship4/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship2/relationship4/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship4/title": {
+						"type": "string"
+					},
+					"relationship2/relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship4/version": {
+						"type": "integer"
+					},
+					"relationship2/status": {
+						"type": "integer"
+					},
+					"relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/title": {
+						"type": "string"
+					},
+					"relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship2/version": {
+						"type": "integer"
+					},
+					"status": {
+						"type": "integer"
+					},
+					"taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"title": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "integer"
+					},
+					"version": {
+						"type": "integer"
+					}
+				},
 				"xml": {
 					"name": "ObjectEntry"
 				}
@@ -317,30 +1266,24 @@
 							},
 							"type": "object"
 						},
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"readOnly": true,
-						"type": "object"
+						"type": "object",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"auditEvents": {
 						"description": "Optional field with the audit events associated with this object entry, can be embedded with nestedFields",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/AuditEvent"
 						},
 						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"creator": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
 						"readOnly": true,
-						"type": "string"
+						"type": "string",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"dateCreated": {
 						"format": "date-time",
@@ -352,109 +1295,167 @@
 						"readOnly": true,
 						"type": "string"
 					},
-					"externalReferenceCode": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
-						"readOnly": false,
+					"defaultLanguageId": {
 						"type": "string"
+					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"externalReferenceCode": {
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
 					},
 					"field1": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
 						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"friendlyUrlPath": {
+						"description": "A relative URL to the page's rendered content.",
 						"type": "string"
 					},
-					"id": {
-						"extensions": {
-							"x-parent-map": "properties"
+					"friendlyUrlPath_i18n": {
+						"additionalProperties": {
+							"description": "The localized relative URLs to the page's rendered content.",
+							"type": "string"
 						},
+						"description": "The localized relative URLs to the page's rendered content.",
+						"type": "object"
+					},
+					"id": {
 						"format": "int64",
 						"readOnly": true,
-						"type": "integer"
+						"type": "integer",
+						"x-parent-map": "properties"
 					},
 					"keywords": {
 						"description": "A list of keywords describing the object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"description": "A list of keywords describing the object entry.",
 							"type": "string"
 						},
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"multiselectPicklistField": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
 						"items": {
 							"$ref": "#/components/schemas/ListEntry"
 						},
 						"readOnly": false,
+						"type": "array",
+						"x-parent-map": "properties"
+					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"permissions": {
+						"items": {
+							"$ref": "#/components/schemas/Permission"
+						},
 						"type": "array"
 					},
 					"r_relationship2_c_object1ERC": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
-						"type": "string"
+						"type": "string",
+						"x-parent-map": "properties"
 					},
 					"r_relationship2_c_object1Id": {
-						"extensions": {
-							"x-parent-map": "properties"
-						},
 						"format": "int64",
 						"readOnly": false,
-						"type": "integer"
+						"type": "integer",
+						"x-parent-map": "properties"
 					},
 					"relationship1": {
 						"description": "Information about the relationship relationship1 can be embedded with \"nestedFields\".",
 						"items": {
-							"$ref": "#/components/schemas/Object1",
-							"type": "object"
+							"$ref": "#/components/schemas/Object1"
 						},
 						"type": "array"
 					},
 					"relationship2": {
-						"$ref": "#/components/schemas/Object1",
-						"description": "Information about the relationship relationship2 can be embedded with \"nestedFields\".",
-						"type": "object"
+						"$ref": "#/components/schemas/Object1"
+					},
+					"relationship2ERC": {
+						"readOnly": true,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"relationship3": {
+						"description": "Information about the relationship relationship3 can be embedded with \"nestedFields\".",
+						"items": {
+							"$ref": "#/components/schemas/Object3"
+						},
+						"type": "array"
+					},
+					"relationship4": {
+						"description": "Information about the relationship relationship4 can be embedded with \"nestedFields\".",
+						"items": {
+							"$ref": "#/components/schemas/Object3"
+						},
+						"type": "array"
+					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
 					},
 					"scopeKey": {
 						"readOnly": true,
 						"type": "string"
 					},
 					"status": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV",
-							"x-parent-map": "properties"
-						},
+						"format": "int32",
 						"readOnly": true,
-						"type": "string"
+						"type": "integer",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
 					},
 					"taxonomyCategoryBriefs": {
 						"description": "The categories associated with this object entry.",
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
 						},
-						"readOnly": true,
-						"type": "array"
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"taxonomyCategoryIds": {
-						"extensions": {
-							"x-batch-unsupported-formats": "CSV"
-						},
 						"items": {
 							"format": "int64",
 							"type": "integer"
 						},
 						"type": "array",
-						"writeOnly": true
+						"writeOnly": true,
+						"x-batch-unsupported-formats": "CSV"
 					},
 					"x-class-name": {
 						"default": "com.liferay.object.rest.dto.v1_0.ObjectEntry",
@@ -468,8 +1469,1868 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+					"creator": {
+						"type": "string"
+					},
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"field1": {
+						"type": "string"
+					},
+					"folderId": {
+						"type": "integer"
+					},
+					"id": {
+						"type": "id"
+					},
+					"keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"object1Id": {
+						"type": "id"
+					},
+					"r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship1/creator": {
+						"type": "string"
+					},
+					"relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship1/field2": {
+						"type": "string"
+					},
+					"relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship1/id": {
+						"type": "id"
+					},
+					"relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship1/status": {
+						"type": "integer"
+					},
+					"relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship1/title": {
+						"type": "string"
+					},
+					"relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship1/version": {
+						"type": "integer"
+					},
+					"relationship2/creator": {
+						"type": "string"
+					},
+					"relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/field2": {
+						"type": "string"
+					},
+					"relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship2/id": {
+						"type": "id"
+					},
+					"relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship1/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship1/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/id": {
+						"type": "id"
+					},
+					"relationship2/relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship1/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship1/object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship1/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship1/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship1/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship1/title": {
+						"type": "string"
+					},
+					"relationship2/relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship1/version": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/creator": {
+						"type": "string"
+					},
+					"relationship2/relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship2/relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship2/relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship2/relationship2/field1": {
+						"type": "string"
+					},
+					"relationship2/relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/id": {
+						"type": "id"
+					},
+					"relationship2/relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship2/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship2/relationship2/object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship2/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship2/relationship2/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship2/relationship2/status": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/relationship2/title": {
+						"type": "string"
+					},
+					"relationship2/relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship2/relationship2/version": {
+						"type": "integer"
+					},
+					"relationship2/status": {
+						"type": "integer"
+					},
+					"relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship2/title": {
+						"type": "string"
+					},
+					"relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship2/version": {
+						"type": "integer"
+					},
+					"relationship3/creator": {
+						"type": "string"
+					},
+					"relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/field1": {
+						"type": "string"
+					},
+					"relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship3/id": {
+						"type": "id"
+					},
+					"relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/object2Id": {
+						"type": "id"
+					},
+					"relationship3/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship3/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship3/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship3/object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship3/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship3/title": {
+						"type": "string"
+					},
+					"relationship3/relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship4/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship4/object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship4/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship4/title": {
+						"type": "string"
+					},
+					"relationship3/relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship5/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship5/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship5/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship5/id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship5/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship5/object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship5/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship5/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship5/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship5/title": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship5/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship6/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/relationship6/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship6/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship6/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/relationship6/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/relationship6/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship6/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship6/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship6/id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship6/relationship6/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/relationship6/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship6/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/relationship6/title": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship6/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship6/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship7/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship7/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship7/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/relationship7/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship5/relationship6/relationship7/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship7/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship7/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship7/id": {
+						"type": "id"
+					},
+					"relationship3/relationship5/relationship6/relationship7/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/relationship7/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship7/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/relationship7/title": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/relationship7/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/relationship7/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship5/relationship6/title": {
+						"type": "string"
+					},
+					"relationship3/relationship5/relationship6/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/relationship6/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship5/title": {
+						"type": "string"
+					},
+					"relationship3/relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship5/version": {
+						"type": "integer"
+					},
+					"relationship3/status": {
+						"type": "integer"
+					},
+					"relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/title": {
+						"type": "string"
+					},
+					"relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship3/version": {
+						"type": "integer"
+					},
+					"relationship4/creator": {
+						"type": "string"
+					},
+					"relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship4/field1": {
+						"type": "string"
+					},
+					"relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship4/id": {
+						"type": "id"
+					},
+					"relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship4/object2Id": {
+						"type": "id"
+					},
+					"relationship4/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship4/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship4/status": {
+						"type": "integer"
+					},
+					"relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship4/title": {
+						"type": "string"
+					},
+					"relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship4/version": {
+						"type": "integer"
+					},
+					"status": {
+						"type": "integer"
+					},
+					"taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"title": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "integer"
+					},
+					"version": {
+						"type": "integer"
+					}
+				},
 				"xml": {
 					"name": "ObjectEntry"
+				}
+			},
+			"Object3": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"readOnly": true,
+						"type": "object",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"auditEvents": {
+						"description": "Optional field with the audit events associated with this object entry, can be embedded with nestedFields",
+						"items": {
+							"$ref": "#/components/schemas/AuditEvent"
+						},
+						"readOnly": true,
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"creator": {
+						"readOnly": true,
+						"type": "string",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
+					},
+					"dateCreated": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"dateModified": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"defaultLanguageId": {
+						"type": "string"
+					},
+					"displayDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"expirationDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"externalReferenceCode": {
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"field1": {
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"friendlyUrlPath": {
+						"description": "A relative URL to the page's rendered content.",
+						"type": "string"
+					},
+					"friendlyUrlPath_i18n": {
+						"additionalProperties": {
+							"description": "The localized relative URLs to the page's rendered content.",
+							"type": "string"
+						},
+						"description": "The localized relative URLs to the page's rendered content.",
+						"type": "object"
+					},
+					"id": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer",
+						"x-parent-map": "properties"
+					},
+					"keywords": {
+						"description": "A list of keywords describing the object entry.",
+						"items": {
+							"description": "A list of keywords describing the object entry.",
+							"type": "string"
+						},
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"multiselectPicklistField": {
+						"items": {
+							"$ref": "#/components/schemas/ListEntry"
+						},
+						"readOnly": false,
+						"type": "array",
+						"x-parent-map": "properties"
+					},
+					"objectEntryFolderExternalReferenceCode": {
+						"type": "string"
+					},
+					"objectEntryFolderId": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"permissions": {
+						"items": {
+							"$ref": "#/components/schemas/Permission"
+						},
+						"type": "array"
+					},
+					"r_relationship4_c_object2ERC": {
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"r_relationship4_c_object2Id": {
+						"format": "int64",
+						"readOnly": false,
+						"type": "integer",
+						"x-parent-map": "properties"
+					},
+					"relationship3": {
+						"description": "Information about the relationship relationship3 can be embedded with \"nestedFields\".",
+						"items": {
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"relationship4": {
+						"description": "Information about the relationship relationship4 can be embedded with \"nestedFields\".",
+						"type": "object"
+					},
+					"relationship4ERC": {
+						"readOnly": true,
+						"type": "string",
+						"x-parent-map": "properties"
+					},
+					"relationship5": {
+						"description": "Information about the relationship relationship5 can be embedded with \"nestedFields\".",
+						"items": {
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"removedBy": {
+						"$ref": "#/components/schemas/Creator"
+					},
+					"removedDate": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"reviewDate": {
+						"format": "date-time",
+						"readOnly": false,
+						"type": "string",
+						"x-parent-map": "properties",
+						"x-timeStorage": "convertToUTC"
+					},
+					"scopeId": {
+						"format": "int64",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"scopeKey": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"status": {
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer",
+						"x-batch-unsupported-formats": "CSV",
+						"x-parent-map": "properties"
+					},
+					"taxonomyCategoryBriefs": {
+						"description": "The categories associated with this object entry.",
+						"items": {
+							"$ref": "#/components/schemas/TaxonomyCategoryBrief"
+						},
+						"type": "array",
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"taxonomyCategoryIds": {
+						"items": {
+							"format": "int64",
+							"type": "integer"
+						},
+						"type": "array",
+						"writeOnly": true,
+						"x-batch-unsupported-formats": "CSV"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ObjectEntry",
+						"readOnly": true,
+						"type": "string"
+					},
+					"x-schema-name": {
+						"default": "Object3",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+					"creator": {
+						"type": "string"
+					},
+					"creatorId": {
+						"type": "integer"
+					},
+					"dateCreated": {
+						"type": "date_time"
+					},
+					"dateModified": {
+						"type": "date_time"
+					},
+					"externalReferenceCode": {
+						"type": "string"
+					},
+					"field1": {
+						"type": "string"
+					},
+					"folderId": {
+						"type": "integer"
+					},
+					"id": {
+						"type": "id"
+					},
+					"keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"object2Id": {
+						"type": "id"
+					},
+					"r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship3/creator": {
+						"type": "string"
+					},
+					"relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/field1": {
+						"type": "string"
+					},
+					"relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship3/id": {
+						"type": "id"
+					},
+					"relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/object1Id": {
+						"type": "id"
+					},
+					"relationship3/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship3/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship1/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship1/field2": {
+						"type": "string"
+					},
+					"relationship3/relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship1/id": {
+						"type": "id"
+					},
+					"relationship3/relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship1/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship1/title": {
+						"type": "string"
+					},
+					"relationship3/relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship1/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship2/field2": {
+						"type": "string"
+					},
+					"relationship3/relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship1/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship1/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship1/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/relationship1/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/relationship1/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship1/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship1/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship1/id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship1/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship1/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship1/object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship1/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship1/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship1/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship1/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship1/title": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship1/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship1/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship2/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship2/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship2/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/relationship2/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship2/relationship2/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship2/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship2/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship2/id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship2/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship2/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship2/object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship2/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship2/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship3/relationship2/relationship2/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship2/relationship2/title": {
+						"type": "string"
+					},
+					"relationship3/relationship2/relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/relationship2/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship2/title": {
+						"type": "string"
+					},
+					"relationship3/relationship2/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship2/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship3/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship3/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship3/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship3/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship3/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship3/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship3/object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship3/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship3/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship3/title": {
+						"type": "string"
+					},
+					"relationship3/relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship3/version": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/creator": {
+						"type": "string"
+					},
+					"relationship3/relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship3/relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship3/relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship3/relationship4/field1": {
+						"type": "string"
+					},
+					"relationship3/relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship3/relationship4/object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship3/relationship4/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship3/relationship4/status": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/relationship4/title": {
+						"type": "string"
+					},
+					"relationship3/relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship3/relationship4/version": {
+						"type": "integer"
+					},
+					"relationship3/status": {
+						"type": "integer"
+					},
+					"relationship3/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship3/title": {
+						"type": "string"
+					},
+					"relationship3/userId": {
+						"type": "integer"
+					},
+					"relationship3/version": {
+						"type": "integer"
+					},
+					"relationship4/creator": {
+						"type": "string"
+					},
+					"relationship4/creatorId": {
+						"type": "integer"
+					},
+					"relationship4/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship4/dateModified": {
+						"type": "date_time"
+					},
+					"relationship4/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship4/field1": {
+						"type": "string"
+					},
+					"relationship4/folderId": {
+						"type": "integer"
+					},
+					"relationship4/id": {
+						"type": "id"
+					},
+					"relationship4/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship4/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship4/object1Id": {
+						"type": "id"
+					},
+					"relationship4/r_relationship2_c_object1ERC": {
+						"type": "string"
+					},
+					"relationship4/r_relationship2_c_object1Id": {
+						"type": "id"
+					},
+					"relationship4/status": {
+						"type": "integer"
+					},
+					"relationship4/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship4/title": {
+						"type": "string"
+					},
+					"relationship4/userId": {
+						"type": "integer"
+					},
+					"relationship4/version": {
+						"type": "integer"
+					},
+					"relationship5/creator": {
+						"type": "string"
+					},
+					"relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/field1": {
+						"type": "string"
+					},
+					"relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship5/id": {
+						"type": "id"
+					},
+					"relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship5/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship5/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship5/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship5/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship5/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship5/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship5/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship5/id": {
+						"type": "id"
+					},
+					"relationship5/relationship5/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship5/multiselectPicklistField": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship5/object2Id": {
+						"type": "id"
+					},
+					"relationship5/relationship5/r_relationship4_c_object2ERC": {
+						"type": "string"
+					},
+					"relationship5/relationship5/r_relationship4_c_object2Id": {
+						"type": "id"
+					},
+					"relationship5/relationship5/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship5/title": {
+						"type": "string"
+					},
+					"relationship5/relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship5/version": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship6/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship6/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship6/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/id": {
+						"type": "id"
+					},
+					"relationship5/relationship6/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship6/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship6/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship6/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship6/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship6/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship6/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship6/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship6/id": {
+						"type": "id"
+					},
+					"relationship5/relationship6/relationship6/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship6/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship6/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship6/title": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship6/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship6/version": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/id": {
+						"type": "id"
+					},
+					"relationship5/relationship6/relationship7/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/relationship7/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship7/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship7/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/relationship7/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/relationship7/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship7/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship7/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship7/id": {
+						"type": "id"
+					},
+					"relationship5/relationship6/relationship7/relationship7/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/relationship7/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship7/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/relationship7/title": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship7/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship7/version": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship8/creator": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship8/creatorId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship8/dateCreated": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/relationship8/dateModified": {
+						"type": "date_time"
+					},
+					"relationship5/relationship6/relationship7/relationship8/externalReferenceCode": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship8/field1": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship8/folderId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship8/id": {
+						"type": "id"
+					},
+					"relationship5/relationship6/relationship7/relationship8/keywords": {
+						"items": "string",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/relationship8/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship8/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/relationship8/title": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/relationship8/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/relationship8/version": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship6/relationship7/title": {
+						"type": "string"
+					},
+					"relationship5/relationship6/relationship7/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/relationship7/version": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/status": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/relationship6/title": {
+						"type": "string"
+					},
+					"relationship5/relationship6/userId": {
+						"type": "integer"
+					},
+					"relationship5/relationship6/version": {
+						"type": "integer"
+					},
+					"relationship5/status": {
+						"type": "integer"
+					},
+					"relationship5/taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"relationship5/title": {
+						"type": "string"
+					},
+					"relationship5/userId": {
+						"type": "integer"
+					},
+					"relationship5/version": {
+						"type": "integer"
+					},
+					"status": {
+						"type": "integer"
+					},
+					"taxonomyCategoryIds": {
+						"items": "integer",
+						"type": "array"
+					},
+					"title": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "integer"
+					},
+					"version": {
+						"type": "integer"
+					}
+				},
+				"xml": {
+					"name": "ObjectEntry"
+				}
+			},
+			"ObjectDefinitionBrief": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The object definition's external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"label": {
+						"description": "The object definition's label.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"objectFolderExternalReferenceCode": {
+						"description": "The object folder's external reference code.",
+						"readOnly": true,
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ObjectDefinitionBrief",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ObjectDefinitionBrief"
+				}
+			},
+			"PageCollaborator": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Collaborator"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"PageComment": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Comment"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
 				}
 			},
 			"PageObject1": {
@@ -490,8 +3351,6 @@
 						"type": "array"
 					},
 					"items": {
-						"extensions": {
-						},
 						"items": {
 							"$ref": "#/components/schemas/Object1"
 						},
@@ -519,7 +3378,9 @@
 						"type": "string"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
 			},
 			"PageObject2": {
 				"properties": {
@@ -539,8 +3400,6 @@
 						"type": "array"
 					},
 					"items": {
-						"extensions": {
-						},
 						"items": {
 							"$ref": "#/components/schemas/Object2"
 						},
@@ -568,7 +3427,58 @@
 						"type": "string"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"PageObject3": {
+				"properties": {
+					"actions": {
+						"additionalProperties": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"type": "object"
+					},
+					"facets": {
+						"items": {
+							"$ref": "#/components/schemas/Facet"
+						},
+						"type": "array"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/Object3"
+						},
+						"type": "array"
+					},
+					"lastPage": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"page": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"pageSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"totalCount": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"x-schema-name": {
+						"default": "PageObject3",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				}
 			},
 			"PagePermission": {
 				"properties": {
@@ -610,7 +3520,49 @@
 						"type": "integer"
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"x-filterable": {
+				}
+			},
+			"ParentTaxonomyCategory": {
+				"description": "The category's parent category.",
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent taxonomy category's external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyCategory",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ParentTaxonomyCategory"
+				}
+			},
+			"ParentTaxonomyVocabulary": {
+				"description": "The parent category's `TaxonomyVocabulary`.",
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The parent category's `TaxonomyVocabulary` external reference code.",
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ParentTaxonomyVocabulary",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ParentTaxonomyVocabulary"
+				}
 			},
 			"Permission": {
 				"properties": {
@@ -620,13 +3572,57 @@
 						},
 						"type": "array"
 					},
+					"roleExternalReferenceCode": {
+						"type": "string"
+					},
 					"roleName": {
+						"type": "string"
+					},
+					"roleType": {
 						"type": "string"
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Permission"
+				}
+			},
+			"Scope": {
+				"properties": {
+					"externalReferenceCode": {
+						"description": "The scope's external reference code.",
+						"type": "string"
+					},
+					"key": {
+						"description": "The scope's identifier.",
+						"type": "string"
+					},
+					"label": {
+						"description": "The scope's name.",
+						"type": "string"
+					},
+					"type": {
+						"description": "The scope's type.",
+						"enum": [
+							"AssetLibrary",
+							"Site",
+							"Space"
+						],
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.portal.vulcan.scope.Scope",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Scope"
 				}
 			},
 			"Status": {
@@ -647,7 +3643,12 @@
 						"type": "string"
 					}
 				},
+				"required": [
+					"code"
+				],
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "Status"
 				}
@@ -659,6 +3660,19 @@
 						"description": "Optional field with the embedded taxonomy category, can be embedded with nestedFields",
 						"readOnly": true,
 						"type": "object"
+					},
+					"parentTaxonomyCategory": {
+						"$ref": "#/components/schemas/ParentTaxonomyCategory"
+					},
+					"parentTaxonomyVocabulary": {
+						"$ref": "#/components/schemas/ParentTaxonomyVocabulary"
+					},
+					"scope": {
+						"$ref": "#/components/schemas/Scope"
+					},
+					"taxonomyCategoryExternalReferenceCode": {
+						"description": "The category's external reference code.",
+						"type": "string"
 					},
 					"taxonomyCategoryId": {
 						"description": "The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API.",
@@ -687,6 +3701,8 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "TaxonomyCategoryBrief"
 				}
@@ -712,8 +3728,99 @@
 					}
 				},
 				"type": "object",
+				"x-filterable": {
+				},
 				"xml": {
 					"name": "UserGroupBrief"
+				}
+			},
+			"ValidationError": {
+				"properties": {
+					"errorMessage": {
+						"type": "string"
+					},
+					"objectFieldName": {
+						"type": "string"
+					},
+					"objectValidationRuleExternalReferenceCode": {
+						"type": "string"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationError",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationError"
+				}
+			},
+			"ValidationRequest": {
+				"properties": {
+					"objectValidationRuleExternalReferenceCodes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"values": {
+						"$ref": "#/components/schemas/Object2"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationRequest",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationRequest"
+				}
+			},
+			"ValidationResponse": {
+				"properties": {
+					"validationErrors": {
+						"items": {
+							"$ref": "#/components/schemas/ValidationError"
+						},
+						"type": "array"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.ValidationResponse",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "ValidationResponse"
+				}
+			},
+			"Version": {
+				"properties": {
+					"number": {
+						"format": "int32",
+						"readOnly": true,
+						"type": "integer"
+					},
+					"x-class-name": {
+						"default": "com.liferay.object.rest.dto.v1_0.Version",
+						"readOnly": true,
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"x-filterable": {
+				},
+				"xml": {
+					"name": "Version"
 				}
 			}
 		}
@@ -745,13 +3852,6 @@
 					{
 						"in": "query",
 						"name": "filter",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "flatten",
 						"schema": {
 							"type": "string"
 						}
@@ -822,8 +3922,6 @@
 			},
 			"post": {
 				"operationId": "postObject2",
-				"parameters": [
-				],
 				"requestBody": {
 					"content": {
 						"application/json": {
@@ -838,6 +3936,152 @@
 						}
 					}
 				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/approved": {
+			"get": {
+				"operationId": "getApprovedPage",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/approved/by-external-reference-code/{externalReferenceCode}": {
+			"get": {
+				"operationId": "getApprovedByExternalReferenceCode",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"default": {
 						"content": {
@@ -961,9 +4205,285 @@
 				]
 			}
 		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship1": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship1Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
 		"/by-external-reference-code/{currentExternalReferenceCode}/relationship1/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship1Object1",
+				"operationId": "putByExternalReferenceCodeObject2Relationship1Object1",
 				"parameters": [
 					{
 						"in": "path",
@@ -993,6 +4513,644 @@
 							"application/xml": {
 								"schema": {
 									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship3": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship3/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship4": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship4Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{currentExternalReferenceCode}/relationship4/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
 								}
 							}
 						},
@@ -1181,6 +5339,794 @@
 				]
 			}
 		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeCommentsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments/{commentExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"get": {
+				"operationId": "getByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"put": {
+				"operationId": "putByExternalReferenceCodeComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/comments/{commentExternalReferenceCode}/child-comments": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeCommentChildCommentsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageComment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			},
+			"post": {
+				"operationId": "postByExternalReferenceCodeCommentChildComment",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "commentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Comment"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/restore": {
+			"put": {
+				"operationId": "putByExternalReferenceCodeRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/subscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeSubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/unsubscribe": {
+			"post": {
+				"operationId": "postByExternalReferenceCodeUnsubscribe",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/by-external-reference-code/{externalReferenceCode}/versions": {
+			"get": {
+				"operationId": "getByExternalReferenceCodeVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "externalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
 		"/export-batch": {
 			"post": {
 				"operationId": "postObject2sPageExportBatch",
@@ -1251,6 +6197,7 @@
 						"name": "type",
 						"required": true,
 						"schema": {
+							"pattern": "json|yaml",
 							"type": "string"
 						}
 					}
@@ -1266,6 +6213,1164 @@
 						"description": "default response"
 					}
 				}
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship1": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship1Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship1/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship3": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship3/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship4": {
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship4Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aggregationTerms",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "filter",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postScopeScopeKeyByExternalReferenceCodeObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/scopes/{scopeKey}/by-external-reference-code/{currentExternalReferenceCode}/relationship4/{relatedExternalReferenceCode}": {
+			"delete": {
+				"operationId": "deleteScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putScopeScopeKeyByExternalReferenceCodeObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "scopeKey",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "currentExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "relatedExternalReferenceCode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/validate": {
+			"post": {
+				"operationId": "postValidate",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/ValidationRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationResponse"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}": {
@@ -1423,6 +7528,774 @@
 						}
 					}
 				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-object-entry-folder-id/{object2FolderId}/copy": {
+			"post": {
+				"operationId": "postObject2ByObject2FolderCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object2FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-object-entry-folder-id/{object2FolderId}/copy-replace": {
+			"post": {
+				"operationId": "postObject2ByObject2FolderCopyReplace",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object2FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-object-entry-folder-id/{object2FolderId}/move": {
+			"post": {
+				"operationId": "postObject2ByObject2FolderMove",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object2FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-object-entry-folder-id/{object2FolderId}/move-replace": {
+			"post": {
+				"operationId": "postObject2ByObject2FolderMoveReplace",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object2FolderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}": {
+			"delete": {
+				"operationId": "deleteObject2ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getObject2ByVersion",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/copy": {
+			"post": {
+				"operationId": "postObject2ByVersionCopy",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/expire": {
+			"post": {
+				"operationId": "postObject2ByVersionExpire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/by-version/{version}/restore": {
+			"put": {
+				"operationId": "putObject2ByVersionRestore",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "version",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object2"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/collaborators": {
+			"get": {
+				"description": "Retrieves the collaborators of an object entry.",
+				"operationId": "getObject2CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"post": {
+				"description": "Add or update all the collaborators received in the request. Delete existing collaborators that are not included in the request.",
+				"operationId": "postObject2CollaboratorsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"items": {
+									"$ref": "#/components/schemas/Collaborator"
+								},
+								"type": "array"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageCollaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/collaborators/by-type/{type}/{collaboratorId}": {
+			"delete": {
+				"description": "Deletes the collaborator for an object entry and returns a 204 if the operation succeeds.",
+				"operationId": "deleteObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"get": {
+				"description": "Retrieves the collaborator for an object entry.",
+				"operationId": "getObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			},
+			"put": {
+				"description": "Add or update a collaborator received in the request.",
+				"operationId": "putObject2CollaboratorByTypeCollaborator",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "type",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "collaboratorId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Collaborator"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Collaborator"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/collaborators/export-batch": {
+			"post": {
+				"operationId": "postObject2CollaboratorsPageExportBatch",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "callbackURL",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contentType",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fieldNames",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Collaborator"
+				]
+			}
+		},
+		"/{object2Id}/expire": {
+			"post": {
+				"operationId": "postObject2Expire",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"default": {
 						"content": {
@@ -1629,6 +8502,53 @@
 				"tags": [
 					"Object2"
 				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
 			}
 		},
 		"/{object2Id}/relationship1/{object1Id}": {
@@ -1667,8 +8587,104 @@
 					"Object2"
 				]
 			},
+			"get": {
+				"operationId": "getObject2Relationship1Object1",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object1Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
 			"put": {
-				"operationId": "putObject2Relationship1Object1",
+				"operationId": "putCurrentObject2",
 				"parameters": [
 					{
 						"in": "path",
@@ -1698,6 +8714,651 @@
 							"application/xml": {
 								"schema": {
 									"$ref": "#/components/schemas/Object1"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/relationship3": {
+			"get": {
+				"operationId": "getObject2Relationship3Object3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/relationship3/{object3Id}": {
+			"delete": {
+				"operationId": "deleteObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getObject2Relationship3Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/relationship4": {
+			"get": {
+				"operationId": "getObject2Relationship4Object3Page",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "fields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "restrictFields",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"post": {
+				"operationId": "postObject2Relationship4",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/relationship4/{object3Id}": {
+			"delete": {
+				"operationId": "deleteObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+							},
+							"application/xml": {
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"get": {
+				"operationId": "getObject2Relationship4Object3",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"patch": {
+				"operationId": "patchCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						},
+						"application/xml": {
+							"schema": {
+								"$ref": "#/components/schemas/Object2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			},
+			"put": {
+				"operationId": "putCurrentObject2",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "object3Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/Object3"
+								}
+							}
+						},
+						"description": "default response"
+					}
+				},
+				"tags": [
+					"Object2"
+				]
+			}
+		},
+		"/{object2Id}/versions": {
+			"get": {
+				"operationId": "getObject2sVersionsPage",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "object2Id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "nestedFields",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sort",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
+								}
+							},
+							"application/xml": {
+								"schema": {
+									"$ref": "#/components/schemas/PageObject2"
 								}
 							}
 						},

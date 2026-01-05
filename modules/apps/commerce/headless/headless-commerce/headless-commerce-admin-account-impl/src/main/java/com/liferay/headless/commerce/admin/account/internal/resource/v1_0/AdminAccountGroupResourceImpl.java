@@ -5,8 +5,6 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
-import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryService;
@@ -14,8 +12,8 @@ import com.liferay.account.service.AccountGroupService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AdminAccountGroup;
 import com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0.AccountGroupEntityModel;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AdminAccountGroupResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -28,11 +26,11 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -40,11 +38,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/admin-account-group.properties",
 	scope = ServiceScope.PROTOTYPE, service = AdminAccountGroupResource.class
 )
+@Deprecated
 public class AdminAccountGroupResourceImpl
 	extends BaseAdminAccountGroupResourceImpl {
 
@@ -63,14 +63,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		_accountGroupService.deleteAccountGroup(
 			accountGroup.getAccountGroupId());
@@ -87,14 +81,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		return _getAdminAccountGroups(
 			accountEntry.getAccountEntryId(), pagination);
@@ -114,14 +102,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		return _adminAccountGroupDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
@@ -169,7 +151,8 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		_accountGroupService.updateAccountGroup(
-			id, adminAccountGroup.getDescription(), adminAccountGroup.getName(),
+			adminAccountGroup.getExternalReferenceCode(), id,
+			adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 			_serviceContextHelper.getServiceContext());
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
@@ -183,17 +166,11 @@ public class AdminAccountGroupResourceImpl
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
-
 		_accountGroupService.updateAccountGroup(
-			accountGroup.getAccountGroupId(),
+			externalReferenceCode, accountGroup.getAccountGroupId(),
 			adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 			_serviceContextHelper.getServiceContext());
 
@@ -228,16 +205,14 @@ public class AdminAccountGroupResourceImpl
 
 		if (accountGroup == null) {
 			accountGroup = _accountGroupService.addAccountGroup(
+				adminAccountGroup.getExternalReferenceCode(),
 				contextUser.getUserId(), adminAccountGroup.getDescription(),
 				adminAccountGroup.getName(),
 				_serviceContextHelper.getServiceContext());
-
-			accountGroup = _accountGroupService.updateExternalReferenceCode(
-				accountGroup.getAccountGroupId(),
-				adminAccountGroup.getExternalReferenceCode());
 		}
 		else {
 			accountGroup = _accountGroupService.updateAccountGroup(
+				adminAccountGroup.getExternalReferenceCode(),
 				accountGroup.getAccountGroupId(),
 				adminAccountGroup.getDescription(), adminAccountGroup.getName(),
 				_serviceContextHelper.getServiceContext());
@@ -283,6 +258,9 @@ public class AdminAccountGroupResourceImpl
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
+	private static final EntityModel _entityModel =
+		new AccountGroupEntityModel();
+
 	@Reference
 	private AccountEntryService _accountEntryService;
 
@@ -294,8 +272,6 @@ public class AdminAccountGroupResourceImpl
 	)
 	private DTOConverter<AccountGroup, AdminAccountGroup>
 		_adminAccountGroupDTOConverter;
-
-	private final EntityModel _entityModel = new AccountGroupEntityModel();
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

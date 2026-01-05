@@ -15,6 +15,8 @@ package ${configYAML.apiPackagePath}.client.dto.${escapedVersion};
 import ${configYAML.apiPackagePath}.client.function.UnsafeSupplier;
 import ${configYAML.apiPackagePath}.client.serdes.${escapedVersion}.${schemaName}SerDes;
 
+import ${configYAML.javaEEPackage}.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -23,14 +25,15 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.annotation.Generated;
-
 /**
  * @author ${configYAML.author}
  * @generated
  */
 @Generated("")
-public class ${schemaName} implements Cloneable, Serializable {
+
+<#assign dtoParentClassName = freeMarkerTool.getDTOParentClassName(openAPIYAML, schemaName)! />
+
+public <#if schema.discriminator?has_content>abstract</#if> class ${schemaName} <#if dtoParentClassName?has_content>extends ${dtoParentClassName}</#if> implements Cloneable, Serializable {
 
 	public static ${schemaName} toDTO(String json) {
 		return ${schemaName}SerDes.toDTO(json);
@@ -48,7 +51,7 @@ public class ${schemaName} implements Cloneable, Serializable {
 			<#assign capitalizedPropertyName = properties[propertyName] />
 		</#if>
 
-		<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.permission.", "${configYAML.apiPackagePath}.client.permission.") />
+		<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.", "${configYAML.apiPackagePath}.client.") />
 
 		public ${propertyType} get${capitalizedPropertyName}() {
 			return ${propertyName};

@@ -12,10 +12,10 @@ import com.liferay.osb.testray.rest.resource.v1_0.CompareRunsResource;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -39,7 +39,7 @@ public class ServletDataImpl implements ServletData {
 	}
 
 	public String getApplicationName() {
-		return "OsbTestrayRest";
+		return "Liferay.OSB.Testray.REST";
 	}
 
 	@Override

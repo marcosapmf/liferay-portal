@@ -274,7 +274,7 @@ public class BaseSolrQueryAssemblerImpl implements BaseSolrQueryAssembler {
 	private void _addAll(
 		List<String> filterQueries, String[] facetPostFilterQueries) {
 
-		if (!ArrayUtil.isEmpty(facetPostFilterQueries)) {
+		if (ArrayUtil.isNotEmpty(facetPostFilterQueries)) {
 			Collections.addAll(filterQueries, facetPostFilterQueries);
 		}
 	}
@@ -352,11 +352,10 @@ public class BaseSolrQueryAssemblerImpl implements BaseSolrQueryAssembler {
 
 		};
 
-	@Reference(target = "(search.engine.impl=Solr)")
-	private FilterTranslator<org.apache.lucene.search.Query> _filterTranslator;
-
-	@Reference(target = "(search.engine.impl=Solr)")
-	private QueryTranslator<String> _queryTranslator;
+	private final FilterTranslator _filterTranslator = new FilterTranslator();
+	private final QueryTranslator<String> _queryTranslator =
+		new com.liferay.portal.search.solr8.internal.query.
+			SolrQueryTranslator();
 
 	@SuppressWarnings("rawtypes")
 	private ServiceTrackerMap<String, FacetProcessor> _serviceTrackerMap;

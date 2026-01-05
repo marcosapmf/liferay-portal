@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.delivery.catalog.client.pagination.Paginati
 import com.liferay.headless.commerce.delivery.catalog.client.problem.Problem;
 import com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0.MappedProductSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.net.URL;
 
 import java.util.LinkedHashMap;
@@ -20,8 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -35,14 +35,15 @@ public interface MappedProductResource {
 	}
 
 	public Page<MappedProduct> getChannelProductMappedProductsPage(
-			Long channelId, Long productId, Long accountId, String search,
-			Pagination pagination, String sortString)
+			Long channelId, Long productId, Long accountId, String currencyCode,
+			String search, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getChannelProductMappedProductsPageHttpResponse(
-				Long channelId, Long productId, Long accountId, String search,
-				Pagination pagination, String sortString)
+				Long channelId, Long productId, Long accountId,
+				String currencyCode, String search, Pagination pagination,
+				String sortString)
 		throws Exception;
 
 	public static class Builder {
@@ -143,8 +144,8 @@ public interface MappedProductResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "";
-		private String _password = "";
+		private String _login;
+		private String _password;
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -155,14 +156,15 @@ public interface MappedProductResource {
 		implements MappedProductResource {
 
 		public Page<MappedProduct> getChannelProductMappedProductsPage(
-				Long channelId, Long productId, Long accountId, String search,
-				Pagination pagination, String sortString)
+				Long channelId, Long productId, Long accountId,
+				String currencyCode, String search, Pagination pagination,
+				String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getChannelProductMappedProductsPageHttpResponse(
-					channelId, productId, accountId, search, pagination,
-					sortString);
+					channelId, productId, accountId, currencyCode, search,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -226,7 +228,8 @@ public interface MappedProductResource {
 		public HttpInvoker.HttpResponse
 				getChannelProductMappedProductsPageHttpResponse(
 					Long channelId, Long productId, Long accountId,
-					String search, Pagination pagination, String sortString)
+					String currencyCode, String search, Pagination pagination,
+					String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -254,6 +257,11 @@ public interface MappedProductResource {
 				httpInvoker.parameter("accountId", String.valueOf(accountId));
 			}
 
+			if (currencyCode != null) {
+				httpInvoker.parameter(
+					"currencyCode", String.valueOf(currencyCode));
+			}
+
 			if (search != null) {
 				httpInvoker.parameter("search", String.valueOf(search));
 			}
@@ -277,8 +285,10 @@ public interface MappedProductResource {
 			httpInvoker.path("channelId", channelId);
 			httpInvoker.path("productId", productId);
 
-			httpInvoker.userNameAndPassword(
-				_builder._login + ":" + _builder._password);
+			if ((_builder._login != null) && (_builder._password != null)) {
+				httpInvoker.userNameAndPassword(
+					_builder._login + ":" + _builder._password);
+			}
 
 			return httpInvoker.invoke();
 		}

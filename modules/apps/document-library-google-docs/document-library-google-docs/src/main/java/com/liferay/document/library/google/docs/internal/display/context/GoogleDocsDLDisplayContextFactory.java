@@ -32,8 +32,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -185,13 +185,8 @@ public class GoogleDocsDLDisplayContextFactory
 					_configurationProvider.getCompanyConfiguration(
 						DLGoogleDriveCompanyConfiguration.class, companyId);
 
-			if (Validator.isNotNull(
-					dlGoogleDriveCompanyConfiguration.pickerAPIKey())) {
-
-				return true;
-			}
-
-			return false;
+			return Validator.isNotNull(
+				dlGoogleDriveCompanyConfiguration.pickerAPIKey());
 		}
 		catch (ConfigurationException configurationException) {
 			return ReflectionUtil.throwException(configurationException);

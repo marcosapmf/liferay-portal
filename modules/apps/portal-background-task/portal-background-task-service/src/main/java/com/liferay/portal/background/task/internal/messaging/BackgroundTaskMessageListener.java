@@ -65,13 +65,13 @@ public class BackgroundTaskMessageListener extends BaseMessageListener {
 	@Override
 	protected void doReceive(Message message) throws Exception {
 		long backgroundTaskId = (Long)message.get(
-			BackgroundTaskConstants.BACKGROUND_TASK_ID);
+			BackgroundTaskConstants.MESSAGE_KEY_BACKGROUND_TASK_ID);
 
 		try (SafeCloseable safeCloseable1 =
 				BackgroundTaskThreadLocal.setBackgroundTaskIdWithSafeCloseable(
 					backgroundTaskId);
 			SafeCloseable safeCloseable2 =
-				BackgroundTaskInExecutionUtil.setInExecution(
+				BackgroundTaskInExecutionUtil.setInExecutionWithSafeCloseable(
 					backgroundTaskId)) {
 
 			ServiceContext serviceContext = new ServiceContext();
@@ -179,7 +179,7 @@ public class BackgroundTaskMessageListener extends BaseMessageListener {
 				Message responseMessage = new Message();
 
 				responseMessage.put(
-					BackgroundTaskConstants.BACKGROUND_TASK_ID,
+					BackgroundTaskConstants.MESSAGE_KEY_BACKGROUND_TASK_ID,
 					backgroundTask.getBackgroundTaskId());
 				responseMessage.put("companyId", backgroundTask.getCompanyId());
 				responseMessage.put("name", backgroundTask.getName());

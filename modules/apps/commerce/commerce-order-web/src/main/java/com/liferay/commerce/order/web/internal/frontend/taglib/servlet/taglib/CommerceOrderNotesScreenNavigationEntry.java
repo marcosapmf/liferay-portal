@@ -5,20 +5,27 @@
 
 package com.liferay.commerce.order.web.internal.frontend.taglib.servlet.taglib;
 
+import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.web.internal.constants.CommerceOrderScreenNavigationConstants;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -62,6 +69,31 @@ public class CommerceOrderNotesScreenNavigationEntry
 	}
 
 	@Override
+	public boolean isVisible(User user, CommerceOrder commerceOrder) {
+		boolean hasPermission = false;
+		PermissionChecker permissionChecker =
+			PermissionCheckerFactoryUtil.create(user);
+
+		try {
+			hasPermission =
+				_commerceOrderModelResourcePermission.contains(
+					permissionChecker, commerceOrder,
+					CommerceOrderActionKeys.MANAGE_COMMERCE_ORDER_NOTES) ||
+				_commerceOrderModelResourcePermission.contains(
+					permissionChecker, commerceOrder,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return hasPermission;
+	}
+
+	@Override
 	public void render(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
@@ -71,6 +103,15 @@ public class CommerceOrderNotesScreenNavigationEntry
 			httpServletRequest, httpServletResponse,
 			"/commerce_order/notes.jsp");
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommerceOrderNotesScreenNavigationEntry.class);
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.model.CommerceOrder)"
+	)
+	private ModelResourcePermission<CommerceOrder>
+		_commerceOrderModelResourcePermission;
 
 	@Reference
 	private JSPRenderer _jspRenderer;

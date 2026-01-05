@@ -3,42 +3,44 @@
 exports[`Field Numeric Integer Input Mask toggle has an inputMaskFormat 1`] = `
 <div>
   <div
-    aria-labelledby="numericField_fieldDetails"
     class="form-group hide"
     data-field-name="numericField"
   >
     <div
-      data-tooltip-align="top"
-      title="+12 (34) 5678-9012"
+      class="input-group"
     >
+      <div
+        class="input-group-item"
+        data-tooltip-align="top"
+        title="+12 (34) 5678-9012"
+      >
+        <input
+          class="form-control ddm-form-field-type__numeric--rtl"
+          id="numericField"
+          name="numericField_masked"
+          placeholder="+__ (__) ____-____"
+          type="text"
+          value="+12 (34) 5678-9012"
+        />
+      </div>
       <input
-        aria-invalid="true"
-        class="form-control ddm-form-field-type__numeric--rtl"
-        id="numericField"
-        name="numericField_masked"
-        placeholder="+__ (__) ____-____"
-        type="text"
-        value="+12 (34) 5678-9012"
+        name="numericField"
+        type="hidden"
+        value="123456789012"
       />
     </div>
-    <input
-      name="numericField"
-      type="hidden"
-      value="123456789012"
-    />
     <input
       name="numericField_edited"
       type="hidden"
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="numericField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="numericField_fieldError"
       />
     </div>
   </div>
@@ -48,19 +50,22 @@ exports[`Field Numeric Integer Input Mask toggle has an inputMaskFormat 1`] = `
 exports[`Field Numeric renders the default markup 1`] = `
 <div>
   <div
-    aria-labelledby="undefined_fieldDetails"
     class="form-group hide"
   >
     <div
-      data-tooltip-align="top"
+      class="input-group"
     >
-      <input
-        aria-invalid="true"
-        class="form-control ddm-form-field-type__numeric--rtl"
-        name="undefined"
-        type="text"
-        value=""
-      />
+      <div
+        class="input-group-item"
+        data-tooltip-align="top"
+      >
+        <input
+          class="form-control ddm-form-field-type__numeric--rtl"
+          name="undefined"
+          type="text"
+          value=""
+        />
+      </div>
     </div>
     <input
       name="undefined_edited"
@@ -68,13 +73,12 @@ exports[`Field Numeric renders the default markup 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="undefined_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="undefined_fieldError"
       />
     </div>
   </div>

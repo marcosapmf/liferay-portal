@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -37,3 +37,7 @@ page import="com.liferay.portal.security.audit.web.internal.display.context.Audi
 <liferay-theme:defineObjects />
 
 <portlet:defineObjects />
+
+<%
+AuditDisplayContext auditDisplayContext = new AuditDisplayContext(request, liferayPortletRequest, liferayPortletResponse, timeZone);
+%>

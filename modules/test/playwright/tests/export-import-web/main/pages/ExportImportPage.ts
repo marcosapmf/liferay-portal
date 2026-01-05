@@ -1,0 +1,479 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {Locator, Page, expect} from '@playwright/test';
+import path from 'path';
+
+import {ProductMenuPage} from '../../../../pages/product-navigation-control-menu-web/ProductMenuPage';
+import {clickAndExpectToBeHidden} from '../../../../utils/clickAndExpectToBeHidden';
+import {clickAndExpectToBeVisible} from '../../../../utils/clickAndExpectToBeVisible';
+import getRandomString from '../../../../utils/getRandomString';
+import {PORTLET_URLS} from '../../../../utils/portletUrls';
+import {getTempDir} from '../../../../utils/temp';
+
+type DateFilter = {
+	endDate?: string;
+	endTime?: string;
+	rangeLast?: string;
+	startDate?: string;
+	startTime?: string;
+};
+
+export type taskStatus = 'success' | 'completedWithErrors';
+
+export class ExportImportPage {
+	readonly cancelButton: Locator;
+	readonly clearMenuItem: Locator;
+	readonly continueButton: Locator;
+	readonly copyAsNewRadioButton: Locator;
+	readonly deleteApplicationDataAlert: Locator;
+	readonly deleteApplicationDataCheckbox: Locator;
+	readonly deleteApplicationDataBeforeImportingWarningLabel: Locator;
+	readonly deletionsLabel: Locator;
+	readonly downloadButton: Locator;
+	readonly exportButton: Locator;
+	readonly exportPermissionsButton: Locator;
+	readonly exportReportEntriesMenuItem: Locator;
+	readonly exportReportEntriesModal: Locator;
+	readonly exportReportEntriesModalDownloadButton: Locator;
+	readonly exportReportEntriesModalProgressbar: Locator;
+	readonly fileSelector: Locator;
+	readonly importButton: Locator;
+	readonly importModalButton: Locator;
+	readonly importPermissionsCheckbox: Locator;
+	readonly mirrorWithOverwritingRadioButton: Locator;
+	readonly newExportButton: Locator;
+	readonly newImportButton: Locator;
+	readonly page: Page;
+	readonly pagesCheckbox: Locator;
+	readonly portletListContainer: Locator;
+	readonly productMenuPage: ProductMenuPage;
+	readonly rangeDateRangeEndDate: Locator;
+	readonly rangeDateRangeEndTime: Locator;
+	readonly rangeDateRangeRadioButton: Locator;
+	readonly rangeDateRangeStartDate: Locator;
+	readonly rangeDateRangeStartTime: Locator;
+	readonly rangeLast: Locator;
+	readonly rangeLastRadioButton: Locator;
+	readonly taskActionsMenu: (taskName: string) => Locator;
+	readonly taskRow: (taskName: string) => Locator;
+	readonly taskStatusLabel: (
+		taskName: string,
+		taskStatus?: taskStatus
+	) => Locator;
+	readonly title: Locator;
+	readonly updateDataAlert: Locator;
+	readonly updateDataMirrorWarningLabel: Locator;
+	readonly useCurrentUserAsAuthorCheckbox: Locator;
+	readonly viewReportEntriesMenuItem: Locator;
+	readonly warningHeader: Locator;
+
+	constructor(page: Page) {
+		this.cancelButton = page.getByRole('button', {name: 'Cancel'});
+		this.clearMenuItem = page.getByRole('link', {name: 'Clear'});
+		this.continueButton = page.getByRole('button', {name: 'Continue'});
+		this.copyAsNewRadioButton = page.getByLabel('Copy as new');
+		this.deleteApplicationDataAlert = page.locator('[role="alert"]', {
+			hasText: 'This option does not apply to object entries.',
+		});
+		this.deleteApplicationDataCheckbox = page.getByLabel(
+			'Delete Application Data'
+		);
+		this.deleteApplicationDataBeforeImportingWarningLabel = page
+			.getByLabel('Important Info About Your Import')
+			.getByText(
+				'Delete Application Data Before Importing: This option does not apply to object'
+			);
+		this.deletionsLabel = page
+			.getByLabel('Deletions', {exact: true})
+			.locator('label');
+		this.downloadButton = page.getByRole('button', {name: 'Download'});
+		this.exportButton = page.getByRole('button', {name: 'Export'});
+		this.exportReportEntriesMenuItem = page.getByRole('menuitem', {
+			name: 'Export Report Entries',
+		});
+		this.exportPermissionsButton = page.getByLabel('Export Permissions');
+		this.exportReportEntriesModal = page.getByRole('dialog', {
+			name: 'Export Report Entries',
+		});
+		this.exportReportEntriesModalDownloadButton =
+			this.exportReportEntriesModal.getByRole('button', {
+				name: 'Download',
+			});
+		this.exportReportEntriesModalProgressbar =
+			this.exportReportEntriesModal.getByRole('progressbar');
+		this.fileSelector = page.getByRole('button', {name: 'Select File'});
+		this.importButton = page.getByRole('button', {name: 'Import'});
+		this.importModalButton = page
+			.getByLabel('Important Info About Your Import')
+			.getByRole('button', {name: 'Import'});
+		this.importPermissionsCheckbox = page.getByLabel('Import Permissions');
+		this.mirrorWithOverwritingRadioButton = page.getByLabel(
+			'Mirror with overwriting'
+		);
+		this.newExportButton = page.getByRole('link', {name: 'Custom Export'});
+		this.newImportButton = page.getByRole('link', {name: 'Import'});
+		this.page = page;
+		this.pagesCheckbox = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentLink_com_liferay_layout_admin_web_portlet_GroupPagesPortlet"]'
+		);
+		this.portletListContainer = page
+			.locator(
+				'#_com_liferay_exportimport_web_portlet_ExportPortlet_selectContents .portlet-list'
+			)
+			.or(
+				page.locator(
+					'#_com_liferay_exportimport_web_portlet_CompanyExportPortlet_selectContents .portlet-list'
+				)
+			);
+		this.productMenuPage = new ProductMenuPage(page);
+		this.rangeDateRangeEndDate = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endDate"]'
+		);
+		this.rangeDateRangeEndTime = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_endTime"]'
+		);
+		this.rangeDateRangeRadioButton = page.getByRole('radio', {
+			name: 'Date Range',
+		});
+		this.rangeDateRangeStartDate = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startDate"]'
+		);
+		this.rangeDateRangeStartTime = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_startTime"]'
+		);
+		this.rangeLast = page.locator(
+			'[id="_com_liferay_exportimport_web_portlet_CompanyExportPortlet_last"]'
+		);
+		this.rangeLastRadioButton = page.getByRole('radio', {name: 'Last'});
+		this.taskActionsMenu = (taskName) =>
+			this.taskRow(taskName).getByRole('button');
+		this.taskRow = (taskName) =>
+			page.locator('[data-qa-id="row"]', {
+				hasText: taskName,
+			});
+		this.taskStatusLabel = (taskName, taskStatus = 'success') => {
+			const taskStatusTexts: Record<taskStatus, string> = {
+				completedWithErrors: 'Completed with errors',
+				success: 'Successful',
+			};
+
+			return this.taskRow(taskName).getByText(
+				taskStatusTexts[taskStatus]
+			);
+		};
+		this.title = page.getByPlaceholder('Enter the name of the process');
+		this.updateDataAlert = page.locator('[role="alert"]', {
+			hasText:
+				'Objects entries are always mirrored regardless of the selection.',
+		});
+		this.updateDataMirrorWarningLabel = page
+			.getByLabel('Important Info About Your Import')
+			.getByText(
+				'Update Data (Mirror): Objects entries are always mirrored regardless of the selection.'
+			);
+		this.useCurrentUserAsAuthorCheckbox = page.getByLabel(
+			'Use the Current User as Author: Assign the current user as the author of all'
+		);
+		this.viewReportEntriesMenuItem = page.getByRole('menuitem', {
+			name: 'View Report Entries',
+		});
+		this.warningHeader = page.getByRole('heading', {
+			name: 'Important Info About Your Import',
+		});
+	}
+
+	async uncheckPortlets() {
+		const portletListContainer = await this.portletListContainer;
+
+		await portletListContainer.waitFor({state: 'attached'});
+
+		const checkBoxes = portletListContainer.locator(
+			'input[type="checkbox"]:visible'
+		);
+
+		for (const checkbox of await checkBoxes.all()) {
+			await checkbox.uncheck();
+		}
+	}
+
+	async export({
+		dateFilter,
+		includePermissions = false,
+		portletLabels,
+		taskName = `Export-${getRandomString()}`,
+	}: {
+		dateFilter?: DateFilter;
+		includePermissions?: boolean;
+		portletLabels?: string[];
+		taskName?: string;
+	} = {}): Promise<string> {
+		await this.newExportButton.click();
+
+		await this.title.fill(taskName);
+
+		if (portletLabels) {
+			await this.uncheckPortlets();
+
+			for (const portletLabel of portletLabels) {
+				await this.page.getByLabel(portletLabel, {exact: true}).check();
+			}
+		}
+
+		if (includePermissions) {
+			await this.exportPermissionsButton.check();
+		}
+
+		if (dateFilter?.endDate || dateFilter?.startDate) {
+			await this.rangeDateRangeRadioButton.check();
+
+			if (dateFilter.endDate) {
+				await this.rangeDateRangeEndDate.fill(dateFilter.endDate);
+			}
+
+			if (dateFilter.endTime) {
+				await this.rangeDateRangeEndTime.fill(dateFilter.endTime);
+			}
+
+			if (dateFilter.startDate) {
+				await this.rangeDateRangeStartDate.fill(dateFilter.startDate);
+			}
+
+			if (dateFilter.startTime) {
+				await this.rangeDateRangeStartTime.fill(dateFilter.startTime);
+			}
+		}
+		else if (dateFilter?.rangeLast) {
+			await this.rangeLastRadioButton.check();
+
+			await this.rangeLast.selectOption(dateFilter.rangeLast);
+		}
+
+		await this.exportButton.click();
+
+		await this.taskStatusLabel(taskName).waitFor();
+
+		return await this.downloadExportProcess(taskName);
+	}
+
+	async clickTaskAction(
+		taskName: string,
+		action: 'Clear' | 'View Report Entries' | 'Export Report Entries'
+	) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: action}),
+			trigger: this.taskActionsMenu(taskName),
+		});
+	}
+
+	async checkItemInNewlyCreatedImportProcess(
+		folderPath: string,
+		itemToCheck: string
+	) {
+		await this.newImportButton.click();
+
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
+		await this.fileSelector.click();
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(folderPath);
+
+		await this.continueButton.click();
+
+		await this.page.waitForLoadState('domcontentloaded');
+		await this.page.waitForTimeout(1000);
+
+		const wikiLabelCount = await this.page.getByLabel(itemToCheck).count();
+		expect(wikiLabelCount).toBe(0);
+	}
+
+	async import({
+		expectedUploadErrorMessage,
+		filePath,
+		taskStatus = 'success',
+		timeout,
+	}: {
+		expectedUploadErrorMessage?: string;
+		filePath: string;
+		taskStatus?: taskStatus;
+		timeout?: number;
+	}) {
+		await this.newImportButton.click();
+
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+
+		await this.fileSelector.click();
+
+		const fileChooser = await fileChooserPromise;
+
+		await fileChooser.setFiles(filePath);
+
+		if (expectedUploadErrorMessage) {
+			await expect(
+				this.page.getByText(expectedUploadErrorMessage)
+			).toBeVisible();
+
+			return;
+		}
+
+		await this.continueButton.click();
+
+		await this.page.waitForLoadState('domcontentloaded');
+		await this.page.waitForTimeout(1000);
+
+		if (await this.pagesCheckbox.isVisible()) {
+			await this.pagesCheckbox.click();
+		}
+
+		const utilityPages = this.page
+			.locator('#PagesContent')
+			.getByText('Utility Pages');
+
+		if (await utilityPages.isVisible()) {
+			await utilityPages.click();
+		}
+
+		await this.page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentOptionsLink"]'
+			)
+			.click();
+
+		await this.page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentOptions"]'
+			)
+			.getByText('Comments')
+			.click();
+
+		await this.page
+			.locator(
+				'[id="_com_liferay_exportimport_web_portlet_ImportPortlet_contentOptions"]'
+			)
+			.getByText('Ratings')
+			.click();
+
+		await this.importButton.click();
+
+		const fileName = path.basename(filePath);
+		await expect(this.taskStatusLabel(fileName, taskStatus)).toBeVisible({
+			timeout,
+		});
+	}
+
+	async getExportableItems() {
+		await this.newExportButton.click();
+
+		const portletListContainer = await this.portletListContainer;
+
+		await portletListContainer.waitFor({state: 'attached'});
+
+		const itemsLocator = portletListContainer.locator(
+			'.custom-control-label-text:has(strong)'
+		);
+
+		const itemsMap = new Map();
+
+		for (const itemLocator of await itemsLocator.all()) {
+			const title = await itemLocator.locator('strong').textContent();
+			const countText = await itemLocator
+				.locator('.staging-taglib-checkbox-items')
+				.textContent();
+
+			const countMatch = countText ? countText.match(/\d+/) : null;
+
+			if (title && countMatch) {
+				const countAsNumber = parseInt(countMatch[0], 10);
+
+				itemsMap.set(title.trim(), countAsNumber);
+			}
+		}
+
+		await this.cancelButton.click();
+
+		return itemsMap;
+	}
+
+	async downloadExportProcess(name: string) {
+		const downloadPromise = this.page.waitForEvent('download');
+
+		await this.page
+			.locator('//h2[span[normalize-space()="' + name + '"]]/span/a')
+			.first()
+			.click();
+
+		const download = await downloadPromise;
+		const filePath = getTempDir() + download.suggestedFilename();
+
+		await download.saveAs(filePath);
+
+		return filePath;
+	}
+
+	async goToExport(siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.export}`
+		);
+	}
+
+	async goToImport(siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.import}`
+		);
+	}
+
+	async goToImportDetails(exportName: string) {
+		await this.clickTaskAction(exportName, 'View Report Entries');
+	}
+
+	async goToImportOptions(
+		folderPath: string,
+		siteUrl?: Site['friendlyUrlPath']
+	) {
+		await this.goToImport(siteUrl);
+		await this.newImportButton.click();
+		await this.page.getByRole('button', {name: 'Select File'}).waitFor();
+
+		const previousFileAlert = this.page.getByText(
+			'Warning:This file was previously uploaded'
+		);
+		if (await previousFileAlert.isVisible()) {
+			await clickAndExpectToBeHidden({
+				target: previousFileAlert,
+				trigger: this.page.getByRole('link', {
+					name: 'Delete File',
+				}),
+			});
+		}
+
+		const fileChooserPromise = this.page.waitForEvent('filechooser');
+		await this.fileSelector.click();
+		const fileChooser = await fileChooserPromise;
+		await fileChooser.setFiles(folderPath);
+
+		await this.continueButton.click();
+		this.page.getByText('File Summary');
+	}
+
+	async goToImportReportEntryDetails(externalReferenceCode: string) {
+		await this.page
+			.getByRole('row', {name: externalReferenceCode})
+			.getByLabel('view')
+			.click();
+
+		expect(
+			this.page.getByText('Report Entry Details').first()
+		).toBeVisible();
+	}
+
+	async openExportReportEntriesModal(exportName) {
+		await this.clickTaskAction(exportName, 'Export Report Entries');
+
+		await this.exportReportEntriesModal.waitFor();
+	}
+}

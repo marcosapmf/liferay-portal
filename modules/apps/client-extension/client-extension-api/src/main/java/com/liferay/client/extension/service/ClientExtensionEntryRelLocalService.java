@@ -300,6 +300,10 @@ public interface ClientExtensionEntryRelLocalService
 	public List<ClientExtensionEntryRel> getClientExtensionEntryRels(
 		long classNameId, long classPK, String type, int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ClientExtensionEntryRel> getClientExtensionEntryRels(
+		String type);
+
 	/**
 	 * Returns all the client extension entry rels matching the UUID and company.
 	 *

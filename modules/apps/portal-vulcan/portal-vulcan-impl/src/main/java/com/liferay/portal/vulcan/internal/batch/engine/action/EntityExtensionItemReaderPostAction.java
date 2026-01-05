@@ -32,7 +32,7 @@ public class EntityExtensionItemReaderPostAction
 	public void run(
 			BatchEngineImportTask batchEngineImportTask,
 			Map<String, Serializable> extendedProperties, Object item)
-		throws ReflectiveOperationException {
+		throws Exception {
 
 		EntityExtensionHandler entityExtensionHandler =
 			ExtensionUtil.getEntityExtensionHandler(
@@ -49,33 +49,24 @@ public class EntityExtensionItemReaderPostAction
 			return;
 		}
 
-		try {
-			entityExtensionHandler.validate(
-				batchEngineImportTask.getCompanyId(), extendedProperties,
-				_isPartialUpdate(batchEngineImportTask));
+		entityExtensionHandler.validate(
+			batchEngineImportTask.getCompanyId(), extendedProperties,
+			_isPartialUpdate(batchEngineImportTask));
 
-			ExtensionUtil.setExtendedProperties(item, extendedProperties);
-		}
-		catch (Exception exception) {
-			throw new ReflectiveOperationException(exception);
-		}
+		ExtensionUtil.setExtendedProperties(item, extendedProperties);
 	}
 
 	private boolean _isPartialUpdate(
 		BatchEngineImportTask batchEngineImportTask) {
 
-		Map<String, Serializable> parameters =
-			batchEngineImportTask.getParameters();
-
-		if (parameters == null) {
-			return false;
-		}
-
 		BatchEngineTaskOperation batchEngineTaskOperation =
 			BatchEngineTaskOperation.valueOf(
 				batchEngineImportTask.getOperation());
-		String createStrategy = MapUtil.getString(parameters, "createStrategy");
-		String updateStrategy = MapUtil.getString(parameters, "updateStrategy");
+
+		String createStrategy = batchEngineImportTask.getParameterValue(
+			"createStrategy");
+		String updateStrategy = batchEngineImportTask.getParameterValue(
+			"updateStrategy");
 
 		if ((batchEngineTaskOperation == BatchEngineTaskOperation.CREATE) &&
 			StringUtil.equals(createStrategy, "UPSERT") &&

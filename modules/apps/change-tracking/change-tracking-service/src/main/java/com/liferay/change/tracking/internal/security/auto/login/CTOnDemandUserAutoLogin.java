@@ -6,7 +6,6 @@
 package com.liferay.change.tracking.internal.security.auto.login;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Ticket;
@@ -19,10 +18,10 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,10 +37,6 @@ public class CTOnDemandUserAutoLogin extends BaseAutoLogin {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
 		throws Exception {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187436")) {
-			return null;
-		}
 
 		String portletId = ParamUtil.getString(httpServletRequest, "p_p_id");
 

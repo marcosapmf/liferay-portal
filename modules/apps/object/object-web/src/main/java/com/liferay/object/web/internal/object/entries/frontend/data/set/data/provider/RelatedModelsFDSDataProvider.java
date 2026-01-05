@@ -8,6 +8,7 @@ package com.liferay.object.web.internal.object.entries.frontend.data.set.data.pr
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.object.entries.frontend.data.set.data.model.RelatedModel;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectRelationship;
@@ -18,15 +19,14 @@ import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.object.entries.constants.ObjectEntriesFDSNames;
-import com.liferay.object.web.internal.object.entries.frontend.data.set.data.model.RelatedModel;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -78,9 +78,9 @@ public class RelatedModelsFDSDataProvider
 
 		return TransformUtil.transform(
 			(List<ObjectEntry>)objectRelatedModelsProvider.getRelatedModels(
-				groupId, objectRelationshipId, objectEntryId,
+				groupId, objectRelationshipId, null, false, objectEntryId,
 				fdsKeywords.getKeywords(), fdsPagination.getStartPosition(),
-				fdsPagination.getEndPosition()),
+				fdsPagination.getEndPosition(), null),
 			objectEntry -> new RelatedModel(
 				objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
 				objectEntry.getTitleValue(), false));
@@ -116,7 +116,8 @@ public class RelatedModelsFDSDataProvider
 
 		return objectRelatedModelsProvider.getRelatedModelsCount(
 			objectScopeProvider.getGroupId(httpServletRequest),
-			objectRelationshipId, objectEntryId, fdsKeywords.getKeywords());
+			objectRelationshipId, null, objectEntryId,
+			fdsKeywords.getKeywords());
 	}
 
 	@Reference

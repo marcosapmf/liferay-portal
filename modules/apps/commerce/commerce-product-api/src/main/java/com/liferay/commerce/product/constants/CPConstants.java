@@ -26,8 +26,11 @@ public class CPConstants {
 
 	public static final String PRODUCT_OPTION_DATE_KEY = "date";
 
+	public static final String PRODUCT_OPTION_DOCUMENT_LIBRARY_KEY =
+		"document_library";
+
 	public static final String[] PRODUCT_OPTION_MULTIPLE_VALUES_FIELD_TYPES = {
-		"checkbox", "checkbox_multiple", "radio", "select", "select_date"
+		"checkbox_multiple", "radio", "select", "select_date"
 	};
 
 	public static final String PRODUCT_OPTION_NUMERIC_KEY = "numeric";

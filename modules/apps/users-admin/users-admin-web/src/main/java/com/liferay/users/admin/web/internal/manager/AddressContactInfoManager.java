@@ -12,9 +12,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.List;
+import jakarta.portlet.ActionRequest;
 
-import javax.portlet.ActionRequest;
+import java.util.List;
 
 /**
  * @author Samuel Trong Tran
@@ -72,11 +72,12 @@ public class AddressContactInfoManager extends BaseContactInfoManager<Address> {
 	@Override
 	protected Address doAdd(Address address) throws Exception {
 		return _addressService.addAddress(
-			null, _className, _classPK, null, null, address.getStreet1(),
-			address.getStreet2(), address.getStreet3(), address.getCity(),
-			address.getZip(), address.getRegionId(), address.getCountryId(),
-			address.getListTypeId(), address.isMailing(), address.isPrimary(),
-			null, new ServiceContext());
+			address.getExternalReferenceCode(), _className, _classPK,
+			address.getCountryId(), address.getListTypeId(),
+			address.getRegionId(), address.getCity(), null, address.isMailing(),
+			null, address.isPrimary(), address.getStreet1(),
+			address.getStreet2(), address.getStreet3(), address.getSubtype(),
+			address.getZip(), null, new ServiceContext());
 	}
 
 	@Override
@@ -87,11 +88,12 @@ public class AddressContactInfoManager extends BaseContactInfoManager<Address> {
 	@Override
 	protected void doUpdate(Address address) throws Exception {
 		_addressService.updateAddress(
-			address.getAddressId(), address.getName(), address.getDescription(),
-			address.getStreet1(), address.getStreet2(), address.getStreet3(),
-			address.getCity(), address.getZip(), address.getRegionId(),
+			address.getExternalReferenceCode(), address.getAddressId(),
 			address.getCountryId(), address.getListTypeId(),
-			address.isMailing(), address.isPrimary(), address.getPhoneNumber());
+			address.getRegionId(), address.getCity(), address.getDescription(),
+			address.isMailing(), address.getName(), address.isPrimary(),
+			address.getStreet1(), address.getStreet2(), address.getStreet3(),
+			address.getSubtype(), address.getZip(), address.getPhoneNumber());
 	}
 
 	@Override

@@ -25,10 +25,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
+import jakarta.portlet.PortletRequest;
+
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
 
 /**
  * @author Julio Camarero
@@ -213,11 +213,7 @@ public class GroupSearchProvider {
 	}
 
 	private static boolean _isSearch(PortletRequest portletRequest) {
-		if (Validator.isNotNull(_getKeywords(portletRequest))) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords(portletRequest));
 	}
 
 }

@@ -10,7 +10,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,29 +26,31 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletModeException;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.WindowState;
+import jakarta.portlet.WindowStateException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletModeException;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
-import javax.portlet.WindowStateException;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -71,12 +72,12 @@ public class LoginUtil {
 		).put(
 			"[$PASSWORD_RESET_URL$]",
 			() -> {
-				if (showPasswordTerms) {
-					return LanguageUtil.get(
-						themeDisplay.getLocale(), "the-password-reset-url");
+				if (!showPasswordTerms) {
+					return null;
 				}
 
-				return null;
+				return LanguageUtil.get(
+					themeDisplay.getLocale(), "the-password-reset-url");
 			}
 		).put(
 			"[$PORTAL_URL$]",
@@ -189,21 +190,17 @@ public class LoginUtil {
 			HttpServletRequest httpServletRequest, long plid)
 		throws PortletModeException, WindowStateException {
 
-		String portletName = LoginPortletKeys.LOGIN;
+		PortletConfig portletConfig =
+			(PortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAKARTA_PORTLET_CONFIG);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-6378")) {
-			PortletConfig portletConfig =
-				(PortletConfig)httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_CONFIG);
+		String portletName = portletConfig.getPortletName();
 
-			portletName = portletConfig.getPortletName();
+		if (!portletName.equals(LoginPortletKeys.CREATE_ACCOUNT) &&
+			!portletName.equals(LoginPortletKeys.LOGIN) &&
+			!portletName.equals(LoginPortletKeys.FORGOT_PASSWORD)) {
 
-			if (!portletName.equals(LoginPortletKeys.CREATE_ACCOUNT) &&
-				!portletName.equals(LoginPortletKeys.LOGIN) &&
-				!portletName.equals(LoginPortletKeys.FORGOT_PASSWORD)) {
-
-				portletName = LoginPortletKeys.LOGIN;
-			}
+			portletName = LoginPortletKeys.LOGIN;
 		}
 
 		return PortletURLBuilder.create(
@@ -219,6 +216,32 @@ public class LoginUtil {
 		).setWindowState(
 			WindowState.MAXIMIZED
 		).buildPortletURL();
+	}
+
+	public static boolean isAllowedToRenderView(
+		String defaultMVCPath, String defaultMVCRenderCommandName,
+		RenderRequest renderRequest) {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		if (!themeDisplay.isSignedIn()) {
+			return true;
+		}
+
+		String mvcPath = ParamUtil.getString(renderRequest, "mvcPath");
+		String mvcRenderCommandName = ParamUtil.getString(
+			renderRequest, "mvcRenderCommandName");
+
+		if ((Validator.isNull(mvcPath) &&
+			 Validator.isNull(mvcRenderCommandName)) ||
+			mvcPath.equals(defaultMVCPath) ||
+			mvcRenderCommandName.equals(defaultMVCRenderCommandName)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	public static void sendEmailUserCreationAttempt(

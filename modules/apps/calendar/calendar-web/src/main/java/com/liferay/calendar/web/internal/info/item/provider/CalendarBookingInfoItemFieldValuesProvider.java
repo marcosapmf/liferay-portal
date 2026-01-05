@@ -18,6 +18,7 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -38,13 +39,13 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.WindowState;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,7 +83,7 @@ public class CalendarBookingInfoItemFieldValuesProvider
 				"Unexpected portal exception", portalException);
 		}
 		catch (Exception exception) {
-			throw new RuntimeException("Unexpected exception", exception);
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -92,6 +93,16 @@ public class CalendarBookingInfoItemFieldValuesProvider
 	 * User, long)}
 	 */
 	protected String getCalendarBookingURL(CalendarBooking calendarBooking) {
+		ThemeDisplay themeDisplay = _getThemeDisplay();
+
+		if (themeDisplay != null) {
+			return StringBundler.concat(
+				themeDisplay.getPortalURL(),
+				themeDisplay.getPathFriendlyURLPublic(),
+				"/calendar/shared/-/calendar/",
+				calendarBooking.getCalendarBookingId());
+		}
+
 		try {
 			Company company = _companyLocalService.getCompany(
 				calendarBooking.getCompanyId());

@@ -1,16 +1,17 @@
 <!DOCTYPE html>
+
 <#include init />
+
 <html class="${root_css_class}" dir="<@liferay.language key="lang.dir" />" lang="${w3c_language_id}">
 	<head>
 		<title>${the_title} - ${company_name}</title>
 
 		<meta content="initial-scale=1.0, width=device-width" name="viewport" />
 
-		<script ${nonceAttribute} type="text/javascript" src="${javascript_folder}/standalone/SpeedwellSlider.js" defer></script>
 		<@liferay_util["include"] page=top_head_include />
 	</head>
 
-	<body class="speedwell ${css_class}" id="content">
+	<body class="speedwell ${css_class}">
 		<@liferay.control_menu />
 
 		<div class="liferay-top">
@@ -25,13 +26,13 @@
 				</div>
 
 				<#if speedwell_content_css_class?contains("wide")>
-				<div class="speedwell-frame speedwell-frame__content--wide">
+					<div class="speedwell-frame speedwell-frame__content--wide">
 				<#else>
-				<div class="speedwell-frame speedwell-frame__content">
+					<div class="speedwell-frame speedwell-frame__content">
 				</#if>
 					<a name="speedwell-top"></a>
 
-					<div class="container-fluid ${speedwell_content_css_class}">
+					<div class="container-fluid ${speedwell_content_css_class}" id="content">
 						<#if selectable>
 							<@liferay_util["include"] page=content_include />
 						<#else>
@@ -60,14 +61,8 @@
 		</div>
 
 		<div class="liferay-bottom">
-				<@liferay_util["include"] page=body_bottom_include />
-				<@liferay_util["include"] page=bottom_include />
+			<@liferay_util["include"] page=body_bottom_include />
+			<@liferay_util["include"] page=bottom_include />
 		</div>
-
-		<script ${nonceAttribute} src="${javascript_folder}/features/accessibility.js" type="text/javascript"></script>
-		<script ${nonceAttribute} src="${javascript_folder}/features/scrollHandler.js" type="text/javascript"></script>
-		<script ${nonceAttribute} src="${javascript_folder}/features/topbar.js" type="text/javascript"></script>
-		<script ${nonceAttribute} src="${javascript_folder}/features/categoryMenu.js" type="text/javascript"></script>
-		<script ${nonceAttribute} src="${javascript_folder}/features/mobile.js" type="text/javascript"></script>
 	</body>
 </html>

@@ -14,7 +14,9 @@ import React, {useState} from 'react';
 import {ModalEditViewColumn} from '../ModalEditViewColumn/ModalEditViewColumn';
 import {TYPES, useViewContext} from '../objectViewContext';
 
-const ViewBuilderScreen: React.FC<{}> = () => {
+const ViewBuilderScreen: React.FC<
+	{children?: React.ReactNode | undefined} & {}
+> = () => {
 	const [visibleEditModal, setVisibleEditModal] = useState(false);
 	const [editingObjectFieldName, setEditingObjectFieldName] = useState('');
 
@@ -31,24 +33,28 @@ const ViewBuilderScreen: React.FC<{}> = () => {
 		dispatch,
 	] = useViewContext();
 
-	const objectFieldNames = new Set(
-		objectViewColumns.map(({objectFieldName}) => objectFieldName)
-	);
+	const objectFieldsMap = new Map();
 
-	const selected = objectFields.filter(({name}) =>
-		objectFieldNames.has(name)
-	);
+	objectFields.forEach((field) => {
+		objectFieldsMap.set(field.name, field);
+	});
+
+	const selected = objectViewColumns.map((column) => {
+		if (objectFieldsMap.has(column.objectFieldName)) {
+			return objectFieldsMap.get(column.objectFieldName);
+		}
+	});
 
 	const handleAddColumns = () => {
 		const parentWindow = Liferay.Util.getOpener();
 
 		parentWindow.Liferay.fire('openModalSelectObjectFields', {
 			getName: ({label, name}: ObjectField) =>
-				stringUtils.getLocalizableLabel(
-					creationLanguageId,
-					label,
-					name
-				),
+				stringUtils.getLocalizableLabel({
+					fallbackLabel: name,
+					fallbackLanguageId: creationLanguageId,
+					labels: label,
+				}),
 			header: Liferay.Language.get('add-columns'),
 			items: objectFields.map((objectField) => {
 				return {

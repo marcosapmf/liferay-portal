@@ -35,10 +35,10 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.product.navigation.control.menu.manager.ProductNavigationControlMenuManager;
 import com.liferay.site.configuration.manager.MenuAccessConfigurationManager;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -74,7 +74,7 @@ public class ProductNavigationControlMenuManagerTest {
 		throws Exception {
 
 		_menuAccessConfigurationManager.updateMenuAccessConfiguration(
-			_group.getGroupId(), new String[0], true);
+			_group.getGroupId(), null, true);
 
 		Assert.assertTrue(
 			_productNavigationControlMenuManager.isShowControlMenu(

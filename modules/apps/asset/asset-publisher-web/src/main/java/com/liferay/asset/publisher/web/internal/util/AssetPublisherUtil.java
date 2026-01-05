@@ -10,8 +10,9 @@ import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntryServiceUtil;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherSelectionStyleConfigurationUtil;
 import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectionStyleConstants;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -19,7 +20,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
 /**
  * @author Lourdes Fernández Besada
@@ -31,22 +32,22 @@ public class AssetPublisherUtil {
 			PortletPreferences portletPreferences)
 		throws PortalException {
 
-		String selectionStyle = GetterUtil.getString(
-			portletPreferences.getValue("selectionStyle", null),
-			AssetPublisherSelectionStyleConfigurationUtil.
-				defaultSelectionStyle());
+		String selectionStyle = StringPool.BLANK;
+
+		try (SafeCloseable safeCloseable =
+				FF_LPD_39304_CompanyTemporarySwapper.
+					setCompanyIdWithSafeCloseable(companyId)) {
+
+			selectionStyle = GetterUtil.getString(
+				portletPreferences.getValue("selectionStyle", null),
+				AssetPublisherSelectionStyleConfigurationUtil.
+					defaultSelectionStyle());
+		}
 
 		if (!selectionStyle.equals(
 				AssetPublisherSelectionStyleConstants.TYPE_ASSET_LIST)) {
 
 			return null;
-		}
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-22837")) {
-			return _fetchAssetListEntry(
-				checkPermissions,
-				GetterUtil.getLong(
-					portletPreferences.getValue("assetListEntryId", null)));
 		}
 
 		String assetListEntryExternalReferenceCode = GetterUtil.getString(
@@ -101,12 +102,6 @@ public class AssetPublisherUtil {
 	public static long getDisplayStyleGroupId(
 		long companyId, long groupId, PortletPreferences portletPreferences) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-22837")) {
-			return GetterUtil.getLong(
-				portletPreferences.getValue("displayStyleGroupId", null),
-				groupId);
-		}
-
 		String displayStyleGroupExternalReferenceCode =
 			portletPreferences.getValue(
 				"displayStyleGroupExternalReferenceCode", null);
@@ -123,19 +118,6 @@ public class AssetPublisherUtil {
 		}
 
 		return 0;
-	}
-
-	private static AssetListEntry _fetchAssetListEntry(
-			boolean checkPermissions, long assetEntryListId)
-		throws PortalException {
-
-		if (checkPermissions) {
-			return AssetListEntryServiceUtil.fetchAssetListEntry(
-				assetEntryListId);
-		}
-
-		return AssetListEntryLocalServiceUtil.fetchAssetListEntry(
-			assetEntryListId);
 	}
 
 	private static AssetListEntry _fetchAssetListEntryByExternalReferenceCode(

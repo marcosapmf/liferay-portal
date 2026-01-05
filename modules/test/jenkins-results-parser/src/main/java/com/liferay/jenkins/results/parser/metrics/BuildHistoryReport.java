@@ -6,15 +6,25 @@
 package com.liferay.jenkins.results.parser.metrics;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.testray.TestrayBuild;
+import com.liferay.jenkins.results.parser.testray.TestrayFactory;
+import com.liferay.jenkins.results.parser.testray.TestrayRun;
+import com.liferay.jenkins.results.parser.testray.TestrayRunComparison;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -56,6 +66,146 @@ public class BuildHistoryReport {
 		return buildHistoryReport;
 	}
 
+	public static BuildHistoryReport newAWSBuildComparisonReport(
+		long durationDays, File outputDir, String startDateString) {
+
+		BuildHistoryReport buildHistoryReport = new BuildHistoryReport(
+			outputDir);
+
+		buildHistoryReport.addFilesFromResource(
+			"dependencies/metrics/build-comparison-report", "/css/main.css",
+			"/index.html", "/js/main.js");
+
+		BuildHistory buildHistory = BuildHistoryProcessor.mergeBuildHistories(
+			BuildHistoryProcessor.newTopLevelBuildHistories(
+				TimeUnit.DAYS.toMillis(durationDays),
+				_getStartTime(startDateString)),
+			"");
+
+		File baseDir = BuildHistoryProcessor.getBaseDir();
+
+		BuildHistoryProcessor.setBaseDir(
+			new File(baseDir.getParentFile(), "aws/builds"));
+
+		BuildHistory awsBuildHistory =
+			BuildHistoryProcessor.mergeBuildHistories(
+				BuildHistoryProcessor.newTopLevelBuildHistories(
+					TimeUnit.DAYS.toMillis(durationDays),
+					_getStartTime(startDateString)),
+				"aws");
+
+		Map<String, BuildJSONObject> awsBuildJSONObjectsMap =
+			awsBuildHistory.getBuildJSONObjectsMap();
+
+		Map<String, BuildJSONObject> buildJSONObjectsMap =
+			buildHistory.getBuildJSONObjectsMap();
+
+		List<List<Object>> rows = new ArrayList<>();
+
+		rows.add(
+			new ArrayList<Object>() {
+				{
+					add("Build Identifier");
+					add("Testray Comparison URL");
+					add("Test Results in Common (%)");
+					add("Test Failure Differences");
+					add("Untested Test Differences");
+					add("Build URL (DB)");
+					add("Build URL (AWS)");
+					add("DB Build Testray URL");
+					add("AWS Build Testray URL");
+					add("Top Level Start Time (DB)");
+					add("Top Level Start Time (AWS)");
+					add("Top Level Duration (DB)");
+					add("Top Level Duration (AWS)");
+				}
+			});
+
+		for (Map.Entry<String, BuildJSONObject> entry :
+				buildJSONObjectsMap.entrySet()) {
+
+			String buildIdentifier = entry.getKey();
+
+			if (!awsBuildJSONObjectsMap.containsKey(buildIdentifier)) {
+				continue;
+			}
+
+			BuildJSONObject awsBuildJSONObject = awsBuildJSONObjectsMap.get(
+				buildIdentifier);
+			BuildJSONObject buildJSONObject = entry.getValue();
+
+			String awsTestrayBuildURL = awsBuildJSONObject.getTestrayBuildURL();
+			String testrayBuildURL = buildJSONObject.getTestrayBuildURL();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(awsTestrayBuildURL) ||
+				JenkinsResultsParserUtil.isNullOrEmpty(testrayBuildURL)) {
+
+				continue;
+			}
+
+			TestrayBuild awsTestrayBuild = TestrayFactory.newTestrayBuild(
+				_getURL(awsTestrayBuildURL));
+
+			TestrayRun awsTestrayRun = awsTestrayBuild.getTestrayRun(
+				TestrayRun.getDefaultRunIDString());
+
+			TestrayBuild testrayBuild = TestrayFactory.newTestrayBuild(
+				_getURL(testrayBuildURL));
+
+			TestrayRun testrayRun = testrayBuild.getTestrayRun(
+				TestrayRun.getDefaultRunIDString());
+
+			if ((awsTestrayRun == null) || (testrayRun == null)) {
+				continue;
+			}
+
+			TestrayRunComparison testrayRunComparison =
+				TestrayFactory.newTestrayRunComparison(
+					testrayRun, awsTestrayRun);
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(buildIdentifier);
+						add(testrayRunComparison.getComparisonURL());
+						add(
+							testrayRunComparison.
+								getCommonStatusTestCountPercentage());
+						add(testrayRunComparison.getNewFailureTestCount());
+						add(testrayRunComparison.getNewUntestedTestCount());
+						add(buildJSONObject.getURL());
+						add(awsBuildJSONObject.getURL());
+						add(testrayBuildURL);
+						add(awsTestrayBuildURL);
+						add(buildJSONObject.getStartTime());
+						add(awsBuildJSONObject.getStartTime());
+						add(buildJSONObject.getDuration());
+						add(awsBuildJSONObject.getDuration());
+					}
+				});
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("var dataGeneratedDate = new Date(");
+		sb.append(JenkinsResultsParserUtil.getCurrentTimeMillis());
+		sb.append(");\nvar reportName = \"AWS Build Comparison Report\";");
+		sb.append("var tableData = ");
+
+		JSONArray tableJSONArray = new JSONArray();
+
+		for (List<Object> row : rows) {
+			tableJSONArray.put(new JSONArray(row));
+		}
+
+		sb.append(tableJSONArray);
+		sb.append(";");
+
+		buildHistoryReport.addFile("js/table-data.js", sb.toString());
+
+		return buildHistoryReport;
+	}
+
 	public static BuildHistoryReport newPullRequestTestSuiteReport(
 		long durationDays, File outputDir, String startDateString) {
 
@@ -88,9 +238,10 @@ public class BuildHistoryReport {
 			outputDir);
 
 		buildHistoryReport.addFilesFromResource(
-			"dependencies/metrics/utilization-report", "/index.html");
+			"dependencies/metrics/utilization-report", "/css/main.css",
+			"/index.html", "/js/main.js");
 
-		Collection<BuildHistory> buildHistories =
+		Collection<BuildHistory> utilizationBuildHistories =
 			BuildHistoryProcessor.newUtilizationBuildHistories(
 				TimeUnit.DAYS.toMillis(durationDays),
 				_getStartTime(startDateString));
@@ -98,7 +249,29 @@ public class BuildHistoryReport {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(
-			_getTableDataJSFileContent(buildHistories, "Category", 7, "All"));
+			_getTableDataJSFileContent(
+				utilizationBuildHistories, "Category", 7, "All",
+				"categoryTableData", null));
+
+		sb.append("\n");
+
+		Collection<BuildHistory> utilizationTestTypeBuildHistories =
+			BuildHistoryProcessor.newUtilizationTestTypeBuildHistories(
+				TimeUnit.DAYS.toMillis(durationDays),
+				_getStartTime(startDateString));
+
+		sb.append(
+			_getTableDataJSFileContent(
+				utilizationTestTypeBuildHistories, "Test Batch Type", 7, "All",
+				"testTypeTableData",
+				Arrays.asList(
+					BuildHistory.TableMetric.AVERAGE_DOWNSTREAM_BUILD_DURATION.
+						toString(),
+					BuildHistory.TableMetric.INVOKED_BUILDS.toString(),
+					BuildHistory.TableMetric.TOTAL_SERVER_DURATION.
+						toString())));
+
+		sb.append("\n");
 
 		sb.append("\nvar reportName = \"Utilization Report\";");
 
@@ -164,13 +337,23 @@ public class BuildHistoryReport {
 		Collection<BuildHistory> buildHistories, String groupIdentifierName,
 		int intervalDays, String mergedBuildHistoryName) {
 
+		return _getTableDataJSFileContent(
+			buildHistories, groupIdentifierName, intervalDays,
+			mergedBuildHistoryName, "tableData", null);
+	}
+
+	private static String _getTableDataJSFileContent(
+		Collection<BuildHistory> buildHistories, String groupIdentifierName,
+		int intervalDays, String mergedBuildHistoryName, String tableName,
+		List<String> metricNames) {
+
 		JSONArray jsonArray = new JSONArray();
 
 		boolean removeHeader = false;
 
 		for (BuildHistory buildHistory : buildHistories) {
 			JSONArray tableJSONArray = buildHistory.getTableJSONArray(
-				groupIdentifierName, intervalDays);
+				groupIdentifierName, intervalDays, metricNames);
 
 			if (removeHeader) {
 				tableJSONArray.remove(0);
@@ -195,7 +378,7 @@ public class BuildHistoryReport {
 			jsonArray.putAll(tableJSONArray);
 		}
 
-		return "var tableData = " + jsonArray.toString();
+		return "var " + tableName + " = " + jsonArray.toString();
 	}
 
 	private static String _getTimelineDataJSFileContent(
@@ -217,6 +400,19 @@ public class BuildHistoryReport {
 		);
 
 		return "var timelineData = " + jsonObject.toString();
+	}
+
+	private static URL _getURL(String url) {
+		if (!JenkinsResultsParserUtil.isURL(url)) {
+			return null;
+		}
+
+		try {
+			return new URL(url);
+		}
+		catch (MalformedURLException malformedURLException) {
+			return null;
+		}
 	}
 
 	private static BuildHistoryReport _newTestSuiteReport(

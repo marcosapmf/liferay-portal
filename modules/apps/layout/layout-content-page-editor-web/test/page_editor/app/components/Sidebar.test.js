@@ -15,20 +15,20 @@ import Sidebar, {
 	MIN_SIDEBAR_WIDTH,
 	SIDEBAR_WIDTH_RESIZE_STEP,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/Sidebar';
-import {useSetOpenShorcutModal} from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ShortcutContext';
+import {useSetOpenShortcutModal} from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ShortcutContext';
 import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag_and_drop/useDragAndDrop';
 import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ShortcutContext',
 	() => {
-		const setOpenShorcutModal = jest.fn();
+		const setOpenShortcutModal = jest.fn();
 
 		return {
 			...jest.requireActual(
 				'../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ShortcutContext'
 			),
-			useSetOpenShorcutModal: () => setOpenShorcutModal,
+			useSetOpenShortcutModal: () => setOpenShortcutModal,
 		};
 	}
 );
@@ -45,6 +45,10 @@ const renderSidebar = () =>
 	);
 
 describe('Sidebar', () => {
+	beforeAll(() => {
+		Liferay.Language.direction = {en_US: 'ltr'};
+	});
+
 	describe('resize', () => {
 		afterEach(() => {
 			sessionStorage.clear();
@@ -144,16 +148,16 @@ describe('Sidebar', () => {
 			);
 		});
 
-		it('opens the shortcut modal when the button is pressed', () => {
-			const setOpenShorcutModal = useSetOpenShorcutModal();
+		it('opens the shortcut modal when the button is pressed', async () => {
+			const setOpenShortcutModal = useSetOpenShortcutModal();
 
 			renderSidebar();
 
-			userEvent.click(
-				screen.getByLabelText('open-keyboard-shortcuts⇧+?')
+			await userEvent.click(
+				screen.getByLabelText('open-keyboard-shortcuts', {exact: false})
 			);
 
-			expect(setOpenShorcutModal).toBeCalledWith(true);
+			expect(setOpenShortcutModal).toBeCalledWith(true);
 		});
 	});
 });

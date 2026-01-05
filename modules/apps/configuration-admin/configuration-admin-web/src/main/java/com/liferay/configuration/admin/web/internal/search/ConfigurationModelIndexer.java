@@ -11,6 +11,7 @@ import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryRetriever;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationModelRetriever;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProviderUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
@@ -47,6 +48,10 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.index.IndexStatusManager;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,10 +62,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -264,14 +265,13 @@ public class ConfigurationModelIndexer
 
 		_setUID(document, configurationModel);
 
+		document.addKeyword(Field.COMPANY_ID, CompanyConstants.SYSTEM);
+		document.addKeyword(Field.ENTRY_CLASS_NAME, getClassName());
 		document.addKeyword(
 			FieldNames.CONFIGURATION_MODEL_FACTORY_PID,
 			configurationModel.getFactoryPid());
 		document.addKeyword(
 			FieldNames.CONFIGURATION_MODEL_ID, configurationModel.getID());
-		document.addKeyword(Field.COMPANY_ID, CompanyConstants.SYSTEM);
-
-		document.addKeyword(Field.ENTRY_CLASS_NAME, getClassName());
 
 		AttributeDefinition[] requiredAttributeDefinitions =
 			configurationModel.getAttributeDefinitions(
@@ -439,31 +439,29 @@ public class ConfigurationModelIndexer
 		List<String> attributeDescriptions,
 		ResourceBundleLoader resourceBundleLoader, Locale locale) {
 
-		List<String> values = new ArrayList<>(attributeDescriptions.size());
+		return TransformUtil.transform(
+			attributeDescriptions,
+			attributeDescription -> {
+				if (Validator.isNull(attributeDescription)) {
+					return null;
+				}
 
-		for (String attributeDescription : attributeDescriptions) {
-			if (Validator.isNull(attributeDescription)) {
-				continue;
-			}
+				ResourceBundle resourceBundle = _getResourceBundle(
+					locale, resourceBundleLoader);
 
-			ResourceBundle resourceBundle = _getResourceBundle(
-				locale, resourceBundleLoader);
+				if (resourceBundle == null) {
+					return null;
+				}
 
-			if (resourceBundle == null) {
-				continue;
-			}
+				String value = ResourceBundleUtil.getString(
+					resourceBundle, attributeDescription);
 
-			String value = ResourceBundleUtil.getString(
-				resourceBundle, attributeDescription);
+				if (Validator.isNull(value)) {
+					return null;
+				}
 
-			if (Validator.isNull(value)) {
-				continue;
-			}
-
-			values.add(value);
-		}
-
-		return values;
+				return value;
+			});
 	}
 
 	private ResourceBundle _getResourceBundle(
@@ -497,11 +495,11 @@ public class ConfigurationModelIndexer
 
 			if (_clusterMasterExecutor.isMaster()) {
 				Map<String, Collection<ConfigurationModel>>
-					configurationModelsMap = new ConcurrentHashMap<>();
+					configurationModelsMap1 = new ConcurrentHashMap<>();
 
 				Bundle[] bundles = _bundleContext.getBundles();
 
-				List<ConfigurationModel> configurationModelsList =
+				List<ConfigurationModel> configurationModels =
 					new ArrayList<>();
 
 				for (Bundle bundle : bundles) {
@@ -509,26 +507,27 @@ public class ConfigurationModelIndexer
 						continue;
 					}
 
-					Map<String, ConfigurationModel> configurationModels =
+					Map<String, ConfigurationModel> configurationModelsMap2 =
 						_configurationModelRetriever.getConfigurationModels(
 							bundle, ExtendedObjectClassDefinition.Scope.SYSTEM,
 							null);
 
-					configurationModelsList.addAll(
-						configurationModels.values());
+					configurationModels.addAll(
+						configurationModelsMap2.values());
 
-					configurationModelsMap.put(
-						bundle.getSymbolicName(), configurationModels.values());
+					configurationModelsMap1.put(
+						bundle.getSymbolicName(),
+						configurationModelsMap2.values());
 				}
 
-				reindex(configurationModelsList);
+				reindex(configurationModels);
 
 				_commit();
 
 				_bundleTracker = new BundleTracker<>(
 					_bundleContext, Bundle.ACTIVE,
 					new ConfigurationModelsBundleTrackerCustomizer(
-						configurationModelsMap));
+						configurationModelsMap1));
 
 				_bundleTracker.open();
 			}

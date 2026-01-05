@@ -12,6 +12,7 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
@@ -57,6 +58,9 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -72,9 +76,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
 /**
  * @author Brian Wing Shun Chan
@@ -441,19 +442,18 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 	@Override
 	public void reindex(String[] ids) throws SearchException {
-		long companyThreadLocalCompanyId = CompanyThreadLocal.getCompanyId();
+		if (IndexWriterHelperUtil.isIndexReadOnly() ||
+			IndexWriterHelperUtil.isIndexReadOnly(getClassName()) ||
+			!isIndexerEnabled()) {
 
-		try {
-			if (IndexWriterHelperUtil.isIndexReadOnly() ||
-				IndexWriterHelperUtil.isIndexReadOnly(getClassName()) ||
-				!isIndexerEnabled()) {
+			return;
+		}
 
-				return;
-			}
+		long companyId = (ids.length > 0) ? GetterUtil.getLong(ids[0]) :
+			CompanyThreadLocal.getCompanyId();
 
-			if (ids.length > 0) {
-				CompanyThreadLocal.setCompanyId(GetterUtil.getLong(ids[0]));
-			}
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(companyId)) {
 
 			doReindex(ids);
 		}
@@ -462,9 +462,6 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		}
 		catch (Exception exception) {
 			throw new SearchException(exception);
-		}
-		finally {
-			CompanyThreadLocal.setCompanyId(companyThreadLocalCompanyId);
 		}
 	}
 
@@ -584,7 +581,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 		Set<String> selectedFieldNames = null;
 
-		if (!ArrayUtil.isEmpty(getDefaultSelectedFieldNames())) {
+		if (ArrayUtil.isNotEmpty(getDefaultSelectedFieldNames())) {
 			selectedFieldNames = SetUtil.fromArray(
 				getDefaultSelectedFieldNames());
 
@@ -596,7 +593,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			}
 		}
 
-		if (!ArrayUtil.isEmpty(getDefaultSelectedLocalizedFieldNames())) {
+		if (ArrayUtil.isNotEmpty(getDefaultSelectedLocalizedFieldNames())) {
 			if (selectedFieldNames == null) {
 				selectedFieldNames = new HashSet<>();
 			}
@@ -1473,22 +1470,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			return classPK;
 		}
 
-		try {
-			AssetEntry assetEntry = assetRendererFactory.getAssetEntry(entry);
-
-			if (assetEntry != null) {
-				return assetEntry.getClassPK();
-			}
-
-			return 0;
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-		}
-
-		return classPK;
+		return assetRendererFactory.getAssetEntryClassPK(entry);
 	}
 
 	private SearchResultPermissionFilter _getSearchResultPermissionFilter(

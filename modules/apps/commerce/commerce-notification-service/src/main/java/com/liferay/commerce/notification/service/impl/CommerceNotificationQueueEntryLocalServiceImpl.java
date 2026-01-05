@@ -12,6 +12,7 @@ import com.liferay.commerce.notification.service.base.CommerceNotificationQueueE
 import com.liferay.commerce.notification.util.comparator.CommerceNotificationAttachmentCreateDateComparator;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -26,26 +27,26 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
-import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.util.ArrayList;
+import jakarta.mail.internet.InternetAddress;
+
 import java.util.Date;
 import java.util.List;
-
-import javax.mail.internet.InternetAddress;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	property = "model.class.name=com.liferay.commerce.notification.model.CommerceNotificationQueueEntry",
 	service = AopService.class
 )
+@Deprecated
 public class CommerceNotificationQueueEntryLocalServiceImpl
 	extends CommerceNotificationQueueEntryLocalServiceBaseImpl {
 
@@ -252,30 +253,19 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 					commerceNotificationAttachment.getFileEntry();
 
 				mailMessage.addFileAttachment(
-					_file.createTempFile(fileEntry.getContentStream()),
-					fileEntry.getFileName());
-			}
-
-			List<InternetAddress> bccInternetAddresses = new ArrayList<>();
-			List<InternetAddress> ccInternetAddresses = new ArrayList<>();
-
-			String[] bccAddresses = StringUtil.split(
-				commerceNotificationQueueEntry.getBcc());
-			String[] ccAddresses = StringUtil.split(
-				commerceNotificationQueueEntry.getCc());
-
-			for (String bccAddress : bccAddresses) {
-				bccInternetAddresses.add(new InternetAddress(bccAddress));
-			}
-
-			for (String ccAddress : ccAddresses) {
-				ccInternetAddresses.add(new InternetAddress(ccAddress));
+					fileEntry.getFileName(), fileEntry.getContentStream());
 			}
 
 			mailMessage.setBCC(
-				bccInternetAddresses.toArray(new InternetAddress[0]));
+				TransformUtil.transform(
+					StringUtil.split(commerceNotificationQueueEntry.getBcc()),
+					bccAddress -> new InternetAddress(bccAddress),
+					InternetAddress.class));
 			mailMessage.setCC(
-				ccInternetAddresses.toArray(new InternetAddress[0]));
+				TransformUtil.transform(
+					StringUtil.split(commerceNotificationQueueEntry.getCc()),
+					ccAddress -> new InternetAddress(ccAddress),
+					InternetAddress.class));
 
 			try {
 				_mailService.sendEmail(mailMessage);
@@ -355,9 +345,6 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 	@Reference
 	private CommerceNotificationAttachmentLocalService
 		_commerceNotificationAttachmentLocalService;
-
-	@Reference
-	private File _file;
 
 	@Reference
 	private MailService _mailService;

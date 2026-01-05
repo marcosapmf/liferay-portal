@@ -8,11 +8,11 @@ package com.liferay.headless.admin.content.client.dto.v1_0;
 import com.liferay.headless.admin.content.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.content.client.serdes.v1_0.PageRuleActionSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -24,27 +24,6 @@ public class PageRuleAction implements Cloneable, Serializable {
 	public static PageRuleAction toDTO(String json) {
 		return PageRuleActionSerDes.toDTO(json);
 	}
-
-	public String getAction() {
-		return action;
-	}
-
-	public void setAction(String action) {
-		this.action = action;
-	}
-
-	public void setAction(
-		UnsafeSupplier<String, Exception> actionUnsafeSupplier) {
-
-		try {
-			action = actionUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String action;
 
 	public String getId() {
 		return id;

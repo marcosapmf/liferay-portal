@@ -20,10 +20,24 @@ export default async function visitProjectTsconfig(
 	projectsEntryPoints,
 	projectDependencies,
 	projectDescription,
-	projectDir = '.'
+	projectDir = '.',
+	testConfig = false
 ) {
 	const rootDir = await getRootDir();
-	const srcPath = path.join(projectDir, SRC_PATH);
+
+	const srcPath = testConfig
+		? path.join(projectDir, 'test')
+		: path.join(projectDir, SRC_PATH);
+
+	if (!(await fileExists(srcPath))) {
+		return;
+	}
+
+	const tsTests = await fg('**/*.{ts,tsx}', {cwd: srcPath});
+
+	if (!tsTests.length) {
+		return false;
+	}
 
 	const globalDTsFileProjectRelativePath = path.posix.relative(
 		srcPath,
@@ -41,7 +55,7 @@ export default async function visitProjectTsconfig(
 			rootDir,
 			'.tsc',
 			'buildinfo',
-			`${projectDescription.name}.tsbuildinfo`
+			`${projectDescription.name}${testConfig ? '-test' : ''}.tsbuildinfo`
 		)
 	);
 
@@ -58,6 +72,22 @@ export default async function visitProjectTsconfig(
 	const paths = {};
 	const references = [];
 
+	const currentProject = projectsEntryPoints[projectDescription.name];
+
+	if (currentProject.path.submodules) {
+		Object.entries(currentProject.path.submodules).forEach(
+			([submoduleName, subModulePath]) => {
+				paths[`${projectDescription.name}/${submoduleName}`] = [
+					'./' +
+						path.posix.relative(
+							srcPath,
+							path.join(projectDir, subModulePath)
+						),
+				];
+			}
+		);
+	}
+
 	for (const dependency of Object.keys(projectDependencies)) {
 		const projectEntryPoint = projectsEntryPoints[dependency];
 
@@ -65,14 +95,35 @@ export default async function visitProjectTsconfig(
 			continue;
 		}
 
-		const projectEntryPointPath = path.join(
+		const projectMainEntryPointPath = path.join(
 			rootDir,
-			...`${projectEntryPoint.dir}/${projectEntryPoint.path}`.split('/')
+			...`${projectEntryPoint.dir}/${projectEntryPoint.path.main}`.split(
+				'/'
+			)
 		);
 
+		const projectSubmodulesEntryPointsPaths = Object.entries(
+			projectEntryPoint.path.submodules ?? {}
+		).reduce((map, [entryPointName, entryPointPath]) => {
+			map[entryPointName] = path.join(
+				rootDir,
+				...`${projectEntryPoint.dir}/${entryPointPath}`.split('/')
+			);
+
+			return map;
+		}, {});
+
 		paths[dependency] = [
-			path.posix.relative(srcPath, projectEntryPointPath),
+			path.posix.relative(srcPath, projectMainEntryPointPath),
 		];
+
+		Object.entries(projectSubmodulesEntryPointsPaths).forEach(
+			([entryPointName, entryPointPath]) => {
+				paths[`${dependency}/${entryPointName}`] = [
+					path.posix.relative(srcPath, entryPointPath),
+				];
+			}
+		);
 
 		const projectPath = path.posix.relative(
 			srcPath,
@@ -80,6 +131,12 @@ export default async function visitProjectTsconfig(
 		);
 
 		references.push({path: `${projectPath}/${SRC_TSCONFIG_PATH}`});
+	}
+
+	const include = ['**/*.ts', '**/*.tsx', globalDTsFileProjectRelativePath];
+
+	if (testConfig) {
+		include.push('../src/**/*.ts', '../src/**/*.tsx');
 	}
 
 	const json = {
@@ -92,7 +149,7 @@ export default async function visitProjectTsconfig(
 			tsBuildInfoFile,
 			typeRoots: [typesDirProjectRelativePath],
 		},
-		include: ['**/*.ts', '**/*.tsx', globalDTsFileProjectRelativePath],
+		include,
 		references,
 	};
 
@@ -112,65 +169,7 @@ export default async function visitProjectTsconfig(
 		hash(previousConfig) !== previousConfig[GENERATED] ||
 		json[GENERATED] !== previousConfig[GENERATED]
 	) {
-
-		// await fs.writeFile(configPath, objectSF(json), 'utf-8');
-
 		await visitorFunction(configPath, objectSF(json));
-	}
-
-	await visitProjectTestsTsconfig(visitorFunction, projectDir);
-}
-
-async function visitProjectTestsTsconfig(visitorFunction, projectDir) {
-	const tsTests = await fg('test/**/*.{ts,tsx}', {cwd: projectDir});
-
-	if (!tsTests.length) {
-		return false;
-	}
-
-	const tsConfig = {
-		'@readonly': '** AUTO-GENERATED: DO NOT EDIT **',
-		'compilerOptions': {
-			allowSyntheticDefaultImports: true,
-			baseUrl: '.',
-			checkJs: false,
-			composite: true,
-			jsx: 'react',
-			module: 'ESNext',
-			moduleResolution: 'node',
-			rootDir: '../',
-			strict: true,
-			target: 'es2020',
-			typeRoots: ['../../../../node_modules/@types'],
-		},
-		'include': ['**/*.ts', '**/*.tsx', '../src/**/*.ts', '../src/**/*.tsx'],
-	};
-
-	tsConfig[GENERATED] = hash(tsConfig);
-
-	let contents = '';
-
-	const testConfigPath = path.join(projectDir, 'test', 'tsconfig.json');
-
-	if (await fileExists(testConfigPath)) {
-		contents = await fs.readFile(testConfigPath, 'utf8');
-	}
-
-	const previousConfig = JSON.parse(contents.trim() ? contents : '{}');
-
-	if (
-		hash(previousConfig) !== previousConfig[GENERATED] ||
-		tsConfig[GENERATED] !== previousConfig[GENERATED]
-	) {
-
-		// await fs.writeFile(testConfigPath, objectSF(tsConfig), 'utf-8');
-
-		await visitorFunction(testConfigPath, objectSF(tsConfig));
-
-		return true;
-	}
-	else {
-		return false;
 	}
 }
 

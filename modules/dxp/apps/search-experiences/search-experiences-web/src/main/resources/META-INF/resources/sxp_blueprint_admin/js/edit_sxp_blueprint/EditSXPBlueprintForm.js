@@ -32,6 +32,7 @@ import fetchPreviewSearch from '../utils/fetch/fetch_preview_search';
 import filterAndSortClassNames from '../utils/functions/filter_and_sort_class_names';
 import getResultsError from '../utils/functions/get_results_error';
 import isDefined from '../utils/functions/is_defined';
+import mapAssetSubtypes from '../utils/functions/map_asset_subtypes';
 import traverseAndEncodeJSONStrings from '../utils/functions/traverse_and_encode_json_strings';
 import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
 import renameKeys from '../utils/language/rename_keys';
@@ -85,7 +86,13 @@ function EditSXPBlueprintForm({
 	initialTitleI18n = {},
 	sxpBlueprintId,
 }) {
-	const {isCompanyAdmin, locale, redirectURL} = useContext(ThemeContext);
+	const {
+		getAssetSubtypesURL = '',
+		isCompanyAdmin,
+		locale,
+		namespace,
+		redirectURL,
+	} = useContext(ThemeContext);
 
 	const formRef = useRef();
 	const sxpElementIdCounterRef = useRef(
@@ -113,6 +120,19 @@ function EditSXPBlueprintForm({
 	const {data: searchableTypes, refetch: refetchSearchableTypes} =
 		useFetchData({
 			resource: `/o/search-experiences-rest/v1.0/searchable-asset-names/${locale}`,
+		});
+
+	const {data: assetSubtypesMap, onChangeData: setAssetSubtypesMap} =
+		useFetchData({
+			defaultValue: {},
+			getData: (response) => mapAssetSubtypes(response?.assetSubtypes),
+			resource: addParams(getAssetSubtypesURL, {
+				[`${namespace}cmd`]: 'getAssetSubtypeInfo',
+				[`${namespace}searchableAssetTypes`]: (
+					initialConfiguration.generalConfiguration
+						?.searchableAssetTypes || []
+				).join(','),
+			}),
 		});
 
 	const {
@@ -843,6 +863,22 @@ function EditSXPBlueprintForm({
 		}
 	};
 
+	/**
+	 * Adds new assetSubtypes to the assetSubtypes map in order to easily find
+	 * their label. This is called when updating searchableAssetTypes
+	 * selection.
+	 * @param {array} subtypes
+	 */
+	const _handleAssetSubtypesMapChange = (subtypes) => {
+		const newAssetSubtypesMap = {};
+
+		subtypes.forEach(({label, value}) => {
+			newAssetSubtypesMap[value] = label;
+		});
+
+		setAssetSubtypesMap({...assetSubtypesMap, ...newAssetSubtypesMap});
+	};
+
 	const _handleTabChange = (tab) => {
 		if (
 			tab !== 'query-builder' &&
@@ -889,6 +925,7 @@ function EditSXPBlueprintForm({
 						advancedConfig={formik.values.advancedConfig}
 						aggregationConfig={formik.values.aggregationConfig}
 						errors={formik.errors}
+						frameworkConfig={formik.values.frameworkConfig}
 						highlightConfig={formik.values.highlightConfig}
 						indexConfig={formik.values.indexConfig}
 						parameterConfig={formik.values.parameterConfig}
@@ -984,6 +1021,7 @@ function EditSXPBlueprintForm({
 								applyIndexerClauses={
 									formik.values.applyIndexerClauses
 								}
+								assetSubtypesMap={assetSubtypesMap}
 								clauseContributorsList={[
 									...keywordQueryContributors,
 									...modelPrefilterContributors,
@@ -1002,6 +1040,9 @@ function EditSXPBlueprintForm({
 								}
 								onApplyIndexerClausesChange={
 									_handleApplyIndexerClausesChange
+								}
+								onAssetSubtypesMapChange={
+									_handleAssetSubtypesMapChange
 								}
 								onBlur={formik.handleBlur}
 								onChange={formik.handleChange}

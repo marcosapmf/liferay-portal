@@ -3,53 +3,29 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {IActionsDropdown, IItemsActions} from '..';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import ClayDropDown from '@clayui/drop-down';
+import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {LinkOrButton} from '@clayui/shared';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import classnames from 'classnames';
-import React, {useContext} from 'react';
+import classNames from 'classnames';
+import React, {useContext, useMemo} from 'react';
 
 import FrontendDataSetContext, {
 	IFrontendDataSetContext,
 } from '../FrontendDataSetContext';
 import formatActionURL from '../utils/actionItems/formatActionURL';
 import isLink from '../utils/isLink';
+import {IActionsDropdown, IItemsActions} from '../utils/types';
 
-interface IDropdownItem {
-	action: IItemsActions;
-	closeMenu: Function;
-	onClick: Function;
-	setLoading: Function;
-	url: string | undefined;
-}
+type TClayDropDownItem = NonNullable<
+	React.ComponentProps<typeof ClayDropDownWithItems>['items']
+>[number] &
+	React.HTMLAttributes<HTMLLIElement>;
 
-function DropdownItem({action, closeMenu, onClick, url}: IDropdownItem) {
-	const {icon, label, target} = action;
-
-	return (
-		<ClayDropDown.Item
-			href={isLink(target, null) ? url : undefined}
-			onClick={(event) =>
-				onClick({
-					action,
-					closeMenu,
-					event,
-				})
-			}
-		>
-			{icon && (
-				<span className="pr-2">
-					<ClayIcon symbol={icon} />
-				</span>
-			)}
-
-			{label}
-		</ClayDropDown.Item>
-	);
+function isDefined(value: any) {
+	return value !== null && value !== undefined;
 }
 
 function ActionsDropdown({
@@ -70,24 +46,89 @@ function ActionsDropdown({
 		uniformActionsDisplay,
 	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
 
+	const isMounted = useIsMounted();
+
+	const items = useMemo(() => {
+		const mapActionsToItems = (currentActions: IItemsActions[]): any[] => {
+			const hasIconsInGroup = currentActions.some(
+				(action) => !!action.icon
+			);
+
+			return currentActions.flatMap((action, index) => {
+				const {
+					className,
+					disabled,
+					icon,
+					items: nestedItems,
+					label,
+					separator,
+					type,
+				} = action;
+
+				const newItem: TClayDropDownItem = {};
+
+				if (isDefined(className)) {
+					newItem.className = className;
+				}
+
+				if (isDefined(disabled)) {
+					newItem.disabled = disabled;
+				}
+
+				if (isDefined(action.href)) {
+					newItem.href = formatActionURL(
+						action.href,
+						itemData,
+						action.target
+					);
+				}
+
+				if (nestedItems?.length) {
+					newItem.items = mapActionsToItems(nestedItems);
+				}
+
+				if (isDefined(label)) {
+					newItem.label = label;
+				}
+
+				newItem.onClick = (event: any) => {
+					onClick({
+						action,
+						closeMenu: () =>
+							onMenuActiveChange && onMenuActiveChange(false),
+						event,
+					});
+				};
+
+				if (hasIconsInGroup) {
+					newItem.symbolLeft = icon;
+				}
+
+				if (isDefined(type)) {
+					newItem.type = type;
+				}
+
+				if (separator && index > 0 && nestedItems?.length) {
+					return [{type: 'divider'}, newItem];
+				}
+
+				return [newItem];
+			});
+		};
+
+		return mapActionsToItems(actions);
+	}, [actions, itemData, onClick, onMenuActiveChange]);
+
 	const inlineEditingAvailable =
 		inlineEditingSettings && itemData.actions?.update;
 
 	const inlineEditingAlwaysOn =
 		inlineEditingAvailable && inlineEditingSettings.alwaysOn;
 
-	const isMounted = useIsMounted();
+	const parsedItemId: number =
+		typeof itemId === 'string' ? parseInt(itemId, 10) : itemId;
 
-	let parsedItemId: number;
-
-	if (typeof itemId === 'string') {
-		parsedItemId = parseInt(itemId, 10);
-	}
-	else {
-		parsedItemId = itemId;
-	}
-
-	const editModeActive = !!itemsChanges![parsedItemId];
+	const editModeActive = !!itemsChanges?.[parsedItemId];
 
 	const itemChanges =
 		editModeActive && Object.keys(itemsChanges![parsedItemId]).length
@@ -144,12 +185,6 @@ function ActionsDropdown({
 	) {
 		const [action] = actions;
 
-		const {data: actionData} = action;
-
-		if (actionData?.id && !action?.href) {
-			return null;
-		}
-
 		if (loading) {
 			return <ClayLoadingIndicator className="mb-2 mt-2" />;
 		}
@@ -157,7 +192,11 @@ function ActionsDropdown({
 		return (
 			<LinkOrButton
 				aria-label={action.label}
-				className="btn btn-secondary btn-sm"
+				className={classNames(
+					'btn btn-secondary btn-sm',
+					action.className
+				)}
+				disabled={action.disabled}
 				href={
 					isLink(
 						action.target,
@@ -168,6 +207,8 @@ function ActionsDropdown({
 				}
 				monospaced={Boolean(action.icon)}
 				onClick={(event: any) => {
+					event.stopPropagation();
+
 					onClick({
 						action,
 						event,
@@ -184,45 +225,14 @@ function ActionsDropdown({
 		return <ClayLoadingIndicator className="mb-2 mt-2" />;
 	}
 
-	const renderItems = (items: IItemsActions[]) =>
-		items.map(({items: nestedItems = [], separator, type, ...item}, i) => {
-			if (type === 'group') {
-				return (
-					<ClayDropDown.Group {...item} key={i}>
-						{separator && <ClayDropDown.Divider />}
-
-						{renderItems(nestedItems)}
-					</ClayDropDown.Group>
-				);
-			}
-
-			return (
-				<DropdownItem
-					action={item}
-					closeMenu={() =>
-						onMenuActiveChange && onMenuActiveChange(false)
-					}
-					key={i}
-					onClick={onClick}
-					setLoading={setLoading}
-					url={
-						item.href &&
-						formatActionURL(item.href, itemData, item.target)
-					}
-				/>
-			);
-		});
-
 	return (
-		<div
-			className={classnames('d-flex', {
-				'justify-content-end': !Liferay.FeatureFlags['LPS-193005'],
-			})}
-		>
+		<div className="d-flex">
 			{inlineEditingAlwaysOn && inlineEditingActions}
 
-			<ClayDropDown
+			<ClayDropDownWithItems
 				active={menuActive}
+				items={items}
+				menuElementAttrs={{onClick: (event) => event.stopPropagation()}}
 				onActiveChange={() =>
 					onMenuActiveChange && onMenuActiveChange(!menuActive)
 				}
@@ -231,6 +241,7 @@ function ActionsDropdown({
 						className="component-action dropdown-toggle"
 						disabled={loading}
 						displayType="unstyled"
+						onClick={(event) => event.stopPropagation()}
 					>
 						<ClayIcon symbol="ellipsis-v" />
 
@@ -239,11 +250,7 @@ function ActionsDropdown({
 						</span>
 					</ClayButton>
 				}
-			>
-				<ClayDropDown.ItemList>
-					{renderItems(actions)}
-				</ClayDropDown.ItemList>
-			</ClayDropDown>
+			/>
 		</div>
 	);
 }

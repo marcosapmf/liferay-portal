@@ -8,13 +8,13 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountRole;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -132,6 +132,16 @@ public class AccountRoleSerDes {
 			sb.append(accountRole.getRoleId());
 		}
 
+		if (accountRole.getRoleType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"roleType\": ");
+
+			sb.append(accountRole.getRoleType());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -204,6 +214,13 @@ public class AccountRoleSerDes {
 			map.put("roleId", String.valueOf(accountRole.getRoleId()));
 		}
 
+		if (accountRole.getRoleType() == null) {
+			map.put("roleType", null);
+		}
+		else {
+			map.put("roleType", String.valueOf(accountRole.getRoleType()));
+		}
+
 		return map;
 	}
 
@@ -243,6 +260,9 @@ public class AccountRoleSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "roleId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "roleType")) {
 				return false;
 			}
 
@@ -295,6 +315,12 @@ public class AccountRoleSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "roleType")) {
+				if (jsonParserFieldValue != null) {
+					accountRole.setRoleType(
+						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
 		}
 
 	}
@@ -340,6 +366,10 @@ public class AccountRoleSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

@@ -20,13 +20,15 @@ CPInstance cpInstance = commercePriceEntryDisplayContext.getCPInstance();
 <portlet:actionURL name="/commerce_price_list/edit_commerce_price_entry" var="editCommercePriceEntryActionURL" />
 
 <liferay-frontend:side-panel-content
-	title='<%= LanguageUtil.format(request, "edit-x", cpInstance.getSku()) %>'
+	title='<%= LanguageUtil.format(request, "edit-x", (cpInstance == null) ? StringPool.BLANK : cpInstance.getSku()) %>'
 >
 	<aui:form action="<%= editCommercePriceEntryActionURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="commercePriceEntryId" type="hidden" value="<%= commercePriceEntryId %>" />
 		<aui:input name="commercePriceListId" type="hidden" value="<%= commercePriceEntryDisplayContext.getCommercePriceListId() %>" />
+
+		<liferay-ui:error exception="<%= CommercePriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
 
 		<aui:model-context bean="<%= commercePriceEntry %>" model="<%= CommercePriceEntry.class %>" />
 

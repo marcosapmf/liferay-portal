@@ -1,15 +1,14 @@
 {
-	"@generated": "59d8e552b759836216c27c4c0a636864df0e0039",
+	"@generated": "e3d71a4d837b7ea38ce23f80f5295adcaaa6fe5f",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/frontend-icons-web": [
@@ -25,10 +24,19 @@
 				"../../../../../../../data-engine/data-engine-taglib/src/main/resources/META-INF/resources/js/index.js"
 			],
 			"dynamic-data-mapping-form-field-type": [
-				"../../../../../../dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"dynamic-data-mapping-form-field-type/api": [
+				"../../../../../../dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/js/api/api.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -61,6 +69,9 @@
 		},
 		{
 			"path": "../../../../../../dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

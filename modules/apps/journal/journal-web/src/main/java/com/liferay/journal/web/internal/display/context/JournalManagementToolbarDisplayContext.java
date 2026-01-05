@@ -7,10 +7,11 @@ package com.liferay.journal.web.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorCriterion;
 import com.liferay.asset.tags.item.selector.AssetTagsItemSelectorReturnType;
-import com.liferay.asset.tags.item.selector.criterion.AssetTagsItemSelectorCriterion;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.util.comparator.StructureModifiedDateComparator;
@@ -58,6 +59,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -72,16 +74,18 @@ import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 import com.liferay.trash.TrashHelper;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowStateException;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -240,9 +244,9 @@ public class JournalManagementToolbarDisplayContext
 			).buildString()
 		).put(
 			"changePermissionsURL",
-			() -> PortletURLBuilder.createRenderURL(
+			() -> PortletURLBuilder.createActionURL(
 				liferayPortletResponse
-			).setMVCRenderCommandName(
+			).setActionName(
 				"/journal/change_articles_permissions"
 			).setWindowState(
 				LiferayWindowState.POP_UP
@@ -548,12 +552,11 @@ public class JournalManagementToolbarDisplayContext
 		).setParameter(
 			"highlightedDDMStructureId",
 			() -> {
-				if (_journalDisplayContext.isHighlightedDDMStructure()) {
-					return _journalDisplayContext.
-						getHighlightedDDMStructureId();
+				if (!_journalDisplayContext.isHighlightedDDMStructure()) {
+					return null;
 				}
 
-				return null;
+				return _journalDisplayContext.getHighlightedDDMStructureId();
 			}
 		).buildString();
 	}
@@ -910,8 +913,11 @@ public class JournalManagementToolbarDisplayContext
 		).setParameter(
 			"vocabularyIds",
 			() -> ListUtil.toString(
-				_assetVocabularyLocalService.getGroupsVocabularies(
-					_getGroupIds()),
+				_assetVocabularyLocalService.getGroupVocabularies(
+					_getGroupIds(),
+					new int[] {
+						AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC
+					}),
 				AssetVocabulary.VOCABULARY_ID_ACCESSOR)
 		).buildString();
 	}
@@ -940,6 +946,23 @@ public class JournalManagementToolbarDisplayContext
 					liferayPortletRequest),
 				liferayPortletResponse.getNamespace() + "selectTag",
 				assetTagsItemSelectorCriterion));
+	}
+
+	private PortletURL _getControlPanelPortletURL(
+		PortletRequest portletRequest) {
+
+		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
+			portletRequest, _themeDisplay.getScopeGroup(),
+			JournalPortletKeys.JOURNAL, 0, 0, PortletRequest.RENDER_PHASE);
+
+		try {
+			portletURL.setWindowState(portletRequest.getWindowState());
+		}
+		catch (WindowStateException windowStateException) {
+			_log.error(windowStateException);
+		}
+
+		return portletURL;
 	}
 
 	private CreationMenu _getCreationMenu() throws PortalException {
@@ -987,47 +1010,53 @@ public class JournalManagementToolbarDisplayContext
 					Collections.sort(
 						ddmStructures, _getDDMStructureOrderByComparator());
 
+					PortletRequest portletRequest =
+						(PortletRequest)httpServletRequest.getAttribute(
+							JavaConstants.JAKARTA_PORTLET_REQUEST);
+
+					PortletURL controlPanelPortletURL =
+						_getControlPanelPortletURL(portletRequest);
+
 					for (DDMStructure ddmStructure : ddmStructures) {
-						PortletURL portletURL =
-							PortletURLBuilder.createRenderURL(
-								liferayPortletResponse
-							).setMVCRenderCommandName(
-								"/journal/edit_article"
-							).setRedirect(
-								() -> {
-									if (_journalDisplayContext.
-											isFilterApplied() ||
-										_journalDisplayContext.isSearch()) {
+						PortletURL portletURL = PortletURLBuilder.create(
+							controlPanelPortletURL
+						).setMVCRenderCommandName(
+							"/journal/edit_article"
+						).setRedirect(
+							() -> {
+								if (_journalDisplayContext.isFilterApplied() ||
+									_journalDisplayContext.isSearch()) {
 
-										return PortletURLBuilder.
-											createRenderURL(
-												liferayPortletResponse
-											).buildString();
-									}
-
-									return PortalUtil.getCurrentURL(
-										httpServletRequest);
+									return PortletURLBuilder.createRenderURL(
+										liferayPortletResponse
+									).setParameter(
+										"folderId",
+										_journalDisplayContext.getFolderId()
+									).buildString();
 								}
-							).setBackURL(
-								_themeDisplay.getURLCurrent()
-							).setParameter(
-								"backURLTitle",
-								() -> {
-									PortletDisplay portletDisplay =
-										_themeDisplay.getPortletDisplay();
 
-									return portletDisplay.
-										getPortletDisplayName();
-								}
-							).setParameter(
-								"ddmStructureId", ddmStructure.getStructureId()
-							).setParameter(
-								"folderId", _journalDisplayContext.getFolderId()
-							).setParameter(
-								"groupId", _themeDisplay.getScopeGroupId()
-							).setParameter(
-								"showSelectFolder", false
-							).buildPortletURL();
+								return PortalUtil.getCurrentURL(
+									httpServletRequest);
+							}
+						).setBackURL(
+							_themeDisplay.getURLCurrent()
+						).setParameter(
+							"backURLTitle",
+							() -> {
+								PortletDisplay portletDisplay =
+									_themeDisplay.getPortletDisplay();
+
+								return portletDisplay.getPortletDisplayName();
+							}
+						).setParameter(
+							"ddmStructureId", ddmStructure.getStructureId()
+						).setParameter(
+							"folderId", _journalDisplayContext.getFolderId()
+						).setParameter(
+							"groupId", _themeDisplay.getScopeGroupId()
+						).setParameter(
+							"showSelectFolder", false
+						).buildPortletURL();
 
 						UnsafeConsumer<DropdownItem, Exception> unsafeConsumer =
 							dropdownItem -> {
@@ -1237,11 +1266,7 @@ public class JournalManagementToolbarDisplayContext
 	}
 
 	private boolean _isShowPublishArticlesAction() {
-		if (_isShowPublishAction()) {
-			return true;
-		}
-
-		return false;
+		return _isShowPublishAction();
 	}
 
 	private boolean _isTrashEnabled() {

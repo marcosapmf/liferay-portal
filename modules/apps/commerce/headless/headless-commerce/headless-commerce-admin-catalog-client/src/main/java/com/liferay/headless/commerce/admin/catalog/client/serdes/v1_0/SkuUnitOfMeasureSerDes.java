@@ -8,6 +8,8 @@ package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.math.BigDecimal;
 
 import java.util.Iterator;
@@ -15,8 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Zoltán Takács
@@ -130,6 +130,16 @@ public class SkuUnitOfMeasureSerDes {
 			sb.append("\"precision\": ");
 
 			sb.append(skuUnitOfMeasure.getPrecision());
+		}
+
+		if (skuUnitOfMeasure.getPricingQuantity() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantity\": ");
+
+			sb.append(skuUnitOfMeasure.getPricingQuantity());
 		}
 
 		if (skuUnitOfMeasure.getPrimary() != null) {
@@ -275,6 +285,15 @@ public class SkuUnitOfMeasureSerDes {
 				"precision", String.valueOf(skuUnitOfMeasure.getPrecision()));
 		}
 
+		if (skuUnitOfMeasure.getPricingQuantity() == null) {
+			map.put("pricingQuantity", null);
+		}
+		else {
+			map.put(
+				"pricingQuantity",
+				String.valueOf(skuUnitOfMeasure.getPricingQuantity()));
+		}
+
 		if (skuUnitOfMeasure.getPrimary() == null) {
 			map.put("primary", null);
 		}
@@ -362,6 +381,9 @@ public class SkuUnitOfMeasureSerDes {
 			else if (Objects.equals(jsonParserFieldName, "precision")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "pricingQuantity")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "primary")) {
 				return false;
 			}
@@ -435,6 +457,12 @@ public class SkuUnitOfMeasureSerDes {
 				if (jsonParserFieldValue != null) {
 					skuUnitOfMeasure.setPrecision(
 						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "pricingQuantity")) {
+				if (jsonParserFieldValue != null) {
+					skuUnitOfMeasure.setPricingQuantity(
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "primary")) {
@@ -516,6 +544,10 @@ public class SkuUnitOfMeasureSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

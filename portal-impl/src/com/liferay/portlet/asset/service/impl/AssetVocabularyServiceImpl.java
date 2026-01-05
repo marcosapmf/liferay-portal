@@ -161,11 +161,46 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 	}
 
 	@Override
+	public AssetVocabulary deleteVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyLocalService.
+				getAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		AssetVocabularyPermission.check(
+			getPermissionChecker(), vocabulary.getVocabularyId(),
+			ActionKeys.DELETE);
+
+		return assetVocabularyLocalService.deleteVocabulary(vocabulary);
+	}
+
+	@Override
 	public AssetVocabulary fetchVocabulary(long vocabularyId)
 		throws PortalException {
 
 		AssetVocabulary vocabulary =
 			assetVocabularyLocalService.fetchAssetVocabulary(vocabularyId);
+
+		if (vocabulary != null) {
+			AssetVocabularyPermission.check(
+				getPermissionChecker(), vocabulary, ActionKeys.VIEW);
+		}
+
+		return vocabulary;
+	}
+
+	@Override
+	public AssetVocabulary fetchVocabularyByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					externalReferenceCode, groupId);
 
 		if (vocabulary != null) {
 			AssetVocabularyPermission.check(
@@ -373,6 +408,25 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 			groupId, name, start, end, false, orderByComparator);
 	}
 
+	public AssetVocabulary getOrAddEmptyVocabulary(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyService.fetchVocabularyByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		if (vocabulary != null) {
+			return vocabulary;
+		}
+
+		AssetCategoriesPermission.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_VOCABULARY);
+
+		return assetVocabularyLocalService.getOrAddEmptyVocabulary(
+			externalReferenceCode, getUserId(), groupId);
+	}
+
 	@Override
 	public AssetVocabulary getVocabulary(long vocabularyId)
 		throws PortalException {
@@ -430,44 +484,47 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings)
 		throws PortalException {
 
 		AssetVocabularyPermission.check(
 			getPermissionChecker(), vocabularyId, ActionKeys.UPDATE);
 
 		return assetVocabularyLocalService.updateVocabulary(
-			vocabularyId, titleMap, descriptionMap, settings);
+			externalReferenceCode, vocabularyId, titleMap, descriptionMap,
+			settings);
 	}
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			int visibilityType)
+			String externalReferenceCode, long vocabularyId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType)
 		throws PortalException {
 
 		AssetVocabularyPermission.check(
 			getPermissionChecker(), vocabularyId, ActionKeys.UPDATE);
 
 		return assetVocabularyLocalService.updateVocabulary(
-			vocabularyId, titleMap, descriptionMap, settings, visibilityType);
+			externalReferenceCode, vocabularyId, titleMap, descriptionMap,
+			settings, visibilityType);
 	}
 
 	@Override
 	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String title, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String settings,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long vocabularyId, String title,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String settings, int visibilityType, ServiceContext serviceContext)
 		throws PortalException {
 
 		AssetVocabularyPermission.check(
 			getPermissionChecker(), vocabularyId, ActionKeys.UPDATE);
 
 		return assetVocabularyLocalService.updateVocabulary(
-			vocabularyId, title, titleMap, descriptionMap, settings,
-			serviceContext);
+			externalReferenceCode, vocabularyId, title, titleMap,
+			descriptionMap, settings, visibilityType, serviceContext);
 	}
 
 	@BeanReference(type = ClassNameLocalService.class)

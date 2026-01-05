@@ -5,7 +5,7 @@
 
 import fetch from 'jest-fetch-mock';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {useModal} from '@clayui/modal';
 import {act, cleanup, render, screen, waitFor} from '@testing-library/react';
 import React from 'react';
@@ -55,7 +55,9 @@ interface IComponentWithEmptyStateProps {
 	requestFn: (params: TTableRequestParams) => Promise<any>;
 }
 
-const ComponentWithData: React.FC<IComponentWithDataProps> = ({requestFn}) => {
+const ComponentWithData: React.FC<
+	{children?: React.ReactNode | undefined} & IComponentWithDataProps
+> = ({requestFn}) => {
 	const {observer} = useModal({onClose: () => {}});
 
 	const emptyState: TEmptyState = {
@@ -91,9 +93,9 @@ const ComponentWithData: React.FC<IComponentWithDataProps> = ({requestFn}) => {
 	);
 };
 
-const ComponentWithEmptyState: React.FC<IComponentWithEmptyStateProps> = ({
-	requestFn,
-}) => {
+const ComponentWithEmptyState: React.FC<
+	{children?: React.ReactNode | undefined} & IComponentWithEmptyStateProps
+> = ({requestFn}) => {
 	const {observer} = useModal({onClose: () => {}});
 
 	const emptyState: TEmptyState = {

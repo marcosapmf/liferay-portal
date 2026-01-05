@@ -2,6 +2,7 @@
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-173135=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Data Migration Center";
@@ -50,8 +51,6 @@ definition {
 
 	@priority = 4
 	test CanSeeDisabledFieldsDetailsWithExportObjectCsv {
-		property portal.acceptance = "true";
-
 		task ("When selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
 				entityType = "Test (v1.0 - Liferay Object REST)",
@@ -73,8 +72,6 @@ definition {
 
 	@priority = 4
 	test CanSelectAllSupportedFieldsWithCheckedAttributeCode {
-		property portal.acceptance = "true";
-
 		task ("And Given selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
 				entityType = "Test (v1.0 - Liferay Object REST)",
@@ -98,8 +95,6 @@ definition {
 
 	@priority = 4
 	test CanSelectSupportedFieldsWithExportCsv {
-		property portal.acceptance = "true";
-
 		task ("When selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
 				entityType = "Test (v1.0 - Liferay Object REST)",

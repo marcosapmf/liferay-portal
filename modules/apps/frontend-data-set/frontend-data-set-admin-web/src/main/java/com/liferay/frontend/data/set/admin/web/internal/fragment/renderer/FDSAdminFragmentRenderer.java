@@ -5,18 +5,20 @@
 
 package com.liferay.frontend.data.set.admin.web.internal.fragment.renderer;
 
-import com.liferay.client.extension.type.FDSCellRendererCET;
-import com.liferay.client.extension.type.FDSFilterCET;
-import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
+import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.processor.DefaultFragmentEntryProcessorContext;
+import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.frontend.data.set.constants.FDSEntityFieldTypes;
-import com.liferay.list.type.model.ListTypeDefinition;
-import com.liferay.list.type.model.ListTypeEntry;
-import com.liferay.list.type.service.ListTypeDefinitionLocalService;
-import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.frontend.data.set.renderer.FDSRenderer;
+import com.liferay.info.constants.InfoDisplayWebKeys;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
@@ -24,56 +26,36 @@ import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.template.react.renderer.ComponentDescriptor;
-import com.liferay.portal.template.react.renderer.ReactRenderer;
-import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
-import com.liferay.portal.vulcan.pagination.Page;
-import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.io.CharArrayWriter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 
-import java.time.Instant;
-
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -91,7 +73,7 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public String getConfiguration(
+	public JSONObject getConfigurationJSONObject(
 		FragmentRendererContext fragmentRendererContext) {
 
 		return JSONUtil.put(
@@ -108,8 +90,7 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 							"type", "itemSelector"
 						).put(
 							"typeOptions", JSONUtil.put("itemType", "FDSView")
-						))))
-		).toString();
+						)))));
 	}
 
 	@Override
@@ -124,11 +105,8 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public boolean isSelectable(HttpServletRequest httpServletRequest) {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-164563")) {
-			return false;
-		}
-
-		return true;
+		return FeatureFlagManagerUtil.isEnabled(
+			_portal.getCompanyId(httpServletRequest), "LPS-164563");
 	}
 
 	@Override
@@ -148,24 +126,37 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 
 			JSONObject jsonObject =
 				(JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
-					getConfiguration(fragmentRendererContext),
-					fragmentEntryLink.getEditableValues(),
+					getConfigurationJSONObject(fragmentRendererContext),
+					fragmentEntryLink.getEditableValuesJSONObject(),
 					fragmentRendererContext.getLocale(), "itemSelector");
 
 			String externalReferenceCode = jsonObject.getString(
 				"externalReferenceCode");
 
-			ObjectEntry fdsViewObjectEntry = null;
-
-			ObjectDefinition fdsViewObjectDefinition =
-				_objectDefinitionLocalService.fetchObjectDefinition(
-					fragmentEntryLink.getCompanyId(), "FDSView");
+			ObjectEntry dataSetObjectEntry = null;
 
 			if (Validator.isNotNull(externalReferenceCode)) {
 				try {
-					fdsViewObjectEntry = _getObjectEntry(
-						fragmentEntryLink.getCompanyId(), externalReferenceCode,
-						fdsViewObjectDefinition);
+					ObjectDefinition dataSetObjectDefinition =
+						_dataSetObjectDefinitionLocalService.
+							fetchObjectDefinitionByExternalReferenceCode(
+								"L_DATA_SET", fragmentEntryLink.getCompanyId());
+
+					DefaultObjectEntryManager defaultObjectEntryManager =
+						DefaultObjectEntryManagerProvider.provide(
+							_dataSetObjectEntryManagerRegistry.
+								getObjectEntryManager(
+									dataSetObjectDefinition.getCompanyId(),
+									dataSetObjectDefinition.getStorageType()));
+
+					dataSetObjectEntry =
+						defaultObjectEntryManager.getObjectEntry(
+							fragmentEntryLink.getCompanyId(),
+							new DefaultDTOConverterContext(
+								false, null, null, null, null,
+								LocaleUtil.getMostRelevantLocale(), null, null),
+							externalReferenceCode, dataSetObjectDefinition,
+							null);
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
@@ -178,48 +169,95 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 				}
 			}
 
-			if ((fdsViewObjectEntry == null) &&
+			if ((dataSetObjectEntry == null) &&
 				fragmentRendererContext.isEditMode()) {
 
-				printWriter.write("<div class=\"portlet-msg-info\">");
-				printWriter.write("<ul class=\"navbar-nav\">");
-				printWriter.write("<li class=\"nav-item\">");
 				printWriter.write(
-					_language.get(
-						httpServletRequest, "select-a-data-set-view"));
-				printWriter.write("</li><li class=\"nav-item\"><div id=\"");
-
-				String betaBadgeComponentId =
-					fragmentRendererContext.getFragmentElementId() + "Beta";
-
-				printWriter.write(betaBadgeComponentId);
-
-				printWriter.write("\">");
-
-				Writer writer = new CharArrayWriter();
-
-				ComponentDescriptor componentDescriptor =
-					new ComponentDescriptor(
-						"{FeatureIndicator} from frontend-js-components-web",
-						betaBadgeComponentId, null, true);
-
-				_reactRenderer.renderReact(
-					componentDescriptor, new HashMap<>(), httpServletRequest,
-					writer);
-
-				printWriter.write(writer.toString());
-
-				printWriter.write("</div></li></ul></div>");
+					StringBundler.concat(
+						"<div class=\"portlet-msg-info\">",
+						_language.get(
+							httpServletRequest, "select-a-data-set-view"),
+						"</div>"));
 			}
 
-			if (fdsViewObjectEntry == null) {
+			if (dataSetObjectEntry == null) {
 				return;
 			}
 
-			printWriter.write(
-				_buildFragmentHTML(
-					fdsViewObjectDefinition, fdsViewObjectEntry,
-					fragmentRendererContext, httpServletRequest));
+			Map<String, Object> properties = dataSetObjectEntry.getProperties();
+
+			if (!FeatureFlagManagerUtil.isEnabled(
+					_portal.getCompanyId(httpServletRequest), "LPD-38564")) {
+
+				_fdsRenderer.render(
+					HashMapBuilder.<String, Object>put(
+						"namespace",
+						fragmentRendererContext.getFragmentElementId()
+					).put(
+						"snapshotsEnabled", properties.get("snapshotsEnabled")
+					).put(
+						"style", "fluid"
+					).build(),
+					fragmentRendererContext.getFragmentElementId(),
+					externalReferenceCode, httpServletRequest,
+					httpServletResponse, true, null, printWriter);
+
+				return;
+			}
+
+			DefaultFragmentEntryProcessorContext
+				defaultFragmentEntryProcessorContext =
+					_getDefaultFragmentEntryProcessorContext(
+						fragmentRendererContext, httpServletRequest,
+						httpServletResponse);
+
+			boolean hasTokens = _hasTokens(
+				externalReferenceCode, httpServletRequest);
+
+			if (fragmentRendererContext.isEditMode() && hasTokens) {
+				_renderMappingUI(
+					defaultFragmentEntryProcessorContext, externalReferenceCode,
+					fragmentEntryLink, httpServletRequest);
+
+				printWriter.write(
+					_processFragmentEntryLinkHTML(
+						defaultFragmentEntryProcessorContext,
+						fragmentRendererContext));
+			}
+
+			if (_isResolved(
+					defaultFragmentEntryProcessorContext, externalReferenceCode,
+					fragmentEntryLink, httpServletRequest)) {
+
+				printWriter.write("<div>");
+
+				_fdsRenderer.render(
+					HashMapBuilder.<String, Object>put(
+						"namespace",
+						fragmentRendererContext.getFragmentElementId()
+					).put(
+						"snapshotsEnabled", properties.get("snapshotsEnabled")
+					).put(
+						"style", "fluid"
+					).put(
+						"tokenResolutions",
+						() -> {
+							if (hasTokens) {
+								return _getTokenResolutionsJSONObject(
+									defaultFragmentEntryProcessorContext,
+									externalReferenceCode, fragmentEntryLink,
+									httpServletRequest);
+							}
+
+							return null;
+						}
+					).build(),
+					fragmentRendererContext.getFragmentElementId(),
+					externalReferenceCode, httpServletRequest,
+					httpServletResponse, true, null, printWriter);
+
+				printWriter.write("</div>");
+			}
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render frontend data set view", exception);
@@ -231,857 +269,320 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 		}
 	}
 
-	private String _buildFragmentHTML(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry,
+	private DefaultFragmentEntryProcessorContext
+		_getDefaultFragmentEntryProcessorContext(
 			FragmentRendererContext fragmentRendererContext,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) {
 
-		StringBundler sb = new StringBundler(5);
+		DefaultFragmentEntryProcessorContext
+			defaultFragmentEntryProcessorContext =
+				new DefaultFragmentEntryProcessorContext(
+					httpServletRequest, httpServletResponse,
+					fragmentRendererContext.getMode(),
+					fragmentRendererContext.getLocale());
 
-		sb.append("<div id=\"");
-		sb.append(fragmentRendererContext.getFragmentElementId());
-		sb.append("\" >");
+		defaultFragmentEntryProcessorContext.setAttributes(
+			fragmentRendererContext.getAttributes());
+		defaultFragmentEntryProcessorContext.setContextInfoItemReference(
+			fragmentRendererContext.getContextInfoItemReference());
+		defaultFragmentEntryProcessorContext.setFragmentElementId(
+			fragmentRendererContext.getFragmentElementId());
+		defaultFragmentEntryProcessorContext.setInfoForm(
+			fragmentRendererContext.getInfoForm());
+		defaultFragmentEntryProcessorContext.setPreviewClassNameId(
+			fragmentRendererContext.getPreviewClassNameId());
+		defaultFragmentEntryProcessorContext.setPreviewClassPK(
+			fragmentRendererContext.getPreviewClassPK());
+		defaultFragmentEntryProcessorContext.setPreviewType(
+			fragmentRendererContext.getPreviewType());
+		defaultFragmentEntryProcessorContext.setPreviewVersion(
+			fragmentRendererContext.getPreviewVersion());
+		defaultFragmentEntryProcessorContext.setSegmentsEntryIds(
+			fragmentRendererContext.getSegmentsEntryIds());
 
-		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
-			"{FrontendDataSet} from frontend-data-set-web",
-			fragmentRendererContext.getFragmentElementId(), null, true);
+		return defaultFragmentEntryProcessorContext;
+	}
 
-		Writer writer = new CharArrayWriter();
+	private Set<String> _getTokenNames(
+		String externalReferenceCode, HttpServletRequest httpServletRequest) {
+
+		Set<String> tokenNames = new HashSet<>();
+
+		Matcher matcher = _pattern.matcher(
+			_fdsRenderer.getFDSAPIURL(
+				externalReferenceCode, httpServletRequest, false, null));
+
+		while (matcher.find()) {
+			tokenNames.add(matcher.group(1));
+		}
+
+		return tokenNames;
+	}
+
+	private JSONObject _getTokenResolutionsJSONObject(
+		DefaultFragmentEntryProcessorContext
+			defaultFragmentEntryProcessorContext,
+		String externalReferenceCode, FragmentEntryLink fragmentEntryLink,
+		HttpServletRequest httpServletRequest) {
+
+		Set<String> tokenNames = _getTokenNames(
+			externalReferenceCode, httpServletRequest);
+
+		JSONObject tokenResolutionsJSONObject = _jsonFactory.createJSONObject();
+
+		for (String tokenName : tokenNames) {
+			String tokenValue = _getTokenValue(
+				defaultFragmentEntryProcessorContext, fragmentEntryLink,
+				httpServletRequest, tokenName);
+
+			if (Validator.isNotNull(tokenValue)) {
+				tokenResolutionsJSONObject.put(tokenName, tokenValue);
+			}
+		}
+
+		return tokenResolutionsJSONObject;
+	}
+
+	private String _getTokenValue(
+		DefaultFragmentEntryProcessorContext
+			defaultFragmentEntryProcessorContext,
+		FragmentEntryLink fragmentEntryLink,
+		HttpServletRequest httpServletRequest, String tokenName) {
+
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
+
+		if (editableValuesJSONObject == null) {
+			return null;
+		}
+
+		JSONObject tokenValuesJSONObject =
+			editableValuesJSONObject.getJSONObject(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR);
+
+		if (tokenValuesJSONObject == null) {
+			return null;
+		}
+
+		JSONObject tokenValueJSONObject = tokenValuesJSONObject.getJSONObject(
+			tokenName);
+
+		if (tokenValueJSONObject == null) {
+			return null;
+		}
+
+		String tokenValue = tokenValueJSONObject.getString(
+			LanguageUtil.getLanguageId(httpServletRequest));
+
+		if (Validator.isNull(tokenValue)) {
+			try {
+				tokenValue = String.valueOf(
+					_fragmentEntryProcessorHelper.getFieldValue(
+						tokenValueJSONObject, new HashMap<>(),
+						defaultFragmentEntryProcessorContext));
+			}
+			catch (PortalException portalException) {
+				_log.error("Unable to get token value", portalException);
+			}
+		}
+
+		if (Validator.isNull(tokenValue) &&
+			tokenName.equals("externalReferenceCode")) {
+
+			tokenValue = tokenValueJSONObject.getString(
+				"externalReferenceCode");
+		}
+
+		if (Validator.isNull(tokenValue)) {
+			tokenValue = tokenValueJSONObject.getString("classPK");
+		}
+
+		if (Validator.isNull(tokenValue)) {
+			InfoItemReference infoItemReference =
+				(InfoItemReference)httpServletRequest.getAttribute(
+					InfoDisplayWebKeys.INFO_ITEM_REFERENCE);
+
+			if (infoItemReference == null) {
+				return null;
+			}
+
+			InfoItemIdentifier infoItemIdentifier =
+				infoItemReference.getInfoItemIdentifier();
+
+			if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+				return null;
+			}
+
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)
+					infoItemReference.getInfoItemIdentifier();
+
+			tokenValue = String.valueOf(classPKInfoItemIdentifier.getClassPK());
+		}
+
+		return tokenValue;
+	}
+
+	private boolean _hasTokens(
+		String externalReferenceCode, HttpServletRequest httpServletRequest) {
+
+		Matcher matcher = _pattern.matcher(
+			_fdsRenderer.getFDSAPIURL(
+				externalReferenceCode, httpServletRequest, false, null));
+
+		return matcher.find();
+	}
+
+	private boolean _isResolved(
+		DefaultFragmentEntryProcessorContext
+			defaultFragmentEntryProcessorContext,
+		String externalReferenceCode, FragmentEntryLink fragmentEntryLink,
+		HttpServletRequest httpServletRequest) {
+
+		Matcher matcher = _pattern.matcher(
+			_fdsRenderer.getFDSAPIURL(
+				externalReferenceCode, httpServletRequest, true,
+				_getTokenResolutionsJSONObject(
+					defaultFragmentEntryProcessorContext, externalReferenceCode,
+					fragmentEntryLink, httpServletRequest)));
+
+		return !matcher.find();
+	}
+
+	private boolean _isResolvedToken(String url, String tokenName) {
+		return !url.contains(
+			StringPool.OPEN_CURLY_BRACE + tokenName +
+				StringPool.CLOSE_CURLY_BRACE);
+	}
+
+	private String _processFragmentEntryLinkHTML(
+			DefaultFragmentEntryProcessorContext
+				defaultFragmentEntryProcessorContext,
+			FragmentRendererContext fragmentRendererContext)
+		throws PortalException {
 
 		FragmentEntryLink fragmentEntryLink =
 			fragmentRendererContext.getFragmentEntryLink();
 
-		Map<String, Object> fdsViewObjectEntryProperties =
-			fdsViewObjectEntry.getProperties();
+		String html = StringPool.BLANK;
 
-		String objectEntryERC = String.valueOf(
-			fdsViewObjectEntryProperties.get(
-				"r_fdsEntryFDSViewRelationship_c_fdsEntryERC"));
+		if (Validator.isNotNull(fragmentEntryLink.getHtml()) ||
+			Validator.isNotNull(fragmentEntryLink.getEditableValues())) {
 
-		String objectDefinitionName = "FDSEntry";
-
-		if (FeatureFlagManagerUtil.isEnabled("LPD-15729")) {
-			objectEntryERC = fdsViewObjectEntry.getExternalReferenceCode();
-
-			objectDefinitionName = "FDSView";
+			html = _fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
+				fragmentEntryLink, defaultFragmentEntryProcessorContext);
 		}
 
-		Set<ObjectEntry> fdsFieldObjectEntries = _getFDSFieldObjectEntries(
-			fdsViewObjectDefinition, fdsViewObjectEntry);
-
-		_reactRenderer.renderReact(
-			componentDescriptor,
-			HashMapBuilder.<String, Object>put(
-				"apiURL",
-				_getAPIURL(
-					_getObjectEntry(
-						fragmentEntryLink.getCompanyId(), objectEntryERC,
-						_objectDefinitionLocalService.fetchObjectDefinition(
-							fragmentEntryLink.getCompanyId(),
-							objectDefinitionName)),
-					fdsFieldObjectEntries, httpServletRequest)
-			).put(
-				"creationMenu",
-				_getCreationMenuJSONObject(
-					fdsViewObjectDefinition, fdsViewObjectEntry)
-			).put(
-				"filters",
-				_getFiltersJSONArray(
-					fdsViewObjectDefinition, fdsViewObjectEntry,
-					httpServletRequest)
-			).put(
-				"id", "FDS_" + fragmentRendererContext.getFragmentElementId()
-			).put(
-				"itemsActions",
-				_getItemsActionsJSONArray(
-					fdsViewObjectDefinition, fdsViewObjectEntry)
-			).put(
-				"namespace", fragmentRendererContext.getFragmentElementId()
-			).put(
-				"pagination", _getPaginationJSONObject(fdsViewObjectEntry)
-			).put(
-				"sorts",
-				_getSortsJSONArray(fdsViewObjectDefinition, fdsViewObjectEntry)
-			).put(
-				"style", "fluid"
-			).put(
-				"views",
-				_getFDSViewsJSONArray(
-					fragmentEntryLink.getCompanyId(),
-					_getRelatedObjectEntries(
-						fdsViewObjectDefinition, fdsViewObjectEntry,
-						"fdsViewFDSCardsSectionRelationship"),
-					String.valueOf(
-						fdsViewObjectEntryProperties.get(
-							"defaultVisualizationMode")),
-					fdsFieldObjectEntries,
-					_getRelatedObjectEntries(
-						fdsViewObjectDefinition, fdsViewObjectEntry,
-						"fdsViewFDSListSectionRelationship"),
-					httpServletRequest)
-			).build(),
-			httpServletRequest, writer);
-
-		sb.append(writer.toString());
-
-		sb.append("</div>");
-
-		return sb.toString();
+		return html;
 	}
 
-	private String _getAPIURL(
-			ObjectEntry fdsEntryObjectEntry,
-			Set<ObjectEntry> fdsFieldObjectEntries,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
+	private void _renderMappingUI(
+		DefaultFragmentEntryProcessorContext
+			defaultFragmentEntryProcessorContext,
+		String externalReferenceCode, FragmentEntryLink fragmentEntryLink,
+		HttpServletRequest httpServletRequest) {
 
-		Map<String, Object> properties = fdsEntryObjectEntry.getProperties();
+		StringBundler htmlSB = new StringBundler();
 
-		StringBundler sb = new StringBundler(3);
+		htmlSB.append("<div class=\"p-2\" data-fragment-namespace=");
+		htmlSB.append("\"${fragmentEntryLinkNamespace}\">");
 
-		sb.append("/o");
-		sb.append(
-			StringUtil.replaceLast(
-				String.valueOf(properties.get("restApplication")), "/v1.0",
-				StringPool.BLANK));
-		sb.append(String.valueOf(properties.get("restEndpoint")));
+		for (String tokenName :
+				_getTokenNames(externalReferenceCode, httpServletRequest)) {
 
-		return _interpolateURL(
-			_getNestedFields(sb.toString(), fdsFieldObjectEntries),
-			httpServletRequest);
-	}
+			htmlSB.append("<div><span><strong>");
+			htmlSB.append(tokenName);
 
-	private JSONObject _getCreationMenuJSONObject(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry)
-		throws Exception {
+			if (!_isResolvedToken(
+					_fdsRenderer.getFDSAPIURL(
+						externalReferenceCode, httpServletRequest, true, null),
+					tokenName)) {
 
-		return JSONUtil.put(
-			"primaryItems",
-			JSONUtil.toJSONArray(
-				_getSortedRelatedObjectEntries(
-					fdsViewObjectDefinition, fdsViewObjectEntry,
-					"fdsCreationActionsOrder",
-					"fdsViewFDSCreationActionRelationship"),
-				(ObjectEntry objectEntry) -> {
-					Map<String, Object> properties =
-						objectEntry.getProperties();
+				htmlSB.append(" (*) ");
+			}
 
-					return JSONUtil.put(
-						"data",
-						JSONUtil.put(
-							"disableHeader",
-							(boolean)Validator.isNull(properties.get("title"))
-						).put(
-							"permissionKey", properties.get("permissionKey")
-						).put(
-							"size", properties.get("modalSize")
-						).put(
-							"title", properties.get("title")
-						)
-					).put(
-						"href", properties.get("url")
-					).put(
-						"icon", properties.get("icon")
-					).put(
-						"label", properties.get("label")
-					).put(
-						"target", properties.get("type")
-					);
+			htmlSB.append(": </strong></span>");
+			htmlSB.append("<span class=\"navbar-text-truncate\"");
+			htmlSB.append("data-lfr-editable-id=\"");
+			htmlSB.append(tokenName);
+			htmlSB.append("\" data-lfr-editable-type=\"text\">\n\t{");
+			htmlSB.append(tokenName);
+			htmlSB.append("}\n</span>");
+			htmlSB.append("</div>");
+		}
+
+		htmlSB.append("<span class=\"workflow-status\"><strong class=\"label ");
+
+		if (_isResolved(
+				defaultFragmentEntryProcessorContext, externalReferenceCode,
+				fragmentEntryLink, httpServletRequest)) {
+
+			htmlSB.append("label-success\">Resolved");
+		}
+		else {
+			htmlSB.append("label-info\">Unresolved");
+		}
+
+		htmlSB.append("</strong></span> Data Set API URL: ");
+
+		Matcher matcher = _pattern.matcher(
+			_fdsRenderer.getFDSAPIURL(
+				externalReferenceCode, httpServletRequest, true,
+				_getTokenResolutionsJSONObject(
+					defaultFragmentEntryProcessorContext, externalReferenceCode,
+					fragmentEntryLink, httpServletRequest)));
+
+		htmlSB.append(
+			matcher.replaceAll(
+				match -> {
+					String tokenName = match.group(1);
+
+					String tokenValue = _getTokenValue(
+						defaultFragmentEntryProcessorContext, fragmentEntryLink,
+						httpServletRequest, tokenName);
+
+					if (Validator.isNull(tokenValue)) {
+						tokenValue = "{" + tokenName + "}";
+					}
+
+					String editableMarkup =
+						"<span><strong>" + tokenValue + "</strong></span>";
+
+					return Matcher.quoteReplacement(editableMarkup);
 				}));
-	}
 
-	private JSONObject _getDateJSONObject(String isoDate) {
-		if (isoDate == null) {
-			return null;
-		}
+		htmlSB.append("</div>");
 
-		Calendar calendar = Calendar.getInstance();
-
-		calendar.setTime(Date.from(Instant.parse(isoDate)));
-
-		return JSONUtil.put(
-			"day", calendar.get(Calendar.DATE)
-		).put(
-			"month", calendar.get(Calendar.MONTH) + 1
-		).put(
-			"year", calendar.get(Calendar.YEAR)
-		);
-	}
-
-	private JSONObject _getFDSCardsViewJSONObject(
-			Collection<ObjectEntry> fdsCardsSectionObjectEntries,
-			String fdsDefaultVisualizationMode,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		return JSONUtil.put(
-			"contentRenderer", "cards"
-		).put(
-			"default", fdsDefaultVisualizationMode.equals("cards")
-		).put(
-			"label", _language.get(httpServletRequest, "cards")
-		).put(
-			"name", "cards"
-		).put(
-			"schema", _getViewSchemaJSONObject(fdsCardsSectionObjectEntries)
-		).put(
-			"thumbnail", "cards2"
-		);
-	}
-
-	private Set<ObjectEntry> _getFDSFieldObjectEntries(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry)
-		throws Exception {
-
-		return _getSortedRelatedObjectEntries(
-			fdsViewObjectDefinition, fdsViewObjectEntry, "fdsFieldsOrder",
-			"fdsViewFDSFieldRelationship");
-	}
-
-	private JSONObject _getFDSListViewJSONObject(
-			String fdsDefaultVisualizationMode,
-			Collection<ObjectEntry> fdsListSectionObjectEntries,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		return JSONUtil.put(
-			"contentRenderer", "list"
-		).put(
-			"default", fdsDefaultVisualizationMode.equals("list")
-		).put(
-			"label", _language.get(httpServletRequest, "list")
-		).put(
-			"name", "list"
-		).put(
-			"schema", _getViewSchemaJSONObject(fdsListSectionObjectEntries)
-		).put(
-			"thumbnail", "list"
-		);
-	}
-
-	private JSONObject _getFDSTableViewJSONObject(
-			long companyId, String fdsDefaultVisualizationMode,
-			Set<ObjectEntry> fdsFieldObjectEntries,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		return JSONUtil.put(
-			"contentRenderer", "table"
-		).put(
-			"default", fdsDefaultVisualizationMode.equals("table")
-		).put(
-			"label", _language.get(httpServletRequest, "table")
-		).put(
-			"name", "table"
-		).put(
-			"schema",
-			JSONUtil.put(
-				"fields", _getFieldsJSONArray(companyId, fdsFieldObjectEntries))
-		).put(
-			"thumbnail", "table"
-		);
-	}
-
-	private JSONArray _getFDSViewsJSONArray(
-			long companyId,
-			Collection<ObjectEntry> fdsCardsSectionObjectEntries,
-			String fdsDefaultVisualizationMode,
-			Set<ObjectEntry> fdsFieldObjectEntries,
-			Collection<ObjectEntry> fdsListSectionObjectEntries,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		JSONArray viewsJSONArray = _jsonFactory.createJSONArray();
-
-		if (!fdsCardsSectionObjectEntries.isEmpty()) {
-			viewsJSONArray.put(
-				_getFDSCardsViewJSONObject(
-					fdsCardsSectionObjectEntries, fdsDefaultVisualizationMode,
-					httpServletRequest));
-		}
-
-		if (!fdsListSectionObjectEntries.isEmpty()) {
-			viewsJSONArray.put(
-				_getFDSListViewJSONObject(
-					fdsDefaultVisualizationMode, fdsListSectionObjectEntries,
-					httpServletRequest));
-		}
-
-		if (!fdsFieldObjectEntries.isEmpty()) {
-			viewsJSONArray.put(
-				_getFDSTableViewJSONObject(
-					companyId, fdsDefaultVisualizationMode,
-					fdsFieldObjectEntries, httpServletRequest));
-		}
-
-		return viewsJSONArray;
-	}
-
-	private JSONArray _getFieldsJSONArray(
-			long companyId, Set<ObjectEntry> fdsFieldObjectEntries)
-		throws Exception {
-
-		return JSONUtil.toJSONArray(
-			fdsFieldObjectEntries,
-			(ObjectEntry objectEntry) -> {
-				Map<String, Object> properties = objectEntry.getProperties();
-
-				JSONObject jsonObject = JSONUtil.put(
-					"contentRenderer",
-					String.valueOf(properties.get("renderer"))
-				).put(
-					"fieldName", String.valueOf(properties.get("name"))
-				).put(
-					"label", _getValue("label", "name", properties)
-				).put(
-					"sortable", (boolean)properties.get("sortable")
-				);
-
-				String rendererType = String.valueOf(
-					properties.get("rendererType"));
-
-				if (!Objects.equals(rendererType, "clientExtension")) {
-					return jsonObject;
-				}
-
-				FDSCellRendererCET fdsCellRendererCET =
-					(FDSCellRendererCET)_cetManager.getCET(
-						companyId, String.valueOf(properties.get("renderer")));
-
-				return jsonObject.put(
-					"contentRendererClientExtension", true
-				).put(
-					"contentRendererModuleURL",
-					"default from " + fdsCellRendererCET.getURL()
-				);
-			});
-	}
-
-	private JSONArray _getFiltersJSONArray(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry,
-			HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		return JSONUtil.toJSONArray(
-			_getSortedRelatedObjectEntries(
-				fdsViewObjectDefinition, fdsViewObjectEntry, "fdsFiltersOrder",
-				"fdsViewFDSClientExtensionFilter",
-				"fdsViewFDSDateFilterRelationship",
-				"fdsViewFDSDynamicFilterRelationship"),
-			(ObjectEntry objectEntry) -> {
-				Map<String, Object> properties = objectEntry.getProperties();
-
-				String type = MapUtil.getString(properties, "type");
-
-				if (Objects.equals(type, "date") ||
-					Objects.equals(type, "date-time")) {
-
-					JSONObject fromJSONObject = _getDateJSONObject(
-						String.valueOf(properties.get("from")));
-					JSONObject toJSONObject = _getDateJSONObject(
-						String.valueOf(properties.get("to")));
-
-					boolean hasPreloadedData =
-						(fromJSONObject != null) || (toJSONObject != null);
-
-					return JSONUtil.put(
-						"active", hasPreloadedData
-					).put(
-						"entityFieldType",
-						Objects.equals(type, "date") ?
-							FDSEntityFieldTypes.DATE :
-								FDSEntityFieldTypes.DATE_TIME
-					).put(
-						"id", properties.get("fieldName")
-					).put(
-						"label", _getValue("label", "fieldName", properties)
-					).put(
-						"preloadedData",
-						() -> {
-							if (!hasPreloadedData) {
-								return null;
-							}
-
-							return JSONUtil.put(
-								"from", fromJSONObject
-							).put(
-								"to", toJSONObject
-							);
-						}
-					).put(
-						"type", "dateRange"
-					);
-				}
-
-				String source = MapUtil.getString(properties, "source");
-
-				if (Validator.isNotNull(source)) {
-					String sourceType = MapUtil.getString(
-						properties, "sourceType");
-
-					JSONObject selectionFilterJSONObject = JSONUtil.put(
-						"autocompleteEnabled", true
-					).put(
-						"entityFieldType", FDSEntityFieldTypes.STRING
-					).put(
-						"id", properties.get("fieldName")
-					).put(
-						"label", _getValue("label", "fieldName", properties)
-					).put(
-						"multiple", properties.get("multiple")
-					).put(
-						"type", "selection"
-					);
-
-					if (Validator.isNotNull(sourceType) &&
-						Objects.equals(sourceType, "API_REST_APPLICATION")) {
-
-						return selectionFilterJSONObject.put(
-							"apiURL", source
-						).put(
-							"itemKey", properties.get("itemKey")
-						).put(
-							"itemLabel", properties.get("itemLabel")
-						).put(
-							"preloadedData",
-							() -> {
-								JSONArray selectedItemsJSONArray =
-									_jsonFactory.createJSONArray(
-										MapUtil.getString(
-											properties, "preselectedValues"));
-
-								if (JSONUtil.isEmpty(selectedItemsJSONArray)) {
-									return null;
-								}
-
-								return JSONUtil.put(
-									"exclude",
-									() -> Boolean.FALSE.equals(
-										(Boolean)properties.get("include"))
-								).put(
-									"selectedItems", selectedItemsJSONArray
-								);
-							}
-						);
-					}
-
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)httpServletRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
-
-					ListTypeDefinition listTypeDefinition =
-						_listTypeDefinitionLocalService.
-							getListTypeDefinitionByExternalReferenceCode(
-								source, themeDisplay.getCompanyId());
-
-					List<ListTypeEntry> listTypeEntries =
-						_listTypeEntryLocalService.getListTypeEntries(
-							listTypeDefinition.getListTypeDefinitionId());
-
-					return selectionFilterJSONObject.put(
-						"items",
-						JSONUtil.toJSONArray(
-							listTypeEntries,
-							listTypeEntry -> JSONUtil.put(
-								"key", listTypeEntry.getKey()
-							).put(
-								"label",
-								listTypeEntry.getName(themeDisplay.getLocale())
-							).put(
-								"value", listTypeEntry.getKey()
-							))
-					).put(
-						"preloadedData",
-						() -> {
-							JSONArray selectedItemsJSONArray =
-								_getSelectedItemsJSONArray(
-									listTypeEntries, themeDisplay.getLocale(),
-									MapUtil.getString(
-										properties, "preselectedValues"));
-
-							if (JSONUtil.isEmpty(selectedItemsJSONArray)) {
-								return null;
-							}
-
-							return JSONUtil.put(
-								"exclude",
-								() -> Boolean.FALSE.equals(
-									(Boolean)properties.get("include"))
-							).put(
-								"selectedItems", selectedItemsJSONArray
-							);
-						}
-					);
-				}
-
-				String fdsFilterClientExtensionERC = MapUtil.getString(
-					properties, "fdsFilterClientExtensionERC");
-
-				if (Validator.isNotNull(fdsFilterClientExtensionERC)) {
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)httpServletRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
-
-					FDSFilterCET fdsFilterCET =
-						(FDSFilterCET)_cetManager.getCET(
-							themeDisplay.getCompanyId(),
-							fdsFilterClientExtensionERC);
-
-					if (fdsFilterCET == null) {
-						_log.error(
-							StringBundler.concat(
-								"No frontend data set filter client extension ",
-								"exists with the external reference code ",
-								fdsFilterClientExtensionERC));
-
-						return null;
-					}
-
-					return JSONUtil.put(
-						"clientExtensionFilterURL", fdsFilterCET.getURL()
-					).put(
-						"entityFieldType", FDSEntityFieldTypes.STRING
-					).put(
-						"id", properties.get("fieldName")
-					).put(
-						"label", _getValue("label", "fieldName", properties)
-					).put(
-						"type", "clientExtension"
-					);
-				}
-
-				return null;
-			});
-	}
-
-	private JSONArray _getItemsActionsJSONArray(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry)
-		throws Exception {
-
-		return JSONUtil.toJSONArray(
-			_getSortedRelatedObjectEntries(
-				fdsViewObjectDefinition, fdsViewObjectEntry,
-				"fdsItemActionsOrder", "fdsViewFDSItemActionRelationship"),
-			(ObjectEntry objectEntry) -> {
-				Map<String, Object> properties = objectEntry.getProperties();
-
-				return JSONUtil.put(
-					"data",
-					JSONUtil.put(
-						"confirmationMessage",
-						properties.get("confirmationMessage")
-					).put(
-						"disableHeader",
-						(boolean)Validator.isNull(properties.get("title"))
-					).put(
-						"errorMessage", properties.get("errorMessage")
-					).put(
-						"method", properties.get("method")
-					).put(
-						"permissionKey", properties.get("permissionKey")
-					).put(
-						"size", properties.get("modalSize")
-					).put(
-						"status", properties.get("confirmationMessageType")
-					).put(
-						"successMessage", properties.get("successMessage")
-					).put(
-						"title", properties.get("title")
-					)
-				).put(
-					"href", properties.get("url")
-				).put(
-					"icon", properties.get("icon")
-				).put(
-					"label", properties.get("label")
-				).put(
-					"target", properties.get("type")
-				);
-			});
-	}
-
-	private String _getNestedFields(
-			String apiURL, Set<ObjectEntry> fdsFieldObjectEntries)
-		throws Exception {
-
-		if (fdsFieldObjectEntries == null) {
-			return apiURL;
-		}
-
-		String nestedFields = StringPool.BLANK;
-		int nestedFieldsDepth = 1;
-
-		for (ObjectEntry fdsFieldObjectEntry : fdsFieldObjectEntries) {
-			Map<String, Object> properties =
-				fdsFieldObjectEntry.getProperties();
-
-			String[] fieldNameList = StringUtil.split(
-				StringUtil.replace(
-					String.valueOf(properties.get("name")), "[]",
-					StringPool.PERIOD),
-				CharPool.PERIOD);
-
-			if (fieldNameList.length > 1) {
-				String[] fieldsName = new String[fieldNameList.length - 1];
-
-				System.arraycopy(
-					fieldNameList, 0, fieldsName, 0, fieldNameList.length - 1);
-
-				for (String fieldName : fieldsName) {
-					nestedFields = StringUtil.add(nestedFields, fieldName);
-				}
-
-				if (fieldNameList.length > nestedFieldsDepth) {
-					nestedFieldsDepth = fieldNameList.length - 1;
-				}
-			}
-		}
-
-		if (nestedFields.equals(StringPool.BLANK)) {
-			return apiURL;
-		}
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(apiURL);
-		sb.append("?nestedFields=");
-		sb.append(
-			StringUtil.replaceLast(
-				nestedFields, CharPool.COMMA, StringPool.BLANK));
-
-		if (nestedFieldsDepth > 1) {
-			sb.append("&nestedFieldsDepth=");
-			sb.append(nestedFieldsDepth);
-		}
-
-		return sb.toString();
-	}
-
-	private ObjectEntry _getObjectEntry(
-			long companyId, String externalReferenceCode,
-			ObjectDefinition objectDefinition)
-		throws Exception {
-
-		DTOConverterContext dtoConverterContext =
-			new DefaultDTOConverterContext(
-				false, null, null, null, null,
-				LocaleUtil.getMostRelevantLocale(), null, null);
-
-		DefaultObjectEntryManager defaultObjectEntryManager =
-			DefaultObjectEntryManagerProvider.provide(
-				_objectEntryManagerRegistry.getObjectEntryManager(
-					objectDefinition.getStorageType()));
-
-		return defaultObjectEntryManager.getObjectEntry(
-			companyId, dtoConverterContext, externalReferenceCode,
-			objectDefinition, null);
-	}
-
-	private JSONObject _getPaginationJSONObject(ObjectEntry fdsViewObjectEntry)
-		throws Exception {
-
-		Map<String, Object> properties = fdsViewObjectEntry.getProperties();
-
-		return JSONUtil.put(
-			"deltas",
-			JSONUtil.toJSONArray(
-				StringUtil.split(
-					String.valueOf(properties.get("listOfItemsPerPage")),
-					StringPool.COMMA_AND_SPACE),
-				(String itemPerPage) -> JSONUtil.put(
-					"label", GetterUtil.getInteger(itemPerPage)))
-		).put(
-			"initialDelta",
-			String.valueOf(properties.get("defaultItemsPerPage"))
-		);
-	}
-
-	private Collection<ObjectEntry> _getRelatedObjectEntries(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry, String relationshipName)
-		throws Exception {
-
-		DTOConverterContext dtoConverterContext =
-			new DefaultDTOConverterContext(
-				false, null, null, null, null,
-				LocaleUtil.getMostRelevantLocale(), null, null);
-
-		DefaultObjectEntryManager defaultObjectEntryManager =
-			DefaultObjectEntryManagerProvider.provide(
-				_objectEntryManagerRegistry.getObjectEntryManager(
-					fdsViewObjectDefinition.getStorageType()));
-
-		Page<ObjectEntry> relatedObjectEntriesPage =
-			defaultObjectEntryManager.getObjectEntryRelatedObjectEntries(
-				dtoConverterContext, fdsViewObjectDefinition,
-				fdsViewObjectEntry.getId(), relationshipName,
-				Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS));
-
-		return relatedObjectEntriesPage.getItems();
-	}
-
-	private JSONArray _getSelectedItemsJSONArray(
-			List<ListTypeEntry> listTypeEntries, Locale locale,
-			String preselectedValues)
-		throws JSONException {
-
-		JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-		JSONArray preselectedValuesJSONArray = _jsonFactory.createJSONArray(
-			preselectedValues);
-
-		for (int i = 0; i < preselectedValuesJSONArray.length(); i++) {
-			JSONObject jsonObject = preselectedValuesJSONArray.getJSONObject(i);
-
-			for (ListTypeEntry listTypeEntry : listTypeEntries) {
-				if (Objects.equals(
-						listTypeEntry.getExternalReferenceCode(),
-						jsonObject.getString("value"))) {
-
-					jsonArray.put(
-						JSONUtil.put(
-							"label", listTypeEntry.getName(locale)
-						).put(
-							"value", listTypeEntry.getKey()
-						));
-
-					break;
-				}
-			}
-		}
-
-		return jsonArray;
-	}
-
-	private Set<ObjectEntry> _getSortedRelatedObjectEntries(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry,
-			String objectEntryComparatorIdsPropertyKey,
-			String... relationshipNames)
-		throws Exception {
-
-		Set<ObjectEntry> objectEntries = new TreeSet<>(
-			new ObjectEntryComparator(
-				ListUtil.toList(
-					ListUtil.fromString(
-						MapUtil.getString(
-							fdsViewObjectEntry.getProperties(),
-							objectEntryComparatorIdsPropertyKey),
-						StringPool.COMMA),
-					Long::parseLong)));
-
-		for (String relationshipName : relationshipNames) {
-			objectEntries.addAll(
-				_getRelatedObjectEntries(
-					fdsViewObjectDefinition, fdsViewObjectEntry,
-					relationshipName));
-		}
-
-		return objectEntries;
-	}
-
-	private JSONArray _getSortsJSONArray(
-			ObjectDefinition fdsViewObjectDefinition,
-			ObjectEntry fdsViewObjectEntry)
-		throws Exception {
-
-		return JSONUtil.toJSONArray(
-			_getSortedRelatedObjectEntries(
-				fdsViewObjectDefinition, fdsViewObjectEntry, "fdsSortsOrder",
-				"fdsViewFDSSortRelationship"),
-			(ObjectEntry objectEntry) -> {
-				Map<String, Object> properties = objectEntry.getProperties();
-
-				String label = (String)properties.get("label");
-
-				if (Validator.isNull(label)) {
-					Map<String, String> labelI18n =
-						(Map<String, String>)properties.get("label_i18n");
-
-					label = labelI18n.get(
-						LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
-				}
-
-				return JSONUtil.put(
-					"active", properties.get("default")
-				).put(
-					"default", properties.get("default")
-				).put(
-					"direction", properties.get("orderType")
-				).put(
-					"key", properties.get("fieldName")
-				).put(
-					"label", label
-				);
-			});
-	}
-
-	private String _getValue(
-		String defaultKey, String fallbackKey,
-		Map<String, Object> fdsFieldProperties) {
-
-		String value = String.valueOf(fdsFieldProperties.get(defaultKey));
-
-		if (Validator.isNotNull(value)) {
-			return value;
-		}
-
-		return String.valueOf(fdsFieldProperties.get(fallbackKey));
-	}
-
-	private JSONObject _getViewSchemaJSONObject(
-			Collection<ObjectEntry> fdsViewObjectEntries)
-		throws Exception {
-
-		JSONObject jsonObject = _jsonFactory.createJSONObject();
-
-		for (ObjectEntry objectEntry : fdsViewObjectEntries) {
-			Map<String, Object> properties = objectEntry.getProperties();
-
-			jsonObject.put(
-				String.valueOf(properties.get("name")),
-				String.valueOf(properties.get("fieldName")));
-		}
-
-		return jsonObject;
-	}
-
-	private String _interpolateURL(
-		String apiURL, HttpServletRequest httpServletRequest) {
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		apiURL = StringUtil.replace(
-			apiURL, "{siteId}", String.valueOf(themeDisplay.getScopeGroupId()));
-		apiURL = StringUtil.replace(
-			apiURL, "{scopeKey}",
-			String.valueOf(themeDisplay.getScopeGroupId()));
-		apiURL = StringUtil.replace(
-			apiURL, "{userId}", String.valueOf(themeDisplay.getUserId()));
-
-		if (StringUtil.contains(apiURL, "{") && _log.isWarnEnabled()) {
-			_log.warn("Unsupported parameter in API URL: " + apiURL);
-		}
-
-		return apiURL;
+		fragmentEntryLink.setHtml(htmlSB.toString());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		FDSAdminFragmentRenderer.class);
 
+	private static final Pattern _pattern = Pattern.compile("\\{(.*?)\\}");
+
 	@Reference
-	private CETManager _cetManager;
+	private ObjectDefinitionLocalService _dataSetObjectDefinitionLocalService;
+
+	@Reference
+	private ObjectEntryManagerRegistry _dataSetObjectEntryManagerRegistry;
+
+	@Reference
+	private FDSRenderer _fdsRenderer;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
+
+	@Reference
+	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -1090,54 +591,6 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 	private Language _language;
 
 	@Reference
-	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
-
-	@Reference
-	private ListTypeEntryLocalService _listTypeEntryLocalService;
-
-	@Reference
-	private ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Reference
-	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
-
-	@Reference
-	private ReactRenderer _reactRenderer;
-
-	private static class ObjectEntryComparator
-		implements Comparator<ObjectEntry> {
-
-		public ObjectEntryComparator(List<Long> ids) {
-			_ids = ids;
-		}
-
-		@Override
-		public int compare(ObjectEntry objectEntry1, ObjectEntry objectEntry2) {
-			long id1 = objectEntry1.getId();
-			long id2 = objectEntry2.getId();
-
-			int index1 = _ids.indexOf(id1);
-			int index2 = _ids.indexOf(id2);
-
-			if ((index1 == -1) && (index2 == -1)) {
-				Date date = objectEntry1.getDateCreated();
-
-				return date.compareTo(objectEntry2.getDateCreated());
-			}
-
-			if (index1 == -1) {
-				return 1;
-			}
-
-			if (index2 == -1) {
-				return -1;
-			}
-
-			return Long.compare(index1, index2);
-		}
-
-		private final List<Long> _ids;
-
-	}
+	private Portal _portal;
 
 }

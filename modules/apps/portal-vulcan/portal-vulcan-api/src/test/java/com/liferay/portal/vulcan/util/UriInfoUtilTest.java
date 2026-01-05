@@ -10,15 +10,14 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.net.URI;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 
 import org.apache.cxf.jaxrs.impl.UriBuilderImpl;
 
@@ -47,13 +46,13 @@ public class UriInfoUtilTest {
 
 		portalUtil.setPortal(_portal);
 
-		PropsUtil.setProps(_props);
-
 		Mockito.when(
 			_uriInfo.getBaseUriBuilder()
 		).thenReturn(
 			_uriBuilder
 		);
+
+		_setProtocol(null);
 	}
 
 	@Test
@@ -117,6 +116,10 @@ public class UriInfoUtilTest {
 		_assertUriBuilder(
 			1, pathContext + path, 1, 0, _uriBuilder, _uriInfo,
 			pathContext + path);
+
+		_assertUriBuilder(
+			1, pathContext + path, 0, 0, _uriBuilder, _uriInfo,
+			pathContext + path);
 	}
 
 	private void _assertUriBuilder(
@@ -147,6 +150,8 @@ public class UriInfoUtilTest {
 		).getBaseUriBuilder();
 
 		Assert.assertEquals(new URI(uriString), uriBuilder.build());
+
+		Mockito.clearInvocations(uriBuilder, uriInfo);
 	}
 
 	private void _setPathContext(String path, String pathContext) {
@@ -164,15 +169,10 @@ public class UriInfoUtilTest {
 	}
 
 	private void _setProtocol(String protocol) {
-		Mockito.when(
-			_props.get(PropsKeys.WEB_SERVER_PROTOCOL)
-		).thenReturn(
-			protocol
-		);
+		PropsUtil.set(PropsKeys.WEB_SERVER_PROTOCOL, protocol);
 	}
 
 	private final Portal _portal = Mockito.mock(Portal.class);
-	private final Props _props = Mockito.mock(Props.class);
 	private final UriBuilder _uriBuilder = Mockito.spy(
 		new UriBuilderImpl(
 		).path(

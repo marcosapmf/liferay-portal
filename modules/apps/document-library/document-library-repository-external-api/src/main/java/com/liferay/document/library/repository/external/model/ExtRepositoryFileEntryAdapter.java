@@ -362,11 +362,7 @@ public class ExtRepositoryFileEntryAdapter
 
 	@Override
 	public boolean isCheckedOut() {
-		if (Validator.isNull(_extRepositoryFileEntry.getCheckedOutBy())) {
-			return false;
-		}
-
-		return true;
+		return Validator.isNotNull(_extRepositoryFileEntry.getCheckedOutBy());
 	}
 
 	@Override
@@ -386,6 +382,11 @@ public class ExtRepositoryFileEntryAdapter
 	@Override
 	public boolean isSupportsLocking() {
 		return true;
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		throw new UnsupportedOperationException();
 	}
 
 	private List<ExtRepositoryFileVersionAdapter>

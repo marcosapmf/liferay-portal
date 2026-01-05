@@ -35,18 +35,6 @@ public class RepositoryLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.service.impl.RepositoryLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static Repository addRepository(
-			long userId, long groupId, long classNameId, long parentFolderId,
-			String name, String description, String portletId,
-			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsUnicodeProperties,
-			boolean hidden, ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addRepository(
-			userId, groupId, classNameId, parentFolderId, name, description,
-			portletId, typeSettingsUnicodeProperties, hidden, serviceContext);
-	}
 
 	/**
 	 * Adds the repository to the database. Also notifies the appropriate model listeners.
@@ -60,6 +48,21 @@ public class RepositoryLocalServiceUtil {
 	 */
 	public static Repository addRepository(Repository repository) {
 		return getService().addRepository(repository);
+	}
+
+	public static Repository addRepository(
+			String externalReferenceCode, long userId, long groupId,
+			long classNameId, long parentFolderId, String name,
+			String description, String portletId,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				typeSettingsUnicodeProperties,
+			boolean hidden, ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addRepository(
+			externalReferenceCode, userId, groupId, classNameId, parentFolderId,
+			name, description, portletId, typeSettingsUnicodeProperties, hidden,
+			serviceContext);
 	}
 
 	public static void checkRepository(long repositoryId) {
@@ -233,6 +236,13 @@ public class RepositoryLocalServiceUtil {
 		return getService().fetchRepository(groupId, name, portletId);
 	}
 
+	public static Repository fetchRepositoryByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchRepositoryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the repository matching the UUID and group.
 	 *
@@ -304,6 +314,10 @@ public class RepositoryLocalServiceUtil {
 		return getService().getRepositories(start, end);
 	}
 
+	public static List<Repository> getRepositories(String portletId) {
+		return getService().getRepositories(portletId);
+	}
+
 	/**
 	 * Returns all the repositories matching the UUID and company.
 	 *
@@ -370,6 +384,14 @@ public class RepositoryLocalServiceUtil {
 		return getService().getRepository(groupId, name, portletId);
 	}
 
+	public static Repository getRepositoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getRepositoryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the repository matching the UUID and group.
 	 *
@@ -390,6 +412,10 @@ public class RepositoryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getTypeSettingsProperties(repositoryId);
+	}
+
+	public static boolean isHidden(long repositoryId) throws PortalException {
+		return getService().isHidden(repositoryId);
 	}
 
 	public static void updateRepository(

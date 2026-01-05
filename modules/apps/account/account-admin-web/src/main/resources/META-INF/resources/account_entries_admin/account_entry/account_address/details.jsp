@@ -76,13 +76,24 @@ renderResponse.setTitle((addressDisplay.getAddressId() == 0) ? LanguageUtil.get(
 				ListType listType = ListTypeLocalServiceUtil.getListType(themeDisplay.getCompanyId(), type, AccountEntry.class.getName() + ListTypeConstants.ADDRESS);
 			%>
 
-				<aui:option label="<%= LanguageUtil.get(request, type) %>" selected="<%= (address != null) ? Objects.equals(addressListType.getListTypeId(), listType.getListTypeId()) : false %>" value="<%= listType.getListTypeId() %>" />
+				<aui:option data-listTypeKey="<%= listType.getName() %>" label="<%= LanguageUtil.get(request, type) %>" selected="<%= (address != null) ? Objects.equals(addressListType.getListTypeId(), listType.getListTypeId()) : false %>" value="<%= listType.getListTypeId() %>" />
 
 			<%
 			}
 			%>
 
 		</aui:select>
+
+		<%
+		AccountEntryAddressDisplayContext accountEntryAddressDisplayContext = (AccountEntryAddressDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
+		%>
+
+		<div>
+			<react:component
+				module="{AddressSubtypeAutocomplete} from account-admin-web"
+				props="<%= accountEntryAddressDisplayContext.getContext() %>"
+			/>
+		</div>
 
 		<aui:select label="country" name="addressCountryId" required="<%= true %>">
 			<aui:validator errorMessage='<%= LanguageUtil.get(request, "this-field-is-required") %>' name="custom">
@@ -108,7 +119,20 @@ renderResponse.setTitle((addressDisplay.getAddressId() == 0) ? LanguageUtil.get(
 			</div>
 
 			<div class="form-group-item">
-				<aui:select label="region" name="addressRegionId">
+				<label class="control-label" for="<portlet:namespace />addressRegionId">
+					<liferay-ui:message key="region" />
+
+					<span hidden id="<portlet:namespace />regionRequiredWrapper">
+						<clay:icon
+							cssClass="reference-mark text-warning"
+							symbol="asterisk"
+						/>
+
+						<span class="hide-accessible sr-only"><liferay-ui:message key="required" /></span>
+					</span>
+				</label>
+
+				<aui:select label="" name="addressRegionId">
 					<aui:validator errorMessage='<%= LanguageUtil.get(request, "this-field-is-required") %>' name="custom">
 						function(val, fieldNode) {
 							if (fieldNode.length === 1) {

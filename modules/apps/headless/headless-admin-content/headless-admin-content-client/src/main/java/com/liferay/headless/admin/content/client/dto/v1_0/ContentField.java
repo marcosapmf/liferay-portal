@@ -8,12 +8,12 @@ package com.liferay.headless.admin.content.client.dto.v1_0;
 import com.liferay.headless.admin.content.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.content.client.serdes.v1_0.ContentFieldSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -92,6 +92,27 @@ public class ContentField implements Cloneable, Serializable {
 	}
 
 	protected String dataType;
+
+	public String getFieldReference() {
+		return fieldReference;
+	}
+
+	public void setFieldReference(String fieldReference) {
+		this.fieldReference = fieldReference;
+	}
+
+	public void setFieldReference(
+		UnsafeSupplier<String, Exception> fieldReferenceUnsafeSupplier) {
+
+		try {
+			fieldReference = fieldReferenceUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String fieldReference;
 
 	public String getInputControl() {
 		return inputControl;

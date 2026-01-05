@@ -24,11 +24,16 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.KMPSearch;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.minifier.MinifierUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.Writer;
 
@@ -38,11 +43,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Brian Wing Shun Chan
@@ -270,8 +270,7 @@ public class StripFilter extends BasePortalFilter {
 			minifiedContent = _minifierPortalCache.get(key);
 
 			if (minifiedContent == null) {
-				minifiedContent = MinifierUtil.minifyJavaScript(
-					resourceName, content);
+				minifiedContent = content;
 
 				boolean skipCache = false;
 
@@ -290,10 +289,6 @@ public class StripFilter extends BasePortalFilter {
 					_minifierPortalCache.put(key, minifiedContent);
 				}
 			}
-		}
-		else {
-			minifiedContent = MinifierUtil.minifyJavaScript(
-				resourceName, content);
 		}
 
 		if (Validator.isNotNull(minifiedContent)) {
@@ -420,11 +415,7 @@ public class StripFilter extends BasePortalFilter {
 
 		Matcher matcher = _javaScriptPattern.matcher(charBuffer);
 
-		if (matcher.find()) {
-			return true;
-		}
-
-		return false;
+		return matcher.find();
 	}
 
 	protected boolean hasMarker(CharBuffer charBuffer, char[] marker) {
@@ -457,7 +448,7 @@ public class StripFilter extends BasePortalFilter {
 
 	protected boolean isInclude(HttpServletRequest httpServletRequest) {
 		String uri = (String)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_SERVLET_INCLUDE_REQUEST_URI);
+			JavaConstants.JAKARTA_SERVLET_INCLUDE_REQUEST_URI);
 
 		if (uri == null) {
 			return false;

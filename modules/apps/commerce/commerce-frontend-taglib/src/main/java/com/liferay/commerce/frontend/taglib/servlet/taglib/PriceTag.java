@@ -9,10 +9,9 @@ import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.PriceModel;
-import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
@@ -37,14 +36,14 @@ import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+
 import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Marco Leo
@@ -61,6 +60,12 @@ public class PriceTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
+			if ((commerceContext == null) ||
+				(commerceContext.getCommerceChannelId() == 0)) {
+
+				return SKIP_BODY;
+			}
+
 			long cpInstanceId = 0;
 
 			if (_showDefaultSkuPrice) {
@@ -82,11 +87,7 @@ public class PriceTag extends IncludeTag {
 			}
 
 			if (BigDecimalUtil.lte(_quantity, BigDecimal.ZERO)) {
-				ProductSettingsModel productSettingsModel =
-					_productHelper.getProductSettingsModel(
-						_cpCatalogEntry.getCPDefinitionId());
-
-				_quantity = productSettingsModel.getMinQuantity();
+				_quantity = BigDecimal.ONE;
 			}
 
 			_displayDiscountLevels = _isDisplayDiscountLevels();
@@ -207,28 +208,6 @@ public class PriceTag extends IncludeTag {
 	protected CommerceChannelLocalService commerceChannelLocalService;
 	protected ConfigurationProvider configurationProvider;
 
-	private BigDecimal _getMinQuantity(
-		BigDecimal minQuantity, BigDecimal multipleQuantity, int precision) {
-
-		BigDecimal minDifference = minQuantity.remainder(multipleQuantity);
-
-		if (minDifference.intValue() <= 0) {
-			if (multipleQuantity.compareTo(minQuantity) < 0) {
-				return minQuantity.setScale(precision);
-			}
-
-			return multipleQuantity.setScale(precision);
-		}
-
-		return minQuantity.add(
-			multipleQuantity
-		).subtract(
-			minDifference
-		).setScale(
-			precision
-		);
-	}
-
 	private PriceModel _getPriceModel(
 			CommerceContext commerceContext, long cpInstanceId)
 		throws PortalException {
@@ -254,10 +233,8 @@ public class PriceTag extends IncludeTag {
 				CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
 					cpInstanceUnitOfMeasures.get(0);
 
-				_quantity = _getMinQuantity(
-					_quantity,
-					cpInstanceUnitOfMeasure.getIncrementalOrderQuantity(),
-					cpInstanceUnitOfMeasure.getPrecision());
+				_quantity =
+					cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
 				_unitOfMeasureKey = cpInstanceUnitOfMeasure.getKey();
 			}
 

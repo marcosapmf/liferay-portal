@@ -28,12 +28,12 @@ import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.service.SharingEntryService;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplayAction;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Date;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SharingPortletKeys.SHARING,
+		"jakarta.portlet.name=" + SharingPortletKeys.SHARING,
 		"mvc.command.name=/sharing/share_entry"
 	},
 	service = MVCActionCommand.class
@@ -92,7 +92,7 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 							(user.getUserId() != themeDisplay.getUserId())) {
 
 							_sharingEntryService.addOrUpdateSharingEntry(
-								user.getUserId(), classNameId, classPK,
+								null, 0, user.getUserId(), classNameId, classPK,
 								themeDisplay.getScopeGroupId(), shareable,
 								sharingEntryPermissionDisplayAction.
 									getSharingEntryActions(),

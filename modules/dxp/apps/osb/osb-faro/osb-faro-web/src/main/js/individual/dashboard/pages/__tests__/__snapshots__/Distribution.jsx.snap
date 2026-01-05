@@ -114,11 +114,11 @@ exports[`Individuals Dashboard Distribution renders 1`] = `
                         class="no-results-icon"
                       >
                         <svg
-                          class="lexicon-icon lexicon-icon-ac-satellite icon-root icon-size-xxxl"
+                          class="lexicon-icon lexicon-icon-ac_satellite icon-root icon-size-xxxl"
                           role="presentation"
                         >
                           <use
-                            href="#ac-satellite"
+                            href="#ac_satellite"
                           />
                         </svg>
                       </div>
@@ -133,7 +133,7 @@ exports[`Individuals Dashboard Distribution renders 1`] = `
                         Try choosing a different breakdown.
                         <a
                           class="d-block"
-                          href="https://learn.liferay.com/analytics-cloud/latest/en/people/individuals/individuals-dashboard.html#breakdown"
+                          href="https://learn.liferay.com/w/dxp/personalization/analytics-cloud/people/individuals-analytics#breakdown"
                           rel="noreferrer noopener"
                           target="_blank"
                         >
@@ -170,11 +170,11 @@ exports[`Individuals Dashboard Distribution renders with data source empty state
         class="no-results-icon"
       >
         <svg
-          class="lexicon-icon lexicon-icon-ac-satellite icon-root icon-size-xxxl"
+          class="lexicon-icon lexicon-icon-ac_satellite icon-root icon-size-xxxl"
           role="presentation"
         >
           <use
-            href="#ac-satellite"
+            href="#ac_satellite"
           />
         </svg>
       </div>
@@ -189,7 +189,7 @@ exports[`Individuals Dashboard Distribution renders with data source empty state
         Connect a data source to get started.
         <a
           class="d-block mb-3"
-          href="https://learn.liferay.com/analytics-cloud/latest/en/getting-started/connecting-liferay-dxp-to-analytics-cloud.html"
+          href="https://learn.liferay.com/w/dxp/personalization/analytics-cloud/workspace-data/managing-data-sources"
           rel="noreferrer noopener"
           target="_blank"
         >

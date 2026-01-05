@@ -10,7 +10,11 @@ import React from 'react';
 
 import PageTemplateModal from '../../../src/main/resources/META-INF/resources/js/components/page_template_modal/PageTemplateModal';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
+
+jest.mock('frontend-js-components-web', () => ({
+	openToast: jest.fn(),
+}));
 
 jest.mock('frontend-js-web', () => {
 	const actual = jest.requireActual('frontend-js-web');
@@ -38,7 +42,7 @@ function renderConvertToPageTemplateModal() {
 
 describe('ConvertToPageTemplateModal', () => {
 	afterEach(() => {
-		fetch.mockClear();
+		(fetch as any).mockClear();
 	});
 
 	beforeAll(() => {
@@ -73,7 +77,7 @@ describe('ConvertToPageTemplateModal', () => {
 
 			fireEvent.click(saveButton);
 
-			const [calledURL] = fetch.mock.calls.pop();
+			const [calledURL] = (fetch as any).mock.calls.pop();
 
 			expect(
 				screen.getByText('page-template-set-field-is-required')
@@ -83,7 +87,7 @@ describe('ConvertToPageTemplateModal', () => {
 		});
 
 		it('calls URL to create a template when clicking Save with a set selected', async () => {
-			fetch.mockImplementation(() =>
+			(fetch as any).mockImplementation(() =>
 				Promise.resolve({json: () => [{name: 'set-1'}]})
 			);
 
@@ -98,18 +102,20 @@ describe('ConvertToPageTemplateModal', () => {
 			const saveButton = screen.getByText('save');
 			const select = screen.getByLabelText('page-template-set');
 
-			userEvent.selectOptions(select, 'set-1');
+			await userEvent.selectOptions(select, 'set-1', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 			fireEvent.change(select);
 
 			fireEvent.click(saveButton);
 
-			const [calledURL] = fetch.mock.calls.pop();
+			const [calledURL] = (fetch as any).mock.calls.pop();
 
 			expect(calledURL).toBe('createTemplateURL');
 		});
 
 		it('changes the modal when the Save In New Set Button is pressed', async () => {
-			fetch.mockImplementation(() =>
+			(fetch as any).mockImplementation(() =>
 				Promise.resolve({json: () => [{name: 'set-1'}]})
 			);
 
@@ -133,7 +139,9 @@ describe('ConvertToPageTemplateModal', () => {
 
 	describe('Add Page Template Set modal', () => {
 		it('renders the set creation modal when there are no sets', async () => {
-			fetch.mockImplementation(() => Promise.resolve({json: () => []}));
+			(fetch as any).mockImplementation(() =>
+				Promise.resolve({json: () => []})
+			);
 
 			await act(async () => {
 				renderConvertToPageTemplateModal();
@@ -149,7 +157,9 @@ describe('ConvertToPageTemplateModal', () => {
 		});
 
 		it('calls URL to create a template with typed description and default name', async () => {
-			fetch.mockImplementation(() => Promise.resolve({json: () => []}));
+			(fetch as any).mockImplementation(() =>
+				Promise.resolve({json: () => []})
+			);
 
 			await act(async () => {
 				renderConvertToPageTemplateModal();
@@ -162,11 +172,13 @@ describe('ConvertToPageTemplateModal', () => {
 			const descriptionInput = screen.getByLabelText('description');
 			const saveButton = screen.getByText('save');
 
-			userEvent.type(descriptionInput, 'This is a description');
+			await userEvent.type(descriptionInput, 'This is a description', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 
 			fireEvent.click(saveButton);
 
-			const [calledURL, {body}] = fetch.mock.calls.pop();
+			const [calledURL, {body}] = (fetch as any).mock.calls.pop();
 
 			const bodyJSON = Object.fromEntries(body.entries());
 
@@ -183,7 +195,9 @@ describe('ConvertToPageTemplateModal', () => {
 		});
 
 		it('does not call URL to create a template when the input name is empty', async () => {
-			fetch.mockImplementation(() => Promise.resolve({json: () => []}));
+			(fetch as any).mockImplementation(() =>
+				Promise.resolve({json: () => []})
+			);
 
 			await act(async () => {
 				renderConvertToPageTemplateModal();
@@ -202,7 +216,7 @@ describe('ConvertToPageTemplateModal', () => {
 
 			fireEvent.click(saveButton);
 
-			const [calledURL] = fetch.mock.calls.pop();
+			const [calledURL] = (fetch as any).mock.calls.pop();
 
 			expect(
 				screen.getByText('name-field-is-required')

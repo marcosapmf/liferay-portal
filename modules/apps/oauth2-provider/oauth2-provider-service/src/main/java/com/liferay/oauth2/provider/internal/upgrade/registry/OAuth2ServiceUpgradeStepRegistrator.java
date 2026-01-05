@@ -48,10 +48,7 @@ public class OAuth2ServiceUpgradeStepRegistrator
 		registry.register(
 			"1.3.0", "2.0.0",
 			new OAuth2ApplicationScopeAliasesUpgradeProcess(
-				_companyLocalService, _scopeLocator),
-			UpgradeProcessFactory.dropColumns(
-				"OAuth2ApplicationScopeAliases", "scopeAliases",
-				"scopeAliasesHash"));
+				_companyLocalService, _scopeLocator));
 
 		registry.register(
 			"2.0.0", "3.0.0",
@@ -91,10 +88,8 @@ public class OAuth2ServiceUpgradeStepRegistrator
 			new BaseUuidUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"OAuth2Application", "oAuth2ApplicationId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"OAuth2Application"};
 				}
 
 			});
@@ -104,10 +99,8 @@ public class OAuth2ServiceUpgradeStepRegistrator
 			new BaseExternalReferenceCodeUpgradeProcess() {
 
 				@Override
-				protected String[][] getTableAndPrimaryKeyColumnNames() {
-					return new String[][] {
-						{"OAuth2Application", "oAuth2ApplicationId"}
-					};
+				protected String[] getTableNames() {
+					return new String[] {"OAuth2Application"};
 				}
 
 			});
@@ -145,6 +138,12 @@ public class OAuth2ServiceUpgradeStepRegistrator
 					"LOWER(applicationName), scopeAliases = ",
 					"LOWER(scopeAliases) where bundleSymbolicName = ",
 					"'com.liferay.object.rest.impl'")));
+
+		registry.register(
+			"4.2.6", "4.2.7",
+			UpgradeProcessFactory.alterColumnType(
+				"OAuth2Application", "externalReferenceCode",
+				"VARCHAR(1000) null"));
 	}
 
 	@Reference

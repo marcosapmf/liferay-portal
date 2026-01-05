@@ -14,7 +14,7 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.RelatedProductUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.RelatedProductResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -25,10 +25,9 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -152,14 +151,14 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 		throws Exception {
 
 		List<CPDefinitionLink> cpDefinitionLinks;
-		int totalItems;
+		int totalCount;
 
 		if (Validator.isNull(type)) {
 			cpDefinitionLinks = _cpDefinitionLinkService.getCPDefinitionLinks(
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-			totalItems = _cpDefinitionLinkService.getCPDefinitionLinksCount(
+			totalCount = _cpDefinitionLinkService.getCPDefinitionLinksCount(
 				cpDefinition.getCPDefinitionId());
 		}
 		else {
@@ -168,12 +167,12 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-			totalItems = _cpDefinitionLinkService.getCPDefinitionLinksCount(
+			totalCount = _cpDefinitionLinkService.getCPDefinitionLinksCount(
 				cpDefinition.getCPDefinitionId(), type);
 		}
 
 		return Page.of(
-			_toRelatedProducts(cpDefinitionLinks), pagination, totalItems);
+			_toRelatedProducts(cpDefinitionLinks), pagination, totalCount);
 	}
 
 	private RelatedProduct _toRelatedProduct(Long cpDefinitionLinkId)
@@ -189,14 +188,10 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 			List<CPDefinitionLink> cpDefinitionLinks)
 		throws Exception {
 
-		List<RelatedProduct> relatedProducts = new ArrayList<>();
-
-		for (CPDefinitionLink cpDefinitionLink : cpDefinitionLinks) {
-			relatedProducts.add(
-				_toRelatedProduct(cpDefinitionLink.getCPDefinitionLinkId()));
-		}
-
-		return relatedProducts;
+		return transform(
+			cpDefinitionLinks,
+			cpDefinitionLink -> _toRelatedProduct(
+				cpDefinitionLink.getCPDefinitionLinkId()));
 	}
 
 	@Reference

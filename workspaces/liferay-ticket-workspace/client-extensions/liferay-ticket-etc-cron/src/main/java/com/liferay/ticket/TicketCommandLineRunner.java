@@ -5,6 +5,8 @@
 
 package com.liferay.ticket;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+
 import java.util.Objects;
 
 import org.apache.commons.logging.Log;
@@ -16,36 +18,27 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Raymond Augé
  * @author Brian Wing Shun Chan
  */
 @Component
-public class TicketCommandLineRunner implements CommandLineRunner {
+public class TicketCommandLineRunner
+	extends BaseRestController implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
 		JSONObject responseJSONObject = new JSONObject(
-			WebClient.create(
-				_lxcDXPServerProtocol + "://" + _lxcDXPMainDomain
-			).get(
-			).uri(
-				"/o/c/j3y7tickets"
-			).accept(
-				MediaType.APPLICATION_JSON
-			).header(
-				HttpHeaders.AUTHORIZATION,
-				"Bearer " + _oAuth2AccessToken.getTokenValue()
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
+			get(
+				"Bearer " + _oAuth2AccessToken.getTokenValue(),
+				UriComponentsBuilder.fromPath(
+					"/o/c/j3y7tickets"
+				).build(
+				).toUri()));
 
 		if (_log.isInfoEnabled()) {
 			_log.info(responseJSONObject.toString(4));
@@ -77,20 +70,12 @@ public class TicketCommandLineRunner implements CommandLineRunner {
 				_log.info("Deleting ticket " + id);
 			}
 
-			WebClient.create(
-				_lxcDXPServerProtocol + "://" + _lxcDXPMainDomain
-			).delete(
-			).uri(
-				"/o/c/j3y7tickets/" + id
-			).accept(
-				MediaType.APPLICATION_JSON
-			).header(
-				HttpHeaders.AUTHORIZATION,
-				"Bearer " + _oAuth2AccessToken.getTokenValue()
-			).retrieve(
-			).toEntity(
-				Void.class
-			).block();
+			delete(
+				"Bearer " + _oAuth2AccessToken.getTokenValue(), "",
+				UriComponentsBuilder.fromPath(
+					"/o/c/j3y7tickets/" + id
+				).build(
+				).toUri());
 		}
 	}
 

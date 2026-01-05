@@ -401,6 +401,14 @@ public class ClientExtensionEntryRelLocalServiceWrapper
 			classNameId, classPK, type, start, end);
 	}
 
+	@Override
+	public java.util.List<ClientExtensionEntryRel> getClientExtensionEntryRels(
+		String type) {
+
+		return _clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+			type);
+	}
+
 	/**
 	 * Returns all the client extension entry rels matching the UUID and company.
 	 *

@@ -19,12 +19,20 @@ portletDisplay.setShowBackIcon(true);
 renderResponse.setTitle(LanguageUtil.get(request, "discard-changes"));
 %>
 
-<clay:container-fluid
-	cssClass="publications-related-entries-container"
->
+<div class="publications-related-entries-container">
 	<div class="sheet">
 		<clay:sheet-section>
-			<h2 class="sheet-title"><liferay-ui:message key="discarded-changes" /></h2>
+			<clay:content-row>
+				<clay:content-col
+					expand="<%= true %>"
+				>
+					<h2 class="sheet-title"><liferay-ui:message key="discarded-changes" /></h2>
+				</clay:content-col>
+
+				<clay:content-col>
+					<aui:input id="showHideable" inlineLabel="right" label='<%= LanguageUtil.get(request, "show-all-items") %>' name="show-hideable" onChange='<%= liferayPortletResponse.getNamespace() + "handleShowAllItemsToggleChange();" %>' type="toggle-switch" value="<%= viewRelatedEntriesDisplayContext.isShowHideable() %>" />
+				</clay:content-col>
+			</clay:content-row>
 
 			<div class="sheet-text">
 				<liferay-ui:message key="the-following-changes-will-be-discarded" />
@@ -44,4 +52,20 @@ renderResponse.setTitle(LanguageUtil.get(request, "discard-changes"));
 			<aui:button href="<%= backURL %>" type="cancel" />
 		</clay:sheet-footer>
 	</div>
-</clay:container-fluid>
+</div>
+
+<aui:script>
+	function <portlet:namespace />handleShowAllItemsToggleChange() {
+		var showHideableToggleState =
+			'<%= !viewRelatedEntriesDisplayContext.isShowHideable() %>';
+
+		let url = new URL(window.location.href);
+
+		url.searchParams.set(
+			'<portlet:namespace />showHideable',
+			showHideableToggleState
+		);
+
+		window.location.href = url;
+	}
+</aui:script>

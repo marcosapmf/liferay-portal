@@ -5,7 +5,7 @@
 
 package com.liferay.fragment.web.internal.servlet.taglib.util;
 
-import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
+import com.liferay.fragment.collection.item.selector.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
@@ -28,13 +28,13 @@ import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfig
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pavel Savinov
@@ -70,15 +70,21 @@ public class BasicFragmentCompositionActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> hasManageFragmentEntriesPermission,
+						() ->
+							hasManageFragmentEntriesPermission &&
+							!_fragmentComposition.isMarketplace(),
 						_getUpdateFragmentCompositionPreviewActionUnsafeConsumer()
 					).add(
 						() ->
 							hasManageFragmentEntriesPermission &&
-							(_fragmentComposition.getPreviewFileEntryId() > 0),
+							(_fragmentComposition.getPreviewFileEntryId() >
+								0) &&
+							!_fragmentComposition.isMarketplace(),
 						_getDeleteFragmentCompositionPreviewActionUnsafeConsumer()
 					).add(
-						() -> hasManageFragmentEntriesPermission,
+						() ->
+							hasManageFragmentEntriesPermission &&
+							!_fragmentComposition.isMarketplace(),
 						_getRenameFragmentCompositionActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -87,7 +93,9 @@ public class BasicFragmentCompositionActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> hasManageFragmentEntriesPermission,
+						() ->
+							hasManageFragmentEntriesPermission &&
+							!_fragmentComposition.isMarketplace(),
 						_getExportFragmentCompositionActionUnsafeConsumer()
 					).add(
 						() -> hasManageFragmentEntriesPermission,

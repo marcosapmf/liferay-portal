@@ -67,14 +67,14 @@ public class RootCauseAnalysisToolBuild extends DefaultTopLevelBuild {
 		_workspaceGitRepository = workspaceGitRepository;
 	}
 
-	protected RootCauseAnalysisToolBuild(String url) {
-		this(url, null);
+	protected RootCauseAnalysisToolBuild(String buildURL) {
+		this(buildURL, null);
 	}
 
 	protected RootCauseAnalysisToolBuild(
-		String url, TopLevelBuild topLevelBuild) {
+		String buildURL, TopLevelBuild topLevelBuild) {
 
-		super(url, topLevelBuild);
+		super(buildURL, topLevelBuild);
 	}
 
 	protected Element getBuildDurationCellElement(
@@ -402,7 +402,7 @@ public class RootCauseAnalysisToolBuild extends DefaultTopLevelBuild {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("$(document).ready(function() {\n");
-		sb.append("$('[data-toggle=\"toggle\"]').change(function(){\n");
+		sb.append("$('[data-toggle=\"toggle\"]').change(function() {\n");
 		sb.append("$(this).parents().next('.hidden-row').toggle();\n");
 		sb.append("var label = $(this).parent('td').find('label');\n");
 		sb.append("var text = label.text();\n");

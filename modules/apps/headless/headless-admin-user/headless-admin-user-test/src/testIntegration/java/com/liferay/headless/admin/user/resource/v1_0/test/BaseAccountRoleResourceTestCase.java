@@ -23,6 +23,7 @@ import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -30,10 +31,13 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
@@ -41,12 +45,15 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -85,7 +89,7 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,10 +103,15 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 		_accountRoleResource.setContextCompany(testCompany);
 
-		AccountRoleResource.Builder builder = AccountRoleResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		accountRoleResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		accountRoleResource = AccountRoleResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +125,32 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		AccountRole accountRole1 = randomAccountRole();
+
+		String json = objectMapper.writeValueAsString(accountRole1);
+
+		AccountRole accountRole2 = AccountRoleSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(accountRole1, accountRole2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		AccountRole accountRole = randomAccountRole();
+
+		String json1 = objectMapper.writeValueAsString(accountRole);
+		String json2 = AccountRoleSerDes.toJSON(accountRole);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +165,6 @@ public abstract class BaseAccountRoleResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		AccountRole accountRole1 = randomAccountRole();
-
-		String json = objectMapper.writeValueAsString(accountRole1);
-
-		AccountRole accountRole2 = AccountRoleSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(accountRole1, accountRole2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		AccountRole accountRole = randomAccountRole();
-
-		String json1 = objectMapper.writeValueAsString(accountRole);
-		String json2 = AccountRoleSerDes.toJSON(accountRole);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -191,6 +191,272 @@ public abstract class BaseAccountRoleResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountAccountRoleUserAccountAssociation()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testDeleteAccountAccountRoleUserAccountAssociation_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				deleteAccountAccountRoleUserAccountAssociationHttpResponse(
+					testDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
+						accountRole),
+					accountRole.getId(),
+					testDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId()));
+	}
+
+	protected AccountRole
+			testDeleteAccountAccountRoleUserAccountAssociation_addAccountRole()
+		throws Exception {
+
+		return testPostAccountAccountRole_addAccountRole(randomAccountRole());
+	}
+
+	protected Long
+			testDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAccountAccountRoleUserAccountAssociation()
+		throws Exception {
+
+		// No namespace
+
+		AccountRole accountRole1 =
+			testGraphQLDeleteAccountAccountRoleUserAccountAssociation_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountAccountRoleUserAccountAssociation",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountId",
+									testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
+										accountRole1));
+								put("accountRoleId", accountRole1.getId());
+
+								put(
+									"userAccountId",
+									testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId());
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAccountAccountRoleUserAccountAssociation"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		AccountRole accountRole2 =
+			testGraphQLDeleteAccountAccountRoleUserAccountAssociation_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountAccountRoleUserAccountAssociation",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountId",
+										testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
+											accountRole2));
+									put("accountRoleId", accountRole2.getId());
+
+									put(
+										"userAccountId",
+										testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountAccountRoleUserAccountAssociation"));
+	}
+
+	protected Long
+			testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testGraphQLDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testGraphQLDeleteAccountAccountRoleUserAccountAssociation_addAccountRole()
+		throws Exception {
+
+		return testGraphQLAccountRole_addAccountRole();
+	}
+
+	@Test
+	public void testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
+					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					accountRole.getExternalReferenceCode(),
+					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()));
+	}
+
+	protected AccountRole
+			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress()
+		throws Exception {
+
+		// No namespace
+
+		AccountRole accountRole1 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+											accountRole1) + "\"");
+								put(
+									"accountRoleExternalReferenceCode",
+									"\"" +
+										accountRole1.
+											getExternalReferenceCode() + "\"");
+
+								put(
+									"emailAddress",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress() +
+											"\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		AccountRole accountRole2 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+												accountRole2) + "\"");
+									put(
+										"accountRoleExternalReferenceCode",
+										"\"" +
+											accountRole2.
+												getExternalReferenceCode() +
+													"\"");
+
+									put(
+										"emailAddress",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress() +
+												"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress"));
+	}
+
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		return testGraphQLAccountRole_addAccountRole();
+	}
+
+	@Test
 	public void testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode()
 		throws Exception {
 
@@ -203,24 +469,8 @@ public abstract class BaseAccountRoleResourceTestCase {
 			accountRoleResource.
 				deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
 					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
-					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountRoleExternalReferenceCode(),
+					accountRole.getExternalReferenceCode(),
 					accountRole.getExternalReferenceCode()));
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountRoleExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	protected AccountRole
@@ -231,33 +481,232 @@ public abstract class BaseAccountRoleResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
-					null, null, accountRole.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
-					null, null, accountRole.getExternalReferenceCode()));
-	}
-
-	protected AccountRole
-			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole()
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode()
+		throws Exception {
+
+		// No namespace
+
+		AccountRole accountRole1 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountExternalReferenceCode",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode() +
+											"\"");
+								put(
+									"accountRoleExternalReferenceCode",
+									"\"" +
+										accountRole1.
+											getExternalReferenceCode() + "\"");
+								put(
+									"externalReferenceCode",
+									"\"" +
+										accountRole1.
+											getExternalReferenceCode() + "\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		AccountRole accountRole2 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountExternalReferenceCode",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode() +
+												"\"");
+									put(
+										"accountRoleExternalReferenceCode",
+										"\"" +
+											accountRole2.
+												getExternalReferenceCode() +
+													"\"");
+									put(
+										"externalReferenceCode",
+										"\"" +
+											accountRole2.
+												getExternalReferenceCode() +
+													"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode"));
+	}
+
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole()
+		throws Exception {
+
+		return testGraphQLAccountRole_addAccountRole();
+	}
+
+	@Test
+	public void testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
+					testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					accountRole.getId(),
+					testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()));
+	}
+
+	protected AccountRole
+			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress()
+		throws Exception {
+
+		// No namespace
+
+		AccountRole accountRole1 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+											accountRole1) + "\"");
+								put("accountRoleId", accountRole1.getId());
+
+								put(
+									"emailAddress",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress() +
+											"\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		AccountRole accountRole2 =
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+												accountRole2) + "\"");
+									put("accountRoleId", accountRole2.getId());
+
+									put(
+										"emailAddress",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress() +
+												"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress"));
+	}
+
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		return testGraphQLAccountRole_addAccountRole();
 	}
 
 	@Test
@@ -277,14 +726,6 @@ public abstract class BaseAccountRoleResourceTestCase {
 					accountRole.getExternalReferenceCode()));
 	}
 
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
 	protected AccountRole
 			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole()
 		throws Exception {
@@ -293,30 +734,8 @@ public abstract class BaseAccountRoleResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCodeHttpResponse(
-					null, accountRole.getId(),
-					accountRole.getExternalReferenceCode()));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCodeHttpResponse(
-					null, 0L, accountRole.getExternalReferenceCode()));
-	}
-
-	protected AccountRole
-			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole()
+	protected String
+			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -324,125 +743,82 @@ public abstract class BaseAccountRoleResourceTestCase {
 	}
 
 	@Test
-	public void testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage()
+	public void testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode()
 		throws Exception {
 
-		String accountExternalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getAccountExternalReferenceCode();
-		String irrelevantAccountExternalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantAccountExternalReferenceCode();
-		String externalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantExternalReferenceCode();
-
-		Page<AccountRole> page =
-			accountRoleResource.
-				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
-					accountExternalReferenceCode, externalReferenceCode);
-
-		long totalCount = page.getTotalCount();
-
-		if ((irrelevantAccountExternalReferenceCode != null) &&
-			(irrelevantExternalReferenceCode != null)) {
-
-			AccountRole irrelevantAccountRole =
-				testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
-					irrelevantAccountExternalReferenceCode,
-					irrelevantExternalReferenceCode,
-					randomIrrelevantAccountRole());
-
-			page =
-				accountRoleResource.
-					getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
-						irrelevantAccountExternalReferenceCode,
-						irrelevantExternalReferenceCode);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantAccountRole, (List<AccountRole>)page.getItems());
-			assertValid(
-				page,
-				testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
-					irrelevantAccountExternalReferenceCode,
-					irrelevantExternalReferenceCode));
-		}
+		// No namespace
 
 		AccountRole accountRole1 =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
-				accountExternalReferenceCode, externalReferenceCode,
-				randomAccountRole());
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"accountExternalReferenceCode",
+									"\"" +
+										testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode() +
+											"\"");
+								put("accountRoleId", accountRole1.getId());
+								put(
+									"externalReferenceCode",
+									"\"" +
+										accountRole1.
+											getExternalReferenceCode() + "\"");
+							}
+						})),
+				"JSONObject/data",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode"));
+
+		// Using the namespace headlessAdminUser_v1_0
 
 		AccountRole accountRole2 =
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
-				accountExternalReferenceCode, externalReferenceCode,
-				randomAccountRole());
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole();
 
-		page =
-			accountRoleResource.
-				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
-					accountExternalReferenceCode, externalReferenceCode);
-
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
-
-		assertContains(accountRole1, (List<AccountRole>)page.getItems());
-		assertContains(accountRole2, (List<AccountRole>)page.getItems());
-		assertValid(
-			page,
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
-				accountExternalReferenceCode, externalReferenceCode));
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"deleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"accountExternalReferenceCode",
+										"\"" +
+											testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode() +
+												"\"");
+									put("accountRoleId", accountRole2.getId());
+									put(
+										"externalReferenceCode",
+										"\"" +
+											accountRole2.
+												getExternalReferenceCode() +
+													"\"");
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"Object/deleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode"));
 	}
 
-	protected Map<String, Map<String, String>>
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
-				String accountExternalReferenceCode,
-				String externalReferenceCode)
+	protected String
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
 		throws Exception {
 
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
-
-		return expectedActions;
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected AccountRole
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
-				String accountExternalReferenceCode,
-				String externalReferenceCode, AccountRole accountRole)
+			testGraphQLDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole()
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getAccountExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantAccountExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
+		return testGraphQLAccountRole_addAccountRole();
 	}
 
 	@Test
@@ -457,8 +833,8 @@ public abstract class BaseAccountRoleResourceTestCase {
 		Page<AccountRole> page =
 			accountRoleResource.
 				getAccountAccountRolesByExternalReferenceCodePage(
-					externalReferenceCode, RandomTestUtil.randomString(), null,
-					Pagination.of(1, 10), null);
+					externalReferenceCode, null, null, Pagination.of(1, 10),
+					null);
 
 		long totalCount = page.getTotalCount();
 
@@ -628,12 +1004,13 @@ public abstract class BaseAccountRoleResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountAccountRolesByExternalReferenceCodePage_getExternalReferenceCode();
 
-		Page<AccountRole> accountRolePage =
+		Page<AccountRole> accountRolesPage =
 			accountRoleResource.
 				getAccountAccountRolesByExternalReferenceCodePage(
 					externalReferenceCode, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(accountRolePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			accountRolesPage.getTotalCount());
 
 		AccountRole accountRole1 =
 			testGetAccountAccountRolesByExternalReferenceCodePage_addAccountRole(
@@ -907,294 +1284,104 @@ public abstract class BaseAccountRoleResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountAccountRoleByExternalReferenceCode()
-		throws Exception {
-
-		AccountRole randomAccountRole = randomAccountRole();
-
-		AccountRole postAccountRole =
-			testPostAccountAccountRoleByExternalReferenceCode_addAccountRole(
-				randomAccountRole);
-
-		assertEquals(randomAccountRole, postAccountRole);
-		assertValid(postAccountRole);
-	}
-
-	protected AccountRole
-			testPostAccountAccountRoleByExternalReferenceCode_addAccountRole(
-				AccountRole accountRole)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
-					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
-						accountRole),
-					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getAccountRoleExternalReferenceCode(),
-					testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()));
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
-				AccountRole accountRole)
-		throws Exception {
-
-		return accountRole.getExternalReferenceCode();
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getAccountRoleExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected AccountRole
-			testDeleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
-					accountRole.getExternalReferenceCode(), null, null));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
-					accountRole.getExternalReferenceCode(), null, null));
-	}
-
-	protected AccountRole
-			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
-					testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
-						accountRole),
-					accountRole.getId(),
-					testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()));
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
-				AccountRole accountRole)
-		throws Exception {
-
-		return accountRole.getExternalReferenceCode();
-	}
-
-	protected String
-			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected AccountRole
-			testDeleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
-
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
-					accountRole.getExternalReferenceCode(), accountRole.getId(),
-					null));
-
-		assertHttpResponseStatusCode(
-			404,
-			accountRoleResource.
-				postAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
-					accountRole.getExternalReferenceCode(), 0L, null));
-	}
-
-	protected AccountRole
-			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage()
+	public void testGraphQLGetAccountAccountRolesByExternalReferenceCodePage()
 		throws Exception {
 
 		String externalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExternalReferenceCode();
-		String irrelevantExternalReferenceCode =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantExternalReferenceCode();
-		String emailAddress =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getEmailAddress();
-		String irrelevantEmailAddress =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantEmailAddress();
+			testGetAccountAccountRolesByExternalReferenceCodePage_getExternalReferenceCode();
 
-		Page<AccountRole> page =
-			accountRoleResource.
-				getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
-					externalReferenceCode, emailAddress);
+		GraphQLField graphQLField = new GraphQLField(
+			"accountAccountRolesByExternalReferenceCode",
+			new HashMap<String, Object>() {
+				{
+					put(
+						"externalReferenceCode",
+						"\"" + externalReferenceCode + "\"");
+					put("keywords", null);
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
 
-		long totalCount = page.getTotalCount();
+		// No namespace
 
-		if ((irrelevantExternalReferenceCode != null) &&
-			(irrelevantEmailAddress != null)) {
+		JSONObject accountAccountRolesByExternalReferenceCodeJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/accountAccountRolesByExternalReferenceCode");
 
-			AccountRole irrelevantAccountRole =
-				testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
-					irrelevantExternalReferenceCode, irrelevantEmailAddress,
-					randomIrrelevantAccountRole());
-
-			page =
-				accountRoleResource.
-					getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
-						irrelevantExternalReferenceCode,
-						irrelevantEmailAddress);
-
-			Assert.assertEquals(totalCount + 1, page.getTotalCount());
-
-			assertContains(
-				irrelevantAccountRole, (List<AccountRole>)page.getItems());
-			assertValid(
-				page,
-				testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
-					irrelevantExternalReferenceCode, irrelevantEmailAddress));
-		}
+		long totalCount =
+			accountAccountRolesByExternalReferenceCodeJSONObject.getLong(
+				"totalCount");
 
 		AccountRole accountRole1 =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
-				externalReferenceCode, emailAddress, randomAccountRole());
+			testGraphQLGetAccountAccountRolesByExternalReferenceCodePageAccountAccountRole_addAccountRole(
+				externalReferenceCode, randomAccountRole());
 
 		AccountRole accountRole2 =
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
-				externalReferenceCode, emailAddress, randomAccountRole());
+			testGraphQLGetAccountAccountRolesByExternalReferenceCodePageAccountAccountRole_addAccountRole(
+				externalReferenceCode, randomAccountRole());
 
-		page =
-			accountRoleResource.
-				getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
-					externalReferenceCode, emailAddress);
+		accountAccountRolesByExternalReferenceCodeJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/accountAccountRolesByExternalReferenceCode");
 
-		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+		Assert.assertEquals(
+			totalCount + 2,
+			accountAccountRolesByExternalReferenceCodeJSONObject.getLong(
+				"totalCount"));
 
-		assertContains(accountRole1, (List<AccountRole>)page.getItems());
-		assertContains(accountRole2, (List<AccountRole>)page.getItems());
-		assertValid(
-			page,
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
-				externalReferenceCode, emailAddress));
-	}
+		assertContains(
+			accountRole1,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesByExternalReferenceCodeJSONObject.
+						getString("items"))));
+		assertContains(
+			accountRole2,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesByExternalReferenceCodeJSONObject.
+						getString("items"))));
 
-	protected Map<String, Map<String, String>>
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
-				String externalReferenceCode, String emailAddress)
-		throws Exception {
+		// Using the namespace headlessAdminUser_v1_0
 
-		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+		accountAccountRolesByExternalReferenceCodeJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(
+					new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+				"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+				"JSONObject/accountAccountRolesByExternalReferenceCode");
 
-		return expectedActions;
+		Assert.assertEquals(
+			totalCount + 2,
+			accountAccountRolesByExternalReferenceCodeJSONObject.getLong(
+				"totalCount"));
+
+		assertContains(
+			accountRole1,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesByExternalReferenceCodeJSONObject.
+						getString("items"))));
+		assertContains(
+			accountRole2,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesByExternalReferenceCodeJSONObject.
+						getString("items"))));
 	}
 
 	protected AccountRole
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
-				String externalReferenceCode, String emailAddress,
-				AccountRole accountRole)
+			testGraphQLGetAccountAccountRolesByExternalReferenceCodePageAccountAccountRole_addAccountRole(
+				String externalReferenceCode, AccountRole accountRole)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExternalReferenceCode()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantExternalReferenceCode()
-		throws Exception {
-
-		return null;
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getEmailAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	protected String
-			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantEmailAddress()
-		throws Exception {
-
-		return null;
 	}
 
 	@Test
@@ -1204,8 +1391,7 @@ public abstract class BaseAccountRoleResourceTestCase {
 			testGetAccountAccountRolesPage_getIrrelevantAccountId();
 
 		Page<AccountRole> page = accountRoleResource.getAccountAccountRolesPage(
-			accountId, RandomTestUtil.randomString(), null,
-			Pagination.of(1, 10), null);
+			accountId, null, null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -1366,11 +1552,12 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 		Long accountId = testGetAccountAccountRolesPage_getAccountId();
 
-		Page<AccountRole> accountRolePage =
+		Page<AccountRole> accountRolesPage =
 			accountRoleResource.getAccountAccountRolesPage(
 				accountId, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(accountRolePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			accountRolesPage.getTotalCount());
 
 		AccountRole accountRole1 =
 			testGetAccountAccountRolesPage_addAccountRole(
@@ -1626,6 +1813,320 @@ public abstract class BaseAccountRoleResourceTestCase {
 	}
 
 	@Test
+	public void testGraphQLGetAccountAccountRolesPage() throws Exception {
+		Long accountId = testGetAccountAccountRolesPage_getAccountId();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"accountAccountRoles",
+			new HashMap<String, Object>() {
+				{
+					put("accountId", accountId);
+					put("keywords", null);
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		// No namespace
+
+		JSONObject accountAccountRolesJSONObject =
+			JSONUtil.getValueAsJSONObject(
+				invokeGraphQLQuery(graphQLField), "JSONObject/data",
+				"JSONObject/accountAccountRoles");
+
+		long totalCount = accountAccountRolesJSONObject.getLong("totalCount");
+
+		AccountRole accountRole1 = testGraphQLAccountAccountRole_addAccountRole(
+			accountId, randomAccountRole());
+
+		AccountRole accountRole2 = testGraphQLAccountAccountRole_addAccountRole(
+			accountId, randomAccountRole());
+
+		accountAccountRolesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/accountAccountRoles");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			accountAccountRolesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			accountRole1,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesJSONObject.getString("items"))));
+		assertContains(
+			accountRole2,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		accountAccountRolesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminUser_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+			"JSONObject/accountAccountRoles");
+
+		Assert.assertEquals(
+			totalCount + 2,
+			accountAccountRolesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			accountRole1,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesJSONObject.getString("items"))));
+		assertContains(
+			accountRole2,
+			Arrays.asList(
+				AccountRoleSerDes.toDTOs(
+					accountAccountRolesJSONObject.getString("items"))));
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantExternalReferenceCode();
+		String emailAddress =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getEmailAddress();
+		String irrelevantEmailAddress =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantEmailAddress();
+
+		Page<AccountRole> page =
+			accountRoleResource.
+				getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
+					externalReferenceCode, emailAddress);
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantExternalReferenceCode != null) &&
+			(irrelevantEmailAddress != null)) {
+
+			AccountRole irrelevantAccountRole =
+				testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
+					irrelevantExternalReferenceCode, irrelevantEmailAddress,
+					randomIrrelevantAccountRole());
+
+			page =
+				accountRoleResource.
+					getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
+						irrelevantExternalReferenceCode,
+						irrelevantEmailAddress);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantAccountRole, (List<AccountRole>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
+					irrelevantExternalReferenceCode, irrelevantEmailAddress));
+		}
+
+		AccountRole accountRole1 =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
+				externalReferenceCode, emailAddress, randomAccountRole());
+
+		AccountRole accountRole2 =
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
+				externalReferenceCode, emailAddress, randomAccountRole());
+
+		page =
+			accountRoleResource.
+				getAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage(
+					externalReferenceCode, emailAddress);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(accountRole1, (List<AccountRole>)page.getItems());
+		assertContains(accountRole2, (List<AccountRole>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
+				externalReferenceCode, emailAddress));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExpectedActions(
+				String externalReferenceCode, String emailAddress)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected AccountRole
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_addAccountRole(
+				String externalReferenceCode, String emailAddress,
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByEmailAddressAccountRolesPage_getIrrelevantEmailAddress()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage()
+		throws Exception {
+
+		String accountExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getAccountExternalReferenceCode();
+		String irrelevantAccountExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantAccountExternalReferenceCode();
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantExternalReferenceCode();
+
+		Page<AccountRole> page =
+			accountRoleResource.
+				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
+					accountExternalReferenceCode, externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantAccountExternalReferenceCode != null) &&
+			(irrelevantExternalReferenceCode != null)) {
+
+			AccountRole irrelevantAccountRole =
+				testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
+					irrelevantAccountExternalReferenceCode,
+					irrelevantExternalReferenceCode,
+					randomIrrelevantAccountRole());
+
+			page =
+				accountRoleResource.
+					getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
+						irrelevantAccountExternalReferenceCode,
+						irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantAccountRole, (List<AccountRole>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
+					irrelevantAccountExternalReferenceCode,
+					irrelevantExternalReferenceCode));
+		}
+
+		AccountRole accountRole1 =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
+				accountExternalReferenceCode, externalReferenceCode,
+				randomAccountRole());
+
+		AccountRole accountRole2 =
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
+				accountExternalReferenceCode, externalReferenceCode,
+				randomAccountRole());
+
+		page =
+			accountRoleResource.
+				getAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage(
+					accountExternalReferenceCode, externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(accountRole1, (List<AccountRole>)page.getItems());
+		assertContains(accountRole2, (List<AccountRole>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
+				accountExternalReferenceCode, externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExpectedActions(
+				String accountExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected AccountRole
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_addAccountRole(
+				String accountExternalReferenceCode,
+				String externalReferenceCode, AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantAccountExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeAccountRolesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
 	public void testPostAccountAccountRole() throws Exception {
 		AccountRole randomAccountRole = randomAccountRole();
 
@@ -1645,41 +2146,64 @@ public abstract class BaseAccountRoleResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteAccountAccountRoleUserAccountAssociation()
-		throws Exception {
+	public void testGraphQLPostAccountAccountRole() throws Exception {
+		AccountRole randomAccountRole = randomAccountRole();
 
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		AccountRole accountRole =
-			testDeleteAccountAccountRoleUserAccountAssociation_addAccountRole();
+		AccountRole accountRole = testGraphQLAccountAccountRole_addAccountRole(
+			testGraphQLPostAccountAccountRole_getAccountId(randomAccountRole),
+			randomAccountRole);
 
-		assertHttpResponseStatusCode(
-			204,
-			accountRoleResource.
-				deleteAccountAccountRoleUserAccountAssociationHttpResponse(
-					testDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
-						accountRole),
-					accountRole.getId(),
-					testDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId()));
+		Assert.assertTrue(equals(randomAccountRole, accountRole));
 	}
 
-	protected Long
-			testDeleteAccountAccountRoleUserAccountAssociation_getAccountId(
-				AccountRole accountRole)
-		throws Exception {
-
-		return accountRole.getAccountId();
-	}
-
-	protected Long
-			testDeleteAccountAccountRoleUserAccountAssociation_getUserAccountId()
+	protected Long testGraphQLPostAccountAccountRole_getAccountId(
+			AccountRole accountRole)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
 	}
 
+	@Test
+	public void testPostAccountAccountRoleByExternalReferenceCode()
+		throws Exception {
+
+		AccountRole randomAccountRole = randomAccountRole();
+
+		AccountRole postAccountRole =
+			testPostAccountAccountRoleByExternalReferenceCode_addAccountRole(
+				randomAccountRole);
+
+		assertEquals(randomAccountRole, postAccountRole);
+		assertValid(postAccountRole);
+	}
+
 	protected AccountRole
-			testDeleteAccountAccountRoleUserAccountAssociation_addAccountRole()
+			testPostAccountAccountRoleByExternalReferenceCode_addAccountRole(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLPostAccountAccountRoleByExternalReferenceCode()
+		throws Exception {
+
+		AccountRole randomAccountRole = randomAccountRole();
+
+		AccountRole accountRole = testGraphQLAccountAccountRole_addAccountRole(
+			testGraphQLPostAccountAccountRoleByExternalReferenceCode_getAccountId(
+				randomAccountRole),
+			randomAccountRole);
+
+		Assert.assertTrue(equals(randomAccountRole, accountRole));
+	}
+
+	protected Long
+			testGraphQLPostAccountAccountRoleByExternalReferenceCode_getAccountId(
+				AccountRole accountRole)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1698,21 +2222,232 @@ public abstract class BaseAccountRoleResourceTestCase {
 			204,
 			accountRoleResource.
 				postAccountAccountRoleUserAccountAssociationHttpResponse(
-					accountRole.getAccountId(), accountRole.getId(), null));
+					testPostAccountAccountRoleUserAccountAssociation_getAccountId(
+						accountRole),
+					accountRole.getId(),
+					testPostAccountAccountRoleUserAccountAssociation_getUserAccountId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			accountRoleResource.
 				postAccountAccountRoleUserAccountAssociationHttpResponse(
-					accountRole.getAccountId(), 0L, null));
+					testPostAccountAccountRoleUserAccountAssociation_getAccountId(
+						accountRole),
+					0L,
+					testPostAccountAccountRoleUserAccountAssociation_getUserAccountId()));
+	}
+
+	protected Long
+			testPostAccountAccountRoleUserAccountAssociation_getAccountId(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long
+			testPostAccountAccountRoleUserAccountAssociation_getUserAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected AccountRole
 			testPostAccountAccountRoleUserAccountAssociation_addAccountRole()
 		throws Exception {
 
+		return testPostAccountAccountRole_addAccountRole(randomAccountRole());
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					accountRole.getExternalReferenceCode(),
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddressHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					"-",
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()));
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					accountRole.getExternalReferenceCode(),
+					accountRole.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					"-", "-"));
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testPostAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					accountRole.getId(),
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddressHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+						accountRole),
+					0L,
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()));
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getExternalReferenceCode(
+				AccountRole accountRole)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_getEmailAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		AccountRole accountRole =
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole();
+
+		assertHttpResponseStatusCode(
+			204,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCodeHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					accountRole.getId(),
+					accountRole.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			accountRoleResource.
+				postAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCodeHttpResponse(
+					testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode(),
+					0L, "-"));
+	}
+
+	protected String
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole
+			testPostAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode_addAccountRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testBatchEngineDeleteImportTask() throws Exception {
+		Assert.assertTrue(true);
 	}
 
 	@Rule
@@ -1723,6 +2458,130 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected AccountRole testGraphQLAccountAccountRole_addAccountRole()
+		throws Exception {
+
+		return testGraphQLAccountAccountRole_addAccountRole(
+			testGraphQLAccountAccountRole_getAccountId(), randomAccountRole());
+	}
+
+	protected Long testGraphQLAccountAccountRole_getAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected AccountRole testGraphQLAccountAccountRole_addAccountRole(
+			Long accountId, AccountRole accountRole)
+		throws Exception {
+
+		JSONDeserializer<AccountRole> jsonDeserializer =
+			JSONFactoryUtil.createJSONDeserializer();
+
+		StringBuilder sb = new StringBuilder("{");
+
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(AccountRole.class)) {
+
+			if (getGraphQLValue(field.get(accountRole)) != null) {
+				if (sb.length() > 1) {
+					sb.append(", ");
+				}
+
+				sb.append(field.getName());
+				sb.append(": ");
+				sb.append(getGraphQLValue(field.get(accountRole)));
+			}
+		}
+
+		sb.append("}");
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		return jsonDeserializer.deserialize(
+			JSONUtil.getValueAsString(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"createAccountAccountRole",
+						new HashMap<String, Object>() {
+							{
+								put("accountId", accountId);
+								put("accountRole", sb.toString());
+							}
+						},
+						graphQLFields)),
+				"JSONObject/data", "JSONObject/createAccountAccountRole"),
+			AccountRole.class);
+	}
+
+	protected String getGraphQLValue(Object value) throws Exception {
+		if (value == null) {
+			return null;
+		}
+		else if (value instanceof Boolean || value instanceof Number) {
+			return value.toString();
+		}
+		else if (value instanceof Date date) {
+			return "\"" +
+				DateUtil.getDate(
+					date, "yyyy-MM-dd'T'HH:mm:ss'Z'", LocaleUtil.getDefault(),
+					TimeZone.getTimeZone("UTC")) + "\"";
+		}
+		else if (value instanceof Enum<?> enm) {
+			return enm.name();
+		}
+		else if (value instanceof Map<?, ?> map) {
+			List<String> entries = new ArrayList<>();
+
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				String graphQLValue = getGraphQLValue(entry.getValue());
+
+				if (graphQLValue != null) {
+					entries.add(entry.getKey() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
+		else if (value instanceof Object[] array) {
+			List<String> entries = new ArrayList<>();
+
+			for (Object entry : array) {
+				String graphQLValue = getGraphQLValue(entry);
+
+				if (graphQLValue != null) {
+					entries.add(graphQLValue);
+				}
+			}
+
+			return "[" + String.join(", ", entries) + "]";
+		}
+		else if (value instanceof String) {
+			return "\"" + value + "\"";
+		}
+		else {
+			List<String> entries = new ArrayList<>();
+
+			Class<?> clazz = value.getClass();
+			java.lang.reflect.Field[] declaredFields = getDeclaredFields(clazz);
+
+			if (declaredFields.length == 0) {
+				declaredFields = getDeclaredFields(clazz.getSuperclass());
+			}
+
+			for (java.lang.reflect.Field field : declaredFields) {
+				String graphQLValue = getGraphQLValue(field.get(value));
+
+				if (graphQLValue != null) {
+					entries.add(field.getName() + ": " + graphQLValue);
+				}
+			}
+
+			return "{" + String.join(", ", entries) + "}";
+		}
 	}
 
 	protected void assertContains(
@@ -1852,6 +2711,14 @@ public abstract class BaseAccountRoleResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("roleType", additionalAssertFieldName)) {
+				if (accountRole.getRoleType() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1909,6 +2776,10 @@ public abstract class BaseAccountRoleResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -2040,6 +2911,17 @@ public abstract class BaseAccountRoleResourceTestCase {
 			if (Objects.equals("roleId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						accountRole1.getRoleId(), accountRole2.getRoleId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("roleType", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						accountRole1.getRoleType(),
+						accountRole2.getRoleType())) {
 
 					return false;
 				}
@@ -2353,6 +3235,12 @@ public abstract class BaseAccountRoleResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("roleType")) {
+			sb.append(String.valueOf(accountRole.getRoleType()));
+
+			return sb.toString();
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -2408,6 +3296,7 @@ public abstract class BaseAccountRoleResourceTestCase {
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				roleId = RandomTestUtil.randomLong();
+				roleType = RandomTestUtil.randomInt();
 			}
 		};
 	}
@@ -2432,12 +3321,12 @@ public abstract class BaseAccountRoleResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2446,11 +3335,16 @@ public abstract class BaseAccountRoleResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2482,6 +3376,24 @@ public abstract class BaseAccountRoleResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2503,16 +3415,6 @@ public abstract class BaseAccountRoleResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2610,7 +3512,9 @@ public abstract class BaseAccountRoleResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseAccountRoleResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.admin.user.resource.v1_0.AccountRoleResource

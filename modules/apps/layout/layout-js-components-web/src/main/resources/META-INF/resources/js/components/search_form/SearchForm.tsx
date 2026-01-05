@@ -6,6 +6,7 @@
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import classNames from 'classnames';
 import {debounce} from 'frontend-js-web';
 import React, {useState} from 'react';
 
@@ -15,10 +16,16 @@ export default function SearchForm({
 	className,
 	label,
 	onChange,
+	placeholder = Liferay.Language.get('search'),
+	size,
+	variant = 'default',
 }: {
 	className?: string;
 	label?: string;
 	onChange: Function;
+	placeholder?: string;
+	size?: 'sm';
+	variant?: 'default' | 'white';
 }) {
 	const id = `pageEditorSearchFormInput${nextInputId++}`;
 
@@ -30,22 +37,31 @@ export default function SearchForm({
 				{label || Liferay.Language.get('search-form')}
 			</label>
 
-			<ClayInput.Group small>
+			<ClayInput.Group small={size === 'sm'}>
 				<ClayInput.GroupItem>
 					<ClayInput
+						className={classNames({
+							'bg-white': variant === 'white',
+						})}
 						id={id}
 						insetAfter
 						onChange={({target: {value}}) => {
 							setSearchValue(value);
 							debounce(() => onChange(value), 100)();
 						}}
-						placeholder={`${Liferay.Language.get('search')}...`}
-						sizing="sm"
+						placeholder={`${placeholder}...`}
+						sizing={size}
 						spellCheck={false}
 						value={searchValue}
 					/>
 
-					<ClayInput.GroupInsetItem after tag="span">
+					<ClayInput.GroupInsetItem
+						after
+						className={classNames({
+							'bg-white': variant === 'white',
+						})}
+						tag="span"
+					>
 						{searchValue ? (
 							<ClayButtonWithIcon
 								aria-label={Liferay.Language.get(
@@ -53,12 +69,12 @@ export default function SearchForm({
 								)}
 								borderless
 								displayType="secondary"
-								monospaced={false}
+								monospaced
 								onClick={() => {
 									setSearchValue('');
 									onChange('');
 								}}
-								size="sm"
+								size={size}
 								symbol={searchValue ? 'times' : 'search'}
 								title={Liferay.Language.get('clear-search')}
 							/>

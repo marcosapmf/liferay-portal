@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import 'jest-extended';
 import * as pedantic from './pedantic';
 import lang from './lang';
@@ -73,6 +73,10 @@ global.localStorage = (() => {
 		}
 	};
 })();
+
+global.pendo = {
+	initialize: () => {}
+};
 
 require('jest-extended');
 require('jest-canvas-mock');

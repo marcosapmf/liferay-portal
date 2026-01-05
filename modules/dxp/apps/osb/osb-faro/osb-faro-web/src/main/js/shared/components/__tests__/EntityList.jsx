@@ -12,11 +12,7 @@ const items = [
 	mockIndividual(2, {total: 123})
 ];
 
-const segments = [
-	mockSegment(0, {segmentType: 'STATIC'}),
-	mockSegment(1, {segmentType: 'DYNAMIC'}),
-	mockSegment(2, {segmentType: 'STATIC'})
-];
+const segments = [mockSegment(1, {segmentType: 'BATCH'})];
 
 const WrappedComponent = withStaticRouter(EntityList);
 
@@ -51,13 +47,7 @@ describe('EntityList', () => {
 
 		expect(
 			container.querySelectorAll(
-				'.lexicon-icon-individual-static-segment'
-			).length
-		).toBe(2);
-
-		expect(
-			container.querySelectorAll(
-				'.lexicon-icon-individual-dynamic-segment'
+				'.lexicon-icon-individual_dynamic_segment'
 			).length
 		).toBe(1);
 	});

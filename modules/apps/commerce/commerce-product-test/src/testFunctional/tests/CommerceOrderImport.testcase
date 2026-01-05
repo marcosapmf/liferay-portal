@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Setup: Create an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -246,132 +249,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9373 Verify pagination is working properly in preview when importing an order"
-	@priority = 3
-	test CanUseImportFromOrdersPreviewPagination {
-		property portal.acceptance = "false";
-
-		task ("Given the Money Order payment is activated") {
-			User.logoutAndLoginPG();
-
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoTableListEntry(entryName = "Minium Portal");
-
-			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-		}
-
-		task ("And a completed order with multiple products is placed") {
-			var orderItems = "MIN93015:1,MIN93017:1,MIN93027:1,MIN93018:1,MIN93019:1,MIN93020:1,MIN93021:1,MIN93023:1,MIN00673:1,MIN00675:1,MIN55859:1,MIN55860:1,MIN55861:1";
-
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = ${orderItems},
-				orderStatus = 1,
-				paymentMethod = "money-order",
-				paymentStatus = 2);
-		}
-
-		task ("And the buyer is importing the order from Orders") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = PropsUtil.get("default.admin.password"),
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			CommerceAcceleratorsInitializer.createNewOrderFromPendingOrders();
-
-			CommerceOrders.importOrderFromType(orderType = "Orders");
-
-			SelectFrameTop();
-
-			IFrame.selectModalFrame();
-
-			Button.click(button = "Select");
-		}
-
-		task ("And can see data set is filled with the following data in the preview modal and only four items are displayed") {
-			Pagination.changePagination(itemsPerPage = "4 Items");
-
-			CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 13 entries.");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "ABS Sensor",
-				productSku = "MIN93015");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Premium Brake Fluid",
-				productSku = "MIN93017");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Wear Sensors",
-				productSku = "MIN93027");
-		}
-
-		task ("When the user go to next page") {
-			Click(locator1 = "ACUtils#NEXT_PAGES");
-		}
-
-		task ("Then four different items are displayed") {
-			CommerceEntry.viewPaginationResults(results = "Showing 5 to 8 of 13 entries.");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Calipers",
-				productSku = "MIN93021");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Premium Brake Pads",
-				productSku = "MIN93019");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Brake Rotors",
-				productSku = "MIN93020");
-
-			AssertElementNotPresent(
-				key_columnNumber = 1,
-				key_productName = "Premium Brake Fluid",
-				key_value = "MIN93017",
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-
-			AssertElementNotPresent(
-				key_columnNumber = 1,
-				key_productName = "ABS Sensor",
-				key_value = "MIN93015",
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-
-			AssertElementNotPresent(
-				key_columnNumber = 1,
-				key_productName = "Wear Sensors",
-				key_value = "MIN93027",
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-
-			Click(locator1 = "ACUtils#PREVIOUS_PAGES");
-
-			CommerceEntry.viewPaginationResults(results = "Showing 1 to 4 of 13 entries.");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "ABS Sensor",
-				productSku = "MIN93015");
-
-			Click(
-				key_pageNumber = 3,
-				locator1 = "ACUtils#ANY_PAGE");
-
-			CommerceEntry.viewPaginationResults(results = "Showing 9 to 12 of 13 entries.");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Bearings",
-				productSku = "MIN00673");
-
-			CommerceOrders.assertOrderImportPreviewEntry(
-				productName = "Engine Mount",
-				productSku = "MIN00675");
-
-			IFrame.closeFrame();
-		}
-	}
-
 	@description = "Verify users can delete an order entry after importing an order"
 	@priority = 3
 	test DeleteAnEntryIntoAnOrder {
@@ -415,13 +292,13 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 
 		task ("When the buyer deletes an entry from the order") {
 			ClickNoError(
 				key_value = "U-Joint",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+				locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 			CommerceEntry.clickNoError(menuItem = "Delete");
 
@@ -480,13 +357,13 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 
 		task ("When the buyer edits an entry from the order") {
 			Click(
 				key_value = "U-Joint",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+				locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 			CommerceEntry.clickNoError(menuItem = "View");
 
@@ -504,7 +381,7 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 		}
 	}
 

@@ -291,65 +291,6 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro approveJoinSiteRestrictedViaMySitesPG(userLastName = null, userScreenName = null, userFirstName = null) {
-		var key_userScreenName = ${userScreenName};
-
-		Click(locator1 = "Icon#INFO");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "SiteMemberships#MEMBERSHIP_TYPE",
-			value1 = "Membership Type: Restricted");
-
-		AssertElementPresent(locator1 = "SiteMemberships#REQUEST_MESSAGE");
-
-		Click(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
-
-		Click(locator1 = "SiteMemberships#REQUEST_MESSAGE");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
-		AssertTextEquals(
-			locator1 = "SiteMembershipsViewMembershipRequests#USER_NAME",
-			value1 = "${userFirstName} ${userLastName}");
-
-		if (!(isSet(memebershipComment))) {
-			var memebershipComment = "Please allow me to join the Restricted Site.";
-		}
-
-		AssertTextEquals(
-			locator1 = "SiteMembershipsViewMembershipRequests#USER_COMMENTS",
-			value1 = ${memebershipComment});
-
-		LexiconTable.clickEllipsisItem(
-			item = "Reply",
-			tableEntry = "${userFirstName} ${userLastName}");
-
-		Select(
-			locator1 = "SiteMembershipsViewMembershipRequests#STATUS",
-			value1 = "Approve");
-
-		Type(
-			locator1 = "SiteMembershipsViewMembershipRequests#REPLY_COMMENTS_AREA",
-			value1 = "You may join the Restricted Site.");
-
-		Button.clickSave();
-
-		VerifyElementPresent(locator1 = "Message#SUCCESS");
-
-		Navigator.gotoNavItem(navItem = "Approved");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
-		AssertTextEquals(
-			locator1 = "SiteMembershipsViewMembershipRequests#USER_NAME",
-			value1 = "${userFirstName} ${userLastName}");
-
-		AssertTextEquals(
-			locator1 = "SiteMembershipsViewMembershipRequests#REPLIER_NAME",
-			value1 = "Test Test");
-	}
-
-	@summary = "Default summary"
 	macro assertMemberListNotVisibleCP(usersEmailsList = null) {
 		for (var userEmail : list ${usersEmailsList}) {
 			var userName = StringUtil.replace(${userEmail}, "@liferay.com", "");
@@ -877,7 +818,7 @@ definition {
 
 	@summary = "Default summary"
 	macro importSiteFromTempFolder() {
-		var siteLarFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "Pages-*.lar");
+		var siteLarFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.lar");
 
 		UploadTempFile.uploadTempFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
@@ -1124,8 +1065,6 @@ definition {
 			card = ${userScreenName},
 			item = "Remove Membership");
 
-		Confirm(value1 = "null");
-
 		Alert.viewSuccessMessage();
 	}
 
@@ -1155,13 +1094,6 @@ definition {
 		Confirm(value1 = "null");
 
 		Alert.viewSuccessMessage();
-	}
-
-	@summary = "Default summary"
-	macro searchCP(siteName = null) {
-		Search.searchCP(searchTerm = ${siteName});
-
-		Site.viewSearchResultsCP(siteName = ${siteName});
 	}
 
 	@summary = "Default summary"
@@ -1224,38 +1156,6 @@ definition {
 		}
 
 		PortletEntry.save();
-	}
-
-	@summary = "Default summary"
-	macro selectParentSite(parentSiteName = null, chooseButtonAvailable = null) {
-		Click(
-			key_itemName = "Site Configuration",
-			locator1 = "ListGroupItem#ITEM_TEXT");
-
-		Click(
-			key_fieldLabel = "Parent Site",
-			key_text = "Change",
-			locator1 = "Button#ANY_WITH_LABEL");
-
-		var key_parentSiteName = ${parentSiteName};
-
-		SelectFrame(locator1 = "SitesSelectSite#SELECT_SITE_IFRAME");
-
-		Search.searchCP(searchTerm = ${parentSiteName});
-
-		if (${chooseButtonAvailable} == "false") {
-			AssertElementNotPresent(
-				key_parentSiteName = ${parentSiteName},
-				locator1 = "SitesSelectSite#SITES_TABLE_NAME");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "Message#EMPTY_INFO",
-				value1 = "No sites were found.");
-		}
-
-		Close(locator1 = "null");
-
-		SelectFrame(value1 = "relative=top");
 	}
 
 	@summary = "Default summary"
@@ -1370,19 +1270,6 @@ definition {
 		}
 
 		SelectFrameTop();
-	}
-
-	@summary = "Default summary"
-	macro viewChildCP(siteName = null, childSiteName = null) {
-		Site.viewCP(siteName = ${siteName});
-
-		LexiconTable.clickEllipsisItem(
-			item = "View Child Sites",
-			tableEntry = ${siteName});
-
-		Breadcrumb.viewActiveEntry(breadcrumbName = ${siteName});
-
-		Site.viewCP(siteName = ${childSiteName});
 	}
 
 	@summary = "Default summary"
@@ -1559,16 +1446,6 @@ definition {
 
 	@summary = "Default summary"
 	macro viewNoSiteMembershipsRequest() {
-		Click(locator1 = "Icon#INFO");
-
-		AssertElementNotPresent(locator1 = "SiteMemberships#REQUEST_MESSAGE");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "SiteMemberships#MEMBERSHIP_TYPE",
-			value1 = "Membership Type: Restricted");
-
-		AssertElementNotPresent(locator1 = "SiteMemberships#REQUEST_MESSAGE");
-
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "View Membership Requests");
 
 		AssertElementNotPresent(locator1 = "SiteMembershipsViewMembershipRequests#USER_NAME");
@@ -1642,26 +1519,6 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewSiteClonedFromSiteTemplateCP(clonedFromTemplate = null, siteTemplateName = null) {
-		Click(
-			key_itemName = "Other",
-			locator1 = "ListGroupItem#ITEM_TEXT");
-
-		Navigator.gotoNavTab(navTab = "Site Template");
-
-		if (${clonedFromTemplate} == "true") {
-			AssertTextEquals.assertPartialText(
-				locator1 = "SiteSettingsSiteTemplate#CONTENT_CONTAINER",
-				value1 = "These pages are linked to site template ${siteTemplateName} without propagation of changes.");
-		}
-		else {
-			AssertTextEquals.assertPartialText(
-				locator1 = "SiteSettingsSiteTemplate#CONTENT_CONTAINER",
-				value1 = "This site is not related to a site template.");
-		}
-	}
-
-	@summary = "Default summary"
 	macro viewSiteFriendlyURLPG(siteName = null, sitePageURL = null) {
 		AssertTextEquals(
 			locator1 = "Home#SITE_NAME",
@@ -1672,15 +1529,7 @@ definition {
 
 	@summary = "Default summary"
 	macro viewSiteMembershipsRequest(userLastName = null, userFirstName = null) {
-		Click(locator1 = "Icon#INFO");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "SiteMemberships#MEMBERSHIP_TYPE",
-			value1 = "Membership Type: Restricted");
-
-		AssertElementPresent(locator1 = "SiteMemberships#REQUEST_MESSAGE");
-
-		Click(locator1 = "SiteMemberships#REQUEST_MESSAGE");
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "View Membership Requests");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 

@@ -31,6 +31,7 @@ exports[`Field DocumentLibrary has a helptext 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -56,13 +57,12 @@ exports[`Field DocumentLibrary has a helptext 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -78,11 +78,11 @@ exports[`Field DocumentLibrary has a helptext 1`] = `
         </span>
          you-need-to-be-signed-in-to-edit-this-field
       </div>
-      <div
-        id="uploadField_fieldHelp"
+      <span
+        class="form-help-text"
       >
         Type something
-      </div>
+      </span>
     </div>
     <span
       class="sr-only"
@@ -132,6 +132,7 @@ exports[`Field DocumentLibrary has a label 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -157,13 +158,12 @@ exports[`Field DocumentLibrary has a label 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -223,6 +223,7 @@ exports[`Field DocumentLibrary has a placeholder 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -249,13 +250,12 @@ exports[`Field DocumentLibrary has a placeholder 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -313,6 +313,7 @@ exports[`Field DocumentLibrary has a spritemap 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -338,13 +339,12 @@ exports[`Field DocumentLibrary has a spritemap 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -402,6 +402,7 @@ exports[`Field DocumentLibrary has a value 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -427,13 +428,12 @@ exports[`Field DocumentLibrary has a value 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -491,6 +491,7 @@ exports[`Field DocumentLibrary has an id 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="ID_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -517,13 +518,12 @@ exports[`Field DocumentLibrary has an id 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="ID_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="ID_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -554,7 +554,7 @@ exports[`Field DocumentLibrary is not readOnly 1`] = `
 <div>
   <div
     aria-labelledby="uploadField_fieldDetails"
-    class="form-group hide"
+    class="form-group has-error hide"
     data-field-name="uploadField"
   >
     <div
@@ -569,6 +569,7 @@ exports[`Field DocumentLibrary is not readOnly 1`] = `
           <input
             aria-label="file"
             class="form-control bg-light field"
+            disabled=""
             id="uploadFieldinputFile"
             readonly="true"
             tabindex="-1"
@@ -580,7 +581,9 @@ exports[`Field DocumentLibrary is not readOnly 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
+            disabled=""
             id="uploadField"
             type="button"
           >
@@ -604,15 +607,34 @@ exports[`Field DocumentLibrary is not readOnly 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
-      />
+      >
+        <span
+          class="form-feedback-indicator inline-item-before"
+        >
+          <svg
+            class="lexicon-icon lexicon-icon-exclamation-full"
+            role="presentation"
+          >
+            <use
+              href="#exclamation-full"
+            />
+          </svg>
+        </span>
+         you-need-to-be-signed-in-to-edit-this-field
+      </div>
     </div>
+    <span
+      class="sr-only"
+      id="uploadField_fieldDetails"
+    >
+       you-need-to-be-signed-in-to-edit-this-field
+    </span>
   </div>
 </div>
 `;
@@ -635,7 +657,6 @@ exports[`Field DocumentLibrary is not required 1`] = `
         >
           <input
             aria-label="file"
-            aria-required="false"
             class="form-control bg-light field"
             disabled=""
             id="uploadFieldinputFile"
@@ -649,6 +670,8 @@ exports[`Field DocumentLibrary is not required 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
+            aria-required="false"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -674,13 +697,12 @@ exports[`Field DocumentLibrary is not required 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"
@@ -743,6 +765,7 @@ exports[`Field DocumentLibrary renders Label if showLabel is true 1`] = `
           class="input-group-item input-group-append input-group-item-shrink"
         >
           <button
+            aria-describedby="uploadField_fieldFeedback"
             class="select-button btn btn-secondary"
             disabled=""
             id="uploadField"
@@ -768,13 +791,12 @@ exports[`Field DocumentLibrary renders Label if showLabel is true 1`] = `
       value="false"
     />
     <div
-      aria-hidden="true"
-      class="form-feedback-group lfr-de__field-feedback"
+      class="form-feedback-group field-feedback"
+      id="uploadField_fieldFeedback"
     >
       <div
         aria-live="assertive"
         class="form-feedback-item"
-        id="uploadField_fieldError"
       >
         <span
           class="form-feedback-indicator inline-item-before"

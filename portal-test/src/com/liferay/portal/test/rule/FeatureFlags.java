@@ -13,12 +13,13 @@ import java.lang.annotation.Target;
 
 /**
  * @author Alejandro Tardín
+ * @author Carlos Correa
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface FeatureFlags {
 
-	public String[] value();
+	public FeatureFlag[] featureFlags();
 
 }

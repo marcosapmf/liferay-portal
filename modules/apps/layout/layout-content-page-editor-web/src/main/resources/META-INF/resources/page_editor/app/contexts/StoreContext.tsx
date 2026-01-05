@@ -21,10 +21,14 @@ import {Action, State} from '../reducers';
 
 const DEFAULT_COMPARE_EQUAL = (a: any, b: any) => a === b;
 
-export type Dispatch = (actionOrThunk: Action | Thunk) => void;
+export type Dispatch = (actionOrThunk: Action | Thunk) => any;
 export type GetState = () => State;
-export type Thunk = (dispatch: Dispatch, getState: GetState) => void;
 export type Reducer = (state: State, action: Action) => State;
+
+export type Thunk = (
+	dispatch: Dispatch,
+	getState: GetState
+) => void | Promise<void>;
 
 interface Subscriber<Data> {
 	(data: Data): void;
@@ -101,7 +105,7 @@ export function StoreAPIContextProvider({
 	const state = getState();
 
 	const subscribe = useCallback(
-		(subscriber) => emitter.addListener(subscriber),
+		(subscriber: any) => emitter.addListener(subscriber),
 		[emitter]
 	);
 
@@ -177,7 +181,7 @@ export function useSelectorCallback<Result>(
 
 		// We really want to call selector here just on component mount.
 		// This provides an initial value that will be recalculated when
-		// store suscription has been called.
+		// store subscription has been called.
 		// eslint-disable-next-line
 		[]
 	);

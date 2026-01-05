@@ -21,6 +21,8 @@
 				HashMapBuilder.<String, Object>put(
 					"accountId", accountEntryId
 				).put(
+					"baseOrderDetailURL", baseOrderDetailURL
+				).put(
 					"cartViews", cartViews
 				).put(
 					"checkoutURL", checkoutURL
@@ -32,6 +34,8 @@
 					"displayTotalItemsQuantity", displayTotalItemsQuantity
 				).put(
 					"groupId", commerceChannelGroupId
+				).put(
+					"guestOrderEnabled", guestOrderEnabled
 				).put(
 					"id", commerceChannelId
 				).put(
@@ -49,9 +53,15 @@
 				).put(
 					"requestQuoteEnabled", requestCodeEnabled
 				).put(
+					"signInURL", signInURL
+				).put(
 					"siteDefaultURL", siteDefaultURL
 				).put(
+					"slowConnectionOrderFlowEnabled", slowConnectionOrderFlowEnabled
+				).put(
 					"toggleable", toggleable
+				).put(
+					"undoCartItemDeletionDisabled", undoCartItemDeletionDisabled
 				).build()
 			%>'
 			module="{cart} from commerce-frontend-taglib"

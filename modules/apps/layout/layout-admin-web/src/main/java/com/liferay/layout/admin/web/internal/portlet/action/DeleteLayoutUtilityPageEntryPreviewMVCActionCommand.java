@@ -10,11 +10,10 @@ import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -24,7 +23,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+		"jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 		"mvc.command.name=/layout_admin/delete_layout_utility_page_entry_preview"
 	},
 	service = MVCActionCommand.class
@@ -49,16 +48,10 @@ public class DeleteLayoutUtilityPageEntryPreviewMVCActionCommand
 
 			_layoutUtilityPageEntryService.updateLayoutUtilityPageEntry(
 				layoutUtilityPageEntryId, 0);
-
-			_portletFileRepository.deletePortletFileEntry(
-				layoutUtilityPageEntry.getPreviewFileEntryId());
 		}
 	}
 
 	@Reference
 	private LayoutUtilityPageEntryService _layoutUtilityPageEntryService;
-
-	@Reference
-	private PortletFileRepository _portletFileRepository;
 
 }

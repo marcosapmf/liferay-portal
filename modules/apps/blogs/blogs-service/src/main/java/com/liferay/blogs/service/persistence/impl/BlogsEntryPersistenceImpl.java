@@ -650,7 +650,6 @@ public class BlogsEntryPersistenceImpl
 		"(blogsEntry.uuid IS NULL OR blogsEntry.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the blogs entry where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -835,68 +834,13 @@ public class BlogsEntryPersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					BlogsEntry.class)) {
+		BlogsEntry blogsEntry = fetchByUUID_G(uuid, groupId);
 
-			uuid = Objects.toString(uuid, "");
-
-			FinderPath finderPath = _finderPathCountByUUID_G;
-
-			Object[] finderArgs = new Object[] {uuid, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_BLOGSENTRY_WHERE);
-
-				boolean bindUuid = false;
-
-				if (uuid.isEmpty()) {
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-				}
-				else {
-					bindUuid = true;
-
-					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-				}
-
-				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindUuid) {
-						queryPos.add(uuid);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (blogsEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -1980,6 +1924,16 @@ public class BlogsEntryPersistenceImpl
 			return findByGroupId(groupId, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -2331,6 +2285,14 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByGroupId(long groupId) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByGroupId(groupId);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByGroupId(groupId);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(2);
@@ -2880,7 +2842,6 @@ public class BlogsEntryPersistenceImpl
 		"blogsEntry.companyId = ?";
 
 	private FinderPath _finderPathFetchByG_UT;
-	private FinderPath _finderPathCountByG_UT;
 
 	/**
 	 * Returns the blogs entry where groupId = &#63; and urlTitle = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -3065,68 +3026,13 @@ public class BlogsEntryPersistenceImpl
 	 */
 	@Override
 	public int countByG_UT(long groupId, String urlTitle) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					BlogsEntry.class)) {
+		BlogsEntry blogsEntry = fetchByG_UT(groupId, urlTitle);
 
-			urlTitle = Objects.toString(urlTitle, "");
-
-			FinderPath finderPath = _finderPathCountByG_UT;
-
-			Object[] finderArgs = new Object[] {groupId, urlTitle};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_BLOGSENTRY_WHERE);
-
-				sb.append(_FINDER_COLUMN_G_UT_GROUPID_2);
-
-				boolean bindUrlTitle = false;
-
-				if (urlTitle.isEmpty()) {
-					sb.append(_FINDER_COLUMN_G_UT_URLTITLE_3);
-				}
-				else {
-					bindUrlTitle = true;
-
-					sb.append(_FINDER_COLUMN_G_UT_URLTITLE_2);
-				}
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					queryPos.add(groupId);
-
-					if (bindUrlTitle) {
-						queryPos.add(urlTitle);
-					}
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (blogsEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_G_UT_GROUPID_2 =
@@ -3673,6 +3579,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, displayDate, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_LtD(
+					groupId, displayDate, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -4076,6 +3992,14 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_LtD(long groupId, Date displayDate) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_LtD(groupId, displayDate);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_LtD(groupId, displayDate);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -4657,6 +4581,16 @@ public class BlogsEntryPersistenceImpl
 			return findByG_S(groupId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_S(
+					groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -5025,6 +4959,14 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_S(long groupId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_S(groupId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_S(groupId, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -5582,6 +5524,16 @@ public class BlogsEntryPersistenceImpl
 			return findByG_NotS(groupId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_NotS(
+					groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -5950,6 +5902,14 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_NotS(long groupId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_NotS(groupId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_NotS(groupId, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(3);
@@ -9358,6 +9318,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, userId, displayDate, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_LtD(
+					groupId, userId, displayDate, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -9782,6 +9752,15 @@ public class BlogsEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_LtD(groupId, userId, displayDate);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_U_LtD(
+				groupId, userId, displayDate);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -10407,6 +10386,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, userId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_S(
+					groupId, userId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -10760,6 +10749,16 @@ public class BlogsEntryPersistenceImpl
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return findByG_U_S(
 				groupId, userId, statuses, start, end, orderByComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_S(
+					groupId, userId, statuses, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
 		}
 
 		if (statuses == null) {
@@ -11252,6 +11251,15 @@ public class BlogsEntryPersistenceImpl
 			return countByG_U_S(groupId, userId, status);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_U_S(
+				groupId, userId, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(4);
 
 		sb.append(_FILTER_SQL_COUNT_BLOGSENTRY_WHERE);
@@ -11308,6 +11316,13 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_U_S(long groupId, long userId, int[] statuses) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_S(groupId, userId, statuses);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = InlineSQLHelperUtil.filter(
+				findByG_U_S(groupId, userId, statuses), groupId);
+
+			return blogsEntries.size();
 		}
 
 		if (statuses == null) {
@@ -11930,6 +11945,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, userId, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_NotS(
+					groupId, userId, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -12317,6 +12342,15 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_U_NotS(long groupId, long userId, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_NotS(groupId, userId, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_U_NotS(
+				groupId, userId, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -12956,6 +12990,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, displayDate, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_D_S(
+					groupId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -13378,6 +13422,15 @@ public class BlogsEntryPersistenceImpl
 	public int filterCountByG_D_S(long groupId, Date displayDate, int status) {
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_D_S(groupId, displayDate, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_D_S(
+				groupId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -14018,6 +14071,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, displayDate, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_GtD_S(
+					groupId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -14442,6 +14505,15 @@ public class BlogsEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_GtD_S(groupId, displayDate, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_GtD_S(
+				groupId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -15082,6 +15154,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, displayDate, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_LtD_S(
+					groupId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -15506,6 +15588,15 @@ public class BlogsEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_LtD_S(groupId, displayDate, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_LtD_S(
+				groupId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -16146,6 +16237,16 @@ public class BlogsEntryPersistenceImpl
 				groupId, displayDate, status, start, end, orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_LtD_NotS(
+					groupId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -16570,6 +16671,15 @@ public class BlogsEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_LtD_NotS(groupId, displayDate, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_LtD_NotS(
+				groupId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -19641,6 +19751,16 @@ public class BlogsEntryPersistenceImpl
 				orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_LtD_S(
+					groupId, userId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -20086,6 +20206,15 @@ public class BlogsEntryPersistenceImpl
 
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_U_LtD_S(groupId, userId, displayDate, status);
+		}
+
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_U_LtD_S(
+				groupId, userId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
 		}
 
 		StringBundler sb = new StringBundler(5);
@@ -20766,6 +20895,16 @@ public class BlogsEntryPersistenceImpl
 				orderByComparator);
 		}
 
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			isPermissionsInMemoryFilterEnabled()) {
+
+			return InlineSQLHelperUtil.filter(
+				findByG_U_LtD_NotS(
+					groupId, userId, displayDate, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator),
+				groupId);
+		}
+
 		StringBundler sb = null;
 
 		if (orderByComparator != null) {
@@ -21214,6 +21353,15 @@ public class BlogsEntryPersistenceImpl
 			return countByG_U_LtD_NotS(groupId, userId, displayDate, status);
 		}
 
+		if (isPermissionsInMemoryFilterEnabled()) {
+			List<BlogsEntry> blogsEntries = findByG_U_LtD_NotS(
+				groupId, userId, displayDate, status);
+
+			blogsEntries = InlineSQLHelperUtil.filter(blogsEntries, groupId);
+
+			return blogsEntries.size();
+		}
+
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(_FILTER_SQL_COUNT_BLOGSENTRY_WHERE);
@@ -21289,7 +21437,6 @@ public class BlogsEntryPersistenceImpl
 		"blogsEntry.status != ?";
 
 	private FinderPath _finderPathFetchByERC_G;
-	private FinderPath _finderPathCountByERC_G;
 
 	/**
 	 * Returns the blogs entry where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchEntryException</code> if it could not be found.
@@ -21476,68 +21623,13 @@ public class BlogsEntryPersistenceImpl
 	 */
 	@Override
 	public int countByERC_G(String externalReferenceCode, long groupId) {
-		try (SafeCloseable safeCloseable =
-				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
-					BlogsEntry.class)) {
+		BlogsEntry blogsEntry = fetchByERC_G(externalReferenceCode, groupId);
 
-			externalReferenceCode = Objects.toString(externalReferenceCode, "");
-
-			FinderPath finderPath = _finderPathCountByERC_G;
-
-			Object[] finderArgs = new Object[] {externalReferenceCode, groupId};
-
-			Long count = (Long)finderCache.getResult(
-				finderPath, finderArgs, this);
-
-			if (count == null) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(_SQL_COUNT_BLOGSENTRY_WHERE);
-
-				boolean bindExternalReferenceCode = false;
-
-				if (externalReferenceCode.isEmpty()) {
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_3);
-				}
-				else {
-					bindExternalReferenceCode = true;
-
-					sb.append(_FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2);
-				}
-
-				sb.append(_FINDER_COLUMN_ERC_G_GROUPID_2);
-
-				String sql = sb.toString();
-
-				Session session = null;
-
-				try {
-					session = openSession();
-
-					Query query = session.createQuery(sql);
-
-					QueryPos queryPos = QueryPos.getInstance(query);
-
-					if (bindExternalReferenceCode) {
-						queryPos.add(externalReferenceCode);
-					}
-
-					queryPos.add(groupId);
-
-					count = (Long)query.uniqueResult();
-
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-				catch (Exception exception) {
-					throw processException(exception);
-				}
-				finally {
-					closeSession(session);
-				}
-			}
-
-			return count.intValue();
+		if (blogsEntry == null) {
+			return 0;
 		}
+
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_G_EXTERNALREFERENCECODE_2 =
@@ -21685,8 +21777,6 @@ public class BlogsEntryPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByUUID_G, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByUUID_G, args, blogsEntryModelImpl);
 
 			args = new Object[] {
@@ -21695,8 +21785,6 @@ public class BlogsEntryPersistenceImpl
 			};
 
 			finderCache.putResult(
-				_finderPathCountByG_UT, args, Long.valueOf(1));
-			finderCache.putResult(
 				_finderPathFetchByG_UT, args, blogsEntryModelImpl);
 
 			args = new Object[] {
@@ -21704,8 +21792,6 @@ public class BlogsEntryPersistenceImpl
 				blogsEntryModelImpl.getGroupId()
 			};
 
-			finderCache.putResult(
-				_finderPathCountByERC_G, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByERC_G, args, blogsEntryModelImpl);
 		}
@@ -22494,21 +22580,21 @@ public class BlogsEntryPersistenceImpl
 		ctMergeColumnNames.add("description");
 		ctMergeColumnNames.add("content");
 		ctMergeColumnNames.add("displayDate");
-		ctStrictColumnNames.add("allowPingbacks");
-		ctStrictColumnNames.add("allowTrackbacks");
-		ctStrictColumnNames.add("trackbacks");
-		ctStrictColumnNames.add("coverImageCaption");
-		ctStrictColumnNames.add("coverImageFileEntryId");
-		ctStrictColumnNames.add("coverImageURL");
-		ctStrictColumnNames.add("smallImage");
-		ctStrictColumnNames.add("smallImageFileEntryId");
-		ctStrictColumnNames.add("smallImageId");
-		ctStrictColumnNames.add("smallImageURL");
-		ctStrictColumnNames.add("lastPublishDate");
-		ctStrictColumnNames.add("status");
-		ctStrictColumnNames.add("statusByUserId");
-		ctStrictColumnNames.add("statusByUserName");
-		ctStrictColumnNames.add("statusDate");
+		ctMergeColumnNames.add("allowPingbacks");
+		ctMergeColumnNames.add("allowTrackbacks");
+		ctMergeColumnNames.add("trackbacks");
+		ctMergeColumnNames.add("coverImageCaption");
+		ctMergeColumnNames.add("coverImageFileEntryId");
+		ctMergeColumnNames.add("coverImageURL");
+		ctMergeColumnNames.add("smallImage");
+		ctMergeColumnNames.add("smallImageFileEntryId");
+		ctMergeColumnNames.add("smallImageId");
+		ctMergeColumnNames.add("smallImageURL");
+		ctMergeColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("status");
+		ctMergeColumnNames.add("statusByUserId");
+		ctMergeColumnNames.add("statusByUserName");
+		ctMergeColumnNames.add("statusDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
@@ -22571,11 +22657,6 @@ public class BlogsEntryPersistenceImpl
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
-
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
@@ -22635,11 +22716,6 @@ public class BlogsEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_UT",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "urlTitle"}, true);
-
-		_finderPathCountByG_UT = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_UT",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "urlTitle"}, false);
 
 		_finderPathWithPaginationFindByG_LtD = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_LtD",
@@ -23026,11 +23102,6 @@ public class BlogsEntryPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "groupId"}, true);
-
-		_finderPathCountByERC_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "groupId"}, false);
 
 		BlogsEntryUtil.setPersistence(this);
 	}

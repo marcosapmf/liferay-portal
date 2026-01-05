@@ -16,9 +16,10 @@ import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceShipmentInactiveWarehouseException;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
-import com.liferay.commerce.exception.DuplicateCommerceShipmentException;
+import com.liferay.commerce.exception.DuplicateCommerceShipmentExternalReferenceCodeException;
 import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.exception.NoSuchShipmentItemException;
+import com.liferay.commerce.helper.CommerceShippingHelper;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
@@ -45,7 +46,6 @@ import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTaxTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
-import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -780,6 +780,61 @@ public class CommerceShipmentTest {
 	}
 
 	@Test
+	public void testDeleteOrderShipment() throws Exception {
+		frutillaRule.scenario(
+			"An order with a shipment is created"
+		).given(
+			"An order"
+		).when(
+			"I delete a shipment on that order"
+		).then(
+			"The shipment is deleted to the order"
+		);
+
+		CPInstance cpInstance = _createCPInstance();
+
+		BigDecimal value = BigDecimal.valueOf(RandomTestUtil.nextDouble());
+
+		CommerceOrder commerceOrder =
+			CommerceTestUtil.createCommerceOrderForShipping(
+				_user.getUserId(), _commerceChannel.getGroupId(),
+				_commerceCurrency.getCommerceCurrencyId(),
+				cpInstance.getCPInstanceId(), value, BigDecimal.ONE, 1);
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			_createCommerceInventoryWarehouse(
+				_commerceChannel.getCommerceChannelId(), true);
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse,
+			BigDecimal.valueOf(5), cpInstance.getSku(), StringPool.BLANK);
+
+		_commerceOrders.add(commerceOrder);
+
+		CommerceShipment commerceShipment =
+			CommerceShipmentTestUtil.createOrderShipment(
+				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId(),
+				commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
+
+		List<CommerceShipment> commerceShipments =
+			_commerceShipmentLocalService.getCommerceShipments(
+				commerceOrder.getCommerceOrderId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			commerceShipments.toString(), 1, commerceShipments.size());
+
+		_commerceShipmentLocalService.deleteCommerceShipment(commerceShipment);
+
+		commerceShipments = _commerceShipmentLocalService.getCommerceShipments(
+			commerceOrder.getCommerceOrderId(), QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			commerceShipments.toString(), 0, commerceShipments.size());
+	}
+
+	@Test
 	public void testShippingAmountAndShippingTaxes() throws Exception {
 		frutillaRule.scenario(
 			"When a shipping amount with tax is associated with an order the " +
@@ -798,7 +853,7 @@ public class CommerceShipmentTest {
 			_user.getGroupId());
 
 		CommerceTaxMethod commerceTaxMethod =
-			CommerceTaxTestUtil.addCommerceByAddressTaxMethod(
+			CommerceTaxTestUtil.addByAddressCommerceTaxMethod(
 				_user.getUserId(), _commerceChannel.getGroupId(), true);
 
 		double shippingTaxRate = 10;
@@ -913,7 +968,9 @@ public class CommerceShipmentTest {
 			commerceShippingMethod.getName(LocaleUtil.JAPAN));
 	}
 
-	@Test(expected = DuplicateCommerceShipmentException.class)
+	@Test(
+		expected = DuplicateCommerceShipmentExternalReferenceCodeException.class
+	)
 	public void testUpdateOrderShipment() throws Exception {
 		frutillaRule.scenario(
 			"It should not be possible to update the ERC field with a value " +

@@ -14,9 +14,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.RenderRequest;
+import jakarta.portlet.RenderRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Lourdes Fernández Besada
@@ -79,11 +79,7 @@ public class LockedLayoutDisplayContext {
 	}
 
 	public boolean isShowGoBackButton() {
-		if (Validator.isNotNull(getBackURL())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(getBackURL());
 	}
 
 	private String _backURL;

@@ -5,6 +5,7 @@
 
 package com.liferay.document.library.internal.util;
 
+import com.liferay.document.library.configuration.DLFileEntryRawMetadataProcessorConfigurationProvider;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
@@ -15,6 +16,8 @@ import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -26,19 +29,17 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -99,13 +100,13 @@ public class RawMetadataProcessorImpl
 
 	@Override
 	public boolean isSupported(FileVersion fileVersion) {
-		return isSupported(fileVersion.getMimeType());
+		return _isSupported(
+			fileVersion.getGroupId(), fileVersion.getMimeType());
 	}
 
 	@Override
 	public boolean isSupported(String mimeType) {
-		return !_dlFileEntryRawMetadataProcesorExcludedMimeTypes.contains(
-			mimeType);
+		return _isSupported(GroupThreadLocal.getGroupId(), mimeType);
 	}
 
 	@Override
@@ -132,31 +133,37 @@ public class RawMetadataProcessorImpl
 			}
 		}
 
-		List<DDMStructure> ddmStructures =
-			_ddmStructureManager.getClassStructures(
-				fileVersion.getCompanyId(),
-				_portal.getClassNameId(RawMetadataProcessor.class));
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					fileVersion.getCtCollectionId())) {
 
-		ServiceContext serviceContext = new ServiceContext();
+			List<DDMStructure> ddmStructures =
+				_ddmStructureManager.getClassStructures(
+					fileVersion.getCompanyId(),
+					_portal.getClassNameId(RawMetadataProcessor.class));
 
-		serviceContext.setScopeGroupId(fileVersion.getGroupId());
-		serviceContext.setUserId(fileVersion.getUserId());
+			ServiceContext serviceContext = new ServiceContext();
 
-		_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
-			fileVersion.getCompanyId(), ddmStructures,
-			fileVersion.getFileEntryId(), fileVersion.getFileVersionId(),
-			rawMetadataMap, serviceContext);
+			serviceContext.setScopeGroupId(fileVersion.getGroupId());
+			serviceContext.setUserId(fileVersion.getUserId());
 
-		FileEntry fileEntry = fileVersion.getFileEntry();
+			_dlFileEntryMetadataLocalService.updateFileEntryMetadata(
+				null, fileVersion.getCompanyId(), ddmStructures,
+				fileVersion.getFileEntryId(), fileVersion.getFileVersionId(),
+				rawMetadataMap, serviceContext);
 
-		if (fileEntry instanceof LiferayFileEntry) {
-			Indexer<DLFileEntry> indexer = IndexerRegistryUtil.getIndexer(
-				DLFileEntryConstants.getClassName());
+			FileEntry fileEntry = fileVersion.getFileEntry();
 
-			if (indexer != null) {
-				LiferayFileEntry liferayFileEntry = (LiferayFileEntry)fileEntry;
+			if (fileEntry instanceof LiferayFileEntry) {
+				Indexer<DLFileEntry> indexer = IndexerRegistryUtil.getIndexer(
+					DLFileEntryConstants.getClassName());
 
-				indexer.reindex(liferayFileEntry.getDLFileEntry());
+				if (indexer != null) {
+					LiferayFileEntry liferayFileEntry =
+						(LiferayFileEntry)fileEntry;
+
+					indexer.reindex(liferayFileEntry.getDLFileEntry());
+				}
 			}
 		}
 	}
@@ -175,20 +182,39 @@ public class RawMetadataProcessorImpl
 			destinationFileVersion);
 	}
 
+	private boolean _isSupported(long groupId, String mimeType) {
+		try {
+			if (ArrayUtil.contains(
+					_dlFileEntryRawMetadataProcessorConfigurationProvider.
+						getGroupExcludedMimeTypes(groupId),
+					mimeType)) {
+
+				return false;
+			}
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(portalException);
+			}
+
+			return false;
+		}
+
+		return true;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		RawMetadataProcessorImpl.class);
-
-	private static final Set<String>
-		_dlFileEntryRawMetadataProcesorExcludedMimeTypes = new HashSet<>(
-			Arrays.asList(
-				PropsValues.
-					DL_FILE_ENTRY_RAW_METADATA_PROCESSOR_EXCLUDED_MIME_TYPES));
 
 	@Reference
 	private DDMStructureManager _ddmStructureManager;
 
 	@Reference
 	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;
+
+	@Reference
+	private DLFileEntryRawMetadataProcessorConfigurationProvider
+		_dlFileEntryRawMetadataProcessorConfigurationProvider;
 
 	@Reference
 	private Portal _portal;

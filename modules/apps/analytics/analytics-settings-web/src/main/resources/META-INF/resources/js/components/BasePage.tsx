@@ -6,11 +6,13 @@
 import React from 'react';
 
 interface IBasePageProps extends React.HTMLAttributes<HTMLElement> {
-	description?: string;
+	description?: string | JSX.Element;
 	title: string;
 }
 
-const BasePage: React.FC<IBasePageProps> & {
+const BasePage: React.FC<
+	{children?: React.ReactNode | undefined} & IBasePageProps
+> & {
 	Footer: typeof BasePageFooter;
 } = ({children, description, title}) => {
 	return (
@@ -26,9 +28,9 @@ const BasePage: React.FC<IBasePageProps> & {
 	);
 };
 
-const BasePageFooter: React.FC<React.HTMLAttributes<HTMLElement>> = ({
-	children,
-}) => {
+const BasePageFooter: React.FC<
+	{children?: React.ReactNode | undefined} & React.HTMLAttributes<HTMLElement>
+> = ({children}) => {
 	return <div className="sheet-footer">{children}</div>;
 };
 

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DynamicSegmentEdit should render 1`] = `
+exports[`DynamicSegmentEdit should render in BATCH mode 1`] = `
 <div>
   <div
     class="segment-edit-page-root"
@@ -29,7 +29,7 @@ exports[`DynamicSegmentEdit should render 1`] = `
                   placeholder="Unnamed Segment"
                   required=""
                   type="text"
-                  value="Seattle0"
+                  value="Seattle123"
                 />
                 <div
                   class="title-display"
@@ -39,7 +39,7 @@ exports[`DynamicSegmentEdit should render 1`] = `
                     role="button"
                     tabindex="0"
                   >
-                    Seattle0
+                    Seattle123
                   </span>
                   <button
                     aria-label="Edit"
@@ -249,13 +249,7 @@ exports[`DynamicSegmentEdit should render 1`] = `
             >
               <ul
                 class="property-subgroups-list active"
-              >
-                <li
-                  class="empty-message"
-                >
-                  No results were found.
-                </li>
-              </ul>
+              />
             </div>
           </div>
         </div>
@@ -293,11 +287,11 @@ exports[`DynamicSegmentEdit should render 1`] = `
                             class="criteria-message"
                           >
                             <svg
-                              class="lexicon-icon lexicon-icon-ac-rule icon-root icon-size-md"
+                              class="lexicon-icon lexicon-icon-ac_rule icon-root icon-size-md"
                               role="presentation"
                             >
                               <use
-                                href="#ac-rule"
+                                href="#ac_rule"
                               />
                             </svg>
                             Drag and drop criterion from the right to add rules.
@@ -306,11 +300,11 @@ exports[`DynamicSegmentEdit should render 1`] = `
                             class="groups-message"
                           >
                             <svg
-                              class="lexicon-icon lexicon-icon-ac-group icon-root icon-size-md"
+                              class="lexicon-icon lexicon-icon-ac_group icon-root icon-size-md"
                               role="presentation"
                             >
                               <use
-                                href="#ac-group"
+                                href="#ac_group"
                               />
                             </svg>
                             Drag and drop over an existing criteria to form groups.

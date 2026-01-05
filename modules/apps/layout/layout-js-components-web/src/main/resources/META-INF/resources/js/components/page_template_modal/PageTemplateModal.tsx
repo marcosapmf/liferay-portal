@@ -7,7 +7,8 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput, ClaySelectWithOption} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import {fetch, openToast, sub} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, sub} from 'frontend-js-web';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {flushSync} from 'react-dom';
 
@@ -170,7 +171,7 @@ export default function PageTemplateModal({
 	);
 
 	const handleSubmit = useCallback(
-		(event) => {
+		(event: any) => {
 			event.preventDefault();
 
 			const errors = validateForm();
@@ -240,7 +241,9 @@ export default function PageTemplateModal({
 
 	return (
 		<ClayModal containerProps={{className: 'cadmin'}} observer={observer}>
-			<ClayModal.Header>
+			<ClayModal.Header
+				closeButtonAriaLabel={Liferay.Language.get('close')}
+			>
 				{openAddTemplateSetModal
 					? Liferay.Language.get('add-page-template-set')
 					: Liferay.Language.get('select-page-template-set')}

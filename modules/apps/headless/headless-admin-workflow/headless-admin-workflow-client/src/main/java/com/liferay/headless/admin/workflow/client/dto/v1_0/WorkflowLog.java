@@ -8,12 +8,12 @@ package com.liferay.headless.admin.workflow.client.dto.v1_0;
 import com.liferay.headless.admin.workflow.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.workflow.client.serdes.v1_0.WorkflowLogSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -376,9 +376,9 @@ public class WorkflowLog implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		NODE_ENTRY("NodeEntry"), TASK_ASSIGN("TaskAssign"),
-		TASK_COMPLETION("TaskCompletion"), TASK_UPDATE("TaskUpdate"),
-		TRANSITION("Transition");
+		INSTANCE_FAIL("InstanceFail"), NODE_ENTRY("NodeEntry"),
+		TASK_ASSIGN("TaskAssign"), TASK_COMPLETION("TaskCompletion"),
+		TASK_UPDATE("TaskUpdate"), TRANSITION("Transition");
 
 		public static Type create(String value) {
 			for (Type type : values()) {

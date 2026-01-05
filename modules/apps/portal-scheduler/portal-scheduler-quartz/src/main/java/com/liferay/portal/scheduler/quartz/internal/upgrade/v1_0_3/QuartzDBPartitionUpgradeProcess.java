@@ -6,10 +6,10 @@
 package com.liferay.portal.scheduler.quartz.internal.upgrade.v1_0_3;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 
 /**
@@ -32,11 +32,7 @@ public class QuartzDBPartitionUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected boolean isSkipUpgradeProcess() {
-		if (!DBPartition.isPartitionEnabled()) {
-			return true;
-		}
-
-		return false;
+		return !PropsValues.DATABASE_PARTITION_ENABLED;
 	}
 
 	private void _addIndex(String createIndexSQLStatement) throws Exception {

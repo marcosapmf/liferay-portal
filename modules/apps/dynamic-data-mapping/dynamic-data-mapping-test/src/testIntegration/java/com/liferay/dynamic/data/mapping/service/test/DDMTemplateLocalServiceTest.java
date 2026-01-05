@@ -19,6 +19,8 @@ import com.liferay.dynamic.data.mapping.util.comparator.TemplateIdComparator;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -216,6 +218,32 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 	}
 
 	@Test
+	public void testFetchDDMTemplateByExternalReferenceCode() throws Exception {
+		Company company = _companyLocalService.getCompany(group.getCompanyId());
+
+		DDMTemplate template = _ddmTemplateLocalService.addTemplate(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			company.getGroupId(), _classNameId, 0, _resourceClassNameId,
+			Collections.singletonMap(
+				LocaleUtil.getSiteDefault(), RandomTestUtil.randomString()),
+			null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
+			DDMTemplateConstants.TEMPLATE_MODE_CREATE,
+			TemplateConstants.LANG_TYPE_VM,
+			getTestTemplateScript(TemplateConstants.LANG_TYPE_VM),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertNull(
+			_ddmTemplateLocalService.fetchDDMTemplateByExternalReferenceCode(
+				template.getExternalReferenceCode(), group.getGroupId(),
+				false));
+		Assert.assertNotNull(
+			_ddmTemplateLocalService.fetchDDMTemplateByExternalReferenceCode(
+				template.getExternalReferenceCode(), group.getGroupId(), true));
+
+		_ddmTemplateLocalService.deleteTemplate(template);
+	}
+
+	@Test
 	public void testFetchTemplate() throws Exception {
 		DDMTemplate template = addDisplayTemplate(
 			_classNameId, _resourceClassNameId, "Test Template",
@@ -233,10 +261,12 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, _resourceClassNameId, "Test Template",
 			WorkflowConstants.STATUS_APPROVED);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.getTemplates(
-			template.getGroupId(), template.getClassNameId());
+		List<DDMTemplate> ddmTemplates =
+			DDMTemplateLocalServiceUtil.getTemplates(
+				template.getGroupId(), template.getClassNameId());
 
-		Assert.assertTrue(templates.toString(), templates.contains(template));
+		Assert.assertTrue(
+			ddmTemplates.toString(), ddmTemplates.contains(template));
 	}
 
 	@Test
@@ -248,13 +278,13 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, 0, _resourceClassNameId, "Contact", null,
 			WorkflowConstants.STATUS_DRAFT);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, _resourceClassNameId, null, null, null, null, null,
 			WorkflowConstants.STATUS_ANY, true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 
-		Assert.assertEquals(templates.toString(), 2, templates.size());
+		Assert.assertEquals(ddmTemplates.toString(), 2, ddmTemplates.size());
 	}
 
 	@Test
@@ -269,15 +299,15 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, 0, _resourceClassNameId, "Meeting", "Meeting",
 			WorkflowConstants.STATUS_APPROVED);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, _resourceClassNameId, null, "Meeting", null, null, null,
 			WorkflowConstants.STATUS_APPROVED, true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 
-		Assert.assertEquals(templates.toString(), 1, templates.size());
+		Assert.assertEquals(ddmTemplates.toString(), 1, ddmTemplates.size());
 
-		DDMTemplate template = templates.get(0);
+		DDMTemplate template = ddmTemplates.get(0);
 
 		Assert.assertEquals(
 			"Meeting", template.getDescription(group.getDefaultLanguageId()));
@@ -292,13 +322,13 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, 0, _resourceClassNameId, "Contact", null,
 			WorkflowConstants.STATUS_DRAFT);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, _resourceClassNameId, null, null, null, null, null,
 			WorkflowConstants.STATUS_DRAFT, true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 
-		Assert.assertEquals(templates.toString(), 1, templates.size());
+		Assert.assertEquals(ddmTemplates.toString(), 1, ddmTemplates.size());
 	}
 
 	@Test
@@ -313,14 +343,14 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, _resourceClassNameId, "Meeting",
 			WorkflowConstants.STATUS_APPROVED);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, _resourceClassNameId, "Event", null, null, null, null,
 			WorkflowConstants.STATUS_APPROVED, true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 
-		Assert.assertEquals(templates.toString(), 1, templates.size());
-		Assert.assertEquals("Event", getTemplateName(templates.get(0)));
+		Assert.assertEquals(ddmTemplates.toString(), 1, ddmTemplates.size());
+		Assert.assertEquals("Event", getTemplateName(ddmTemplates.get(0)));
 	}
 
 	@Test
@@ -335,13 +365,13 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, 0, _resourceClassNameId, "Meeting", "Meeting",
 			WorkflowConstants.STATUS_APPROVED);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, 0, "Event", "Meeting", null, null, null,
 			WorkflowConstants.STATUS_APPROVED, true, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 
-		Assert.assertEquals(templates.toString(), 2, templates.size());
+		Assert.assertEquals(ddmTemplates.toString(), 2, ddmTemplates.size());
 	}
 
 	@Test
@@ -356,14 +386,14 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 			_classNameId, 0, _resourceClassNameId, "Meeting", "Meeting",
 			WorkflowConstants.STATUS_APPROVED);
 
-		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+		List<DDMTemplate> ddmTemplates = DDMTemplateLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
 			null, null, _resourceClassNameId, "Event", "Meeting", null, null,
 			null, WorkflowConstants.STATUS_APPROVED, false, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, TemplateIdComparator.getInstance(true));
 
-		Assert.assertEquals("Event", getTemplateName(templates.get(0)));
-		Assert.assertEquals("Meeting", getTemplateName(templates.get(1)));
+		Assert.assertEquals("Event", getTemplateName(ddmTemplates.get(0)));
+		Assert.assertEquals("Meeting", getTemplateName(ddmTemplates.get(1)));
 	}
 
 	@Test
@@ -608,6 +638,9 @@ public class DDMTemplateLocalServiceTest extends BaseDDMServiceTestCase {
 
 	private static long _classNameId;
 	private static long _resourceClassNameId;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private DDMTemplateLocalService _ddmTemplateLocalService;

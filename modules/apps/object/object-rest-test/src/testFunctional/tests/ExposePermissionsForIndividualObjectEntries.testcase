@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
 	property testray.main.component.name = "Object Entries REST APIs";
 
 	setUp {
@@ -42,6 +41,8 @@ definition {
 		}
 		else {
 			ObjectAdmin.deleteObjectViaAPI(objectName = "Student");
+
+			JSONRole.deleteRole(roleTitle = "Test");
 		}
 	}
 
@@ -107,7 +108,7 @@ definition {
 		}
 
 		task ("And Given with putStudentPermissionsPage I update "Test" role with no actionIds") {
-			CustomObjectAPI.updateObjectPermissions(
+			var updateResponse = CustomObjectAPI.updateObjectPermissions(
 				actionIds = "",
 				en_US_plural_label = "students",
 				objectEntryId = ${staticObjectId},
@@ -115,17 +116,23 @@ definition {
 		}
 
 		task ("When requesting getStudentPermissionsPage with created {studentId}") {
-			var response = CustomObjectAPI.getObjectPermissions(
+			var getResponse = CustomObjectAPI.getObjectPermissions(
 				en_US_plural_label = "students",
 				objectEntryId = ${staticObjectId});
 		}
 
-		task ("Then I can see "Owner" as a unique assigned role") {
-			var actualRole = JSONUtil.getWithJSONPath(${response}, "$.items[*].roleName");
+		task ("Then I can see the empty page of roles and permissions") {
+			var updateResponseRole = JSONUtil.getWithJSONPath(${updateResponse}, "$.items");
 
 			TestUtils.assertEquals(
-				actual = ${actualRole},
-				expected = "Owner");
+				actual = ${updateResponseRole},
+				expected = "");
+
+			var getResponseRole = JSONUtil.getWithJSONPath(${getResponse}, "$.items");
+
+			TestUtils.assertEquals(
+				actual = ${getResponseRole},
+				expected = "");
 		}
 	}
 
@@ -135,9 +142,11 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("And Given the role "Test" assigned to student entry") {
+			var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${staticObjectDefinitionId});
+
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW",
-				resourceName = "com.liferay.object.model.ObjectDefinition#${staticObjectDefinitionId}",
+				resourceName = ${objectDefinitionClassName},
 				roleTitle = "Test",
 				roleType = "regular");
 		}
@@ -184,9 +193,11 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("And Given the role "Test" assigned to student entry through jsonws") {
+			var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${staticObjectDefinitionId});
+
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW",
-				resourceName = "com.liferay.object.model.ObjectDefinition#${staticObjectDefinitionId}",
+				resourceName = ${objectDefinitionClassName},
 				roleTitle = "Test",
 				roleType = "regular");
 		}

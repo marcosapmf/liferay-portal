@@ -6,7 +6,8 @@
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal from '@clayui/modal';
-import {fetch, navigate, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {fetch, navigate} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useRef, useState} from 'react';
 
@@ -95,7 +96,13 @@ export function MultiStepFormModal({
 			onSubmit={handleFormSubmit}
 			size={size}
 		>
-			{title && <ClayModal.Header>{title}</ClayModal.Header>}
+			{title && (
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
+					{title}
+				</ClayModal.Header>
+			)}
 
 			<ClayModal.Body>
 				<ClayForm ref={formRef}>

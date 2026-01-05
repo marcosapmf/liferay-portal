@@ -140,7 +140,8 @@ public class CommercePriceListPersistenceTest {
 
 		newCommercePriceList.setModifiedDate(RandomTestUtil.nextDate());
 
-		newCommercePriceList.setCommerceCurrencyId(RandomTestUtil.nextLong());
+		newCommercePriceList.setCommerceCurrencyCode(
+			RandomTestUtil.randomString());
 
 		newCommercePriceList.setParentCommercePriceListId(
 			RandomTestUtil.nextLong());
@@ -209,8 +210,8 @@ public class CommercePriceListPersistenceTest {
 			Time.getShortTimestamp(existingCommercePriceList.getModifiedDate()),
 			Time.getShortTimestamp(newCommercePriceList.getModifiedDate()));
 		Assert.assertEquals(
-			existingCommercePriceList.getCommerceCurrencyId(),
-			newCommercePriceList.getCommerceCurrencyId());
+			existingCommercePriceList.getCommerceCurrencyCode(),
+			newCommercePriceList.getCommerceCurrencyCode());
 		Assert.assertEquals(
 			existingCommercePriceList.getParentCommercePriceListId(),
 			newCommercePriceList.getParentCommercePriceListId());
@@ -311,13 +312,6 @@ public class CommercePriceListPersistenceTest {
 	}
 
 	@Test
-	public void testCountByCommerceCurrencyId() throws Exception {
-		_persistence.countByCommerceCurrencyId(RandomTestUtil.nextLong());
-
-		_persistence.countByCommerceCurrencyId(0L);
-	}
-
-	@Test
 	public void testCountByParentCommercePriceListId() throws Exception {
 		_persistence.countByParentCommercePriceListId(
 			RandomTestUtil.nextLong());
@@ -341,12 +335,20 @@ public class CommercePriceListPersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_CatalogBasePriceList() throws Exception {
-		_persistence.countByG_CatalogBasePriceList(
+	public void testCountByG_CBPL() throws Exception {
+		_persistence.countByG_CBPL(
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
-		_persistence.countByG_CatalogBasePriceList(
-			0L, RandomTestUtil.randomBoolean());
+		_persistence.countByG_CBPL(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_C() throws Exception {
+		_persistence.countByC_C(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_C(0L, "null");
+
+		_persistence.countByC_C(0L, (String)null);
 	}
 
 	@Test
@@ -390,13 +392,14 @@ public class CommercePriceListPersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_C_T() throws Exception {
-		_persistence.countByG_C_T(
+	public void testCountByG_CBPL_T() throws Exception {
+		_persistence.countByG_CBPL_T(
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(), "");
 
-		_persistence.countByG_C_T(0L, RandomTestUtil.randomBoolean(), "null");
+		_persistence.countByG_CBPL_T(
+			0L, RandomTestUtil.randomBoolean(), "null");
 
-		_persistence.countByG_C_T(
+		_persistence.countByG_CBPL_T(
 			0L, RandomTestUtil.randomBoolean(), (String)null);
 	}
 
@@ -476,7 +479,7 @@ public class CommercePriceListPersistenceTest {
 			"uuid", true, "externalReferenceCode", true, "commercePriceListId",
 			true, "groupId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
-			"commerceCurrencyId", true, "parentCommercePriceListId", true,
+			"commerceCurrencyCode", true, "parentCommercePriceListId", true,
 			"catalogBasePriceList", true, "netPrice", true, "type", true,
 			"name", true, "priority", true, "displayDate", true,
 			"expirationDate", true, "lastPublishDate", true, "status", true,
@@ -769,39 +772,6 @@ public class CommercePriceListPersistenceTest {
 				new Class<?>[] {String.class}, "groupId"));
 
 		Assert.assertEquals(
-			Long.valueOf(commercePriceList.getParentCommercePriceListId()),
-			ReflectionTestUtil.<Long>invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "parentCommercePriceListId"));
-
-		Assert.assertEquals(
-			Long.valueOf(commercePriceList.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "groupId"));
-		Assert.assertEquals(
-			Boolean.valueOf(commercePriceList.getCatalogBasePriceList()),
-			ReflectionTestUtil.<Boolean>invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "catalogBasePriceList"));
-
-		Assert.assertEquals(
-			Long.valueOf(commercePriceList.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "groupId"));
-		Assert.assertEquals(
-			Boolean.valueOf(commercePriceList.getCatalogBasePriceList()),
-			ReflectionTestUtil.<Boolean>invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "catalogBasePriceList"));
-		Assert.assertEquals(
-			commercePriceList.getType(),
-			ReflectionTestUtil.invoke(
-				commercePriceList, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "type_"));
-
-		Assert.assertEquals(
 			commercePriceList.getExternalReferenceCode(),
 			ReflectionTestUtil.invoke(
 				commercePriceList, "getColumnOriginalValue",
@@ -839,7 +809,8 @@ public class CommercePriceListPersistenceTest {
 
 		commercePriceList.setModifiedDate(RandomTestUtil.nextDate());
 
-		commercePriceList.setCommerceCurrencyId(RandomTestUtil.nextLong());
+		commercePriceList.setCommerceCurrencyCode(
+			RandomTestUtil.randomString());
 
 		commercePriceList.setParentCommercePriceListId(
 			RandomTestUtil.nextLong());

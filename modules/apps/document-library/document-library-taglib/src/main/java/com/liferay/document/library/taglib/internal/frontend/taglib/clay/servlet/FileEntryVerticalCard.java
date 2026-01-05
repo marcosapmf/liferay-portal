@@ -24,11 +24,11 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -137,11 +137,7 @@ public class FileEntryVerticalCard implements VerticalCard {
 
 	@Override
 	public boolean isSelectable() {
-		if (_actions.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !_actions.isEmpty();
 	}
 
 	private final Set<String> _actions;

@@ -12,10 +12,10 @@ import com.liferay.headless.commerce.admin.payment.resource.v1_0.PaymentResource
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
+import jakarta.annotation.Generated;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentServiceObjects;
@@ -76,10 +76,27 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
-						"mutation#createPaymentsPageExportBatch",
+						"mutation#deletePayment",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class, "deletePayment"));
+					put(
+						"mutation#deletePaymentBatch",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class, "deletePaymentBatch"));
+					put(
+						"mutation#deletePaymentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							PaymentResourceImpl.class,
-							"postPaymentsPageExportBatch"));
+							"deletePaymentByExternalReferenceCode"));
+					put(
+						"mutation#patchPayment",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class, "patchPayment"));
+					put(
+						"mutation#patchPaymentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class,
+							"patchPaymentByExternalReferenceCode"));
 					put(
 						"mutation#createPayment",
 						new ObjectValuePair<>(
@@ -89,50 +106,38 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							PaymentResourceImpl.class, "postPaymentBatch"));
 					put(
-						"mutation#deletePaymentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							PaymentResourceImpl.class,
-							"deletePaymentByExternalReferenceCode"));
-					put(
-						"mutation#patchPaymentByExternalReferenceCode",
-						new ObjectValuePair<>(
-							PaymentResourceImpl.class,
-							"patchPaymentByExternalReferenceCode"));
-					put(
 						"mutation#createPaymentByExternalReferenceCodeRefund",
 						new ObjectValuePair<>(
 							PaymentResourceImpl.class,
 							"postPaymentByExternalReferenceCodeRefund"));
 					put(
-						"mutation#deletePayment",
-						new ObjectValuePair<>(
-							PaymentResourceImpl.class, "deletePayment"));
-					put(
-						"mutation#deletePaymentBatch",
-						new ObjectValuePair<>(
-							PaymentResourceImpl.class, "deletePaymentBatch"));
-					put(
-						"mutation#patchPayment",
-						new ObjectValuePair<>(
-							PaymentResourceImpl.class, "patchPayment"));
-					put(
 						"mutation#createPaymentRefund",
 						new ObjectValuePair<>(
 							PaymentResourceImpl.class, "postPaymentRefund"));
+					put(
+						"mutation#createPaymentsPageExportBatch",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class,
+							"postPaymentsPageExportBatch"));
+					put(
+						"mutation#updatePaymentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PaymentResourceImpl.class,
+							"putPaymentByExternalReferenceCode"));
 
 					put(
-						"query#payments",
+						"query#payment",
 						new ObjectValuePair<>(
-							PaymentResourceImpl.class, "getPaymentsPage"));
+							PaymentResourceImpl.class, "getPayment"));
 					put(
 						"query#paymentByExternalReferenceCode",
 						new ObjectValuePair<>(
 							PaymentResourceImpl.class,
 							"getPaymentByExternalReferenceCode"));
 					put(
-						"query#payment",
+						"query#payments",
 						new ObjectValuePair<>(
-							PaymentResourceImpl.class, "getPayment"));
+							PaymentResourceImpl.class, "getPaymentsPage"));
 				}
 			};
 

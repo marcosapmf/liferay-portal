@@ -11,7 +11,7 @@ exports[`SearchableTableModal should render 1`] = `
       class="modal-content"
     >
       <div
-        class="modal-header"
+        class="modal-header has-title"
       >
         <div
           class="h4 modal-title"
@@ -74,28 +74,9 @@ exports[`SearchableTableModal should render 1`] = `
                   </label>
                 </div>
               </li>
-              <li
-                class="nav-item"
-                role="presentation"
-              >
-                <button
-                  aria-label="Ascending"
-                  class="btn-root nav-link nav-link-monospaced btn btn-outline-borderless btn-outline-unstyled"
-                  type="button"
-                >
-                  <svg
-                    class="lexicon-icon lexicon-icon-order-arrow-ascending icon-root"
-                    role="presentation"
-                  >
-                    <use
-                      href="#order-arrow-ascending"
-                    />
-                  </svg>
-                </button>
-              </li>
             </ul>
             <div
-              class="navbar-form navbar-form-autofit"
+              class="navbar-form navbar-form-autofit mx-2"
             >
               <div
                 class="input-group search"

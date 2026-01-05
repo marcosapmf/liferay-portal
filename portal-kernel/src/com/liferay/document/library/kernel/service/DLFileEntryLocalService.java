@@ -204,6 +204,10 @@ public interface DLFileEntryLocalService
 			long groupId, long folderId, boolean includeTrashedEntries)
 		throws PortalException;
 
+	public void deleteFileEntries(
+			long companyId, long classNameId, long classPK)
+		throws PortalException;
+
 	@Indexable(type = IndexableType.DELETE)
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
@@ -217,6 +221,11 @@ public interface DLFileEntryLocalService
 
 	@Indexable(type = IndexableType.DELETE)
 	public DLFileEntry deleteFileEntry(long userId, long fileEntryId)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.DELETE)
+	public DLFileEntry deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -536,7 +545,7 @@ public interface DLFileEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

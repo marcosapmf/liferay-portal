@@ -8,7 +8,7 @@ package com.liferay.comment.taglib.internal.context.helper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -118,6 +118,16 @@ public class DiscussionTaglibHelper {
 		return _ratingsEnabled;
 	}
 
+	public boolean isRefreshPageOnReply() {
+		if (_refreshPageOnReply == null) {
+			_refreshPageOnReply = GetterUtil.getBoolean(
+				_httpServletRequest.getAttribute(
+					"liferay-comment:discussion:refreshPageOnReply"));
+		}
+
+		return _refreshPageOnReply;
+	}
+
 	private static final String _CLASS_NAME =
 		"com.liferay.message.boards.model.MBDiscussion";
 
@@ -131,6 +141,7 @@ public class DiscussionTaglibHelper {
 	private String _paginationURL;
 	private Boolean _ratingsEnabled;
 	private String _redirect;
+	private Boolean _refreshPageOnReply;
 	private Long _userId;
 
 }

@@ -17,12 +17,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -67,13 +67,12 @@ public class AssetCategoryUtil {
 			}
 		).addAll(
 			() -> {
-				List<AssetCategory> ancestorsCategories =
-					category.getAncestors();
+				List<AssetCategory> assetCategories = category.getAncestors();
 
-				Collections.reverse(ancestorsCategories);
+				Collections.reverse(assetCategories);
 
 				return TransformUtil.transform(
-					ancestorsCategories,
+					assetCategories,
 					curCategory -> BreadcrumbEntryBuilder.setTitle(
 						curCategory.getTitle(themeDisplay.getLocale())
 					).setURL(

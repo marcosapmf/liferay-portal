@@ -17,7 +17,6 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
-import com.liferay.portal.osgi.web.servlet.JSPTaglibHelper;
 import com.liferay.portal.osgi.web.servlet.context.helper.ServletContextHelperRegistration;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.FilterDefinition;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.ListenerDefinition;
@@ -33,6 +32,18 @@ import com.liferay.portal.osgi.web.wab.extender.internal.registration.FilterRegi
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ListenerServiceRegistrationComparator;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ServletRegistrationImpl;
 import com.liferay.portal.plugin.PluginPackageUtil;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextAttributeListener;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletRequestAttributeListener;
+import jakarta.servlet.ServletRequestListener;
+import jakarta.servlet.annotation.HandlesTypes;
+import jakarta.servlet.http.HttpSessionAttributeListener;
+import jakarta.servlet.http.HttpSessionListener;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -62,18 +73,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
-import javax.servlet.annotation.HandlesTypes;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -89,12 +88,10 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 public class WabBundleProcessor {
 
 	public WabBundleProcessor(
-		Bundle bundle, JSPServletFactory jspServletFactory,
-		JSPTaglibHelper jspTaglibHelper) {
+		Bundle bundle, JSPServletFactory jspServletFactory) {
 
 		_bundle = bundle;
 		_jspServletFactory = jspServletFactory;
-		_jspTaglibHelper = jspTaglibHelper;
 
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
@@ -633,7 +630,7 @@ public class WabBundleProcessor {
 		throws IOException {
 
 		Enumeration<URL> enumeration = bundle.getResources(
-			"META-INF/services/javax.servlet.ServletContainerInitializer");
+			"META-INF/services/jakarta.servlet.ServletContainerInitializer");
 
 		if (enumeration == null) {
 			return;
@@ -857,7 +854,8 @@ public class WabBundleProcessor {
 
 		List<String> listenerClassNames = new ArrayList<>();
 
-		_jspTaglibHelper.scanTLDs(_bundle, servletContext, listenerClassNames);
+		JSPTaglibHelperUtil.scanTLDs(
+			_bundle, servletContext, listenerClassNames);
 
 		for (String listenerClassName : listenerClassNames) {
 			try {
@@ -899,7 +897,6 @@ public class WabBundleProcessor {
 	private final Set<ServiceRegistration<Filter>> _filterServiceRegistrations =
 		new ConcurrentSkipListSet<>();
 	private final JSPServletFactory _jspServletFactory;
-	private final JSPTaglibHelper _jspTaglibHelper;
 	private final Set<ServiceRegistration<?>> _listenerServiceRegistrations =
 		new ConcurrentSkipListSet<>(
 			new ListenerServiceRegistrationComparator());

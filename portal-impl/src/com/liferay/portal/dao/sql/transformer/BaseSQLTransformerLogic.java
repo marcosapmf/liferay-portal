@@ -53,6 +53,16 @@ public abstract class BaseSQLTransformerLogic implements SQLTransformerLogic {
 		return Pattern.compile("BITAND\\(\\s*(.+?)\\s*,\\s*(.+?)\\s*\\)");
 	}
 
+	protected Function<String, String> getBitwiseOrFunction() {
+		Pattern pattern = getBitwiseOrPattern();
+
+		return (String sql) -> replaceBitwiseOr(pattern.matcher(sql));
+	}
+
+	protected Pattern getBitwiseOrPattern() {
+		return Pattern.compile("BITOR\\(\\s*(.+?)\\s*,\\s*(.+?)\\s*\\)");
+	}
+
 	protected Function<String, String> getBooleanFunction() {
 		return (String sql) -> StringUtil.replace(
 			sql, new String[] {"[$FALSE$]", "[$TRUE$]"},
@@ -68,6 +78,17 @@ public abstract class BaseSQLTransformerLogic implements SQLTransformerLogic {
 	protected Pattern getCastClobTextPattern() {
 		return Pattern.compile(
 			"CAST_CLOB_TEXT\\((.*)\\)", Pattern.CASE_INSENSITIVE);
+	}
+
+	protected Function<String, String> getCastDecimalFunction() {
+		return _getCastFunction(
+			matcher -> replaceCastDecimal(matcher), "CAST_DECIMAL",
+			getCastDecimalPattern());
+	}
+
+	protected Pattern getCastDecimalPattern() {
+		return Pattern.compile(
+			"CAST_DECIMAL\\((.*)\\)", Pattern.CASE_INSENSITIVE);
 	}
 
 	protected Function<String, String> getCastLongFunction() {
@@ -204,6 +225,18 @@ public abstract class BaseSQLTransformerLogic implements SQLTransformerLogic {
 			Pattern.CASE_INSENSITIVE);
 	}
 
+	protected Function<String, String> getTruncateTableFunction() {
+		Pattern pattern = getTruncateTablePattern();
+
+		return (String sql) -> replaceTruncateTable(pattern.matcher(sql));
+	}
+
+	protected Pattern getTruncateTablePattern() {
+		return Pattern.compile(
+			"TRUNCATE\\s+TABLE\\s+([a-zA-Z_][\\w.]*)",
+			Pattern.CASE_INSENSITIVE);
+	}
+
 	protected String replaceAggregation(Matcher matcher) {
 		return matcher.replaceAll("$2($3)");
 	}
@@ -212,8 +245,16 @@ public abstract class BaseSQLTransformerLogic implements SQLTransformerLogic {
 		return matcher.replaceAll("($1 & $2)");
 	}
 
+	protected String replaceBitwiseOr(Matcher matcher) {
+		return matcher.replaceAll("($1 | $2)");
+	}
+
 	protected String replaceCastClobText(Matcher matcher) {
 		return replaceCastText(matcher);
+	}
+
+	protected String replaceCastDecimal(Matcher matcher) {
+		return matcher.replaceAll("CAST($1 AS DECIMAL(31, 2))");
 	}
 
 	protected String replaceCastLong(Matcher matcher) {
@@ -242,6 +283,10 @@ public abstract class BaseSQLTransformerLogic implements SQLTransformerLogic {
 
 	protected String replaceSubstr(Matcher matcher) {
 		return matcher.replaceAll("SUBSTRING($1, $2, $3)");
+	}
+
+	protected String replaceTruncateTable(Matcher matcher) {
+		return matcher.replaceAll("TRUNCATE TABLE $1");
 	}
 
 	protected void setFunctions(Function... functions) {

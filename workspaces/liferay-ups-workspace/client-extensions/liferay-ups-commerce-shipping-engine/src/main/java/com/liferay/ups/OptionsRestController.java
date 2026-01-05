@@ -5,7 +5,9 @@
 
 package com.liferay.ups;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.ups.constants.UPSServiceCodeConstants;
 
@@ -28,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Alessio Antonio Rendina
@@ -109,18 +111,12 @@ public class OptionsRestController extends BaseRestController {
 
 	private JSONObject _get(String authorization, String path) {
 		return new JSONObject(
-			_getWebClient(
-			).get(
-			).uri(
-				uriBuilder -> uriBuilder.path(
+			get(
+				authorization,
+				UriComponentsBuilder.fromPath(
 					path
-				).build()
-			).header(
-				HttpHeaders.AUTHORIZATION, authorization
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
+				).build(
+				).toUri()));
 	}
 
 	private String _getAccessToken(
@@ -131,28 +127,23 @@ public class OptionsRestController extends BaseRestController {
 
 			String credentials = clientId + ":" + clientSecret;
 
-			WebClient webClient = WebClient.builder(
-			).baseUrl(
-				"https://wwwcie.ups.com"
-			).defaultHeader(
-				HttpHeaders.AUTHORIZATION,
-				"Basic " + encoder.encodeToString(credentials.getBytes())
-			).defaultHeader(
-				HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_FORM_URLENCODED_VALUE
-			).build();
-
 			JSONObject jsonObject = new JSONObject(
-				webClient.post(
-				).uri(
-					"/security/v1/oauth/token"
-				).body(
+				post(
 					BodyInserters.fromFormData(
-						"grant_type", "client_credentials")
-				).retrieve(
-				).bodyToFlux(
-					String.class
-				).blockLast());
+						"grant_type", "client_credentials"
+					).toString(),
+					HashMapBuilder.put(
+						HttpHeaders.AUTHORIZATION,
+						"Basic " +
+							encoder.encodeToString(credentials.getBytes())
+					).put(
+						HttpHeaders.CONTENT_TYPE,
+						MediaType.APPLICATION_FORM_URLENCODED_VALUE
+					).build(),
+					UriComponentsBuilder.fromUriString(
+						"https://wwwcie.ups.com/security/v1/oauth/token"
+					).build(
+					).toUri()));
 
 			return jsonObject.getString("access_token");
 		}
@@ -163,17 +154,6 @@ public class OptionsRestController extends BaseRestController {
 		}
 
 		return StringPool.BLANK;
-	}
-
-	private WebClient _getWebClient() {
-		return WebClient.builder(
-		).baseUrl(
-			lxcDXPServerProtocol + "://" + lxcDXPMainDomain
-		).defaultHeader(
-			HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE
-		).defaultHeader(
-			HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE
-		).build();
 	}
 
 	private JSONObject _postRate(
@@ -213,14 +193,6 @@ public class OptionsRestController extends BaseRestController {
 							"Width", String.valueOf(width)
 						)
 					).put(
-						"PackagingType",
-						new JSONObject(
-						).put(
-							"Code",
-							typeSettingsJSONObject.getString(
-								"packagingTypeCode")
-						)
-					).put(
 						"PackageWeight",
 						new JSONObject(
 						).put(
@@ -235,6 +207,14 @@ public class OptionsRestController extends BaseRestController {
 							"Weight", String.valueOf(weight)
 						)
 					).put(
+						"PackagingType",
+						new JSONObject(
+						).put(
+							"Code",
+							typeSettingsJSONObject.getString(
+								"packagingTypeCode")
+						)
+					).put(
 						"SimpleRate",
 						new JSONObject(
 						).put(
@@ -247,6 +227,35 @@ public class OptionsRestController extends BaseRestController {
 					new JSONObject(
 					).put(
 						"Code", code
+					)
+				).put(
+					"Shipper",
+					new JSONObject(
+					).put(
+						"Address",
+						new JSONObject(
+						).put(
+							"AddressLine",
+							new JSONArray(
+							).put(
+								typeSettingsJSONObject.getString(
+									"shipperAddressLine1")
+							).put(
+								typeSettingsJSONObject.getString(
+									"shipperAddressLine2")
+							).put(
+								typeSettingsJSONObject.getString(
+									"shipperAddressLine3")
+							)
+						).put(
+							"CountryCode",
+							typeSettingsJSONObject.getString(
+								"shipperCountryCode")
+						).put(
+							"PostalCode",
+							typeSettingsJSONObject.getString(
+								"shipperPostalCode")
+						)
 					)
 				).put(
 					"ShipTo",
@@ -278,62 +287,19 @@ public class OptionsRestController extends BaseRestController {
 							shippingAddressJSONObject.getString("regionISOCode")
 						)
 					)
-				).put(
-					"Shipper",
-					new JSONObject(
-					).put(
-						"Address",
-						new JSONObject(
-						).put(
-							"AddressLine",
-							new JSONArray(
-							).put(
-								typeSettingsJSONObject.getString(
-									"shipperAddressLine1")
-							).put(
-								typeSettingsJSONObject.getString(
-									"shipperAddressLine2")
-							).put(
-								typeSettingsJSONObject.getString(
-									"shipperAddressLine3")
-							)
-						).put(
-							"CountryCode",
-							typeSettingsJSONObject.getString(
-								"shipperCountryCode")
-						).put(
-							"PostalCode",
-							typeSettingsJSONObject.getString(
-								"shipperPostalCode")
-						)
-					)
 				)
 			)
 		).toString();
 
 		try {
-			WebClient webClient = WebClient.builder(
-			).baseUrl(
-				"https://wwwcie.ups.com"
-			).defaultHeader(
-				HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE
-			).defaultHeader(
-				HttpHeaders.AUTHORIZATION,
-				"Bearer " + _getAccessToken(clientId, clientSecret, log)
-			).defaultHeader(
-				HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE
-			).build();
-
 			return new JSONObject(
-				webClient.post(
-				).uri(
-					"/api/rating/v2403/Rate"
-				).bodyValue(
-					body
-				).retrieve(
-				).bodyToFlux(
-					String.class
-				).blockLast());
+				post(
+					"Bearer " + _getAccessToken(clientId, clientSecret, log),
+					body,
+					UriComponentsBuilder.fromUriString(
+						"https://wwwcie.ups.com/api/rating/v2403/Rate"
+					).build(
+					).toUri()));
 		}
 		catch (Exception exception) {
 			if (log.isDebugEnabled()) {

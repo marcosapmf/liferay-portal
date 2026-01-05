@@ -13,15 +13,17 @@ import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Drew Brokke
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	property = {
 		"com.liferay.portlet.friendly-url-routes=META-INF/friendly-url-routes/routes.xml",
-		"javax.portlet.name=" + ContactsPortletKeys.CONTACTS_CENTER,
-		"javax.portlet.name=" + ContactsPortletKeys.MEMBERS
+		"jakarta.portlet.name=" + ContactsPortletKeys.CONTACTS_CENTER,
+		"jakarta.portlet.name=" + ContactsPortletKeys.MEMBERS
 	},
 	service = FriendlyURLMapper.class
 )
+@Deprecated
 public class ContactsFriendlyURLMapper extends DefaultFriendlyURLMapper {
 
 	@Override

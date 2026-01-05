@@ -20,10 +20,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 
-import javax.portlet.PortletResponse;
-import javax.portlet.ResourceURL;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.ResourceURL;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Cristina González
@@ -43,7 +43,7 @@ public class SegmentsCompanyConfigurationDisplayContext {
 		return PortletURLBuilder.createActionURL(
 			_portal.getLiferayPortletResponse(
 				(PortletResponse)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE)),
+					JavaConstants.JAKARTA_PORTLET_RESPONSE)),
 			ConfigurationAdminPortletKeys.INSTANCE_SETTINGS
 		).setActionName(
 			"/instance_settings/bind_segments_company_configuration"
@@ -54,7 +54,7 @@ public class SegmentsCompanyConfigurationDisplayContext {
 		return PortletURLBuilder.createActionURL(
 			_portal.getLiferayPortletResponse(
 				(PortletResponse)_httpServletRequest.getAttribute(
-					JavaConstants.JAVAX_PORTLET_RESPONSE)),
+					JavaConstants.JAKARTA_PORTLET_RESPONSE)),
 			ConfigurationAdminPortletKeys.INSTANCE_SETTINGS
 		).setActionName(
 			"/instance_settings/delete_segments_company_configuration"

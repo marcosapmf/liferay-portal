@@ -6,9 +6,7 @@
 package com.liferay.portal.deploy.hot;
 
 import com.liferay.petra.io.StreamUtil;
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.deploy.hot.BaseHotDeployListener;
@@ -36,7 +34,6 @@ import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -48,16 +45,22 @@ import com.liferay.portlet.PortletContextBagPool;
 import com.liferay.portlet.PortletFilterFactory;
 import com.liferay.portlet.PortletURLListenerFactory;
 
+import jakarta.portlet.PortletURLGenerationListener;
+import jakarta.portlet.filter.ActionFilter;
+import jakarta.portlet.filter.EventFilter;
+import jakarta.portlet.filter.RenderFilter;
+import jakarta.portlet.filter.ResourceFilter;
+
+import jakarta.servlet.ServletContext;
+
 import java.io.InputStream;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -66,16 +69,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import javax.portlet.PortletURLGenerationListener;
-import javax.portlet.filter.ActionFilter;
-import javax.portlet.filter.EventFilter;
-import javax.portlet.filter.RenderFilter;
-import javax.portlet.filter.ResourceFilter;
-
-import javax.servlet.ServletContext;
-
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -115,78 +109,27 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 	protected void checkResourceBundles(
 		ClassLoader classLoader, Portlet portlet) {
 
-		String resourceBundle = portlet.getResourceBundle();
-
-		if (Validator.isNull(resourceBundle)) {
+		if (Validator.isNull(portlet.getResourceBundle())) {
 			return;
 		}
 
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
 		ResourceBundleLoader resourceBundleLoader =
-			new ClassResourceBundleLoader(resourceBundle, classLoader);
+			new ClassResourceBundleLoader(
+				portlet.getResourceBundle(), classLoader);
 
 		_resourceBundleLoaderServiceRegistrations.put(
 			portlet.getPortletId(),
 			bundleContext.registerService(
 				ResourceBundleLoader.class, resourceBundleLoader,
 				HashMapDictionaryBuilder.<String, Object>put(
-					"resource.bundle.base.name", resourceBundle
+					"resource.bundle.base.name", portlet.getResourceBundle()
 				).put(
 					"service.ranking", Integer.MIN_VALUE
 				).put(
 					"servlet.context.name", portlet.getContextName()
 				).build()));
-
-		PortletApp portletApp = portlet.getPortletApp();
-
-		ServletContext servletContext = portletApp.getServletContext();
-
-		String path = resourceBundle;
-
-		int index = resourceBundle.lastIndexOf(StringPool.PERIOD);
-
-		if (index > 0) {
-			path = resourceBundle.substring(0, index);
-		}
-
-		Set<String> resourcePaths = servletContext.getResourcePaths(
-			"/WEB-INF/classes/" +
-				StringUtil.replace(path, CharPool.PERIOD, CharPool.SLASH));
-
-		if (resourcePaths == null) {
-			return;
-		}
-
-		Set<ServiceRegistration<ResourceBundle>> serviceRegistrations =
-			new HashSet<>();
-
-		for (String resourcePath : resourcePaths) {
-			String languageId = StringPool.BLANK;
-
-			index = resourcePath.indexOf(
-				StringPool.UNDERLINE, resourcePath.length());
-
-			if (index > -1) {
-				languageId = resourcePath.substring(
-					index + 1, resourcePath.length() - ".properties".length());
-			}
-
-			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
-
-			serviceRegistrations.add(
-				bundleContext.registerService(
-					ResourceBundle.class,
-					resourceBundleLoader.loadResourceBundle(locale),
-					HashMapDictionaryBuilder.<String, Object>put(
-						Constants.SERVICE_RANKING, Integer.MIN_VALUE
-					).put(
-						"language.id", languageId
-					).build()));
-		}
-
-		_resourceBundleServiceRegistrations.put(
-			portlet.getContextName(), serviceRegistrations);
 	}
 
 	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
@@ -292,6 +235,10 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 		PortletCategory newPortletCategory =
 			PortletLocalServiceUtil.getWARDisplay(servletContextName, xml);
+
+		for (Portlet portlet : portlets) {
+			_addCategoryNames(portlet, newPortletCategory);
+		}
 
 		CompanyLocalServiceUtil.forEachCompanyId(
 			companyId -> {
@@ -452,18 +399,18 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		Set<PortletFilter> portletFilters = portletApp.getPortletFilters();
 
 		for (PortletFilter portletFilter : portletFilters) {
-			javax.portlet.filter.PortletFilter portletFilterInstance =
-				(javax.portlet.filter.PortletFilter)newInstance(
+			jakarta.portlet.filter.PortletFilter portletFilterInstance =
+				(jakarta.portlet.filter.PortletFilter)newInstance(
 					classLoader,
 					new Class<?>[] {
 						ActionFilter.class, EventFilter.class,
-						javax.portlet.filter.PortletFilter.class,
+						jakarta.portlet.filter.PortletFilter.class,
 						RenderFilter.class, ResourceFilter.class
 					},
 					portletFilter.getFilterClass());
 
-			Map<String, javax.portlet.filter.PortletFilter> portletFiltersMap =
-				portletContextBag.getPortletFilters();
+			Map<String, jakarta.portlet.filter.PortletFilter>
+				portletFiltersMap = portletContextBag.getPortletFilters();
 
 			portletFiltersMap.put(
 				portletFilter.getFilterName(), portletFilterInstance);
@@ -540,6 +487,30 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		}
 	}
 
+	private void _addCategoryNames(
+		Portlet portlet, PortletCategory portletCategory) {
+
+		Set<String> portletIds = portletCategory.getPortletIds();
+
+		if (portletIds.contains(portlet.getPortletId())) {
+			Set<String> categoryNames = portlet.getCategoryNames();
+
+			String categoryName = portletCategory.getPath();
+
+			if (categoryName.startsWith("root//")) {
+				categoryName = categoryName.substring(6);
+			}
+
+			categoryNames.add(categoryName);
+		}
+
+		for (PortletCategory childPortletCategory :
+				portletCategory.getCategories()) {
+
+			_addCategoryNames(portlet, childPortletCategory);
+		}
+	}
+
 	private void _destroyPortlet(Portlet portlet, Set<String> portletIds)
 		throws Exception {
 
@@ -571,19 +542,6 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 		if (resourceBundleLoaderServiceRegistration != null) {
 			resourceBundleLoaderServiceRegistration.unregister();
-		}
-
-		Set<ServiceRegistration<ResourceBundle>>
-			resourceBundleServiceRegistrations =
-				_resourceBundleServiceRegistrations.remove(
-					portlet.getPortletId());
-
-		if (resourceBundleServiceRegistrations != null) {
-			for (ServiceRegistration<ResourceBundle> serviceRegistration :
-					resourceBundleServiceRegistrations) {
-
-				serviceRegistration.unregister();
-			}
 		}
 	}
 
@@ -620,7 +578,5 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 	private final Map<String, ServiceRegistration<ResourceBundleLoader>>
 		_resourceBundleLoaderServiceRegistrations = new HashMap<>();
-	private final Map<String, Set<ServiceRegistration<ResourceBundle>>>
-		_resourceBundleServiceRegistrations = new HashMap<>();
 
 }

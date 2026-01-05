@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.wiki.item.selector.criterion.WikiPageItemSelectorCriterion;
+import com.liferay.wiki.item.selector.WikiPageItemSelectorCriterion;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiNodeLocalService;
@@ -31,15 +31,15 @@ import com.liferay.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.wiki.web.internal.item.selector.WikiPageItemSelectorReturnTypeResolver;
 import com.liferay.wiki.web.internal.item.selector.view.WikiPageItemSelectorView;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Roberto Díaz
@@ -81,7 +81,7 @@ public class WikiPageItemSelectorViewDisplayContext {
 		return PortletURLBuilder.create(
 			PortletURLUtil.clone(_portletURL, liferayPortletResponse)
 		).setParameter(
-			"selectedTab", getTitle(httpServletRequest.getLocale())
+			"selectedTab", _getSelectedTab(httpServletRequest)
 		).buildPortletURL();
 	}
 
@@ -189,12 +189,23 @@ public class WikiPageItemSelectorViewDisplayContext {
 		return _search;
 	}
 
+	private String _getSelectedTab(HttpServletRequest httpServletRequest) {
+		if (_selectedTab != null) {
+			return _selectedTab;
+		}
+
+		_selectedTab = ParamUtil.getString(httpServletRequest, "selectedTab");
+
+		return _selectedTab;
+	}
+
 	private final String _itemSelectedEventName;
 	private final ItemSelectorReturnTypeResolverHandler
 		_itemSelectorReturnTypeResolverHandler;
 	private final PortletURL _portletURL;
 	private final boolean _search;
 	private SearchContainer<WikiPage> _searchContainer;
+	private String _selectedTab;
 	private final WikiNodeLocalService _wikiNodeLocalService;
 	private final WikiPageItemSelectorCriterion _wikiPageItemSelectorCriterion;
 	private final WikiPageItemSelectorView _wikiPageItemSelectorView;

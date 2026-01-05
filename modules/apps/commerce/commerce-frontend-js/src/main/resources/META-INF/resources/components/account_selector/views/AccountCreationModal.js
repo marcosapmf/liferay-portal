@@ -16,7 +16,7 @@ const DeliveryCatalogAPIServiceProvider =
 	ServiceProvider.DeliveryCatalogAPI('v1');
 
 export default function AccountCreationModal({
-	accountTypes,
+	accountEntryAllowedTypes,
 	closeModal,
 	commerceChannelId,
 	handleAccountChange,
@@ -28,7 +28,7 @@ export default function AccountCreationModal({
 		name: '',
 		organizations: [],
 		taxId: '',
-		type: accountTypes[0],
+		type: accountEntryAllowedTypes[0],
 	});
 
 	const apiUrl = new URL(
@@ -96,15 +96,19 @@ export default function AccountCreationModal({
 					maxHeight: 'inherit',
 				}}
 			>
-				<ClayModal.Header>
+				<ClayModal.Header
+					closeButtonAriaLabel={Liferay.Language.get('close')}
+				>
 					{Liferay.Language.get('create-new-account')}
 				</ClayModal.Header>
 
-				<AccountCreationModalBody
-					accountData={accountData}
-					accountTypes={accountTypes}
-					setAccountData={setAccountData}
-				/>
+				<ClayModal.Body>
+					<AccountCreationModalBody
+						accountData={accountData}
+						accountEntryAllowedTypes={accountEntryAllowedTypes}
+						setAccountData={setAccountData}
+					/>
+				</ClayModal.Body>
 
 				<ClayModal.Footer
 					last={

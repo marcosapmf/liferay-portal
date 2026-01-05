@@ -92,21 +92,13 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 			}
 			%>
 
-			Liferay.Util.openWindow(
-				{
-					id: dialogId,
-					dialog: {
-						bodyContent:
-							'<p><liferay-ui:message key="<%= messageKey %>" /></p><div aria-hidden="true" class="loading-animation"></div>',
-						cssClass: 'google-docs-redirect-modal',
-						height: 172,
-						modal: true,
-						resizable: false,
-						title: '',
-						width: 320,
-					},
-				},
-				() => {
+			Liferay.Util.openModal({
+				bodyHTML:
+					'<p><liferay-ui:message key="<%= messageKey %>" /></p><div aria-hidden="true" class="loading-animation"></div>',
+				className: 'google-docs-redirect-modal',
+				containerProps: {},
+				id: dialogId,
+				onOpen: () => {
 					setTimeout(polling, TIME_POLLING);
 
 					setTimeout(() => {
@@ -114,12 +106,12 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 
 						navigate();
 					}, TIME_SHOW_MSG);
-				}
-			);
+				},
+			});
 		})();
 	</aui:script>
 </c:if>
 
 <liferay-util:html-top>
-	<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>" rel="stylesheet" type="text/css" />
+	<aui:link hashedFile="<%= true %>" href="document-library-opener-google-drive-web/css/document_library.css" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>

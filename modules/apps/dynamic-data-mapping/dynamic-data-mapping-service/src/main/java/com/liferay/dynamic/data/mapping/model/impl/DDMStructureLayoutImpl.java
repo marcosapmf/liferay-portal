@@ -27,6 +27,9 @@ public class DDMStructureLayoutImpl extends DDMStructureLayoutBaseImpl {
 				_ddmFormLayout =
 					DDMStructureLayoutLocalServiceUtil.
 						getStructureLayoutDDMFormLayout(this);
+
+				ddmFormLayoutUpdateEntityCacheBiConsumer.accept(
+					this, _ddmFormLayout);
 			}
 			catch (Exception exception) {
 				_log.error(exception);
@@ -52,6 +55,11 @@ public class DDMStructureLayoutImpl extends DDMStructureLayoutBaseImpl {
 		DDMStructure ddmStructure = getDDMStructure();
 
 		return ddmStructure.getStructureId();
+	}
+
+	@Override
+	public void setDDMFormLayout(DDMFormLayout ddmFormLayout) {
+		_ddmFormLayout = ddmFormLayout;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

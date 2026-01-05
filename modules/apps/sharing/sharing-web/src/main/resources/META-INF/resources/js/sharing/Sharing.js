@@ -235,6 +235,9 @@ const Sharing = ({
 							</label>
 
 							<ClayMultiSelect
+								clearAllTitle={Liferay.Language.get(
+									'clear-all'
+								)}
 								inputName={`${portletNamespace}userEmailAddress`}
 								items={selectedItems}
 								loadingState={networkStatus}
@@ -244,7 +247,9 @@ const Sharing = ({
 									'enter-name-or-email-address'
 								)}
 								sourceItems={
-									multiSelectValue && users
+									multiSelectValue &&
+									!!users.length &&
+									!emailAddressErrorMessages.length
 										? users.map((user) => {
 												return {
 													emailAddress:
@@ -257,7 +262,7 @@ const Sharing = ({
 													value: user.emailAddress,
 												};
 											})
-										: []
+										: undefined
 								}
 								value={multiSelectValue}
 							>

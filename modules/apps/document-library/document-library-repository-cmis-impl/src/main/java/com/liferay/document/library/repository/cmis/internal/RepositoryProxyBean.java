@@ -77,12 +77,13 @@ public class RepositoryProxyBean
 
 	@Override
 	public FileShortcut addFileShortcut(
-			long userId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		FileShortcut fileShortcut = _repository.addFileShortcut(
-			userId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, folderId, toFileEntryId,
+			serviceContext);
 
 		return newFileShortcutProxyBean(fileShortcut);
 	}
@@ -213,6 +214,17 @@ public class RepositoryProxyBean
 		throws PortalException {
 
 		_repository.deleteFolder(parentFolderId, name);
+	}
+
+	@Override
+	public FileEntry fetchFileEntry(long fileEntryId) throws PortalException {
+		FileEntry fileEntry = _repository.fetchFileEntry(fileEntryId);
+
+		if (fileEntry == null) {
+			return fileEntry;
+		}
+
+		return newFileEntryProxyBean(fileEntry);
 	}
 
 	@Override

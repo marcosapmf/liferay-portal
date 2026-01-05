@@ -5,6 +5,7 @@
 
 package com.liferay.message.boards.internal.pop;
 
+import com.liferay.mail.kernel.service.MailService;
 import com.liferay.message.boards.constants.MBCategoryConstants;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.internal.util.MBMailMessage;
@@ -14,18 +15,16 @@ import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.service.MBCategoryLocalService;
 import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.message.boards.service.MBMessageService;
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.pop.MessageListener;
 import com.liferay.portal.kernel.pop.MessageListenerException;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -33,20 +32,18 @@ import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.PermissionCheckerUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.List;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -70,18 +67,18 @@ public class MessageListenerImpl implements MessageListener {
 				return false;
 			}
 
-			String messageIdString = _getMessageIdString(recipients, message);
+			String messageIdString = _getMessageIdString(
+				_mailService, recipients, message);
 
 			if (Validator.isNull(messageIdString)) {
 				return false;
 			}
 
-			Company company = _getCompany(messageIdString);
-
 			MBCategory category = _mbCategoryLocalService.getCategory(
 				MBMailUtil.getCategoryId(messageIdString));
 
-			if ((category.getCompanyId() != company.getCompanyId()) &&
+			if ((category.getCompanyId() !=
+					CompanyThreadLocal.getCompanyId()) &&
 				!category.isRoot()) {
 
 				return false;
@@ -91,16 +88,12 @@ public class MessageListenerImpl implements MessageListener {
 				_log.debug("Check to see if user " + from + " exists");
 			}
 
-			String pop3User = PrefsPropsUtil.getString(
-				PropsKeys.MAIL_SESSION_MAIL_POP3_USER,
-				PropsValues.MAIL_SESSION_MAIL_POP3_USER);
-
-			if (StringUtil.equalsIgnoreCase(from, pop3User)) {
+			if (_mailService.isPOPServerUser(from)) {
 				return false;
 			}
 
 			_userLocalService.getUserByEmailAddress(
-				company.getCompanyId(), from);
+				CompanyThreadLocal.getCompanyId(), from);
 
 			return true;
 		}
@@ -122,7 +115,8 @@ public class MessageListenerImpl implements MessageListener {
 
 			stopWatch.start();
 
-			String messageIdString = _getMessageIdString(recipients, message);
+			String messageIdString = _getMessageIdString(
+				_mailService, recipients, message);
 
 			if (Validator.isNull(messageIdString)) {
 				if (_log.isDebugEnabled()) {
@@ -135,8 +129,6 @@ public class MessageListenerImpl implements MessageListener {
 
 				return;
 			}
-
-			Company company = _getCompany(messageIdString);
 
 			if (_log.isDebugEnabled()) {
 				_log.debug("Message id " + messageIdString);
@@ -183,7 +175,7 @@ public class MessageListenerImpl implements MessageListener {
 			}
 
 			User user = _userLocalService.getUserByEmailAddress(
-				company.getCompanyId(), from);
+				CompanyThreadLocal.getCompanyId(), from);
 
 			String subject = null;
 
@@ -267,38 +259,17 @@ public class MessageListenerImpl implements MessageListener {
 		return MessageListenerImpl.class.getName();
 	}
 
-	private Company _getCompany(String messageIdString) throws Exception {
-		int pos =
-			messageIdString.indexOf(CharPool.AT) +
-				PropsValues.POP_SERVER_SUBDOMAIN.length() + 1;
-
-		if (PropsValues.POP_SERVER_SUBDOMAIN.length() > 0) {
-			pos++;
-		}
-
-		int endPos = messageIdString.indexOf(CharPool.GREATER_THAN, pos);
-
-		if (endPos == -1) {
-			endPos = messageIdString.length();
-		}
-
-		String mx = messageIdString.substring(pos, endPos);
-
-		return _companyLocalService.getCompanyByMx(mx);
-	}
-
-	private String _getMessageIdString(List<String> recipients, Message message)
+	private String _getMessageIdString(
+			MailService mailService, List<String> recipients, Message message)
 		throws Exception {
 
-		if (PropsValues.POP_SERVER_SUBDOMAIN.length() == 0) {
+		if (!MBMailUtil.hasSubdomain(mailService)) {
 			return MBMailUtil.getParentMessageIdString(message);
 		}
 
 		for (String recipient : recipients) {
 			if ((recipient != null) &&
-				recipient.startsWith(
-					MBMailUtil.MESSAGE_POP_PORTLET_PREFIX,
-					MBMailUtil.getMessageIdStringOffset())) {
+				recipient.startsWith(MBMailUtil.MESSAGE_POP_PORTLET_PREFIX)) {
 
 				return recipient;
 			}
@@ -322,21 +293,17 @@ public class MessageListenerImpl implements MessageListener {
 
 		String[] mailAutoReply = message.getHeader("X-Mail-Autoreply");
 
-		if (ArrayUtil.isNotEmpty(mailAutoReply)) {
-			return true;
-		}
-
-		return false;
+		return ArrayUtil.isNotEmpty(mailAutoReply);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MessageListenerImpl.class);
 
 	@Reference
-	private CompanyLocalService _companyLocalService;
+	private HtmlParser _htmlParser;
 
 	@Reference
-	private HtmlParser _htmlParser;
+	private MailService _mailService;
 
 	@Reference
 	private MBCategoryLocalService _mbCategoryLocalService;

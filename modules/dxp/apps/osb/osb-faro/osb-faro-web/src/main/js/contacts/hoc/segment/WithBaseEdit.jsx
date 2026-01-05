@@ -15,6 +15,7 @@ import {PropTypes} from 'prop-types';
 import {Routes, SEGMENTS, toRoute} from 'shared/util/router';
 import {Segment} from 'shared/util/records';
 import {SegmentTypes} from 'shared/util/constants';
+import {sub} from 'shared/util/lang';
 
 const MessageKeys = {
 	NameCannotBeBlank: 'name-cannot-be-blank',
@@ -34,7 +35,6 @@ const ERRORS = {
 		)
 	}
 };
-
 export default WrappedComponent => {
 	class BaseEdit extends React.Component {
 		static contextType = ChannelContext;
@@ -47,8 +47,7 @@ export default WrappedComponent => {
 			history: PropTypes.object.isRequired,
 			id: PropTypes.string,
 			open: PropTypes.func.isRequired,
-			segment: PropTypes.instanceOf(Segment),
-			type: PropTypes.oneOf([SegmentTypes.Dynamic, SegmentTypes.Static])
+			segment: PropTypes.instanceOf(Segment)
 		};
 
 		state = {
@@ -136,14 +135,6 @@ export default WrappedComponent => {
 			return this.props.id && segment
 				? Liferay.Language.get('edit-individuals-segment')
 				: Liferay.Language.get('create-individuals-segment');
-		}
-
-		getPageTitleLabel() {
-			const {type} = this.props;
-
-			return type === SegmentTypes.Static
-				? Liferay.Language.get('static-segment')
-				: Liferay.Language.get('dynamic-segment');
 		}
 
 		@autobind
@@ -253,6 +244,11 @@ export default WrappedComponent => {
 						}
 				  ];
 
+			const SEGMENT_TYPES_LABEL_MAP = {
+				[SegmentTypes.Batch]: Liferay.Language.get('batch'),
+				[SegmentTypes.RealTime]: Liferay.Language.get('real-time')
+			};
+
 			return (
 				<BasePage
 					className={getCN('segment-edit-root', className, {
@@ -279,7 +275,9 @@ export default WrappedComponent => {
 								title={this.getPageTitle()}
 							>
 								<Label display='secondary' size='lg' uppercase>
-									{this.getPageTitleLabel()}
+									{sub(Liferay.Language.get('x-segment'), [
+										SEGMENT_TYPES_LABEL_MAP[type]
+									])}
 								</Label>
 							</BasePage.Header.TitleSection>
 
@@ -306,7 +304,7 @@ export default WrappedComponent => {
 						</BasePage.Row>
 					</BasePage.Header>
 
-					<BasePage.Body pageContainer={type === SegmentTypes.Static}>
+					<BasePage.Body pageContainer={false}>
 						<WrappedComponent
 							{...omitDefinedProps(
 								otherProps,

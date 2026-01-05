@@ -3,17 +3,21 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {CONSENT_TYPE} from '../enums/consentType';
-import {Liferay} from '../liferay/liferay';
+import {Liferay, LiferayStorage} from '../liferay/liferay';
 
-export enum STORAGE_KEYS {
-	GET_APP = '@marketplace/get-app',
+export enum CONSENT_TYPE {
+	FUNCTIONAL = 'CONSENT_TYPE_FUNCTIONAL',
+	NECESSARY = 'CONSENT_TYPE_NECESSARY',
+	PERFORMANCE = 'CONSENT_TYPE_PERFORMANCE',
+	PERSONALIZATION = 'CONSENT_TYPE_PERSONALIZATION',
 }
 
-export type LiferayStorage = Storage & {
-	getItem(key: string, consentType: CONSENT_TYPE): string | null;
-	setItem(key: string, value: string, consentType: CONSENT_TYPE): void;
-};
+export enum STORAGE_KEYS {
+	LIST_VIEW_COLUMNS = '@marketplace/listview-columns-',
+	SWR_CACHE = '@marketplace/swr-cache',
+}
+
+export type StorageType = 'persisted' | 'temporary';
 
 class Storage {
 	private storage: LiferayStorage;

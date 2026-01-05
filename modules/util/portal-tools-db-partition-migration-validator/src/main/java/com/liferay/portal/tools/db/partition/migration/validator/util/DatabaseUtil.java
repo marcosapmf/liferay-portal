@@ -24,13 +24,15 @@ import java.util.List;
  */
 public class DatabaseUtil {
 
-	public static LiferayDatabase exportLiferayDatabase(Connection connection)
+	public static LiferayDatabase exportLiferayDatabase(
+			Connection connection, long companyId)
 		throws Exception {
 
 		LiferayDatabase liferayDatabase = new LiferayDatabase();
 
 		liferayDatabase.setCompanies(_getCompanies(connection));
-		liferayDatabase.setExportedCompanyId(_getExportedCompanyId(connection));
+		liferayDatabase.setExportedCompanyId(
+			_getExportedCompanyId(connection, companyId));
 		liferayDatabase.setExportedCompanyDefault(
 			_isDefaultCompany(connection));
 		liferayDatabase.setReleases(_getReleases(connection));
@@ -40,11 +42,7 @@ public class DatabaseUtil {
 	}
 
 	public static boolean isPostgreSQL(String jdbcURL) {
-		if (jdbcURL.indexOf("postgresql") != -1) {
-			return true;
-		}
-
-		return false;
+		return jdbcURL.contains("postgresql");
 	}
 
 	public static String replaceSchemaName(String jdbcURL, String schemaName) {
@@ -98,27 +96,23 @@ public class DatabaseUtil {
 		return companyIds;
 	}
 
-	private static long _getExportedCompanyId(Connection connection)
+	private static long _getExportedCompanyId(
+			Connection connection, long companyId)
 		throws Exception {
-
-		long companyId = 0;
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select companyId from CompanyInfo");
 			ResultSet resultSet = preparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {
-				if (companyId > 0) {
-					throw new UnsupportedOperationException(
-						"Database schema has to have a single company or " +
-							"database partitioning must be enabled");
+				if (companyId == resultSet.getLong(1)) {
+					return companyId;
 				}
-
-				companyId = resultSet.getLong(1);
 			}
 		}
 
-		return companyId;
+		throw new IllegalArgumentException(
+			"Company " + companyId + " does not exist");
 	}
 
 	private static List<String> _getPartitionedTableNames(Connection connection)

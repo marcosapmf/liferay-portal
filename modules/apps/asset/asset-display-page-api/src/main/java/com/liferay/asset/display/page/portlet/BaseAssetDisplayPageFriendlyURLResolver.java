@@ -55,14 +55,14 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -217,7 +217,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		FriendlyURLSeparatorProvider friendlyURLSeparatorProvider =
-			_friendlyURLSeparatorProvider.get();
+			_friendlyURLSeparatorProviderSnapshot.get();
 
 		if (friendlyURLSeparatorProvider == null) {
 			return getDefaultURLSeparator();
@@ -257,7 +257,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 		return _getLayoutDisplayPageObjectProvider(
 			layoutDisplayPageProvider, groupId, friendlyURL,
-			_getVersion(params));
+			getVersion(params));
 	}
 
 	protected Layout getLayoutDisplayPageObjectProviderLayout(
@@ -294,6 +294,16 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		return locale;
+	}
+
+	protected String getVersion(Map<String, String[]> params) {
+		String[] versions = params.get("version");
+
+		if (ArrayUtil.isEmpty(versions)) {
+			return StringPool.BLANK;
+		}
+
+		return versions[0];
 	}
 
 	protected boolean isSameFriendlyURL(String url1, String url2) {
@@ -379,7 +389,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			Map<String, String[]> params)
 		throws NoSuchInfoItemException {
 
-		String version = _getVersion(params);
+		String version = getVersion(params);
 
 		if (Validator.isNull(version)) {
 			return layoutDisplayPageObjectProvider.getDisplayObject();
@@ -458,12 +468,12 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 				groupId, layoutDisplayPageObjectProvider.getClassNameId(),
 				layoutDisplayPageObjectProvider.getClassTypeId());
 
-		if (layoutPageTemplateEntry != null) {
-			return layoutLocalService.fetchLayout(
-				layoutPageTemplateEntry.getPlid());
+		if (layoutPageTemplateEntry == null) {
+			return null;
 		}
 
-		return null;
+		return layoutLocalService.fetchLayout(
+			layoutPageTemplateEntry.getPlid());
 	}
 
 	private LayoutDisplayPageProvider<?> _getLayoutDisplayPageProvider(
@@ -543,21 +553,11 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		return StringPool.BLANK;
 	}
 
-	private String _getVersion(Map<String, String[]> params) {
-		String[] versions = params.get("version");
-
-		if (ArrayUtil.isEmpty(versions)) {
-			return StringPool.BLANK;
-		}
-
-		return versions[0];
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseAssetDisplayPageFriendlyURLResolver.class);
 
 	private static final Snapshot<FriendlyURLSeparatorProvider>
-		_friendlyURLSeparatorProvider = new Snapshot<>(
+		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(
 			BaseAssetDisplayPageFriendlyURLResolver.class,
 			FriendlyURLSeparatorProvider.class);
 

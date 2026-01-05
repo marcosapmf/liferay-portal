@@ -10,9 +10,9 @@ import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Pavel Savinov
@@ -56,11 +56,7 @@ public class MostViewedAssetPublisherCustomizer
 	public boolean isOrderingByTitleEnabled(
 		HttpServletRequest httpServletRequest) {
 
-		if (!assetPublisherWebConfiguration.searchWithIndex()) {
-			return false;
-		}
-
-		return true;
+		return assetPublisherWebConfiguration.searchWithIndex();
 	}
 
 	@Override
@@ -81,11 +77,7 @@ public class MostViewedAssetPublisherCustomizer
 	public boolean isShowSubtypeFieldsFilter(
 		HttpServletRequest httpServletRequest) {
 
-		if (!assetPublisherWebConfiguration.searchWithIndex()) {
-			return false;
-		}
-
-		return true;
+		return assetPublisherWebConfiguration.searchWithIndex();
 	}
 
 }

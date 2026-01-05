@@ -96,8 +96,20 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>The language keys of the checkbox's subtitles.</description>
+			<name>subtitles</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>The language key of the checkbox's suggestion text. It is displayed after the label.</description>
 			<name>suggestion</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>The language key of the checkbox's tag.</description>
+			<name>tag</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -519,6 +531,13 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
+			<description>Whether to show the details menu. The default value is false.</description>
+			<name>detailsMenu</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
 			<description>The empty results message's language key.</description>
 			<name>emptyResultsMessage</name>
 			<required>true</required>
@@ -579,6 +598,13 @@
 		<attribute>
 			<description>Whether to show the delete menu. The default value is true.</description>
 			<name>deleteMenu</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
+			<description>Whether to show the details menu. The default value is false.</description>
+			<name>detailsMenu</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>

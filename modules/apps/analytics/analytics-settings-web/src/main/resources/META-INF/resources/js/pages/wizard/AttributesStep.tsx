@@ -6,15 +6,17 @@
 import ClayButton from '@clayui/button';
 import React from 'react';
 
-import {EPageView, Events, useDispatch} from '../..';
 import BasePage from '../../components/BasePage';
 import Attributes from '../../components/attributes/Attributes';
+import {EPageView, Events, useDispatch} from '../../index';
 import {sync} from '../../utils/api';
 import {ESteps, IGenericStepProps} from './WizardPage';
 
 interface IStepProps extends IGenericStepProps {}
 
-const Step: React.FC<IStepProps> = ({onChangeStep}) => {
+const Step: React.FC<{children?: React.ReactNode | undefined} & IStepProps> = ({
+	onChangeStep,
+}) => {
 	const dispatch = useDispatch();
 
 	return (
@@ -25,31 +27,49 @@ const Step: React.FC<IStepProps> = ({onChangeStep}) => {
 			<Attributes />
 
 			<BasePage.Footer>
-				<ClayButton
-					displayType="secondary"
-					onClick={() => onChangeStep(ESteps.People)}
-				>
-					{Liferay.Language.get('previous')}
-				</ClayButton>
+				{Liferay.FeatureFlags['LPD-20640'] ? (
+					<>
+						<ClayButton
+							onClick={() => onChangeStep(ESteps.Recommendations)}
+						>
+							{Liferay.Language.get('next')}
+						</ClayButton>
 
-				<ClayButton
-					onClick={() => {
-						sync();
+						<ClayButton
+							displayType="secondary"
+							onClick={() => onChangeStep(ESteps.People)}
+						>
+							{Liferay.Language.get('previous')}
+						</ClayButton>
+					</>
+				) : (
+					<>
+						<ClayButton
+							onClick={() => {
+								sync();
 
-						dispatch({
-							payload: EPageView.Default,
-							type: Events.ChangePageView,
-						});
+								dispatch({
+									payload: EPageView.Default,
+									type: Events.ChangePageView,
+								});
+								Liferay.Util.openToast({
+									message: Liferay.Language.get(
+										'dxp-has-successfully-connected-to-analytics-cloud.-you-will-begin-to-see-data-as-activities-occur-on-your-sites'
+									),
+								});
+							}}
+						>
+							{Liferay.Language.get('finish')}
+						</ClayButton>
 
-						Liferay.Util.openToast({
-							message: Liferay.Language.get(
-								'dxp-has-successfully-connected-to-analytics-cloud.-you-will-begin-to-see-data-as-activities-occur-on-your-sites'
-							),
-						});
-					}}
-				>
-					{Liferay.Language.get('finish')}
-				</ClayButton>
+						<ClayButton
+							displayType="secondary"
+							onClick={() => onChangeStep(ESteps.People)}
+						>
+							{Liferay.Language.get('previous')}
+						</ClayButton>
+					</>
+				)}
 			</BasePage.Footer>
 		</BasePage>
 	);

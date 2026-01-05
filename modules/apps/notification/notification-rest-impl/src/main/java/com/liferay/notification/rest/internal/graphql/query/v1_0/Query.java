@@ -11,9 +11,9 @@ import com.liferay.notification.rest.resource.v1_0.NotificationQueueEntryResourc
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
@@ -23,16 +23,16 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -108,6 +108,43 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {notificationTemplate(notificationTemplateId: ___){actions, attachmentObjectFieldExternalReferenceCodes, attachmentObjectFieldIds, body, dateCreated, dateModified, description, editorType, externalReferenceCode, id, name, name_i18n, objectDefinitionExternalReferenceCode, objectDefinitionId, recipientType, recipients, subject, system, type, typeLabel}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public NotificationTemplate notificationTemplate(
+			@GraphQLName("notificationTemplateId") Long notificationTemplateId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.getNotificationTemplate(
+					notificationTemplateId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {notificationTemplateByExternalReferenceCode(externalReferenceCode: ___){actions, attachmentObjectFieldExternalReferenceCodes, attachmentObjectFieldIds, body, dateCreated, dateModified, description, editorType, externalReferenceCode, id, name, name_i18n, objectDefinitionExternalReferenceCode, objectDefinitionId, recipientType, recipients, subject, system, type, typeLabel}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public NotificationTemplate notificationTemplateByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_notificationTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			notificationTemplateResource ->
+				notificationTemplateResource.
+					getNotificationTemplateByExternalReferenceCode(
+						externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {notificationTemplates(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -133,43 +170,6 @@ public class Query {
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						notificationTemplateResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {notificationTemplateByExternalReferenceCode(externalReferenceCode: ___){actions, attachmentObjectFieldExternalReferenceCodes, attachmentObjectFieldIds, body, dateCreated, dateModified, description, editorType, externalReferenceCode, id, name, name_i18n, objectDefinitionExternalReferenceCode, objectDefinitionId, recipientType, recipients, subject, system, type, typeLabel}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public NotificationTemplate notificationTemplateByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.
-					getNotificationTemplateByExternalReferenceCode(
-						externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {notificationTemplate(notificationTemplateId: ___){actions, attachmentObjectFieldExternalReferenceCodes, attachmentObjectFieldIds, body, dateCreated, dateModified, description, editorType, externalReferenceCode, id, name, name_i18n, objectDefinitionExternalReferenceCode, objectDefinitionId, recipientType, recipients, subject, system, type, typeLabel}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public NotificationTemplate notificationTemplate(
-			@GraphQLName("notificationTemplateId") Long notificationTemplateId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_notificationTemplateResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			notificationTemplateResource ->
-				notificationTemplateResource.getNotificationTemplate(
-					notificationTemplateId));
 	}
 
 	@GraphQLName("NotificationQueueEntryPage")
@@ -281,6 +281,10 @@ public class Query {
 		notificationQueueEntryResource.setContextUriInfo(_uriInfo);
 		notificationQueueEntryResource.setContextUser(_user);
 		notificationQueueEntryResource.setGroupLocalService(_groupLocalService);
+		notificationQueueEntryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		notificationQueueEntryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		notificationQueueEntryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -297,6 +301,10 @@ public class Query {
 		notificationTemplateResource.setContextUriInfo(_uriInfo);
 		notificationTemplateResource.setContextUser(_user);
 		notificationTemplateResource.setGroupLocalService(_groupLocalService);
+		notificationTemplateResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		notificationTemplateResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		notificationTemplateResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -309,12 +317,17 @@ public class Query {
 	private BiFunction<Object, List<String>, Aggregation>
 		_aggregationBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

@@ -13,13 +13,13 @@ import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -61,8 +61,8 @@ public class LodashTopHeadDynamicInclude extends BaseDynamicInclude {
 			printWriter.print(" data-senna-track=\"permanent\" src=\"");
 
 			printWriter.print(
-				absolutePortalURLBuilder.forBundleScript(
-					_bundleContext.getBundle(), fileName
+				absolutePortalURLBuilder.forWebContextScript(
+					"frontend-js-lodash-web", fileName
 				).build());
 
 			printWriter.println("\" type=\"text/javascript\"></script>");

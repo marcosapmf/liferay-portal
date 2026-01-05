@@ -5,10 +5,10 @@
 
 package com.liferay.change.tracking.web.internal.upgrade.registry;
 
+import com.liferay.change.tracking.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
-import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.web.internal.upgrade.v1_0_3.PublicationsConfigurationPortletUpgradeProcess;
 import com.liferay.change.tracking.web.internal.upgrade.v1_0_4.PublicationsRolePermissionsUpgradeProcess;
 import com.liferay.change.tracking.web.internal.upgrade.v1_0_5.PublicationsAdminRoleNameUpgradeProcess;
@@ -65,12 +65,15 @@ public class PublicationsWebUpgradeStepRegistrator
 		registry.register("1.0.1", "1.0.2", new DummyUpgradeStep());
 
 		registry.register(
-			"1.0.2", "1.0.3",
+			"1.0.2", "1.0.2.step-1",
 			new com.liferay.change.tracking.web.internal.upgrade.v1_0_3.
 				PublicationsUserRoleUpgradeProcess(
 					_companyLocalService, _resourceActions,
 					_resourcePermissionLocalService, _roleLocalService,
-					_userLocalService),
+					_userLocalService));
+
+		registry.register(
+			"1.0.2.step-1", "1.0.3",
 			new PublicationsConfigurationPortletUpgradeProcess(
 				_resourceActionLocalService, _resourcePermissionLocalService));
 

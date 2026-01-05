@@ -55,6 +55,7 @@ create table OSBFaro_FaroProject (
 	accountName VARCHAR(75) null,
 	corpProjectName VARCHAR(75) null,
 	corpProjectUuid VARCHAR(75) null,
+	dataSourceConnected BOOLEAN,
 	ipAddresses STRING null,
 	incidentReportEmailAddresses STRING null,
 	lastAccessTime LONG,
@@ -75,6 +76,20 @@ create table OSBFaro_FaroProjectEmailDomain (
 	companyId LONG,
 	faroProjectId LONG,
 	emailDomain VARCHAR(75) null
+);
+
+create table OSBFaro_FaroProjectUsage (
+	mvccVersion LONG default 0 not null,
+	faroProjectUsageId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	createTime LONG,
+	modifiedTime LONG,
+	faroProjectId LONG,
+	knownIndividualsCount LONG,
+	monthDateKey VARCHAR(75) null,
+	pageViewsCount LONG,
+	usageTime LONG
 );
 
 create table OSBFaro_FaroUser (

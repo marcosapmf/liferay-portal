@@ -9,24 +9,28 @@ import {ManagementToolbar} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
+import FrontendDataSetContext from '../../FrontendDataSetContext';
 import ViewsContext from '../../views/ViewsContext';
 import ActiveViewSelector from './ActiveViewSelector';
 import CreationMenu from './CreationMenu';
-import CustomViewsControls from './CustomViewsControls';
+import InfoPanelToggleButton from './InfoPanelToggleButton';
 import MainSearch from './MainSearch';
+import SnapshotsControls from './SnapshotsControls';
 import SortDropdown from './SortDropdown';
 import FiltersDropdown from './filters/FiltersDropdown';
 
 function NavBar({creationMenu, showSearch}) {
-	const [{customViewsEnabled, filters, sorts, views}] =
+	const {showInfoPanel} = useContext(FrontendDataSetContext);
+
+	const [{filters, snapshotsEnabled, sorts, views}] =
 		useContext(ViewsContext);
 
 	const [showMobile, setShowMobile] = useState(false);
 
 	return (
-		<ManagementToolbar.Container
-			className="justify-content-space-between"
-			data-qa-id="management-toolbar"
+		<ManagementToolbar.ItemList
+			className="container-fluid ml-2 navbar navbar-expand-md"
+			data-qa-id="managementToolbar"
 		>
 			<ManagementToolbar.ItemList>
 				{!!filters.length && (
@@ -50,7 +54,11 @@ function NavBar({creationMenu, showSearch}) {
 						}}
 						showMobile={showMobile}
 					>
-						<MainSearch setShowMobile={setShowMobile} />
+						<MainSearch
+							onClear={() => {
+								setShowMobile(false);
+							}}
+						/>
 					</ManagementToolbar.Search>
 				</>
 			)}
@@ -69,7 +77,7 @@ function NavBar({creationMenu, showSearch}) {
 					</ManagementToolbar.Item>
 				)}
 
-				{customViewsEnabled && <CustomViewsControls />}
+				{snapshotsEnabled && <SnapshotsControls />}
 
 				{views?.length > 1 && (
 					<ManagementToolbar.Item>
@@ -82,8 +90,14 @@ function NavBar({creationMenu, showSearch}) {
 						<CreationMenu {...creationMenu} />
 					</ManagementToolbar.Item>
 				)}
+
+				{showInfoPanel && (
+					<ManagementToolbar.Item>
+						<InfoPanelToggleButton symbol="info-circle-open" />
+					</ManagementToolbar.Item>
+				)}
 			</ManagementToolbar.ItemList>
-		</ManagementToolbar.Container>
+		</ManagementToolbar.ItemList>
 	);
 }
 
@@ -92,14 +106,7 @@ NavBar.propTypes = {
 		primaryItems: PropTypes.array,
 		secondaryItems: PropTypes.array,
 	}),
-	setActiveView: PropTypes.func,
 	showSearch: PropTypes.bool,
-	views: PropTypes.arrayOf(
-		PropTypes.shape({
-			label: PropTypes.string.isRequired,
-			thumbnail: PropTypes.string.isRequired,
-		})
-	),
 };
 
 NavBar.defaultProps = {

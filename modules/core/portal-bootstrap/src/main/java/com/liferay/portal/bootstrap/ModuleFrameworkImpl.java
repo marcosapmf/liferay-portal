@@ -29,16 +29,16 @@ import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ModuleFrameworkPropsValues;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.module.framework.ModuleFramework;
 import com.liferay.portal.spring.context.PortalContextLoaderListener;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -342,8 +342,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 					"OSGi framework event ", frameworkEvent,
 					" triggered after a ", timeout, "ms timeout"));
 		}
-		else if (_log.isInfoEnabled()) {
-			_log.info(frameworkEvent);
+		else if (_log.isDebugEnabled()) {
+			_log.debug(frameworkEvent);
 		}
 
 		if (Boolean.parseBoolean(System.getenv("LIFERAY_CLEAN_OSGI_STATE"))) {
@@ -800,12 +800,12 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private Dictionary<String, Object> _getProperties(
 		OSGiBeanProperties osgiBeanProperties, Object bean, String beanName) {
 
-		HashMapDictionary<String, Object> properties =
-			new HashMapDictionary<>();
+		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		if (osgiBeanProperties != null) {
-			properties.putAll(
-				OSGiBeanProperties.Convert.toMap(osgiBeanProperties));
+			properties = HashMapDictionaryBuilder.<String, Object>putAll(
+				OSGiBeanProperties.Convert.toMap(osgiBeanProperties)
+			).build();
 		}
 
 		properties.put(ServicePropsKeys.BEAN_ID, beanName);
@@ -1657,12 +1657,6 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 
 		bundleContext.registerService(
 			ProcessExecutor.class, new LocalProcessExecutor(), null);
-
-		Props props = PropsUtil.getProps();
-
-		bundleContext.registerService(
-			Props.class, props,
-			_getProperties(null, props, Props.class.getName()));
 	}
 
 	private void _startConfigurationBundles(Collection<Bundle> bundles)
@@ -1836,7 +1830,7 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 				MODULE_FRAMEWORK_CONFIGURATION_BUNDLE_SYMBOLIC_NAMES);
 
 	private BundleListener _bundleListener;
-	private Framework _framework;
+	private volatile Framework _framework;
 	private LogListener _logListener;
 	private final Map
 		<ConfigurableApplicationContext, Collection<ServiceRegistration<?>>>

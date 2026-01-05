@@ -14,7 +14,7 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.BaseSynonymsWebTes
 import com.liferay.portal.search.tuning.synonyms.web.internal.display.context.SynonymSetDisplayContext;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,6 +62,7 @@ public class SearchSynonymSetRequestTest extends BaseSynonymsWebTestCase {
 		).match(
 			Mockito.anyString(), Mockito.anyString()
 		);
+
 		Mockito.verify(
 			_queries, Mockito.times(1)
 		).matchAll();
@@ -92,6 +93,7 @@ public class SearchSynonymSetRequestTest extends BaseSynonymsWebTestCase {
 		).match(
 			Mockito.anyString(), Mockito.anyString()
 		);
+
 		Mockito.verify(
 			_queries, Mockito.never()
 		).matchAll();

@@ -10,6 +10,7 @@ import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -25,12 +26,12 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.ActionRequest;
+
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -51,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"jakarta.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 		"mvc.command.name=/analytics_settings/edit_workspace_connection"
 	},
 	service = MVCActionCommand.class
@@ -205,7 +206,8 @@ public class EditWorkspaceConnectionMVCActionCommand
 
 		try {
 			HttpResponse httpResponse = AnalyticsSettingsUtil.doPost(
-				null, companyId, faroBackendURL,
+				JSONUtil.put("url", _portal.getPortalURL(themeDisplay)),
+				companyId, faroBackendURL,
 				String.format(
 					"api/1.0/data-sources/%s/disconnect", dataSourceId),
 				projectId);

@@ -5,7 +5,9 @@
 
 package com.liferay.portal.vulcan.internal.batch.engine.action;
 
+import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.action.ImportTaskPreAction;
+import com.liferay.batch.engine.context.ImportTaskContext;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.portal.vulcan.extension.EntityExtensionHandler;
 import com.liferay.portal.vulcan.extension.EntityExtensionThreadLocal;
@@ -26,7 +28,10 @@ import org.osgi.service.component.annotations.Reference;
 public class EntityExtensionImportTaskPreAction implements ImportTaskPreAction {
 
 	@Override
-	public void run(BatchEngineImportTask batchEngineImportTask, Object item)
+	public void run(
+			BatchEngineImportTask batchEngineImportTask,
+			BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate,
+			ImportTaskContext importTaskContext, Object item)
 		throws Exception {
 
 		EntityExtensionHandler entityExtensionHandler =

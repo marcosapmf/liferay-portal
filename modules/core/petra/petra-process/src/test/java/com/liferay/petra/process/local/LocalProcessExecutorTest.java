@@ -19,6 +19,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.test.util.ThreadTestUtil;
+import com.liferay.portal.kernel.test.ConsoleTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -246,6 +247,7 @@ public class LocalProcessExecutorTest {
 		ProcessConfig.Builder builder = new ProcessConfig.Builder();
 
 		builder.setArguments(_createArguments(_JPDA_OPTIONS1));
+		builder.setEnvironment(_environment);
 
 		char[] largeFileNameChars = new char[10 * 1024 * 1024];
 
@@ -550,6 +552,7 @@ public class LocalProcessExecutorTest {
 
 		builder.setArguments(_createArguments(_JPDA_OPTIONS1));
 		builder.setBootstrapClassPath(System.getProperty("java.class.path"));
+		builder.setEnvironment(_environment);
 		builder.setProcessLogConsumer(
 			processLog -> {
 				if (processLog.getLevel() == ProcessLog.Level.ERROR) {
@@ -900,69 +903,133 @@ public class LocalProcessExecutorTest {
 			}
 		};
 
+		String logPrefixString = StringPool.OPEN_BRACKET.concat(
+			Operations.LEADING_LOG.toString()
+		).concat(
+			StringPool.CLOSE_BRACKET
+		);
+
+		String stdErrMessage = logPrefixString.concat("Body STDERR log");
+		String stdOutMessage = logPrefixString.concat("Body STDOUT log");
+
 		// Warn level
 
-		ProcessChannel<String> processChannel = _localProcessExecutor.execute(
-			_createJPDAProcessConfig(_JPDA_OPTIONS1, processLogConsumer),
-			Operations.LEADING_LOG);
+		UnsyncByteArrayOutputStream stdErrUnsyncByteArrayOutputStream =
+			ConsoleTestUtil.hijackStdErr();
+		UnsyncByteArrayOutputStream stdOutUnsyncByteArrayOutputStream =
+			ConsoleTestUtil.hijackStdOut();
 
-		Future<String> future = processChannel.getProcessNoticeableFuture();
+		try {
+			ProcessChannel<String> processChannel =
+				_localProcessExecutor.execute(
+					_createJPDAProcessConfig(
+						_JPDA_OPTIONS1, processLogConsumer),
+					Operations.LEADING_LOG);
 
-		Assert.assertEquals("DONE", future.get());
+			Future<String> future = processChannel.getProcessNoticeableFuture();
 
-		Assert.assertEquals(processLogs.toString(), 1, processLogs.size());
+			Assert.assertEquals("DONE", future.get());
 
-		ProcessLog processLog = processLogs.remove(0);
+			Assert.assertEquals(processLogs.toString(), 1, processLogs.size());
 
-		Assert.assertEquals(
-			"Found corrupt leading log Leading log", processLog.getMessage());
+			ProcessLog processLog = processLogs.remove(0);
+
+			Assert.assertEquals(
+				"Found corrupt leading log Leading log",
+				processLog.getMessage());
+		}
+		finally {
+			Assert.assertEquals(
+				stdErrMessage,
+				ConsoleTestUtil.restoreStdErr(
+					stdErrUnsyncByteArrayOutputStream));
+			Assert.assertEquals(
+				stdOutMessage,
+				ConsoleTestUtil.restoreStdOut(
+					stdOutUnsyncByteArrayOutputStream));
+		}
 
 		// Fine level
 
-		levelReference.set(ProcessLog.Level.DEBUG);
+		stdErrUnsyncByteArrayOutputStream = ConsoleTestUtil.hijackStdErr();
+		stdOutUnsyncByteArrayOutputStream = ConsoleTestUtil.hijackStdOut();
 
-		processChannel = _localProcessExecutor.execute(
-			_createJPDAProcessConfig(_JPDA_OPTIONS1, processLogConsumer),
-			Operations.LEADING_LOG);
+		try {
+			levelReference.set(ProcessLog.Level.DEBUG);
 
-		future = processChannel.getProcessNoticeableFuture();
+			ProcessChannel<String> processChannel =
+				_localProcessExecutor.execute(
+					_createJPDAProcessConfig(
+						_JPDA_OPTIONS1, processLogConsumer),
+					Operations.LEADING_LOG);
 
-		Assert.assertEquals("DONE", future.get());
+			Future<String> future = processChannel.getProcessNoticeableFuture();
 
-		Assert.assertEquals(processLogs.toString(), 3, processLogs.size());
+			Assert.assertEquals("DONE", future.get());
 
-		processLog = processLogs.remove(0);
+			Assert.assertEquals(processLogs.toString(), 3, processLogs.size());
 
-		Assert.assertEquals(
-			"Found corrupt leading log Leading log", processLog.getMessage());
+			ProcessLog processLog = processLogs.remove(0);
 
-		processLog = processLogs.remove(0);
+			Assert.assertEquals(
+				"Found corrupt leading log Leading log",
+				processLog.getMessage());
 
-		String message = processLog.getMessage();
+			processLog = processLogs.remove(0);
 
-		Assert.assertTrue(
-			message, message.contains("Invoked generic process callable"));
+			String message = processLog.getMessage();
 
-		processLog = processLogs.remove(0);
+			Assert.assertTrue(
+				message, message.contains("Invoked generic process callable"));
 
-		message = processLog.getMessage();
+			processLog = processLogs.remove(0);
 
-		Assert.assertTrue(
-			message, message.contains("Invoked generic process callable"));
+			message = processLog.getMessage();
+
+			Assert.assertTrue(
+				message, message.contains("Invoked generic process callable"));
+		}
+		finally {
+			Assert.assertEquals(
+				stdErrMessage,
+				ConsoleTestUtil.restoreStdErr(
+					stdErrUnsyncByteArrayOutputStream));
+			Assert.assertEquals(
+				stdOutMessage,
+				ConsoleTestUtil.restoreStdOut(
+					stdOutUnsyncByteArrayOutputStream));
+		}
 
 		// Severe level
 
-		levelReference.set(ProcessLog.Level.ERROR);
+		stdErrUnsyncByteArrayOutputStream = ConsoleTestUtil.hijackStdErr();
+		stdOutUnsyncByteArrayOutputStream = ConsoleTestUtil.hijackStdOut();
 
-		processChannel = _localProcessExecutor.execute(
-			_createJPDAProcessConfig(_JPDA_OPTIONS1, processLogConsumer),
-			Operations.LEADING_LOG);
+		try {
+			levelReference.set(ProcessLog.Level.ERROR);
 
-		future = processChannel.getProcessNoticeableFuture();
+			ProcessChannel<String> processChannel =
+				_localProcessExecutor.execute(
+					_createJPDAProcessConfig(
+						_JPDA_OPTIONS1, processLogConsumer),
+					Operations.LEADING_LOG);
 
-		Assert.assertEquals("DONE", future.get());
+			Future<String> future = processChannel.getProcessNoticeableFuture();
 
-		Assert.assertTrue(processLogs.toString(), processLogs.isEmpty());
+			Assert.assertEquals("DONE", future.get());
+
+			Assert.assertTrue(processLogs.toString(), processLogs.isEmpty());
+		}
+		finally {
+			Assert.assertEquals(
+				stdErrMessage,
+				ConsoleTestUtil.restoreStdErr(
+					stdErrUnsyncByteArrayOutputStream));
+			Assert.assertEquals(
+				stdOutMessage,
+				ConsoleTestUtil.restoreStdOut(
+					stdOutUnsyncByteArrayOutputStream));
+		}
 	}
 
 	@Test
@@ -1132,6 +1199,7 @@ public class LocalProcessExecutorTest {
 
 		builder.setArguments(_createArguments(jpdaOption));
 		builder.setBootstrapClassPath(System.getProperty("java.class.path"));
+		builder.setEnvironment(_environment);
 
 		if (processLogConsumer != null) {
 			builder.setProcessLogConsumer(processLogConsumer);
@@ -1316,6 +1384,16 @@ public class LocalProcessExecutorTest {
 
 	private static final String _SYSTEM_PROPERTIES_QUIET =
 		"system.properties.quiet";
+
+	private static final Map<String, String> _environment =
+		new HashMap<String, String>(System.getenv()) {
+			{
+				put(
+					"JDK_JAVA_OPTIONS",
+					"--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens" +
+						"=java.base/java.lang.invoke=ALL-UNNAMED");
+			}
+		};
 
 	private final LocalProcessExecutor _localProcessExecutor =
 		new LocalProcessExecutor();

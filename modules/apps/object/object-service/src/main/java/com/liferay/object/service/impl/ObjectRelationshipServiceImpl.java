@@ -5,11 +5,16 @@
 
 package com.liferay.object.service.impl;
 
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.base.ObjectRelationshipServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
+import com.liferay.object.system.SystemObjectDefinitionManager;
+import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -19,6 +24,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,8 +47,8 @@ public class ObjectRelationshipServiceImpl
 	public ObjectRelationship addObjectRelationship(
 			String externalReferenceCode, long objectDefinitionId1,
 			long objectDefinitionId2, long parameterObjectFieldId,
-			String deletionType, Map<Locale, String> labelMap, String name,
-			boolean system, String type, ObjectField objectField)
+			String deletionType, boolean edge, Map<Locale, String> labelMap,
+			String name, boolean system, String type, ObjectField objectField)
 		throws PortalException {
 
 		ObjectDefinition objectDefinition =
@@ -54,8 +60,8 @@ public class ObjectRelationshipServiceImpl
 
 		return objectRelationshipLocalService.addObjectRelationship(
 			externalReferenceCode, getUserId(), objectDefinitionId1,
-			objectDefinitionId2, parameterObjectFieldId, deletionType, labelMap,
-			name, system, type, objectField);
+			objectDefinitionId2, parameterObjectFieldId, deletionType, edge,
+			labelMap, name, system, type, objectField);
 	}
 
 	@Override
@@ -68,9 +74,18 @@ public class ObjectRelationshipServiceImpl
 			objectRelationshipPersistence.findByPrimaryKey(
 				objectRelationshipId);
 
-		_objectDefinitionModelResourcePermission.check(
-			getPermissionChecker(), objectRelationship.getObjectDefinitionId1(),
+		_checkModelResourcePermission(
+			objectRelationship.getObjectDefinitionId2(), primaryKey2,
 			ActionKeys.UPDATE);
+
+		if (Objects.equals(
+				objectRelationship.getType(),
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+
+			_checkModelResourcePermission(
+				objectRelationship.getObjectDefinitionId1(), primaryKey1,
+				ActionKeys.UPDATE);
+		}
 
 		objectRelationshipLocalService.addObjectRelationshipMappingTableValues(
 			getUserId(), objectRelationshipId, primaryKey1, primaryKey2,
@@ -177,6 +192,33 @@ public class ObjectRelationshipServiceImpl
 			deletionType, edge, labelMap, objectField);
 	}
 
+	private void _checkModelResourcePermission(
+			long objectDefinitionId, long objectEntryId, String actionId)
+		throws PortalException {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
+
+		if (objectDefinition.isUnmodifiableSystemObject()) {
+			SystemObjectDefinitionManager systemObjectDefinitionManager =
+				_systemObjectDefinitionManagerRegistry.
+					getSystemObjectDefinitionManager(
+						objectDefinition.getName());
+
+			systemObjectDefinitionManager.checkModelResourcePermission(
+				objectDefinition.getPrimaryKey(), getPermissionChecker(),
+				objectEntryId, actionId);
+		}
+		else {
+			ModelResourcePermission<ObjectEntry> modelResourcePermission =
+				_objectEntryService.getModelResourcePermission(
+					objectDefinitionId);
+
+			modelResourcePermission.check(
+				getPermissionChecker(), objectEntryId, actionId);
+		}
+	}
+
 	@Reference(
 		target = "(model.class.name=com.liferay.object.model.ObjectDefinition)"
 	)
@@ -185,5 +227,12 @@ public class ObjectRelationshipServiceImpl
 
 	@Reference
 	private ObjectDefinitionPersistence _objectDefinitionPersistence;
+
+	@Reference
+	private ObjectEntryService _objectEntryService;
+
+	@Reference
+	private SystemObjectDefinitionManagerRegistry
+		_systemObjectDefinitionManagerRegistry;
 
 }

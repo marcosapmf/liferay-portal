@@ -26,7 +26,10 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 		<aui:input name="cpInstanceUnitOfMeasureId" type="hidden" value="<%= cpInstanceUnitOfMeasure.getCPInstanceUnitOfMeasureId() %>" />
 		<aui:input name="sku" type="hidden" value="<%= cpInstanceUnitOfMeasure.getSku() %>" />
 
+		<liferay-ui:error exception="<%= CommercePriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureIncrementalOrderQuantityException.class %>" message="decimals-allowed-cannot-be-less-than-the-number-of-decimals-in-the-base-unit-quantity" />
+		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasurePriceException.class %>" message="please-enter-a-valid-price" />
+		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureQuantityException.class %>" message="please-enter-a-valid-quantity" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureRateException.class %>" message="conversion-rate-quantity-must-be-greater-than-zero" />
 		<liferay-ui:error exception="<%= DuplicateCPInstanceUnitOfMeasureKeyException.class %>" message="there-is-another-unit-of-measure-with-the-same-key" />
 
@@ -49,7 +52,7 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 								<label class="field-label"><liferay-ui:message key="primary-unit-of-measure" /></label>
 
 								<div class="col-6 form-group">
-									<%= cpInstanceUnitOfMeasureDisplayContext.getPrimaryCPInstanceUnitOfMeasureName() %>
+									<%= HtmlUtil.escape(cpInstanceUnitOfMeasureDisplayContext.getPrimaryCPInstanceUnitOfMeasureName()) %>
 								</div>
 							</div>
 						</div>
@@ -76,7 +79,7 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 								</div>
 
 								<div class="col-6">
-									<aui:input helpMessage="base-unit-quantity-help" label="base-unit-quantity" name="incrementalOrderQuantity" required="<%= true %>" type="text">
+									<aui:input helpMessage="base-unit-quantity-help" ignoreRequestValue="<%= true %>" label="base-unit-quantity" name="incrementalOrderQuantity" required="<%= true %>" type="text" value='<%= BeanParamUtil.getDouble(cpInstanceUnitOfMeasure, request, "incrementalOrderQuantity", BigDecimal.ZERO.doubleValue()) %>'>
 										<aui:validator name="number" />
 										<aui:validator name="min">0</aui:validator>
 									</aui:input>
@@ -87,6 +90,13 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 								<div class="col-6">
 									<aui:input helpMessage="priority-help" label="priority" name="priority" type="text">
 										<aui:validator name="number" />
+									</aui:input>
+								</div>
+
+								<div class="col-6">
+									<aui:input helpMessage="pricing-quantity-help" ignoreRequestValue="<%= true %>" label="pricing-quantity" name="pricingQuantity" type="text" value='<%= BeanParamUtil.getDouble(cpInstanceUnitOfMeasure, request, "pricingQuantity", BigDecimal.ZERO.doubleValue()) %>'>
+										<aui:validator name="number" />
+										<aui:validator name="min">0</aui:validator>
 									</aui:input>
 								</div>
 							</div>
@@ -119,7 +129,7 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 
 							<div class="row">
 								<div class="col-6">
-									<aui:input helpMessage="base-unit-quantity-help" label="base-unit-quantity" name="incrementalOrderQuantity" required="<%= true %>" type="text">
+									<aui:input helpMessage="base-unit-quantity-help" ignoreRequestValue="<%= true %>" label="base-unit-quantity" name="incrementalOrderQuantity" required="<%= true %>" type="text" value='<%= BeanParamUtil.getDouble(cpInstanceUnitOfMeasure, request, "incrementalOrderQuantity", BigDecimal.ZERO.doubleValue()) %>'>
 										<aui:validator name="number" />
 										<aui:validator name="min">0</aui:validator>
 									</aui:input>
@@ -128,6 +138,15 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 								<div class="col-6">
 									<aui:input helpMessage="priority-help" label="priority" name="priority" type="text">
 										<aui:validator name="number" />
+									</aui:input>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-6">
+									<aui:input helpMessage="pricing-quantity-help" ignoreRequestValue="<%= true %>" label="pricing-quantity" name="pricingQuantity" type="text" value='<%= BeanParamUtil.getDouble(cpInstanceUnitOfMeasure, request, "pricingQuantity", BigDecimal.ZERO.doubleValue()) %>'>
+										<aui:validator name="number" />
+										<aui:validator name="min">0</aui:validator>
 									</aui:input>
 								</div>
 							</div>

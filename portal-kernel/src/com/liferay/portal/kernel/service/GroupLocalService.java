@@ -81,20 +81,12 @@ public interface GroupLocalService
 	public Group addGroup(Group group);
 
 	public Group addGroup(
-			long userId, long parentGroupId, String className, long classPK,
-			long liveGroupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int type,
-			boolean manualMembership, int membershipRestriction,
-			String friendlyURL, boolean site, boolean inheritContent,
-			boolean active, ServiceContext serviceContext)
-		throws PortalException;
-
-	public Group addGroup(
-			long userId, long parentGroupId, String className, long classPK,
-			long liveGroupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int type,
-			boolean manualMembership, int membershipRestriction,
-			String friendlyURL, boolean site, boolean active,
+			String externalReferenceCode, long userId, long parentGroupId,
+			String className, long classPK, long liveGroupId,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			int type, String typeSettings, boolean manualMembership,
+			int membershipRestriction, String friendlyURL, boolean site,
+			boolean inheritContent, boolean active,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -139,16 +131,6 @@ public interface GroupLocalService
 	public boolean addUserGroups(long userId, List<Group> groups);
 
 	public boolean addUserGroups(long userId, long[] groupIds);
-
-	/**
-	 * Adds a company group if it does not exist. This method is typically used
-	 * when a virtual host is added.
-	 *
-	 * @param companyId the primary key of the company
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public void checkCompanyGroup(long companyId) throws PortalException;
 
 	public Group checkScopeGroup(Layout layout, long userId)
 		throws PortalException;
@@ -963,16 +945,6 @@ public interface GroupLocalService
 	public List<Group> getStagedSites();
 
 	/**
-	 * Returns the staging group.
-	 *
-	 * @param liveGroupId the primary key of the live group
-	 * @return the staging group
-	 * @throws PortalException if a portal exception occurred
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public Group getStagingGroup(long liveGroupId) throws PortalException;
-
-	/**
 	 * Returns the group directly associated with the user.
 	 *
 	 * @param companyId the primary key of the company
@@ -1174,16 +1146,6 @@ public interface GroupLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasRoleGroups(long roleId);
-
-	/**
-	 * Returns <code>true</code> if the live group has a staging group.
-	 *
-	 * @param liveGroupId the primary key of the live group
-	 * @return <code>true</code> if the live group has a staging group;
-	 <code>false</code> otherwise
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public boolean hasStagingGroup(long liveGroupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasUserGroup(long userId, long groupId);
@@ -2189,7 +2151,7 @@ public interface GroupLocalService
 
 	public Group updateGroup(
 			long groupId, long parentGroupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int type,
+			Map<Locale, String> descriptionMap, int type, String typeSettings,
 			boolean manualMembership, int membershipRestriction,
 			String friendlyURL, boolean inheritContent, boolean active,
 			ServiceContext serviceContext)

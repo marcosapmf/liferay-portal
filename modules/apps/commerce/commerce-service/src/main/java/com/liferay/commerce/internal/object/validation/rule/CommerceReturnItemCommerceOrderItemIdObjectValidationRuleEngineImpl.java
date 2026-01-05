@@ -7,6 +7,7 @@ package com.liferay.commerce.internal.object.validation.rule;
 
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -72,12 +73,29 @@ public class CommerceReturnItemCommerceOrderItemIdObjectValidationRuleEngineImpl
 		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
 			GetterUtil.getString(
 				properties.get(
-					"r_commerceReturnToCommerceReturnItems_c_" +
+					"r_commerceReturnToCommerceReturnItems_l_" +
 						"commerceReturnERC")),
+			ObjectDefinitionConstants.GROUP_ID_DEFAULT,
 			objectDefinition.getObjectDefinitionId());
 
 		if (objectEntry == null) {
-			return false;
+			Map<String, Object> originalEntryDTO =
+				(Map<String, Object>)inputObjects.get("originalEntryDTO");
+
+			Map<String, Object> originalProperties =
+				(Map<String, Object>)originalEntryDTO.get("properties");
+
+			objectEntry = _objectEntryLocalService.fetchObjectEntry(
+				GetterUtil.getString(
+					originalProperties.get(
+						"r_commerceReturnToCommerceReturnItems_l_" +
+							"commerceReturnERC")),
+				ObjectDefinitionConstants.GROUP_ID_DEFAULT,
+				objectDefinition.getObjectDefinitionId());
+
+			if (objectEntry == null) {
+				return false;
+			}
 		}
 
 		Map<String, Serializable> values = objectEntry.getValues();

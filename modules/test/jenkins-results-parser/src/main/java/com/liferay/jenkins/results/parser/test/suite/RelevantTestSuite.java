@@ -12,6 +12,7 @@ import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.test.batch.TestBatch;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,37 +33,57 @@ public class RelevantTestSuite {
 			portalAcceptancePullRequestJob.getPortalGitWorkingDirectory();
 
 		_modifiedFiles = portalGitWorkingDirectory.getModifiedFilesList();
+		_portalGitWorkingDirectory = portalGitWorkingDirectory;
 
 		_relevantRuleEngine = RelevantRuleEngine.getInstance(
 			portalAcceptancePullRequestJob);
 	}
 
-	public List<TestBatch> getTestBatches() {
+	public List<TestBatch> getTestBatches(boolean validateAllRules) {
 		File baseTestPropertiesFile = new File(
 			_relevantRuleEngine.getBaseDir(), "test.properties");
 
 		String testBatchNamesPropertyValue =
 			JenkinsResultsParserUtil.getProperty(
 				JenkinsResultsParserUtil.getProperties(baseTestPropertiesFile),
-				"test.batch.names[relevant]");
+				"relevant.batch.names.whitelist");
 
 		if (testBatchNamesPropertyValue == null) {
-			throw new RuntimeException(
-				"Please set test.batch.names[relevant] in " +
-					baseTestPropertiesFile);
+			testBatchNamesPropertyValue = JenkinsResultsParserUtil.getProperty(
+				JenkinsResultsParserUtil.getProperties(baseTestPropertiesFile),
+				"test.batch.names[relevant]");
+
+			if (testBatchNamesPropertyValue == null) {
+				throw new RuntimeException(
+					"Please set relevant.batch.names.whitelist or " +
+						"test.batch.names[relevant] in " +
+							baseTestPropertiesFile);
+			}
 		}
-
-		List<String> validTestBatchNames = Arrays.asList(
-			testBatchNamesPropertyValue.split(","));
-
-		List<TestBatch> testBatches = new ArrayList<>();
 
 		List<RelevantRule> relevantRules =
 			_relevantRuleEngine.getMatchingRelevantRules(_modifiedFiles);
 
-		RelevantRuleValidation.validate(relevantRules);
-
 		Collections.sort(relevantRules);
+
+		try {
+			if (validateAllRules) {
+				RelevantRuleValidation.validate(
+					_portalGitWorkingDirectory.getGitRepositoryName(),
+					_portalGitWorkingDirectory.getUpstreamBranchName());
+			}
+			else {
+				RelevantRuleValidation.validate(relevantRules);
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		List<String> validTestBatchRegexes = Arrays.asList(
+			testBatchNamesPropertyValue.split(","));
+
+		List<TestBatch> testBatches = new ArrayList<>();
 
 		System.out.println(
 			"There are " + relevantRules.size() + " matching relevant rules: " +
@@ -79,10 +100,20 @@ public class RelevantTestSuite {
 					continue;
 				}
 
-				if (!validTestBatchNames.isEmpty() &&
-					validTestBatchNames.contains(testBatch.getName())) {
+				if (!validTestBatchRegexes.isEmpty() &&
+					isValidTestBatch(
+						validTestBatchRegexes, testBatch.getName())) {
 
 					testBatches.add(testBatch);
+				}
+				else {
+					System.out.println(
+						JenkinsResultsParserUtil.combine(
+							testBatch.getName(),
+							" is not a valid test batch in relevant. Check ",
+							"the property \"relevant.batch.names.whitelist\" ",
+							"in the base test.properties file and set the ",
+							"batch name.\n"));
 				}
 			}
 
@@ -99,11 +130,24 @@ public class RelevantTestSuite {
 		return _testBatchNamesJobProperties;
 	}
 
+	public Boolean isValidTestBatch(
+		List<String> validTestBatchRegexes, String testBatchName) {
+
+		for (String validTestBatchRegex : validTestBatchRegexes) {
+			if (testBatchName.matches(validTestBatchRegex)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public void setModifiedFiles(List<File> modifiedFiles) {
 		_modifiedFiles = modifiedFiles;
 	}
 
 	private List<File> _modifiedFiles;
+	private final PortalGitWorkingDirectory _portalGitWorkingDirectory;
 	private final RelevantRuleEngine _relevantRuleEngine;
 	private final Set<JobProperty> _testBatchNamesJobProperties =
 		new HashSet<>();

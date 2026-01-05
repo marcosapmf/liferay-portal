@@ -18,21 +18,23 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Guilherme Camacho
@@ -42,6 +44,7 @@ public class ObjectEntryItemSelectorView
 			   ItemSelectorView<InfoItemItemSelectorCriterion> {
 
 	public ObjectEntryItemSelectorView(
+		GroupLocalService groupLocalService,
 		InfoPermissionProvider<ObjectEntry> infoPermissionProvider,
 		ItemSelectorViewDescriptorRenderer<InfoItemItemSelectorCriterion>
 			itemSelectorViewDescriptorRenderer,
@@ -51,6 +54,7 @@ public class ObjectEntryItemSelectorView
 		ObjectScopeProviderRegistry objectScopeProviderRegistry,
 		Portal portal) {
 
+		_groupLocalService = groupLocalService;
 		_infoPermissionProvider = infoPermissionProvider;
 		_itemSelectorViewDescriptorRenderer =
 			itemSelectorViewDescriptorRenderer;
@@ -81,7 +85,13 @@ public class ObjectEntryItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return _objectDefinition.getPluralLabel(locale);
+		String title = _objectDefinition.getPluralLabel(locale);
+
+		if (_objectDefinition.isCMS()) {
+			title = StringUtil.appendParentheticalSuffix(title, "CMS");
+		}
+
+		return title;
 	}
 
 	@Override
@@ -104,7 +114,7 @@ public class ObjectEntryItemSelectorView
 			servletRequest, servletResponse, infoItemItemSelectorCriterion,
 			portletURL, itemSelectedEventName, search,
 			new ObjectEntryItemSelectorViewDescriptor(
-				(HttpServletRequest)servletRequest,
+				_groupLocalService, (HttpServletRequest)servletRequest,
 				infoItemItemSelectorCriterion, _objectDefinition,
 				_objectEntryManager, _objectRelatedModelsProviderRegistry,
 				_objectScopeProviderRegistry, _portal, portletURL));
@@ -116,6 +126,7 @@ public class ObjectEntryItemSelectorView
 			new InfoItemItemSelectorReturnType(),
 			new ObjectEntryItemSelectorReturnType());
 
+	private final GroupLocalService _groupLocalService;
 	private final InfoPermissionProvider<ObjectEntry> _infoPermissionProvider;
 	private final ItemSelectorViewDescriptorRenderer
 		<InfoItemItemSelectorCriterion> _itemSelectorViewDescriptorRenderer;

@@ -19,11 +19,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspWriter;
 
 /**
  * @author Brian Wing Shun Chan
@@ -118,7 +118,10 @@ public class MetaTagsTag extends IncludeTag {
 
 		if (Validator.isNull(metaDescription)) {
 			metaDescription = layout.getDescription(defaultLanguageId);
-			metaDescriptionLanguageId = w3cDefaultLanguageId;
+
+			if (Validator.isNotNull(metaDescription)) {
+				metaDescriptionLanguageId = w3cDefaultLanguageId;
+			}
 		}
 
 		ListMergeable<String> pageDescriptionListMergeable =
@@ -150,7 +153,10 @@ public class MetaTagsTag extends IncludeTag {
 
 		if (Validator.isNull(metaKeywords)) {
 			metaKeywords = layout.getKeywords(defaultLanguageId);
-			metaKeywordsLanguageId = w3cDefaultLanguageId;
+
+			if (Validator.isNotNull(metaKeywords)) {
+				metaKeywordsLanguageId = w3cDefaultLanguageId;
+			}
 		}
 
 		ListMergeable<String> pageKeywordsListMergeable =

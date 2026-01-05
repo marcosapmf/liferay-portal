@@ -13,7 +13,6 @@ import com.liferay.petra.sql.dsl.ast.ASTNode;
 import com.liferay.petra.sql.dsl.expression.Alias;
 import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.expression.ScalarDSLQueryAlias;
-import com.liferay.petra.sql.dsl.expression.TypeAlias;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
@@ -25,6 +24,7 @@ import com.liferay.petra.sql.dsl.spi.expression.DSLFunction;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunctionType;
 import com.liferay.petra.sql.dsl.spi.expression.Scalar;
 import com.liferay.petra.sql.dsl.spi.expression.TableStar;
+import com.liferay.petra.sql.dsl.spi.expression.step.ElseEnd;
 import com.liferay.petra.sql.dsl.spi.query.QueryTable;
 import com.liferay.petra.sql.dsl.spi.query.Select;
 import com.liferay.petra.sql.dsl.spi.query.SetOperation;
@@ -67,6 +67,7 @@ import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -78,6 +79,8 @@ import java.io.Serializable;
 
 import java.math.BigDecimal;
 
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -94,6 +97,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.sql.DataSource;
 
@@ -166,6 +171,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <R> R dslQuery(DSLQuery dslQuery) {
+		return dslQuery(dslQuery, true);
+	}
+
+	@Override
+	public <R> R dslQuery(DSLQuery dslQuery, boolean useFinderCache) {
 		DefaultASTNodeListener defaultASTNodeListener =
 			new DefaultASTNodeListener();
 
@@ -210,19 +220,28 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		ProjectionType projectionType = _getProjectionType(
 			tableNames, select.getExpressions());
 
-		FinderCache finderCache = getFinderCache();
+		Consumer<Object> resultConsumer = null;
 
-		FinderPath finderPath = new FinderPath(
-			FinderPath.encodeDSLQueryCacheName(tableNames), "dslQuery",
-			sb.getStrings(), new String[0],
-			projectionType == ProjectionType.MODELS);
+		if (useFinderCache) {
+			FinderCache finderCache = getFinderCache();
 
-		Object[] arguments = _getArguments(defaultASTNodeListener);
+			FinderPath finderPath = new FinderPath(
+				FinderPath.encodeDSLQueryCacheName(tableNames), "dslQuery",
+				ArrayUtil.append(
+					sb.getStrings(), _getAliasTypes(select.getExpressions())),
+				new String[0], projectionType == ProjectionType.MODELS);
 
-		Object cacheResult = finderCache.getResult(finderPath, arguments, this);
+			Object[] arguments = _getArguments(defaultASTNodeListener);
 
-		if (cacheResult != null) {
-			return (R)cacheResult;
+			Object cacheResult = finderCache.getResult(
+				finderPath, arguments, this);
+
+			if (cacheResult != null) {
+				return (R)cacheResult;
+			}
+
+			resultConsumer = result -> finderCache.putResult(
+				finderPath, arguments, result);
 		}
 
 		Session session = null;
@@ -255,7 +274,8 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 					if (expression instanceof Alias) {
 						Alias<?> alias = (Alias<?>)expression;
 
-						sqlQuery.addScalar(alias.getName(), _getType(alias));
+						sqlQuery.addScalar(
+							alias.getName(), _getType(alias.getExpression()));
 					}
 					else if (expression instanceof Column) {
 						Column<?, ?> column = (Column<?, ?>)expression;
@@ -295,7 +315,9 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 					defaultASTNodeListener.getEnd());
 			}
 
-			finderCache.putResult(finderPath, arguments, result);
+			if (resultConsumer != null) {
+				resultConsumer.accept(result);
+			}
 
 			return (R)result;
 		}
@@ -647,6 +669,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T remove(T model) {
+		return removeByFunction(model, this::removeImpl);
+	}
+
+	@Override
+	public T removeByFunction(T model, Function<T, T> function) {
 		if (ReadOnlyTransactionThreadLocal.isReadOnly()) {
 			throw new IllegalStateException(
 				"Remove called with read only transaction");
@@ -664,7 +691,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			modelListener.onBeforeRemove(model);
 		}
 
-		T removedModel = removeImpl(model);
+		T removedModel = function.apply(model);
 
 		if (removedModel != null) {
 			model = removedModel;
@@ -919,6 +946,20 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		throw new UnsupportedOperationException();
 	}
 
+	protected boolean isPermissionsInMemoryFilterEnabled() {
+		if (_permissionsInMemoryFilterEnabled == null) {
+			Class<?> modelClass = getModelClass();
+
+			_permissionsInMemoryFilterEnabled = GetterUtil.getBoolean(
+				PropsUtil.get(
+					"permissions.in.memory.filter.enabled",
+					new Filter(modelClass.getName())),
+				_PERMISSIONS_IN_MEMORY_FILTER_ENABLED);
+		}
+
+		return _permissionsInMemoryFilterEnabled;
+	}
+
 	/**
 	 * Removes the model instance from the database. {@link #update(BaseModel,
 	 * boolean)} depends on this method to implement the remove operation; it
@@ -1037,6 +1078,28 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	@Deprecated
 	protected boolean finderCacheEnabled = true;
 
+	private String[] _getAliasTypes(
+		Collection<? extends Expression<?>> expressions) {
+
+		List<String> aliasTypes = new ArrayList<>();
+
+		for (Expression<?> expression : expressions) {
+			Type type = null;
+
+			if (expression instanceof Alias) {
+				Alias<?> alias = (Alias<?>)expression;
+
+				type = _getType(alias.getExpression());
+			}
+
+			if (type != null) {
+				aliasTypes.add(String.valueOf(type));
+			}
+		}
+
+		return aliasTypes.toArray(new String[0]);
+	}
+
 	private Object[] _getArguments(
 		DefaultASTNodeListener defaultASTNodeListener) {
 
@@ -1109,12 +1172,6 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			}
 		}
 
-		if (expression instanceof TypeAlias) {
-			TypeAlias<?> typeAlias = (TypeAlias<?>)expression;
-
-			return _types.get(typeAlias.getJavaType());
-		}
-
 		if (expression instanceof Alias) {
 			Alias<?> alias = (Alias<?>)expression;
 
@@ -1151,7 +1208,17 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 				return Type.LONG;
 			}
 
+			if (dslFunctionType == DSLFunctionType.FLOAT_DIVISION) {
+				return Type.FLOAT;
+			}
+
 			return _getType(dslFunction.getExpressions()[0]);
+		}
+
+		if (expression instanceof ElseEnd<?>) {
+			ElseEnd<?> elseEnd = (ElseEnd<?>)expression;
+
+			return _getType(elseEnd.getElseExpression());
 		}
 
 		if (expression instanceof Scalar<?>) {
@@ -1194,6 +1261,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		return queryTable.getDslQuery();
 	}
 
+	private static final boolean _PERMISSIONS_IN_MEMORY_FILTER_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get("permissions.in.memory.filter.enabled"), true);
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		BasePersistenceImpl.class);
 
@@ -1201,7 +1272,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		HashMapBuilder.<Class<?>, Type>put(
 			BigDecimal.class, Type.BIG_DECIMAL
 		).put(
+			Blob.class, Type.BINARY
+		).put(
 			Boolean.class, Type.BOOLEAN
+		).put(
+			Clob.class, Type.STRING
 		).put(
 			Date.class, Type.DATE
 		).put(
@@ -1228,6 +1303,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	private Class<T> _modelClass;
 	private Class<? extends T> _modelImplClass;
 	private ModelPKType _modelPKType = ModelPKType.COMPOUND;
+	private Boolean _permissionsInMemoryFilterEnabled;
 	private SessionFactory _sessionFactory;
 	private Table<?> _table;
 

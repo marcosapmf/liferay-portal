@@ -11,6 +11,7 @@ import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.DateTimeInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.FriendlyURLInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.LongTextInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
@@ -133,6 +134,9 @@ public class DefaultInputFragmentEntryConfigurationProviderImpl
 			FileInfoFieldType.INSTANCE.getName(),
 			JSONUtil.put("key", "INPUTS-file-upload")
 		).put(
+			FriendlyURLInfoFieldType.INSTANCE.getName(),
+			JSONUtil.put("key", "INPUTS-friendly-url-input")
+		).put(
 			HTMLInfoFieldType.INSTANCE.getName(),
 			JSONUtil.put("key", "INPUTS-rich-text-input")
 		).put(
@@ -140,7 +144,7 @@ public class DefaultInputFragmentEntryConfigurationProviderImpl
 			JSONUtil.put("key", "INPUTS-textarea")
 		).put(
 			MultiselectInfoFieldType.INSTANCE.getName(),
-			JSONUtil.put("key", "INPUTS-multiselect-list")
+			JSONUtil.put("key", "INPUTS-multiselector-dropdown")
 		).put(
 			NumberInfoFieldType.INSTANCE.getName(),
 			JSONUtil.put("key", "INPUTS-numeric-input")

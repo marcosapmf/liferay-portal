@@ -57,7 +57,7 @@ public class LayoutSEOScreenNavigationEntryTest {
 	public void testIsVisibleDisplayPage() throws Exception {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, _group.getGroupId(), 0,
+				null, _group.getGroupId(), 0, null,
 				_portal.getClassNameId(AssetCategory.class.getName()), 0,
 				RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -77,7 +77,7 @@ public class LayoutSEOScreenNavigationEntryTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
 				LayoutUtilityPageEntryConstants.TYPE_SC_INTERNAL_SERVER_ERROR,
-				0, ServiceContextTestUtil.getServiceContext());
+				null, ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertTrue(
 			_screenNavigationEntry.isVisible(

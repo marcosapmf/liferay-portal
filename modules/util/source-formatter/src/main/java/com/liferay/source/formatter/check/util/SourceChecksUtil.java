@@ -22,6 +22,7 @@ import com.liferay.source.formatter.check.configuration.SourceCheckConfiguration
 import com.liferay.source.formatter.check.configuration.SourceChecksResult;
 import com.liferay.source.formatter.check.configuration.SourceFormatterConfiguration;
 import com.liferay.source.formatter.check.configuration.SourceFormatterSuppressions;
+import com.liferay.source.formatter.checkstyle.util.CheckstyleUtil;
 import com.liferay.source.formatter.parser.GradleFile;
 import com.liferay.source.formatter.parser.GradleFileParser;
 import com.liferay.source.formatter.parser.JavaClass;
@@ -32,6 +33,11 @@ import com.liferay.source.formatter.util.CheckType;
 import com.liferay.source.formatter.util.DebugUtil;
 import com.liferay.source.formatter.util.SourceFormatterCheckUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
+
+import com.puppycrawl.tools.checkstyle.JavaParser;
+import com.puppycrawl.tools.checkstyle.api.DetailAST;
+import com.puppycrawl.tools.checkstyle.api.FileContents;
+import com.puppycrawl.tools.checkstyle.api.FileText;
 
 import java.io.File;
 
@@ -128,14 +134,25 @@ public class SourceChecksUtil {
 
 				if (javaClass == null) {
 					try {
+						file = new File(absolutePath);
+
+						FileText fileText = new FileText(
+							file, CheckstyleUtil.getLines(content));
+
+						DetailAST detailAST = JavaParser.parseFileText(
+							fileText, JavaParser.Options.WITH_COMMENTS);
+						FileContents fileContents = new FileContents(fileText);
+
 						javaClass = JavaClassParser.parseJavaClass(
-							fileName, sourceChecksResult.getContent());
+							sourceChecksResult.getContent(), detailAST,
+							fileContents);
 
 						anonymousClasses =
 							JavaClassParser.parseAnonymousClasses(
-								sourceChecksResult.getContent(),
+								fileName, sourceChecksResult.getContent(),
 								javaClass.getPackageName(),
-								javaClass.getImportNames());
+								javaClass.getImportNames(), detailAST,
+								fileContents);
 					}
 					catch (ParseException parseException) {
 						sourceChecksResult.addSourceFormatterMessage(
@@ -214,6 +231,7 @@ public class SourceChecksUtil {
 		attributesJSONObject = SourceFormatterCheckUtil.addPropertiesAttributes(
 			attributesJSONObject, propertiesMap,
 			SourceFormatterUtil.GIT_LIFERAY_PORTAL_BRANCH,
+			SourceFormatterUtil.JAKARTA_USED_BRANCH,
 			SourceFormatterUtil.UPGRADE_FROM_VERSION,
 			SourceFormatterUtil.UPGRADE_TO_LIFERAY_VERSION,
 			SourceFormatterUtil.UPGRADE_TO_RELEASE_VERSION);
@@ -270,7 +288,8 @@ public class SourceChecksUtil {
 			String sourceCheckName = SourceFormatterUtil.getSimpleName(
 				sourceCheckConfiguration.getName());
 
-			if ((sourceCheckCategory.startsWith("Upgrade") &&
+			if (((sourceCheckCategory.equals("JakartaTransform") ||
+				  sourceCheckCategory.startsWith("Upgrade")) &&
 				 !filterCheckCategoryNames.contains(sourceCheckCategory)) ||
 				((!filterCheckCategoryNames.isEmpty() ||
 				  !filterCheckNames.isEmpty()) &&

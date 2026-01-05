@@ -66,8 +66,8 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -444,8 +444,8 @@ public class GetPageContentMVCResourceCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), _layout.getPlid(),
-				layoutStructure.toString());
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				_layout.getPlid(), layoutStructure.toString());
 	}
 
 	private MockLiferayResourceRequest _getMockLiferayPortletResourceRequest(
@@ -458,13 +458,13 @@ public class GetPageContentMVCResourceCommandTest {
 		mockLiferayResourceRequest.addParameter(
 			"segmentsExperienceId", String.valueOf(segmentsExperienceId));
 		mockLiferayResourceRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG, null);
+			JavaConstants.JAKARTA_PORTLET_CONFIG, null);
 
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayResourceResponse());
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();

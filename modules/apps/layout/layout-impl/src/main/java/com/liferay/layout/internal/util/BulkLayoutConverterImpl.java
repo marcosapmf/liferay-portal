@@ -50,14 +50,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ReadOnlyException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-
-import javax.portlet.ReadOnlyException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -240,8 +240,9 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				layout.getGroupId(), layout.getPlid(),
-				defaultSegmentsExperienceId, layoutDataJSONObject.toString());
+				serviceContext.getUserId(), layout.getGroupId(),
+				layout.getPlid(), defaultSegmentsExperienceId,
+				layoutDataJSONObject.toString());
 	}
 
 	private Layout _convertLayout(long plid) throws PortalException {
@@ -351,7 +352,7 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 				layout.getDescriptionMap(), layout.getKeywordsMap(),
 				layout.getRobotsMap(), LayoutConstants.TYPE_CONTENT,
 				layout.getTypeSettings(), true, true, Collections.emptyMap(),
-				layout.getMasterLayoutPlid(), serviceContext);
+				layout.getMasterLayoutPageTemplateEntryERC(), serviceContext);
 		}
 
 		try {
@@ -372,7 +373,7 @@ public class BulkLayoutConverterImpl implements BulkLayoutConverter {
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
 
 		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			javax.portlet.PortletPreferences jxPortletPreferences =
+			jakarta.portlet.PortletPreferences jxPortletPreferences =
 				_portletPreferenceValueLocalService.getPreferences(
 					portletPreferences);
 

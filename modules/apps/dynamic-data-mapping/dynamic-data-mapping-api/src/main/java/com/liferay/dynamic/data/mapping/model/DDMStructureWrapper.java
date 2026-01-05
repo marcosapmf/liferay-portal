@@ -39,6 +39,7 @@ public class DDMStructureWrapper
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("structureId", getStructureId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -80,6 +81,13 @@ public class DDMStructureWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long structureId = (Long)attributes.get("structureId");
@@ -210,6 +218,13 @@ public class DDMStructureWrapper
 	}
 
 	@Override
+	public DDMForm createFullHierarchyDDMForm(boolean copy)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.createFullHierarchyDDMForm(copy);
+	}
+
+	@Override
 	public DDMStructureLayout fetchDDMStructureLayout() {
 		return model.fetchDDMStructureLayout();
 	}
@@ -282,10 +297,22 @@ public class DDMStructureWrapper
 	}
 
 	@Override
+	public DDMForm getDDMForm(boolean copy) {
+		return model.getDDMForm(copy);
+	}
+
+	@Override
 	public DDMFormField getDDMFormField(String fieldName)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getDDMFormField(fieldName);
+	}
+
+	@Override
+	public DDMFormField getDDMFormField(String fieldName, boolean copy)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getDDMFormField(fieldName, copy);
 	}
 
 	@Override
@@ -405,6 +432,16 @@ public class DDMStructureWrapper
 		return model.getDescriptionMap();
 	}
 
+	/**
+	 * Returns the external reference code of this ddm structure.
+	 *
+	 * @return the external reference code of this ddm structure
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
+	}
+
 	@Override
 	public String getFieldDataType(String fieldName)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -484,6 +521,11 @@ public class DDMStructureWrapper
 	@Override
 	public DDMForm getFullHierarchyDDMForm() {
 		return model.getFullHierarchyDDMForm();
+	}
+
+	@Override
+	public DDMForm getFullHierarchyDDMForm(boolean copy) {
+		return model.getFullHierarchyDDMForm(copy);
 	}
 
 	@Override
@@ -969,6 +1011,16 @@ public class DDMStructureWrapper
 		java.util.Locale defaultLocale) {
 
 		model.setDescriptionMap(descriptionMap, defaultLocale);
+	}
+
+	/**
+	 * Sets the external reference code of this ddm structure.
+	 *
+	 * @param externalReferenceCode the external reference code of this ddm structure
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**

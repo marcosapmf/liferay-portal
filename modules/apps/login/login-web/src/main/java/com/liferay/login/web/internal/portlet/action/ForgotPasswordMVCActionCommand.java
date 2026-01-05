@@ -37,18 +37,18 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SortedArrayList;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletSession;
 
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,10 +60,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + LoginPortletKeys.CREATE_ACCOUNT,
-		"javax.portlet.name=" + LoginPortletKeys.FAST_LOGIN,
-		"javax.portlet.name=" + LoginPortletKeys.FORGOT_PASSWORD,
-		"javax.portlet.name=" + LoginPortletKeys.LOGIN,
+		"jakarta.portlet.name=" + LoginPortletKeys.CREATE_ACCOUNT,
+		"jakarta.portlet.name=" + LoginPortletKeys.FAST_LOGIN,
+		"jakarta.portlet.name=" + LoginPortletKeys.FORGOT_PASSWORD,
+		"jakarta.portlet.name=" + LoginPortletKeys.LOGIN,
 		"mvc.command.name=/login/forgot_password"
 	},
 	service = MVCActionCommand.class
@@ -136,12 +136,14 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected CaptchaConfiguration getCaptchaConfiguration()
+	protected CaptchaConfiguration getCaptchaConfiguration(
+			ActionRequest actionRequest)
 		throws CaptchaConfigurationException {
 
 		try {
-			return _configurationProvider.getSystemConfiguration(
-				CaptchaConfiguration.class);
+			return _configurationProvider.getCompanyConfiguration(
+				CaptchaConfiguration.class,
+				_portal.getCompanyId(actionRequest));
 		}
 		catch (Exception exception) {
 			throw new CaptchaConfigurationException(exception);
@@ -151,7 +153,8 @@ public class ForgotPasswordMVCActionCommand extends BaseMVCActionCommand {
 	private void _checkCaptcha(ActionRequest actionRequest)
 		throws CaptchaConfigurationException, CaptchaException {
 
-		CaptchaConfiguration captchaConfiguration = getCaptchaConfiguration();
+		CaptchaConfiguration captchaConfiguration = getCaptchaConfiguration(
+			actionRequest);
 
 		if (captchaConfiguration.sendPasswordCaptchaEnabled()) {
 			CaptchaUtil.check(actionRequest);

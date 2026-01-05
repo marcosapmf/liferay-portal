@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -26,7 +26,6 @@ page import="com.liferay.document.library.kernel.util.DLUtil" %><%@
 page import="com.liferay.item.selector.ItemSelectorReturnTypeResolver" %><%@
 page import="com.liferay.item.selector.taglib.internal.dao.search.RepositoryEntryResultRowSplitter" %><%@
 page import="com.liferay.item.selector.taglib.internal.display.context.GroupSelectorDisplayContext" %><%@
-page import="com.liferay.item.selector.taglib.internal.servlet.ServletContextUtil" %><%@
 page import="com.liferay.item.selector.taglib.internal.servlet.item.selector.GroupNavigationCard" %><%@
 page import="com.liferay.item.selector.taglib.internal.util.ItemSelectorRepositoryEntryBrowserUtil" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -48,11 +47,11 @@ page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %>
 
+<%@ page import="jakarta.portlet.PortletURL" %>
+
 <%@ page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Set" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

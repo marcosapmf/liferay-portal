@@ -1,6 +1,7 @@
 @component-name = "portal-headless"
 definition {
 
+	property browser.chrome.version = "139.0";
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -179,7 +180,9 @@ definition {
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
+		AssertElementPresent(
+			key_card = "1 Column",
+			locator1 = "Card#CARD_SELECTED");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -191,7 +194,9 @@ definition {
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		PagesAdmin.viewSelectedLayoutColumn(columnName = "2 Columns");
+		AssertElementPresent(
+			key_card = "2 Columns",
+			locator1 = "Card#CARD_SELECTED");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -203,7 +208,9 @@ definition {
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
+		AssertElementPresent(
+			key_card = "1 Column",
+			locator1 = "Card#CARD_SELECTED");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -217,7 +224,9 @@ definition {
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
+		AssertElementPresent(
+			key_card = "1 Column",
+			locator1 = "Card#CARD_SELECTED");
 	}
 
 	@priority = 3
@@ -393,11 +402,12 @@ definition {
 		PagesAdmin.viewPageItemPresent(pageName = "Test Page Name");
 	}
 
+	@description = "Ignored due to LPD-66917"
+	@ignore = "true"
 	@priority = 3
 	test StagingDemoLocalLive4 {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -495,7 +505,7 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "Web Content Title");
 
@@ -863,7 +873,6 @@ definition {
 	test StagingPublishPage {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
@@ -938,6 +947,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
@@ -948,7 +961,7 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = "Web Content Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "Web Content Title");
 

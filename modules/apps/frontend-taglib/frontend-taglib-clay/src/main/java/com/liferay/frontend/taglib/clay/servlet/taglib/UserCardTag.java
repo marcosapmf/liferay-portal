@@ -10,12 +10,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Carlos Lancha
@@ -188,7 +188,7 @@ public class UserCardTag extends BaseCardTag {
 			jspWriter.write("<div class=\"custom-checkbox custom-control\">");
 			jspWriter.write("<label><input ");
 
-			jspWriter.write("class=\"custom-control-input\"");
+			jspWriter.write("class=\"custom-control-input\" ");
 
 			Boolean selected = isSelected();
 

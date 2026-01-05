@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.deploy.hot.HotDeployUtil;
 import com.liferay.portal.kernel.exception.LoggedExceptionInInitializerError;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.log4j.Log4JUtil;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.module.util.ServiceLatch;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
@@ -40,8 +41,9 @@ import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ModuleFrameworkPropsValues;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SystemProperties;
-import com.liferay.portal.log4j.Log4JUtil;
 import com.liferay.portal.module.framework.ModuleFrameworkUtil;
 import com.liferay.portal.spring.aop.AopConfigurableApplicationContextConfigurator;
 import com.liferay.portal.spring.aop.DynamicProxyCreator;
@@ -52,8 +54,9 @@ import com.liferay.portal.spring.transaction.TransactionManagerFactory;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalClassPathUtil;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
 
 import java.beans.PropertyDescriptor;
 
@@ -83,9 +86,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 
 import javax.sql.DataSource;
 
@@ -153,7 +153,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			}
 		}
 
-		closeDataSource("liferayDataSource");
+		DataSource dataSource = (DataSource)PortalBeanLocatorUtil.locate(
+			"liferayDataSource");
 
 		super.contextDestroyed(servletContextEvent);
 
@@ -161,6 +162,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			(SessionFactory)InfrastructureUtil.getSessionFactory();
 
 		sessionFactory.close();
+
+		closeDataSource(dataSource);
 
 		_cleanUpJDBCDrivers();
 
@@ -228,9 +231,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		}
 	}
 
-	protected void closeDataSource(String name) {
-		DataSource dataSource = (DataSource)PortalBeanLocatorUtil.locate(name);
-
+	protected void closeDataSource(DataSource dataSource) {
 		if (dataSource instanceof DelegatingDataSource) {
 			DelegatingDataSource delegatingDataSource =
 				(DelegatingDataSource)dataSource;
@@ -337,7 +338,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		_portalServletContextPath = servletContext.getContextPath();
 
 		File tempDir = (File)servletContext.getAttribute(
-			JavaConstants.JAVAX_SERVLET_CONTEXT_TEMPDIR);
+			JavaConstants.JAKARTA_SERVLET_CONTEXT_TEMPDIR);
 
 		PropsValues.LIFERAY_WEB_PORTAL_CONTEXT_TEMPDIR =
 			tempDir.getAbsolutePath();
@@ -358,7 +359,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		ExecutorService executorService =
 			SystemExecutorServiceUtil.getExecutorService();
 
-		Future<?> future = executorService.submit(
+		Future<Future<?>> future1 = executorService.submit(
 			() -> {
 				DBInitUtil.init();
 
@@ -366,7 +367,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 				InfrastructureUtil.setDataSource(dataSource);
 
-				executorService.submit(
+				return executorService.submit(
 					() -> {
 						PortalHibernateConfiguration
 							portalHibernateConfiguration =
@@ -387,13 +388,13 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 						return null;
 					});
-
-				return null;
 			});
 
 		ModuleFrameworkUtil.initFramework();
 
-		future.get();
+		Future<?> future2 = future1.get();
+
+		future2.get();
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 
@@ -467,6 +468,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		if (upgradeDatabaseAutoRun) {
 			StartupHelperUtil.setUpgrading(true);
+
+			DBUpgrader.startUpgradeLogAppender();
 
 			try {
 				DBUpgrader.upgradePortal();

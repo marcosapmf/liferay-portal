@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.translation.constants.TranslationActionKeys;
@@ -75,6 +74,10 @@ public class LayoutActionsHelper {
 	}
 
 	public boolean isShowConfigureAction(Layout layout) throws PortalException {
+		if (layout.isTypeEmpty()) {
+			return false;
+		}
+
 		return LayoutPermissionUtil.containsLayoutRestrictedUpdatePermission(
 			_themeDisplay.getPermissionChecker(), layout);
 	}
@@ -161,11 +164,7 @@ public class LayoutActionsHelper {
 			return false;
 		}
 
-		if (draftLayout.isDraft()) {
-			return true;
-		}
-
-		return false;
+		return draftLayout.isDraft();
 	}
 
 	public boolean isShowExportTranslationAction(Layout layout) {
@@ -214,7 +213,9 @@ public class LayoutActionsHelper {
 	public boolean isShowPermissionsAction(Layout layout, Group selGroup)
 		throws PortalException {
 
-		if (StagingUtil.isIncomplete(layout) || selGroup.isLayoutPrototype()) {
+		if (StagingUtil.isIncomplete(layout) || layout.isTypeEmpty() ||
+			selGroup.isLayoutPrototype()) {
+
 			return false;
 		}
 
@@ -253,29 +254,6 @@ public class LayoutActionsHelper {
 		}
 
 		return false;
-	}
-
-	public boolean isShowViewCollectionItemsAction(Layout layout) {
-		if (!Objects.equals(
-				layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
-
-			return false;
-		}
-
-		String collectionType = layout.getTypeSettingsProperty(
-			"collectionType");
-
-		if (Validator.isNull(collectionType)) {
-			return false;
-		}
-
-		String collectionPK = layout.getTypeSettingsProperty("collectionPK");
-
-		if (Validator.isNull(collectionPK)) {
-			return false;
-		}
-
-		return true;
 	}
 
 	public boolean isShowViewLayoutAction(Layout layout) {

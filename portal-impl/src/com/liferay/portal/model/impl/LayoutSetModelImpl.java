@@ -7,8 +7,10 @@ package com.liferay.portal.model.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -22,6 +24,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -165,7 +169,7 @@ public class LayoutSetModelImpl
 	public static final long LAYOUTSETID_COLUMN_BITMASK = 32L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.portal.util.PropsUtil.get(
+		com.liferay.portal.kernel.util.PropsUtil.get(
 			"lock.expiration.time.com.liferay.portal.kernel.model.LayoutSet"));
 
 	public LayoutSetModelImpl() {
@@ -698,12 +702,12 @@ public class LayoutSetModelImpl
 		String companyFallbackVirtualHostname) {
 	}
 
-	public java.util.TreeMap<String, String> getVirtualHostnames() {
+	public java.util.NavigableMap<String, String> getVirtualHostnames() {
 		return null;
 	}
 
 	public void setVirtualHostnames(
-		java.util.TreeMap<String, String> virtualHostnames) {
+		java.util.NavigableMap<String, String> virtualHostnames) {
 	}
 
 	public long getColumnBitmask() {
@@ -981,14 +985,23 @@ public class LayoutSetModelImpl
 		layoutSetCacheModel.layoutSetPrototypeLinkEnabled =
 			isLayoutSetPrototypeLinkEnabled();
 
-		setCompanyFallbackVirtualHostname(null);
+		try {
+			setCompanyFallbackVirtualHostname(null);
 
-		layoutSetCacheModel._companyFallbackVirtualHostname =
-			getCompanyFallbackVirtualHostname();
+			layoutSetCacheModel.companyFallbackVirtualHostname =
+				(String)_companyFallbackVirtualHostnameMethodHandle.invokeExact(
+					(LayoutSetImpl)this);
 
-		setVirtualHostnames(null);
+			setVirtualHostnames(null);
 
-		layoutSetCacheModel._virtualHostnames = getVirtualHostnames();
+			layoutSetCacheModel.virtualHostnames =
+				(java.util.NavigableMap<String, String>)
+					_virtualHostnamesMethodHandle.invokeExact(
+						(LayoutSetImpl)this);
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 
 		return layoutSetCacheModel;
 	}
@@ -1176,6 +1189,63 @@ public class LayoutSetModelImpl
 	}
 
 	private long _columnBitmask;
+
+	protected static final BiConsumer<LayoutSet, String>
+		companyFallbackVirtualHostnameUpdateEntityCacheBiConsumer =
+			(layoutSet, companyFallbackVirtualHostname) -> {
+				LayoutSetCacheModel layoutSetCacheModel =
+					EntityCacheUtil.fetchCacheModel(
+						LayoutSetImpl.class, layoutSet.getPrimaryKey(),
+						LayoutSetCacheModel.class);
+
+				if ((layoutSetCacheModel != null) &&
+					(layoutSetCacheModel.getMvccVersion() ==
+						layoutSet.getMvccVersion())) {
+
+					layoutSetCacheModel.companyFallbackVirtualHostname =
+						companyFallbackVirtualHostname;
+				}
+			};
+
+	private static final MethodHandle
+		_companyFallbackVirtualHostnameMethodHandle;
+
+	protected static final BiConsumer
+		<LayoutSet, java.util.NavigableMap<String, String>>
+			virtualHostnamesUpdateEntityCacheBiConsumer =
+				(layoutSet, virtualHostnames) -> {
+					LayoutSetCacheModel layoutSetCacheModel =
+						EntityCacheUtil.fetchCacheModel(
+							LayoutSetImpl.class, layoutSet.getPrimaryKey(),
+							LayoutSetCacheModel.class);
+
+					if ((layoutSetCacheModel != null) &&
+						(layoutSetCacheModel.getMvccVersion() ==
+							layoutSet.getMvccVersion())) {
+
+						layoutSetCacheModel.virtualHostnames = virtualHostnames;
+					}
+				};
+
+	private static final MethodHandle _virtualHostnamesMethodHandle;
+
+	static {
+		MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+		try {
+			_companyFallbackVirtualHostnameMethodHandle = lookup.findGetter(
+				LayoutSetImpl.class, "_companyFallbackVirtualHostname",
+				String.class);
+
+			_virtualHostnamesMethodHandle = lookup.findGetter(
+				LayoutSetImpl.class, "_virtualHostnames",
+				java.util.NavigableMap.class);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
+
 	private LayoutSet _escapedModel;
 
 }

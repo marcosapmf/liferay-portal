@@ -18,7 +18,7 @@ LayoutSet privateLayoutSet = LayoutSetLocalServiceUtil.getLayoutSet(liveGroupId,
 
 Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(liveGroupId);
 
-TreeMap<String, String> publicVirtualHostnames = publicLayoutSet.getVirtualHostnames();
+NavigableMap<String, String> publicVirtualHostnames = publicLayoutSet.getVirtualHostnames();
 
 if (publicVirtualHostnames.isEmpty()) {
 	publicVirtualHostnames = TreeMapBuilder.put(
@@ -26,7 +26,7 @@ if (publicVirtualHostnames.isEmpty()) {
 	).build();
 }
 
-TreeMap<String, String> privateVirtualHostnames = privateLayoutSet.getVirtualHostnames();
+NavigableMap<String, String> privateVirtualHostnames = privateLayoutSet.getVirtualHostnames();
 
 if (privateVirtualHostnames.isEmpty()) {
 	privateVirtualHostnames = TreeMapBuilder.put(
@@ -142,6 +142,7 @@ if (privateVirtualHostnames.isEmpty()) {
 
 			<clay:container-fluid
 				cssClass="lfr-form-row"
+				fullWidth="<%= true %>"
 			>
 				<clay:row>
 					<aui:input inlineField="<%= true %>" label="public-pages-virtual-host" maxlength="200" name="publicVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
@@ -182,6 +183,7 @@ if (privateVirtualHostnames.isEmpty()) {
 
 			<clay:container-fluid
 				cssClass="lfr-form-row"
+				fullWidth="<%= true %>"
 			>
 				<clay:row>
 					<aui:input inlineField="<%= true %>" label="private-pages-virtual-host" maxlength="200" name="privateVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
@@ -215,7 +217,7 @@ if (privateVirtualHostnames.isEmpty()) {
 		<%
 		LayoutSet stagingPublicLayoutSet = LayoutSetLocalServiceUtil.getLayoutSet(stagingGroupId, false);
 
-		TreeMap<String, String> stagingPublicVirtualHostnames = stagingPublicLayoutSet.getVirtualHostnames();
+		NavigableMap<String, String> stagingPublicVirtualHostnames = stagingPublicLayoutSet.getVirtualHostnames();
 
 		if (stagingPublicVirtualHostnames.isEmpty()) {
 			stagingPublicVirtualHostnames = TreeMapBuilder.put(
@@ -235,6 +237,7 @@ if (privateVirtualHostnames.isEmpty()) {
 
 				<clay:container-fluid
 					cssClass="lfr-form-row"
+					fullWidth="<%= true %>"
 				>
 					<clay:row>
 						<aui:input inlineField="<%= true %>" label="staging-public-pages" maxlength="200" name="stagingPublicVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
@@ -266,7 +269,7 @@ if (privateVirtualHostnames.isEmpty()) {
 		<%
 		LayoutSet stagingPrivateLayoutSet = LayoutSetLocalServiceUtil.getLayoutSet(stagingGroupId, true);
 
-		TreeMap<String, String> stagingPrivateVirtualHostnames = stagingPrivateLayoutSet.getVirtualHostnames();
+		NavigableMap<String, String> stagingPrivateVirtualHostnames = stagingPrivateLayoutSet.getVirtualHostnames();
 
 		if (stagingPrivateVirtualHostnames.isEmpty()) {
 			stagingPrivateVirtualHostnames = TreeMapBuilder.put(
@@ -286,6 +289,7 @@ if (privateVirtualHostnames.isEmpty()) {
 
 				<clay:container-fluid
 					cssClass="lfr-form-row"
+					fullWidth="<%= true %>"
 				>
 					<clay:row>
 						<aui:input inlineField="<%= true %>" label="staging-private-pages" maxlength="200" name="stagingPrivateVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />

@@ -27,6 +27,7 @@ import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.JavaTerm;
 import com.liferay.source.formatter.parser.JavaVariable;
+import com.liferay.source.formatter.processor.CSPSourceProcessor;
 import com.liferay.source.formatter.processor.JSPSourceProcessor;
 import com.liferay.source.formatter.processor.JavaSourceProcessor;
 import com.liferay.source.formatter.processor.SourceProcessor;
@@ -40,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +97,9 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			return true;
 		}
 
-		if (_sourceProcessor instanceof JSPSourceProcessor) {
+		if (_sourceProcessor instanceof CSPSourceProcessor ||
+			_sourceProcessor instanceof JSPSourceProcessor) {
+
 			return JSPSourceUtil.isJavaSource(content, pos);
 		}
 
@@ -110,7 +114,9 @@ public abstract class BaseSourceCheck implements SourceCheck {
 			return true;
 		}
 
-		if (_sourceProcessor instanceof JSPSourceProcessor) {
+		if (_sourceProcessor instanceof CSPSourceProcessor ||
+			_sourceProcessor instanceof JSPSourceProcessor) {
+
 			return JSPSourceUtil.isJavaSource(content, pos, checkInsideTags);
 		}
 
@@ -590,6 +596,34 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return null;
 	}
 
+	protected List<String> getPrimaryKeys(String tableContent) {
+		List<String> primaryKeys = new ArrayList<>();
+
+		for (String line : StringUtil.splitLines(tableContent)) {
+			String trimmedLine = StringUtil.trimLeading(line);
+
+			if (!trimmedLine.contains("primary key")) {
+				continue;
+			}
+
+			if (trimmedLine.startsWith("primary key")) {
+				String keys = trimmedLine.replaceFirst(
+					"primary key \\((.+)\\)", "$1");
+
+				for (String key : StringUtil.split(keys)) {
+					primaryKeys.add(key.trim());
+				}
+			}
+			else if (trimmedLine.matches("(\\w+) .+ primary key,?")) {
+				int x = trimmedLine.indexOf(" ");
+
+				primaryKeys.add(trimmedLine.substring(0, x));
+			}
+		}
+
+		return primaryKeys;
+	}
+
 	protected String getProjectName() {
 		if (_projectName != null) {
 			return _projectName;
@@ -693,17 +727,29 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		String className, String content, String fileContent, String fileName,
 		String methodCall) {
 
-		String variable = getVariableName(methodCall);
+		String variableName = getVariableName(methodCall);
 
-		if (variable.isEmpty()) {
+		if (variableName.isEmpty()) {
 			return false;
 		}
 
 		String variableTypeName = getVariableTypeName(
-			content, null, fileContent, fileName, variable.trim(), true, false);
+			content, null, fileContent, fileName, variableName.trim(), true,
+			false);
 
-		if ((variableTypeName != null) &&
-			variableTypeName.startsWith(className)) {
+		if (variableTypeName == null) {
+			return false;
+		}
+
+		variableTypeName = StringUtil.trim(
+			variableTypeName.replaceAll("<[^>]+>", ""));
+
+		String defaultVariableName = StringUtil.lowerCaseFirstLetter(
+			variableTypeName);
+
+		if (StringUtil.equalsIgnoreCase(className, variableTypeName) ||
+			className.startsWith(defaultVariableName) ||
+			className.startsWith("_" + defaultVariableName)) {
 
 			return true;
 		}

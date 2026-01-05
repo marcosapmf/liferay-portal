@@ -5,7 +5,6 @@
 
 package com.liferay.commerce.service.impl;
 
-import com.liferay.commerce.context.CommerceGroupThreadLocal;
 import com.liferay.commerce.exception.CommerceOrderTypeDisplayDateException;
 import com.liferay.commerce.exception.CommerceOrderTypeExpirationDateException;
 import com.liferay.commerce.exception.CommerceOrderTypeNameException;
@@ -14,6 +13,7 @@ import com.liferay.commerce.model.CommerceOrderTypeRelTable;
 import com.liferay.commerce.model.CommerceOrderTypeTable;
 import com.liferay.commerce.service.CommerceOrderTypeRelLocalService;
 import com.liferay.commerce.service.base.CommerceOrderTypeLocalServiceBaseImpl;
+import com.liferay.commerce.util.CommerceGroupThreadLocal;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -41,7 +41,6 @@ import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 
@@ -78,10 +77,6 @@ public class CommerceOrderTypeLocalServiceImpl
 			int expirationDateMinute, boolean neverExpire,
 			ServiceContext serviceContext)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		_validate(nameMap);
 
@@ -186,18 +181,6 @@ public class CommerceOrderTypeLocalServiceImpl
 
 		return commerceOrderTypeLocalService.deleteCommerceOrderType(
 			commerceOrderType);
-	}
-
-	@Override
-	public CommerceOrderType fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commerceOrderTypePersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override

@@ -16,16 +16,16 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.product.navigation.personal.menu.PersonalMenuEntry;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -78,11 +78,7 @@ public class MyProfilePersonalMenuEntry implements PersonalMenuEntry {
 
 		User user = themeDisplay.getUser();
 
-		if (displayURL.startsWith(user.getDisplayURL(themeDisplay, false))) {
-			return true;
-		}
-
-		return false;
+		return displayURL.startsWith(user.getDisplayURL(themeDisplay, false));
 	}
 
 	@Override

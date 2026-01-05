@@ -7,6 +7,7 @@ package com.liferay.portal.vulcan.internal.jaxrs.lifecycle.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -18,19 +19,20 @@ import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.sse.SseEventSink;
+
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -153,6 +155,13 @@ public class SafeReleaseInstanceResourceProviderTest {
 			HTTPTestUtil.invokeToHttpCode(
 				StringPool.BLANK, "test-vulcan/test/0", Http.Method.GET));
 
+		// Server-Sent Events
+
+		Assert.assertEquals(
+			200,
+			HTTPTestUtil.invokeToHttpCode(
+				StringPool.BLANK, "test-vulcan/sse", Http.Method.GET));
+
 		// Valid site ID
 
 		Assert.assertEquals(
@@ -184,6 +193,11 @@ public class SafeReleaseInstanceResourceProviderTest {
 			return Collections::emptyMap;
 		}
 
+		@Override
+		public void setContextCompany(Company contextCompany) {
+			_contextCompany = contextCompany;
+		}
+
 		@GET
 		@Path("/test/{siteId}")
 		@Produces("application/json")
@@ -201,12 +215,23 @@ public class SafeReleaseInstanceResourceProviderTest {
 			throw new NotFoundException();
 		}
 
+		@GET
+		@Path("/sse")
+		@Produces("text/event-stream")
+		public void testServerSentEvents(@Context SseEventSink sseEventSink) {
+			Assert.assertNotNull(_contextCompany);
+
+			sseEventSink.close();
+		}
+
 		@Override
 		protected void finalize() throws Throwable {
 			super.finalize();
 
 			_instancesCountDownLatch.countDown();
 		}
+
+		private Company _contextCompany;
 
 	}
 

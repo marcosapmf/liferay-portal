@@ -5,7 +5,7 @@
 
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
-import com.liferay.asset.display.page.item.selector.criterion.AssetDisplayPageSelectorCriterion;
+import com.liferay.asset.display.page.item.selector.AssetDisplayPageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -31,13 +31,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Yurena Cabrera
@@ -46,16 +46,18 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 	public AssetDisplayPagesItemSelectorCustomViewDisplayContext(
 		HttpServletRequest httpServletRequest, String itemSelectedEventName,
-		AssetDisplayPageSelectorCriterion assetDisplayPageSelectorCriterion,
+		AssetDisplayPageItemSelectorCriterion
+			assetDisplayPageItemSelectorCriterion,
 		PortletURL portletURL) {
 
 		_httpServletRequest = httpServletRequest;
 		_itemSelectedEventName = itemSelectedEventName;
-		_assetDisplayPageSelectorCriterion = assetDisplayPageSelectorCriterion;
+		_assetDisplayPageItemSelectorCriterion =
+			assetDisplayPageItemSelectorCriterion;
 		_portletURL = portletURL;
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+			JavaConstants.JAKARTA_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -70,6 +72,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 				_portletRequest, _portletURL, null,
 				"there-are-no-display-page-templates");
 
+		assetDisplayPageSearchContainer.setId(
+			"displayPages" + getLayoutPageTemplateCollectionId());
 		assetDisplayPageSearchContainer.setOrderByCol(_getOrderByCol());
 		assetDisplayPageSearchContainer.setOrderByComparator(
 			_getLayoutPageTemplateEntryOrderByComparator(
@@ -80,8 +84,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageCollectionsAndLayoutPageTemplateEntries(
 						_getGroupId(), getLayoutPageTemplateCollectionId(),
-						_assetDisplayPageSelectorCriterion.getClassNameId(),
-						_assetDisplayPageSelectorCriterion.getClassTypeId(),
+						_assetDisplayPageItemSelectorCriterion.getClassNameId(),
+						_assetDisplayPageItemSelectorCriterion.getClassTypeId(),
 						_getKeywords(),
 						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 						WorkflowConstants.STATUS_APPROVED,
@@ -91,8 +95,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			LayoutPageTemplateEntryServiceUtil.
 				getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
 					_getGroupId(), getLayoutPageTemplateCollectionId(),
-					_assetDisplayPageSelectorCriterion.getClassNameId(),
-					_assetDisplayPageSelectorCriterion.getClassTypeId(),
+					_assetDisplayPageItemSelectorCriterion.getClassNameId(),
+					_assetDisplayPageItemSelectorCriterion.getClassTypeId(),
 					_getKeywords(),
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 					WorkflowConstants.STATUS_APPROVED));
@@ -256,9 +260,9 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _orderByCol;
 	}
 
+	private final AssetDisplayPageItemSelectorCriterion
+		_assetDisplayPageItemSelectorCriterion;
 	private SearchContainer<?> _assetDisplayPageSearchContainer;
-	private final AssetDisplayPageSelectorCriterion
-		_assetDisplayPageSelectorCriterion;
 	private Long _groupId;
 	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;

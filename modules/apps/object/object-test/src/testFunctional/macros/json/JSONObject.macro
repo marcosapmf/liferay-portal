@@ -242,8 +242,10 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/object.objectentry/add-object-entry \
 				-u ${userEmailAddress}:${userPassword} \
+				-d defaultLanguageId='' \
 				-d groupId=${groupId} \
 				-d objectDefinitionId=${objectId} \
+				-d objectEntryFolderId=0 \
 				-d values={${entryValues}}
 		''';
 
@@ -875,7 +877,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro deleteAllCustomObjects(pageSize = null) {
+	macro deleteAllCustomObjects() {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (!(isSet(userEmailAddress))) {
@@ -886,15 +888,8 @@ definition {
 			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
-		if (isSet(pageSize)) {
-			var url = "object-admin/v1.0/object-definitions?pageSize=${pageSize}";
-		}
-		else {
-			var url = "object-admin/v1.0/object-definitions";
-		}
-
 		var curl = '''
-			${portalURL}/o/${url} \
+			${portalURL}/o/object-admin/v1.0/object-definitions?pageSize=-1 \
 				-u ${userEmailAddress}:${userPassword}
 		''';
 

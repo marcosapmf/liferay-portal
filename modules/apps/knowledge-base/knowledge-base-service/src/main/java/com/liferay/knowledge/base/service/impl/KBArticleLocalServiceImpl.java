@@ -82,6 +82,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -93,6 +94,7 @@ import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -111,6 +113,7 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -142,6 +145,7 @@ import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashVersionLocalService;
 
 import java.io.InputStream;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,9 +185,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		return _portletFileRepository.addPortletFileEntry(
 			null, kbArticle.getGroupId(), userId, KBArticle.class.getName(),
-			kbArticle.getClassPK(), KBConstants.SERVICE_NAME,
+			resourcePrimKey, KBConstants.SERVICE_NAME,
 			kbArticle.getAttachmentsFolderId(), inputStream, fileName, mimeType,
-			false);
+			true);
 	}
 
 	@Override
@@ -370,9 +374,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 
 		long userId = _userLocalService.getGuestUserId(company.getCompanyId());
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
-			_checkKBArticlesByDisplayDate(company, date, userId);
-		}
+		_checkKBArticlesByDisplayDate(company, date, userId);
 
 		_checkKBArticlesByExpirationDate(company, date, userId);
 
@@ -657,6 +659,14 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	}
 
 	@Override
+	public KBArticle fetchKBArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int version) {
+
+		return kbArticlePersistence.fetchByG_ERC_V(
+			groupId, externalReferenceCode, version);
+	}
+
+	@Override
 	public KBArticle fetchKBArticleByUrlTitle(
 		long groupId, long kbFolderId, String urlTitle) {
 
@@ -720,6 +730,26 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	}
 
 	@Override
+	public KBArticle fetchLatestKBArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status) {
+
+		KBArticle latestKBArticle = kbArticlePersistence.fetchByG_ERC_Last(
+			groupId, externalReferenceCode,
+			KBArticleVersionComparator.getInstance(false));
+
+		if ((latestKBArticle == null) ||
+			(status == WorkflowConstants.STATUS_ANY) ||
+			(latestKBArticle.getStatus() == status)) {
+
+			return latestKBArticle;
+		}
+
+		return kbArticlePersistence.fetchByG_ERC_S_First(
+			groupId, externalReferenceCode, status,
+			KBArticleVersionComparator.getInstance(false));
+	}
+
+	@Override
 	public KBArticle fetchLatestKBArticleByUrlTitle(
 		long groupId, long kbFolderId, String urlTitle, int status) {
 
@@ -737,7 +767,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 				WorkflowConstants.STATUS_IN_TRASH, 0, 1, orderByComparator);
 		}
 		else {
-			kbArticles = kbArticlePersistence.findByG_KBFI_UT_ST(
+			kbArticles = kbArticlePersistence.findByG_KBFI_UT_S(
 				groupId, kbFolderId, urlTitle, status, 0, 1, orderByComparator);
 		}
 
@@ -746,6 +776,20 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		}
 
 		return kbArticles.get(0);
+	}
+
+	@Override
+	public PersistedModel fetchPersistedModel(Serializable primaryKeyObj) {
+		PersistedModel persistedModel = kbArticlePersistence.fetchByPrimaryKey(
+			primaryKeyObj);
+
+		if (persistedModel == null) {
+			persistedModel = fetchLatestKBArticle(
+				GetterUtil.getLong(primaryKeyObj),
+				WorkflowConstants.STATUS_APPROVED);
+		}
+
+		return persistedModel;
 	}
 
 	@Override
@@ -1188,7 +1232,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	public Lock lockKBArticle(long userId, long resourcePrimKey)
 		throws PortalException {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-11003")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-11003")) {
+
 			return null;
 		}
 
@@ -1547,7 +1593,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	public void unlockKBArticle(
 		long userId, long resourcePrimKey, boolean force) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-11003")) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-11003")) {
+
 			return;
 		}
 
@@ -1825,9 +1873,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		if (status == WorkflowConstants.STATUS_APPROVED) {
 			main = true;
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-188058") &&
-				date.before(kbArticle.getDisplayDate())) {
-
+			if (date.before(kbArticle.getDisplayDate())) {
 				status = WorkflowConstants.STATUS_SCHEDULED;
 			}
 		}
@@ -2540,13 +2586,13 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		String uniqueUrlTitle = urlTitle;
 
 		if (kbFolderId == KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			int kbArticlesCount = kbArticlePersistence.countByG_KBFI_UT_ST(
+			int kbArticlesCount = kbArticlePersistence.countByG_KBFI_UT_S(
 				groupId, kbFolderId, uniqueUrlTitle, _STATUSES);
 
 			for (int i = 1; kbArticlesCount > 0; i++) {
 				uniqueUrlTitle = _getUniqueUrlTitle(urlTitle, i);
 
-				kbArticlesCount = kbArticlePersistence.countByG_KBFI_UT_ST(
+				kbArticlesCount = kbArticlePersistence.countByG_KBFI_UT_S(
 					groupId, kbFolderId, uniqueUrlTitle, _STATUSES);
 			}
 

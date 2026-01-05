@@ -5,11 +5,13 @@
 
 package com.liferay.portal.vulcan.jaxrs.exception.mapper;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.liferay.petra.string.StringBundler;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Javier Gamarra
@@ -22,6 +24,7 @@ public class Problem {
 
 	public Problem(Exception exception) {
 		_status = Response.Status.BAD_REQUEST;
+		_throwable = exception;
 		_title = exception.getMessage();
 
 		Class<?> clazz = exception.getClass();
@@ -51,6 +54,11 @@ public class Problem {
 		return _status;
 	}
 
+	@JsonIgnore
+	public Throwable getThrowable() {
+		return _throwable;
+	}
+
 	public String getTitle() {
 		return _title;
 	}
@@ -65,6 +73,10 @@ public class Problem {
 
 	public void setStatus(Response.Status status) {
 		_status = status;
+	}
+
+	public void setThrowable(Throwable throwable) {
+		_throwable = throwable;
 	}
 
 	public void setTitle(String title) {
@@ -84,6 +96,7 @@ public class Problem {
 
 	private String _detail;
 	private Response.Status _status;
+	private Throwable _throwable;
 	private String _title;
 	private String _type;
 

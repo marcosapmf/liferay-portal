@@ -145,12 +145,15 @@ public interface AssetEntryLocalService
 
 	public void deleteAssetTagAssetEntry(long tagId, long entryId);
 
+	public void deleteEntries(long companyId, String className)
+		throws PortalException;
+
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
-	public void deleteEntry(AssetEntry entry) throws PortalException;
+	public AssetEntry deleteEntry(AssetEntry entry) throws PortalException;
 
-	public void deleteEntry(long entryId) throws PortalException;
+	public AssetEntry deleteEntry(long entryId) throws PortalException;
 
-	public void deleteEntry(String className, long classPK)
+	public AssetEntry deleteEntry(String className, long classPK)
 		throws PortalException;
 
 	public void deleteGroupEntries(long groupId) throws PortalException;

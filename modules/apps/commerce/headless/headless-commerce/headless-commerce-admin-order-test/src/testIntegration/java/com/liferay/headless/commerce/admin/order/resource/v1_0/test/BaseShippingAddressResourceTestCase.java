@@ -28,20 +28,25 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,10 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -80,7 +81,7 @@ public abstract class BaseShippingAddressResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -94,11 +95,15 @@ public abstract class BaseShippingAddressResourceTestCase {
 
 		_shippingAddressResource.setContextCompany(testCompany);
 
-		ShippingAddressResource.Builder builder =
-			ShippingAddressResource.builder();
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		shippingAddressResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		shippingAddressResource = ShippingAddressResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -112,7 +117,32 @@ public abstract class BaseShippingAddressResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ShippingAddress shippingAddress1 = randomShippingAddress();
+
+		String json = objectMapper.writeValueAsString(shippingAddress1);
+
+		ShippingAddress shippingAddress2 = ShippingAddressSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(shippingAddress1, shippingAddress2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ShippingAddress shippingAddress = randomShippingAddress();
+
+		String json1 = objectMapper.writeValueAsString(shippingAddress);
+		String json2 = ShippingAddressSerDes.toJSON(shippingAddress);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -127,40 +157,6 @@ public abstract class BaseShippingAddressResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ShippingAddress shippingAddress1 = randomShippingAddress();
-
-		String json = objectMapper.writeValueAsString(shippingAddress1);
-
-		ShippingAddress shippingAddress2 = ShippingAddressSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(shippingAddress1, shippingAddress2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ShippingAddress shippingAddress = randomShippingAddress();
-
-		String json1 = objectMapper.writeValueAsString(shippingAddress);
-		String json2 = ShippingAddressSerDes.toJSON(shippingAddress);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -179,6 +175,7 @@ public abstract class BaseShippingAddressResourceTestCase {
 		shippingAddress.setStreet1(regex);
 		shippingAddress.setStreet2(regex);
 		shippingAddress.setStreet3(regex);
+		shippingAddress.setSubtype(regex);
 		shippingAddress.setZip(regex);
 
 		String json = ShippingAddressSerDes.toJSON(shippingAddress);
@@ -197,145 +194,8 @@ public abstract class BaseShippingAddressResourceTestCase {
 		Assert.assertEquals(regex, shippingAddress.getStreet1());
 		Assert.assertEquals(regex, shippingAddress.getStreet2());
 		Assert.assertEquals(regex, shippingAddress.getStreet3());
+		Assert.assertEquals(regex, shippingAddress.getSubtype());
 		Assert.assertEquals(regex, shippingAddress.getZip());
-	}
-
-	@Test
-	public void testGetOrderItemShippingAddress() throws Exception {
-		ShippingAddress postShippingAddress =
-			testGetOrderItemShippingAddress_addShippingAddress();
-
-		ShippingAddress getShippingAddress =
-			shippingAddressResource.getOrderItemShippingAddress(
-				testGetOrderItemShippingAddress_getId(postShippingAddress));
-
-		assertEquals(postShippingAddress, getShippingAddress);
-		assertValid(getShippingAddress);
-	}
-
-	protected Long testGetOrderItemShippingAddress_getId(
-			ShippingAddress shippingAddress)
-		throws Exception {
-
-		return shippingAddress.getId();
-	}
-
-	protected ShippingAddress
-			testGetOrderItemShippingAddress_addShippingAddress()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetOrderItemShippingAddress() throws Exception {
-		ShippingAddress shippingAddress =
-			testGraphQLGetOrderItemShippingAddress_addShippingAddress();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				shippingAddress,
-				ShippingAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"orderItemShippingAddress",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"id",
-											testGraphQLGetOrderItemShippingAddress_getId(
-												shippingAddress));
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/orderItemShippingAddress"))));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertTrue(
-			equals(
-				shippingAddress,
-				ShippingAddressSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminOrder_v1_0",
-								new GraphQLField(
-									"orderItemShippingAddress",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												testGraphQLGetOrderItemShippingAddress_getId(
-													shippingAddress));
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminOrder_v1_0",
-						"Object/orderItemShippingAddress"))));
-	}
-
-	protected Long testGraphQLGetOrderItemShippingAddress_getId(
-			ShippingAddress shippingAddress)
-		throws Exception {
-
-		return shippingAddress.getId();
-	}
-
-	@Test
-	public void testGraphQLGetOrderItemShippingAddressNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"orderItemShippingAddress",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminOrder_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminOrder_v1_0",
-						new GraphQLField(
-							"orderItemShippingAddress",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ShippingAddress
-			testGraphQLGetOrderItemShippingAddress_addShippingAddress()
-		throws Exception {
-
-		return testGraphQLShippingAddress_addShippingAddress();
 	}
 
 	@Test
@@ -355,16 +215,17 @@ public abstract class BaseShippingAddressResourceTestCase {
 		assertValid(getShippingAddress);
 	}
 
+	protected ShippingAddress
+			testGetOrderByExternalReferenceCodeShippingAddress_addShippingAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected String
 			testGetOrderByExternalReferenceCodeShippingAddress_getExternalReferenceCode(
 				ShippingAddress shippingAddress)
-		throws Exception {
-
-		return shippingAddress.getExternalReferenceCode();
-	}
-
-	protected ShippingAddress
-			testGetOrderByExternalReferenceCodeShippingAddress_addShippingAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -434,7 +295,8 @@ public abstract class BaseShippingAddressResourceTestCase {
 				ShippingAddress shippingAddress)
 		throws Exception {
 
-		return shippingAddress.getExternalReferenceCode();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -489,14 +351,7 @@ public abstract class BaseShippingAddressResourceTestCase {
 			testGraphQLGetOrderByExternalReferenceCodeShippingAddress_addShippingAddress()
 		throws Exception {
 
-		return testGraphQLShippingAddress_addShippingAddress();
-	}
-
-	@Test
-	public void testPatchOrderByExternalReferenceCodeShippingAddress()
-		throws Exception {
-
-		Assert.assertTrue(false);
+		return testGraphQLOrderShippingAddress_addShippingAddress();
 	}
 
 	@Test
@@ -512,14 +367,15 @@ public abstract class BaseShippingAddressResourceTestCase {
 		assertValid(getShippingAddress);
 	}
 
-	protected Long testGetOrderIdShippingAddress_getId(
-			ShippingAddress shippingAddress)
+	protected ShippingAddress testGetOrderIdShippingAddress_addShippingAddress()
 		throws Exception {
 
-		return shippingAddress.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
-	protected ShippingAddress testGetOrderIdShippingAddress_addShippingAddress()
+	protected Long testGetOrderIdShippingAddress_getId(
+			ShippingAddress shippingAddress)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -582,7 +438,8 @@ public abstract class BaseShippingAddressResourceTestCase {
 			ShippingAddress shippingAddress)
 		throws Exception {
 
-		return shippingAddress.getId();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -632,7 +489,154 @@ public abstract class BaseShippingAddressResourceTestCase {
 			testGraphQLGetOrderIdShippingAddress_addShippingAddress()
 		throws Exception {
 
-		return testGraphQLShippingAddress_addShippingAddress();
+		return testGraphQLOrderShippingAddress_addShippingAddress();
+	}
+
+	@Test
+	public void testGetOrderItemShippingAddress() throws Exception {
+		ShippingAddress postShippingAddress =
+			testGetOrderItemShippingAddress_addShippingAddress();
+
+		ShippingAddress getShippingAddress =
+			shippingAddressResource.getOrderItemShippingAddress(
+				testGetOrderItemShippingAddress_getId(postShippingAddress));
+
+		assertEquals(postShippingAddress, getShippingAddress);
+		assertValid(getShippingAddress);
+	}
+
+	protected ShippingAddress
+			testGetOrderItemShippingAddress_addShippingAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetOrderItemShippingAddress_getId(
+			ShippingAddress shippingAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemShippingAddress() throws Exception {
+		ShippingAddress shippingAddress =
+			testGraphQLGetOrderItemShippingAddress_addShippingAddress();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				shippingAddress,
+				ShippingAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"orderItemShippingAddress",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"id",
+											testGraphQLGetOrderItemShippingAddress_getId(
+												shippingAddress));
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/orderItemShippingAddress"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				shippingAddress,
+				ShippingAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderItemShippingAddress",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												testGraphQLGetOrderItemShippingAddress_getId(
+													shippingAddress));
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderItemShippingAddress"))));
+	}
+
+	protected Long testGraphQLGetOrderItemShippingAddress_getId(
+			ShippingAddress shippingAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemShippingAddressNotFound()
+		throws Exception {
+
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"orderItemShippingAddress",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderItemShippingAddress",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ShippingAddress
+			testGraphQLGetOrderItemShippingAddress_addShippingAddress()
+		throws Exception {
+
+		return testGraphQLOrderItemShippingAddress_addShippingAddress();
+	}
+
+	@Test
+	public void testPatchOrderByExternalReferenceCodeShippingAddress()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -640,7 +644,16 @@ public abstract class BaseShippingAddressResourceTestCase {
 		Assert.assertTrue(false);
 	}
 
-	protected ShippingAddress testGraphQLShippingAddress_addShippingAddress()
+	protected ShippingAddress
+			testGraphQLOrderShippingAddress_addShippingAddress()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected ShippingAddress
+			testGraphQLOrderItemShippingAddress_addShippingAddress()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -831,6 +844,14 @@ public abstract class BaseShippingAddressResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (shippingAddress.getSubtype() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("zip", additionalAssertFieldName)) {
 				if (shippingAddress.getZip() == null) {
 					valid = false;
@@ -897,6 +918,10 @@ public abstract class BaseShippingAddressResourceTestCase {
 
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
+
+		graphQLFields.add(new GraphQLField("externalReferenceCode"));
+
+		graphQLFields.add(new GraphQLField("id"));
 
 		for (java.lang.reflect.Field field :
 				getDeclaredFields(
@@ -1096,6 +1121,17 @@ public abstract class BaseShippingAddressResourceTestCase {
 				if (!Objects.deepEquals(
 						shippingAddress1.getStreet3(),
 						shippingAddress2.getStreet3())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("subtype", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						shippingAddress1.getSubtype(),
+						shippingAddress2.getSubtype())) {
 
 					return false;
 				}
@@ -1698,6 +1734,52 @@ public abstract class BaseShippingAddressResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("subtype")) {
+			Object object = shippingAddress.getSubtype();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("zip")) {
 			Object object = shippingAddress.getZip();
 
@@ -1807,6 +1889,7 @@ public abstract class BaseShippingAddressResourceTestCase {
 				street1 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street2 = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				street3 = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				subtype = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				zip = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}
 		};
@@ -1835,12 +1918,12 @@ public abstract class BaseShippingAddressResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1849,11 +1932,16 @@ public abstract class BaseShippingAddressResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1885,6 +1973,24 @@ public abstract class BaseShippingAddressResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1906,16 +2012,6 @@ public abstract class BaseShippingAddressResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(
@@ -2013,7 +2109,9 @@ public abstract class BaseShippingAddressResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseShippingAddressResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.order.resource.v1_0.

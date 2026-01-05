@@ -14,7 +14,7 @@ import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.AccountAddressChannelResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -30,7 +30,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,12 +78,12 @@ public class AccountAddressChannelResourceImpl
 				Address.class.getName(), address.getAddressId(), null,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			Address.class.getName(), address.getAddressId());
 
 		return Page.of(
 			_toAccountAddressChannels(commerceChannelRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(
@@ -108,12 +107,12 @@ public class AccountAddressChannelResourceImpl
 				Address.class.getName(), addressId, search,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceChannelRelService.getCommerceChannelRelsCount(
+		int totalCount = _commerceChannelRelService.getCommerceChannelRelsCount(
 			Address.class.getName(), addressId, search);
 
 		return Page.of(
 			_toAccountAddressChannels(commerceChannelRel), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -179,8 +178,9 @@ public class AccountAddressChannelResourceImpl
 				accountAddressChannel.getAddressChannelExternalReferenceCode();
 
 			commerceChannel =
-				_commerceChannelService.fetchByExternalReferenceCode(
-					externalReferenceCode, serviceContext.getCompanyId());
+				_commerceChannelService.
+					fetchCommerceChannelByExternalReferenceCode(
+						externalReferenceCode, serviceContext.getCompanyId());
 
 			if (commerceChannel == null) {
 				throw new NoSuchChannelException(
@@ -227,15 +227,10 @@ public class AccountAddressChannelResourceImpl
 			List<CommerceChannelRel> commerceChannelRels)
 		throws Exception {
 
-		List<AccountAddressChannel> accountAddressChannels = new ArrayList<>();
-
-		for (CommerceChannelRel commerceChannelRel : commerceChannelRels) {
-			accountAddressChannels.add(
-				_toAccountAddressChannel(
-					commerceChannelRel.getCommerceChannelRelId()));
-		}
-
-		return accountAddressChannels;
+		return transform(
+			commerceChannelRels,
+			commerceChannelRel -> _toAccountAddressChannel(
+				commerceChannelRel.getCommerceChannelRelId()));
 	}
 
 	@Reference(

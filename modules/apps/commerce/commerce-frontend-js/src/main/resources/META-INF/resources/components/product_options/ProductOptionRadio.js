@@ -6,7 +6,7 @@
 import ClayForm, {ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import {useLiferayState} from '@liferay/frontend-js-state-web';
+import {useLiferayState} from '@liferay/frontend-js-state-web/react';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import ServiceProvider from '../../ServiceProvider/index';
@@ -17,11 +17,11 @@ import {
 } from '../../utilities/eventsDefinitions';
 import Asterisk from './Asterisk';
 import {
+	INITIAL_SKU_OPTIONS_ATOM_STATE,
 	getInitialProductOptionValue,
 	getName,
 	getProductOptionName,
 	getSkuOptionsErrors,
-	initialSkuOptionsAtomState,
 	isRequired,
 } from './utils';
 
@@ -101,13 +101,17 @@ const ProductOptionRadio = ({
 					],
 		});
 
+		if (defaultProductOptionValue) {
+			handleChange(selectedProductOption, json);
+		}
+
 		return () =>
 			isFromMiniCart
 				? setSkuOptionsAtomState({
 						...skuOptionsAtomState,
 						miniCartSkuOptions: [],
 					})
-				: setSkuOptionsAtomState(initialSkuOptionsAtomState);
+				: setSkuOptionsAtomState(INITIAL_SKU_OPTIONS_ATOM_STATE);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -135,7 +139,7 @@ const ProductOptionRadio = ({
 	const DeliveryCatalogAPIServiceProvider =
 		ServiceProvider.DeliveryCatalogAPI('v1');
 
-	const handleChange = (value) => {
+	const handleChange = (value, json = '') => {
 		if (skuOptionsAtomState.updating) {
 			return;
 		}
@@ -159,7 +163,9 @@ const ProductOptionRadio = ({
 			(productOptionValue) => productOptionValue.key === valueArray[1]
 		);
 
-		let currentSkuOptions = skuOptionsAtomState[skuOptionsKey].slice();
+		let currentSkuOptions = json
+			? JSON.parse(json)
+			: skuOptionsAtomState[skuOptionsKey].slice();
 
 		const currentSkuOption = currentSkuOptions.filter(
 			(skuOption) => skuOption.skuOptionKey === productOption.key
@@ -209,6 +215,9 @@ const ProductOptionRadio = ({
 			channelId,
 			productId,
 			accountId,
+			Liferay.CommerceContext
+				? Liferay.CommerceContext.currency.currencyCode
+				: '',
 			minQuantity,
 			null,
 			currentSkuOptions
@@ -283,6 +292,9 @@ const ProductOptionRadio = ({
 				productId,
 				productOption.id,
 				accountId,
+				Liferay.CommerceContext
+					? Liferay.CommerceContext.currency.currencyCode
+					: '',
 				selectedProductOptionValue?.productOptionValueId,
 				skuId,
 				1,

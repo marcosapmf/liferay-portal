@@ -1,25 +1,80 @@
 [
 	{
 		"ddmFormFieldTypeName": "radio",
-		"description": "Specifies if a trial exists for a given app or solution submission.",
-		"externalReferenceCode": "MKT-OPTION-TRIAL",
-		"facetable": true,
+		"description": "Used for Analytics Provisioning",
+		"externalReferenceCode": "MKT-OPTION-ANALYTICS-LICENSE-USAGE",
+		"facetable": false,
 		"fieldType": "radio",
-		"key": "trial",
-		"name": "Trial",
+		"key": "analytics-license-usage-type",
+		"name": "Analytics License Usage Type",
 		"required": true,
 		"skuContributor": true,
 		"values": [
 			{
-				"externalReferenceCode": "NO-VALUE",
-				"key": "no",
-				"name": "No",
+				"externalReferenceCode": "BASIC",
+				"key": "basic",
+				"name": "Basic",
 				"priority": 0
 			},
 			{
-				"externalReferenceCode": "YES-VALUE",
-				"key": "yes",
-				"name": "Yes",
+				"externalReferenceCode": "BUSINESS",
+				"key": "business",
+				"name": "Business",
+				"priority": 1
+			},
+			{
+				"externalReferenceCode": "ENTERPRISE",
+				"key": "enterprise",
+				"name": "Enterprise",
+				"priority": 2
+			}
+		]
+	},
+	{
+		"ddmFormFieldTypeName": "radio",
+		"description": "Apps that are not DXP or Cloud can be licensed using this base type.",
+		"externalReferenceCode": "MKT-OPTION-BASE-LICENSE-USAGE",
+		"facetable": false,
+		"fieldType": "radio",
+		"key": "base-license-usage-type",
+		"name": "Base License Usage Type",
+		"required": true,
+		"skuContributor": true,
+		"values": [
+			{
+				"externalReferenceCode": "STANDARD",
+				"key": "standard",
+				"name": "Standard",
+				"priority": 0
+			},
+			{
+				"externalReferenceCode": "DEVELOPER",
+				"key": "developer",
+				"name": "Developer",
+				"priority": 1
+			}
+		]
+	},
+	{
+		"ddmFormFieldTypeName": "radio",
+		"description": "Specifies if a acquision of an app.",
+		"externalReferenceCode": "MKT-OPTION-CLOUD-LICENSE-USAGE",
+		"facetable": false,
+		"key": "cloud-license-usage-type",
+		"name": "Cloud License Usage Type",
+		"required": true,
+		"skuContributor": true,
+		"values": [
+			{
+				"externalReferenceCode": "STANDARD",
+				"key": "standard",
+				"name": "Standard",
+				"priority": 0
+			},
+			{
+				"externalReferenceCode": "TRIAL",
+				"key": "trial",
+				"name": "Trial",
 				"priority": 1
 			}
 		]
@@ -51,31 +106,6 @@
 				"key": "trial",
 				"name": "Trial",
 				"priority": 2
-			}
-		]
-	},
-	{
-		"ddmFormFieldTypeName": "radio",
-		"description": "Adds on support for DXP Licenses.",
-		"externalReferenceCode": "MKT-OPTION-DXP-SUPPORT",
-		"facetable": false,
-		"fieldType": "radio",
-		"key": "dxp-license-support",
-		"name": "DXP License Support",
-		"required": false,
-		"skuContributor": false,
-		"values": [
-			{
-				"externalReferenceCode": "STANDARD",
-				"key": "standard",
-				"name": "Standard",
-				"priority": 0
-			},
-			{
-				"externalReferenceCode": "DEVELOPER",
-				"key": "developer",
-				"name": "Developer",
-				"priority": 1
 			}
 		]
 	}

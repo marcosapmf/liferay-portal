@@ -6,14 +6,15 @@
 package com.liferay.commerce.inventory.web.internal.frontend.data.set.provider;
 
 import com.liferay.commerce.frontend.model.TimelineModel;
-import com.liferay.commerce.inventory.model.CommerceInventoryAudit;
 import com.liferay.commerce.inventory.service.CommerceInventoryAuditService;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditType;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
 import com.liferay.commerce.inventory.web.internal.constants.CommerceInventoryFDSNames;
+import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.frontend.data.set.provider.FDSDataProvider;
 import com.liferay.frontend.data.set.provider.search.FDSKeywords;
 import com.liferay.frontend.data.set.provider.search.FDSPagination;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Sort;
@@ -23,16 +24,15 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
 import java.text.Format;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,8 +54,6 @@ public class CommerceInventoryAuditFDSDataProvider
 			HttpServletRequest httpServletRequest, Sort sort)
 		throws PortalException {
 
-		List<TimelineModel> timelineModels = new ArrayList<>();
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -68,48 +66,48 @@ public class CommerceInventoryAuditFDSDataProvider
 		String unitOfMeasureKey = ParamUtil.getString(
 			httpServletRequest, "unitOfMeasureKey");
 
-		List<CommerceInventoryAudit> commerceInventoryAudits =
+		return TransformUtil.transform(
 			_commerceInventoryAuditService.getCommerceInventoryAudits(
 				_portal.getCompanyId(httpServletRequest), sku, unitOfMeasureKey,
 				fdsPagination.getStartPosition(),
-				fdsPagination.getEndPosition());
+				fdsPagination.getEndPosition()),
+			commerceInventoryAudit -> {
+				StringBundler titleSB = new StringBundler(1);
 
-		for (CommerceInventoryAudit commerceInventoryAudit :
-				commerceInventoryAudits) {
+				try {
+					CommerceInventoryAuditType commerceInventoryAuditType =
+						_commerceInventoryAuditTypeRegistry.
+							getCommerceInventoryAuditType(
+								commerceInventoryAudit.getLogType());
 
-			StringBundler titleSB = new StringBundler(1);
+					Locale locale = _portal.getLocale(httpServletRequest);
 
-			try {
-				CommerceInventoryAuditType commerceInventoryAuditType =
-					_commerceInventoryAuditTypeRegistry.
-						getCommerceInventoryAuditType(
-							commerceInventoryAudit.getLogType());
+					titleSB.append(
+						commerceInventoryAuditType.formatLog(
+							commerceInventoryAudit.getUserId(),
+							commerceInventoryAudit.getLogTypeSettings(),
+							locale));
 
-				Locale locale = _portal.getLocale(httpServletRequest);
+					BigDecimal commerceInventoryWarehouseItemQuantity =
+						_commerceQuantityFormatter.format(
+							commerceInventoryAudit.getCompanyId(),
+							commerceInventoryAudit.getQuantity(),
+							commerceInventoryAudit.getSku(),
+							commerceInventoryAudit.getUnitOfMeasureKey());
 
-				titleSB.append(
-					commerceInventoryAuditType.formatLog(
-						commerceInventoryAudit.getUserId(),
-						commerceInventoryAudit.getLogTypeSettings(), locale));
-
-				BigDecimal commerceInventoryWarehouseItemQuantity =
-					commerceInventoryAudit.getQuantity();
-
-				timelineModels.add(
-					new TimelineModel(
+					return new TimelineModel(
 						commerceInventoryAudit.getCommerceInventoryAuditId(),
 						dateTimeFormat.format(
 							commerceInventoryAudit.getCreateDate()),
 						commerceInventoryAuditType.formatQuantity(
 							commerceInventoryWarehouseItemQuantity, locale),
-						titleSB.toString()));
-			}
-			catch (Exception exception) {
-				throw new PortalException(exception.getMessage(), exception);
-			}
-		}
-
-		return timelineModels;
+						titleSB.toString());
+				}
+				catch (Exception exception) {
+					throw new PortalException(
+						exception.getMessage(), exception);
+				}
+			});
 	}
 
 	@Override
@@ -131,6 +129,9 @@ public class CommerceInventoryAuditFDSDataProvider
 	@Reference
 	private CommerceInventoryAuditTypeRegistry
 		_commerceInventoryAuditTypeRegistry;
+
+	@Reference
+	private CommerceQuantityFormatter _commerceQuantityFormatter;
 
 	@Reference
 	private Portal _portal;

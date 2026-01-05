@@ -4,7 +4,8 @@
  */
 
 import {CommerceServiceProvider, commerceEvents} from 'commerce-frontend-js';
-import {createPortletURL, openToast} from 'frontend-js-web';
+import {openToast} from 'frontend-js-components-web';
+import {createPortletURL} from 'frontend-js-web';
 
 export default function ({
 	defaultLanguageId,
@@ -35,6 +36,12 @@ export default function ({
 			active: false,
 			name: {[defaultLanguageId]: name},
 		};
+
+		if (defaultLanguageId !== Liferay.ThemeDisplay.getDefaultLanguageId()) {
+			commerceInventoryWarehouseData.name[
+				Liferay.ThemeDisplay.getDefaultLanguageId()
+			] = name;
+		}
 
 		return CommerceInventoryWarehouseResource.addWarehouse(
 			commerceInventoryWarehouseData

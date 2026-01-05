@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.servlet.ProtectedServletRequest;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StackTraceUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
@@ -28,12 +29,11 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsValues;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -53,9 +53,8 @@ public class AutoLoginFilter extends BasePortalFilter {
 		}
 
 		String jUserName = credentials[0];
-		String jPassword = credentials[1];
 
-		if (Validator.isNull(jUserName) || Validator.isNull(jPassword)) {
+		if (Validator.isNull(jUserName)) {
 			return null;
 		}
 
@@ -82,19 +81,25 @@ public class AutoLoginFilter extends BasePortalFilter {
 
 		httpSession.setAttribute("j_username", jUserName);
 
-		// Not having access to the unencrypted password will not allow you to
-		// connect to external resources that require it (mail server)
+		String jPassword = credentials[1];
 
-		if (GetterUtil.getBoolean(credentials[2])) {
-			httpSession.setAttribute("j_password", jPassword);
-		}
-		else {
-			httpSession.setAttribute(
-				"j_password",
-				PasswordEncryptorUtil.encrypt(jPassword, user.getPassword()));
+		if (Validator.isNotNull(jPassword)) {
 
-			if (PropsValues.SESSION_STORE_PASSWORD) {
-				httpSession.setAttribute(WebKeys.USER_PASSWORD, jPassword);
+			// Not having access to the unencrypted password will not allow you
+			// to connect to external resources that require it (mail server)
+
+			if (GetterUtil.getBoolean(credentials[2])) {
+				httpSession.setAttribute("j_password", jPassword);
+			}
+			else {
+				httpSession.setAttribute(
+					"j_password",
+					PasswordEncryptorUtil.encrypt(
+						jPassword, user.getPassword()));
+
+				if (PropsValues.SESSION_STORE_PASSWORD) {
+					httpSession.setAttribute(WebKeys.USER_PASSWORD, jPassword);
+				}
 			}
 		}
 

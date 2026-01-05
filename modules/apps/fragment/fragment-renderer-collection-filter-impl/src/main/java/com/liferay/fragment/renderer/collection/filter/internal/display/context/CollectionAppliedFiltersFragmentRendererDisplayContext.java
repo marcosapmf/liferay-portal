@@ -25,14 +25,14 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pablo.Molina
@@ -94,7 +94,7 @@ public class CollectionAppliedFiltersFragmentRendererDisplayContext {
 				(JSONArray)
 					_fragmentEntryConfigurationParser.
 						getConfigurationFieldValue(
-							fragmentEntryLink.getEditableValues(),
+							fragmentEntryLink.getEditableValuesJSONObject(),
 							"targetCollections",
 							FragmentConfigurationFieldDataType.ARRAY);
 
@@ -162,7 +162,8 @@ public class CollectionAppliedFiltersFragmentRendererDisplayContext {
 	public boolean showClearFiltersButton() {
 		return GetterUtil.getBoolean(
 			_fragmentEntryConfigurationParser.getConfigurationFieldValue(
-				_fragmentEntryLink.getEditableValues(), "showClearFilters",
+				_fragmentEntryLink.getEditableValuesJSONObject(),
+				"showClearFilters",
 				FragmentConfigurationFieldDataType.BOOLEAN));
 	}
 
@@ -174,7 +175,8 @@ public class CollectionAppliedFiltersFragmentRendererDisplayContext {
 		JSONArray targetCollectionsJSONArray =
 			(JSONArray)
 				_fragmentEntryConfigurationParser.getConfigurationFieldValue(
-					_fragmentEntryLink.getEditableValues(), "targetCollections",
+					_fragmentEntryLink.getEditableValuesJSONObject(),
+					"targetCollections",
 					FragmentConfigurationFieldDataType.ARRAY);
 
 		_targetCollections = JSONUtil.toStringSet(targetCollectionsJSONArray);

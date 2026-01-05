@@ -23,6 +23,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -31,13 +38,6 @@ import java.net.URL;
 
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -123,10 +123,13 @@ public class FrontendJsWebLanguageServlet extends HttpServlet {
 
 		// Check if servlet context exists
 
+		String modulePath = _portal.getPathModule();
+		String proxyPath = _portal.getPathProxy();
 		String webContextPath = parts[2];
 
 		ServletContext servletContext = _serviceTrackerMap.getService(
-			Portal.PATH_MODULE + StringPool.SLASH + webContextPath);
+			modulePath.substring(proxyPath.length()) + StringPool.SLASH +
+				webContextPath);
 
 		if (servletContext == null) {
 			httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -242,6 +245,9 @@ public class FrontendJsWebLanguageServlet extends HttpServlet {
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Portal _portal;
 
 	private ServiceTrackerMap<String, ServletContext> _serviceTrackerMap;
 

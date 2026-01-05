@@ -8,13 +8,13 @@ package com.liferay.headless.delivery.client.serdes.v1_0;
 import com.liferay.headless.delivery.client.dto.v1_0.BlogPostingImage;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -88,6 +88,20 @@ public class BlogPostingImageSerDes {
 			sb.append("\"");
 		}
 
+		if (blogPostingImage.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(blogPostingImage.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (blogPostingImage.getFileExtension() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -144,9 +158,7 @@ public class BlogPostingImageSerDes {
 			sb.append("\"viewableBy\": ");
 
 			sb.append("\"");
-
 			sb.append(blogPostingImage.getViewableBy());
-
 			sb.append("\"");
 		}
 
@@ -193,6 +205,15 @@ public class BlogPostingImageSerDes {
 			map.put(
 				"encodingFormat",
 				String.valueOf(blogPostingImage.getEncodingFormat()));
+		}
+
+		if (blogPostingImage.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(blogPostingImage.getExternalReferenceCode()));
 		}
 
 		if (blogPostingImage.getFileExtension() == null) {
@@ -262,6 +283,11 @@ public class BlogPostingImageSerDes {
 			else if (Objects.equals(jsonParserFieldName, "encodingFormat")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "fileExtension")) {
 				return false;
 			}
@@ -301,6 +327,14 @@ public class BlogPostingImageSerDes {
 			else if (Objects.equals(jsonParserFieldName, "encodingFormat")) {
 				if (jsonParserFieldValue != null) {
 					blogPostingImage.setEncodingFormat(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					blogPostingImage.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -379,6 +413,10 @@ public class BlogPostingImageSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

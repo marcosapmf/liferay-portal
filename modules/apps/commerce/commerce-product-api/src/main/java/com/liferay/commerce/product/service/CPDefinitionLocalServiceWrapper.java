@@ -49,7 +49,7 @@ public class CPDefinitionLocalServiceWrapper
 
 	@Override
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> shortDescriptionMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
@@ -80,7 +80,7 @@ public class CPDefinitionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLocalService.addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -99,7 +99,7 @@ public class CPDefinitionLocalServiceWrapper
 
 	@Override
 	public CPDefinition addCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> shortDescriptionMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
@@ -126,7 +126,7 @@ public class CPDefinitionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLocalService.addCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -142,8 +142,8 @@ public class CPDefinitionLocalServiceWrapper
 
 	@Override
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
-			java.util.Map<java.util.Locale, String> nameMap,
+			String externalReferenceCode, long userId, long cpDefinitionId,
+			long groupId, java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> shortDescriptionMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			java.util.Map<java.util.Locale, String> urlTitleMap,
@@ -173,7 +173,7 @@ public class CPDefinitionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLocalService.addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, cpDefinitionId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -192,7 +192,7 @@ public class CPDefinitionLocalServiceWrapper
 
 	@Override
 	public CPDefinition addOrUpdateCPDefinition(
-			String externalReferenceCode, long groupId, long userId,
+			String externalReferenceCode, long userId, long groupId,
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> shortDescriptionMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
@@ -219,7 +219,7 @@ public class CPDefinitionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLocalService.addOrUpdateCPDefinition(
-			externalReferenceCode, groupId, userId, nameMap,
+			externalReferenceCode, userId, groupId, nameMap,
 			shortDescriptionMap, descriptionMap, urlTitleMap, metaTitleMap,
 			metaDescriptionMap, metaKeywordsMap, productTypeName,
 			ignoreSKUCombinations, shippable, freeShipping, shipSeparately,
@@ -479,6 +479,14 @@ public class CPDefinitionLocalServiceWrapper
 			cProductId);
 	}
 
+	@Override
+	public CPDefinition fetchCPDefinitionByFriendlyURL(
+		long groupId, String friendlyURL) {
+
+		return _cpDefinitionLocalService.fetchCPDefinitionByFriendlyURL(
+			groupId, friendlyURL);
+	}
+
 	/**
 	 * Returns the cp definition matching the UUID and group.
 	 *
@@ -503,6 +511,16 @@ public class CPDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<CPDefinition> findByExpirationDate(
+		java.util.Date expirationDate,
+		com.liferay.portal.kernel.dao.orm.QueryDefinition<CPDefinition>
+			queryDefinition) {
+
+		return _cpDefinitionLocalService.findByExpirationDate(
+			expirationDate, queryDefinition);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -521,6 +539,14 @@ public class CPDefinitionLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDefinitionLocalService.getCPDefinition(CPDefinitionId);
+	}
+
+	@Override
+	public CPDefinition getCPDefinitionByCProductId(long cProductId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionLocalService.getCPDefinitionByCProductId(
+			cProductId);
 	}
 
 	/**
@@ -647,18 +673,6 @@ public class CPDefinitionLocalServiceWrapper
 			groupId, status, start, end, orderByComparator);
 	}
 
-	@Override
-	public java.util.List<CPDefinition> getCPDefinitions(
-		long groupId, String productTypeName, String languageId, int status,
-		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CPDefinition>
-			orderByComparator) {
-
-		return _cpDefinitionLocalService.getCPDefinitions(
-			groupId, productTypeName, languageId, status, start, end,
-			orderByComparator);
-	}
-
 	/**
 	 * Returns all the cp definitions matching the UUID and company.
 	 *
@@ -715,14 +729,6 @@ public class CPDefinitionLocalServiceWrapper
 	@Override
 	public int getCPDefinitionsCount(long groupId, int status) {
 		return _cpDefinitionLocalService.getCPDefinitionsCount(groupId, status);
-	}
-
-	@Override
-	public int getCPDefinitionsCount(
-		long groupId, String productTypeName, String languageId, int status) {
-
-		return _cpDefinitionLocalService.getCPDefinitionsCount(
-			groupId, productTypeName, languageId, status);
 	}
 
 	@Override
@@ -872,17 +878,18 @@ public class CPDefinitionLocalServiceWrapper
 	@Override
 	public boolean isVersionable(
 		long cpDefinitionId,
-		javax.servlet.http.HttpServletRequest httpServletRequest) {
+		jakarta.servlet.http.HttpServletRequest httpServletRequest) {
 
 		return _cpDefinitionLocalService.isVersionable(
 			cpDefinitionId, httpServletRequest);
 	}
 
 	@Override
-	public void maintainVersionThreshold(long cProductId)
+	public void maintainVersionThreshold(long companyId, long cProductId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_cpDefinitionLocalService.maintainVersionThreshold(cProductId);
+		_cpDefinitionLocalService.maintainVersionThreshold(
+			companyId, cProductId);
 	}
 
 	@Override

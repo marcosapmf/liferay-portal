@@ -100,6 +100,12 @@ public class CTEntryLocalServiceUtil {
 		return getService().deleteCTEntry(ctEntry);
 	}
 
+	public static CTEntry deleteCTEntry(CTEntry ctEntry, boolean force)
+		throws PortalException {
+
+		return getService().deleteCTEntry(ctEntry, force);
+	}
+
 	/**
 	 * Deletes the ct entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -282,6 +288,10 @@ public class CTEntryLocalServiceUtil {
 		long ctCollectionId, long modelClassNameId) {
 
 		return getService().getCTEntries(ctCollectionId, modelClassNameId);
+	}
+
+	public static List<CTEntry> getCTEntries(long[] ctEntryIds) {
+		return getService().getCTEntries(ctEntryIds);
 	}
 
 	/**

@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceResponse;
@@ -81,7 +82,7 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 		_mockLiferayResourceRequest = new MockLiferayResourceRequest();
 
 		_mockLiferayResourceRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG,
+			JavaConstants.JAKARTA_PORTLET_CONFIG,
 			PortletConfigFactoryUtil.create(
 				_portletLocalService.getPortletById(
 					ConfigurationAdminPortletKeys.SYSTEM_SETTINGS),
@@ -273,12 +274,14 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				userId, 0, false, true, false, false,
+				null, userId, 0, null, false, true, false, true, false, false,
+				false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Arrays.asList(
 					new TextObjectFieldBuilder(
 					).labelMap(
@@ -286,7 +289,8 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 							RandomTestUtil.randomString())
 					).name(
 						"textObjectField"
-					).build()));
+					).build()),
+				Collections.emptyList(), new ServiceContext());
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
 			TestPropsValues.getUserId(),
@@ -327,26 +331,27 @@ public class GetGroovyScriptUsesMVCResourceCommandTest {
 		throws Exception {
 
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "PublishedGroovyWorkflowDefinition",
 			companyName + "PublishedGroovyWorkflowDefinition",
 			_getContentBytes("workflow-definition-2.json"));
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, companyName + "PublishedJavaWorkflowDefinition",
+			null, companyId, userId,
+			companyName + "PublishedJavaWorkflowDefinition",
 			companyName + "PublishedJavaWorkflowDefinition",
 			_getContentBytes("workflow-definition-3.json"));
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, companyName + "PublishedWorkflowDefinition",
-			StringUtil.randomId(),
+			null, companyId, userId,
+			companyName + "PublishedWorkflowDefinition", StringUtil.randomId(),
 			_getContentBytes("workflow-definition-1.json"));
 
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "UnpublishedGroovyWorkflowDefinition",
 			StringUtil.randomId(),
 			_getContentBytes("workflow-definition-2.json"));
 		_workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId,
+			null, companyId, userId,
 			companyName + "UnpublishedJavaWorkflowDefinition",
 			StringUtil.randomId(),
 			_getContentBytes("workflow-definition-3.json"));

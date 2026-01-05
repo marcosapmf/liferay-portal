@@ -47,21 +47,21 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 import com.liferay.translation.security.permission.TranslationPermission;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -179,12 +179,14 @@ public class LayoutsTreeImpl implements LayoutsTree {
 			long groupId, boolean privateLayout)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-174417")) {
-			return Collections.emptyList();
-		}
-
 		LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
 			groupId, privateLayout);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				layoutSet.getCompanyId(), "LPS-174417")) {
+
+			return Collections.emptyList();
+		}
 
 		if (layoutSet.isLayoutSetPrototypeLinkEnabled()) {
 			return _layoutSetPrototypeHelper.getDuplicatedFriendlyURLPlids(
@@ -410,18 +412,17 @@ public class LayoutsTreeImpl implements LayoutsTree {
 		JSONObject jsonObject = JSONUtil.put(
 			"actions",
 			() -> {
-				if (includeActions) {
-					LayoutActionProvider layoutActionProvider =
-						new LayoutActionProvider(
-							_groupProvider, httpServletRequest, _language,
-							layoutActionsHelper,
-							_siteNavigationMenuLocalService);
-
-					return layoutActionProvider.getActionsJSONArray(
-						layout, afterDeleteSelectedLayout);
+				if (!includeActions) {
+					return null;
 				}
 
-				return null;
+				LayoutActionProvider layoutActionProvider =
+					new LayoutActionProvider(
+						_groupProvider, httpServletRequest, _language,
+						layoutActionsHelper, _siteNavigationMenuLocalService);
+
+				return layoutActionProvider.getActionsJSONArray(
+					layout, afterDeleteSelectedLayout);
 			}
 		).put(
 			"children",

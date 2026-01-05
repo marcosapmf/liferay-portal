@@ -218,7 +218,7 @@ public class ClientExtensionServicePreActionTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -232,7 +232,8 @@ public class ClientExtensionServicePreActionTest {
 			ClientExtensionEntryConstants.TYPE_THEME_FAVICON, StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		_layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
+		_layout.setMasterLayoutPageTemplateEntryERC(
+			masterLayoutPageTemplateEntry.getExternalReferenceCode());
 
 		_layout = _layoutLocalService.updateLayout(_layout);
 
@@ -247,7 +248,7 @@ public class ClientExtensionServicePreActionTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -261,7 +262,8 @@ public class ClientExtensionServicePreActionTest {
 			ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		_layout.setMasterLayoutPlid(masterLayoutPageTemplateEntry.getPlid());
+		_layout.setMasterLayoutPageTemplateEntryERC(
+			masterLayoutPageTemplateEntry.getExternalReferenceCode());
 
 		_layout = _layoutLocalService.updateLayout(_layout);
 
@@ -350,12 +352,10 @@ public class ClientExtensionServicePreActionTest {
 		else {
 			MatcherAssert.assertThat(
 				themeDisplay.getClayCSSURL(),
-				CoreMatchers.containsString(
-					"themeId=classic_WAR_classictheme"));
+				CoreMatchers.startsWith("/o/classic-theme/css/clay."));
 			MatcherAssert.assertThat(
 				themeDisplay.getMainCSSURL(),
-				CoreMatchers.containsString(
-					"themeId=classic_WAR_classictheme"));
+				CoreMatchers.startsWith("/o/classic-theme/css/main."));
 		}
 	}
 

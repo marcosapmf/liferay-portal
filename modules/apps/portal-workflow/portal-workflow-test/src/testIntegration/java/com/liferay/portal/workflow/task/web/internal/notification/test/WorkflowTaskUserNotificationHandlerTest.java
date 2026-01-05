@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -41,14 +42,14 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.product.navigation.personal.menu.util.PersonalApplicationURLUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -76,7 +77,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 		Group group = GroupTestUtil.addGroup();
 
 		_workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
 			group.getGroupId(), BlogsEntry.class.getName(), 0, 0,
 			"Single Approver", 1);
 
@@ -130,6 +131,8 @@ public class WorkflowTaskUserNotificationHandlerTest {
 					expectedPlid, PortletRequest.RENDER_PHASE)
 			).setMVCPath(
 				"/edit_workflow_task.jsp"
+			).setBackURL(
+				_CURRENT_URL
 			).setParameter(
 				"workflowTaskId",
 				() -> {
@@ -155,6 +158,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
 		themeDisplay.setSiteGroupId(group.getGroupId());
+		themeDisplay.setURLCurrent(_CURRENT_URL);
 		themeDisplay.setUser(TestPropsValues.getUser());
 
 		return themeDisplay;
@@ -197,6 +201,8 @@ public class WorkflowTaskUserNotificationHandlerTest {
 			userNotificationEvent, serviceContext);
 	}
 
+	private static final String _CURRENT_URL = RandomTestUtil.randomString();
+
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
 
@@ -210,7 +216,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
 
-	@Inject(filter = "javax.portlet.name=" + PortletKeys.MY_WORKFLOW_TASK)
+	@Inject(filter = "jakarta.portlet.name=" + PortletKeys.MY_WORKFLOW_TASK)
 	private UserNotificationHandler _userNotificationHandler;
 
 	@Inject

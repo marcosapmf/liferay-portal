@@ -20,6 +20,7 @@ import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.CountryLocalService;
@@ -30,9 +31,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.Objects;
+import jakarta.portlet.ActionRequest;
 
-import javax.portlet.ActionRequest;
+import java.util.Objects;
 
 /**
  * @author Luca Pellizzon
@@ -112,14 +113,16 @@ public class AddressCommerceCheckoutStepDisplayContext {
 
 			if (useAsBilling) {
 				_commerceAddressService.updateCommerceAddress(
-					commerceAddressId, commerceAddress.getName(),
-					commerceAddress.getDescription(),
+					commerceAddress.getExternalReferenceCode(),
+					commerceAddressId, commerceAddress.getCountryId(),
+					commerceAddress.getRegionId(), commerceAddress.getCity(),
+					commerceAddress.getDescription(), commerceAddress.getName(),
+					commerceAddress.getPhoneNumber(),
 					commerceAddress.getStreet1(), commerceAddress.getStreet2(),
-					commerceAddress.getStreet3(), commerceAddress.getCity(),
-					commerceAddress.getZip(), commerceAddress.getRegionId(),
-					commerceAddress.getCountryId(),
-					commerceAddress.getPhoneNumber(), _commerceAddressType,
-					null);
+					commerceAddress.getStreet3(),
+					ParamUtil.getString(
+						actionRequest, "subtype", commerceAddress.getSubtype()),
+					_commerceAddressType, commerceAddress.getZip(), null);
 
 				commerceOrder.setBillingAddressId(commerceAddressId);
 
@@ -202,14 +205,6 @@ public class AddressCommerceCheckoutStepDisplayContext {
 		}
 
 		String name = ParamUtil.getString(actionRequest, "name");
-		String description = ParamUtil.getString(actionRequest, "description");
-		String street1 = ParamUtil.getString(actionRequest, "street1");
-		String street2 = ParamUtil.getString(actionRequest, "street2");
-		String street3 = ParamUtil.getString(actionRequest, "street3");
-		String city = ParamUtil.getString(actionRequest, "city");
-		String zip = ParamUtil.getString(actionRequest, "zip");
-		long regionId = ParamUtil.getLong(actionRequest, "regionId");
-		String phoneNumber = ParamUtil.getString(actionRequest, "phoneNumber");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CommerceAddress.class.getName(), actionRequest);
@@ -221,7 +216,7 @@ public class AddressCommerceCheckoutStepDisplayContext {
 
 			AccountEntry accountEntry =
 				_accountEntryLocalService.addAccountEntry(
-					serviceContext.getUserId(),
+					StringPool.BLANK, serviceContext.getUserId(),
 					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, name,
 					null, null, email, null, null,
 					AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST,
@@ -235,9 +230,17 @@ public class AddressCommerceCheckoutStepDisplayContext {
 		}
 
 		return _commerceAddressService.addCommerceAddress(
-			AccountEntry.class.getName(), commerceOrder.getCommerceAccountId(),
-			name, description, street1, street2, street3, city, zip, regionId,
-			countryId, phoneNumber, _commerceAddressType, serviceContext);
+			StringPool.BLANK, AccountEntry.class.getName(),
+			commerceOrder.getCommerceAccountId(), countryId,
+			ParamUtil.getLong(actionRequest, "regionId"),
+			ParamUtil.getString(actionRequest, "city"),
+			ParamUtil.getString(actionRequest, "description"), name,
+			ParamUtil.getString(actionRequest, "phoneNumber"),
+			ParamUtil.getString(actionRequest, "street1"),
+			ParamUtil.getString(actionRequest, "street2"),
+			ParamUtil.getString(actionRequest, "street3"),
+			ParamUtil.getString(actionRequest, "subtype"), _commerceAddressType,
+			ParamUtil.getString(actionRequest, "zip"), serviceContext);
 	}
 
 	private CommerceOrder _getCommerceOrder(

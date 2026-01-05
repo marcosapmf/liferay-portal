@@ -241,6 +241,10 @@ public interface SegmentsEntryLocalService
 	public SegmentsEntry fetchSegmentsEntry(
 		long groupId, String segmentsEntryKey);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SegmentsEntry fetchSegmentsEntryByExternalReferenceCode(
+		String externalReferenceCode, long groupId);
+
 	/**
 	 * Returns the segments entry matching the UUID and group.
 	 *
@@ -302,6 +306,10 @@ public interface SegmentsEntryLocalService
 		OrderByComparator<SegmentsEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SegmentsEntry> getSegmentsEntries(
+		long[] segmentsEntryIds, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SegmentsEntry> getSegmentsEntriesBySource(
 		String source, int start, int end,
 		OrderByComparator<SegmentsEntry> orderByComparator);
@@ -352,6 +360,11 @@ public interface SegmentsEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsEntry getSegmentsEntry(long segmentsEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SegmentsEntry getSegmentsEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	/**

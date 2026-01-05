@@ -13,22 +13,24 @@ import com.liferay.dispatch.exception.DuplicateDispatchTriggerException;
 import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
-import com.liferay.dispatch.internal.messaging.TestDispatchTaskExecutor;
+import com.liferay.dispatch.executor.internal.messaging.TestDispatchTaskExecutor;
 import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
-import com.liferay.dispatch.service.test.util.CronExpressionUtil;
-import com.liferay.dispatch.service.test.util.DispatchTriggerTestUtil;
+import com.liferay.dispatch.test.util.CronExpressionTestUtil;
+import com.liferay.dispatch.test.util.DispatchTriggerTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
+import com.liferay.portal.kernel.scheduler.messaging.SchedulerResponse;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
@@ -161,7 +163,7 @@ public class DispatchTriggerLocalServiceTest {
 				dispatchTrigger.getDispatchTaskClusterMode()),
 			0, 0, 0, 0, 0, true, false, calendar.get(Calendar.MONTH),
 			calendar.get(Calendar.DATE), calendar.get(Calendar.YEAR),
-			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE),
+			calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE),
 			timeZoneId);
 
 		TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
@@ -324,10 +326,11 @@ public class DispatchTriggerLocalServiceTest {
 					dispatchTrigger.getDispatchTriggerId(),
 					expectedDispatchTrigger.isActive(),
 					expectedDispatchTrigger.getCronExpression(),
-					dispatchTaskClusterMode, CronExpressionUtil.getMonth() + 1,
-					20, CronExpressionUtil.getYear(), 23, 59, false, true,
-					CronExpressionUtil.getMonth() - 1, 1,
-					CronExpressionUtil.getYear(), 0, 0, "UTC");
+					dispatchTaskClusterMode,
+					CronExpressionTestUtil.getMonth() + 1, 20,
+					CronExpressionTestUtil.getYear(), 23, 59, false, true,
+					CronExpressionTestUtil.getMonth() - 1, 1,
+					CronExpressionTestUtil.getYear(), 0, 0, "UTC");
 
 			_basicAssertEquals(expectedDispatchTrigger, dispatchTrigger);
 
@@ -419,6 +422,65 @@ public class DispatchTriggerLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateDispatchTriggerWithCronExpressions()
+		throws Exception {
+
+		// Future start date after the cron expression
+
+		Calendar calendar = CalendarFactoryUtil.getCalendar();
+
+		calendar.setTime(new Date());
+
+		Calendar futureCalendar = (Calendar)calendar.clone();
+
+		futureCalendar.add(Calendar.HOUR_OF_DAY, 12);
+
+		String cronExpression = StringBundler.concat(
+			futureCalendar.get(Calendar.SECOND), " ",
+			futureCalendar.get(Calendar.MINUTE), " ",
+			futureCalendar.get(Calendar.HOUR_OF_DAY), " * * ? *");
+
+		Calendar startCalendar = (Calendar)calendar.clone();
+
+		startCalendar.add(Calendar.HOUR_OF_DAY, 14);
+
+		_testUpdateDispatchTriggerWithCronExpressions(
+			cronExpression, _getExpectedCalendar(futureCalendar, startCalendar),
+			startCalendar);
+
+		// Future start date before the cron expression
+
+		startCalendar = (Calendar)calendar.clone();
+
+		startCalendar.add(Calendar.HOUR_OF_DAY, 10);
+
+		_testUpdateDispatchTriggerWithCronExpressions(
+			cronExpression, _getExpectedCalendar(futureCalendar, startCalendar),
+			startCalendar);
+
+		// Past start Date after the cron expression
+
+		startCalendar = (Calendar)calendar.clone();
+
+		startCalendar.add(Calendar.DAY_OF_MONTH, -1);
+		startCalendar.add(Calendar.HOUR_OF_DAY, 14);
+
+		_testUpdateDispatchTriggerWithCronExpressions(
+			cronExpression, _getExpectedCalendar(futureCalendar, startCalendar),
+			startCalendar);
+
+		// Past start date before the cron expression
+
+		startCalendar = (Calendar)calendar.clone();
+
+		startCalendar.add(Calendar.DAY_OF_MONTH, -1);
+
+		_testUpdateDispatchTriggerWithCronExpressions(
+			cronExpression, _getExpectedCalendar(futureCalendar, startCalendar),
+			startCalendar);
+	}
+
+	@Test
 	public void testUpdateDispatchTriggerWithDifferentDispatchTaskClusterMode()
 		throws Exception {
 
@@ -428,12 +490,13 @@ public class DispatchTriggerLocalServiceTest {
 
 		dispatchTrigger = _dispatchTriggerLocalService.updateDispatchTrigger(
 			dispatchTrigger.getDispatchTriggerId(), true,
-			CronExpressionUtil.getCronExpression(),
+			CronExpressionTestUtil.getCronExpression(),
 			DispatchTaskClusterMode.valueOf(
 				dispatchTrigger.getDispatchTaskClusterMode()),
-			CronExpressionUtil.getMonth() + 1, 20, CronExpressionUtil.getYear(),
-			23, 59, false, true, CronExpressionUtil.getMonth() - 1, 1,
-			CronExpressionUtil.getYear(), 0, 0, "UTC");
+			CronExpressionTestUtil.getMonth() + 1, 20,
+			CronExpressionTestUtil.getYear(), 23, 59, false, true,
+			CronExpressionTestUtil.getMonth() - 1, 1,
+			CronExpressionTestUtil.getYear(), 0, 0, "UTC");
 
 		DispatchTaskClusterMode dispatchTaskClusterMode =
 			DispatchTaskClusterMode.valueOf(
@@ -442,12 +505,12 @@ public class DispatchTriggerLocalServiceTest {
 		DispatchTrigger updateDispatchTrigger =
 			_dispatchTriggerLocalService.updateDispatchTrigger(
 				dispatchTrigger.getDispatchTriggerId(), true,
-				CronExpressionUtil.getCronExpression(),
+				CronExpressionTestUtil.getCronExpression(),
 				DispatchTaskClusterMode.SINGLE_NODE_MEMORY_CLUSTERED,
-				CronExpressionUtil.getMonth() + 1, 20,
-				CronExpressionUtil.getYear(), 23, 59, false, true,
-				CronExpressionUtil.getMonth() - 1, 1,
-				CronExpressionUtil.getYear(), 0, 0, "UTC");
+				CronExpressionTestUtil.getMonth() + 1, 20,
+				CronExpressionTestUtil.getYear(), 23, 59, false, true,
+				CronExpressionTestUtil.getMonth() - 1, 1,
+				CronExpressionTestUtil.getYear(), 0, 0, "UTC");
 
 		DispatchTaskClusterMode updateDispatchTaskClusterMode =
 			DispatchTaskClusterMode.valueOf(
@@ -564,6 +627,20 @@ public class DispatchTriggerLocalServiceTest {
 				value));
 	}
 
+	private Calendar _getExpectedCalendar(
+		Calendar futureCalendar, Calendar startCalendar) {
+
+		Calendar calendar = (Calendar)futureCalendar.clone();
+
+		calendar.set(Calendar.MILLISECOND, 0);
+
+		if (startCalendar.compareTo(calendar) >= 0) {
+			calendar.add(Calendar.DAY_OF_MONTH, 1);
+		}
+
+		return calendar;
+	}
+
 	private String _getGroupName(DispatchTrigger dispatchTrigger) {
 		String dispatchTriggerId = String.format(
 			"%07d", dispatchTrigger.getDispatchTriggerId());
@@ -599,6 +676,64 @@ public class DispatchTriggerLocalServiceTest {
 		return TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST;
 	}
 
+	private void _testUpdateDispatchTriggerWithCronExpressions(
+			String cronExpression, Calendar expectedCalendar,
+			Calendar startCalendar)
+		throws Exception {
+
+		DispatchTrigger dispatchTrigger = _addDispatchTrigger(
+			DispatchTriggerTestUtil.randomDispatchTrigger(
+				UserTestUtil.addUser(), _getRandomDispatchExecutorType(),
+				RandomTestUtil.nextInt()));
+
+		DispatchTaskClusterMode dispatchTaskClusterMode =
+			DispatchTaskClusterMode.SINGLE_NODE_MEMORY_CLUSTERED;
+
+		dispatchTrigger.setDispatchTaskClusterMode(
+			dispatchTaskClusterMode.getMode());
+
+		Calendar endCalendar = CalendarFactoryUtil.getCalendar();
+
+		endCalendar.setTime(new Date());
+
+		endCalendar.add(Calendar.YEAR, 1);
+
+		dispatchTrigger = _dispatchTriggerLocalService.updateDispatchTrigger(
+			dispatchTrigger.getDispatchTriggerId(), true, cronExpression,
+			dispatchTaskClusterMode, endCalendar.get(Calendar.MONTH),
+			endCalendar.get(Calendar.DAY_OF_MONTH),
+			endCalendar.get(Calendar.YEAR),
+			endCalendar.get(Calendar.HOUR_OF_DAY),
+			endCalendar.get(Calendar.MINUTE), false, true,
+			startCalendar.get(Calendar.MONTH),
+			startCalendar.get(Calendar.DAY_OF_MONTH),
+			startCalendar.get(Calendar.YEAR),
+			startCalendar.get(Calendar.HOUR_OF_DAY),
+			startCalendar.get(Calendar.MINUTE), "UTC");
+
+		Thread.sleep(1000);
+
+		Assert.assertEquals(
+			0,
+			_dispatchLogLocalService.getDispatchLogsCount(
+				dispatchTrigger.getDispatchTriggerId()));
+
+		SchedulerResponse schedulerResponse =
+			_schedulerEngineHelper.getScheduledJob(
+				_getJobName(dispatchTrigger), _getGroupName(dispatchTrigger),
+				dispatchTaskClusterMode.getStorageType());
+
+		Assert.assertNotNull(schedulerResponse);
+
+		Date date = _schedulerEngineHelper.getNextFireTime(schedulerResponse);
+
+		Calendar nextFireCalendar = CalendarFactoryUtil.getCalendar();
+
+		nextFireCalendar.setTime(date);
+
+		Assert.assertEquals(expectedCalendar, nextFireCalendar);
+	}
+
 	@Inject
 	private DispatchLogLocalService _dispatchLogLocalService;
 
@@ -630,6 +765,14 @@ public class DispatchTriggerLocalServiceTest {
 		@Override
 		public void clearLocalCache() {
 			_entityCache.clearLocalCache();
+		}
+
+		@Override
+		public <T extends CacheModel<?>> T fetchCacheModel(
+			Class<?> clazz, Serializable primaryKey, Class<T> cacheModelClass) {
+
+			return _entityCache.fetchCacheModel(
+				clazz, primaryKey, cacheModelClass);
 		}
 
 		@Override

@@ -79,7 +79,15 @@
 	/>
 	<instance-wrapper
 		parent-dir="../portal-kernel/src"
+		src-file="com/liferay/portal/kernel/util/LocaleUtil.java"
+	/>
+	<instance-wrapper
+		parent-dir="../portal-kernel/src"
 		src-file="com/liferay/portal/kernel/util/ParamUtil.java"
+	/>
+	<instance-wrapper
+		parent-dir="../portal-kernel/src"
+		src-file="com/liferay/portal/kernel/util/PropsUtil.java"
 	/>
 	<instance-wrapper
 		parent-dir="../portal-kernel/src"

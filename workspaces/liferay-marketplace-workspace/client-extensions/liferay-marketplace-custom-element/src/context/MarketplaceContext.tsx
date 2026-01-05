@@ -6,71 +6,56 @@
 import {ReactNode, createContext, useContext} from 'react';
 import useSWR, {KeyedMutator} from 'swr';
 
-import SearchBuilder from '../core/SearchBuilder';
+import {MarketplaceUserAccount} from '../entity/MarketplaceUserAccount';
 import {Liferay} from '../liferay/liferay';
-import HeadlessAdminUserImpl from '../services/rest/HeadlessAdminUser';
-import HeadlessCommerceDeliveryCatalogImpl from '../services/rest/HeadlessCommerceDeliveryCatalog';
+import HeadlessAdminUser from '../services/rest/HeadlessAdminUser';
+import {MarketplaceProperties} from '../utils/attributes';
 
-type ContextType = {
+type Context = {
 	channel: Channel;
+	marketplaceUserAccount: MarketplaceUserAccount;
 	mutateMyUserAccount: KeyedMutator<UserAccount | undefined>;
 	myUserAccount: UserAccount;
-	properties: DefaultProperties;
+	properties: MarketplaceProperties;
 };
-
-const MarketplaceContext = createContext<ContextType>({
-	channel: {} as Channel,
-	mutateMyUserAccount: (() => null) as unknown as KeyedMutator<
-		UserAccount | undefined
-	>,
-	myUserAccount: {} as UserAccount,
-	properties: {} as DefaultProperties,
-});
 
 type MarketplaceContextProviderProps = {
 	children: ReactNode;
-	properties: DefaultProperties;
+	properties: MarketplaceProperties;
 };
 
-const urlSearchParams = new URLSearchParams();
+const channel = {
+	channelId: Number(Liferay.CommerceContext.commerceChannelId),
+	currencyCode: Liferay.CommerceContext.currency.currencyCode,
+	externalReferenceCode: 'MARKETPLACE',
+	id: Number(Liferay.CommerceContext.commerceChannelId),
+} as Channel;
 
-urlSearchParams.set(
-	'filter',
-	SearchBuilder.contains('name', 'Marketplace Channel')
-);
+const MarketplaceContext = createContext<Context>({} as Context);
 
 const MarketplaceContextProvider: React.FC<MarketplaceContextProviderProps> = ({
 	children,
 	properties,
 }) => {
-	const {data: marketplaceChannel} = useSWR(
-		'/marketplace/channel',
-		async () => {
-			const channelResponse =
-				await HeadlessCommerceDeliveryCatalogImpl.getChannels(
-					urlSearchParams
-				);
-
-			return (channelResponse?.items ?? [])[0];
-		}
-	);
-
 	const {data: myUserAccount, mutate} = useSWR(
 		Liferay.ThemeDisplay.isSignedIn()
 			? '/marketplace/my-user-account'
 			: null,
-		() => HeadlessAdminUserImpl.getMyUserAccount()
+		HeadlessAdminUser.getMyUserAccount
 	);
 
 	return (
 		<MarketplaceContext.Provider
 			value={
 				{
-					channel: marketplaceChannel,
-					mutateMyUserAccount: mutate,
+					channel,
+					marketplaceUserAccount: new MarketplaceUserAccount(
+						myUserAccount as UserAccount
+					),
+					mutateMyUserAccount: mutate as KeyedMutator<UserAccount>,
 					myUserAccount,
 					properties,
-				} as ContextType
+				} as Context
 			}
 		>
 			{children}

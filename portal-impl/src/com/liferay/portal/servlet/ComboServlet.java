@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -39,8 +40,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.minifier.MinifierUtil;
 import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.util.AggregateUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.constants.DLFriendlyURLConstants;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -55,13 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Eduardo Lundgren
@@ -229,16 +229,6 @@ public class ComboServlet extends HttpServlet {
 			}
 		}
 
-		boolean cacheEnabled = true;
-
-		if (PropsValues.WORK_DIR_OVERRIDE_ENABLED) {
-			cacheEnabled = false;
-
-			httpServletResponse.setHeader(
-				HttpHeaders.CACHE_CONTROL,
-				HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
-		}
-
 		String minifierType = ParamUtil.getString(
 			httpServletRequest, "minifierType");
 
@@ -270,6 +260,8 @@ public class ComboServlet extends HttpServlet {
 
 		if (bytesArray == null) {
 			bytesArray = new byte[modulePaths.length][];
+
+			boolean cacheEnabled = true;
 
 			for (int i = 0; i < modulePaths.length; i++) {
 				String modulePath = modulePaths[i];
@@ -314,6 +306,12 @@ public class ComboServlet extends HttpServlet {
 
 					httpServletResponse.setHeader(
 						HttpHeaders.CACHE_CONTROL, "max-age=1, no-cache");
+				}
+				else if ((PropsValues.COMBO_ALLOWED_FILE_MAX_SIZE > 0) &&
+						 (bytes.length >
+							 PropsValues.COMBO_ALLOWED_FILE_MAX_SIZE)) {
+
+					cacheEnabled = false;
 				}
 
 				bytesArray[i] = bytes;
@@ -464,13 +462,8 @@ public class ComboServlet extends HttpServlet {
 
 					baseURL = PortalUtil.getPathProxy() + baseURL;
 
-					if (StringUtil.contains(
-							stringFileContent, _CSS_CHARSET_UTF_8,
-							StringPool.BLANK)) {
-
-						stringFileContent = StringUtil.removeSubstring(
-							stringFileContent, _CSS_CHARSET_UTF_8);
-					}
+					stringFileContent = StringUtil.removeSubstring(
+						stringFileContent, _CSS_CHARSET_UTF_8);
 
 					stringFileContent = AggregateUtil.updateRelativeURLs(
 						stringFileContent, baseURL);
@@ -489,10 +482,6 @@ public class ComboServlet extends HttpServlet {
 					if (matcher.matches()) {
 						stringFileContent =
 							matcher.group(1) + "../o/" + matcher.group(3);
-					}
-					else {
-						stringFileContent = MinifierUtil.minifyJavaScript(
-							resourcePath, stringFileContent);
 					}
 
 					stringFileContent =

@@ -6,24 +6,23 @@
 import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 
 import {EditableValue} from '../../types/editables/EditableValue';
-import {LanguageId} from '../../types/layout_data/BaseLayoutDataItem';
 import {config} from '../config/index';
 
 export function getEditableLocalizedValue(
-	editableValue: EditableValue,
-	languageId: LanguageId | null = null,
-	defaultValue = ''
+	editableValue: EditableValue | undefined,
+	languageId: Liferay.Language.Locale | null = null,
+	defaultValue: string = ''
 ) {
 	let content;
 
 	if (languageId && !isNullOrUndefined(editableValue?.[languageId])) {
-		content = editableValue[languageId];
+		content = editableValue?.[languageId];
 	}
 	else if (!isNullOrUndefined(editableValue?.[config.defaultLanguageId])) {
-		content = editableValue[config.defaultLanguageId];
+		content = editableValue?.[config.defaultLanguageId];
 	}
 	else if (!isNullOrUndefined(editableValue?.defaultValue)) {
-		content = editableValue.defaultValue;
+		content = editableValue?.defaultValue;
 	}
 	else if (typeof editableValue === typeof defaultValue) {
 		content = editableValue;

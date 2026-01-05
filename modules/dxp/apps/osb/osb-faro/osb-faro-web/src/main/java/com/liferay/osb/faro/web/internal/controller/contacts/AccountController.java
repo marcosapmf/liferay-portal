@@ -6,8 +6,11 @@
 package com.liferay.osb.faro.web.internal.controller.contacts;
 
 import com.liferay.osb.faro.contacts.model.constants.JSONConstants;
+import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
 import com.liferay.osb.faro.engine.client.model.Account;
 import com.liferay.osb.faro.engine.client.model.Field;
+import com.liferay.osb.faro.engine.client.model.FieldMapping;
+import com.liferay.osb.faro.engine.client.model.FieldMappingMap;
 import com.liferay.osb.faro.engine.client.model.Results;
 import com.liferay.osb.faro.engine.client.util.OrderByField;
 import com.liferay.osb.faro.web.internal.constants.FaroConstants;
@@ -21,22 +24,22 @@ import com.liferay.osb.faro.web.internal.util.PhotoURLHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.RoleConstants;
 
+import jakarta.annotation.security.RolesAllowed;
+
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.annotation.security.RolesAllowed;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -174,10 +177,30 @@ public class AccountController extends BaseFaroController {
 			@QueryParam("delta") int delta)
 		throws Exception {
 
+		for (FieldMappingMap fieldMappingMap :
+				FieldMappingConstants.getAccountFieldMappingMaps()) {
+
+			if (fieldMappingFieldName.equals(fieldMappingMap.getName())) {
+				FieldMapping fieldMapping = new FieldMapping();
+
+				fieldMapping.setDisplayName(
+					FieldMappingConstants.getAccountFieldMappingLanguageKey(
+						fieldMappingMap.getName()));
+				fieldMapping.setDisplayType("input-field");
+				fieldMapping.setFieldName(fieldMappingMap.getName());
+				fieldMapping.setFieldType(fieldMappingMap.getType());
+				fieldMapping.setOwnerType(
+					FieldMappingConstants.OWNER_TYPE_ACCOUNT);
+
+				return new FaroResultsDisplay(
+					new Results<>(Collections.singletonList(fieldMapping), 1));
+			}
+		}
+
 		return new FaroResultsDisplay(
-			contactsEngineClient.getFieldValues(
+			contactsEngineClient.getAccountFieldValues(
 				faroProjectLocalService.getFaroProjectByGroupId(groupId),
-				channelId, query, fieldMappingFieldName, cur, delta));
+				channelId, fieldMappingFieldName, query, cur, delta));
 	}
 
 	@SuppressWarnings("unchecked")

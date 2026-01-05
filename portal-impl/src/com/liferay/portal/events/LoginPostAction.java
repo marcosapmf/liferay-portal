@@ -26,15 +26,15 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -108,8 +108,8 @@ public class LoginPostAction extends Action {
 
 				boolean reindex = false;
 
-				if (UserLocalServiceUtil.addDefaultGroups(userId) ||
-					UserLocalServiceUtil.addDefaultRoles(userId) ||
+				if (UserLocalServiceUtil.addDefaultGroups(userId) |
+					UserLocalServiceUtil.addDefaultRoles(userId) |
 					UserLocalServiceUtil.addDefaultUserGroups(userId)) {
 
 					reindex = true;

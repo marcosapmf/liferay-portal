@@ -46,14 +46,14 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelService;
 import com.liferay.segments.service.SegmentsExperimentService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -65,7 +65,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
+		"jakarta.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
 		"mvc.command.name=/segments_experiment/add_segments_experiment"
 	},
 	service = MVCActionCommand.class
@@ -135,9 +135,18 @@ public class AddSegmentsExperimentMVCActionCommand
 			actionRequest, "segmentsExperienceId");
 		long plid = ParamUtil.getLong(actionRequest, "plid");
 
-		SegmentsExperiment segmentsExperiment =
-			_segmentsExperimentService.fetchSegmentsExperiment(
-				serviceContext.getScopeGroupId(), segmentsExperienceId, plid);
+		SegmentsExperiment segmentsExperiment = null;
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
+
+		if (segmentsExperience != null) {
+			segmentsExperiment =
+				_segmentsExperimentService.fetchSegmentsExperiment(
+					serviceContext.getScopeGroupId(),
+					segmentsExperience.getSegmentsExperienceKey(), plid);
+		}
 
 		if (segmentsExperiment != null) {
 			if (segmentsExperiment.getStatus() ==
@@ -190,7 +199,7 @@ public class AddSegmentsExperimentMVCActionCommand
 		SegmentsExperimentRel segmentsExperimentRel =
 			_segmentsExperimentRelService.getSegmentsExperimentRel(
 				segmentsExperiment.getSegmentsExperimentId(),
-				segmentsExperiment.getSegmentsExperienceId());
+				segmentsExperiment.getSegmentsExperienceKey());
 
 		return JSONUtil.put(
 			"segmentsExperiment",

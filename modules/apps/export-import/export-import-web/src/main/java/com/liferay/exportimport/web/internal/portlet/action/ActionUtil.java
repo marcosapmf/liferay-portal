@@ -30,14 +30,14 @@ import com.liferay.portlet.portletconfiguration.util.ConfigurationActionRequest;
 import com.liferay.portlet.portletconfiguration.util.ConfigurationRenderRequest;
 import com.liferay.portlet.portletconfiguration.util.ConfigurationResourceRequest;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.ResourceRequest;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.ResourceRequest;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Daniel Kocsis
@@ -48,7 +48,8 @@ public class ActionUtil {
 		throws PortalException {
 
 		long backgroundTaskId = ParamUtil.getLong(
-			actionRequest, BackgroundTaskConstants.BACKGROUND_TASK_ID);
+			actionRequest,
+			BackgroundTaskConstants.MESSAGE_KEY_BACKGROUND_TASK_ID);
 
 		BackgroundTaskManagerUtil.deleteBackgroundTask(backgroundTaskId);
 	}
@@ -133,6 +134,7 @@ public class ActionUtil {
 			renderRequest, portlet);
 
 		String title = PortletConfigurationUtil.getPortletTitle(
+			portlet.getPortletId(),
 			_getPortletSetup(
 				httpServletRequest, renderRequest.getPreferences(),
 				portletPreferences),
@@ -176,7 +178,7 @@ public class ActionUtil {
 			renderRequest, portletPreferences);
 
 		httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST, renderRequest);
+			JavaConstants.JAKARTA_PORTLET_REQUEST, renderRequest);
 
 		return renderRequest;
 	}

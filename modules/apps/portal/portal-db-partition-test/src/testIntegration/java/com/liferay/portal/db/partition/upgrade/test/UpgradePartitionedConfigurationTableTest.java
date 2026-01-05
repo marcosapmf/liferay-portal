@@ -6,36 +6,33 @@
 package com.liferay.portal.db.partition.upgrade.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
+import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.AssumeTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.service.impl.ResourceActionLocalServiceImpl;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -49,7 +46,6 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -81,24 +77,13 @@ public class UpgradePartitionedConfigurationTableTest
 
 		_companyId = PortalInstancePool.getDefaultCompanyId();
 
-		_resourceActions = ReflectionTestUtil.getFieldValue(
-			ResourceActionLocalServiceImpl.class, "_resourceActions");
-
-		_regenerateResourceActions();
-
 		_dataSource = InfrastructureUtil.getDataSource();
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		_regenerateResourceActions();
 	}
 
 	@Test
 	public void testUpgradeProcess() throws Exception {
-		_company = CompanyTestUtil.addCompany();
-
-		PortalInstancePool.add(_company);
+		Company company = companyLocalService.fetchCompanyByVirtualHost(
+			TestPropsValues.COMPANY_WEB_ID);
 
 		DBPartitionUtil.forEachCompanyId(
 			companyId -> {
@@ -112,9 +97,6 @@ public class UpgradePartitionedConfigurationTableTest
 				}
 			});
 
-		Group group = GroupLocalServiceUtil.getGroup(
-			_company.getCompanyId(), GroupConstants.GUEST);
-
 		Map<Long, ConfigurationEntry> validConfigurationEntries =
 			HashMapBuilder.<Long, ConfigurationEntry>put(
 				_companyId,
@@ -126,15 +108,20 @@ public class UpgradePartitionedConfigurationTableTest
 					ExtendedObjectClassDefinition.Scope.PORTLET_INSTANCE,
 					RandomTestUtil.randomLong())
 			).put(
-				_company.getCompanyId(),
-				new ConfigurationEntry(
-					ExtendedObjectClassDefinition.Scope.GROUP,
-					group.getGroupId())
+				company.getCompanyId(),
+				() -> {
+					Group group = GroupLocalServiceUtil.getGroup(
+						company.getCompanyId(), GroupConstants.GUEST);
+
+					return new ConfigurationEntry(
+						ExtendedObjectClassDefinition.Scope.GROUP,
+						group.getGroupId());
+				}
 			).put(
-				_company.getCompanyId(),
+				company.getCompanyId(),
 				new ConfigurationEntry(
 					ExtendedObjectClassDefinition.Scope.COMPANY,
-					_company.getCompanyId())
+					company.getCompanyId())
 			).build();
 
 		long randomCompanyId = RandomTestUtil.randomLong();
@@ -153,7 +140,10 @@ public class UpgradePartitionedConfigurationTableTest
 			).build();
 
 		try {
-			try (PreparedStatement preparedStatement =
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						PortalInstancePool.getDefaultCompanyId());
+				PreparedStatement preparedStatement =
 					connection.prepareStatement(
 						"insert into Configuration_ (configurationId, " +
 							"dictionary) values (?, ?)")) {
@@ -205,6 +195,7 @@ public class UpgradePartitionedConfigurationTableTest
 						configurationEntryEntry.getValue();
 
 					Assert.assertTrue(
+						logMessage,
 						logMessage.contains(
 							StringBundler.concat(
 								StringUtil.upperCaseFirstLetter(
@@ -260,27 +251,22 @@ public class UpgradePartitionedConfigurationTableTest
 			}
 		}
 		finally {
-			try (PreparedStatement preparedStatement =
-					connection.prepareStatement(
-						"delete from Configuration_ where configurationId = " +
-							"?")) {
+			DBPartitionUtil.forEachCompanyId(
+				currentCompanyId -> {
+					try (Connection connection = DataAccess.getConnection();
+						PreparedStatement preparedStatement =
+							connection.prepareStatement(
+								StringBundler.concat(
+									"delete from Configuration_ where ",
+									"configurationId like '%",
+									UpgradePartitionedConfigurationTableTest.
+										class.getName(),
+									"%'"))) {
 
-				for (ConfigurationEntry configurationEntry :
-						validConfigurationEntries.values()) {
-
-					preparedStatement.setString(1, configurationEntry.getPid());
-
-					preparedStatement.executeUpdate();
-				}
-			}
+						preparedStatement.executeUpdate();
+					}
+				});
 		}
-	}
-
-	private static void _regenerateResourceActions() throws Exception {
-		_resourceActions.clear();
-
-		DBPartitionUtil.forEachCompanyId(
-			companyId -> _resourceActionLocalService.checkResourceActions());
 	}
 
 	private String _convertDictionaryValue(Object value) {
@@ -297,14 +283,6 @@ public class UpgradePartitionedConfigurationTableTest
 
 	private static long _companyId;
 	private static DataSource _dataSource;
-
-	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
-
-	private static Map<String, ResourceAction> _resourceActions;
-
-	@DeleteAfterTestRun
-	private Company _company;
 
 	private class ConfigurationEntry {
 

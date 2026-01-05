@@ -13,7 +13,7 @@ import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
-import javax.portlet.PortletResponse;
+import jakarta.portlet.PortletResponse;
 
 /**
  * @author Albert Lee
@@ -21,7 +21,7 @@ import javax.portlet.PortletResponse;
 public class AccountGroupAccountEntryRowChecker extends EmptyOnClickRowChecker {
 
 	public AccountGroupAccountEntryRowChecker(
-		PortletResponse portletResponse, long accountGroupId) {
+		long accountGroupId, PortletResponse portletResponse) {
 
 		super(portletResponse);
 

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {v4 as uuidv4} from 'uuid';
+
 import {defaultLanguageId} from '../constants';
 import {removeNewLine, replaceTabSpaces} from '../util/utils';
 import {DEFAULT_LANGUAGE} from './constants';
@@ -27,8 +29,6 @@ DeserializeUtil.prototype = {
 		const instance = this;
 
 		const elements = [];
-
-		const transitionsNames = [];
 
 		const nodesNames = [];
 
@@ -114,6 +114,48 @@ DeserializeUtil.prototype = {
 						node.scriptLanguage || DEFAULT_LANGUAGE;
 				}
 
+				if (type === 'llm' || type === 'ai-decision') {
+					data.inputVariables = (() => {
+						try {
+							return JSON.parse(node['input-variables']);
+						}
+						catch (error) {
+							return [];
+						}
+					})();
+
+					data.outputVariables = (() => {
+						try {
+							return JSON.parse(node['output-variables']);
+						}
+						catch (error) {
+							return [];
+						}
+					})();
+
+					data.prompt = node.prompt || '';
+
+					data.rag = (() => {
+						try {
+							return JSON.parse(node.rag);
+						}
+						catch (error) {
+							return [];
+						}
+					})();
+
+					data.tools = (() => {
+						try {
+							return JSON.parse(node.tools);
+						}
+						catch (error) {
+							return [];
+						}
+					})();
+
+					data.userMessage = node['user-message'] || '';
+				}
+
 				data.actions = node.actions?.length && parseActions(node);
 
 				data.notifications =
@@ -145,6 +187,8 @@ DeserializeUtil.prototype = {
 						(transition) => transition?.default === 'true'
 					);
 
+					const transitionsNames = [];
+
 					transitions.forEach((transition) => {
 						let label = {};
 
@@ -175,10 +219,7 @@ DeserializeUtil.prototype = {
 							return;
 						}
 
-						if (
-							transitionsNames.includes(transitionName) ||
-							nodesNames.includes(transitionName)
-						) {
+						if (transitionsNames.includes(transitionName)) {
 							transitionName = `${nodeName}_${transitionName}_${transition.target}`;
 						}
 						else {
@@ -194,8 +235,9 @@ DeserializeUtil.prototype = {
 							data: {
 								defaultEdge,
 								label,
+								name: transitionName,
 							},
-							id: transitionName,
+							id: uuidv4(),
 							source: nodeName,
 							target: transition.target,
 							type: 'transition',

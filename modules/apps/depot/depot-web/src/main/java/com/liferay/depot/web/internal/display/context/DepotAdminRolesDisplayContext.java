@@ -6,9 +6,10 @@
 package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
+import com.liferay.depot.constants.DepotPortletKeys;
 import com.liferay.depot.constants.DepotRolesConstants;
-import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -34,12 +35,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.WindowStateException;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.WindowStateException;
 
 /**
  * @author Cristina González
@@ -62,10 +63,14 @@ public class DepotAdminRolesDisplayContext {
 		_user = PortalUtil.getSelectedUser(liferayPortletRequest);
 	}
 
-	public String getAssetLibraryLabel() {
-		return ResourceBundleUtil.getString(
-			ResourceBundleUtil.getBundle(_themeDisplay.getLocale(), getClass()),
-			"asset-library");
+	public String getAssetLibraryLabelKey() {
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-17564")) {
+
+			return "asset-library-or-space";
+		}
+
+		return "asset-library";
 	}
 
 	public String getDepotRoleSyncEntitiesEventName() {
@@ -73,10 +78,34 @@ public class DepotAdminRolesDisplayContext {
 			"syncDepotRoles";
 	}
 
+	public String getEmptyResultsMessageKey() {
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-17564")) {
+
+			return "this-user-is-not-assigned-any-asset-library-or-space-roles";
+		}
+
+		return "this-user-is-not-assigned-any-asset-library-roles";
+	}
+
+	public String getHeaderNames() {
+		return "title," + getAssetLibraryLabelKey() + ",null";
+	}
+
 	public String getLabel() {
 		return ResourceBundleUtil.getString(
 			ResourceBundleUtil.getBundle(_themeDisplay.getLocale(), getClass()),
-			"asset-library-roles");
+			getLabelKey());
+	}
+
+	public String getLabelKey() {
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-17564")) {
+
+			return "asset-library-and-space-roles";
+		}
+
+		return "asset-library-roles";
 	}
 
 	public String getSelectDepotRolesEventName() {
@@ -132,13 +161,8 @@ public class DepotAdminRolesDisplayContext {
 
 		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
 
-		if (!Objects.equals(
-				portletDisplay.getPortletName(), myAccountPortletId)) {
-
-			return true;
-		}
-
-		return false;
+		return !Objects.equals(
+			portletDisplay.getPortletName(), myAccountPortletId);
 	}
 
 	private boolean _contains(UserGroupRole userGroupRole) {

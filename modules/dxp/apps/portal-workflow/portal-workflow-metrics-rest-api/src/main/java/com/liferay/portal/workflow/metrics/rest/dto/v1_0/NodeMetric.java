@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rafael Praxedes
@@ -52,7 +50,7 @@ public class NodeMetric implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(NodeMetric.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getBreachedInstanceCount() {
 		if (_breachedInstanceCountSupplier != null) {
 			breachedInstanceCount = _breachedInstanceCountSupplier.get();
@@ -93,7 +91,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _breachedInstanceCountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Double getBreachedInstancePercentage() {
 		if (_breachedInstancePercentageSupplier != null) {
 			breachedInstancePercentage =
@@ -138,7 +136,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _breachedInstancePercentageSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getDurationAvg() {
 		if (_durationAvgSupplier != null) {
 			durationAvg = _durationAvgSupplier.get();
@@ -179,7 +177,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _durationAvgSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getInstanceCount() {
 		if (_instanceCountSupplier != null) {
 			instanceCount = _instanceCountSupplier.get();
@@ -220,7 +218,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _instanceCountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Node getNode() {
 		if (_nodeSupplier != null) {
@@ -260,7 +258,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Node> _nodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOnTimeInstanceCount() {
 		if (_onTimeInstanceCountSupplier != null) {
 			onTimeInstanceCount = _onTimeInstanceCountSupplier.get();
@@ -301,7 +299,7 @@ public class NodeMetric implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _onTimeInstanceCountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOverdueInstanceCount() {
 		if (_overdueInstanceCountSupplier != null) {
 			overdueInstanceCount = _overdueInstanceCountSupplier.get();
@@ -458,8 +456,8 @@ public class NodeMetric implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.workflow.metrics.rest.dto.v1_0.NodeMetric",
 		name = "x-class-name"
 	)

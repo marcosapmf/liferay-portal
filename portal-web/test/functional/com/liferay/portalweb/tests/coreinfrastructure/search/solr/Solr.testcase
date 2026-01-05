@@ -5,7 +5,7 @@ definition {
 	property portal.suite.search.engine = "solr";
 	property portal.upstream = "true";
 	property solr.enabled = "true";
-	property testray.main.component.name = "SOLR Impl";
+	property testray.main.component.name = "Search Infrastructure > Solr Connector";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -47,6 +47,8 @@ definition {
 
 	@priority = 4
 	test AssertSearchInsightsExplain {
+		property browser.chrome.version = "139.0";
+
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",

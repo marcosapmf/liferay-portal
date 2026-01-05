@@ -25,13 +25,13 @@ import com.liferay.users.admin.item.selector.UserUserGroupItemSelectorCriterion;
 import com.liferay.users.admin.search.UserSearch;
 import com.liferay.users.admin.search.UserSearchTerms;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.LinkedHashMap;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pei-Jung Lan
@@ -89,6 +89,8 @@ public class UserUserGroupItemSelectorViewDisplayContext {
 	private LinkedHashMap<String, Object> _getParams(
 		ThemeDisplay themeDisplay) {
 
+		LinkedHashMap<String, Object> userParams = new LinkedHashMap<>();
+
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		String portletName = portletDisplay.getPortletName();
@@ -107,10 +109,8 @@ public class UserUserGroupItemSelectorViewDisplayContext {
 				themeDisplay.getScopeGroup(), User.class.getName(),
 				User.class.getName(), ActionKeys.VIEW)) {
 
-			return null;
+			return userParams;
 		}
-
-		LinkedHashMap<String, Object> userParams = new LinkedHashMap<>();
 
 		User user = themeDisplay.getUser();
 
@@ -121,8 +121,6 @@ public class UserUserGroupItemSelectorViewDisplayContext {
 			if (_log.isDebugEnabled()) {
 				_log.debug(portalException);
 			}
-
-			return null;
 		}
 
 		return userParams;

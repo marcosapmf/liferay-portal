@@ -9,13 +9,13 @@ import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.ShippingMetho
 import com.liferay.headless.commerce.delivery.cart.client.dto.v1_0.ShippingOption;
 import com.liferay.headless.commerce.delivery.cart.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -57,6 +57,20 @@ public class ShippingMethodSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(shippingMethod.getDescription()));
+
+			sb.append("\"");
+		}
+
+		if (shippingMethod.getEngineKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"engineKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(shippingMethod.getEngineKey()));
 
 			sb.append("\"");
 		}
@@ -135,6 +149,13 @@ public class ShippingMethodSerDes {
 				"description", String.valueOf(shippingMethod.getDescription()));
 		}
 
+		if (shippingMethod.getEngineKey() == null) {
+			map.put("engineKey", null);
+		}
+		else {
+			map.put("engineKey", String.valueOf(shippingMethod.getEngineKey()));
+		}
+
 		if (shippingMethod.getId() == null) {
 			map.put("id", null);
 		}
@@ -179,6 +200,9 @@ public class ShippingMethodSerDes {
 			if (Objects.equals(jsonParserFieldName, "description")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "engineKey")) {
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -200,6 +224,11 @@ public class ShippingMethodSerDes {
 			if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					shippingMethod.setDescription((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "engineKey")) {
+				if (jsonParserFieldValue != null) {
+					shippingMethod.setEngineKey((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -274,6 +303,10 @@ public class ShippingMethodSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

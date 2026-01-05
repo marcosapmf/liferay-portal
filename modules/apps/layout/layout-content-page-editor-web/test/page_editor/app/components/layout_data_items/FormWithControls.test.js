@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import {fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
@@ -26,6 +26,13 @@ jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/common/openInfoFieldSelector',
 	() => ({
 		openInfoFieldSelector: jest.fn(() => {}),
+	})
+);
+
+jest.mock(
+	'../../../../../src/main/resources/META-INF/resources/page_editor/app/services/FormService',
+	() => ({
+		getFormFields: jest.fn(() => Promise.resolve({})),
 	})
 );
 
@@ -124,7 +131,9 @@ describe('FormWithControls', () => {
 			</StoreMother.Component>
 		);
 
-		expect(screen.getByText('place-fragments-here')).toBeInTheDocument();
+		expect(
+			screen.getByText('drag-and-drop-fragments-or-widgets-here')
+		).toBeInTheDocument();
 	});
 
 	it('renders children inside container', () => {
@@ -258,9 +267,7 @@ describe('FormWithControls', () => {
 		).toBeInTheDocument();
 	});
 
-	it('opens field selection modal with correct type when mapping the form', () => {
-		Liferay.FeatureFlags['LPD-20213'] = true;
-
+	it('opens field selection modal with correct type when mapping the form', async () => {
 		render(
 			<StoreMother.Component>
 				<FormWithControls
@@ -279,7 +286,7 @@ describe('FormWithControls', () => {
 
 		const select = screen.getByLabelText('content-type');
 
-		userEvent.selectOptions(select, '33333');
+		await userEvent.selectOptions(select, '33333');
 		fireEvent.change(select);
 
 		expect(openInfoFieldSelector).toBeCalledWith(
@@ -287,7 +294,5 @@ describe('FormWithControls', () => {
 				itemType: '33333-className',
 			})
 		);
-
-		Liferay.FeatureFlags['LPD-20213'] = false;
 	});
 });

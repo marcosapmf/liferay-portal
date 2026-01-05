@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -84,6 +84,7 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.PrefsPropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropertiesParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropsKeys" %><%@
+page import="com.liferay.portal.kernel.util.PropsValues" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
 page import="com.liferay.portal.kernel.util.TreeMapBuilder" %><%@
@@ -93,7 +94,6 @@ page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.liveusers.LiveUsers" %><%@
-page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.ratings.kernel.RatingsType" %><%@
 page import="com.liferay.ratings.kernel.display.context.CompanyPortletRatingsDefinitionDisplayContext" %><%@
 page import="com.liferay.ratings.kernel.display.context.GroupPortletRatingsDefinitionDisplayContext" %><%@
@@ -110,21 +110,21 @@ page import="com.liferay.site.admin.web.internal.display.context.SiteAdminDispla
 page import="com.liferay.site.admin.web.internal.display.context.SiteAdminManagementToolbarDisplayContext" %><%@
 page import="com.liferay.site.admin.web.internal.frontend.taglib.clay.servlet.taglib.SelectSiteInitializerVerticalCard" %><%@
 page import="com.liferay.site.admin.web.internal.frontend.taglib.clay.servlet.taglib.SiteVerticalCard" %><%@
-page import="com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion" %><%@
+page import="com.liferay.site.item.selector.SiteItemSelectorCriterion" %><%@
 page import="com.liferay.site.settings.configuration.admin.display.SiteSettingsConfigurationScreenContributor" %><%@
 page import="com.liferay.sites.kernel.util.Sites" %>
+
+<%@ page import="jakarta.portlet.PortletPreferences" %><%@
+page import="jakarta.portlet.PortletRequest" %><%@
+page import="jakarta.portlet.PortletURL" %>
 
 <%@ page import="java.util.ArrayList" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Locale" %><%@
 page import="java.util.Map" %><%@
+page import="java.util.NavigableMap" %><%@
 page import="java.util.Objects" %><%@
-page import="java.util.Set" %><%@
-page import="java.util.TreeMap" %>
-
-<%@ page import="javax.portlet.PortletPreferences" %><%@
-page import="javax.portlet.PortletRequest" %><%@
-page import="javax.portlet.PortletURL" %>
+page import="java.util.Set" %>
 
 <%@ page import="org.osgi.service.cm.ConfigurationException" %>
 

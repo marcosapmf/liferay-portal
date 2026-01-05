@@ -3,38 +3,66 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import useSWR from 'swr';
+import {useSearchParams} from 'react-router-dom';
 
 import Page from '../../../../components/Page';
-import i18n from '../../../../i18n';
-import HeadlessCommerceAdminCatalogImpl from '../../../../services/rest/HeadlessCommerceAdminCatalog';
-import AppAdministratorTable from './AppAdministratorTable';
+import InfoCard from '../../components/InfoCard';
+import useAppsMetrics from '../../hooks/useAppsMetrics';
+import {percentage} from '../../util';
+import AdministratorAppsListView from './AdministratorAppsListView';
 
-const AppAdministrator = () => {
+export default function Apps() {
+	const [searchParams] = useSearchParams();
 	const {
-		data: apps,
-		error,
-		isLoading,
-	} = useSWR<APIResponse<PublisherRequestInfo>>(
-		'administrator-dashboard/apps',
-		() =>
-			HeadlessCommerceAdminCatalogImpl.getProducts(
-				new URLSearchParams({
-					nestedFields: 'productSpecifications',
-					sort: 'createDate:desc',
-				})
-			)
-	);
+		approved = 0,
+		approvedBeforeLastWeek = 0,
+		approvedLastWeek = 0,
+		inReview = 0,
+		inReviewBeforeLastWeek = 0,
+		inReviewLastWeek = 0,
+		products = 0,
+	} = useAppsMetrics('week');
 
 	return (
-		<Page
-			description={i18n.translate('list-with-latest-published-apps')}
-			pageRendererProps={{error, isLoading}}
-			title={i18n.translate('recent-published-apps')}
-		>
-			<AppAdministratorTable items={apps?.items || []} />
-		</Page>
-	);
-};
+		<>
+			<div className="d-flex flex-wrap info-container mb-3">
+				<InfoCard
+					className="mr-3"
+					growth={percentage(
+						products,
+						inReviewLastWeek - inReviewBeforeLastWeek
+					)}
+					growthContext={`+${inReviewLastWeek - inReviewBeforeLastWeek} this week`}
+					symbol="squares-clock"
+					title="App Awaiting Review"
+					value={inReview}
+				/>
 
-export default AppAdministrator;
+				<InfoCard
+					growth={percentage(
+						products,
+						approvedLastWeek - approvedBeforeLastWeek
+					)}
+					growthContext={`+${approvedLastWeek - approvedBeforeLastWeek} this week`}
+					symbol="squares"
+					title="Recently Published"
+					value={approved}
+				/>
+			</div>
+
+			<Page
+				pageRendererProps={{className: 'border py-2 rounded-lg'}}
+				title="Apps"
+			>
+				<AdministratorAppsListView
+					filter={searchParams.get('filter') as string}
+					isSortable
+					managementToolbarProps={{
+						searchVisible: true,
+						visible: true,
+					}}
+				/>
+			</Page>
+		</>
+	);
+}

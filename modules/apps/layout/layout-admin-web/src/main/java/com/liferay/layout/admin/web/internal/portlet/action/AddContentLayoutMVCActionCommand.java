@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -37,12 +36,12 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+		"jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 		"mvc.command.name=/layout_admin/add_content_layout"
 	},
 	service = MVCActionCommand.class
@@ -122,17 +121,11 @@ public class AddContentLayoutMVCActionCommand
 						layoutPageTemplateEntryId, ActionKeys.VIEW);
 				}
 
-				long masterLayoutPlid = 0;
+				String masterLayoutPageTemplateEntryERC = null;
 
 				if (layoutPageTemplateEntry != null) {
-					Layout layoutPageTemplateEntryLayout =
-						_layoutLocalService.fetchLayout(
-							layoutPageTemplateEntry.getPlid());
-
-					if (layoutPageTemplateEntryLayout != null) {
-						masterLayoutPlid =
-							layoutPageTemplateEntryLayout.getMasterLayoutPlid();
-					}
+					masterLayoutPageTemplateEntryERC =
+						layoutPageTemplateEntry.getExternalReferenceCode();
 				}
 
 				layout = _layoutService.addLayout(
@@ -142,7 +135,8 @@ public class AddContentLayoutMVCActionCommand
 					new HashMap<>(), new HashMap<>(), new HashMap<>(),
 					LayoutConstants.TYPE_CONTENT,
 					typeSettingsUnicodeProperties.toString(), false, false,
-					new HashMap<>(), masterLayoutPlid, serviceContext);
+					new HashMap<>(), masterLayoutPageTemplateEntryERC,
+					serviceContext);
 			}
 
 			String redirectURL = getRedirectURL(
@@ -184,9 +178,6 @@ public class AddContentLayoutMVCActionCommand
 				actionRequest, actionResponse, exception);
 		}
 	}
-
-	@Reference
-	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService

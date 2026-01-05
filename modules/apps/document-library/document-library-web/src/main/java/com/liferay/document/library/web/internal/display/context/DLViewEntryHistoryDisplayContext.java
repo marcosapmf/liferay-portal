@@ -6,7 +6,7 @@
 package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.util.comparator.FileVersionVersionComparator;
+import com.liferay.document.library.web.internal.util.DLFileEntryUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -17,20 +17,19 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Mikel Lorza
@@ -55,7 +54,8 @@ public class DLViewEntryHistoryDisplayContext {
 			return _backURL;
 		}
 
-		_backURL = ParamUtil.getString(_renderRequest, "backURL");
+		_backURL = ParamUtil.getString(
+			_httpServletRequest, "backURL", _getRedirect());
 
 		return _backURL;
 	}
@@ -117,11 +117,9 @@ public class DLViewEntryHistoryDisplayContext {
 		int status = _getFileEntryStatus();
 
 		searchContainer.setResultsAndTotal(
-			() -> ListUtil.sort(
-				_fileEntry.getFileVersions(
-					status, searchContainer.getStart(),
-					searchContainer.getEnd()),
-				new FileVersionVersionComparator(false)),
+			() -> DLFileEntryUtil.getFileEntryVersionsSorted(
+				_fileEntry, status, searchContainer.getStart(),
+				searchContainer.getEnd()),
 			_fileEntry.getFileVersionsCount(status));
 
 		return searchContainer;

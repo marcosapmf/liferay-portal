@@ -5,6 +5,7 @@
 
 package com.liferay.document.library.item.selector.web.internal.folder;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.document.library.constants.DLPortletKeys;
@@ -34,6 +35,15 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.language.LanguageResources;
 
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Arrays;
@@ -41,15 +51,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletURL;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -201,8 +202,8 @@ public class DLFolderItemSelectorView
 		try {
 			return ListUtil.toList(
 				_depotEntryService.getCurrentAndGroupConnectedDepotEntries(
-					themeDisplay.getRefererGroupId(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS),
+					themeDisplay.getRefererGroupId(), DepotConstants.TYPE_ANY,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
 				DepotEntry::getGroupId);
 		}
 		catch (Exception exception) {

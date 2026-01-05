@@ -8,13 +8,13 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.WebUrl;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -43,6 +43,20 @@ public class WebUrlSerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		if (webUrl.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(webUrl.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
 
 		if (webUrl.getId() != null) {
 			if (sb.length() > 1) {
@@ -110,6 +124,15 @@ public class WebUrlSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (webUrl.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(webUrl.getExternalReferenceCode()));
+		}
+
 		if (webUrl.getId() == null) {
 			map.put("id", null);
 		}
@@ -155,7 +178,10 @@ public class WebUrlSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "primary")) {
@@ -176,7 +202,13 @@ public class WebUrlSerDes {
 			WebUrl webUrl, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					webUrl.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					webUrl.setId(Long.valueOf((String)jsonParserFieldValue));
 				}
@@ -241,6 +273,10 @@ public class WebUrlSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

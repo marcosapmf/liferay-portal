@@ -237,6 +237,14 @@ public class OrganizationServiceUtil {
 			gtOrganizationId, companyId, parentOrganizationId, size);
 	}
 
+	public static Organization getOrAddEmptyOrganization(
+			String externalReferenceCode, String name)
+		throws PortalException {
+
+		return getService().getOrAddEmptyOrganization(
+			externalReferenceCode, name);
+	}
+
 	/**
 	 * Returns the organization with the primary key.
 	 *
@@ -250,11 +258,11 @@ public class OrganizationServiceUtil {
 	}
 
 	public static Organization getOrganizationByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		return getService().getOrganizationByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	/**

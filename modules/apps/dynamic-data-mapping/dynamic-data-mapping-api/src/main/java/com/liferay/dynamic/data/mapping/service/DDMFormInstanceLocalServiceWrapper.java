@@ -481,6 +481,14 @@ public class DDMFormInstanceLocalServiceWrapper
 	}
 
 	@Override
+	public DDMFormInstance getFormInstanceByStructureId(long structureId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmFormInstanceLocalService.getFormInstanceByStructureId(
+			structureId);
+	}
+
+	@Override
 	public java.util.List<DDMFormInstance> getFormInstances(long groupId) {
 		return _ddmFormInstanceLocalService.getFormInstances(groupId);
 	}
@@ -499,8 +507,7 @@ public class DDMFormInstanceLocalServiceWrapper
 
 	@Override
 	public com.liferay.dynamic.data.mapping.storage.DDMFormValues
-			getFormInstanceSettingsFormValues(DDMFormInstance formInstance)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		getFormInstanceSettingsFormValues(DDMFormInstance formInstance) {
 
 		return _ddmFormInstanceLocalService.getFormInstanceSettingsFormValues(
 			formInstance);

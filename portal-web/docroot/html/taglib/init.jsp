@@ -7,7 +7,9 @@
 
 <%@ include file="/html/common/init.jsp" %>
 
-<%@ page import="com.liferay.portal.kernel.servlet.MultiSessionErrors" %><%@
+<%@ page import="com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyHTMLRewriterUtil" %><%@
+page import="com.liferay.portal.kernel.frontend.esm.FrontendESMUtil" %><%@
+page import="com.liferay.portal.kernel.servlet.MultiSessionErrors" %><%@
 page import="com.liferay.portal.kernel.util.DateFormatFactoryUtil" %><%@
 page import="com.liferay.taglib.aui.AUIUtil" %><%@
 page import="com.liferay.taglib.util.InlineUtil" %><%@
@@ -16,9 +18,9 @@ page import="com.liferay.taglib.util.TagResourceBundleUtil" %>
 <portlet:defineObjects />
 
 <%
-PortletRequest portletRequest = (PortletRequest)request.getAttribute(JavaConstants.JAVAX_PORTLET_REQUEST);
+PortletRequest portletRequest = (PortletRequest)request.getAttribute(JavaConstants.JAKARTA_PORTLET_REQUEST);
 
-PortletResponse portletResponse = (PortletResponse)request.getAttribute(JavaConstants.JAVAX_PORTLET_RESPONSE);
+PortletResponse portletResponse = (PortletResponse)request.getAttribute(JavaConstants.JAKARTA_PORTLET_RESPONSE);
 
 String namespace = AUIUtil.getNamespace(portletRequest, portletResponse);
 

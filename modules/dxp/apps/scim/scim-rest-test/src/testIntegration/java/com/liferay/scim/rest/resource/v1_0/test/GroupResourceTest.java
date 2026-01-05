@@ -7,13 +7,20 @@ package com.liferay.scim.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -21,16 +28,18 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.scim.rest.client.dto.v1_0.Group;
 import com.liferay.scim.rest.client.dto.v1_0.Meta;
 import com.liferay.scim.rest.client.dto.v1_0.MultiValuedAttribute;
 import com.liferay.scim.rest.client.dto.v1_0.Name;
+import com.liferay.scim.rest.client.dto.v1_0.Operation;
+import com.liferay.scim.rest.client.dto.v1_0.PatchOp;
 import com.liferay.scim.rest.client.dto.v1_0.User;
 import com.liferay.scim.rest.client.http.HttpInvoker;
 import com.liferay.scim.rest.client.resource.v1_0.UserResource;
@@ -38,8 +47,9 @@ import com.liferay.scim.rest.resource.v1_0.test.util.ScimTestUtil;
 
 import java.util.Arrays;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -51,7 +61,6 @@ import org.junit.runner.RunWith;
  * @author Olivér Kecskeméty
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
-@FeatureFlags("LPS-96845")
 @RunWith(Arquillian.class)
 public class GroupResourceTest extends BaseGroupResourceTestCase {
 
@@ -63,6 +72,12 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		BaseUserResourceTestCase.setUpClass();
+	}
+
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
 
 		_pid = ConfigurationTestUtil.createFactoryConfiguration(
 			"com.liferay.scim.rest.internal.configuration." +
@@ -73,19 +88,29 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 				"matcherField", "email"
 			).put(
 				"oAuth2ApplicationName", "scim-client-test"
+			).put(
+				"userId", TestPropsValues.getUserId()
 			).build());
 
 		UserResource.Builder builder = UserResource.builder();
 
+		Company company = _companyLocalService.getCompany(
+			TestPropsValues.getCompanyId());
+		com.liferay.portal.kernel.model.User user = _userLocalService.getUser(
+			TestPropsValues.getUserId());
+
 		_userResource = builder.authentication(
-			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+			user.getEmailAddress(), PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			company.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
 
-	@AfterClass
-	public static void tearDownClass() throws Exception {
+	@After
+	@Override
+	public void tearDown() throws Exception {
 		ConfigurationTestUtil.deleteConfiguration(_pid);
 	}
 
@@ -98,7 +123,7 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 			204, groupResource.deleteV2GroupHttpResponse(group.getId()));
 
 		assertHttpResponseStatusCode(
-			404, groupResource.getV2GroupByIdHttpResponse(group.getId()));
+			404, groupResource.getV2GroupByIdHttpResponse(group.getId(), null));
 
 		Assert.assertNull(
 			_userGroupLocalService.fetchUserGroupByExternalReferenceCode(
@@ -107,8 +132,9 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 		// Delete an existing group with no SCIM client ID
 
 		UserGroup userGroup = _userGroupLocalService.addUserGroup(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
-			RandomTestUtil.randomString(), null, new ServiceContext());
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			TestPropsValues.getCompanyId(), RandomTestUtil.randomString(), null,
+			new ServiceContext());
 
 		assertHttpResponseStatusCode(
 			404,
@@ -125,41 +151,293 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 			409,
 			groupResource.deleteV2GroupHttpResponse(
 				String.valueOf(userGroup.getUserGroupId())));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, groupResource.deleteV2GroupHttpResponse("12345"));
 	}
 
 	@Override
 	@Test
 	public void testGetV2GroupById() throws Exception {
 		assertHttpResponseStatusCode(
-			404, groupResource.getV2GroupByIdHttpResponse("12345"));
+			404, groupResource.getV2GroupByIdHttpResponse("12345", null));
 
-		Group group = testDeleteV2Group_addGroup();
+		Group group1 = testDeleteV2Group_addGroup();
 
 		HttpInvoker.HttpResponse httpResponse =
-			groupResource.getV2GroupByIdHttpResponse(group.getId());
+			groupResource.getV2GroupByIdHttpResponse(group1.getId(), null);
 
 		assertHttpResponseStatusCode(200, httpResponse);
 		assertValid(Group.toDTO(httpResponse.getContent()));
+
+		Group group2 = _addGroupWithMember();
+
+		httpResponse = groupResource.getV2GroupByIdHttpResponse(
+			group2.getId(), null);
+
+		assertHttpResponseStatusCode(200, httpResponse);
+
+		Group getGroup = Group.toDTO(httpResponse.getContent());
+
+		assertValid(getGroup);
+		Assert.assertEquals(1, ArrayUtil.getLength(getGroup.getMembers()));
+
+		httpResponse = groupResource.getV2GroupByIdHttpResponse(
+			group2.getId(), "members");
+
+		assertHttpResponseStatusCode(200, httpResponse);
+
+		getGroup = Group.toDTO(httpResponse.getContent());
+
+		assertValid(getGroup);
+		Assert.assertNull(getGroup.getMembers());
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404,
+			groupResource.getV2GroupByIdHttpResponse(group1.getId(), null));
 	}
 
 	@Override
 	@Test
 	public void testGetV2Groups() throws Exception {
 		_userGroupLocalService.addUserGroup(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
-			RandomTestUtil.randomString(), null, new ServiceContext());
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			TestPropsValues.getCompanyId(), RandomTestUtil.randomString(), null,
+			new ServiceContext());
 
-		_assertListResponse(groupResource.getV2Groups(5, 0), 0, 0);
+		_assertListResponse(groupResource.getV2Groups(5, null, 0, null), 0, 0);
 
 		Group group1 = testDeleteV2Group_addGroup();
 		Group group2 = testDeleteV2Group_addGroup();
 
 		_assertListResponse(
-			groupResource.getV2Groups(5, 0), 2, 2, group1, group2);
+			groupResource.getV2Groups(5, null, 0, null), 2, 2, group1, group2);
+
+		_assertListResponse(groupResource.getV2Groups(-1, null, 1, null), 2, 0);
+		_assertListResponse(
+			groupResource.getV2Groups(1, null, 2, null), 2, 1, group2);
+		_assertListResponse(
+			groupResource.getV2Groups(1, null, null, null), 2, 1, group1);
 
 		Group group3 = testDeleteV2Group_addGroup();
 
-		_assertListResponse(groupResource.getV2Groups(5, 3), 3, 1, group3);
+		_assertListResponse(
+			groupResource.getV2Groups(5, null, 3, null), 3, 1, group3);
+
+		_assertListResponse(
+			groupResource.getV2Groups(10000, null, null, null), 3, 3, group1,
+			group2, group3);
+
+		_assertListResponse(
+			groupResource.getV2Groups(null, null, 10000, null), 3, 0);
+		_assertListResponse(
+			groupResource.getV2Groups(null, null, 2, null), 3, 2, group2,
+			group3);
+
+		_assertListResponse(
+			groupResource.getV2Groups(
+				5, null, 0,
+				"displayName eq \"" + RandomTestUtil.randomString() + "\""),
+			0, 0);
+		_assertListResponse(
+			groupResource.getV2Groups(
+				5, null, 0, "displayName eq \"" + _PREFIX + "\""),
+			0, 0);
+		_assertListResponse(
+			groupResource.getV2Groups(
+				5, null, 0,
+				"displayName eq \"" + group1.getDisplayName() + "\""),
+			1, 1, group1);
+
+		assertHttpResponseStatusCode(
+			400,
+			groupResource.getV2GroupsHttpResponse(
+				5, null, 0,
+				RandomTestUtil.randomString() + " eq +\"" +
+					RandomTestUtil.randomString() + "\""));
+
+		Group group4 = _addGroupWithMember();
+
+		Group getGroup = _getGroupByListResponse(
+			groupResource.getV2Groups(
+				5, null, 0,
+				"displayName eq \"" + group4.getDisplayName() + "\""));
+
+		assertValid(getGroup);
+		Assert.assertEquals(1, ArrayUtil.getLength(getGroup.getMembers()));
+
+		getGroup = _getGroupByListResponse(
+			groupResource.getV2Groups(
+				5, "members", 0,
+				"displayName eq \"" + group4.getDisplayName() + "\""
+			).toString());
+
+		assertValid(getGroup);
+		Assert.assertNull(getGroup.getMembers());
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, groupResource.getV2GroupsHttpResponse(5, null, 0, null));
+	}
+
+	@Override
+	@Test
+	public void testPatchV2Group() throws Exception {
+		Group postGroup = randomGroup();
+
+		User user1 = _addUser();
+
+		postGroup.setMembers(
+			new MultiValuedAttribute[] {
+				new MultiValuedAttribute() {
+					{
+						Meta meta = user1.getMeta();
+
+						$ref = meta.getLocation();
+
+						value = user1.getId();
+					}
+				}
+			});
+
+		groupResource.postV2Group(postGroup);
+
+		UserGroup userGroup =
+			_userGroupLocalService.getUserGroupByExternalReferenceCode(
+				postGroup.getExternalId(), TestPropsValues.getCompanyId());
+
+		PatchOp patchOp = new PatchOp();
+
+		String displayName1 = StringUtil.toLowerCase(
+			RandomTestUtil.randomString());
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("replace");
+						setPath("displayName");
+						setValue(displayName1);
+					}
+				}
+			});
+
+		patchOp.setSchemas(
+			new String[] {"\"urn:ietf:params:scim:api:messages:2.0:PatchOp\""});
+
+		Group patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertEquals(displayName1, patchGroup.getDisplayName());
+
+		String displayName2 = StringUtil.toLowerCase(
+			RandomTestUtil.randomString());
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("replace");
+						setValue(
+							JSONFactoryUtil.createJSONObject(
+								LinkedHashMapBuilder.put(
+									"id",
+									String.valueOf(userGroup.getUserGroupId())
+								).put(
+									"displayName", displayName2
+								).build()));
+					}
+				}
+			});
+
+		patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertEquals(displayName2, patchGroup.getDisplayName());
+
+		User user2 = _addUser();
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("Add");
+						setPath("members");
+						setValue(
+							JSONFactoryUtil.createJSONArray(
+							).put(
+								JSONUtil.put("value", user2.getId())
+							));
+					}
+				}
+			});
+
+		patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertEquals(2, ArrayUtil.getLength(patchGroup.getMembers()));
+
+		User user3 = _addUser();
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("Remove");
+						setPath("members");
+						setValue(
+							JSONFactoryUtil.createJSONArray(
+							).put(
+								JSONUtil.put("value", user1.getId())
+							));
+					}
+				},
+				new Operation() {
+					{
+						setOp("Add");
+						setPath("members");
+						setValue(
+							JSONFactoryUtil.createJSONArray(
+							).put(
+								JSONUtil.put("value", user3.getId())
+							));
+					}
+				}
+			});
+
+		patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertEquals(2, ArrayUtil.getLength(patchGroup.getMembers()));
+
+		patchOp.setOperations(
+			new Operation[] {
+				new Operation() {
+					{
+						setOp("Remove");
+						setPath("members");
+						setValue(JSONUtil.put("value", user2.getId()));
+					}
+				},
+				new Operation() {
+					{
+						setOp("Remove");
+						setPath("members[value eq \"" + user3.getId() + "\"]");
+					}
+				}
+			});
+
+		patchGroup = _patchGroup(patchOp, userGroup.getUserGroupId());
+
+		Assert.assertNull(patchGroup.getMembers());
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404,
+			groupResource.patchV2GroupHttpResponse(
+				randomGroup().getId(), patchOp));
 	}
 
 	@Override
@@ -188,16 +466,16 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 			_userGroupLocalService.getUserGroupByExternalReferenceCode(
 				postGroup1.getExternalId(), TestPropsValues.getCompanyId());
 
-		assertEquals(
-			postGroup1, _getGroup(String.valueOf(userGroup1.getUserGroupId())));
+		assertEquals(postGroup1, _getGroup(userGroup1.getUserGroupId()));
 
 		// Provision an existing group with no SCIM client ID set
 
 		Group postGroup2 = randomGroup();
 
 		UserGroup userGroup2 = _userGroupLocalService.addUserGroup(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
-			postGroup2.getDisplayName(), null, new ServiceContext());
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			TestPropsValues.getCompanyId(), postGroup2.getDisplayName(), null,
+			new ServiceContext());
 
 		postGroup2.setExternalId(userGroup2.getExternalReferenceCode());
 
@@ -225,6 +503,11 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 
 		Assert.assertEquals(
 			postGroup2.getExternalId(), userGroup2.getExternalReferenceCode());
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, groupResource.postV2GroupHttpResponse(randomGroup()));
 	}
 
 	@Ignore
@@ -274,6 +557,11 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 			group.getId(), group);
 
 		assertEquals(group, Group.toDTO(httpResponse.getContent()));
+
+		ConfigurationTestUtil.deleteConfiguration(_pid);
+
+		assertHttpResponseStatusCode(
+			404, groupResource.putV2GroupHttpResponse("12345", randomGroup()));
 	}
 
 	@Override
@@ -307,8 +595,48 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 	}
 
 	@Override
+	protected Group randomGroup() throws Exception {
+		Group group = super.randomGroup();
+
+		group.setDisplayName(_PREFIX + group.getDisplayName());
+
+		return group;
+	}
+
+	@Override
 	protected Group testDeleteV2Group_addGroup() throws Exception {
 		Group group = randomGroup();
+
+		HttpInvoker.HttpResponse httpResponse =
+			groupResource.postV2GroupHttpResponse(group);
+
+		Assert.assertEquals(2, httpResponse.getStatusCode() / 100);
+
+		JSONObject groupJSONObject = _jsonFactory.createJSONObject(
+			httpResponse.getContent());
+
+		group.setId(groupJSONObject.getString("id"));
+
+		return group;
+	}
+
+	private Group _addGroupWithMember() throws Exception {
+		Group group = randomGroup();
+
+		User user = _addUser();
+
+		group.setMembers(
+			new MultiValuedAttribute[] {
+				new MultiValuedAttribute() {
+					{
+						Meta meta = user.getMeta();
+
+						$ref = meta.getLocation();
+
+						value = user.getId();
+					}
+				}
+			});
 
 		HttpInvoker.HttpResponse httpResponse =
 			groupResource.postV2GroupHttpResponse(group);
@@ -326,6 +654,13 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 	private User _addUser() throws Exception {
 		String emailPrefix = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
+
+		StringBundler profileUrlSB = new StringBundler(3);
+
+		profileUrlSB.append("http://");
+		profileUrlSB.append(
+			StringUtil.toLowerCase(RandomTestUtil.randomString()));
+		profileUrlSB.append(".com");
 
 		HttpInvoker.HttpResponse httpResponse =
 			_userResource.postV2UserHttpResponse(
@@ -358,8 +693,7 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 							RandomTestUtil.randomString());
 						preferredLanguage = StringUtil.toLowerCase(
 							RandomTestUtil.randomString());
-						profileUrl = StringUtil.toLowerCase(
-							RandomTestUtil.randomString());
+						profileUrl = profileUrlSB.toString();
 						schemas = new String[] {
 							"urn:ietf:params:scim:schemas:core:2.0:User"
 						};
@@ -419,19 +753,55 @@ public class GroupResourceTest extends BaseGroupResourceTestCase {
 		}
 	}
 
-	private Group _getGroup(String userId) throws Exception {
-		Object groupObject = groupResource.getV2GroupById(userId);
+	private Group _getGroup(long userGroupId) throws Exception {
+		Object groupObject = groupResource.getV2GroupById(
+			String.valueOf(userGroupId), null);
 
 		return Group.toDTO(groupObject.toString());
 	}
 
-	private static String _pid;
-	private static UserResource _userResource;
+	private Group _getGroupByListResponse(Object response) throws Exception {
+		JSONObject responseJSONObject = _jsonFactory.createJSONObject(
+			response.toString());
+
+		JSONArray resourcesJSONArray = responseJSONObject.getJSONArray(
+			"Resources");
+
+		return Group.toDTO(
+			resourcesJSONArray.getJSONObject(
+				0
+			).toString());
+	}
+
+	private Group _patchGroup(PatchOp patchOp, long userGroupId)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			groupResource.patchV2GroupHttpResponse(
+				String.valueOf(userGroupId), patchOp);
+
+		assertHttpResponseStatusCode(204, httpResponse);
+
+		return _getGroup(userGroupId);
+	}
+
+	private static final String _PREFIX = StringUtil.toLowerCase(
+		RandomTestUtil.randomString());
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private JSONFactory _jsonFactory;
 
+	private String _pid;
+
 	@Inject
 	private UserGroupLocalService _userGroupLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	private UserResource _userResource;
 
 }

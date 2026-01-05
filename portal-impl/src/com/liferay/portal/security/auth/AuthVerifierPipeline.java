@@ -19,11 +19,14 @@ import com.liferay.portal.kernel.security.auth.verifier.AuthVerifier;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierConfiguration;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.security.auth.registry.AuthVerifierRegistry;
 import com.liferay.portal.spring.context.PortalContextLoaderListener;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,8 +37,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -102,6 +103,24 @@ public class AuthVerifierPipeline {
 		}
 
 		return _createGuestVerificationResult(accessControlContext);
+	}
+
+	private static List<AuthVerifierConfiguration> _filterSupremeAuthVerifier(
+		List<AuthVerifierConfiguration> authVerifierConfigurations) {
+
+		for (AuthVerifierConfiguration authVerifierConfiguration :
+				authVerifierConfigurations) {
+
+			Properties properties = authVerifierConfiguration.getProperties();
+
+			for (String key : _SUPREME_AUTH_VERIFIER_KEYS) {
+				if (GetterUtil.getBoolean(properties.get(key))) {
+					return Collections.singletonList(authVerifierConfiguration);
+				}
+			}
+		}
+
+		return authVerifierConfigurations;
 	}
 
 	private synchronized void _addAuthVerifierConfiguration(
@@ -202,6 +221,10 @@ public class AuthVerifierPipeline {
 		_buildURLPatternMapper();
 	}
 
+	private static final String[] _SUPREME_AUTH_VERIFIER_KEYS = {
+		"basic_auth", "digest_auth"
+	};
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AuthVerifierPipeline.class);
 
@@ -231,7 +254,7 @@ public class AuthVerifierPipeline {
 			}
 
 			for (AuthVerifierConfiguration authVerifierConfiguration :
-					authVerifierConfigurations) {
+					_filterSupremeAuthVerifier(authVerifierConfigurations)) {
 
 				if (_excludedAuthVerifierConfigurations.contains(
 						authVerifierConfiguration)) {

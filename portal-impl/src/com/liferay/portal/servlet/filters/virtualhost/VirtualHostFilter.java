@@ -14,11 +14,13 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.struts.LastPath;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -26,18 +28,17 @@ import com.liferay.portal.model.impl.LayoutImpl;
 import com.liferay.portal.servlet.I18nServlet;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.webserver.WebServerServlet;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * <p>
@@ -186,6 +187,10 @@ public class VirtualHostFilter extends BasePortalFilter {
 
 		if (i18nLanguageId != null) {
 			friendlyURL = friendlyURL.substring(i18nLanguageId.length());
+
+			if (friendlyURL.length() == 0) {
+				friendlyURL = StringPool.SLASH;
+			}
 		}
 
 		int widgetServletMappingPos = 0;
@@ -265,7 +270,7 @@ public class VirtualHostFilter extends BasePortalFilter {
 			return;
 		}
 
-		long companyId = PortalInstances.getCompanyId(httpServletRequest);
+		long companyId = CompanyThreadLocal.getCompanyId();
 
 		try {
 			Map<String, String[]> parameterMap =

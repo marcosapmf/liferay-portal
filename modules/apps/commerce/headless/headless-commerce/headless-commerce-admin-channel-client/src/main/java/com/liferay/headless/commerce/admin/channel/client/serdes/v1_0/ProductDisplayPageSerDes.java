@@ -8,13 +8,13 @@ package com.liferay.headless.commerce.admin.channel.client.serdes.v1_0;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.ProductDisplayPage;
 import com.liferay.headless.commerce.admin.channel.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Andrea Sbarra
@@ -94,6 +94,21 @@ public class ProductDisplayPageSerDes {
 			sb.append("\"");
 		}
 
+		if (productDisplayPage.getProductExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"productExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(productDisplayPage.getProductExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (productDisplayPage.getProductId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -156,6 +171,16 @@ public class ProductDisplayPageSerDes {
 				"pageUuid", String.valueOf(productDisplayPage.getPageUuid()));
 		}
 
+		if (productDisplayPage.getProductExternalReferenceCode() == null) {
+			map.put("productExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"productExternalReferenceCode",
+				String.valueOf(
+					productDisplayPage.getProductExternalReferenceCode()));
+		}
+
 		if (productDisplayPage.getProductId() == null) {
 			map.put("productId", null);
 		}
@@ -194,6 +219,11 @@ public class ProductDisplayPageSerDes {
 			else if (Objects.equals(jsonParserFieldName, "pageUuid")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "productExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "productId")) {
 				return false;
 			}
@@ -227,6 +257,14 @@ public class ProductDisplayPageSerDes {
 			else if (Objects.equals(jsonParserFieldName, "pageUuid")) {
 				if (jsonParserFieldValue != null) {
 					productDisplayPage.setPageUuid(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "productExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					productDisplayPage.setProductExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -281,6 +319,10 @@ public class ProductDisplayPageSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

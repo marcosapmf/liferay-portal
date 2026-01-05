@@ -29,17 +29,17 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.ActionParameters;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Dictionary;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.ActionParameters;
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Andrea Sbarra
@@ -109,21 +109,29 @@ public class ClientExtensionCommerceCheckoutStep
 			(CommerceOrder)httpServletRequest.getAttribute(
 				CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
+		JSONObject jsonObject = JSONUtil.put(
+			"commerceOrderId", commerceOrder.getCommerceOrderId());
+
 		User currentUser = _userService.getCurrentUser();
 
 		try {
 			String status = new String(
 				_portalCatapult.launch(
 					commerceOrder.getCompanyId(), Http.Method.GET,
-					_oAuth2ApplicationExternalReferenceCode,
-					_jsonFactory.createJSONObject(), "/ready",
-					currentUser.getUserId()
+					_oAuth2ApplicationExternalReferenceCode, jsonObject,
+					"/ready", currentUser.getUserId()
 				).get());
 
 			if (Objects.equals(status, "READY") && _active &&
 				(Validator.isNull(_paymentMethodKey) ||
 				 _paymentMethodKey.equals(
 					 commerceOrder.getCommercePaymentMethodKey()))) {
+
+				_portalCatapult.launch(
+					commerceOrder.getCompanyId(), Http.Method.POST,
+					_oAuth2ApplicationExternalReferenceCode, jsonObject,
+					"/active", currentUser.getUserId()
+				).get();
 
 				return true;
 			}

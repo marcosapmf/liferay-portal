@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Brian Wing Shun Chan
@@ -49,7 +47,7 @@ public class GeneralConfiguration implements Serializable {
 			GeneralConfiguration.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getClauseContributorsExcludes() {
 		if (_clauseContributorsExcludesSupplier != null) {
 			clauseContributorsExcludes =
@@ -94,7 +92,7 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _clauseContributorsExcludesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getClauseContributorsIncludes() {
 		if (_clauseContributorsIncludesSupplier != null) {
 			clauseContributorsIncludes =
@@ -139,7 +137,90 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _clauseContributorsIncludesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getCollectionProvider() {
+		if (_collectionProviderSupplier != null) {
+			collectionProvider = _collectionProviderSupplier.get();
+
+			_collectionProviderSupplier = null;
+		}
+
+		return collectionProvider;
+	}
+
+	public void setCollectionProvider(Boolean collectionProvider) {
+		this.collectionProvider = collectionProvider;
+
+		_collectionProviderSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCollectionProvider(
+		UnsafeSupplier<Boolean, Exception> collectionProviderUnsafeSupplier) {
+
+		_collectionProviderSupplier = () -> {
+			try {
+				return collectionProviderUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean collectionProvider;
+
+	@JsonIgnore
+	private Supplier<Boolean> _collectionProviderSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String getCollectionProviderType() {
+		if (_collectionProviderTypeSupplier != null) {
+			collectionProviderType = _collectionProviderTypeSupplier.get();
+
+			_collectionProviderTypeSupplier = null;
+		}
+
+		return collectionProviderType;
+	}
+
+	public void setCollectionProviderType(String collectionProviderType) {
+		this.collectionProviderType = collectionProviderType;
+
+		_collectionProviderTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCollectionProviderType(
+		UnsafeSupplier<String, Exception>
+			collectionProviderTypeUnsafeSupplier) {
+
+		_collectionProviderTypeSupplier = () -> {
+			try {
+				return collectionProviderTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String collectionProviderType;
+
+	@JsonIgnore
+	private Supplier<String> _collectionProviderTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getEmptySearchEnabled() {
 		if (_emptySearchEnabledSupplier != null) {
 			emptySearchEnabled = _emptySearchEnabledSupplier.get();
@@ -180,7 +261,7 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _emptySearchEnabledSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getExplain() {
 		if (_explainSupplier != null) {
 			explain = _explainSupplier.get();
@@ -221,7 +302,7 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _explainSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getIncludeResponseString() {
 		if (_includeResponseStringSupplier != null) {
 			includeResponseString = _includeResponseStringSupplier.get();
@@ -263,7 +344,7 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _includeResponseStringSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getLanguageId() {
 		if (_languageIdSupplier != null) {
 			languageId = _languageIdSupplier.get();
@@ -304,7 +385,52 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _languageIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public Boolean getLegacyAssetCollectionProvider() {
+		if (_legacyAssetCollectionProviderSupplier != null) {
+			legacyAssetCollectionProvider =
+				_legacyAssetCollectionProviderSupplier.get();
+
+			_legacyAssetCollectionProviderSupplier = null;
+		}
+
+		return legacyAssetCollectionProvider;
+	}
+
+	public void setLegacyAssetCollectionProvider(
+		Boolean legacyAssetCollectionProvider) {
+
+		this.legacyAssetCollectionProvider = legacyAssetCollectionProvider;
+
+		_legacyAssetCollectionProviderSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setLegacyAssetCollectionProvider(
+		UnsafeSupplier<Boolean, Exception>
+			legacyAssetCollectionProviderUnsafeSupplier) {
+
+		_legacyAssetCollectionProviderSupplier = () -> {
+			try {
+				return legacyAssetCollectionProviderUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean legacyAssetCollectionProvider;
+
+	@JsonIgnore
+	private Supplier<Boolean> _legacyAssetCollectionProviderSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getQueryString() {
 		if (_queryStringSupplier != null) {
 			queryString = _queryStringSupplier.get();
@@ -345,7 +471,48 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _queryStringSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
+	public String[] getScope() {
+		if (_scopeSupplier != null) {
+			scope = _scopeSupplier.get();
+
+			_scopeSupplier = null;
+		}
+
+		return scope;
+	}
+
+	public void setScope(String[] scope) {
+		this.scope = scope;
+
+		_scopeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setScope(
+		UnsafeSupplier<String[], Exception> scopeUnsafeSupplier) {
+
+		_scopeSupplier = () -> {
+			try {
+				return scopeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String[] scope;
+
+	@JsonIgnore
+	private Supplier<String[]> _scopeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getSearchableAssetTypes() {
 		if (_searchableAssetTypesSupplier != null) {
 			searchableAssetTypes = _searchableAssetTypesSupplier.get();
@@ -387,7 +554,7 @@ public class GeneralConfiguration implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _searchableAssetTypesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getTimeZoneId() {
 		if (_timeZoneIdSupplier != null) {
 			timeZoneId = _timeZoneIdSupplier.get();
@@ -508,6 +675,34 @@ public class GeneralConfiguration implements Serializable {
 			sb.append("]");
 		}
 
+		Boolean collectionProvider = getCollectionProvider();
+
+		if (collectionProvider != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collectionProvider\": ");
+
+			sb.append(collectionProvider);
+		}
+
+		String collectionProviderType = getCollectionProviderType();
+
+		if (collectionProviderType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collectionProviderType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(collectionProviderType));
+
+			sb.append("\"");
+		}
+
 		Boolean emptySearchEnabled = getEmptySearchEnabled();
 
 		if (emptySearchEnabled != null) {
@@ -560,6 +755,19 @@ public class GeneralConfiguration implements Serializable {
 			sb.append("\"");
 		}
 
+		Boolean legacyAssetCollectionProvider =
+			getLegacyAssetCollectionProvider();
+
+		if (legacyAssetCollectionProvider != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"legacyAssetCollectionProvider\": ");
+
+			sb.append(legacyAssetCollectionProvider);
+		}
+
 		String queryString = getQueryString();
 
 		if (queryString != null) {
@@ -574,6 +782,32 @@ public class GeneralConfiguration implements Serializable {
 			sb.append(_escape(queryString));
 
 			sb.append("\"");
+		}
+
+		String[] scope = getScope();
+
+		if (scope != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scope\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < scope.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(scope[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < scope.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		String[] searchableAssetTypes = getSearchableAssetTypes();
@@ -623,8 +857,8 @@ public class GeneralConfiguration implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.search.experiences.rest.dto.v1_0.GeneralConfiguration",
 		name = "x-class-name"
 	)

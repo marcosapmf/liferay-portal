@@ -14,14 +14,13 @@ import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroupProduct;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductGroupProductUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductGroupProductResource;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -52,8 +51,9 @@ public class ProductGroupProductResourceImpl
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -69,14 +69,14 @@ public class ProductGroupProductResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePricingClassCPDefinitionRelService.
 				getCommercePricingClassCPDefinitionRelsCount(
 					commercePricingClass.getCommercePricingClassId());
 
 		return Page.of(
 			_toProductGroupProducts(commercePricingClassCPDefinitionRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -91,13 +91,13 @@ public class ProductGroupProductResourceImpl
 						id, pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePricingClassCPDefinitionRelService.
 				getCommercePricingClassCPDefinitionRelsCount(id);
 
 		return Page.of(
 			_toProductGroupProducts(commercePricingClassCPDefinitionRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -108,8 +108,9 @@ public class ProductGroupProductResourceImpl
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -164,19 +165,11 @@ public class ProductGroupProductResourceImpl
 				commercePricingClassCPDefinitionRels)
 		throws Exception {
 
-		List<ProductGroupProduct> productGroupProducts = new ArrayList<>();
-
-		for (CommercePricingClassCPDefinitionRel
-				commercePricingClassCPDefinitionRel :
-					commercePricingClassCPDefinitionRels) {
-
-			productGroupProducts.add(
-				_toProductGroupProduct(
-					commercePricingClassCPDefinitionRel.
-						getCommercePricingClassCPDefinitionRelId()));
-		}
-
-		return productGroupProducts;
+		return transform(
+			commercePricingClassCPDefinitionRels,
+			commercePricingClassCPDefinitionRel -> _toProductGroupProduct(
+				commercePricingClassCPDefinitionRel.
+					getCommercePricingClassCPDefinitionRelId()));
 	}
 
 	@Reference

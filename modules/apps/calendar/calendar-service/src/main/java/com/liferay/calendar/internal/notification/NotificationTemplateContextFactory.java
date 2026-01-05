@@ -28,13 +28,16 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.portlet.WindowState;
 
 import java.io.Serializable;
 
@@ -43,8 +46,6 @@ import java.text.Format;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
-
-import javax.portlet.WindowState;
 
 /**
  * @author Eduardo Lundgren
@@ -101,25 +102,23 @@ public class NotificationTemplateContextFactory {
 			).put(
 				"icsFile",
 				() -> {
-					if (Objects.equals(
+					if (!Objects.equals(
 							notificationTemplateContext.
 								getNotificationTemplateType(),
 							NotificationTemplateType.INVITE)) {
 
-						CalendarBookingLocalService
-							calendarBookingLocalService =
-								_calendarBookingLocalServiceSnapshot.get();
-
-						String calendarBookingString =
-							calendarBookingLocalService.exportCalendarBooking(
-								calendarBooking.getCalendarBookingId(),
-								CalendarUtil.ICAL_EXTENSION);
-
-						return FileUtil.createTempFile(
-							calendarBookingString.getBytes());
+						return null;
 					}
 
-					return null;
+					CalendarBookingLocalService calendarBookingLocalService =
+						_calendarBookingLocalServiceSnapshot.get();
+
+					String calendarBookingString =
+						calendarBookingLocalService.exportCalendarBooking(
+							calendarBooking.getCalendarBookingId(),
+							CalendarUtil.ICAL_EXTENSION);
+
+					return calendarBookingString.getBytes();
 				}
 			).put(
 				"location", calendarBooking.getLocation()
@@ -132,7 +131,8 @@ public class NotificationTemplateContextFactory {
 				"portletName",
 				LanguageUtil.get(
 					user.getLocale(),
-					"javax.portlet.title.".concat(CalendarPortletKeys.CALENDAR))
+					"jakarta.portlet.title.".concat(
+						CalendarPortletKeys.CALENDAR))
 			).put(
 				"siteName",
 				() -> {
@@ -217,6 +217,21 @@ public class NotificationTemplateContextFactory {
 			CalendarBooking calendarBooking, String layoutURL, String portalURL,
 			User user)
 		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext != null) {
+			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
+			if (themeDisplay != null) {
+				return StringBundler.concat(
+					themeDisplay.getPortalURL(),
+					themeDisplay.getPathFriendlyURLPublic(),
+					"/calendar/shared/-/calendar/",
+					calendarBooking.getCalendarBookingId());
+			}
+		}
 
 		String url = layoutURL;
 

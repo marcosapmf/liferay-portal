@@ -37,11 +37,11 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.List;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.util.List;
 
 /**
  * @author Alessio Antonio Rendina
@@ -99,7 +99,7 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 
 		return _commerceInventoryWarehouseService.
 			getCommerceInventoryWarehouses(
-				commerceShippingMethod.getCompanyId(),
+				commerceShippingMethod.getCompanyId(), 0,
 				commerceShippingMethod.getGroupId(), true);
 	}
 
@@ -223,11 +223,7 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		List<CommerceShippingFixedOption> commerceShippingFixedOptions =
 			getCommerceShippingFixedOptions();
 
-		if (commerceShippingFixedOptions.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !commerceShippingFixedOptions.isEmpty();
 	}
 
 	private final CommerceInventoryWarehouseService

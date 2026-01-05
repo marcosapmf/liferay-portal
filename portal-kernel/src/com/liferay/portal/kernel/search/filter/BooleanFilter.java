@@ -136,9 +136,7 @@ public class BooleanFilter extends BaseFilter {
 	}
 
 	public Filter addRequiredTerm(String field, String value) {
-		TermFilter termFilter = new TermFilter(field, value);
-
-		return add(termFilter, BooleanClauseOccur.MUST);
+		return add(new TermFilter(field, value), BooleanClauseOccur.MUST);
 	}
 
 	public Filter addTerm(String field, boolean value) {
@@ -188,9 +186,7 @@ public class BooleanFilter extends BaseFilter {
 	public Filter addTerm(
 		String field, String value, BooleanClauseOccur booleanClauseOccur) {
 
-		TermFilter termFilter = new TermFilter(field, value);
-
-		return add(termFilter, booleanClauseOccur);
+		return add(new TermFilter(field, value), booleanClauseOccur);
 	}
 
 	public List<BooleanClause<Filter>> getMustBooleanClauses() {

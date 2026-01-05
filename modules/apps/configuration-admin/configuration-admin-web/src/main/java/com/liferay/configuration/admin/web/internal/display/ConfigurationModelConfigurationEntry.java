@@ -11,13 +11,13 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 /**
  * @author Jorge Ferrer
@@ -108,6 +108,11 @@ public class ConfigurationModelConfigurationEntry
 	@Override
 	public int hashCode() {
 		return Objects.hash(_configurationModel);
+	}
+
+	@Override
+	public boolean isDeprecated() {
+		return _configurationModel.isDeprecated();
 	}
 
 	private final ConfigurationModel _configurationModel;

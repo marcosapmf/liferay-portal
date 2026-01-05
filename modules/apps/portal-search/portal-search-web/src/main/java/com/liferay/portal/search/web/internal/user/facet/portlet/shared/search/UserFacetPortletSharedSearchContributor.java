@@ -24,7 +24,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lino Alves
  */
 @Component(
-	property = "javax.portlet.name=" + UserFacetPortletKeys.USER_FACET,
+	property = "jakarta.portlet.name=" + UserFacetPortletKeys.USER_FACET,
 	service = PortletSharedSearchContributor.class
 )
 public class UserFacetPortletSharedSearchContributor
@@ -57,7 +57,7 @@ public class UserFacetPortletSharedSearchContributor
 	protected UserFacetSearchContributor userFacetSearchContributor;
 
 	private long[] _toLongArray(String[] parameterValues) {
-		if (!ArrayUtil.isEmpty(parameterValues)) {
+		if (ArrayUtil.isNotEmpty(parameterValues)) {
 			return ListUtil.toLongArray(
 				Arrays.asList(parameterValues), GetterUtil::getLong);
 		}

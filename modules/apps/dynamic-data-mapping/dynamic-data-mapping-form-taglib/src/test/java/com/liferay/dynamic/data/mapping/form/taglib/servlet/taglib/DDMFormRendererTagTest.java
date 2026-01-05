@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.portlet.MockRenderResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -42,16 +43,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockRenderResponse;
+
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -421,7 +421,7 @@ public class DDMFormRendererTagTest {
 
 	protected void setUpHttpServletRequest() throws IllegalAccessException {
 		_httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE, new MockRenderResponse());
+			JavaConstants.JAKARTA_PORTLET_RESPONSE, new MockRenderResponse());
 		_httpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, new ThemeDisplay());
 

@@ -6,7 +6,7 @@
 import ClayBreadcrumb from '@clayui/breadcrumb';
 import ClayCard from '@clayui/card';
 import ClayTabs from '@clayui/tabs';
-import {openModal, openToast} from 'frontend-js-web';
+import {openModal, openToast} from 'frontend-js-components-web';
 import React, {
 	Dispatch,
 	SetStateAction,
@@ -70,7 +70,7 @@ export default function EditAPIEndpoint({
 		parameter: false,
 		path: false,
 		pathParameter: false,
-		r_requestAPISchemaToAPIEndpoints_c_apiSchemaId: false,
+		r_requestAPISchemaToAPIEndpoints_l_apiSchemaId: false,
 		retrieveType: false,
 		scope: false,
 	});
@@ -106,13 +106,13 @@ export default function EditAPIEndpoint({
 				...(response.pathParameterDescription && {
 					pathParameterDescription: response.pathParameterDescription,
 				}),
-				...(response.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId && {
-					r_requestAPISchemaToAPIEndpoints_c_apiSchemaId:
-						response.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId,
+				...(response.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId && {
+					r_requestAPISchemaToAPIEndpoints_l_apiSchemaId:
+						response.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId,
 				}),
-				...(response.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId && {
-					r_responseAPISchemaToAPIEndpoints_c_apiSchemaId:
-						response.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
+				...(response.r_responseAPISchemaToAPIEndpoints_l_apiSchemaId && {
+					r_responseAPISchemaToAPIEndpoints_l_apiSchemaId:
+						response.r_responseAPISchemaToAPIEndpoints_l_apiSchemaId,
 				}),
 				retrieveType: response.retrieveType,
 				scope: response.scope,
@@ -131,14 +131,14 @@ export default function EditAPIEndpoint({
 		) {
 			mandatoryFields.push('parameter');
 
-			if (localUIData.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId) {
+			if (localUIData.r_responseAPISchemaToAPIEndpoints_l_apiSchemaId) {
 				mandatoryFields.push('pathParameter');
 			}
 		}
 
 		if (localUIData.httpMethod?.key === HTTP_METHODS.POST) {
 			mandatoryFields.push(
-				'r_requestAPISchemaToAPIEndpoints_c_apiSchemaId'
+				'r_requestAPISchemaToAPIEndpoints_l_apiSchemaId'
 			);
 		}
 
@@ -225,7 +225,9 @@ export default function EditAPIEndpoint({
 
 				updateData<APIEndpointItem>({
 					dataToUpdate: {
-						description: localUIData.description,
+						description: localUIData.description
+							? localUIData.description
+							: STR_BLANK,
 						...(localUIData.path && {
 							path: beginStringWithForwardSlash(
 								localUIData.path +
@@ -243,12 +245,12 @@ export default function EditAPIEndpoint({
 							localUIData.pathParameterDescription
 								? localUIData.pathParameterDescription
 								: STR_BLANK,
-						...(localUIData.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId && {
-							r_requestAPISchemaToAPIEndpoints_c_apiSchemaId:
-								localUIData.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId,
+						...(localUIData.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId && {
+							r_requestAPISchemaToAPIEndpoints_l_apiSchemaId:
+								localUIData.r_requestAPISchemaToAPIEndpoints_l_apiSchemaId,
 						}),
-						r_responseAPISchemaToAPIEndpoints_c_apiSchemaId:
-							localUIData.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
+						r_responseAPISchemaToAPIEndpoints_l_apiSchemaId:
+							localUIData.r_responseAPISchemaToAPIEndpoints_l_apiSchemaId,
 						retrieveType: localUIData.retrieveType,
 						scope: localUIData.scope,
 					},
@@ -324,7 +326,7 @@ export default function EditAPIEndpoint({
 							: localUIData[`apiEndpointToAPISorts`]?.[0][
 									`oData${fieldKey}`
 								],
-					[`r_apiEndpointToAPI${fieldKey}s_c_apiEndpointId`]:
+					[`r_apiEndpointToAPI${fieldKey}s_l_apiEndpointId`]:
 						fetchedData.apiEndpoint.id,
 				},
 				onError: (error: string) => {

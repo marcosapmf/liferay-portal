@@ -67,9 +67,9 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.SkuResource;
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.TierPriceResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
@@ -78,15 +78,15 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
 
@@ -445,26 +445,14 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discounts(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discount(id: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, modifiedDate, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public DiscountPage discounts(
-			@GraphQLName("search") String search,
-			@GraphQLName("filter") String filterString,
-			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page,
-			@GraphQLName("sort") String sortsString)
-		throws Exception {
-
+	public Discount discount(@GraphQLName("id") Long id) throws Exception {
 		return _applyComponentServiceObjects(
 			_discountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			discountResource -> new DiscountPage(
-				discountResource.getDiscountsPage(
-					search,
-					_filterBiFunction.apply(discountResource, filterString),
-					Pagination.of(page, pageSize),
-					_sortsBiFunction.apply(discountResource, sortsString))));
+			discountResource -> discountResource.getDiscount(id));
 	}
 
 	/**
@@ -488,14 +476,26 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discount(id: ___){actions, active, amountFormatted, couponCode, customFields, discountAccountGroups, discountAccounts, discountCategories, discountChannels, discountOrderTypes, discountProductGroups, discountProducts, discountRules, displayDate, expirationDate, externalReferenceCode, id, level, limitationTimes, limitationTimesPerAccount, limitationType, maximumDiscountAmount, modifiedDate, neverExpire, numberOfUse, percentageLevel1, percentageLevel2, percentageLevel3, percentageLevel4, rulesConjunction, target, title, useCouponCode, usePercentage}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discounts(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public Discount discount(@GraphQLName("id") Long id) throws Exception {
+	public DiscountPage discounts(
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
 		return _applyComponentServiceObjects(
 			_discountResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			discountResource -> discountResource.getDiscount(id));
+			discountResource -> new DiscountPage(
+				discountResource.getDiscountsPage(
+					search,
+					_filterBiFunction.apply(discountResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(discountResource, sortsString))));
 	}
 
 	/**
@@ -847,21 +847,6 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountRule(id: ___){actions, discountId, id, name, type, typeSettings}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public DiscountRule discountRule(@GraphQLName("id") Long id)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_discountRuleResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			discountRuleResource -> discountRuleResource.getDiscountRule(id));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountByExternalReferenceCodeDiscountRules(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -904,6 +889,21 @@ public class Query {
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						discountRuleResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {discountRule(id: ___){actions, discountId, id, name, type, typeSettings}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DiscountRule discountRule(@GraphQLName("id") Long id)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_discountRuleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			discountRuleResource -> discountRuleResource.getDiscountRule(id));
 	}
 
 	/**
@@ -991,6 +991,22 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntry(priceEntryId: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, priceOnApplication, product, quantity, sku, skuExternalReferenceCode, skuId, tierPrices, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PriceEntry priceEntry(@GraphQLName("priceEntryId") Long priceEntryId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceEntryResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceEntryResource -> priceEntryResource.getPriceEntry(
+				priceEntryId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntryByExternalReferenceCode(externalReferenceCode: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, priceOnApplication, product, quantity, sku, skuExternalReferenceCode, skuId, tierPrices, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1004,22 +1020,6 @@ public class Query {
 			priceEntryResource ->
 				priceEntryResource.getPriceEntryByExternalReferenceCode(
 					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceEntry(priceEntryId: ___){actions, active, bulkPricing, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevelsFormatted, displayDate, expirationDate, externalReferenceCode, hasTierPrice, neverExpire, price, priceEntryId, priceFormatted, priceListExternalReferenceCode, priceListId, priceOnApplication, product, quantity, sku, skuExternalReferenceCode, skuId, tierPrices, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public PriceEntry priceEntry(@GraphQLName("priceEntryId") Long priceEntryId)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceEntryResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceEntryResource -> priceEntryResource.getPriceEntry(
-				priceEntryId));
 	}
 
 	/**
@@ -1079,6 +1079,37 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceList(id: ___){actions, active, author, catalogBasePriceList, catalogExternalReferenceCode, catalogId, catalogName, createDate, currencyCode, currencyExternalReferenceCode, currencyId, customFields, displayDate, expirationDate, externalReferenceCode, id, name, netPrice, neverExpire, parentPriceListId, priceEntries, priceListAccountGroups, priceListAccounts, priceListChannels, priceListDiscounts, priceListOrderTypes, priceModifiers, priority, type, workflowStatusInfo}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PriceList priceList(@GraphQLName("id") Long id) throws Exception {
+		return _applyComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource -> priceListResource.getPriceList(id));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceListByExternalReferenceCode(externalReferenceCode: ___){actions, active, author, catalogBasePriceList, catalogExternalReferenceCode, catalogId, catalogName, createDate, currencyCode, currencyExternalReferenceCode, currencyId, customFields, displayDate, expirationDate, externalReferenceCode, id, name, netPrice, neverExpire, parentPriceListId, priceEntries, priceListAccountGroups, priceListAccounts, priceListChannels, priceListDiscounts, priceListOrderTypes, priceModifiers, priority, type, workflowStatusInfo}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PriceList priceListByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceListResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceListResource ->
+				priceListResource.getPriceListByExternalReferenceCode(
+					externalReferenceCode));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceLists(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1099,37 +1130,6 @@ public class Query {
 					_filterBiFunction.apply(priceListResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(priceListResource, sortsString))));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceListByExternalReferenceCode(externalReferenceCode: ___){actions, active, author, catalogBasePriceList, catalogId, catalogName, createDate, currencyCode, customFields, displayDate, expirationDate, externalReferenceCode, id, name, netPrice, neverExpire, parentPriceListId, priceEntries, priceListAccountGroups, priceListAccounts, priceListChannels, priceListDiscounts, priceListOrderTypes, priceModifiers, priority, type, workflowStatusInfo}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public PriceList priceListByExternalReferenceCode(
-			@GraphQLName("externalReferenceCode") String externalReferenceCode)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceListResource ->
-				priceListResource.getPriceListByExternalReferenceCode(
-					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceList(id: ___){actions, active, author, catalogBasePriceList, catalogId, catalogName, createDate, currencyCode, customFields, displayDate, expirationDate, externalReferenceCode, id, name, netPrice, neverExpire, parentPriceListId, priceEntries, priceListAccountGroups, priceListAccounts, priceListChannels, priceListDiscounts, priceListOrderTypes, priceModifiers, priority, type, workflowStatusInfo}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public PriceList priceList(@GraphQLName("id") Long id) throws Exception {
-		return _applyComponentServiceObjects(
-			_priceListResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceListResource -> priceListResource.getPriceList(id));
 	}
 
 	/**
@@ -1420,6 +1420,22 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceModifier(id: ___){actions, active, displayDate, expirationDate, externalReferenceCode, id, modifierAmount, modifierType, neverExpire, priceListExternalReferenceCode, priceListId, priceModifierCategories, priceModifierProductGroups, priceModifierProducts, priority, target, title}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public PriceModifier priceModifier(@GraphQLName("id") Long id)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_priceModifierResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			priceModifierResource -> priceModifierResource.getPriceModifier(
+				id));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceModifierByExternalReferenceCode(externalReferenceCode: ___){actions, active, displayDate, expirationDate, externalReferenceCode, id, modifierAmount, modifierType, neverExpire, priceListExternalReferenceCode, priceListId, priceModifierCategories, priceModifierProductGroups, priceModifierProducts, priority, target, title}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1433,22 +1449,6 @@ public class Query {
 			priceModifierResource ->
 				priceModifierResource.getPriceModifierByExternalReferenceCode(
 					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {priceModifier(id: ___){actions, active, displayDate, expirationDate, externalReferenceCode, id, modifierAmount, modifierType, neverExpire, priceListExternalReferenceCode, priceListId, priceModifierCategories, priceModifierProductGroups, priceModifierProducts, priority, target, title}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public PriceModifier priceModifier(@GraphQLName("id") Long id)
-		throws Exception {
-
-		return _applyComponentServiceObjects(
-			_priceModifierResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			priceModifierResource -> priceModifierResource.getPriceModifier(
-				id));
 	}
 
 	/**
@@ -1809,6 +1809,19 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPrice(id: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public TierPrice tierPrice(@GraphQLName("id") Long id) throws Exception {
+		return _applyComponentServiceObjects(
+			_tierPriceResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			tierPriceResource -> tierPriceResource.getTierPrice(id));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPriceByExternalReferenceCode(externalReferenceCode: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -1822,19 +1835,6 @@ public class Query {
 			tierPriceResource ->
 				tierPriceResource.getTierPriceByExternalReferenceCode(
 					externalReferenceCode));
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {tierPrice(id: ___){actions, active, customFields, discountDiscovery, discountLevel1, discountLevel2, discountLevel3, discountLevel4, displayDate, expirationDate, externalReferenceCode, id, minimumQuantity, neverExpire, price, priceEntryExternalReferenceCode, priceEntryId, priceFormatted, unitOfMeasureKey}}"}' -u 'test@liferay.com:test'
-	 */
-	@GraphQLField
-	public TierPrice tierPrice(@GraphQLName("id") Long id) throws Exception {
-		return _applyComponentServiceObjects(
-			_tierPriceResourceComponentServiceObjects,
-			this::_populateResourceContext,
-			tierPriceResource -> tierPriceResource.getTierPrice(id));
 	}
 
 	@GraphQLTypeExtension(PriceEntry.class)
@@ -3682,6 +3682,10 @@ public class Query {
 		accountResource.setContextUriInfo(_uriInfo);
 		accountResource.setContextUser(_user);
 		accountResource.setGroupLocalService(_groupLocalService);
+		accountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		accountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		accountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3695,6 +3699,10 @@ public class Query {
 		categoryResource.setContextUriInfo(_uriInfo);
 		categoryResource.setContextUser(_user);
 		categoryResource.setGroupLocalService(_groupLocalService);
+		categoryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		categoryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		categoryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3708,6 +3716,10 @@ public class Query {
 		channelResource.setContextUriInfo(_uriInfo);
 		channelResource.setContextUser(_user);
 		channelResource.setGroupLocalService(_groupLocalService);
+		channelResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		channelResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		channelResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3721,6 +3733,10 @@ public class Query {
 		discountResource.setContextUriInfo(_uriInfo);
 		discountResource.setContextUser(_user);
 		discountResource.setGroupLocalService(_groupLocalService);
+		discountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3737,6 +3753,10 @@ public class Query {
 		discountAccountResource.setContextUriInfo(_uriInfo);
 		discountAccountResource.setContextUser(_user);
 		discountAccountResource.setGroupLocalService(_groupLocalService);
+		discountAccountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountAccountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountAccountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3753,6 +3773,10 @@ public class Query {
 		discountAccountGroupResource.setContextUriInfo(_uriInfo);
 		discountAccountGroupResource.setContextUser(_user);
 		discountAccountGroupResource.setGroupLocalService(_groupLocalService);
+		discountAccountGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountAccountGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountAccountGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3769,6 +3793,10 @@ public class Query {
 		discountCategoryResource.setContextUriInfo(_uriInfo);
 		discountCategoryResource.setContextUser(_user);
 		discountCategoryResource.setGroupLocalService(_groupLocalService);
+		discountCategoryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountCategoryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountCategoryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3785,6 +3813,10 @@ public class Query {
 		discountChannelResource.setContextUriInfo(_uriInfo);
 		discountChannelResource.setContextUser(_user);
 		discountChannelResource.setGroupLocalService(_groupLocalService);
+		discountChannelResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountChannelResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountChannelResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3801,6 +3833,10 @@ public class Query {
 		discountOrderTypeResource.setContextUriInfo(_uriInfo);
 		discountOrderTypeResource.setContextUser(_user);
 		discountOrderTypeResource.setGroupLocalService(_groupLocalService);
+		discountOrderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountOrderTypeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountOrderTypeResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3817,6 +3853,10 @@ public class Query {
 		discountProductResource.setContextUriInfo(_uriInfo);
 		discountProductResource.setContextUser(_user);
 		discountProductResource.setGroupLocalService(_groupLocalService);
+		discountProductResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountProductResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountProductResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3833,6 +3873,10 @@ public class Query {
 		discountProductGroupResource.setContextUriInfo(_uriInfo);
 		discountProductGroupResource.setContextUser(_user);
 		discountProductGroupResource.setGroupLocalService(_groupLocalService);
+		discountProductGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountProductGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountProductGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3848,6 +3892,10 @@ public class Query {
 		discountRuleResource.setContextUriInfo(_uriInfo);
 		discountRuleResource.setContextUser(_user);
 		discountRuleResource.setGroupLocalService(_groupLocalService);
+		discountRuleResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountRuleResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountRuleResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3862,6 +3910,10 @@ public class Query {
 		discountSkuResource.setContextUriInfo(_uriInfo);
 		discountSkuResource.setContextUser(_user);
 		discountSkuResource.setGroupLocalService(_groupLocalService);
+		discountSkuResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		discountSkuResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		discountSkuResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3875,6 +3927,10 @@ public class Query {
 		orderTypeResource.setContextUriInfo(_uriInfo);
 		orderTypeResource.setContextUser(_user);
 		orderTypeResource.setGroupLocalService(_groupLocalService);
+		orderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		orderTypeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		orderTypeResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3888,6 +3944,10 @@ public class Query {
 		priceEntryResource.setContextUriInfo(_uriInfo);
 		priceEntryResource.setContextUser(_user);
 		priceEntryResource.setGroupLocalService(_groupLocalService);
+		priceEntryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceEntryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceEntryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3901,6 +3961,10 @@ public class Query {
 		priceListResource.setContextUriInfo(_uriInfo);
 		priceListResource.setContextUser(_user);
 		priceListResource.setGroupLocalService(_groupLocalService);
+		priceListResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3917,6 +3981,10 @@ public class Query {
 		priceListAccountResource.setContextUriInfo(_uriInfo);
 		priceListAccountResource.setContextUser(_user);
 		priceListAccountResource.setGroupLocalService(_groupLocalService);
+		priceListAccountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListAccountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListAccountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3933,6 +4001,10 @@ public class Query {
 		priceListAccountGroupResource.setContextUriInfo(_uriInfo);
 		priceListAccountGroupResource.setContextUser(_user);
 		priceListAccountGroupResource.setGroupLocalService(_groupLocalService);
+		priceListAccountGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListAccountGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListAccountGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3949,6 +4021,10 @@ public class Query {
 		priceListChannelResource.setContextUriInfo(_uriInfo);
 		priceListChannelResource.setContextUser(_user);
 		priceListChannelResource.setGroupLocalService(_groupLocalService);
+		priceListChannelResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListChannelResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListChannelResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3965,6 +4041,10 @@ public class Query {
 		priceListDiscountResource.setContextUriInfo(_uriInfo);
 		priceListDiscountResource.setContextUser(_user);
 		priceListDiscountResource.setGroupLocalService(_groupLocalService);
+		priceListDiscountResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListDiscountResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListDiscountResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3981,6 +4061,10 @@ public class Query {
 		priceListOrderTypeResource.setContextUriInfo(_uriInfo);
 		priceListOrderTypeResource.setContextUser(_user);
 		priceListOrderTypeResource.setGroupLocalService(_groupLocalService);
+		priceListOrderTypeResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceListOrderTypeResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceListOrderTypeResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -3996,6 +4080,10 @@ public class Query {
 		priceModifierResource.setContextUriInfo(_uriInfo);
 		priceModifierResource.setContextUser(_user);
 		priceModifierResource.setGroupLocalService(_groupLocalService);
+		priceModifierResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceModifierResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceModifierResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4012,6 +4100,10 @@ public class Query {
 		priceModifierCategoryResource.setContextUriInfo(_uriInfo);
 		priceModifierCategoryResource.setContextUser(_user);
 		priceModifierCategoryResource.setGroupLocalService(_groupLocalService);
+		priceModifierCategoryResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceModifierCategoryResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceModifierCategoryResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4028,6 +4120,10 @@ public class Query {
 		priceModifierProductResource.setContextUriInfo(_uriInfo);
 		priceModifierProductResource.setContextUser(_user);
 		priceModifierProductResource.setGroupLocalService(_groupLocalService);
+		priceModifierProductResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceModifierProductResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceModifierProductResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4046,6 +4142,10 @@ public class Query {
 		priceModifierProductGroupResource.setContextUser(_user);
 		priceModifierProductGroupResource.setGroupLocalService(
 			_groupLocalService);
+		priceModifierProductGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		priceModifierProductGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		priceModifierProductGroupResource.setRoleLocalService(
 			_roleLocalService);
 	}
@@ -4063,6 +4163,10 @@ public class Query {
 		pricingAccountGroupResource.setContextUriInfo(_uriInfo);
 		pricingAccountGroupResource.setContextUser(_user);
 		pricingAccountGroupResource.setGroupLocalService(_groupLocalService);
+		pricingAccountGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		pricingAccountGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		pricingAccountGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4076,6 +4180,10 @@ public class Query {
 		productResource.setContextUriInfo(_uriInfo);
 		productResource.setContextUser(_user);
 		productResource.setGroupLocalService(_groupLocalService);
+		productResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		productResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		productResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4091,6 +4199,10 @@ public class Query {
 		productGroupResource.setContextUriInfo(_uriInfo);
 		productGroupResource.setContextUser(_user);
 		productGroupResource.setGroupLocalService(_groupLocalService);
+		productGroupResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		productGroupResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		productGroupResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4104,6 +4216,9 @@ public class Query {
 		skuResource.setContextUriInfo(_uriInfo);
 		skuResource.setContextUser(_user);
 		skuResource.setGroupLocalService(_groupLocalService);
+		skuResource.setResourceActionLocalService(_resourceActionLocalService);
+		skuResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		skuResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4117,6 +4232,10 @@ public class Query {
 		tierPriceResource.setContextUriInfo(_uriInfo);
 		tierPriceResource.setContextUser(_user);
 		tierPriceResource.setGroupLocalService(_groupLocalService);
+		tierPriceResource.setResourceActionLocalService(
+			_resourceActionLocalService);
+		tierPriceResource.setResourcePermissionLocalService(
+			_resourcePermissionLocalService);
 		tierPriceResource.setRoleLocalService(_roleLocalService);
 	}
 
@@ -4183,12 +4302,17 @@ public class Query {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private BiFunction
+		<Object, String, com.liferay.portal.kernel.search.filter.Filter>
+			_filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private ResourceActionLocalService _resourceActionLocalService;
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 	private RoleLocalService _roleLocalService;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
+	private BiFunction<Object, String, com.liferay.portal.kernel.search.Sort[]>
+		_sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
 

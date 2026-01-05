@@ -10,6 +10,7 @@ import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -25,9 +26,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-		"javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+		"jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
 		"mvc.command.name=/document_library/edit_folder"
 	},
 	service = MVCRenderCommand.class
@@ -39,8 +40,14 @@ public class EditFolderMVCRenderCommand extends BaseFolderMVCRenderCommand {
 			PermissionChecker permissionChecker, Folder folder)
 		throws PortalException {
 
-		_folderModelResourcePermission.check(
-			permissionChecker, folder, ActionKeys.UPDATE);
+		if (!_folderModelResourcePermission.contains(
+				permissionChecker, folder, ActionKeys.ADVANCED_UPDATE) &&
+			!_folderModelResourcePermission.contains(
+				permissionChecker, folder, ActionKeys.UPDATE)) {
+
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker.getUserId());
+		}
 	}
 
 	@Override

@@ -50,6 +50,8 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
@@ -61,8 +63,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.utils.HttpUtils;
@@ -114,24 +114,22 @@ public class LiferayOAuthDataProvider
 	public List<OAuthPermission> convertScopeToPermissions(
 		Client client, List<String> requestedScopes) {
 
-		List<OAuthPermission> oAuth2Permissions = new ArrayList<>();
-
 		List<String> invisibleToClientScopes = getInvisibleToClientScopes();
 
-		for (String requestedScope : requestedScopes) {
-			OAuthPermission oAuthPermission = new OAuthPermission(
-				requestedScope);
+		return TransformUtil.transform(
+			requestedScopes,
+			requestedScope -> {
+				OAuthPermission oAuthPermission = new OAuthPermission(
+					requestedScope);
 
-			if (invisibleToClientScopes.contains(
-					oAuthPermission.getPermission())) {
+				if (invisibleToClientScopes.contains(
+						oAuthPermission.getPermission())) {
 
-				oAuthPermission.setInvisibleToClient(true);
-			}
+					oAuthPermission.setInvisibleToClient(true);
+				}
 
-			oAuth2Permissions.add(oAuthPermission);
-		}
-
-		return oAuth2Permissions;
+				return oAuthPermission;
+			});
 	}
 
 	@Override

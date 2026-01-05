@@ -23,20 +23,39 @@ import {useQueryRangeSelectors} from 'shared/hooks/useQueryRangeSelectors';
 const {cur, delta, deltaValues} = FaroConstants.pagination;
 
 export enum Accessor {
-	ViewsMetric = 'viewsMetric',
 	DownloadsMetric = 'downloadsMetric',
+	ImpressionMadeMetric = 'impressionMadeMetric',
 	SubmissionsMetric = 'submissionsMetric',
-	PreviewsMetric = 'previewsMetric'
+	ViewsMetric = 'viewsMetric'
+}
+
+export enum EmptyStateLink {
+	Asset = URLConstants.AssetsCustomAssetsListDocumentation,
+	Blog = URLConstants.AssetsAppearsBlogsOnDocumentation,
+	Document = URLConstants.AssetsAppearsDocumentsAndMediaOnDocumentation,
+	Form = URLConstants.AssetsAppearsFormsOnDocumentation,
+	Journal = URLConstants.AssetsAppearsWebContentOnDocumentation
+}
+
+export enum EmptyStateText {
+	Blog = Liferay.Language.get('learn-more-about-blogs'),
+	Document = Liferay.Language.get('learn-more-about-documents-and-media'),
+	Form = Liferay.Language.get('learn-more-about-forms'),
+	Journal = Liferay.Language.get('learn-more-about-web-content')
 }
 
 interface IAssetAppearsOnCardProps {
 	accessors: Accessor[];
 	assetType: AssetTypes;
+	emptyStateLink: EmptyStateLink;
+	emptyStateText: EmptyStateText;
 }
 
 export const AssetAppearsOnCard: React.FC<IAssetAppearsOnCardProps> = ({
 	accessors,
-	assetType
+	assetType,
+	emptyStateLink,
+	emptyStateText
 }) => (
 	<BaseCard
 		label={Liferay.Language.get('asset-appears-on')}
@@ -48,6 +67,8 @@ export const AssetAppearsOnCard: React.FC<IAssetAppearsOnCardProps> = ({
 			<AssetAppearsOnStateRenderer
 				accessors={accessors}
 				assetType={assetType}
+				emptyStateLink={emptyStateLink}
+				emptyStateText={emptyStateText}
 				rangeSelectors={rangeSelectors}
 			/>
 		)}
@@ -57,6 +78,8 @@ export const AssetAppearsOnCard: React.FC<IAssetAppearsOnCardProps> = ({
 const AssetAppearsOnStateRenderer = ({
 	accessors,
 	assetType,
+	emptyStateLink,
+	emptyStateText,
 	rangeSelectors
 }) => {
 	const {assetId, channelId, title} = useParams();
@@ -96,11 +119,11 @@ const AssetAppearsOnStateRenderer = ({
 						</span>
 
 						<ClayLink
-							href={URLConstants.AssetsDefinitionDocumentation}
+							href={emptyStateLink}
 							key='DOCUMENTATION'
 							target='_blank'
 						>
-							{Liferay.Language.get('learn-more-about-assets')}
+							{emptyStateText}
 						</ClayLink>
 					</>
 				}

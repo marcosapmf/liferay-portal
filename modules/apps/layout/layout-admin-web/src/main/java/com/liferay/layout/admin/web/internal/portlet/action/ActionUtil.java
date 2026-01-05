@@ -29,14 +29,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.impl.ThemeSettingImpl;
 import com.liferay.portal.util.ThemeFactoryUtil;
 
+import jakarta.portlet.ActionRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -51,7 +51,8 @@ public class ActionUtil {
 		Group group = layout.getGroup();
 		LayoutSet layoutSet = layout.getLayoutSet();
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-174417") ||
+		if (!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPS-174417") ||
 			(!group.isLayoutSetPrototype() &&
 			 !layoutSet.isLayoutSetPrototypeLinkActive())) {
 
@@ -150,7 +151,7 @@ public class ActionUtil {
 				typeSettingsUnicodeProperties, deviceThemeId, true);
 		}
 
-		LayoutServiceUtil.updateLayout(
+		LayoutServiceUtil.updateTypeSettings(
 			groupId, privateLayout, layoutId,
 			typeSettingsUnicodeProperties.toString());
 

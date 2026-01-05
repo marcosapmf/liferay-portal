@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import jakarta.portlet.Portlet;
+
 import java.io.InputStream;
 
 import java.net.URL;
@@ -29,8 +31,6 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-
-import javax.portlet.Portlet;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -181,7 +181,7 @@ public class ResourceActionsDefinitionTest {
 		if (headers.get("Liferay-Service") == null) {
 			sb.append("\n\t\tModel resources are defined in bundle ");
 			sb.append(bundle.getSymbolicName());
-			sb.append(" which is not liferay service bundle");
+			sb.append(" which is not Liferay service bundle");
 		}
 	}
 

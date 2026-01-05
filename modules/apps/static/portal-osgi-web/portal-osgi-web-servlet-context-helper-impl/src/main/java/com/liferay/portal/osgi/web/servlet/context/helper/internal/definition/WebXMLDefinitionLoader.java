@@ -23,6 +23,14 @@ import com.liferay.portal.osgi.web.servlet.context.helper.internal.JspServletWra
 import com.liferay.portal.osgi.web.servlet.context.helper.internal.order.OrderUtil;
 import com.liferay.portal.osgi.web.servlet.context.helper.order.Order;
 
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.annotation.WebInitParam;
+import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.annotation.WebServlet;
+
 import java.io.InputStream;
 
 import java.net.URL;
@@ -38,14 +46,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.annotation.WebInitParam;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.annotation.WebServlet;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -574,13 +574,13 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 		FilterDefinition filterDefinition, String[] value,
 		String[] urlPatterns) {
 
-		if (!ArrayUtil.isEmpty(value)) {
+		if (ArrayUtil.isNotEmpty(value)) {
 			for (String urlPattern : value) {
 				filterDefinition.addURLPattern(urlPattern);
 			}
 		}
 
-		if (!ArrayUtil.isEmpty(urlPatterns)) {
+		if (ArrayUtil.isNotEmpty(urlPatterns)) {
 			if (ListUtil.isNotEmpty(filterDefinition.getURLPatterns())) {
 				throw new IllegalStateException(
 					"Both value and URL patterns are declared");
@@ -605,13 +605,13 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 		ServletDefinition servletDefinition, String[] value,
 		String[] urlPatterns) {
 
-		if (!ArrayUtil.isEmpty(value)) {
+		if (ArrayUtil.isNotEmpty(value)) {
 			for (String urlPattern : value) {
 				servletDefinition.addURLPattern(urlPattern);
 			}
 		}
 
-		if (!ArrayUtil.isEmpty(urlPatterns)) {
+		if (ArrayUtil.isNotEmpty(urlPatterns)) {
 			if (ListUtil.isNotEmpty(servletDefinition.getURLPatterns())) {
 				throw new IllegalStateException(
 					"Both value and URL patterns are declared");
@@ -701,7 +701,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 						throw new Exception(
 							StringBundler.concat(
-								"Init paramter name ", initParameterName,
+								"Init parameter name ", initParameterName,
 								" conflicts with filter name ", filterName));
 					}
 
@@ -826,7 +826,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 						throw new Exception(
 							StringBundler.concat(
-								"Init paramter name ", initParameterName,
+								"Init parameter name ", initParameterName,
 								" conflicts with servlet name ", servletName));
 					}
 
@@ -982,7 +982,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 			DispatcherType[] dispatcherTypes = webFilter.dispatcherTypes();
 
-			if (!ArrayUtil.isEmpty(dispatcherTypes)) {
+			if (ArrayUtil.isNotEmpty(dispatcherTypes)) {
 				for (DispatcherType dispatcherType : dispatcherTypes) {
 					filterDefinition.addDispatcher(dispatcherType.name());
 				}
@@ -1004,7 +1004,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 
 			String[] servletNames = webFilter.servletNames();
 
-			if (!ArrayUtil.isEmpty(servletNames)) {
+			if (ArrayUtil.isNotEmpty(servletNames)) {
 				for (String servletName : servletNames) {
 					filterDefinition.addServletName(servletName);
 				}
@@ -1108,7 +1108,7 @@ public class WebXMLDefinitionLoader extends DefaultHandler {
 	private void _setInitParameters(
 		WebInitParam[] webInitParams, Map<String, String> initParametersMap) {
 
-		if (!ArrayUtil.isEmpty(webInitParams)) {
+		if (ArrayUtil.isNotEmpty(webInitParams)) {
 			for (WebInitParam webInitParam : webInitParams) {
 				initParametersMap.put(
 					webInitParam.name(), webInitParam.value());

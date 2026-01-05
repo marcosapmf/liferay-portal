@@ -56,12 +56,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -198,16 +198,13 @@ public class FragmentDropZoneMVCActionCommandTest {
 			layoutStructure.getLayoutStructureItemByFragmentEntryLinkId(
 				fragmentEntryLinkId);
 
-		List<String> childrenItemIds =
-			fragmentLayoutStructureItem.getChildrenItemIds();
-
 		mockLiferayPortletActionRequest = _getMockLiferayPortletActionRequest(
 			_group.getGroupId());
 
 		mockLiferayPortletActionRequest.addParameter(
 			"itemType", LayoutDataItemTypeConstants.TYPE_CONTAINER);
 		mockLiferayPortletActionRequest.addParameter(
-			"parentItemId", childrenItemIds.get(0));
+			"parentItemId", fragmentLayoutStructureItem.getChildrenItemId(0));
 		mockLiferayPortletActionRequest.addParameter("position", "0");
 
 		ReflectionTestUtil.invoke(
@@ -222,8 +219,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			"itemId", fragmentLayoutStructureItem.getItemId());
 
 		jsonObject = ReflectionTestUtil.invoke(
-			_duplicateItemMVCActionCommand,
-			"_addDuplicateFragmentEntryLinkToLayoutDataJSONObject",
+			_duplicateItemMVCActionCommand, "doTransactionalCommand",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -241,7 +237,8 @@ public class FragmentDropZoneMVCActionCommandTest {
 		LayoutStructureItem rootLayoutStructureItem =
 			layoutStructure.getMainLayoutStructureItem();
 
-		childrenItemIds = rootLayoutStructureItem.getChildrenItemIds();
+		List<String> childrenItemIds =
+			rootLayoutStructureItem.getChildrenItemIds();
 
 		Assert.assertEquals(
 			childrenItemIds.toString(), 2, childrenItemIds.size());
@@ -254,23 +251,17 @@ public class FragmentDropZoneMVCActionCommandTest {
 				fragmentLayoutStructureItem instanceof
 					FragmentStyledLayoutStructureItem);
 
-			List<String> fragmentChildrenItemIds =
-				fragmentLayoutStructureItem.getChildrenItemIds();
-
 			LayoutStructureItem fragmentDropZoneLayoutStructureItem =
 				layoutStructure.getLayoutStructureItem(
-					fragmentChildrenItemIds.get(0));
+					fragmentLayoutStructureItem.getChildrenItemId(0));
 
 			Assert.assertTrue(
 				fragmentDropZoneLayoutStructureItem instanceof
 					FragmentDropZoneLayoutStructureItem);
 
-			List<String> fragmentDropZoneChildrenItemIds =
-				fragmentDropZoneLayoutStructureItem.getChildrenItemIds();
-
 			LayoutStructureItem containerLayoutStructureItem =
 				layoutStructure.getLayoutStructureItem(
-					fragmentDropZoneChildrenItemIds.get(0));
+					fragmentDropZoneLayoutStructureItem.getChildrenItemId(0));
 
 			Assert.assertTrue(
 				containerLayoutStructureItem instanceof
@@ -387,7 +378,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			_readFileToString("drop_zone_fragment_entry.html"),
 			RandomTestUtil.randomString(), false,
 			_readFileToString("drop_zone_fragment_entry_configuration.json"),
-			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -398,7 +389,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			JavaConstants.JAKARTA_PORTLET_RESPONSE,
 			new MockLiferayPortletActionResponse());
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(mockHttpServletRequest));

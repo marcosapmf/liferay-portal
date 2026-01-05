@@ -5,6 +5,12 @@
  */
 --%>
 
-<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
+taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <liferay-theme:defineObjects />
+
+<liferay-util:html-top>
+	<aui:link hashedFile="<%= true %>" href="captcha-taglib/css/main.css" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>

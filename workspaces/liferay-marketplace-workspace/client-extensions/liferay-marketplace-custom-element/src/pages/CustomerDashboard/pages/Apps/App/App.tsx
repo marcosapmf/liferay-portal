@@ -5,22 +5,90 @@
 
 import {useOutletContext, useParams} from 'react-router-dom';
 
+import {breadcrumbStore} from '../../../../../components/Breadcrumb/BreadcrumbStore';
+import {DetailedCard} from '../../../../../components/DetailedCard/DetailedCard';
+import QATable from '../../../../../components/QATable';
+import {ProductSpecificationKey} from '../../../../../enums/Product';
+import i18n from '../../../../../i18n';
+import {formatDate} from '../../../../../utils/date';
+import formatLocaleCurrency from '../../../../../utils/formatLocaleCurrency';
+import {
+	getProductPriceModel,
+	getProductSpecificationValue,
+	isCloudProduct,
+} from '../../../../../utils/productUtils';
+import {safeJSONParse} from '../../../../../utils/util';
+
 import './App.scss';
 
-import classNames from 'classnames';
-import {ReactNode} from 'react';
+const getPriceList = (
+	isCloud: boolean,
+	isPaidApp: boolean,
+	placedOrder: PlacedOrder
+) => {
+	if (!isPaidApp) {
+		return {
+			title: i18n.translate('license'),
+			value: placedOrder.placedOrderItems.map((order, index) => (
+				<p key={index}>
+					{formatLocaleCurrency(order.quantity * order.price.price)}
+				</p>
+			)),
+		};
+	}
 
-import {DetailedCard} from '../../../../../components/DetailedCard/DetailedCard';
-import i18n from '../../../../../i18n';
-import formatLocaleCurrency from '../../../../../utils/formatLocaleCurrency';
-import {isCloudProduct} from '../../../../../utils/productUtils';
-import {safeJSONParse} from '../../../../../utils/util';
-import getProductPriceModel from '../../../../GetApp/utils/getProductPriceModel';
-import {formatDate} from '../../../../PublisherDashboard/PublisherDashboardPageUtil';
+	return {
+		title: 'License Price',
+		value: (
+			<table className="qa-table">
+				<thead>
+					<tr>
+						<th style={{width: '40%'}}>{i18n.translate('type')}</th>
+						<th style={{width: '30%'}}>{i18n.translate('qty')}</th>
+						<th>{i18n.translate('total')}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{placedOrder.placedOrderItems.map((order, index) => {
+						const optionName = safeJSONParse<any>(
+							order.options,
+							[]
+						);
+
+						const type = isCloud
+							? 'Standard'
+							: optionName[0]?.value || '';
+						{
+							return (
+								<tr key={index}>
+									<td className="text-capitalize">{type}</td>
+
+									<td>{order.quantity}</td>
+
+									<td>{order.price.priceFormatted}</td>
+								</tr>
+							);
+						}
+					})}
+				</tbody>
+			</table>
+		),
+	};
+};
 
 const App = () => {
 	const {orderId} = useParams();
 	const {placedOrder, product} = useOutletContext<any>();
+
+	breadcrumbStore.send({
+		replacements: {[orderId as string]: product.name},
+		type: 'setReplacements',
+	});
+
+	const licenseType = getProductSpecificationValue(
+		ProductSpecificationKey.APP_LICENSING_TYPE,
+		product
+	);
 
 	const projectNameField =
 		Object.values(placedOrder.customFields).find((field) =>
@@ -34,214 +102,114 @@ const App = () => {
 		<div className="app-details-page-container mt-6">
 			<div className="app-details-body-container">
 				<DetailedCard
-					cardIconAltText="Details Icon"
+					cardIconAltText="Profile Icon"
 					cardTitle={i18n.translate('details')}
 					clayIcon="order-form-tag"
 				>
-					<div className="mb-2 mt-7 row">
-						<div className="col-6 h5">
-							{i18n.translate('order-id')}
-						</div>
-						<p className="col">{orderId}</p>
-					</div>
-					<div className="mb-2 row">
-						<div className="col-6 h5">
-							{i18n.translate('order-date')}
-						</div>
-						<p className="col">
-							{formatDate(placedOrder.createDate)}
-						</p>
-					</div>
-					<div className="mb-2 row">
-						<div className="col-6 h5">
-							{i18n.translate('customer-account')}
-						</div>
-						<p className="col">{placedOrder.account}</p>
-					</div>
-					<div className="mb-2 row">
-						<div className="col-6 h5">
-							{i18n.translate('customer-roject')}
-						</div>
-						<p className="col">{projectNameField as ReactNode}</p>
-					</div>
-					<div className="mb-2 row">
-						<div className="col-6 h5">
-							{i18n.translate('purchased-by')}
-						</div>
-						<p className="col">{placedOrder.author}</p>
-					</div>
-					<div className="row">
-						<div className="col-6 h5">Purchase Order Number</div>
-						<p className="col">
-							{placedOrder.purchaseOrderNumber || '-'}
-						</p>
-					</div>
+					<QATable
+						items={[
+							{
+								title: i18n.translate('order-id'),
+								value: orderId,
+							},
+							{
+								title: i18n.translate('order-date'),
+								value: formatDate(placedOrder.createDate),
+							},
+							{
+								title: i18n.translate('customer-account'),
+								value: placedOrder.account,
+							},
+							{
+								title: i18n.translate('customer-project'),
+								value: projectNameField,
+							},
+							{
+								title: i18n.translate('purchased-by'),
+								value: placedOrder.author,
+							},
+							{
+								title: 'Purchase Order Number',
+								value: placedOrder.purchaseOrderNumber || '-',
+							},
+							{
+								title: i18n.translate('license-type'),
+								value: licenseType || '-',
+							},
+						]}
+					/>
 				</DetailedCard>
+
 				<DetailedCard
-					cardIconAltText="Summary Icon"
+					cardIconAltText="Profile Icon"
 					cardTitle={i18n.translate('summary')}
 					clayIcon="shopping-cart"
 				>
-					{isPaidApp && (
-						<div className="justify-content-center mb-2 mt-4 row">
-							<div className="col-3 h5">
-								{i18n.translate('type')}
-							</div>
-							<div className="col-1 h5">
-								{i18n.translate('qty')}
-							</div>
-						</div>
-					)}
-					<div
-						className={classNames('row mb-2', {
-							'mt-6': !isPaidApp,
-						})}
-					>
-						<div className="col h5">
-							{i18n.translate('license-price')}
-						</div>
-						<div className="col-8">
-							{placedOrder.placedOrderItems.map(
-								(order: PlacedOrderItems) => {
-									const optionName = safeJSONParse(
-										order.options,
-										[]
-									);
-
-									return (
-										<div
-											className={classNames('mb-2 row', {
-												'justify-content-end':
-													!isPaidApp,
-											})}
-											key={order.id}
-										>
-											{isPaidApp && (
-												<>
-													<p className="col-5 text-capitalize">
-														{isCloud
-															? 'Standard'
-															: optionName[0]
-																	?.value ||
-																''}
-													</p>
-													<p className="col-3">
-														{order.quantity}
-													</p>
-												</>
-											)}
-											<p className="col-4 text-right">
-												{formatLocaleCurrency(
-													order.quantity *
-														order.price.price
-												)}
-											</p>
-										</div>
-									);
-								}
-							)}
-						</div>
-					</div>
-					<div className="justify-content-between mb-2 row">
-						<div className="col h5">
-							{i18n.translate('subtotal')}
-						</div>
-						<p className="col-3 text-right">
-							{formatLocaleCurrency(
-								placedOrder.summary.subtotal
-							) || ''}
-						</p>
-					</div>
-					<div className="justify-content-between mb-2 row">
-						<div className="col h5">
-							{i18n.translate('subtotal-discount')}
-						</div>
-						<p className="col-3 text-right">
-							{formatLocaleCurrency(
-								placedOrder.summary.totalDiscountValue
-							) || ''}
-						</p>
-					</div>
-					<div className="justify-content-between mb-2 row">
-						<div className="col h5">
-							{i18n.translate('coupon-code')}
-						</div>
-						<p className="col-3 text-right">
-							{placedOrder.couponCode || '-'}
-						</p>
-					</div>
-					<div className="justify-content-between mb-2 row">
-						<div className="col h5">
-							{i18n.translate('tax-vat')}
-						</div>
-						<p className="col-3 text-right">
-							{formatLocaleCurrency(
-								placedOrder.summary.taxValue
-							) || ''}
-						</p>
-					</div>
-					<div className="justify-content-between row">
-						<div className="col h5">{i18n.translate('total')}</div>
-						<p className="col-3 text-right">
-							{formatLocaleCurrency(placedOrder.summary.total) ||
-								''}
-						</p>
-					</div>
+					<QATable
+						items={[
+							getPriceList(isCloud, isPaidApp, placedOrder),
+							{
+								title: i18n.translate('subtotal'),
+								value: placedOrder.summary.subtotalFormatted,
+							},
+							{
+								title: i18n.translate('subtotal-discount'),
+								value: placedOrder.summary
+									.subtotalDiscountValueFormatted,
+							},
+							{
+								title: i18n.translate('coupon-code'),
+								value: placedOrder.couponCode || '-',
+							},
+							{
+								title: i18n.translate('tax-vat'),
+								value: placedOrder.summary.taxValueFormatted,
+							},
+							{
+								title: i18n.translate('total'),
+								value: placedOrder.summary.totalFormatted,
+							},
+						]}
+					/>
 				</DetailedCard>
+
 				{placedOrder.placedOrderBillingAddress && (
 					<DetailedCard
-						cardIconAltText="Location Icon"
+						cardIconAltText="Profile Icon"
 						cardTitle={i18n.translate('address')}
 						clayIcon="geolocation"
 					>
-						<div className="mb-2 mt-4 row">
-							<div className="col-6 h5">
-								{i18n.translate('billing-address')}
-							</div>
-							<div className="col-6">
-								<p>
-									{placedOrder.placedOrderBillingAddress
-										.street1 || ''}
-									,
-								</p>
-								{placedOrder.placedOrderBillingAddress
-									.street2 && (
-									<p>
-										{
-											placedOrder
-												.placedOrderBillingAddress
-												.street2
-										}
-									</p>
-								)}
-								{placedOrder.placedOrderBillingAddress
-									.street3 && (
-									<p>
-										{
-											placedOrder
-												.placedOrderBillingAddress
-												.street3
-										}
-									</p>
-								)}
-								<p>
-									{placedOrder.placedOrderBillingAddress.city}
-									,
-								</p>
-								<p>
-									{placedOrder.placedOrderBillingAddress
-										.regionISOCode || ''}
-									,{' '}
-									{placedOrder.placedOrderBillingAddress
-										.zip || ''}
-									,
-								</p>
-								<p>
-									{placedOrder.placedOrderBillingAddress
-										.countryISOCode || ''}
-								</p>
-							</div>
-						</div>
+						<QATable
+							items={[
+								{
+									title: i18n.translate('billing-address'),
+									value:
+										placedOrder.placedOrderBillingAddress
+											.street1 || '',
+								},
+								{
+									title: '',
+									value: placedOrder.placedOrderBillingAddress
+										.city,
+								},
+								{
+									title: '',
+									value: `${
+										placedOrder.placedOrderBillingAddress
+											.regionISOCode || ''
+									}, ${
+										placedOrder.placedOrderBillingAddress
+											.zip || ''
+									}`,
+								},
+								{
+									title: '',
+									value:
+										placedOrder.placedOrderBillingAddress
+											.countryISOCode || '',
+								},
+							]}
+						/>
 					</DetailedCard>
 				)}
 			</div>

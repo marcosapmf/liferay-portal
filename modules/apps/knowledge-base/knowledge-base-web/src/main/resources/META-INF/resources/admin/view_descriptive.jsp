@@ -65,11 +65,9 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 
 						<%
 						Date modifiedDate = kbFolder.getModifiedDate();
-
-						String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
 						%>
 
-						<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(kbFolder.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
+						<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true) %>" key="modified-x-ago" />
 					</span>
 				</liferay-ui:search-container-column-text>
 
@@ -132,7 +130,7 @@ KBArticleViewDisplayContext kbArticleViewDisplayContext = new KBArticleViewDispl
 
 					<span class="text-default">
 						<c:choose>
-							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-188058") && kbArticle.isScheduled() %>'>
+							<c:when test="<%= kbArticle.isScheduled() %>">
 
 								<%
 								String displayDateString = StringPool.BLANK;

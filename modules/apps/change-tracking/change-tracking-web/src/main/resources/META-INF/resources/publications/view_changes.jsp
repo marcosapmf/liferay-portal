@@ -15,7 +15,6 @@ if (!user.isOnDemandUser()) {
 	portletDisplay.setShowBackIcon(true);
 }
 else {
-	portletDisplay.setBeta(true);
 	portletDisplay.setShowBackIcon(false);
 }
 
@@ -30,17 +29,29 @@ renderResponse.setTitle(LanguageUtil.get(request, "review-changes"));
 		/>
 	</div>
 
-	<clay:container-fluid>
-		<clay:navigation-bar
-			navigationItems="<%= viewChangesDisplayContext.getViewNavigationItems() %>"
+	<div>
+		<react:component
+			module="{ChangeTrackingOverview} from change-tracking-web"
+			props="<%= viewChangesDisplayContext.getItemsOverview() %>"
 		/>
+	</div>
 
+	<clay:navigation-bar
+		navigationItems="<%= viewChangesDisplayContext.getViewNavigationItems() %>"
+	/>
+
+	<aui:form action="<%= viewChangesDisplayContext.getBackURL() %>" method="post" name="fm">
 		<frontend-data-set:headless-display
 			apiURL="<%= viewChangesDisplayContext.getAPIURL() %>"
+			bulkActionDropdownItems="<%= viewChangesDisplayContext.getBulkActionDropdownItems() %>"
 			fdsActionDropdownItems="<%= viewChangesDisplayContext.getFDSActionDropdownItems() %>"
 			fdsFilters="<%= viewChangesDisplayContext.getFDSFilters() %>"
 			fdsSortItemList="<%= viewChangesDisplayContext.getFDSSortItemList() %>"
+			formName="fm"
 			id="<%= PublicationsFDSNames.PUBLICATIONS_CHANGES %>"
+			selectedItemsKey="id"
+			selectionType="multiple"
+			style="fluid"
 		/>
-	</clay:container-fluid>
+	</aui:form>
 </div>

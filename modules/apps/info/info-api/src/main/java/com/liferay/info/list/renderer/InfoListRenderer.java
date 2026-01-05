@@ -7,14 +7,15 @@ package com.liferay.info.list.renderer;
 
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.type.Keyed;
+import com.liferay.petra.reflect.GenericUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Jorge Ferrer
@@ -23,6 +24,10 @@ public interface InfoListRenderer<T> extends Keyed {
 
 	public default List<InfoItemRenderer<?>> getAvailableInfoItemRenderers() {
 		return Collections.emptyList();
+	}
+
+	public default String getCollectionItemClassName() {
+		return GenericUtil.getGenericClassName(this);
 	}
 
 	public default String getLabel(Locale locale) {

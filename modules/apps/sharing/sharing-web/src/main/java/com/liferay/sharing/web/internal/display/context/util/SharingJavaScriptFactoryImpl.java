@@ -14,19 +14,22 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.display.context.util.SharingJavaScriptFactory;
+import com.liferay.sharing.security.permission.SharingPermission;
 import com.liferay.sharing.web.internal.util.SharingJavaScriptThreadLocal;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,7 +45,11 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 	public String createCopyLinkClickMethod(
 		String className, long classPK, HttpServletRequest httpServletRequest) {
 
-		requestSharingJavascript();
+		if (!_containsSharePermission(className, classPK, httpServletRequest)) {
+			return null;
+		}
+
+		requestSharingJavaScript();
 
 		String link = _getAssetURLShare(className, classPK, httpServletRequest);
 
@@ -53,7 +60,11 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 	public String createManageCollaboratorsOnClickMethod(
 		String className, long classPK, HttpServletRequest httpServletRequest) {
 
-		requestSharingJavascript();
+		if (!_containsSharePermission(className, classPK, httpServletRequest)) {
+			return null;
+		}
+
+		requestSharingJavaScript();
 
 		return StringBundler.concat(
 			"Liferay.Sharing.manageCollaborators(",
@@ -65,7 +76,11 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 	public String createSharingOnClickMethod(
 		String className, long classPK, HttpServletRequest httpServletRequest) {
 
-		requestSharingJavascript();
+		if (!_containsSharePermission(className, classPK, httpServletRequest)) {
+			return null;
+		}
+
+		requestSharingJavaScript();
 
 		return StringBundler.concat(
 			"Liferay.Sharing.share(",
@@ -77,8 +92,28 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 	}
 
 	@Override
-	public void requestSharingJavascript() {
+	public void requestSharingJavaScript() {
 		SharingJavaScriptThreadLocal.setSharingJavaScriptNeeded(true);
+	}
+
+	private boolean _containsSharePermission(
+		String className, long classPK, HttpServletRequest httpServletRequest) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		try {
+			return _sharingPermission.containsSharePermission(
+				themeDisplay.getPermissionChecker(),
+				_classNameLocalService.getClassNameId(className), classPK,
+				themeDisplay.getScopeGroupId());
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return false;
+		}
 	}
 
 	private AssetRenderer<?> _getAssetRenderer(String className, long classPK)
@@ -141,10 +176,10 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 			return assetRenderer.getURLShare(
 				_portal.getLiferayPortletRequest(
 					(PortletRequest)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_REQUEST)),
+						JavaConstants.JAKARTA_PORTLET_REQUEST)),
 				_portal.getLiferayPortletResponse(
 					(PortletResponse)httpServletRequest.getAttribute(
-						JavaConstants.JAVAX_PORTLET_RESPONSE)));
+						JavaConstants.JAKARTA_PORTLET_RESPONSE)));
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -183,5 +218,8 @@ public class SharingJavaScriptFactoryImpl implements SharingJavaScriptFactory {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SharingPermission _sharingPermission;
 
 }

@@ -78,10 +78,16 @@ public class AutoIncrementObjectFieldBusinessType
 
 	@Override
 	public Map<String, Object> getProperties(
-		ObjectField objectField,
-		ObjectFieldRenderingContext objectFieldRenderingContext) {
+			ObjectField objectField,
+			ObjectFieldRenderingContext objectFieldRenderingContext)
+		throws PortalException {
 
-		return Collections.emptyMap();
+		Map<String, Object> properties = super.getProperties(
+			objectField, objectFieldRenderingContext);
+
+		properties.remove(ObjectFieldSettingConstants.NAME_INITIAL_VALUE);
+
+		return properties;
 	}
 
 	@Override
@@ -103,6 +109,11 @@ public class AutoIncrementObjectFieldBusinessType
 			ObjectFieldSettingConstants.NAME_INITIAL_VALUE,
 			ObjectFieldSettingConstants.NAME_PREFIX,
 			ObjectFieldSettingConstants.NAME_SUFFIX);
+	}
+
+	@Override
+	public boolean isLocalizationSupported(ObjectField objectField) {
+		return false;
 	}
 
 	@Override

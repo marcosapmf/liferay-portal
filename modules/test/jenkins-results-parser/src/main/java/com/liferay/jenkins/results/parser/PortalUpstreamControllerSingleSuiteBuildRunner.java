@@ -17,13 +17,8 @@ public class PortalUpstreamControllerSingleSuiteBuildRunner
 	}
 
 	@Override
-	protected String getJobURL() {
-		return JenkinsResultsParserUtil.combine(
-			JenkinsResultsParserUtil.getMostAvailableMasterURL(
-				JenkinsResultsParserUtil.combine(
-					"http://" + getInvocationCohortName() + ".liferay.com"),
-				null, 1, 24, 2),
-			"/job/test-portal-upstream");
+	protected String getInvocationJobName() {
+		return "test-portal-upstream";
 	}
 
 }

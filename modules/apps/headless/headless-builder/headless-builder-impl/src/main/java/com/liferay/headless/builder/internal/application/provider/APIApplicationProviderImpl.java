@@ -109,7 +109,7 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 					public APIApplication.Schema getRequestSchema() {
 						return _getSchema(
 							(String)properties.get(
-								"r_requestAPISchemaToAPIEndpoints_c_" +
+								"r_requestAPISchemaToAPIEndpoints_l_" +
 									"apiSchemaERC"),
 							schemas);
 					}
@@ -118,7 +118,7 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 					public APIApplication.Schema getResponseSchema() {
 						return _getSchema(
 							(String)properties.get(
-								"r_responseAPISchemaToAPIEndpoints_c_" +
+								"r_responseAPISchemaToAPIEndpoints_l_" +
 									"apiSchemaERC"),
 							schemas);
 					}
@@ -436,7 +436,13 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 
 			@Override
 			public String getVersion() {
-				return (String)properties.get("version");
+				String version = (String)properties.get("version");
+
+				if (Validator.isNotNull(version)) {
+					return version;
+				}
+
+				return "v1.0";
 			}
 
 		};

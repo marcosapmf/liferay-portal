@@ -15,15 +15,15 @@ import com.liferay.portal.vulcan.internal.graphql.data.processor.GraphQLDTOContr
 
 import graphql.schema.DataFetchingEnvironment;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.HttpMethod;
+
 import java.io.Serializable;
 
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.HttpMethod;
 
 /**
  * @author Carlos Correa
@@ -91,7 +91,7 @@ public class GraphQLDTOContributorDataFetcher extends BaseDataFetcher {
 		}
 		else if (_operation == GraphQLDTOContributor.Operation.DELETE) {
 			return _graphQLDTOContributorDataFetchingProcessor.delete(
-				_graphQLDTOContributor,
+				_graphQLDTOContributor, httpServletRequest,
 				dataFetchingEnvironment.<Long>getArgument(
 					_graphQLDTOContributor.getIdName()));
 		}

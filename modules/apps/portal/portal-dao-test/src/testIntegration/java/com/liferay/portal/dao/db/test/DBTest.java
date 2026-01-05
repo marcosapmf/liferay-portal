@@ -61,7 +61,9 @@ public class DBTest {
 
 		dbInspector = new DBInspector(connection);
 
-		Assume.assumeTrue(db.getDBType() != DBType.ORACLE);
+		Assume.assumeTrue(
+			(db.getDBType() != DBType.ORACLE) &&
+			(db.getDBType() != DBType.POSTGRESQL));
 	}
 
 	@BeforeClass
@@ -520,7 +522,7 @@ public class DBTest {
 				"typeDate2 DATE null, typeDouble2 DOUBLE, typeInteger2 ",
 				"INTEGER, typeLong2 LONG null, typeSBlob2 SBLOB, typeString2 ",
 				"STRING null, typeText2 TEXT null, typeVarchar2 VARCHAR(75) ",
-				"null);"));
+				"null)"));
 
 		db.runSQL(
 			StringBundler.concat(
@@ -614,11 +616,11 @@ public class DBTest {
 	}
 
 	@Test
-	public void testGetIndexes() throws Exception {
+	public void testGetIndexMetadatas() throws Exception {
 		addIndex(new String[] {"typeVarchar", "typeBoolean"});
 
 		List<IndexMetadata> indexMetadatas = ReflectionTestUtil.invoke(
-			db, "getIndexes",
+			db, "getIndexMetadatas",
 			new Class<?>[] {
 				Connection.class, String.class, String.class, boolean.class
 			},
@@ -766,7 +768,7 @@ public class DBTest {
 				"10 not null, typeSBlob2 SBLOB, typeString2 STRING null, ",
 				"typeText2 TEXT null, typeVarchar2 VARCHAR(75) null,",
 				"typeVarcharDefault2 VARCHAR(10) default 'testValue' not ",
-				"null);"));
+				"null)"));
 
 		db.runSQL(
 			StringBundler.concat(
@@ -828,6 +830,85 @@ public class DBTest {
 		}
 	}
 
+	@Test
+	public void testUpdatePrimaryKeyAddsMissingPrimaryKey() throws Exception {
+		db.runSQL("create table DBTest (id INTEGER not null, column1 TEXT)");
+
+		try (Connection connection = DataAccess.getConnection()) {
+			db.updatePrimaryKey(connection, "DBTest", new String[] {"id"});
+
+			Assert.assertTrue(
+				ArrayUtil.equalsIgnoreCase(
+					new String[] {"id"},
+					db.getPrimaryKeyColumnNames(connection, "DBTest")));
+		}
+		finally {
+			db.runSQL("DROP_TABLE_IF_EXISTS(DBTest)");
+		}
+	}
+
+	@Test
+	public void testUpdatePrimaryKeyChangesPrimaryKey() throws Exception {
+		db.runSQL(
+			"create table DBTest (id INTEGER not null, column1 LONG not null " +
+				"primary key, column2 INTEGER not null)");
+
+		try (Connection connection = DataAccess.getConnection()) {
+			db.updatePrimaryKey(
+				connection, "DBTest", new String[] {"id", "column2"});
+
+			Assert.assertTrue(
+				ArrayUtil.equalsIgnoreCase(
+					new String[] {"id", "column2"},
+					db.getPrimaryKeyColumnNames(connection, "DBTest")));
+		}
+		finally {
+			db.runSQL("DROP_TABLE_IF_EXISTS(DBTest)");
+		}
+	}
+
+	@Test
+	public void testUpdatePrimaryKeyWithCTCollectionIdAddsPrimaryKey()
+		throws Exception {
+
+		db.runSQL(
+			"create table DBTest (id INTEGER not null, ctCollectionId LONG " +
+				"not null)");
+
+		try (Connection connection = DataAccess.getConnection()) {
+			db.updatePrimaryKey(
+				connection, "DBTest", new String[] {"id", "ctCollectionId"});
+
+			Assert.assertTrue(
+				ArrayUtil.equalsIgnoreCase(
+					new String[] {"id", "ctCollectionId"},
+					db.getPrimaryKeyColumnNames(connection, "DBTest")));
+		}
+		finally {
+			db.runSQL("DROP_TABLE_IF_EXISTS(DBTest)");
+		}
+	}
+
+	@Test
+	public void testUpdatePrimaryKeyWithoutCTCollectionIdAddsPrimaryKey()
+		throws Exception {
+
+		db.runSQL("create table DBTest (id INTEGER not null, column1 TEXT)");
+
+		try (Connection connection = DataAccess.getConnection()) {
+			db.updatePrimaryKey(
+				connection, "DBTest", new String[] {"id", "ctCollectionId"});
+
+			Assert.assertTrue(
+				ArrayUtil.equalsIgnoreCase(
+					new String[] {"id"},
+					db.getPrimaryKeyColumnNames(connection, "DBTest")));
+		}
+		finally {
+			db.runSQL("DROP_TABLE_IF_EXISTS(DBTest)");
+		}
+	}
+
 	protected void addIndex(
 		String tableName, String[] columnNames, boolean unique) {
 
@@ -861,14 +942,14 @@ public class DBTest {
 				"null, typeLongDefault LONG default 10 not null, typeSBlob ",
 				"SBLOB, typeString STRING null, typeText TEXT null, ",
 				"typeVarchar VARCHAR(75) null, typeVarcharDefault VARCHAR(10) ",
-				"default 'testValue' not null);"));
+				"default 'testValue' not null)"));
 	}
 
-	private List<IndexMetadata> _getIndexes(
+	private List<IndexMetadata> _getIndexMetadatas(
 		String tableName, String[] columnNames) {
 
 		return ReflectionTestUtil.invoke(
-			db, "getIndexes",
+			db, "getIndexMetadatas",
 			new Class<?>[] {
 				Connection.class, String.class, String.class, boolean.class
 			},
@@ -876,7 +957,7 @@ public class DBTest {
 	}
 
 	private void _validateIndex(String[] columnNames) throws Exception {
-		List<IndexMetadata> indexMetadatas = _getIndexes(
+		List<IndexMetadata> indexMetadatas = _getIndexMetadatas(
 			TABLE_NAME_1, columnNames);
 
 		Assert.assertEquals(

@@ -7,7 +7,7 @@ import {act, cleanup, render} from '@testing-library/react';
 import {PageProvider} from 'data-engine-js-components-web';
 import React from 'react';
 
-import OptionFieldKeyValue from '../../../src/main/resources/META-INF/resources/OptionFieldKeyValue/OptionFieldKeyValue';
+import OptionFieldKeyValue from '../../../src/main/resources/META-INF/resources/js/OptionFieldKeyValue/OptionFieldKeyValue';
 
 const globalLanguageDirection = Liferay.Language.direction;
 
@@ -54,44 +54,12 @@ describe('OptionFieldKeyValue', () => {
 		fetch.mockResponseOnce(JSON.stringify({}));
 	});
 
-	it('is not editable', () => {
-		const {container} = render(
-			<OptionFieldKeyValueWithProvider
-				name="OptionFieldKeyValue"
-				readOnly={true}
-				spritemap={spritemap}
-			/>
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
 	it('has a helptext', () => {
 		const {container} = render(
 			<OptionFieldKeyValueWithProvider
 				name="OptionFieldKeyValue"
 				spritemap={spritemap}
 				tip="Type something"
-			/>
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('has an id', () => {
-		const {container} = render(
-			<OptionFieldKeyValueWithProvider
-				id="Id"
-				name="OptionFieldKeyValue"
-				spritemap={spritemap}
 			/>
 		);
 
@@ -134,6 +102,38 @@ describe('OptionFieldKeyValue', () => {
 		expect(container).toMatchSnapshot();
 	});
 
+	it('has a value', () => {
+		const {container} = render(
+			<OptionFieldKeyValueWithProvider
+				name="OptionFieldKeyValue"
+				spritemap={spritemap}
+				value="value"
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
+	it('has an id', () => {
+		const {container} = render(
+			<OptionFieldKeyValueWithProvider
+				id="Id"
+				name="OptionFieldKeyValue"
+				spritemap={spritemap}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
 	it('hides keyword input', () => {
 		const {container} = render(
 			<OptionFieldKeyValueWithProvider
@@ -149,11 +149,43 @@ describe('OptionFieldKeyValue', () => {
 		expect(OptionFieldKeyValueInput.length).toBe(0);
 	});
 
+	it('is not editable', () => {
+		const {container} = render(
+			<OptionFieldKeyValueWithProvider
+				name="OptionFieldKeyValue"
+				readOnly={true}
+				spritemap={spritemap}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
 	it('is not required', () => {
 		const {container} = render(
 			<OptionFieldKeyValueWithProvider
 				name="OptionFieldKeyValue"
 				required={false}
+				spritemap={spritemap}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(container).toMatchSnapshot();
+	});
+
+	it('renders component with a key', () => {
+		const {container} = render(
+			<OptionFieldKeyValueWithProvider
+				keyword="key"
+				name="OptionFieldKeyValue"
 				spritemap={spritemap}
 			/>
 		);
@@ -182,38 +214,6 @@ describe('OptionFieldKeyValue', () => {
 		expect(container).toMatchSnapshot();
 	});
 
-	it('has a value', () => {
-		const {container} = render(
-			<OptionFieldKeyValueWithProvider
-				name="OptionFieldKeyValue"
-				spritemap={spritemap}
-				value="value"
-			/>
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('renders component with a key', () => {
-		const {container} = render(
-			<OptionFieldKeyValueWithProvider
-				keyword="key"
-				name="OptionFieldKeyValue"
-				spritemap={spritemap}
-			/>
-		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
-
-		expect(container).toMatchSnapshot();
-	});
-
 	it('shows keyword input', () => {
 		const {container} = render(
 			<OptionFieldKeyValueWithProvider
@@ -225,7 +225,7 @@ describe('OptionFieldKeyValue', () => {
 		);
 
 		const OptionFieldKeyValueInput = container.querySelectorAll(
-			'[id*="keyValueName"]:not([id*="_fieldError"])'
+			'[id*="keyValueName"]:not([id*="_fieldFeedback"])'
 		);
 
 		expect(OptionFieldKeyValueInput.length).toBe(1);

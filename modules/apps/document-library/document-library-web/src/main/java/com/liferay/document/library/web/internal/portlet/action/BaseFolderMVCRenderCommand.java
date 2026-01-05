@@ -5,7 +5,7 @@
 
 package com.liferay.document.library.web.internal.portlet.action;
 
-import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 /**
  * @author Iván Zaera
@@ -43,10 +43,8 @@ public abstract class BaseFolderMVCRenderCommand implements MVCRenderCommand {
 
 				checkPermissions(themeDisplay.getPermissionChecker(), folder);
 
-				renderRequest.setAttribute(
-					CTTimelineKeys.CLASS_NAME, DLFolder.class.getName());
-				renderRequest.setAttribute(
-					CTTimelineKeys.CLASS_PK, folder.getFolderId());
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, DLFolder.class, folder.getFolderId());
 			}
 
 			renderRequest.setAttribute(

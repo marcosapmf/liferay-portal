@@ -5,7 +5,10 @@
 
 package com.liferay.knowledge.base.web.internal.portlet.action;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
+import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -13,10 +16,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -25,11 +28,11 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ARTICLE,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_DISPLAY,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SEARCH,
-		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SECTION,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ARTICLE,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_DISPLAY,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SEARCH,
+		"jakarta.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_SECTION,
 		"mvc.command.name=/", "mvc.command.name=/knowledge_base/view"
 	},
 	service = MVCRenderCommand.class
@@ -43,15 +46,33 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 
 		String rootPortletId = _getRootPortletId(renderRequest);
 
+		CTTimelineUtil.setClassName(renderRequest, KBArticle.class);
+
 		if (rootPortletId.equals(KBPortletKeys.KNOWLEDGE_BASE_ADMIN)) {
 			return "/admin/view.jsp";
 		}
 
 		if (rootPortletId.equals(KBPortletKeys.KNOWLEDGE_BASE_ARTICLE)) {
+			KBArticle kbArticle = (KBArticle)renderRequest.getAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE);
+
+			if (kbArticle != null) {
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, KBArticle.class, kbArticle.getKbArticleId());
+			}
+
 			return "/article/view.jsp";
 		}
 
 		if (rootPortletId.equals(KBPortletKeys.KNOWLEDGE_BASE_DISPLAY)) {
+			KBArticle kbArticle = (KBArticle)renderRequest.getAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE);
+
+			if (kbArticle != null) {
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, KBArticle.class, kbArticle.getKbArticleId());
+			}
+
 			return "/display/view.jsp";
 		}
 

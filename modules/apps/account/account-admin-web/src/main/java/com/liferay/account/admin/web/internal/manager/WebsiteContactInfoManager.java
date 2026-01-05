@@ -11,9 +11,9 @@ import com.liferay.portal.kernel.service.WebsiteLocalService;
 import com.liferay.portal.kernel.service.WebsiteService;
 import com.liferay.portal.kernel.util.ParamUtil;
 
-import java.util.List;
+import jakarta.portlet.ActionRequest;
 
-import javax.portlet.ActionRequest;
+import java.util.List;
 
 /**
  * @author Danny Situ
@@ -50,8 +50,9 @@ public class WebsiteContactInfoManager extends BaseContactInfoManager<Website> {
 	@Override
 	protected Website doAdd(Website website) throws Exception {
 		return _websiteService.addWebsite(
-			_className, _classPK, website.getUrl(), website.getListTypeId(),
-			website.isPrimary(), new ServiceContext());
+			website.getExternalReferenceCode(), _className, _classPK,
+			website.getUrl(), website.getListTypeId(), website.isPrimary(),
+			new ServiceContext());
 	}
 
 	@Override
@@ -62,8 +63,8 @@ public class WebsiteContactInfoManager extends BaseContactInfoManager<Website> {
 	@Override
 	protected void doUpdate(Website website) throws Exception {
 		_websiteService.updateWebsite(
-			website.getWebsiteId(), website.getUrl(), website.getListTypeId(),
-			website.isPrimary());
+			website.getExternalReferenceCode(), website.getWebsiteId(),
+			website.getUrl(), website.getListTypeId(), website.isPrimary());
 	}
 
 	@Override

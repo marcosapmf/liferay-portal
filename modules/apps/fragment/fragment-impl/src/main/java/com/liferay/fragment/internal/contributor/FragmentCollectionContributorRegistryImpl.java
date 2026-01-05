@@ -23,6 +23,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -33,6 +35,8 @@ import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -41,8 +45,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -73,7 +75,14 @@ public class FragmentCollectionContributorRegistryImpl
 			return null;
 		}
 
-		return fragmentCollectionBag._fragmentCollectionContributor;
+		FragmentCollectionContributor fragmentCollectionContributor =
+			fragmentCollectionBag._fragmentCollectionContributor;
+
+		if (!fragmentCollectionContributor.isEnabled()) {
+			return null;
+		}
+
+		return fragmentCollectionContributor;
 	}
 
 	@Override
@@ -88,6 +97,10 @@ public class FragmentCollectionContributorRegistryImpl
 
 			FragmentCollectionContributor fragmentCollectionContributor =
 				fragmentCollectionBag._fragmentCollectionContributor;
+
+			if (!fragmentCollectionContributor.isEnabled()) {
+				continue;
+			}
 
 			if (MapUtil.isNotEmpty(fragmentCollectionContributor.getNames())) {
 				fragmentCollectionContributors.add(
@@ -116,6 +129,13 @@ public class FragmentCollectionContributorRegistryImpl
 			return null;
 		}
 
+		FragmentCollectionContributor fragmentCollectionContributor =
+			fragmentCollectionBag._fragmentCollectionContributor;
+
+		if (!fragmentCollectionContributor.isEnabled()) {
+			return null;
+		}
+
 		Map<String, FragmentComposition> fragmentCompostions =
 			fragmentCollectionBag._fragmentCompostions;
 
@@ -128,6 +148,13 @@ public class FragmentCollectionContributorRegistryImpl
 
 		for (FragmentCollectionBag fragmentCollectionBag :
 				_serviceTrackerMap.values()) {
+
+			FragmentCollectionContributor fragmentCollectionContributor =
+				fragmentCollectionBag._fragmentCollectionContributor;
+
+			if (!fragmentCollectionContributor.isEnabled()) {
+				continue;
+			}
 
 			fragmentEntries.putAll(fragmentCollectionBag._fragmentEntries);
 		}
@@ -144,6 +171,10 @@ public class FragmentCollectionContributorRegistryImpl
 
 			FragmentCollectionContributor fragmentCollectionContributor =
 				fragmentCollectionBag._fragmentCollectionContributor;
+
+			if (!fragmentCollectionContributor.isEnabled()) {
+				continue;
+			}
 
 			for (FragmentEntry fragmentEntry :
 					fragmentCollectionContributor.getFragmentEntries(
@@ -173,6 +204,13 @@ public class FragmentCollectionContributorRegistryImpl
 			_serviceTrackerMap.getService(fragmentEntryKey.substring(0, index));
 
 		if (fragmentCollectionBag == null) {
+			return null;
+		}
+
+		FragmentCollectionContributor fragmentCollectionContributor =
+			fragmentCollectionBag._fragmentCollectionContributor;
+
+		if (!fragmentCollectionContributor.isEnabled()) {
 			return null;
 		}
 
@@ -301,12 +339,12 @@ public class FragmentCollectionContributorRegistryImpl
 						_layoutServiceContextHelper.
 							getServiceContextAutoCloseable(company)) {
 
-					Set<String> fragmentEntriesSet = fragmentEntries.keySet();
+					Set<String> keys = fragmentEntries.keySet();
 
 					List<FragmentEntryLink> fragmentEntryLinks =
 						_fragmentEntryLinkLocalService.getFragmentEntryLinks(
 							company.getCompanyId(),
-							fragmentEntriesSet.toArray(new String[0]));
+							keys.toArray(new String[0]));
 
 					for (FragmentEntryLink fragmentEntryLink :
 							fragmentEntryLinks) {
@@ -334,14 +372,17 @@ public class FragmentCollectionContributorRegistryImpl
 	}
 
 	private boolean _validateFragmentEntry(FragmentEntry fragmentEntry) {
+		JSONObject configurationJSONObject = _jsonFactory.safeCreateJSONObject(
+			fragmentEntry.getConfiguration(), true);
+
 		try {
 			fragmentEntryValidator.validateConfiguration(
-				fragmentEntry.getConfiguration());
+				configurationJSONObject);
 			fragmentEntryValidator.validateTypeOptions(
 				fragmentEntry.getType(), fragmentEntry.getTypeOptions());
 
 			fragmentEntryProcessorRegistry.validateFragmentEntryHTML(
-				fragmentEntry.getHtml(), fragmentEntry.getConfiguration());
+				fragmentEntry.getHtml(), configurationJSONObject);
 
 			return true;
 		}
@@ -371,6 +412,9 @@ public class FragmentCollectionContributorRegistryImpl
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private LayoutServiceContextHelper _layoutServiceContextHelper;

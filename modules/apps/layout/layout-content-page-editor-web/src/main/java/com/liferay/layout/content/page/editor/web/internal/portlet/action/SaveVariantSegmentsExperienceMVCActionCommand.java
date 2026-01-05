@@ -14,9 +14,11 @@ import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
+		"jakarta.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
 		"mvc.command.name=/layout_content_page_editor/save_variant_segments_experience"
 	},
 	service = MVCActionCommand.class
@@ -60,8 +62,19 @@ public class SaveVariantSegmentsExperienceMVCActionCommand
 		long segmentsExperienceId = ParamUtil.getLong(
 			actionRequest, "segmentsExperienceId");
 
+		SegmentsExperience sourceSegmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
+
+		SegmentsExperience targetSegmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				layout.getGroupId(),
+				sourceSegmentsExperience.getSegmentsExperienceKey(),
+				layout.getPlid());
+
 		_layoutLocalService.copyLayoutContent(
-			new long[] {segmentsExperienceId}, draftLayout, layout);
+			sourceSegmentsExperience.getSegmentsExperienceId(), draftLayout,
+			targetSegmentsExperience.getSegmentsExperienceId(), layout);
 
 		hideDefaultSuccessMessage(actionRequest);
 
@@ -70,5 +83,8 @@ public class SaveVariantSegmentsExperienceMVCActionCommand
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

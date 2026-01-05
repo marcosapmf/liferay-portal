@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.net.URLEncoder;
+
+import java.nio.charset.StandardCharsets;
 import java.nio.file.PathMatcher;
 
 import java.util.ArrayList;
@@ -106,6 +109,25 @@ public class GitWorkingDirectory {
 		}
 
 		return newGitRemote;
+	}
+
+	public File archive(String fileName) {
+		GitUtil.ExecutionResult executionResult = executeBashCommands(
+			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 10,
+			"git archive HEAD -o " + fileName);
+
+		if (executionResult.getExitValue() != 0) {
+			File gitDirectory = getGitDirectory();
+
+			throw new GitWorkingDirectoryRuntimeException(
+				this,
+				JenkinsResultsParserUtil.combine(
+					"Unable to create Git archive from ",
+					gitDirectory.toString(), "\n",
+					executionResult.getStandardError()));
+		}
+
+		return new File(getWorkingDirectory(), fileName);
 	}
 
 	public LocalGitBranch checkoutLocalGitBranch(
@@ -550,6 +572,10 @@ public class GitWorkingDirectory {
 		Map<String, Set<String>> remoteURLGitBranchNameMap = new HashMap<>();
 
 		for (RemoteGitBranch remoteGitBranch : remoteGitBranches) {
+			if (remoteGitBranch == null) {
+				continue;
+			}
+
 			RemoteGitRepository remoteGitRepository =
 				remoteGitBranch.getRemoteGitRepository();
 
@@ -605,10 +631,16 @@ public class GitWorkingDirectory {
 			callables.add(callable);
 		}
 
+		int maximumPoolSize = callables.size();
+
+		if (JenkinsResultsParserUtil.isCloudCINode()) {
+			maximumPoolSize = 1;
+		}
+
 		ParallelExecutor<Boolean> parallelExecutor = new ParallelExecutor<>(
 			callables, true,
 			JenkinsResultsParserUtil.getNewThreadPoolExecutor(
-				callables.size(), true),
+				maximumPoolSize, true),
 			"deleteRemoteGitBranches");
 
 		try {
@@ -703,7 +735,8 @@ public class GitWorkingDirectory {
 
 		String remoteURL = remoteGitRepository.getRemoteURL();
 
-		if (JenkinsResultsParserUtil.isCINode() &&
+		if (!JenkinsResultsParserUtil.isCloudCINode() &&
+			JenkinsResultsParserUtil.isCINode() &&
 			remoteURL.contains("github.com:liferay/")) {
 
 			String gitHubDevRemoteURL = remoteURL.replace(
@@ -955,9 +988,7 @@ public class GitWorkingDirectory {
 	}
 
 	public Set<File> findFiles(String fileName, String fileContentSnippet) {
-		if (JenkinsResultsParserUtil.isNullOrEmpty(fileName) ||
-			JenkinsResultsParserUtil.isNullOrEmpty(fileContentSnippet)) {
-
+		if (JenkinsResultsParserUtil.isNullOrEmpty(fileContentSnippet)) {
 			return null;
 		}
 
@@ -965,28 +996,38 @@ public class GitWorkingDirectory {
 
 		sb.append("git grep ");
 		sb.append(fileContentSnippet);
-		sb.append(" | grep ");
-		sb.append(fileName);
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(fileName)) {
+			sb.append(" | grep ");
+			sb.append(fileName);
+		}
 
 		GitUtil.ExecutionResult result = executeBashCommands(
-			5, 1000, 30 * 1000, sb.toString());
+			5, 1000, 60 * 1000, sb.toString());
 
 		if (result.getExitValue() != 0) {
 			throw new GitWorkingDirectoryRuntimeException(
 				this, "Unable to run: git grep");
 		}
 
-		Pattern pattern = Pattern.compile(
-			JenkinsResultsParserUtil.combine(
-				"(?<filePath>.+/", fileName, ")\\:.+"));
+		String regex = JenkinsResultsParserUtil.combine(
+			"(?<filePath>[^\\:]+)\\:.+");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(fileName)) {
+			regex = JenkinsResultsParserUtil.combine(
+				"(?<filePath>[^\\:]+/", fileName, ")\\:.+");
+		}
+
+		Pattern pattern = Pattern.compile(regex);
 
 		Matcher matcher = pattern.matcher(result.getStandardOut());
 
 		Set<File> files = new HashSet<>();
 
 		while (matcher.find()) {
-			files.add(
-				new File(getWorkingDirectory(), matcher.group("filePath")));
+			String filePath = matcher.group("filePath");
+
+			files.add(new File(getWorkingDirectory(), filePath.trim()));
 		}
 
 		return files;
@@ -1090,6 +1131,25 @@ public class GitWorkingDirectory {
 		}
 
 		return branchNamesList;
+	}
+
+	public int getCommitCountBetweenBranches(
+		String baseBranchName, String branchName) {
+
+		GitUtil.ExecutionResult executionResult = executeBashCommands(
+			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 10,
+			JenkinsResultsParserUtil.combine(
+				"git rev-list --count ", baseBranchName, "..", branchName));
+
+		int exitValue = executionResult.getExitValue();
+
+		if (exitValue == 0) {
+			return Integer.parseInt(executionResult.getStandardOut());
+		}
+
+		System.out.println(executionResult.getStandardError());
+
+		return 0;
 	}
 
 	public String getCurrentBranchName() {
@@ -1234,22 +1294,6 @@ public class GitWorkingDirectory {
 		}
 
 		return configProperty;
-	}
-
-	public Boolean getGitConfigPropertyBoolean(
-		String gitConfigPropertyName, Boolean defaultValue) {
-
-		String gitConfigProperty = getGitConfigProperty(gitConfigPropertyName);
-
-		if (gitConfigProperty == null) {
-			if (defaultValue != null) {
-				return defaultValue;
-			}
-
-			return null;
-		}
-
-		return Boolean.parseBoolean(gitConfigProperty);
 	}
 
 	public File getGitDirectory() {
@@ -1645,13 +1689,7 @@ public class GitWorkingDirectory {
 			String gitDiffOutput = executionResult.getStandardOut();
 
 			for (String line : gitDiffOutput.split("\n")) {
-				File modifiedFile = new File(_workingDirectory, line);
-
-				if (!modifiedFile.exists()) {
-					continue;
-				}
-
-				modifiedFiles.add(modifiedFile);
+				modifiedFiles.add(new File(_workingDirectory, line));
 			}
 
 			_modifiedFilesMap.put(gitDiffCommandString, modifiedFiles);
@@ -1773,13 +1811,11 @@ public class GitWorkingDirectory {
 	public RemoteGitBranch getRemoteGitBranch(
 		String remoteGitBranchName, String remoteURL, boolean required) {
 
-		List<RemoteGitBranch> remoteGitBranches = getRemoteGitBranches(
-			remoteGitBranchName, remoteURL);
+		RemoteGitBranch remoteGitBranch = GitUtil.getRemoteGitBranch(
+			remoteGitBranchName, getWorkingDirectory(), remoteURL, required);
 
-		for (RemoteGitBranch remoteGitBranch : remoteGitBranches) {
-			if (remoteGitBranchName.equals(remoteGitBranch.getName())) {
-				return remoteGitBranch;
-			}
+		if (remoteGitBranch != null) {
+			return remoteGitBranch;
 		}
 
 		if (required) {
@@ -1883,6 +1919,35 @@ public class GitWorkingDirectory {
 				this, "Invalid remote url " + remoteURL);
 		}
 
+		if (JenkinsResultsParserUtil.isCINode() &&
+			!JenkinsResultsParserUtil.isCloudCINode() &&
+			remoteURL.startsWith("git@github.com:liferay/")) {
+
+			try {
+				String sha = JenkinsResultsParserUtil.toString(
+					JenkinsResultsParserUtil.combine(
+						"http://",
+						JenkinsResultsParserUtil.getBuildProperty(
+							"mirrors.hostname"),
+						"/github.com/liferay/sha/", getGitRepositoryName(), "(",
+						URLEncoder.encode(
+							remoteGitBranchName, StandardCharsets.UTF_8.name()),
+						").txt"),
+					false);
+
+				sha = sha.trim();
+
+				if (JenkinsResultsParserUtil.isValidGitSHA(sha)) {
+					return sha;
+				}
+			}
+			catch (Exception exception) {
+				System.out.println(
+					"Unable to retrieve cached SHA information: " +
+						exception.getMessage());
+			}
+		}
+
 		String command = JenkinsResultsParserUtil.combine(
 			"git ls-remote -h ", remoteURL, " ", remoteGitBranchName);
 
@@ -1921,13 +1986,11 @@ public class GitWorkingDirectory {
 	public RemoteGitRef getRemoteGitRef(
 		String remoteGitRefName, String remoteURL, boolean required) {
 
-		List<RemoteGitRef> remoteGitRefs = GitUtil.getRemoteGitRefs(
-			remoteGitRefName, getWorkingDirectory(), remoteURL);
+		RemoteGitRef remoteGitRef = GitUtil.getRemoteGitRef(
+			remoteGitRefName, getWorkingDirectory(), remoteURL, required);
 
-		for (RemoteGitRef remoteGitRef : remoteGitRefs) {
-			if (remoteGitRefName.equals(remoteGitRef.getName())) {
-				return remoteGitRef;
-			}
+		if (remoteGitRef != null) {
+			return remoteGitRef;
 		}
 
 		if (required) {
@@ -1954,14 +2017,20 @@ public class GitWorkingDirectory {
 			gitRemote = gitRemotes.get("upstream");
 		}
 
-		if (gitRemote == null) {
-			gitRemote = addGitRemote(
-				true, "upstream",
-				JenkinsResultsParserUtil.combine(
-					"git@github.com:liferay/", getGitRepositoryName(), ".git"));
+		if (gitRemote != null) {
+			return gitRemote;
 		}
 
-		return gitRemote;
+		String gitRepositoryName = getGitRepositoryName();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(gitRepositoryName)) {
+			return null;
+		}
+
+		return addGitRemote(
+			true, "upstream",
+			JenkinsResultsParserUtil.combine(
+				"git@github.com:liferay/", gitRepositoryName, ".git"));
 	}
 
 	public LocalGitBranch getUpstreamLocalGitBranch() {
@@ -2048,11 +2117,7 @@ public class GitWorkingDirectory {
 		if (executionResult.getExitValue() == 0) {
 			String standardOut = executionResult.getStandardOut();
 
-			if (standardOut.isEmpty()) {
-				return false;
-			}
-
-			return true;
+			return !standardOut.isEmpty();
 		}
 
 		return false;
@@ -2111,6 +2176,89 @@ public class GitWorkingDirectory {
 		}
 
 		return log(Integer.parseInt(result.getStandardOut()));
+	}
+
+	public List<RemoteGitBranch> pushBranchesToRemoteGitRepository(
+		boolean force, LocalGitBranch localGitBranch,
+		List<String> remoteGitBranchNames, GitRemote gitRemote) {
+
+		if (localGitBranch == null) {
+			throw new GitWorkingDirectoryIllegalArgumentException(
+				this, "Local Git branch is null");
+		}
+
+		if (gitRemote == null) {
+			throw new GitWorkingDirectoryIllegalArgumentException(
+				this, "Git remote is null");
+		}
+
+		String remoteURL = gitRemote.getRemoteURL();
+
+		if (!GitUtil.isValidRemoteURL(remoteURL)) {
+			throw new GitWorkingDirectoryIllegalArgumentException(
+				this, "Invalid remote URL " + remoteURL);
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("git push ");
+
+		if (force) {
+			sb.append("-f ");
+		}
+
+		sb.append(remoteURL);
+		sb.append(" ");
+
+		if (remoteGitBranchNames.isEmpty()) {
+			sb.append(localGitBranch.getName());
+		}
+		else {
+			for (String remoteGitBranchName : remoteGitBranchNames) {
+				sb.append(localGitBranch.getName());
+
+				if (remoteGitBranchName != null) {
+					sb.append(":");
+					sb.append(remoteGitBranchName);
+				}
+
+				sb.append(" ");
+			}
+		}
+
+		try {
+			GitUtil.ExecutionResult executionResult = executeBashCommands(
+				GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
+				1000 * 60 * 10, sb.toString());
+
+			if (executionResult.getExitValue() != 0) {
+				return null;
+			}
+		}
+		catch (RuntimeException runtimeException) {
+			runtimeException.printStackTrace();
+
+			return null;
+		}
+
+		List<RemoteGitBranch> remoteGitBranches = new ArrayList<>();
+
+		if (remoteGitBranchNames.isEmpty()) {
+			remoteGitBranches.add(
+				(RemoteGitBranch)GitBranchFactory.newRemoteGitRef(
+					GitRepositoryFactory.getRemoteGitRepository(remoteURL),
+					null, localGitBranch.getSHA(), "heads"));
+		}
+		else {
+			for (String remoteGitBranchName : remoteGitBranchNames) {
+				remoteGitBranches.add(
+					(RemoteGitBranch)GitBranchFactory.newRemoteGitRef(
+						GitRepositoryFactory.getRemoteGitRepository(remoteURL),
+						remoteGitBranchName, localGitBranch.getSHA(), "heads"));
+			}
+		}
+
+		return remoteGitBranches;
 	}
 
 	public RemoteGitBranch pushToRemoteGitRepository(
@@ -2375,7 +2523,7 @@ public class GitWorkingDirectory {
 		waitForIndexLock();
 
 		if ((gitRepositoryName == null) || gitRepositoryName.equals("")) {
-			gitRepositoryName = loadGitRepositoryName();
+			gitRepositoryName = _loadGitRepositoryName();
 		}
 
 		_gitRepositoryName = gitRepositoryName;
@@ -2410,6 +2558,22 @@ public class GitWorkingDirectory {
 		_executionResults.put(command, executionResult);
 
 		return executionResult;
+	}
+
+	protected Boolean getGitConfigPropertyBoolean(
+		String gitConfigPropertyName, Boolean defaultValue) {
+
+		String gitConfigProperty = getGitConfigProperty(gitConfigPropertyName);
+
+		if (gitConfigProperty == null) {
+			if (defaultValue != null) {
+				return defaultValue;
+			}
+
+			return null;
+		}
+
+		return Boolean.parseBoolean(gitConfigProperty);
 	}
 
 	protected Map<String, String> getLocalGitBranchesShaMap() {
@@ -2524,41 +2688,6 @@ public class GitWorkingDirectory {
 		}
 
 		return true;
-	}
-
-	protected String loadGitRepositoryName() {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		String remoteURL = upstreamGitRemote.getRemoteURL();
-
-		int x = remoteURL.lastIndexOf("/") + 1;
-
-		int y = remoteURL.indexOf(".git");
-
-		if (y == -1) {
-			y = remoteURL.length();
-		}
-
-		String gitRepositoryName = remoteURL.substring(x, y);
-
-		if (gitRepositoryName.equals("liferay-jenkins-tools-private")) {
-			return gitRepositoryName;
-		}
-
-		if ((gitRepositoryName.equals("liferay-plugins-ee") ||
-			 gitRepositoryName.equals("liferay-portal-ee")) &&
-			_upstreamBranchName.equals("master")) {
-
-			gitRepositoryName = gitRepositoryName.replace("-ee", "");
-		}
-
-		if (gitRepositoryName.contains("-private") &&
-			!_upstreamBranchName.contains("-private")) {
-
-			gitRepositoryName = gitRepositoryName.replace("-private", "");
-		}
-
-		return gitRepositoryName;
 	}
 
 	protected String loadGitRepositoryUsername() {
@@ -2727,9 +2856,11 @@ public class GitWorkingDirectory {
 			String upstreamGitBranchSHA = upstreamRemoteGitBranch.getSHA();
 
 			if (!localSHAExists(upstreamGitBranchSHA)) {
+				GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
 				commands.add(
 					JenkinsResultsParserUtil.combine(
-						"git fetch -f upstream ",
+						"git fetch -f ", upstreamGitRemote.getRemoteURL(), " ",
 						upstreamRemoteGitBranch.getName(), ":",
 						tempBranchName));
 			}
@@ -2763,8 +2894,8 @@ public class GitWorkingDirectory {
 		commands.add(sb.toString());
 
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
-			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
-			GitUtil.MILLIS_TIMEOUT, commands.toArray(new String[0]));
+			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY, 240 * 1000,
+			commands.toArray(new String[0]));
 
 		if (executionResult.getExitValue() != 0) {
 			throw new GitWorkingDirectoryRuntimeException(
@@ -2876,6 +3007,43 @@ public class GitWorkingDirectory {
 		return true;
 	}
 
+	private String _getGitRepositoryName(GitRemote gitRemote) {
+		if (gitRemote == null) {
+			return null;
+		}
+
+		String remoteURL = gitRemote.getRemoteURL();
+
+		int x = remoteURL.lastIndexOf("/") + 1;
+
+		int y = remoteURL.indexOf(".git");
+
+		if (y == -1) {
+			y = remoteURL.length();
+		}
+
+		String gitRepositoryName = remoteURL.substring(x, y);
+
+		if (gitRepositoryName.equals("liferay-jenkins-tools-private")) {
+			return gitRepositoryName;
+		}
+
+		if ((gitRepositoryName.equals("liferay-plugins-ee") ||
+			 gitRepositoryName.equals("liferay-portal-ee")) &&
+			_upstreamBranchName.equals("master")) {
+
+			gitRepositoryName = gitRepositoryName.replace("-ee", "");
+		}
+
+		if (gitRepositoryName.contains("-private") &&
+			!_upstreamBranchName.contains("-private")) {
+
+			gitRepositoryName = gitRepositoryName.replace("-private", "");
+		}
+
+		return gitRepositoryName;
+	}
+
 	private LocalGitBranch _getLocalGitBranch(
 		String branchName, boolean required) {
 
@@ -2908,6 +3076,12 @@ public class GitWorkingDirectory {
 		}
 
 		return sb.toString();
+	}
+
+	private GitRemote _getOriginGitRemote() {
+		Map<String, GitRemote> gitRemotes = getGitRemotes();
+
+		return gitRemotes.get("origin");
 	}
 
 	private String _getRemoteGitBranchesSHAReport(
@@ -2948,6 +3122,16 @@ public class GitWorkingDirectory {
 		}
 
 		return GitUtil.getPrivateRepositoryName(gitRepositoryName);
+	}
+
+	private String _loadGitRepositoryName() {
+		String gitRepositoryName = _getGitRepositoryName(_getOriginGitRemote());
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(gitRepositoryName)) {
+			gitRepositoryName = _getGitRepositoryName(getUpstreamGitRemote());
+		}
+
+		return gitRepositoryName;
 	}
 
 	private List<LocalGitCommit> _log(

@@ -14,8 +14,8 @@ import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.service.CPMeasurementUnitService;
 import com.liferay.headless.commerce.admin.site.setting.dto.v1_0.MeasurementUnit;
 import com.liferay.headless.commerce.admin.site.setting.resource.v1_0.MeasurementUnitResource;
+import com.liferay.headless.commerce.core.helper.ServiceContextHelper;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
-import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -31,10 +31,10 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.Response;
+
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -217,6 +217,34 @@ public class MeasurementUnitResourceImpl
 
 			throw new Exception(exception.getMessage(), exception.getCause());
 		}
+	}
+
+	@Override
+	public MeasurementUnit putMeasurementUnitByExternalReferenceCode(
+			String externalReferenceCode, MeasurementUnit measurementUnit)
+		throws Exception {
+
+		CPMeasurementUnit cpMeasurementUnit =
+			_cpMeasurementUnitService.
+				fetchCPMeasurementUnitByExternalReferenceCode(
+					contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (cpMeasurementUnit == null) {
+			return postMeasurementUnit(measurementUnit);
+		}
+
+		return _toMeasurementUnit(
+			_cpMeasurementUnitService.updateCPMeasurementUnit(
+				GetterUtil.getString(
+					measurementUnit.getExternalReferenceCode()),
+				cpMeasurementUnit.getCPMeasurementUnitId(),
+				LanguageUtils.getLocalizedMap(measurementUnit.getName()),
+				GetterUtil.getString(measurementUnit.getKey()),
+				GetterUtil.getDouble(measurementUnit.getRate()),
+				GetterUtil.getBoolean(measurementUnit.getPrimary()),
+				GetterUtil.getDouble(measurementUnit.getPriority()),
+				_getType(measurementUnit.getType()),
+				_serviceContextHelper.getServiceContext(contextUser)));
 	}
 
 	private CPMeasurementUnit _findByExternalReferenceCode(

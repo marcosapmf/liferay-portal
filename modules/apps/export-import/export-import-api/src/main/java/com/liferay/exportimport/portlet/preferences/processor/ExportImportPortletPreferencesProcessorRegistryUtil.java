@@ -60,10 +60,12 @@ public class ExportImportPortletPreferencesProcessorRegistryUtil {
 	private List<ExportImportPortletPreferencesProcessor>
 		_getExportImportPortletPreferencesProcessors() {
 
-		Collection<ExportImportPortletPreferencesProcessor> values =
-			_exportImportPortletPreferencesProcessors.values();
+		Collection<ExportImportPortletPreferencesProcessor>
+			exportImportPortletPreferencesProcessors =
+				_exportImportPortletPreferencesProcessors.values();
 
-		return ListUtil.fromCollection(values);
+		return ListUtil.fromCollection(
+			exportImportPortletPreferencesProcessors);
 	}
 
 	private static final ExportImportPortletPreferencesProcessorRegistryUtil
@@ -93,7 +95,7 @@ public class ExportImportPortletPreferencesProcessorRegistryUtil {
 					_bundleContext.getService(serviceReference);
 
 			String portletName = GetterUtil.getString(
-				serviceReference.getProperty("javax.portlet.name"));
+				serviceReference.getProperty("jakarta.portlet.name"));
 
 			_exportImportPortletPreferencesProcessors.put(
 				portletName, exportImportPortletPreferencesProcessor);
@@ -124,7 +126,7 @@ public class ExportImportPortletPreferencesProcessorRegistryUtil {
 			_bundleContext.ungetService(serviceReference);
 
 			String portletName = GetterUtil.getString(
-				serviceReference.getProperty("javax.portlet.name"));
+				serviceReference.getProperty("jakarta.portlet.name"));
 
 			_exportImportPortletPreferencesProcessors.remove(portletName);
 		}

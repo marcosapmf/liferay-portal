@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {buildFragment, openSelectionModal, sub} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
+import {buildFragment, sub} from 'frontend-js-web';
 
 const HTML5_UPLOAD =
 	window && window.File && window.FormData && window.XMLHttpRequest;
@@ -106,8 +107,8 @@ export default function DocumentLibrary({
 	function _moveToTrash() {
 		const action = 'move_to_trash';
 
-		if (form.elements[`${namespace}javax-portlet-action`]) {
-			form.elements[`${namespace}javax-portlet-action`].value = action;
+		if (form.elements[`${namespace}jakarta-portlet-action`]) {
+			form.elements[`${namespace}jakarta-portlet-action`].value = action;
 		}
 		else {
 			form.elements[`${namespace}cmd`].value = action;

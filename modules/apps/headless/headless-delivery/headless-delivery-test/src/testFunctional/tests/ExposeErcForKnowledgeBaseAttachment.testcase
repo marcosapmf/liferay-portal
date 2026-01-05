@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Knowledge Base";
 	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
@@ -184,7 +183,7 @@ definition {
 	@disable-webdriver = "true"
 	@priority = 3
 	test CanDeleteAttachmentForKnowledgeBaseArticleByExternalReferenceCode {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
 
 		task ("When with deleteSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode and siteId and knowledgeBaseExternalReferenceCode and knowledgeBaseAttachmentExternalReferenceCode to delete the knwoledgeBaseAttachment") {
 			KnowledgeBaseAttachmentAPI.deleteKBAttachmentByKBArticleErcAndKBAttachmentErc(
@@ -197,11 +196,9 @@ definition {
 				kBArticleErc = "KBAErc",
 				kBAttachmentErc = "KBAtErc");
 
-			var actualValue = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualValue},
-				expected = "No DLFileEntry exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 
@@ -239,11 +236,9 @@ definition {
 				kBArticleErc = "KBFAErc",
 				kBAttachmentErc = "KBFAtErc");
 
-			var actualValue = JSONUtil.getWithJSONPath(${response}, "$.title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${actualValue},
-				expected = "No DLFileEntry exists with the key");
+			ObjectDefinitionAPI.assertStatusInResponse(
+				expectedValue = "NOT_FOUND",
+				responseToParse = ${response});
 		}
 	}
 

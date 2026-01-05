@@ -77,18 +77,19 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	/**
 	 * Adds an asset tag.
 	 *
-	 * @param  userId the primary key of the user adding the asset tag
-	 * @param  groupId the primary key of the group in which the asset tag is to
-	 *         be added
-	 * @param  name the asset tag's name
-	 * @param  serviceContext the service context to be applied
+	 * @param externalReferenceCode
+	 * @param userId                the primary key of the user adding the asset tag
+	 * @param groupId               the primary key of the group in which the asset tag is to
+	 *                              be added
+	 * @param name                  the asset tag's name
+	 * @param serviceContext        the service context to be applied
 	 * @return the asset tag that was added
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AssetTag addTag(
-			long userId, long groupId, String name,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			String name, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Tag
@@ -100,6 +101,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		AssetTag tag = assetTagPersistence.create(tagId);
 
 		tag.setUuid(serviceContext.getUuid());
+		tag.setExternalReferenceCode(externalReferenceCode);
 		tag.setGroupId(groupId);
 		tag.setCompanyId(user.getCompanyId());
 		tag.setUserId(user.getUserId());
@@ -152,7 +154,8 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 				serviceContext.setAddGuestPermissions(true);
 				serviceContext.setScopeGroupId(group.getGroupId());
 
-				tag = addTag(userId, group.getGroupId(), name, serviceContext);
+				tag = addTag(
+					null, userId, group.getGroupId(), name, serviceContext);
 			}
 
 			if (tag != null) {
@@ -266,8 +269,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	 */
 	@Override
 	public AssetTag fetchTag(long groupId, String name) {
-		List<AssetTag> assetTags = assetTagPersistence.findByG_LikeN(
-			groupId, name);
+		List<AssetTag> assetTags = assetTagPersistence.findByG_N(groupId, name);
 
 		for (AssetTag assetTag : assetTags) {
 			if (StringUtil.equals(assetTag.getName(), name)) {
@@ -703,7 +705,8 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AssetTag updateTag(
-			long userId, long tagId, String name, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long tagId, String name,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		// Tag
@@ -734,6 +737,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		validate(name);
 
+		tag.setExternalReferenceCode(externalReferenceCode);
 		tag.setName(name);
 
 		tag = assetTagPersistence.update(tag);

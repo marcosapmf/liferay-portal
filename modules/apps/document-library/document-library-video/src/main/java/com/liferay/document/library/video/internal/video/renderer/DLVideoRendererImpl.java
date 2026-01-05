@@ -17,7 +17,7 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,8 +45,7 @@ public class DLVideoRendererImpl implements DLVideoRenderer {
 					WebKeys.THEME_DISPLAY);
 
 			return StringBundler.concat(
-				"<iframe data-video-liferay height=\"315\" frameborder=\"0\" ",
-				"src=\"",
+				"<iframe data-video-liferay height=\"315\" src=\"",
 				_dlURLHelper.getPreviewURL(
 					fileVersion.getFileEntry(), fileVersion, themeDisplay,
 					"&videoEmbed=true", true, false),

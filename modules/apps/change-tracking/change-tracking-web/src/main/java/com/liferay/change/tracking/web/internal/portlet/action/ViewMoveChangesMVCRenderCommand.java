@@ -7,6 +7,7 @@ package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
 import com.liferay.change.tracking.web.internal.display.context.ViewRelatedEntriesDisplayContext;
@@ -14,8 +15,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -25,7 +26,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"jakarta.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/view_move_changes"
 	},
 	service = MVCRenderCommand.class
@@ -39,6 +40,7 @@ public class ViewMoveChangesMVCRenderCommand implements MVCRenderCommand {
 		ViewRelatedEntriesDisplayContext viewRelatedEntriesDisplayContext =
 			new ViewRelatedEntriesDisplayContext(
 				_ctCollectionLocalService, _ctDisplayRendererRegistry,
+				_ctEntryLocalService,
 				_portal.getHttpServletRequest(renderRequest), renderRequest,
 				renderResponse, _userLocalService);
 
@@ -54,6 +56,9 @@ public class ViewMoveChangesMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
+
+	@Reference
+	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference
 	private Portal _portal;

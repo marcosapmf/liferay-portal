@@ -13,7 +13,7 @@ import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemAc
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.Validator;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,11 +57,7 @@ public class ViewBlogsEntryContentDashboardItemActionProvider
 		ContentDashboardItemAction contentDashboardItemAction =
 			_getContentDashboardItemAction(httpServletRequest, blogsEntry);
 
-		if (Validator.isNull(contentDashboardItemAction.getURL())) {
-			return false;
-		}
-
-		return true;
+		return Validator.isNotNull(contentDashboardItemAction.getURL());
 	}
 
 	private ContentDashboardItemAction _getContentDashboardItemAction(

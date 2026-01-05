@@ -24,11 +24,11 @@ import com.liferay.translation.service.TranslationEntryLocalService;
 import com.liferay.translation.web.internal.display.context.ImportTranslationDisplayContext;
 import com.liferay.translation.web.internal.helper.TranslationRequestHelper;
 
-import java.util.Locale;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.util.Locale;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + TranslationPortletKeys.TRANSLATION,
+		"jakarta.portlet.name=" + TranslationPortletKeys.TRANSLATION,
 		"mvc.command.name=/translation/import_translation"
 	},
 	service = MVCRenderCommand.class
@@ -62,7 +62,7 @@ public class ImportTranslationMVCRenderCommand implements MVCRenderCommand {
 			renderRequest.setAttribute(
 				ImportTranslationDisplayContext.class.getName(),
 				new ImportTranslationDisplayContext(
-					ParamUtil.getLong(renderRequest, "classNameId"),
+					translationRequestHelper.getClassNameId(),
 					translationRequestHelper.getModelClassPK(),
 					themeDisplay.getCompanyId(),
 					ParamUtil.getLong(renderRequest, "groupId"),

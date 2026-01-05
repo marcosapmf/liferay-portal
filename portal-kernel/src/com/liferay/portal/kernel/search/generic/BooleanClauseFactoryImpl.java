@@ -49,9 +49,8 @@ public class BooleanClauseFactoryImpl implements BooleanClauseFactory {
 	public BooleanClause<Filter> createFilter(
 		String field, String value, BooleanClauseOccur booleanClauseOccur) {
 
-		TermFilter termFilter = new TermFilter(field, value);
-
-		return new BooleanClauseImpl<Filter>(termFilter, booleanClauseOccur);
+		return new BooleanClauseImpl<Filter>(
+			new TermFilter(field, value), booleanClauseOccur);
 	}
 
 }

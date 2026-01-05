@@ -15,7 +15,6 @@ import com.liferay.object.system.SystemObjectEntry;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -86,7 +85,10 @@ public class SystemObjectEntrySingleFormVariationInfoCollectionProvider
 						}
 
 						return new SystemObjectEntry(
-							GetterUtil.getLong(values.get("id")), values);
+							GetterUtil.getLong(values.get("id")),
+							GetterUtil.getString(
+								values.get("externalReferenceCode")),
+							values);
 					}),
 				collectionQuery.getPagination(), (int)page.getTotalCount());
 		}
@@ -124,9 +126,8 @@ public class SystemObjectEntrySingleFormVariationInfoCollectionProvider
 
 	@Override
 	public boolean isAvailable() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-17965") ||
-			(_objectDefinition.getCompanyId() !=
-				CompanyThreadLocal.getCompanyId())) {
+		if (_objectDefinition.getCompanyId() !=
+				CompanyThreadLocal.getCompanyId()) {
 
 			return false;
 		}

@@ -8,6 +8,8 @@ package com.liferay.portal.url.builder.internal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.frontend.hashed.files.HashedFilesRegistry;
+import com.liferay.portal.kernel.frontend.hashed.files.HashedFilesUtil;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -17,12 +19,13 @@ import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.portal.url.builder.facet.CacheAwareAbsolutePortalURLBuilder.CachePolicy;
 import com.liferay.portal.url.builder.internal.util.CacheHelper;
 
-import java.util.Dictionary;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Dictionary;
 
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 import org.osgi.framework.Bundle;
 
@@ -67,6 +70,20 @@ public abstract class BaseAbsolutePortalURLBuilderTestCase {
 		);
 
 		return cacheHelper;
+	}
+
+	protected HashedFilesRegistry mockHashedFilesRegistry() {
+		HashedFilesRegistry hashedFilesRegistry = Mockito.mock(
+			HashedFilesRegistry.class);
+
+		Mockito.when(
+			hashedFilesRegistry.getHashedFileURI(Mockito.anyString())
+		).thenAnswer(
+			(Answer<String>)invocationOnMock -> HashedFilesUtil.addHash(
+				invocationOnMock.getArgument(0), "HASH")
+		);
+
+		return hashedFilesRegistry;
 	}
 
 	protected HttpServletRequest mockHttpServletRequest() {

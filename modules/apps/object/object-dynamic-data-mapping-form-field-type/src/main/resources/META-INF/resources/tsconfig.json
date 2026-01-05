@@ -1,28 +1,39 @@
 {
-	"@generated": "78e5496353e9a7bac29f049b0a8c897abb0acd98",
+	"@generated": "18faa2849d855b10645034862670e3a0e15c68e3",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"checkJs": false,
 		"composite": true,
 		"declarationDir": "../../../../../../../../.tsc/types",
 		"emitDeclarationOnly": true,
 		"jsx": "react",
-		"module": "es6",
+		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
 			"@liferay/frontend-data-set-web": [
 				"../../../../../../../frontend-data-set/frontend-data-set-web/src/main/resources/META-INF/resources/index.ts"
 			],
+			"@liferay/object-js-components-web": [
+				"../../../../../../object-js-components-web/src/main/resources/META-INF/resources/index.ts"
+			],
 			"data-engine-js-components-web": [
 				"../../../../../../../data-engine/data-engine-js-components-web/src/main/resources/META-INF/resources/js/index.d.ts"
 			],
 			"dynamic-data-mapping-form-field-type": [
-				"../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/index.ts"
+				"../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"dynamic-data-mapping-form-field-type/api": [
+				"../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/js/api/api.ts"
+			],
+			"frontend-js-components-web": [
+				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],
 			"frontend-js-web": [
-				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/index.d.ts"
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/main/index.d.ts"
+			],
+			"frontend-js-web/legacy": [
+				"../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/legacy/index.ts"
 			]
 		},
 		"rootDir": "../../../../../../../..",
@@ -45,10 +56,16 @@
 			"path": "../../../../../../../frontend-data-set/frontend-data-set-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
+			"path": "../../../../../../object-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
 			"path": "../../../../../../../data-engine/data-engine-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../dynamic-data-mapping/dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/tsconfig.json"
+		},
+		{
+			"path": "../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/tsconfig.json"
 		},
 		{
 			"path": "../../../../../../../frontend-js/frontend-js-web/src/main/resources/META-INF/resources/tsconfig.json"

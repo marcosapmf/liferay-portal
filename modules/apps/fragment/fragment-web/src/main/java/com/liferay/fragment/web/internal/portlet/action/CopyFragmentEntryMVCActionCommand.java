@@ -41,10 +41,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.net.URL;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import java.net.URL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
+		"jakarta.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"mvc.command.name=/fragment/copy_fragment_entry"
 	},
 	service = MVCActionCommand.class
@@ -184,7 +184,7 @@ public class CopyFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), fragmentEntry.isCacheable(),
 			fragmentEntry.getConfiguration(), fragmentEntry.getIcon(),
-			previewFileEntryId, fragmentEntry.isReadOnly(),
+			previewFileEntryId, false, fragmentEntry.isReadOnly(),
 			fragmentEntry.getType(), fragmentEntry.getTypeOptions(),
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
