@@ -4,6 +4,8 @@ Bundle-Version: 1.0.13
 Import-Package:\
 	!jakarta.xml.bind.*,\
 	\
+	!javax.servlet.*,\
+	\
 	!javax.validation.*,\
 	\
 	!org.yaml.snakeyaml.*,\
