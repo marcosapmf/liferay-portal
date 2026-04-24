@@ -13,7 +13,8 @@
 	"private": true,
 	"workspaces": {
 		"packages": [
-			"client-extensions/liferay-data-platform-custom-element"
+			"client-extensions/liferay-data-platform-custom-element",
+			"client-extensions/liferay-data-platform-site-initializer"
 		]
 	}
 }
