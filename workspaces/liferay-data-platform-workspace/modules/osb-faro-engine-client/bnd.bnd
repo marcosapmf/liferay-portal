@@ -138,17 +138,23 @@ Import-Package:\
 	\
 	!org.antlr.stringtemplate.*,\
 	\
+	!org.apache.avalon.*,\
 	!org.apache.catalina.*,\
 	!org.apache.commons.cli.*,\
 	!org.apache.commons.dbcp2.*,\
+	!org.apache.commons.fileupload.*,\
 	!org.apache.commons.lang.*,\
+	!org.apache.commons.pool2.*,\
 	!org.apache.coyote.*,\
 	!org.apache.hc.*,\
 	!org.apache.http.impl.nio.client.*,\
 	!org.apache.http.nio.*,\
 	!org.apache.juli.*,\
+	!org.apache.log.*,\
+	!org.apache.log4j.*,\
 	!org.apache.logging.log4j.*,\
 	!org.apache.naming.*,\
+	!org.apache.tapestry5.*,\
 	!org.apache.tomcat.*,\
 	!org.apache.tools.ant.*,\
 	!org.apache.velocity.*,\
@@ -161,7 +167,7 @@ Import-Package:\
 	\
 	!org.checkerframework.checker.nullness.*,\
 	\
-	!org.codehaus.groovy.*,\
+	!org.codehaus.*,\
 	\
 	!org.conscrypt.*,\
 	\
