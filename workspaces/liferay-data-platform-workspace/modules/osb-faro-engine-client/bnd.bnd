@@ -38,6 +38,8 @@ Import-Package:\
 	\
 	!com.googlecode.*,\
 	\
+	!com.jamonapi.*,\
+	\
 	!com.jayway.*,\
 	\
 	!com.jcraft.jzlib.*,\
