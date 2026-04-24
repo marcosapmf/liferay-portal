@@ -1,20 +1,40 @@
 [
-    {
-        "friendlyURL": "/home",
-        "name": "Home",
-        "title": "Welcome to Liferay Data Platform",
-        "pageDefinition": {
-            "pageElement": {
-                "pageElements": [
-                    {
-                        "definitionId": "basic-component-heading",
-                        "type": "fragment",
-                        "configuration": {
-                            "headingText": "Hello World!"
-                        }
-                    }
-                ]
-            }
-        }
-    }
+	{
+		"friendlyURL": "/home",
+		"name": "Home",
+		"title": "Liferay Data Platform",
+		"pageDefinition": {
+			"pageElement": {
+				"pageElements": [
+					{
+						"definition": {
+							"layout": {
+								"borderWidth": 0,
+								"marginBottom": 0,
+								"marginLeft": 0,
+								"marginRight": 0,
+								"marginTop": 0,
+								"paddingBottom": 0,
+								"paddingLeft": 0,
+								"paddingRight": 0,
+								"paddingTop": 0,
+								"widthType": "Fluid"
+							}
+						},
+						"pageElements": [
+							{
+								"definition": {
+									"widgetInstance": {
+										"widgetName": "[$CLIENT_EXTENSION_ENTRY_ERC:LXC:liferay-data-platform-custom-element$]"
+									}
+								},
+								"type": "Widget"
+							}
+						],
+						"type": "Section"
+					}
+				]
+			}
+		}
+	}
 ]
