@@ -1,0 +1,10 @@
+{
+    "name": "Liferay Data Platform",
+    "icon": "icon.png",
+    "siteNavigationMenus": [
+        {
+            "name": "Primary Navigation",
+            "type": "primary"
+        }
+    ]
+}

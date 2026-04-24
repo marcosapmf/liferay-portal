@@ -1,0 +1,20 @@
+[
+    {
+        "friendlyURL": "/home",
+        "name": "Home",
+        "title": "Welcome to Liferay Data Platform",
+        "pageDefinition": {
+            "pageElement": {
+                "pageElements": [
+                    {
+                        "definitionId": "basic-component-heading",
+                        "type": "fragment",
+                        "configuration": {
+                            "headingText": "Hello World!"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+]
