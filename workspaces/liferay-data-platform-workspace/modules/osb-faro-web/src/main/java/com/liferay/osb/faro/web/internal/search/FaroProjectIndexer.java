@@ -13,6 +13,7 @@ import com.liferay.osb.faro.service.FaroProjectUsageLocalService;
 import com.liferay.osb.faro.web.internal.util.JSONUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
@@ -253,10 +254,31 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 	}
 
 	@Override
-	protected IndexableActionableDynamicQuery
-		getIndexableActionableDynamicQuery() {
+	protected void doReindex(String[] ids) throws Exception {
+		long companyId = GetterUtil.getLong(ids[0]);
 
-		return _faroProjectLocalService.getIndexableActionableDynamicQuery();
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_faroProjectLocalService.getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			(FaroProject faroProject) -> {
+				try {
+					Document document = getDocument(faroProject);
+
+					indexableActionableDynamicQuery.addDocuments(document);
+				}
+				catch (PortalException portalException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index FaroProject " +
+								faroProject.getFaroProjectId(),
+							portalException);
+					}
+				}
+			});
+
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private double _getUsage(long count, long limit) {
