@@ -3,8 +3,6 @@ assemble:
         into: static
 
 liferay-data-platform-custom-element:
-    cssURLs:
-        - "*.css"
     friendlyURLMapping: liferay-data-platform-custom-element
     htmlElementName: liferay-data-platform
     instanceable: false

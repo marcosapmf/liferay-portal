@@ -1,0 +1,17 @@
+{
+  "com.liferay.client.extension.type.configuration.CETConfiguration~liferay-data-platform-custom-element" : {
+    ":configurator:policy" : "force",
+    "baseURL" : "${portalURL}/o/liferay-data-platform-custom-element",
+    "buildTimestamp" : 1777054180082,
+    "description" : "",
+    "dxp.lxc.liferay.com.virtualInstanceId" : "default",
+    "name" : "Liferay Data Platform Custom Element",
+    "projectId" : "liferaydataplatformcustomelement",
+    "projectName" : "liferay-data-platform-custom-element",
+    "properties" : [ ],
+    "sourceCodeURL" : "",
+    "type" : "customElement",
+    "typeSettings" : [ "friendlyURLMapping=liferay-data-platform-custom-element", "instanceable=false", "urls=index.460bb77b.js", "useESM=true", "portletCategoryName=category.client-extensions", "htmlElementName=liferay-data-platform" ],
+    "webContextPath" : "/liferay-data-platform-custom-element"
+  }
+}
