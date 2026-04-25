@@ -56,7 +56,7 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 	immediate = true,
 	service = PortalInstanceLifecycleListener.class
 )
-public class DataPlatformSitePortalInstanceLifecycleListener
+public class OSBFaroSitePortalInstanceLifecycleListener
 	extends BasePortalInstanceLifecycleListener {
 
 	@Activate
@@ -252,7 +252,7 @@ public class DataPlatformSitePortalInstanceLifecycleListener
 	private static final String _SITE_NAME = "OSB Faro";
 
 	private static final Log _log = LogFactoryUtil.getLog(
-		DataPlatformSitePortalInstanceLifecycleListener.class);
+		OSBFaroSitePortalInstanceLifecycleListener.class);
 
 	private BundleTracker<Bundle> _bundleTracker;
 
