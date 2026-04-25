@@ -1,0 +1,13 @@
+[
+	{
+		"menuItems": [
+			{
+				"friendlyURL": "/home",
+				"privateLayout": false,
+				"type": "layout"
+			}
+		],
+		"name": "Primary Navigation",
+		"typeSite": 1
+	}
+]

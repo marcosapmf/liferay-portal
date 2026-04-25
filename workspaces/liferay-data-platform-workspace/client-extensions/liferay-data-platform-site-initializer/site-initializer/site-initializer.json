@@ -1,16 +1,3 @@
 {
-	"name": "Liferay Data Platform",
-	"siteNavigationMenus": [
-		{
-			"menuItems": [
-				{
-					"friendlyURL": "/home",
-					"privateLayout": false,
-					"type": "layout"
-				}
-			],
-			"name": "Primary Navigation",
-			"type": "primary"
-		}
-	]
+	"name": "Liferay Data Platform"
 }
