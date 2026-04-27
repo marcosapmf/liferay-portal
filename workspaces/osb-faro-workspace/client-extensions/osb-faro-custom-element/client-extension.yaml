@@ -1,0 +1,14 @@
+assemble:
+    -   from: build/static
+        into: static
+
+osb-faro-custom-element:
+    friendlyURLMapping: osb-faro-custom-element
+    htmlElementName: osb-faro
+    instanceable: false
+    name: OSB Faro Custom Element
+    portletCategoryName: category.client-extensions
+    type: customElement
+    urls:
+        - "*.js"
+    useESM: true

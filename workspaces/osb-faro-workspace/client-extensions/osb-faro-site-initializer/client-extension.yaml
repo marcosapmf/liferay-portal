@@ -1,0 +1,16 @@
+osb-faro-site-initializer:
+    name: OSB Faro Site Initializer
+    oAuthApplicationHeadlessServer: osb-faro-oahs
+    siteExternalReferenceCode: OSB_FARO
+    siteName: OSB Faro
+    type: siteInitializer
+
+osb-faro-oahs:
+    .serviceAddress: localhost:8080
+    .serviceScheme: http
+    name: OSB Faro OAuth Application Headless Server
+    scopes:
+        - Liferay.Headless.Site.everything
+        - Liferay.Headless.Delivery.everything
+        - Liferay.Headless.Admin.User.everything
+    type: oAuthApplicationHeadlessServer

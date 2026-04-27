@@ -1,0 +1,12 @@
+[
+	{
+		"externalReferenceCode": "ROLE_ANALYTICS_ADMINISTRATOR",
+		"name": "Analytics Administrator",
+		"type": 1
+	},
+	{
+		"externalReferenceCode": "ROLE_ANALYTICS_USER",
+		"name": "Analytics User",
+		"type": 1
+	}
+]

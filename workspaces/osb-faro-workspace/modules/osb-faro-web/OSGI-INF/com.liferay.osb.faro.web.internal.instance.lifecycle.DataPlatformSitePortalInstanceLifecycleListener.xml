@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.3.0" name="com.liferay.osb.faro.web.internal.instance.lifecycle.DataPlatformSitePortalInstanceLifecycleListener" immediate="true" activate="activate" deactivate="deactivate">
+  <service>
+    <provide interface="com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener"/>
+  </service>
+  <reference name="_companyLocalService" interface="com.liferay.portal.kernel.service.CompanyLocalService" field="_companyLocalService"/>
+  <reference name="_groupLocalService" interface="com.liferay.portal.kernel.service.GroupLocalService" field="_groupLocalService"/>
+  <reference name="_layoutLocalService" interface="com.liferay.portal.kernel.service.LayoutLocalService" field="_layoutLocalService"/>
+  <reference name="_siteInitializerFactory" interface="com.liferay.site.initializer.SiteInitializerFactory" field="_siteInitializerFactory"/>
+  <reference name="_userLocalService" interface="com.liferay.portal.kernel.service.UserLocalService" field="_userLocalService"/>
+  <implementation class="com.liferay.osb.faro.web.internal.instance.lifecycle.DataPlatformSitePortalInstanceLifecycleListener"/>
+</scr:component>
