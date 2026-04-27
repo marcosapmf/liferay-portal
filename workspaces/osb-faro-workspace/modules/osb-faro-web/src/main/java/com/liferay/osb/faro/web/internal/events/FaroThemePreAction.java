@@ -29,9 +29,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Leilany Ulisses
  * @author Marcos Martins
  */
-@Component(
-	property = "key=servlet.service.events.pre", service = LifecycleAction.class
-)
+// @Component(
+// 	property = "key=servlet.service.events.pre", service = LifecycleAction.class
+// )
 public class FaroThemePreAction extends Action {
 
 	@Override

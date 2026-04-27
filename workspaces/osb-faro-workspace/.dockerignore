@@ -1,0 +1,11 @@
+bundles/data
+bundles/logs
+bundles/work
+bundles/tomcat*
+bundles/*.zip
+node_modules
+node_modules_cache
+build
+.gradle
+.yarnrc
+yarn.lock
